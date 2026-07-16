@@ -1,2 +1,49 @@
-import { useEffect,useState } from 'react'; import { Link } from 'react-router-dom'; import { base44 } from '@/api/base44Client'; import { Map, ArrowRight } from 'lucide-react'; import PageHeader from '@/components/PageHeader';
-export default function SavedRoadmaps(){const [items,setItems]=useState([]);useEffect(()=>{base44.entities.Roadmap.list('-created_date',50).then(setItems)},[]);return <main className="mx-auto max-w-5xl px-5 py-10 sm:px-8"><PageHeader eyebrow="Roadmap history" title="Your paths, saved." description="Revisit earlier strategies and see how your direction evolves as you create evidence."/><div className="space-y-4">{items.map((r,i)=><Link to="/roadmap" key={r.id} className="flex items-center gap-5 rounded-2xl border bg-white p-6 transition hover:border-blue-300"><span className="grid h-12 w-12 place-items-center rounded-xl bg-blue-50 text-blue-600"><Map/></span><div className="min-w-0 flex-1"><h2 className="truncate font-bold text-[#07152f]">{r.title}</h2><p className="mt-1 text-xs text-slate-400">Created {new Date(r.created_date).toLocaleDateString()} · {r.thirty_day_plan?.length||0} milestones</p></div><span className="hidden text-xs font-bold text-slate-400 sm:block">VERSION {items.length-i}</span><ArrowRight className="text-slate-300"/></Link>)}{!items.length&&<div className="rounded-2xl border border-dashed p-12 text-center text-slate-400">Your first roadmap will appear here.</div>}</div></main>}
+import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { base44 } from '@/api/base44Client';
+import { Map, ArrowRight } from 'lucide-react';
+import PageHeader from '@/components/PageHeader';
+
+export default function SavedRoadmaps() {
+  const [items, setItems] = useState([]);
+  useEffect(() => { base44.entities.Roadmap.list('-created_date', 50).then(setItems); }, []);
+
+  return (
+    <main className="mx-auto max-w-5xl px-5 py-10 sm:px-8">
+      <PageHeader
+        eyebrow="Roadmap history"
+        title="Your paths, saved."
+        description="Revisit earlier strategies and see how your direction evolves as you create evidence."
+      />
+      <div className="space-y-4">
+        {items.map((r, i) => (
+          <Link
+            to="/roadmap"
+            key={r.id}
+            className="flex items-center gap-5 rounded-[20px] border border-[#E2E8F0] bg-white p-6 transition hover:border-[#BFDBFE] hover:-translate-y-0.5 hover:shadow-md"
+          >
+            <span
+              className="grid h-12 w-12 place-items-center rounded-xl text-white shrink-0"
+              style={{ background: 'linear-gradient(135deg, #EFF6FF, #F5F3FF)' }}
+            >
+              <Map className="text-[#2563EB]" size={20} />
+            </span>
+            <div className="min-w-0 flex-1">
+              <h2 className="font-heading truncate font-bold text-[#07111F]">{r.title}</h2>
+              <p className="mt-1 text-xs text-[#64748B]">
+                Created {new Date(r.created_date).toLocaleDateString()} · {r.thirty_day_plan?.length || 0} milestones
+              </p>
+            </div>
+            <span className="hidden text-xs font-bold text-[#94A3B8] sm:block">VERSION {items.length - i}</span>
+            <ArrowRight className="text-[#CBD5E1] shrink-0" size={18} />
+          </Link>
+        ))}
+        {!items.length && (
+          <div className="rounded-[20px] border border-dashed border-[#E2E8F0] p-12 text-center text-[#94A3B8]">
+            Your first roadmap will appear here.
+          </div>
+        )}
+      </div>
+    </main>
+  );
+}
