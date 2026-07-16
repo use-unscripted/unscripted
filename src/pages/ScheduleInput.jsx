@@ -25,6 +25,8 @@ export default function ScheduleInput() {
   const submit = async () => {
     setSaving(true);
     await base44.entities.Schedule.create(data);
+    // Mark onboarding fully complete so future logins route to /dashboard
+    await base44.auth.updateMe({ onboarding_completed: true });
     nav('/generating');
   };
 

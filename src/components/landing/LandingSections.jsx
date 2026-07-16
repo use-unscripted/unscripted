@@ -1,5 +1,6 @@
 import { Compass, Route, CalendarCheck, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
+// All CTAs in LandingSections point to /register — guests only reach this component
 
 const uses = [
   'Build a personal brand',

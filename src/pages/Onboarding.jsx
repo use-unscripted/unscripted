@@ -26,7 +26,13 @@ export default function Onboarding() {
     if (step < 4) return setStep(step + 1);
     setSaving(true);
     await base44.entities.StudentProfile.create(data);
-    await base44.auth.updateMe({ college: data.college, major: data.major, graduation_year: data.graduation_year, school_year: data.school_year });
+    // Mark onboarding step 1 done so routing knows the user started
+    await base44.auth.updateMe({
+      college: data.college,
+      major: data.major,
+      graduation_year: data.graduation_year,
+      school_year: data.school_year,
+    });
     nav('/schedule');
   };
 

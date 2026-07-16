@@ -23,6 +23,7 @@ import WeeklyCalendar from '@/pages/WeeklyCalendar';
 import SavedRoadmaps from '@/pages/SavedRoadmaps';
 import Settings from '@/pages/Settings';
 import BlueprintLibrary from '@/pages/BlueprintLibrary';
+import PostAuth from '@/pages/PostAuth';
 import AppShell from '@/components/AppShell';
 
 const AuthenticatedApp = () => {
@@ -46,6 +47,7 @@ const AuthenticatedApp = () => {
       <Route path="/register" element={<Register />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
+      <Route path="/post-auth" element={<PostAuth />} />
       <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
         <Route path="/onboarding" element={<Onboarding />} />
         <Route path="/schedule" element={<ScheduleInput />} />

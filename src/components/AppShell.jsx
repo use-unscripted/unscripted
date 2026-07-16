@@ -1,5 +1,6 @@
 import { Outlet, NavLink } from 'react-router-dom';
-import { LayoutDashboard, Map, CalendarDays, Archive, Settings, BookOpen } from 'lucide-react';
+import { LayoutDashboard, Map, CalendarDays, Archive, Settings, BookOpen, LogOut } from 'lucide-react';
+import { base44 } from '@/api/base44Client';
 
 const links = [
   ['/dashboard', 'Today', LayoutDashboard],
@@ -57,9 +58,15 @@ export default function AppShell() {
           ))}
         </nav>
 
-        <p className="mt-auto rounded-2xl p-4 text-xs leading-5 text-slate-500" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
+        <p className="rounded-2xl p-4 text-xs leading-5 text-slate-500" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
           Build proof. Create leverage. Choose your path.
         </p>
+        <button
+          onClick={() => base44.auth.logout('/')}
+          className="mt-4 flex items-center gap-2 rounded-xl px-4 py-3 text-sm font-medium text-slate-500 transition hover:bg-white/5 hover:text-white"
+        >
+          <LogOut size={16} /> Log out
+        </button>
       </aside>
 
       {/* Main */}
