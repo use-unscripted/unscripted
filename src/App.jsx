@@ -22,6 +22,7 @@ import Roadmap from '@/pages/Roadmap';
 import WeeklyCalendar from '@/pages/WeeklyCalendar';
 import SavedRoadmaps from '@/pages/SavedRoadmaps';
 import Settings from '@/pages/Settings';
+import BlueprintLibrary from '@/pages/BlueprintLibrary';
 import AppShell from '@/components/AppShell';
 
 const AuthenticatedApp = () => {
@@ -56,6 +57,7 @@ const AuthenticatedApp = () => {
           <Route path="/calendar" element={<WeeklyCalendar />} />
           <Route path="/saved" element={<SavedRoadmaps />} />
           <Route path="/settings" element={<Settings />} />
+          <Route path="/blueprints" element={<BlueprintLibrary />} />
         </Route>
       </Route>
       <Route path="*" element={<PageNotFound />} />
