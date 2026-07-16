@@ -1,0 +1,5 @@
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Sparkles } from 'lucide-react';
+import { generateAmbitionPlan } from '@/lib/ambition-generator';
+export default function Generating(){const nav=useNavigate();const [label,setLabel]=useState('Reading between the lines of your goals...');useEffect(()=>{let active=true;const run=async()=>{setTimeout(()=>active&&setLabel('Turning ambition into specific weekly moves...'),2500);await generateAmbitionPlan();if(active)nav('/profile')};run();return()=>{active=false}},[]);return <main className="grid min-h-screen place-items-center bg-[#07152f] px-6 text-center text-white"><div><div className="mx-auto grid h-16 w-16 place-items-center rounded-2xl bg-blue-500 shadow-xl shadow-blue-500/30"><Sparkles className="animate-pulse"/></div><h1 className="mt-8 text-3xl font-bold">Building your operating system.</h1><p className="mt-3 text-slate-400">{label}</p><div className="mx-auto mt-8 h-1.5 w-64 overflow-hidden rounded-full bg-white/10"><div className="h-full w-2/3 animate-pulse rounded-full bg-blue-500"/></div></div></main>}

@@ -1,0 +1,36 @@
+{
+  "name": "Schedule",
+  "type": "object",
+  "properties": {
+    "class_blocks": {
+      "type": "string"
+    },
+    "work_blocks": {
+      "type": "string"
+    },
+    "club_blocks": {
+      "type": "string"
+    },
+    "athletic_blocks": {
+      "type": "string"
+    },
+    "study_blocks": {
+      "type": "string"
+    },
+    "social_commitments": {
+      "type": "string"
+    },
+    "preferred_deep_work_times": {
+      "type": "string"
+    },
+    "low_energy_times": {
+      "type": "string"
+    },
+    "available_hours_per_week": {
+      "type": "number"
+    }
+  },
+  "required": [
+    "available_hours_per_week"
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "name": "Reflection",
+  "type": "object",
+  "properties": {
+    "roadmap_id": {
+      "type": "string"
+    },
+    "reflection_text": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "reflection_text"
+  ]
+}

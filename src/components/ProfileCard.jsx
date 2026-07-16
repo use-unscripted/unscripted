@@ -1,0 +1,1 @@
+export default function ProfileCard({label,children,dark=false}){return <section className={`rounded-2xl border p-6 ${dark?'border-transparent bg-[#07152f] text-white':'bg-white'}`}><p className={`text-xs font-bold uppercase tracking-widest ${dark?'text-blue-400':'text-blue-600'}`}>{label}</p><div className="mt-4">{children}</div></section>}

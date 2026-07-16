@@ -6,7 +6,23 @@ import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import ScrollToTop from './components/ScrollToTop';
-// Add page imports here
+import { Navigate } from 'react-router-dom';
+import ProtectedRoute from '@/components/ProtectedRoute';
+import Landing from '@/pages/Landing';
+import Login from '@/pages/Login';
+import Register from '@/pages/Register';
+import ForgotPassword from '@/pages/ForgotPassword';
+import ResetPassword from '@/pages/ResetPassword';
+import Onboarding from '@/pages/Onboarding';
+import ScheduleInput from '@/pages/ScheduleInput';
+import Generating from '@/pages/Generating';
+import AmbitionProfile from '@/pages/AmbitionProfile';
+import Dashboard from '@/pages/Dashboard';
+import Roadmap from '@/pages/Roadmap';
+import WeeklyCalendar from '@/pages/WeeklyCalendar';
+import SavedRoadmaps from '@/pages/SavedRoadmaps';
+import Settings from '@/pages/Settings';
+import AppShell from '@/components/AppShell';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -20,21 +36,28 @@ const AuthenticatedApp = () => {
     );
   }
 
-  // Handle authentication errors
-  if (authError) {
-    if (authError.type === 'user_not_registered') {
-      return <UserNotRegisteredError />;
-    } else if (authError.type === 'auth_required') {
-      // Redirect to login automatically
-      navigateToLogin();
-      return null;
-    }
-  }
+  if (authError?.type === 'user_not_registered') return <UserNotRegisteredError />;
 
-  // Render the main app
   return (
     <Routes>
-      {/* Add your page Route elements here */}
+      <Route path="/" element={<Landing />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
+      <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
+        <Route path="/onboarding" element={<Onboarding />} />
+        <Route path="/schedule" element={<ScheduleInput />} />
+        <Route path="/generating" element={<Generating />} />
+        <Route path="/profile" element={<AmbitionProfile />} />
+        <Route element={<AppShell />}>
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/roadmap" element={<Roadmap />} />
+          <Route path="/calendar" element={<WeeklyCalendar />} />
+          <Route path="/saved" element={<SavedRoadmaps />} />
+          <Route path="/settings" element={<Settings />} />
+        </Route>
+      </Route>
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );

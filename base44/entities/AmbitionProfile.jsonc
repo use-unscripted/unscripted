@@ -1,0 +1,64 @@
+{
+  "name": "AmbitionProfile",
+  "type": "object",
+  "properties": {
+    "archetype": {
+      "type": "string"
+    },
+    "motivations": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "best_fit_paths": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "traditional_paths": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "non_traditional_paths": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "strengths": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "weaknesses": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "biggest_risk": {
+      "type": "string"
+    },
+    "biggest_opportunity": {
+      "type": "string"
+    },
+    "stop_doing": {
+      "type": "string"
+    },
+    "start_doing": {
+      "type": "string"
+    },
+    "identity_statement": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "archetype",
+    "identity_statement"
+  ]
+}

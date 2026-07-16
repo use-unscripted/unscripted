@@ -1,0 +1,46 @@
+{
+  "name": "Task",
+  "type": "object",
+  "properties": {
+    "roadmap_id": {
+      "type": "string"
+    },
+    "task_title": {
+      "type": "string"
+    },
+    "task_type": {
+      "type": "string",
+      "enum": [
+        "career",
+        "networking",
+        "content",
+        "project",
+        "skill",
+        "wellness",
+        "reflection"
+      ]
+    },
+    "day": {
+      "type": "string"
+    },
+    "time": {
+      "type": "string"
+    },
+    "due_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "completed": {
+      "type": "boolean",
+      "default": false
+    },
+    "completed_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "task_title",
+    "completed"
+  ]
+}

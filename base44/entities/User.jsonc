@@ -1,0 +1,22 @@
+{
+  "name": "User",
+  "type": "object",
+  "properties": {
+    "college": {
+      "type": "string"
+    },
+    "major": {
+      "type": "string"
+    },
+    "graduation_year": {
+      "type": "string"
+    },
+    "school_year": {
+      "type": "string"
+    },
+    "onboarding_complete": {
+      "type": "boolean",
+      "default": false
+    }
+  }
+}

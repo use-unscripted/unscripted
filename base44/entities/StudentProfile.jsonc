@@ -1,0 +1,74 @@
+{
+  "name": "StudentProfile",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "college": {
+      "type": "string"
+    },
+    "major": {
+      "type": "string"
+    },
+    "graduation_year": {
+      "type": "string"
+    },
+    "school_year": {
+      "type": "string"
+    },
+    "career_interests": {
+      "type": "string"
+    },
+    "desired_lifestyle": {
+      "type": "string"
+    },
+    "income_goals": {
+      "type": "string"
+    },
+    "location_preferences": {
+      "type": "string"
+    },
+    "work_life_balance": {
+      "type": "string"
+    },
+    "pressured_paths": {
+      "type": "string"
+    },
+    "secret_paths": {
+      "type": "string"
+    },
+    "people_admired": {
+      "type": "string"
+    },
+    "favorite_topics": {
+      "type": "string"
+    },
+    "interests": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "current_skills": {
+      "type": "string"
+    },
+    "desired_skills": {
+      "type": "string"
+    },
+    "commitments": {
+      "type": "string"
+    },
+    "biggest_blocker": {
+      "type": "string"
+    },
+    "thirty_day_success": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "name",
+    "college",
+    "major"
+  ]
+}

@@ -1,0 +1,57 @@
+{
+  "name": "Roadmap",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string"
+    },
+    "profile_id": {
+      "type": "string"
+    },
+    "thirty_day_plan": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "semester_plan": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "skill_plan": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "networking_plan": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "personal_brand_plan": {
+      "type": "object"
+    },
+    "startup_project_plan": {
+      "type": "object"
+    },
+    "wellness_plan": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "weekly_tasks": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    }
+  },
+  "required": [
+    "title"
+  ]
+}
