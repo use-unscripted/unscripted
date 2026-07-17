@@ -32,14 +32,14 @@ export default function Settings() {
         <Field label="School year" value={user.school_year} name="school_year" onChange={change} />
         <button
           onClick={save}
-          className="rounded-xl px-5 py-3 font-semibold text-white transition hover:-translate-y-0.5 sm:col-span-2"
-          style={{ background: 'linear-gradient(135deg, #2563EB 0%, #7C3AED 100%)', boxShadow: '0 12px 30px rgba(37,99,235,0.2)' }}
+          className="rounded-[10px] px-5 py-3 font-semibold text-white transition hover:-translate-y-px sm:col-span-2"
+          style={{ background: '#8B0C21', boxShadow: '0 8px 24px rgba(139,12,33,0.18)' }}
         >
           {saved ? 'Saved ✓' : 'Save changes'}
         </button>
         <button
           onClick={() => base44.auth.logout('/')}
-          className="text-sm font-semibold text-[#64748B] hover:text-[#07111F] transition sm:col-span-2"
+          className="text-sm font-semibold text-[#64748B] hover:text-[#050816] transition sm:col-span-2"
         >
           Log out
         </button>

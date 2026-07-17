@@ -1,6 +1,7 @@
 import { Outlet, NavLink } from 'react-router-dom';
 import { LayoutDashboard, Map, CalendarDays, Archive, Settings, BookOpen, LogOut } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
+import { LogoWordmark, CompassIcon } from '@/components/UnscriptedLogo';
 
 const links = [
   ['/dashboard', 'Today', LayoutDashboard],
@@ -13,28 +14,22 @@ const links = [
 
 export default function AppShell() {
   return (
-    <div className="min-h-screen font-body" style={{ background: '#F8FAFC' }}>
+    <div className="min-h-screen font-body" style={{ background: '#FAFAF9' }}>
       {/* Sidebar */}
       <aside
         className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col p-6 text-white lg:flex"
-        style={{ background: '#061226' }}
+        style={{ background: '#081225' }}
       >
         {/* Logo */}
-        <NavLink to="/dashboard" className="mb-10 flex items-center gap-2.5">
-          <span
-            className="grid h-8 w-8 place-items-center rounded-lg"
-            style={{ background: 'linear-gradient(135deg, #2563EB 0%, #7C3AED 100%)' }}
-          >
-            <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
-              <path d="M8 1L14 4.5V11.5L8 15L2 11.5V4.5L8 1Z" stroke="white" strokeWidth="1.5" fill="none" />
-              <path d="M8 4L11 5.75V9.25L8 11L5 9.25V5.75L8 4Z" fill="white" />
-            </svg>
-          </span>
-          <span className="font-heading text-lg font-bold text-white">AmbitionOS</span>
+        <NavLink to="/dashboard" className="mb-10 block">
+          <div className="flex items-center gap-2.5">
+            <CompassIcon size={22} />
+            <span className="font-heading text-lg font-bold tracking-tight text-white">Unscripted</span>
+          </div>
         </NavLink>
 
         {/* Nav */}
-        <nav className="space-y-1">
+        <nav className="flex-1 space-y-1">
           {links.map(([to, label, Icon]) => (
             <NavLink
               key={to}
@@ -48,7 +43,7 @@ export default function AppShell() {
               }
               style={({ isActive }) =>
                 isActive
-                  ? { background: 'linear-gradient(135deg, rgba(37,99,235,0.35) 0%, rgba(124,58,237,0.25) 100%)', border: '1px solid rgba(37,99,235,0.3)' }
+                  ? { background: 'rgba(139,12,33,0.30)', border: '1px solid rgba(139,12,33,0.40)' }
                   : {}
               }
             >
@@ -59,7 +54,7 @@ export default function AppShell() {
         </nav>
 
         <p className="rounded-2xl p-4 text-xs leading-5 text-slate-500" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
-          Build proof. Create leverage. Choose your path.
+          Build your own path.
         </p>
         <button
           onClick={() => base44.auth.logout('/')}
@@ -82,7 +77,7 @@ export default function AppShell() {
             to={to}
             className={({ isActive }) =>
               `flex flex-col items-center gap-1 px-2 py-1 text-[10px] font-semibold transition ${
-                isActive ? 'text-[#2563EB]' : 'text-[#64748B]'
+                isActive ? 'text-[#8B0C21]' : 'text-[#64748B]'
               }`
             }
           >

@@ -8,7 +8,7 @@ import PageHeader from '@/components/PageHeader';
 const Chips = ({ items }) => (
   <div className="flex flex-wrap gap-2">
     {items?.map(x => (
-      <span key={x} className="rounded-full border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-1.5 text-xs font-semibold text-[#334155]">{x}</span>
+      <span key={x} className="rounded-full border border-[#E2E8F0] bg-[#FAFAF9] px-3 py-1.5 text-xs font-semibold text-[#334155]">{x}</span>
     ))}
   </div>
 );
@@ -18,15 +18,15 @@ export default function AmbitionProfile() {
   useEffect(() => { base44.entities.AmbitionProfile.list('-created_date', 1).then(x => setP(x[0])); }, []);
 
   if (!p) return (
-    <div className="grid min-h-screen place-items-center" style={{ background: '#F8FAFC' }}>
+    <div className="grid min-h-screen place-items-center" style={{ background: '#FAFAF9' }}>
       <p className="text-[#64748B]">Loading your profile...</p>
     </div>
   );
 
   return (
-    <main className="mx-auto max-w-6xl px-5 py-10 sm:px-8" style={{ background: '#F8FAFC' }}>
+    <main className="mx-auto max-w-6xl px-5 py-10 sm:px-8" style={{ background: '#FAFAF9' }}>
       <PageHeader
-        eyebrow="Your ambition profile"
+        eyebrow="Your Unscripted Profile"
         title={`You are a ${p.archetype}.`}
         description="This is a working hypothesis — not a box. Use it to make sharper decisions and update it as you create evidence."
       />
@@ -45,7 +45,7 @@ export default function AmbitionProfile() {
         </ProfileCard>
         <ProfileCard label="Biggest opportunity">
           <div className="flex gap-3">
-            <TrendingUp className="shrink-0 text-[#10B981]" size={18} />
+            <TrendingUp className="shrink-0" size={18} style={{ color: '#15803D' }} />
             <p className="text-sm leading-6 text-[#334155]">{p.biggest_opportunity}</p>
           </div>
         </ProfileCard>
@@ -58,8 +58,8 @@ export default function AmbitionProfile() {
       </div>
       <Link
         to="/roadmap"
-        className="mt-8 flex w-full items-center justify-center gap-2 rounded-xl px-6 py-4 font-semibold text-white transition hover:-translate-y-0.5"
-        style={{ background: 'linear-gradient(135deg, #2563EB 0%, #7C3AED 100%)', boxShadow: '0 12px 30px rgba(37,99,235,0.25)' }}
+        className="mt-8 flex w-full items-center justify-center gap-2 rounded-[10px] px-6 py-4 font-semibold text-white transition hover:-translate-y-px"
+        style={{ background: '#8B0C21', boxShadow: '0 8px 24px rgba(139,12,33,0.18)' }}
       >
         Open my roadmap <ArrowRight size={18} />
       </Link>

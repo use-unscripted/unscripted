@@ -110,7 +110,7 @@ export default function Login() {
             />
           </div>
         </div>
-        <Button type="submit" className="w-full h-12 font-medium" disabled={loading}>
+        <Button type="submit" className="w-full h-12 font-semibold text-white border-none" style={{ background: '#8B0C21', boxShadow: '0 8px 24px rgba(139,12,33,0.18)' }} disabled={loading}>
           {loading ? (
             <>
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />

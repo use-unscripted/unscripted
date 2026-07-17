@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import Field from '@/components/onboarding/Field';
 import { Clock3, ArrowRight } from 'lucide-react';
+import { LogoWordmark } from '@/components/UnscriptedLogo';
 
 const fields = [
   ['class_blocks', 'Class schedule', 'Mon/Wed 10–12, Tue/Thu 2–4...'],
@@ -25,22 +26,24 @@ export default function ScheduleInput() {
   const submit = async () => {
     setSaving(true);
     await base44.entities.Schedule.create(data);
-    // Mark onboarding fully complete so future logins route to /dashboard
     await base44.auth.updateMe({ onboarding_completed: true });
     nav('/generating');
   };
 
   return (
-    <main className="min-h-screen px-5 py-10" style={{ background: '#F8FAFC' }}>
+    <main className="min-h-screen px-5 py-10" style={{ background: '#FAFAF9' }}>
       <div className="mx-auto max-w-4xl">
         <div className="mb-8">
+          <div className="mb-6">
+            <LogoWordmark />
+          </div>
           <div
             className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl text-white"
-            style={{ background: 'linear-gradient(135deg, #2563EB 0%, #7C3AED 100%)' }}
+            style={{ background: '#8B0C21' }}
           >
             <Clock3 size={20} />
           </div>
-          <h1 className="font-heading text-4xl font-bold tracking-tight text-[#07111F]">Build around your real week.</h1>
+          <h1 className="font-heading text-4xl font-bold tracking-tight text-[#050816]">Build around your real week.</h1>
           <p className="mt-3 text-[#334155]">Your roadmap should fit your life — not compete with it.</p>
         </div>
 
@@ -55,10 +58,10 @@ export default function ScheduleInput() {
           <button
             onClick={submit}
             disabled={saving}
-            className="mt-4 flex items-center justify-center gap-2 rounded-xl px-6 py-3.5 font-semibold text-white transition hover:-translate-y-0.5 sm:col-span-2 disabled:opacity-60"
-            style={{ background: 'linear-gradient(135deg, #2563EB 0%, #7C3AED 100%)', boxShadow: '0 12px 30px rgba(37,99,235,0.25)' }}
+            className="mt-4 flex items-center justify-center gap-2 rounded-[10px] px-6 py-3.5 font-semibold text-white transition hover:-translate-y-px sm:col-span-2 disabled:opacity-60"
+            style={{ background: '#8B0C21', boxShadow: '0 8px 24px rgba(139,12,33,0.18)' }}
           >
-            {saving ? 'Saving your week...' : 'Generate my Ambition Profile'} <ArrowRight size={18} />
+            {saving ? 'Saving your week...' : 'Build My Unscripted Profile'} <ArrowRight size={18} />
           </button>
         </section>
       </div>
