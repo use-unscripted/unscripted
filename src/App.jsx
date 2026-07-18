@@ -28,6 +28,7 @@ import PathResults from '@/pages/PathResults';
 // App shell pages
 import AppShell from '@/components/AppShell';
 import Dashboard from '@/pages/Dashboard';
+import ExperimentSetup from '@/pages/ExperimentSetup';
 import Roadmap from '@/pages/Roadmap';
 import WeeklyCalendar from '@/pages/WeeklyCalendar';
 import SavedRoadmaps from '@/pages/SavedRoadmaps';
@@ -70,6 +71,7 @@ const AuthenticatedApp = () => {
         <Route path="/generating" element={<Generating />} />
         <Route path="/profile" element={<AmbitionProfile />} />
         <Route path="/path-results" element={<PathResults />} />
+        <Route path="/experiments/new" element={<ExperimentSetup />} />
         <Route element={<AppShell />}>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/roadmap" element={<Roadmap />} />

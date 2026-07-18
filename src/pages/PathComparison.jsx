@@ -92,8 +92,11 @@ function PathCard({ rec, expanded, onToggle }) {
               <p className="text-sm text-[#334155]">{rec.first_experiment}</p>
             </div>
           )}
-          <Link to="/experiments" className="inline-flex items-center gap-2 text-sm font-semibold transition hover:opacity-80" style={{ color: '#8B0C21' }}>
-            Start an experiment for this path <ArrowRight size={15} />
+          <Link
+            to={`/experiments/new?recId=${rec.id}&pathName=${encodeURIComponent(rec.path_name)}`}
+            className="inline-flex items-center gap-2 text-sm font-semibold transition hover:opacity-80"
+            style={{ color: '#8B0C21' }}>
+            Start an Experiment for This Path <ArrowRight size={15} />
           </Link>
         </div>
       )}

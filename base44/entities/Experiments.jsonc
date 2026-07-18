@@ -8,7 +8,13 @@
     "path_name": {
       "type": "string"
     },
+    "path_recommendation_id": {
+      "type": "string"
+    },
     "title": {
+      "type": "string"
+    },
+    "experiment_type": {
       "type": "string"
     },
     "objective": {
@@ -45,12 +51,22 @@
     "status": {
       "type": "string",
       "enum": [
+        "draft",
         "planned",
         "in_progress",
         "completed",
         "skipped"
       ],
-      "default": "planned"
+      "default": "draft"
+    },
+    "mission_guide_status": {
+      "type": "string",
+      "enum": [
+        "not_generated",
+        "generating",
+        "generated"
+      ],
+      "default": "not_generated"
     },
     "mission_steps": {
       "type": "array",
