@@ -69,7 +69,7 @@ export default function AppShell() {
         </nav>
 
         <p className="rounded-xl p-3 text-xs leading-5 text-slate-500 mt-4" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
-          Build your own path.
+          Write your unscripted path.
         </p>
         <button onClick={() => base44.auth.logout('/')}
           className="mt-3 flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium text-slate-500 transition hover:bg-white/5 hover:text-white">
