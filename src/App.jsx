@@ -8,32 +8,43 @@ import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import ScrollToTop from './components/ScrollToTop';
 import { Navigate } from 'react-router-dom';
 import ProtectedRoute from '@/components/ProtectedRoute';
+
+// Pages
 import Landing from '@/pages/Landing';
 import Login from '@/pages/Login';
 import Register from '@/pages/Register';
 import ForgotPassword from '@/pages/ForgotPassword';
 import ResetPassword from '@/pages/ResetPassword';
 import Onboarding from '@/pages/Onboarding';
-import ScheduleInput from '@/pages/ScheduleInput';
+import GoalIntake from '@/pages/GoalIntake';
 import Generating from '@/pages/Generating';
 import AmbitionProfile from '@/pages/AmbitionProfile';
+import PostAuth from '@/pages/PostAuth';
+
+// App shell pages
+import AppShell from '@/components/AppShell';
 import Dashboard from '@/pages/Dashboard';
 import Roadmap from '@/pages/Roadmap';
 import WeeklyCalendar from '@/pages/WeeklyCalendar';
 import SavedRoadmaps from '@/pages/SavedRoadmaps';
 import Settings from '@/pages/Settings';
 import BlueprintLibrary from '@/pages/BlueprintLibrary';
-import PostAuth from '@/pages/PostAuth';
-import AppShell from '@/components/AppShell';
+import PathComparison from '@/pages/PathComparison';
+import ExperimentsPage from '@/pages/ExperimentsPage';
+import OutreachTracker from '@/pages/OutreachTracker';
+import ProofOfWorkPage from '@/pages/ProofOfWorkPage';
+import WeeklyReflectionPage from '@/pages/WeeklyReflectionPage';
+import ResourceHub from '@/pages/ResourceHub';
+import CreatorLibrary from '@/pages/CreatorLibrary';
+import GoalsPage from '@/pages/GoalsPage';
 
 const AuthenticatedApp = () => {
-  const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
+  const { isLoadingAuth, isLoadingPublicSettings, authError } = useAuth();
 
-  // Show loading spinner while checking app public settings or auth
   if (isLoadingPublicSettings || isLoadingAuth) {
     return (
       <div className="fixed inset-0 flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-slate-200 border-t-slate-800 rounded-full animate-spin"></div>
+        <div className="w-8 h-8 border-4 border-slate-200 border-t-[#8B0C21] rounded-full animate-spin"></div>
       </div>
     );
   }
@@ -50,7 +61,7 @@ const AuthenticatedApp = () => {
       <Route path="/post-auth" element={<PostAuth />} />
       <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
         <Route path="/onboarding" element={<Onboarding />} />
-        <Route path="/schedule" element={<ScheduleInput />} />
+        <Route path="/goals" element={<GoalIntake />} />
         <Route path="/generating" element={<Generating />} />
         <Route path="/profile" element={<AmbitionProfile />} />
         <Route element={<AppShell />}>
@@ -60,6 +71,14 @@ const AuthenticatedApp = () => {
           <Route path="/saved" element={<SavedRoadmaps />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/blueprints" element={<BlueprintLibrary />} />
+          <Route path="/paths" element={<PathComparison />} />
+          <Route path="/experiments" element={<ExperimentsPage />} />
+          <Route path="/outreach" element={<OutreachTracker />} />
+          <Route path="/proof" element={<ProofOfWorkPage />} />
+          <Route path="/reflection" element={<WeeklyReflectionPage />} />
+          <Route path="/resources" element={<ResourceHub />} />
+          <Route path="/creators" element={<CreatorLibrary />} />
+          <Route path="/goals-tracker" element={<GoalsPage />} />
         </Route>
       </Route>
       <Route path="*" element={<PageNotFound />} />
@@ -67,9 +86,7 @@ const AuthenticatedApp = () => {
   );
 };
 
-
 function App() {
-
   return (
     <AuthProvider>
       <QueryClientProvider client={queryClientInstance}>

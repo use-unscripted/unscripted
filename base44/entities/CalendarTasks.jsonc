@@ -1,0 +1,81 @@
+{
+  "name": "CalendarTasks",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string"
+    },
+    "experiment_id": {
+      "type": "string"
+    },
+    "goal_id": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "date": {
+      "type": "string",
+      "format": "date"
+    },
+    "start_time": {
+      "type": "string"
+    },
+    "end_time": {
+      "type": "string"
+    },
+    "priority": {
+      "type": "string",
+      "enum": [
+        "high",
+        "medium",
+        "low"
+      ],
+      "default": "medium"
+    },
+    "energy_requirement": {
+      "type": "string",
+      "enum": [
+        "high",
+        "medium",
+        "low"
+      ]
+    },
+    "task_type": {
+      "type": "string",
+      "enum": [
+        "career",
+        "networking",
+        "content",
+        "project",
+        "skill",
+        "wellness",
+        "reflection",
+        "outreach"
+      ]
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "planned",
+        "completed",
+        "skipped",
+        "rescheduled"
+      ],
+      "default": "planned"
+    },
+    "skip_reason": {
+      "type": "string"
+    },
+    "rescheduled_from": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "title",
+    "date"
+  ]
+}

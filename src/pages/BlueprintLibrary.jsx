@@ -25,7 +25,7 @@ export default function BlueprintLibrary() {
     setDetail(null);
     setLoading(true);
     const result = await base44.integrations.Core.InvokeLLM({
-      prompt: `You are AmbitionOS, a direct strategist for ambitious college students. Generate a detailed, actionable blueprint for the "${bp.label}" path. Be specific and practical—no generic advice. Focus on what a college student can actually do today.`,
+      prompt: `You are Unscripted, a life-design and execution platform for ambitious college students. Generate a detailed, actionable playbook for the "${bp.label}" path. Be specific and practical—no generic advice. Focus on what a college student can actually do today. Include honest tradeoffs.`,
       response_json_schema: {
         type: 'object',
         properties: {

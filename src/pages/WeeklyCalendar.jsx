@@ -24,12 +24,12 @@ export default function WeeklyCalendar() {
       <PageHeader
         eyebrow="Weekly execution"
         title="Make the week count."
-        description={`${done} of ${tasks.length} actions complete. This plan is intentionally finite — finish it before adding more.`}
+        description={`${done} of ${tasks.length} actions complete this week.`}
       />
       <div className="mb-8 h-2 rounded-full overflow-hidden" style={{ background: '#E2E8F0' }}>
         <div
           className="h-full rounded-full transition-all"
-          style={{ width: `${pct}%`, background: 'linear-gradient(90deg, #2563EB, #7C3AED)' }}
+          style={{ width: `${pct}%`, background: '#8B0C21' }}
         />
       </div>
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">

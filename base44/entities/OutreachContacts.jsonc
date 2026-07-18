@@ -1,0 +1,67 @@
+{
+  "name": "OutreachContacts",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "company": {
+      "type": "string"
+    },
+    "role": {
+      "type": "string"
+    },
+    "email": {
+      "type": "string"
+    },
+    "profile_url": {
+      "type": "string"
+    },
+    "reason_for_contact": {
+      "type": "string"
+    },
+    "date_contacted": {
+      "type": "string",
+      "format": "date"
+    },
+    "followup_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "response_status": {
+      "type": "string",
+      "enum": [
+        "not_sent",
+        "sent",
+        "responded",
+        "no_response",
+        "call_scheduled",
+        "completed"
+      ],
+      "default": "not_sent"
+    },
+    "call_scheduled": {
+      "type": "boolean",
+      "default": false
+    },
+    "call_date": {
+      "type": "string"
+    },
+    "thank_you_sent": {
+      "type": "boolean",
+      "default": false
+    },
+    "notes": {
+      "type": "string"
+    },
+    "path_being_tested": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "name"
+  ]
+}

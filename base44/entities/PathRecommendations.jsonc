@@ -1,0 +1,64 @@
+{
+  "name": "PathRecommendations",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string"
+    },
+    "path_id": {
+      "type": "string"
+    },
+    "path_name": {
+      "type": "string"
+    },
+    "fit_reason": {
+      "type": "string"
+    },
+    "concern": {
+      "type": "string"
+    },
+    "readiness_score": {
+      "type": "number"
+    },
+    "confidence_level": {
+      "type": "string",
+      "enum": [
+        "low",
+        "medium",
+        "high"
+      ]
+    },
+    "current_gaps": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "first_experiment": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "exploring",
+        "active",
+        "paused",
+        "deprioritized"
+      ],
+      "default": "exploring"
+    },
+    "path_fit_signals": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "generated_detail": {
+      "type": "object"
+    }
+  },
+  "required": [
+    "path_name",
+    "fit_reason"
+  ]
+}

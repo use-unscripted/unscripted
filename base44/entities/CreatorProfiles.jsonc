@@ -1,0 +1,92 @@
+{
+  "name": "CreatorProfiles",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "category": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "role": {
+      "type": "string"
+    },
+    "company": {
+      "type": "string"
+    },
+    "short_bio": {
+      "type": "string"
+    },
+    "starting_point": {
+      "type": "string"
+    },
+    "milestones": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "projects": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "skills": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "lessons": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "student_takeaways": {
+      "type": "string"
+    },
+    "instagram_url": {
+      "type": "string"
+    },
+    "youtube_url": {
+      "type": "string"
+    },
+    "linkedin_url": {
+      "type": "string"
+    },
+    "website_url": {
+      "type": "string"
+    },
+    "source_urls": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "verified": {
+      "type": "boolean",
+      "default": false
+    },
+    "featured": {
+      "type": "boolean",
+      "default": false
+    },
+    "last_reviewed": {
+      "type": "string",
+      "format": "date"
+    },
+    "active": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "name",
+    "short_bio"
+  ]
+}

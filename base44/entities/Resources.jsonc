@@ -1,0 +1,89 @@
+{
+  "name": "Resources",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "ib_prep",
+        "consulting_prep",
+        "startup_fellowships",
+        "entrepreneurship",
+        "creator_education",
+        "brand_tools",
+        "coding_tools",
+        "fitness",
+        "networking_tools",
+        "wellness",
+        "simulations",
+        "certifications",
+        "competitions",
+        "accelerators",
+        "scholarships",
+        "fellowships",
+        "other"
+      ]
+    },
+    "description": {
+      "type": "string"
+    },
+    "target_user": {
+      "type": "string"
+    },
+    "problem_solved": {
+      "type": "string"
+    },
+    "price_type": {
+      "type": "string",
+      "enum": [
+        "free",
+        "paid",
+        "freemium"
+      ]
+    },
+    "estimated_cost": {
+      "type": "string"
+    },
+    "external_url": {
+      "type": "string"
+    },
+    "pros": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "limitations": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "recommendation_reason": {
+      "type": "string"
+    },
+    "affiliate_disclosure": {
+      "type": "string"
+    },
+    "last_reviewed": {
+      "type": "string",
+      "format": "date"
+    },
+    "active": {
+      "type": "boolean",
+      "default": true
+    },
+    "featured": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "required": [
+    "name",
+    "category",
+    "description"
+  ]
+}

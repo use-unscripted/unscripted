@@ -9,12 +9,14 @@ import { CompassIcon } from '@/components/UnscriptedLogo';
 export default function Landing() {
   const nav = useNavigate();
   const [authState, setAuthState] = useState('loading');
+  const [authUser, setAuthUser] = useState(null);
 
   useEffect(() => {
     base44.auth.isAuthenticated().then(async (authed) => {
       if (!authed) { setAuthState('guest'); return; }
       try {
         const user = await base44.auth.me();
+        setAuthUser(user);
         setAuthState(user?.onboarding_completed ? 'done' : 'no-onboarding');
       } catch {
         setAuthState('guest');
@@ -24,7 +26,7 @@ export default function Landing() {
 
   useEffect(() => {
     if (authState === 'done') nav('/dashboard', { replace: true });
-    if (authState === 'no-onboarding') nav('/onboarding', { replace: true });
+    if (authState === 'no-onboarding') nav(authUser?.college ? '/goals' : '/onboarding', { replace: true });
   }, [authState]);
 
   if (authState === 'loading' || authState === 'done' || authState === 'no-onboarding') {

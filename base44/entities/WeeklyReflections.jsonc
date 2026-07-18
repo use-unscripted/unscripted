@@ -1,0 +1,61 @@
+{
+  "name": "WeeklyReflections",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string"
+    },
+    "week_start": {
+      "type": "string",
+      "format": "date"
+    },
+    "completed_items": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "avoided_items": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "avoidance_reasons": {
+      "type": "string"
+    },
+    "energy_sources": {
+      "type": "string"
+    },
+    "energy_drains": {
+      "type": "string"
+    },
+    "surprises": {
+      "type": "string"
+    },
+    "path_feedback": {
+      "type": "string"
+    },
+    "skill_gaps_noticed": {
+      "type": "string"
+    },
+    "lessons": {
+      "type": "string"
+    },
+    "next_changes": {
+      "type": "string"
+    },
+    "generated_summary": {
+      "type": "string"
+    },
+    "path_adjustments": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "week_start"
+  ]
+}

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
-import { CalendarDays } from 'lucide-react';
+import { CalendarDays, AlertTriangle } from 'lucide-react';
 import PageHeader from '@/components/PageHeader';
 import RoadmapSection from '@/components/RoadmapSection';
 
@@ -14,29 +14,48 @@ export default function Roadmap() {
   return (
     <main className="mx-auto max-w-6xl px-5 py-10 sm:px-8">
       <PageHeader
-        eyebrow="Personalized roadmap"
+        eyebrow="Personal roadmap"
         title={r.title}
         description="Specific actions, sequenced around what matters now — not a list of everything you could do."
         action={
-          <Link
-            to="/calendar"
-            className="flex items-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold text-white transition hover:-translate-y-0.5"
-            style={{ background: 'linear-gradient(135deg, #2563EB 0%, #7C3AED 100%)', boxShadow: '0 12px 30px rgba(37,99,235,0.22)' }}
-          >
+          <Link to="/calendar"
+            className="flex items-center gap-2 rounded-[10px] px-5 py-3 text-sm font-semibold text-white transition hover:-translate-y-px"
+            style={{ background: '#8B0C21', boxShadow: '0 8px 24px rgba(139,12,33,0.18)' }}>
             <CalendarDays size={16} /> Open this week
           </Link>
         }
       />
+
+      {/* Feasibility assessment */}
+      {r.feasibility_assessment && (
+        <div className="mb-6 flex items-start gap-3 rounded-[20px] p-6" style={{ background: '#081225', border: '1px solid rgba(139,12,33,0.30)' }}>
+          <AlertTriangle size={18} className="shrink-0 mt-0.5" style={{ color: '#8B0C21' }} />
+          <div>
+            <p className="text-xs font-bold uppercase tracking-wide mb-2" style={{ color: '#8B0C21' }}>Feasibility assessment</p>
+            <p className="text-sm text-slate-300 leading-6">{r.feasibility_assessment}</p>
+          </div>
+        </div>
+      )}
+
+      {r.goals_to_defer?.length > 0 && (
+        <div className="mb-6 rounded-[16px] p-4" style={{ background: '#FFFBEB', border: '1px solid rgba(180,83,9,0.25)' }}>
+          <p className="text-xs font-bold uppercase tracking-wide text-[#B45309] mb-2">Goals to defer for now</p>
+          <ul className="space-y-1">{r.goals_to_defer.map((g, i) => <li key={i} className="text-sm text-[#334155]">· {g}</li>)}</ul>
+        </div>
+      )}
+
       <div className="grid gap-5 lg:grid-cols-2">
         <RoadmapSection title="Your next 30 days" items={r.thirty_day_plan} />
         <RoadmapSection title="Semester direction" items={r.semester_plan} />
         <RoadmapSection title="Skills to build" items={r.skill_plan} />
         <RoadmapSection title="Networking plan" items={r.networking_plan} />
-        <RoadmapSection title="Wellness and discipline" items={r.wellness_plan} />
-        <RoadmapSection
-          title="Personal brand moves"
-          items={Object.values(r.personal_brand_plan || {}).flat().filter(x => typeof x === 'string').slice(0, 6)}
-        />
+        <RoadmapSection title="Wellness and recovery" items={r.wellness_plan} />
+        {r.personal_brand_plan && (
+          <RoadmapSection
+            title="Personal brand moves"
+            items={Object.values(r.personal_brand_plan || {}).flat().filter(x => typeof x === 'string').slice(0, 6)}
+          />
+        )}
       </div>
     </main>
   );

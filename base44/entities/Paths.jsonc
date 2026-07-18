@@ -1,0 +1,101 @@
+{
+  "name": "Paths",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "category": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "day_to_day": {
+      "type": "string"
+    },
+    "sample_day": {
+      "type": "string"
+    },
+    "lifestyle": {
+      "type": "string"
+    },
+    "work_hours": {
+      "type": "string"
+    },
+    "work_environment": {
+      "type": "string"
+    },
+    "income_trajectory": {
+      "type": "string"
+    },
+    "skills_required": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "credentials_expected": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "time_to_competitive": {
+      "type": "string"
+    },
+    "advantages": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "drawbacks": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "common_misconceptions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "who_thrives": {
+      "type": "string"
+    },
+    "who_dislikes": {
+      "type": "string"
+    },
+    "risk_level": {
+      "type": "string",
+      "enum": [
+        "low",
+        "medium",
+        "high"
+      ]
+    },
+    "ai_impact": {
+      "type": "string"
+    },
+    "questions_to_ask": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "first_experiment": {
+      "type": "string"
+    },
+    "active": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "name",
+    "category",
+    "description"
+  ]
+}

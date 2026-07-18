@@ -1,0 +1,78 @@
+{
+  "name": "Goals",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string"
+    },
+    "timeframe": {
+      "type": "string",
+      "enum": [
+        "annual",
+        "monthly",
+        "weekly"
+      ]
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "career",
+        "financial",
+        "academic",
+        "project",
+        "brand",
+        "networking",
+        "wellness",
+        "other"
+      ]
+    },
+    "goal_text": {
+      "type": "string"
+    },
+    "measurable_outcome": {
+      "type": "string"
+    },
+    "priority": {
+      "type": "string",
+      "enum": [
+        "high",
+        "medium",
+        "low"
+      ]
+    },
+    "estimated_hours": {
+      "type": "number"
+    },
+    "feasibility_status": {
+      "type": "string",
+      "enum": [
+        "realistic",
+        "stretch",
+        "unrealistic",
+        "needs_clarity"
+      ]
+    },
+    "feasibility_note": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "completed",
+        "deferred",
+        "dropped"
+      ],
+      "default": "active"
+    },
+    "due_date": {
+      "type": "string",
+      "format": "date"
+    }
+  },
+  "required": [
+    "goal_text",
+    "timeframe",
+    "category"
+  ]
+}

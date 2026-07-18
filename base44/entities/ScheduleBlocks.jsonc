@@ -1,0 +1,71 @@
+{
+  "name": "ScheduleBlocks",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string"
+    },
+    "block_type": {
+      "type": "string",
+      "enum": [
+        "class",
+        "study",
+        "work",
+        "club",
+        "athletic",
+        "commute",
+        "meal",
+        "exercise",
+        "social",
+        "sleep",
+        "personal",
+        "deep_work",
+        "low_energy"
+      ]
+    },
+    "title": {
+      "type": "string"
+    },
+    "day": {
+      "type": "string",
+      "enum": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+        "Sunday"
+      ]
+    },
+    "start_time": {
+      "type": "string"
+    },
+    "end_time": {
+      "type": "string"
+    },
+    "recurring": {
+      "type": "boolean",
+      "default": true
+    },
+    "energy_level": {
+      "type": "string",
+      "enum": [
+        "high",
+        "medium",
+        "low"
+      ]
+    },
+    "fixed_or_flexible": {
+      "type": "string",
+      "enum": [
+        "fixed",
+        "flexible"
+      ]
+    }
+  },
+  "required": [
+    "block_type",
+    "day"
+  ]
+}

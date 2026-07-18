@@ -1,0 +1,262 @@
+import { useEffect, useState } from 'react';
+import { base44 } from '@/api/base44Client';
+import { ArrowRight, Plus, ChevronDown, ChevronUp, CheckCircle, Clock, BookOpen } from 'lucide-react';
+import PageHeader from '@/components/PageHeader';
+
+const STATUS_STYLES = {
+  planned: { bg: '#F1F5F9', text: '#334155', label: 'Planned' },
+  in_progress: { bg: '#FFFBEB', text: '#B45309', label: 'In Progress' },
+  completed: { bg: '#F0FDF4', text: '#15803D', label: 'Completed' },
+  skipped: { bg: '#F8FAFC', text: '#94A3B8', label: 'Skipped' },
+};
+
+const EXPERIMENT_TYPES = [
+  'Interview a professional',
+  'Complete a virtual simulation',
+  'Build a small project',
+  'Publish content (article, post, or video)',
+  'Attend a relevant event',
+  'Apply to a short-term project',
+  'Test a freelance service',
+  'Interview a founder',
+  'Build a portfolio sample',
+  'Complete a skills workshop',
+  'Volunteer for a relevant role',
+  'Complete a research project',
+];
+
+function ExperimentCard({ exp, onStatusChange, onExpand, expanded }) {
+  const s = STATUS_STYLES[exp.status] || STATUS_STYLES.planned;
+  return (
+    <div className="rounded-[20px] border border-[#E2E8F0] bg-white overflow-hidden">
+      <div className="p-5">
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex-1">
+            <div className="flex flex-wrap items-center gap-2 mb-2">
+              <span className="rounded-full px-2.5 py-1 text-xs font-bold" style={{ background: s.bg, color: s.text }}>{s.label}</span>
+              {exp.path_name && <span className="rounded-full px-2.5 py-1 text-xs font-semibold" style={{ background: '#F8ECEF', color: '#8B0C21' }}>{exp.path_name}</span>}
+            </div>
+            <h3 className="font-heading font-bold text-[#050816]">{exp.title}</h3>
+            <p className="mt-1 text-sm text-[#334155]">{exp.objective}</p>
+          </div>
+          <button onClick={onExpand} className="shrink-0 rounded-xl border border-[#E2E8F0] p-2 hover:bg-[#F8FAFC]">
+            {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+          </button>
+        </div>
+        <div className="mt-3 flex items-center gap-4 text-xs text-[#64748B]">
+          {exp.estimated_hours && <span className="flex items-center gap-1"><Clock size={12} /> ~{exp.estimated_hours}h</span>}
+          {exp.deadline && <span>Due {new Date(exp.deadline).toLocaleDateString()}</span>}
+          {exp.deliverable && <span className="flex items-center gap-1"><BookOpen size={12} /> {exp.deliverable}</span>}
+        </div>
+      </div>
+      {expanded && (
+        <div className="border-t border-[#E2E8F0] p-5 space-y-4">
+          {exp.expected_learning && (
+            <div><p className="text-xs font-bold uppercase tracking-wide text-[#64748B] mb-1">Expected learning</p><p className="text-sm text-[#334155]">{exp.expected_learning}</p></div>
+          )}
+          {exp.mission_steps?.length > 0 && (
+            <div>
+              <p className="text-xs font-bold uppercase tracking-wide text-[#64748B] mb-2">Mission steps</p>
+              <ol className="space-y-2">
+                {exp.mission_steps.map((s, i) => (
+                  <li key={i} className="flex gap-3 text-sm text-[#334155]">
+                    <span className="shrink-0 font-bold" style={{ color: '#8B0C21' }}>{i + 1}.</span>
+                    <span>{typeof s === 'string' ? s : s.step || s.description || JSON.stringify(s)}</span>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          )}
+          {exp.proof_required && (
+            <div className="rounded-xl p-3" style={{ background: '#F8ECEF', border: '1px solid rgba(139,12,33,0.2)' }}>
+              <p className="text-xs font-bold uppercase tracking-wide mb-1" style={{ color: '#8B0C21' }}>Proof required</p>
+              <p className="text-sm text-[#334155]">{exp.proof_required}</p>
+            </div>
+          )}
+          {exp.reflection_questions?.length > 0 && (
+            <div>
+              <p className="text-xs font-bold uppercase tracking-wide text-[#64748B] mb-2">Reflection questions</p>
+              <ul className="space-y-1">{exp.reflection_questions.map((q, i) => <li key={i} className="text-sm text-[#334155]">· {q}</li>)}</ul>
+            </div>
+          )}
+          <div className="flex gap-2 flex-wrap pt-2">
+            {['planned', 'in_progress', 'completed', 'skipped'].map(s => (
+              <button key={s} onClick={() => onStatusChange(exp.id, s)}
+                className="rounded-lg px-3 py-1.5 text-xs font-semibold transition border"
+                style={exp.status === s ? { background: '#8B0C21', color: '#fff', borderColor: '#8B0C21' } : { background: 'white', color: '#334155', borderColor: '#E2E8F0' }}>
+                {STATUS_STYLES[s].label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function NewExperimentModal({ onClose, onSave }) {
+  const [data, setData] = useState({ title: '', objective: '', path_name: '', estimated_hours: 3, deliverable: '' });
+  const [generating, setGenerating] = useState(false);
+  const [type, setType] = useState('');
+
+  const generateGuide = async () => {
+    if (!data.title) return;
+    setGenerating(true);
+    const result = await base44.integrations.Core.InvokeLLM({
+      prompt: `You are Unscripted. Generate a detailed Mission Guide for this experiment: "${data.title}" related to path: "${data.path_name}". Include specific step-by-step instructions a college student can follow. Be practical and specific.`,
+      response_json_schema: {
+        type: 'object',
+        properties: {
+          expected_learning: { type: 'string' },
+          estimated_hours: { type: 'number' },
+          prerequisites: { type: 'string' },
+          tools: { type: 'array', items: { type: 'string' } },
+          mission_steps: { type: 'array', items: { type: 'string' } },
+          proof_required: { type: 'string' },
+          reflection_questions: { type: 'array', items: { type: 'string' } },
+          common_mistakes: { type: 'array', items: { type: 'string' } },
+          alternative_version: { type: 'string' },
+          completion_criteria: { type: 'string' },
+        }
+      }
+    });
+    setData(d => ({ ...d, ...result }));
+    setGenerating(false);
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(5,8,22,0.5)' }}>
+      <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-[24px] bg-white p-6 sm:p-8">
+        <h2 className="font-heading text-2xl font-bold text-[#050816] mb-1">New Experiment</h2>
+        <p className="text-sm text-[#64748B] mb-6">Define what you want to test. We'll generate a step-by-step Mission Guide.</p>
+        <div className="space-y-4">
+          <div>
+            <label className="text-sm font-semibold text-[#334155] block mb-1">Choose an experiment type</label>
+            <select className="w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-3 text-sm outline-none focus:border-[#8B0C21]"
+              value={type} onChange={e => { setType(e.target.value); setData(d => ({ ...d, title: e.target.value })); }}>
+              <option value="">Select or type your own below</option>
+              {EXPERIMENT_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+            </select>
+          </div>
+          {[
+            { name: 'title', label: 'Experiment title', placeholder: 'e.g. Interview 3 investment bankers' },
+            { name: 'path_name', label: 'Path being tested', placeholder: 'e.g. Investment Banking, Startup Operations...' },
+            { name: 'objective', label: 'What do you want to learn?', placeholder: 'What question are you trying to answer?' },
+            { name: 'deliverable', label: 'Deliverable', placeholder: 'What will you produce or submit?' },
+          ].map(f => (
+            <label key={f.name} className="block">
+              <span className="text-sm font-semibold text-[#334155] block mb-1">{f.label}</span>
+              <input className="w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-3 text-sm outline-none focus:border-[#8B0C21]"
+                placeholder={f.placeholder} value={data[f.name] || ''} onChange={e => setData(d => ({ ...d, [f.name]: e.target.value }))} />
+            </label>
+          ))}
+          <label className="block">
+            <span className="text-sm font-semibold text-[#334155] block mb-1">Deadline</span>
+            <input type="date" className="w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-3 text-sm outline-none focus:border-[#8B0C21]"
+              value={data.deadline || ''} onChange={e => setData(d => ({ ...d, deadline: e.target.value }))} />
+          </label>
+
+          {data.mission_steps?.length > 0 && (
+            <div className="rounded-xl p-4" style={{ background: '#F8ECEF', border: '1px solid rgba(139,12,33,0.2)' }}>
+              <p className="text-xs font-bold uppercase tracking-wide mb-2" style={{ color: '#8B0C21' }}>Mission Guide generated</p>
+              <ol className="space-y-1">{data.mission_steps.map((s, i) => <li key={i} className="text-sm text-[#334155]">{i+1}. {s}</li>)}</ol>
+            </div>
+          )}
+        </div>
+        <div className="mt-6 flex gap-3">
+          <button onClick={onClose} className="flex-1 rounded-[10px] border border-[#E2E8F0] py-3 text-sm font-semibold text-[#334155] transition hover:bg-[#F8FAFC]">Cancel</button>
+          <button onClick={generateGuide} disabled={generating || !data.title}
+            className="flex-1 rounded-[10px] border py-3 text-sm font-semibold transition disabled:opacity-60"
+            style={{ borderColor: '#8B0C21', color: '#8B0C21', background: 'white' }}>
+            {generating ? 'Generating guide...' : 'Generate Mission Guide'}
+          </button>
+          <button onClick={() => onSave(data)}
+            className="flex-1 rounded-[10px] py-3 text-sm font-semibold text-white transition hover:-translate-y-px"
+            style={{ background: '#8B0C21', boxShadow: '0 8px 24px rgba(139,12,33,0.18)' }}>
+            Save Experiment
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function ExperimentsPage() {
+  const [experiments, setExperiments] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showNew, setShowNew] = useState(false);
+  const [expandedId, setExpandedId] = useState(null);
+  const [filter, setFilter] = useState('all');
+
+  const load = async () => {
+    const data = await base44.entities.Experiments.list('-created_date', 50);
+    setExperiments(data);
+    setLoading(false);
+  };
+
+  useEffect(() => { load(); }, []);
+
+  const save = async (data) => {
+    await base44.entities.Experiments.create({ ...data, status: 'planned' });
+    setShowNew(false);
+    load();
+  };
+
+  const updateStatus = async (id, status) => {
+    await base44.entities.Experiments.update(id, { status });
+    load();
+  };
+
+  const filtered = filter === 'all' ? experiments : experiments.filter(e => e.status === filter);
+
+  return (
+    <main className="mx-auto max-w-5xl px-5 py-10 sm:px-8">
+      {showNew && <NewExperimentModal onClose={() => setShowNew(false)} onSave={save} />}
+      <PageHeader
+        eyebrow="Experiments"
+        title="Test paths. Learn from results."
+        description="Every experiment is a controlled test. You are not committing to a path — you are gathering evidence."
+        action={
+          <button onClick={() => setShowNew(true)}
+            className="flex items-center gap-2 rounded-[10px] px-5 py-3 text-sm font-semibold text-white transition hover:-translate-y-px"
+            style={{ background: '#8B0C21', boxShadow: '0 8px 24px rgba(139,12,33,0.18)' }}>
+            <Plus size={16} /> New Experiment
+          </button>
+        }
+      />
+
+      <div className="mb-6 flex gap-2 flex-wrap">
+        {['all', 'planned', 'in_progress', 'completed', 'skipped'].map(f => (
+          <button key={f} onClick={() => setFilter(f)}
+            className="rounded-full px-4 py-1.5 text-xs font-semibold transition border"
+            style={filter === f ? { background: '#8B0C21', color: '#fff', borderColor: '#8B0C21' } : { background: 'white', color: '#334155', borderColor: '#E2E8F0' }}>
+            {f === 'all' ? 'All' : STATUS_STYLES[f].label}
+          </button>
+        ))}
+      </div>
+
+      {loading ? (
+        <div className="py-20 text-center text-[#64748B]">Loading experiments...</div>
+      ) : filtered.length === 0 ? (
+        <div className="rounded-[24px] border border-dashed border-[#E2E8F0] p-16 text-center">
+          <h3 className="font-heading text-xl font-bold text-[#050816]">No experiments yet.</h3>
+          <p className="mt-2 text-sm text-[#64748B]">Start your first experiment to test a path in the real world.</p>
+          <button onClick={() => setShowNew(true)}
+            className="mt-6 inline-flex items-center gap-2 rounded-[10px] px-6 py-3 text-sm font-semibold text-white"
+            style={{ background: '#8B0C21', boxShadow: '0 8px 24px rgba(139,12,33,0.18)' }}>
+            <Plus size={16} /> Create first experiment
+          </button>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {filtered.map(exp => (
+            <ExperimentCard key={exp.id} exp={exp}
+              expanded={expandedId === exp.id}
+              onExpand={() => setExpandedId(expandedId === exp.id ? null : exp.id)}
+              onStatusChange={updateStatus} />
+          ))}
+        </div>
+      )}
+    </main>
+  );
+}

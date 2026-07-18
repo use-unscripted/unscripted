@@ -1,0 +1,81 @@
+{
+  "name": "ProofOfWork",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string"
+    },
+    "mission_id": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "report",
+        "model",
+        "case_study",
+        "article",
+        "post",
+        "newsletter",
+        "video",
+        "podcast",
+        "prototype",
+        "landing_page",
+        "service_pilot",
+        "interview_notes",
+        "simulation",
+        "presentation",
+        "database",
+        "community",
+        "volunteer",
+        "other"
+      ]
+    },
+    "path_tested": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "skills_demonstrated": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "external_url": {
+      "type": "string"
+    },
+    "file_url": {
+      "type": "string"
+    },
+    "outcome": {
+      "type": "string"
+    },
+    "feedback": {
+      "type": "string"
+    },
+    "reflection": {
+      "type": "string"
+    },
+    "visibility": {
+      "type": "string",
+      "enum": [
+        "private",
+        "public"
+      ],
+      "default": "private"
+    },
+    "completed_at": {
+      "type": "string",
+      "format": "date"
+    }
+  },
+  "required": [
+    "title",
+    "category"
+  ]
+}
