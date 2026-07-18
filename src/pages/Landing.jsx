@@ -26,7 +26,11 @@ export default function Landing() {
 
   useEffect(() => {
     if (authState === 'done') nav('/dashboard', { replace: true });
-    if (authState === 'no-onboarding') nav(authUser?.college ? '/goals' : '/onboarding', { replace: true });
+    if (authState === 'no-onboarding') {
+      if (authUser?.college && !authUser?.primary_path) nav('/paths-intake', { replace: true });
+      else if (authUser?.college) nav('/paths-intake', { replace: true });
+      else nav('/onboarding', { replace: true });
+    }
   }, [authState]);
 
   if (authState === 'loading' || authState === 'done' || authState === 'no-onboarding') {
@@ -48,7 +52,7 @@ export default function Landing() {
       <footer className="border-t border-[#E2E8F0] px-6 py-8">
         <div className="mx-auto flex max-w-7xl items-center justify-center gap-2 text-sm text-[#64748B]">
           <CompassIcon size={14} />
-          © 2026 Unscripted. Build your own path.
+          © 2026 Unscripted. Write your unscripted path.
         </div>
       </footer>
     </div>

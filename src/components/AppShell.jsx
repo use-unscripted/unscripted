@@ -1,26 +1,19 @@
 import { Outlet, NavLink } from 'react-router-dom';
-import { LayoutDashboard, Map, CalendarDays, Target, Beaker, Users, BookOpen, Star, Lightbulb, FileText, RotateCcw, Settings, LogOut } from 'lucide-react';
+import { LayoutDashboard, Beaker, CalendarDays, Users, FileText, RotateCcw, Settings, LogOut, Target } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { CompassIcon } from '@/components/UnscriptedLogo';
 
-const mainLinks = [
+const coreLinks = [
   ['/dashboard', 'Dashboard', LayoutDashboard],
-  ['/paths', 'Paths', Target],
-  ['/experiments', 'Experiments', Beaker],
+  ['/experiments', 'Missions', Beaker],
   ['/calendar', 'Week', CalendarDays],
-  ['/roadmap', 'Roadmap', Map],
+  ['/paths', 'Paths', Target],
 ];
 
 const buildLinks = [
   ['/outreach', 'Outreach', Users],
   ['/proof', 'Proof of Work', FileText],
   ['/reflection', 'Reflect', RotateCcw],
-];
-
-const exploreLinks = [
-  ['/creators', 'Journeys', Star],
-  ['/resources', 'Resources', Lightbulb],
-  ['/blueprints', 'Blueprints', BookOpen],
 ];
 
 function NavGroup({ label, links }) {
@@ -62,9 +55,8 @@ export default function AppShell() {
         </NavLink>
 
         <nav className="flex-1 overflow-y-auto">
-          <NavGroup label="Execute" links={mainLinks} />
-          <NavGroup label="Build" links={buildLinks} />
-          <NavGroup label="Explore" links={exploreLinks} />
+          <NavGroup label="Path Test" links={coreLinks} />
+          <NavGroup label="Build Evidence" links={buildLinks} />
           <NavGroup label="Account" links={[['/settings', 'Settings', Settings]]} />
         </nav>
 

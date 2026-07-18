@@ -168,8 +168,8 @@ Goals: ${JSON.stringify(goals)}`,
     <main className="mx-auto max-w-5xl px-5 py-10 sm:px-8">
       <PageHeader
         eyebrow="Path comparison"
-        title="Paths worth exploring."
-        description="These are recommendations based on your profile, not prescriptions. You decide what to test."
+        title="Three paths worth testing."
+        description="These recommendations are based on your profile and selected paths. None is objectively correct. Your job is to test and learn."
       />
 
       {loading ? (

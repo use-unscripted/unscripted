@@ -10,9 +10,11 @@ export async function redirectAfterAuth() {
     const user = await base44.auth.me();
     if (user?.onboarding_completed) {
       window.location.href = '/dashboard';
+    } else if (user?.college && !user?.primary_path) {
+      // Profile done, still need path selection
+      window.location.href = '/paths-intake';
     } else if (user?.college) {
-      // Profile intake done, still need goals
-      window.location.href = '/goals';
+      window.location.href = '/onboarding';
     } else {
       window.location.href = '/onboarding';
     }

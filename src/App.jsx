@@ -21,6 +21,10 @@ import Generating from '@/pages/Generating';
 import AmbitionProfile from '@/pages/AmbitionProfile';
 import PostAuth from '@/pages/PostAuth';
 
+// New onboarding flow pages
+import PathsIntake from '@/pages/PathsIntake';
+import PathResults from '@/pages/PathResults';
+
 // App shell pages
 import AppShell from '@/components/AppShell';
 import Dashboard from '@/pages/Dashboard';
@@ -61,9 +65,11 @@ const AuthenticatedApp = () => {
       <Route path="/post-auth" element={<PostAuth />} />
       <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
         <Route path="/onboarding" element={<Onboarding />} />
+        <Route path="/paths-intake" element={<PathsIntake />} />
         <Route path="/goals" element={<GoalIntake />} />
         <Route path="/generating" element={<Generating />} />
         <Route path="/profile" element={<AmbitionProfile />} />
+        <Route path="/path-results" element={<PathResults />} />
         <Route element={<AppShell />}>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/roadmap" element={<Roadmap />} />

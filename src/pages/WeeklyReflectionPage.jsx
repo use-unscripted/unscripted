@@ -4,16 +4,14 @@ import { ArrowRight, CheckCircle } from 'lucide-react';
 import PageHeader from '@/components/PageHeader';
 
 const QUESTIONS = [
-  { name: 'completed_items', label: 'What did you complete this week?', placeholder: 'List the actions, experiments, or outputs you finished', type: 'textarea' },
-  { name: 'avoided_items', label: 'What did you avoid or not finish?', placeholder: 'Be honest — what stayed on the list?', type: 'textarea' },
-  { name: 'avoidance_reasons', label: 'Why did you avoid those things?', placeholder: 'Not enough time, fear, unclear how to start, lost interest...', type: 'textarea' },
-  { name: 'energy_sources', label: 'What gave you energy this week?', placeholder: 'Work, conversations, or activities that felt engaging', type: 'textarea' },
-  { name: 'energy_drains', label: 'What drained you?', placeholder: 'Tasks, situations, or environments that felt difficult or draining', type: 'textarea' },
-  { name: 'surprises', label: 'What surprised you?', placeholder: 'Unexpected reactions, results, or realizations', type: 'textarea' },
-  { name: 'path_feedback', label: 'Did any path feel more or less right this week?', placeholder: 'Based on what you actually did and felt, not what you expect you should feel', type: 'textarea' },
-  { name: 'skill_gaps_noticed', label: 'What skill gap became visible?', placeholder: 'What do you need to learn or practice that you didn\'t expect?', type: 'textarea' },
-  { name: 'lessons', label: 'What did you actually learn?', placeholder: 'Be specific — a lesson is not just completing something', type: 'textarea' },
-  { name: 'next_changes', label: 'What should change next week?', placeholder: 'What will you do differently, stop doing, or try for the first time?', type: 'textarea' },
+  { name: 'completed_items', label: 'What did you complete this week?', placeholder: 'List the experiments, conversations, or outputs you finished' },
+  { name: 'avoided_items', label: 'What did you avoid or not finish?', placeholder: 'Be honest — what stayed on the list?' },
+  { name: 'energy_sources', label: 'What gave you energy this week?', placeholder: 'Work, conversations, or activities that felt engaging' },
+  { name: 'energy_drains', label: 'What drained you?', placeholder: 'Tasks, situations, or environments that felt difficult or draining' },
+  { name: 'path_feedback', label: 'Did the path match your expectations this week?', placeholder: 'Based on what you actually did and felt — not what you expected to feel' },
+  { name: 'surprises', label: 'What surprised you?', placeholder: 'Unexpected reactions, results, or realizations' },
+  { name: 'lessons', label: 'What did you actually learn?', placeholder: 'Be specific — a lesson is not just completing something' },
+  { name: 'next_changes', label: 'What should change next week?', placeholder: 'What will you do differently, stop doing, or try for the first time?' },
 ];
 
 function getMonday(d) {
@@ -109,6 +107,39 @@ export default function WeeklyReflectionPage() {
                   className="w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-3 text-sm text-[#050816] placeholder-[#94A3B8] outline-none focus:border-[#8B0C21] resize-none" />
               </label>
             ))}
+
+            {/* Path decision */}
+            <div className="rounded-[20px] border border-[#E2E8F0] bg-white p-5">
+              <span className="text-sm font-semibold text-[#050816] block mb-3">Continue, modify, or stop testing this path?</span>
+              <div className="flex gap-2 flex-wrap mb-3">
+                {[
+                  { val: 'continue', label: 'Continue testing', bg: '#F0FDF4', color: '#15803D' },
+                  { val: 'modify', label: 'Modify approach', bg: '#FFFBEB', color: '#B45309' },
+                  { val: 'stop', label: 'Stop — not a fit', bg: '#FEF2F2', color: '#B91C1C' },
+                ].map(opt => (
+                  <button key={opt.val} type="button"
+                    onClick={() => setCurrent(c => ({ ...c, path_decision: opt.val }))}
+                    className="rounded-full px-4 py-2 text-sm font-semibold transition border"
+                    style={current.path_decision === opt.val
+                      ? { background: opt.bg, color: opt.color, borderColor: opt.color }
+                      : { background: 'white', color: '#334155', borderColor: '#E2E8F0' }}>
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+              {current.path_decision === 'modify' && (
+                <textarea rows={2} name="path_modification_note"
+                  value={current.path_modification_note || ''} onChange={ch}
+                  placeholder="What specifically would you change about how you are testing this path?"
+                  className="w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-3 text-sm text-[#050816] placeholder-[#94A3B8] outline-none focus:border-[#8B0C21] resize-none" />
+              )}
+              {current.path_decision === 'stop' && (
+                <textarea rows={2} name="path_stop_reason"
+                  value={current.path_stop_reason || ''} onChange={ch}
+                  placeholder="What did you learn that made this path a poor fit?"
+                  className="w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-3 text-sm text-[#050816] placeholder-[#94A3B8] outline-none focus:border-[#8B0C21] resize-none" />
+              )}
+            </div>
           </div>
 
           {current.generated_summary && (
