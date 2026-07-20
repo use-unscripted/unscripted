@@ -95,9 +95,8 @@ function ExperimentCard({ exp, onStatusChange, onExpand, expanded }) {
 }
 
 function NewExperimentModal({ onClose, onSave }) {
-  const [data, setData] = useState({ title: '', objective: '', path_name: '', estimated_hours: 3, deliverable: '' });
+  const [data, setData] = useState({ title: '', objective: '', path_name: '', estimated_hours: 3, deliverable: '', experiment_type: '' });
   const [generating, setGenerating] = useState(false);
-  const [type, setType] = useState('');
 
   const generateGuide = async () => {
     if (!data.title) return;
@@ -133,7 +132,7 @@ function NewExperimentModal({ onClose, onSave }) {
           <div>
             <label className="text-sm font-semibold text-[#334155] block mb-1">Choose an experiment type</label>
             <select className="w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-3 text-sm outline-none focus:border-[#8B0C21]"
-              value={type} onChange={e => { setType(e.target.value); setData(d => ({ ...d, title: e.target.value })); }}>
+              value={data.experiment_type} onChange={e => setData(d => ({ ...d, experiment_type: e.target.value, title: d.title || e.target.value }))}>
               <option value="">Select or type your own below</option>
               {EXPERIMENT_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
             </select>
