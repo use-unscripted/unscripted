@@ -137,22 +137,28 @@ export default function Onboarding() {
   const next = async () => {
     if (!isLast) return setStep(step + 1);
     setSaving(true);
-    await base44.entities.StudentProfile.create({
-      ...data,
-      available_hours_per_week: hours,
-      career_interests: data.paths_considering,
-      pressured_paths: data.pressured_path,
-      secret_paths: data.curious_path,
-      desired_lifestyle: data.desired_lifestyle,
-      biggest_blocker: data.biggest_blocker,
-      commitments: data.fixed_commitments,
-    });
-    await base44.auth.updateMe({
-      college: data.college,
-      major: data.major,
-      graduation_year: data.graduation_year,
-      school_year: data.school_year,
-    });
+    try {
+      await base44.entities.StudentProfile.create({
+        ...data,
+        available_hours_per_week: hours,
+        career_interests: data.paths_considering,
+        pressured_paths: data.pressured_path,
+        secret_paths: data.curious_path,
+        desired_lifestyle: data.desired_lifestyle,
+        biggest_blocker: data.biggest_blocker,
+        commitments: data.fixed_commitments,
+      });
+      await base44.auth.updateMe({
+        college: data.college,
+        major: data.major,
+        graduation_year: data.graduation_year,
+        school_year: data.school_year,
+      });
+    } catch (e) {
+      console.error('Onboarding save error, continuing:', e);
+    } finally {
+      setSaving(false);
+    }
     nav('/paths-intake');
   };
 

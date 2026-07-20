@@ -48,7 +48,7 @@ export async function generatePathTest() {
   const schedule = schedules[0] || {};
   const primaryPath = user.primary_path || profile.career_interests || 'undecided';
   const comparisonPath = user.comparison_path || '';
-  const availableHours = schedule.available_hours_per_week || 8;
+  const availableHours = profile.available_hours_per_week || schedule.available_hours_per_week || 8;
 
   const prompt = `You are Unscripted, a path-experimentation platform for college students. Your only job is to help this student test whether their chosen paths actually fit them.
 
