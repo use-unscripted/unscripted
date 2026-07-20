@@ -1,15 +1,18 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { Link } from "react-router-dom";
 import { redirectAfterAuth } from "@/lib/post-auth-redirect";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { UserPlus, Mail, Lock, Loader2 } from "lucide-react";
+import { UserPlus, Mail, Loader2 } from "lucide-react";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import AuthLayout from "@/components/AuthLayout";
 import GoogleIcon from "@/components/GoogleIcon";
 import { toast } from "@/components/ui/use-toast";
+import PasswordField from "@/components/PasswordField";
+import PasswordChecklist from "@/components/PasswordChecklist";
+import { validatePassword, isPasswordValid } from "@/lib/password-validation";
 
 export default function Register() {
   const [email, setEmail] = useState("");
@@ -19,22 +22,47 @@ export default function Register() {
   const [loading, setLoading] = useState(false);
   const [showOtp, setShowOtp] = useState(false);
   const [otpCode, setOtpCode] = useState("");
+  const submittingRef = useRef(false);
+
+  const passwordValid = isPasswordValid(password, email);
+  const passwordsMatch = password === confirmPassword;
+  const showConfirmMismatch = confirmPassword.length > 0 && !passwordsMatch;
+  const canSubmit = email.length > 0 && passwordValid && passwordsMatch && !loading;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (submittingRef.current) return; // prevent double-submit
     setError("");
-    if (password !== confirmPassword) {
-      setError("Passwords do not match");
+
+    // Re-validate immediately before submission
+    if (!isPasswordValid(password, email)) {
+      setError("Please satisfy all password requirements before continuing.");
       return;
     }
+    if (!passwordsMatch) {
+      setError("Passwords do not match.");
+      return;
+    }
+
+    submittingRef.current = true;
     setLoading(true);
     try {
       await base44.auth.register({ email, password });
       setShowOtp(true);
+      // Clear password from state after successful registration step
+      setPassword("");
+      setConfirmPassword("");
     } catch (err) {
-      setError(err.message || "Registration failed");
+      // Never expose raw internal errors or tokens
+      const msg = err.message || "";
+      if (msg.toLowerCase().includes("already")) {
+        setError("An account with this email already exists. Try logging in.");
+      } else {
+        setError("Registration failed. Please check your details and try again.");
+      }
     } finally {
       setLoading(false);
+      submittingRef.current = false;
     }
   };
 
@@ -48,7 +76,7 @@ export default function Register() {
       }
       await redirectAfterAuth();
     } catch (err) {
-      setError(err.message || "Invalid verification code");
+      setError(err.message || "Invalid verification code. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -58,12 +86,9 @@ export default function Register() {
     setError("");
     try {
       await base44.auth.resendOtp(email);
-      toast({
-        title: "Code sent",
-        description: "Check your email for the new code.",
-      });
+      toast({ title: "Code sent", description: "Check your email for the new code." });
     } catch (err) {
-      setError(err.message || "Failed to resend code");
+      setError(err.message || "Failed to resend code.");
     }
   };
 
@@ -73,24 +98,14 @@ export default function Register() {
 
   if (showOtp) {
     return (
-      <AuthLayout
-        icon={Mail}
-        title="Verify your email"
-        subtitle={`We sent a code to ${email}`}
-      >
+      <AuthLayout icon={Mail} title="Verify your email" subtitle={`We sent a code to ${email}`}>
         {error && (
-          <div className="mb-4 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
+          <div className="mb-4 p-3 rounded-lg bg-destructive/10 text-destructive text-sm" role="alert">
             {error}
           </div>
         )}
         <div className="flex justify-center mb-6">
-          <InputOTP
-            maxLength={6}
-            value={otpCode}
-            onChange={setOtpCode}
-            autoFocus
-            autoComplete="one-time-code"
-          >
+          <InputOTP maxLength={6} value={otpCode} onChange={setOtpCode} autoFocus autoComplete="one-time-code">
             <InputOTPGroup>
               <InputOTPSlot index={0} />
               <InputOTPSlot index={1} />
@@ -107,20 +122,11 @@ export default function Register() {
           onClick={handleVerify}
           disabled={loading || otpCode.length < 6}
         >
-          {loading ? (
-            <>
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              Verifying...
-            </>
-          ) : (
-            "Verify"
-          )}
+          {loading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Verifying...</> : "Verify"}
         </Button>
         <p className="text-center text-sm text-muted-foreground mt-4">
           Didn't receive the code?{" "}
-          <button onClick={handleResend} className="text-primary font-medium hover:underline">
-            Resend
-          </button>
+          <button onClick={handleResend} className="text-primary font-medium hover:underline">Resend</button>
         </p>
       </AuthLayout>
     );
@@ -134,17 +140,11 @@ export default function Register() {
       footer={
         <>
           Already have an account?{" "}
-          <Link to="/login" className="text-primary font-medium hover:underline">
-            Log in
-          </Link>
+          <Link to="/login" className="text-primary font-medium hover:underline">Log in</Link>
         </>
       }
     >
-      <Button
-        variant="outline"
-        className="w-full h-12 text-sm font-medium mb-6"
-        onClick={handleGoogle}
-      >
+      <Button variant="outline" className="w-full h-12 text-sm font-medium mb-6" onClick={handleGoogle}>
         <GoogleIcon className="w-5 h-5 mr-2" />
         Continue with Google
       </Button>
@@ -159,12 +159,12 @@ export default function Register() {
       </div>
 
       {error && (
-        <div className="mb-4 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
+        <div className="mb-4 p-3 rounded-lg bg-destructive/10 text-destructive text-sm" role="alert">
           {error}
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-4" noValidate>
         <div className="space-y-2">
           <Label htmlFor="email">Email</Label>
           <div className="relative">
@@ -182,47 +182,40 @@ export default function Register() {
             />
           </div>
         </div>
+
         <div className="space-y-2">
           <Label htmlFor="password">Password</Label>
-          <div className="relative">
-            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
-            <Input
-              id="password"
-              type="password"
-              autoComplete="new-password"
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="pl-10 h-12"
-              required
-            />
-          </div>
+          <PasswordField
+            id="password"
+            label="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+          <PasswordChecklist
+            password={password}
+            email={email}
+            confirmPassword={confirmPassword}
+            showConfirmError={showConfirmMismatch}
+          />
         </div>
+
         <div className="space-y-2">
           <Label htmlFor="confirm">Confirm Password</Label>
-          <div className="relative">
-            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
-            <Input
-              id="confirm"
-              type="password"
-              autoComplete="new-password"
-              placeholder="••••••••"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              className="pl-10 h-12"
-              required
-            />
-          </div>
+          <PasswordField
+            id="confirm"
+            label="Confirm Password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+          />
         </div>
-        <Button type="submit" className="w-full h-12 font-semibold text-white border-none" style={{ background: '#8B0C21', boxShadow: '0 8px 24px rgba(139,12,33,0.18)' }} disabled={loading}>
-          {loading ? (
-            <>
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              Creating account...
-            </>
-          ) : (
-            "Create account"
-          )}
+
+        <Button
+          type="submit"
+          className="w-full h-12 font-semibold text-white border-none"
+          style={{ background: canSubmit ? '#8B0C21' : undefined, boxShadow: canSubmit ? '0 8px 24px rgba(139,12,33,0.18)' : undefined }}
+          disabled={!canSubmit}
+        >
+          {loading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Creating account...</> : "Create account"}
         </Button>
       </form>
     </AuthLayout>
