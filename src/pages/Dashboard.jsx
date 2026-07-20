@@ -93,7 +93,7 @@ export default function Dashboard() {
             <p className="font-semibold text-white">{nextExp.title}</p>
             <p className="text-sm text-slate-400 mt-1">{nextExp.objective}</p>
             <Link to="/experiments" className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold transition hover:opacity-80" style={{ color: '#8B0C21' }}>
-              Open Mission Guide <ArrowRight size={14} />
+              View in Missions <ArrowRight size={14} />
             </Link>
           </div>
         )}
