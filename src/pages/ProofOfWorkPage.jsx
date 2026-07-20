@@ -95,29 +95,48 @@ function FilePreviewModal({ entry, onClose }) {
 
 // ── Proof Card ─────────────────────────────────────────────────────────────────
 function ProofCard({ entry, missionsMap, experimentsMap, onDelete, onNavigateToProof }) {
-  const mission = entry.mission_id ? missionsMap[entry.mission_id] : null;
-  const experiment = entry.experiment_id ? experimentsMap[entry.experiment_id] : null;
+  const safeEntry = {
+    title: entry.title || entry.proof_title || 'Untitled proof',
+    category: entry.category || 'other',
+    visibility: entry.visibility || entry.privacy_status || 'private',
+    description: entry.description || entry.completion_note || '',
+    file_url: entry.file_url || null,
+    file_name: entry.file_name || null,
+    file_size: entry.file_size || null,
+    mime_type: entry.mime_type || null,
+    external_url: entry.external_url || null,
+    skills_demonstrated: Array.isArray(entry.skills_demonstrated) ? entry.skills_demonstrated : [],
+    mission_id: entry.mission_id || null,
+    experiment_id: entry.experiment_id || null,
+    created_date: entry.created_date || entry.created_at || entry.completed_at || null,
+  };
+
+  const mission = safeEntry.mission_id ? (missionsMap[safeEntry.mission_id] || null) : null;
+  const experiment = safeEntry.experiment_id ? (experimentsMap[safeEntry.experiment_id] || null) : null;
   const [showPreview, setShowPreview] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const vid = isVideoFile(entry.file_name, entry.mime_type);
+
+  if (!entry || !entry.id) return null;
+
+  const vid = isVideoFile(safeEntry.file_name, safeEntry.mime_type);
 
   return (
     <div className="rounded-[20px] border border-[#E2E8F0] bg-white p-5">
-      {showPreview && <FilePreviewModal entry={entry} onClose={() => setShowPreview(false)} />}
+      {showPreview && <FilePreviewModal entry={safeEntry} onClose={() => setShowPreview(false)} />}
 
       {/* Header */}
       <div className="flex items-start justify-between gap-3 mb-3">
         <div className="flex-1 min-w-0">
           <div className="flex flex-wrap items-center gap-2 mb-1.5">
             <span className="rounded-full px-2.5 py-0.5 text-xs font-bold" style={{ background: '#F8ECEF', color: '#8B0C21' }}>
-              {entry.category?.replace(/_/g,' ').replace(/\b\w/g,l=>l.toUpperCase()) || 'Other'}
+              {safeEntry.category.replace(/_/g,' ').replace(/\b\w/g,l=>l.toUpperCase())}
             </span>
-            {entry.visibility === 'public'
+            {safeEntry.visibility === 'public'
               ? <span className="rounded-full px-2.5 py-0.5 text-xs font-bold flex items-center gap-1" style={{ background: '#F0FDF4', color: '#15803D' }}><Eye size={10} />Public</span>
               : <span className="rounded-full px-2.5 py-0.5 text-xs font-bold flex items-center gap-1" style={{ background: '#F8FAFC', color: '#64748B' }}><EyeOff size={10} />Private</span>}
           </div>
-          <h3 className="font-heading font-bold text-[#050816] leading-snug">{entry.title}</h3>
-          {entry.description && <p className="mt-1 text-sm text-[#334155] line-clamp-2">{entry.description}</p>}
+          <h3 className="font-heading font-bold text-[#050816] leading-snug">{safeEntry.title}</h3>
+          {safeEntry.description && <p className="mt-1 text-sm text-[#334155] line-clamp-2">{safeEntry.description}</p>}
         </div>
 
         {/* More actions */}
@@ -139,14 +158,14 @@ function ProofCard({ entry, missionsMap, experimentsMap, onDelete, onNavigateToP
       </div>
 
       {/* File preview row */}
-      {entry.file_url && (
+      {safeEntry.file_url && (
         <div className="mb-3 flex items-center gap-3 rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2.5">
           <div className="shrink-0 w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: '#F8ECEF' }}>
-            <FileIcon name={entry.file_name} mime={entry.mime_type} size={16} />
+            <FileIcon name={safeEntry.file_name} mime={safeEntry.mime_type} size={16} />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-xs font-semibold text-[#334155] truncate">{entry.file_name || 'Attached file'}</p>
-            {entry.file_size && <p className="text-[10px] text-[#94A3B8]">{fmtSize(entry.file_size)}</p>}
+            <p className="text-xs font-semibold text-[#334155] truncate">{safeEntry.file_name || 'Attached file'}</p>
+            {safeEntry.file_size && <p className="text-[10px] text-[#94A3B8]">{fmtSize(safeEntry.file_size)}</p>}
           </div>
           <button onClick={() => setShowPreview(true)}
             className="shrink-0 flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-white"
@@ -157,44 +176,48 @@ function ProofCard({ entry, missionsMap, experimentsMap, onDelete, onNavigateToP
       )}
 
       {/* External URL */}
-      {entry.external_url && (
-        <a href={entry.external_url} target="_blank" rel="noopener noreferrer"
+      {safeEntry.external_url && (
+        <a href={safeEntry.external_url} target="_blank" rel="noopener noreferrer"
           className="mb-3 flex items-center gap-1.5 text-xs text-[#8B0C21] hover:underline">
-          <ExternalLink size={11} /> {entry.external_url}
+          <ExternalLink size={11} /> {safeEntry.external_url}
         </a>
       )}
 
       {/* Skills */}
-      {entry.skills_demonstrated?.length > 0 && (
+      {safeEntry.skills_demonstrated.length > 0 && (
         <div className="mb-3 flex flex-wrap gap-1.5">
-          {entry.skills_demonstrated.map((s, i) => (
+          {safeEntry.skills_demonstrated.map((s, i) => (
             <span key={i} className="rounded-full border border-[#E2E8F0] px-2.5 py-0.5 text-[10px] text-[#334155]">{s}</span>
           ))}
         </div>
       )}
 
       {/* Mission / Experiment links */}
-      {(mission || experiment) && (
+      {(mission || experiment || safeEntry.mission_id || safeEntry.experiment_id) && (
         <div className="pt-3 border-t border-[#F1F5F9] flex flex-wrap gap-3">
-          {mission && (
+          {mission ? (
             <button onClick={() => onNavigateToProof('experiments')}
               className="text-xs text-[#64748B] hover:text-[#8B0C21] transition text-left">
-              Mission: <span className="font-semibold text-[#334155] hover:text-[#8B0C21]">{mission.title}</span>
+              Mission: <span className="font-semibold text-[#334155]">{mission.title}</span>
             </button>
-          )}
-          {experiment && (
+          ) : safeEntry.mission_id ? (
+            <span className="text-xs text-[#94A3B8]">Mission: <span className="italic">No longer available</span></span>
+          ) : null}
+          {experiment ? (
             <button onClick={() => onNavigateToProof('experiments')}
               className="text-xs text-[#64748B] hover:text-[#8B0C21] transition text-left">
-              Experiment: <span className="font-semibold text-[#334155] hover:text-[#8B0C21]">{experiment.title}</span>
+              Experiment: <span className="font-semibold text-[#334155]">{experiment.title}</span>
             </button>
-          )}
+          ) : safeEntry.experiment_id ? (
+            <span className="text-xs text-[#94A3B8]">Experiment: <span className="italic">Not linked</span></span>
+          ) : null}
           {experiment?.path_name && (
             <span className="text-xs text-[#94A3B8]">Path: {experiment.path_name}</span>
           )}
         </div>
       )}
 
-      <p className="mt-2 text-[10px] text-[#94A3B8]">Submitted {fmtDate(entry.created_date || entry.completed_at)}</p>
+      <p className="mt-2 text-[10px] text-[#94A3B8]">Submitted {fmtDate(safeEntry.created_date) || 'date unavailable'}</p>
     </div>
   );
 }
@@ -206,25 +229,37 @@ export default function ProofOfWorkPage() {
   const [missions, setMissions] = useState([]);
   const [experiments, setExperiments] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [showNew, setShowNew] = useState(false);
   const [search, setSearch] = useState('');
   const [filterPath, setFilterPath] = useState('all');
   const [filterExp, setFilterExp] = useState('all');
   const [filterVis, setFilterVis] = useState('all');
   const [deleteTarget, setDeleteTarget] = useState(null);
-  const [successToast, setSuccessToast] = useState(null); // { proof, missionTitle }
+  const [successToast, setSuccessToast] = useState(null);
   const toastTimer = useRef(null);
 
   const load = async () => {
-    const [proofData, missionData, expData] = await Promise.all([
-      base44.entities.ProofOfWork.list('-created_date', 200),
-      base44.entities.Missions.list('-created_date', 200),
-      base44.entities.Experiments.list('-created_date', 200),
-    ]);
-    setEntries(proofData);
-    setMissions(missionData);
-    setExperiments(expData);
-    setLoading(false);
+    setLoadError(false);
+    setLoading(true);
+    try {
+      const [proofData, missionData, expData] = await Promise.all([
+        base44.entities.ProofOfWork.list('-created_date', 200).catch(() => []),
+        base44.entities.Missions.list('-created_date', 200).catch(() => []),
+        base44.entities.Experiments.list('-created_date', 200).catch(() => []),
+      ]);
+      setEntries(Array.isArray(proofData) ? proofData : []);
+      setMissions(Array.isArray(missionData) ? missionData : []);
+      setExperiments(Array.isArray(expData) ? expData : []);
+    } catch (err) {
+      console.error('[ProofOfWorkPage] Failed to load data:', err?.message || err);
+      setLoadError(true);
+      setEntries([]);
+      setMissions([]);
+      setExperiments([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => { load(); }, []);
@@ -237,20 +272,23 @@ export default function ProofOfWorkPage() {
   const paths = ['all', ...new Set(experiments.map(e => e.path_name).filter(Boolean))];
   const expOptions = ['all', ...experiments.map(e => e.id)];
 
-  // Filtered list
+  // Filtered list — all field access guarded against undefined
   const filtered = entries.filter(e => {
-    const mission = e.mission_id ? missionsMap[e.mission_id] : null;
-    const experiment = e.experiment_id ? experimentsMap[e.experiment_id] : null;
+    if (!e || !e.id) return false;
+    const mission = e.mission_id ? (missionsMap[e.mission_id] || null) : null;
+    const experiment = e.experiment_id ? (experimentsMap[e.experiment_id] || null) : null;
     if (filterPath !== 'all' && (experiment?.path_name || '') !== filterPath) return false;
-    if (filterExp !== 'all' && e.experiment_id !== filterExp) return false;
-    if (filterVis !== 'all' && (e.visibility || 'private') !== filterVis) return false;
+    if (filterExp !== 'all' && (e.experiment_id || '') !== filterExp) return false;
+    if (filterVis !== 'all' && (e.visibility || e.privacy_status || 'private') !== filterVis) return false;
     if (search.trim()) {
       const q = search.toLowerCase();
-      const matchTitle = e.title?.toLowerCase().includes(q);
-      const matchMission = mission?.title?.toLowerCase().includes(q);
-      const matchExp = experiment?.title?.toLowerCase().includes(q);
-      const matchFile = e.file_name?.toLowerCase().includes(q);
-      if (!matchTitle && !matchMission && !matchExp && !matchFile) return false;
+      const title = (e.title || e.proof_title || '').toLowerCase();
+      const matchTitle = title.includes(q);
+      const matchMission = (mission?.title || '').toLowerCase().includes(q);
+      const matchExp = (experiment?.title || '').toLowerCase().includes(q);
+      const matchFile = (e.file_name || '').toLowerCase().includes(q);
+      const matchDesc = (e.description || e.completion_note || '').toLowerCase().includes(q);
+      if (!matchTitle && !matchMission && !matchExp && !matchFile && !matchDesc) return false;
     }
     return true;
   });
@@ -266,14 +304,14 @@ export default function ProofOfWorkPage() {
 
   const handleDelete = async () => {
     if (!deleteTarget) return;
-    await base44.entities.ProofOfWork.delete(deleteTarget.id);
+    try {
+      await base44.entities.ProofOfWork.delete(deleteTarget.id);
+    } catch (err) {
+      console.error('[ProofOfWorkPage] Failed to delete record:', deleteTarget.id, err?.message || err);
+    }
     setDeleteTarget(null);
     load();
   };
-
-  // For standalone "Add Proof" from this page — we need a mission+experiment to pass
-  // We'll show a simple selector or skip the modal here since this page shows history.
-  // The modal is primarily triggered from ExperimentsPage. Here we just show history.
 
   return (
     <main className="mx-auto max-w-5xl px-5 py-10 sm:px-8">
@@ -353,7 +391,23 @@ export default function ProofOfWorkPage() {
       </div>
 
       {loading ? (
-        <div className="py-20 text-center text-[#64748B]">Loading proof history…</div>
+        <div className="py-20 text-center text-[#64748B]">Loading proof of work…</div>
+      ) : loadError ? (
+        <div className="rounded-[24px] border border-dashed border-red-200 p-16 text-center">
+          <h3 className="font-heading text-xl font-bold text-[#050816]">We couldn't load your proof of work.</h3>
+          <p className="mt-2 text-sm text-[#64748B]">There was a problem fetching your records. Please try again.</p>
+          <div className="mt-6 flex justify-center gap-3">
+            <button onClick={load}
+              className="inline-flex items-center gap-2 rounded-[10px] px-5 py-2.5 text-sm font-semibold text-white"
+              style={{ background: '#8B0C21' }}>
+              Retry
+            </button>
+            <button onClick={() => navigate('/dashboard')}
+              className="inline-flex items-center gap-2 rounded-[10px] border border-[#E2E8F0] px-5 py-2.5 text-sm font-semibold text-[#334155] hover:bg-[#F8FAFC]">
+              Return to Dashboard
+            </button>
+          </div>
+        </div>
       ) : filtered.length === 0 ? (
         <div className="rounded-[24px] border border-dashed border-[#E2E8F0] p-16 text-center">
           <h3 className="font-heading text-xl font-bold text-[#050816]">
