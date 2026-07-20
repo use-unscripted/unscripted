@@ -43,6 +43,9 @@ export default function WeeklyReflectionPage() {
   const ch = e => setCurrent(c => ({ ...c, [e.target.name]: e.target.value }));
 
   const save = async () => {
+    const hasContent = QUESTIONS.some(q => (current[q.name] || '').trim());
+    if (!hasContent) return;
+    if (saving) return;
     setSaving(true);
     try {
       if (current.id) await base44.entities.WeeklyReflections.update(current.id, current);

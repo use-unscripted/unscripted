@@ -59,9 +59,10 @@ function ContactModal({ contact, onClose, onSave }) {
               className="w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-3 py-2.5 text-sm outline-none focus:border-[#8B0C21]" />
           </label>
         </div>
-        <div className="mt-6 flex gap-3">
+        {!data.name?.trim() && <p className="mt-4 text-xs text-[#B91C1C] font-semibold">Name is required.</p>}
+        <div className="mt-3 flex gap-3">
           <button onClick={onClose} className="flex-1 rounded-[10px] border border-[#E2E8F0] py-3 text-sm font-semibold text-[#334155] hover:bg-[#F8FAFC]">Cancel</button>
-          <button onClick={() => onSave(data)} className="flex-1 rounded-[10px] py-3 text-sm font-semibold text-white"
+          <button onClick={() => { if (data.name?.trim()) onSave(data); }} className="flex-1 rounded-[10px] py-3 text-sm font-semibold text-white"
             style={{ background: '#8B0C21', boxShadow: '0 8px 24px rgba(139,12,33,0.18)' }}>Save</button>
         </div>
       </div>
