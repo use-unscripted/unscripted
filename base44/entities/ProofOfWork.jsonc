@@ -5,6 +5,9 @@
     "user_id": {
       "type": "string"
     },
+    "experiment_id": {
+      "type": "string"
+    },
     "mission_id": {
       "type": "string"
     },
@@ -50,6 +53,9 @@
       "type": "string"
     },
     "file_url": {
+      "type": "string"
+    },
+    "completion_note": {
       "type": "string"
     },
     "outcome": {

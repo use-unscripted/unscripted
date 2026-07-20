@@ -1,0 +1,48 @@
+{
+  "name": "Missions",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string"
+    },
+    "experiment_id": {
+      "type": "string"
+    },
+    "path_name": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string"
+    },
+    "objective": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "planned",
+        "in_progress",
+        "completed",
+        "skipped"
+      ],
+      "default": "planned"
+    },
+    "deadline": {
+      "type": "string",
+      "format": "date"
+    },
+    "estimated_hours": {
+      "type": "number"
+    },
+    "proof_required": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "title",
+    "experiment_id"
+  ]
+}

@@ -1,31 +1,101 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { base44 } from '@/api/base44Client';
-import { ArrowRight, Plus, ChevronDown, ChevronUp, CheckCircle, Clock, BookOpen } from 'lucide-react';
+import { Plus, ChevronDown, ChevronUp, Clock, BookOpen, Target, FileText, Loader2 } from 'lucide-react';
 import PageHeader from '@/components/PageHeader';
+import AddMissionModal from '@/components/experiments/AddMissionModal';
+import AddProofModal from '@/components/experiments/AddProofModal';
 
 const STATUS_STYLES = {
-  planned: { bg: '#F1F5F9', text: '#334155', label: 'Planned' },
+  planned:     { bg: '#F1F5F9', text: '#334155', label: 'Planned' },
   in_progress: { bg: '#FFFBEB', text: '#B45309', label: 'In Progress' },
-  completed: { bg: '#F0FDF4', text: '#15803D', label: 'Completed' },
-  skipped: { bg: '#F8FAFC', text: '#94A3B8', label: 'Skipped' },
+  completed:   { bg: '#F0FDF4', text: '#15803D', label: 'Completed' },
+  skipped:     { bg: '#F8FAFC', text: '#94A3B8', label: 'Skipped' },
 };
 
 const EXPERIMENT_TYPES = [
-  'Interview a professional',
-  'Complete a virtual simulation',
-  'Build a small project',
-  'Publish content (article, post, or video)',
-  'Attend a relevant event',
-  'Apply to a short-term project',
-  'Test a freelance service',
-  'Interview a founder',
-  'Build a portfolio sample',
-  'Complete a skills workshop',
-  'Volunteer for a relevant role',
+  'Interview a professional', 'Complete a virtual simulation', 'Build a small project',
+  'Publish content (article, post, or video)', 'Attend a relevant event',
+  'Apply to a short-term project', 'Test a freelance service', 'Interview a founder',
+  'Build a portfolio sample', 'Complete a skills workshop', 'Volunteer for a relevant role',
   'Complete a research project',
 ];
 
-function ExperimentCard({ exp, onStatusChange, onExpand, expanded }) {
+// ── Mission row inside expanded card ──────────────────────────────────────────
+function MissionRow({ mission, experiment, onProofAdded }) {
+  const [showProof, setShowProof] = useState(false);
+  const s = STATUS_STYLES[mission.status] || STATUS_STYLES.planned;
+  return (
+    <div className="flex items-center justify-between gap-3 rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-3">
+      {showProof && (
+        <AddProofModal
+          mission={mission}
+          experiment={experiment}
+          onClose={() => setShowProof(false)}
+          onSaved={(proof) => { setShowProof(false); onProofAdded(proof); }}
+        />
+      )}
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="rounded-full px-2 py-0.5 text-xs font-bold" style={{ background: s.bg, color: s.text }}>{s.label}</span>
+          <span className="text-sm font-semibold text-[#050816] truncate">{mission.title}</span>
+        </div>
+        {mission.objective && <p className="mt-0.5 text-xs text-[#64748B] line-clamp-1">{mission.objective}</p>}
+      </div>
+      <button
+        onClick={() => setShowProof(true)}
+        className="shrink-0 flex items-center gap-1.5 rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-xs font-semibold text-[#334155] hover:bg-white transition"
+      >
+        <FileText size={12} /> Add Proof
+      </button>
+    </div>
+  );
+}
+
+// ── Missions section inside expanded card ─────────────────────────────────────
+function MissionsSection({ experiment, missions, loadingMissions, onMissionAdded, onProofAdded }) {
+  const [showAdd, setShowAdd] = useState(false);
+  const hasMissions = missions.length > 0;
+
+  return (
+    <div className="border-t border-[#E2E8F0] pt-4">
+      {showAdd && (
+        <AddMissionModal
+          experiment={experiment}
+          onClose={() => setShowAdd(false)}
+          onSaved={(m) => { setShowAdd(false); onMissionAdded(m); }}
+        />
+      )}
+      <div className="flex items-center justify-between mb-3">
+        <p className="text-xs font-bold uppercase tracking-wide text-[#64748B]">
+          Missions {hasMissions ? `(${missions.length})` : ''}
+        </p>
+        <button
+          onClick={() => setShowAdd(true)}
+          className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold text-white transition hover:-translate-y-px"
+          style={{ background: '#8B0C21', boxShadow: '0 4px 12px rgba(139,12,33,0.18)' }}
+        >
+          <Plus size={12} /> {hasMissions ? 'Add Another Mission' : 'Add Mission'}
+        </button>
+      </div>
+      {loadingMissions ? (
+        <div className="flex items-center gap-2 text-xs text-[#64748B] py-2">
+          <Loader2 size={13} className="animate-spin" /> Loading missions...
+        </div>
+      ) : hasMissions ? (
+        <div className="space-y-2">
+          {missions.map(m => (
+            <MissionRow key={m.id} mission={m} experiment={experiment} onProofAdded={onProofAdded} />
+          ))}
+        </div>
+      ) : (
+        <p className="text-xs text-[#94A3B8] italic">No missions yet. Add one to track progress and submit proof.</p>
+      )}
+    </div>
+  );
+}
+
+// ── Experiment card ───────────────────────────────────────────────────────────
+function ExperimentCard({ exp, onStatusChange, onExpand, expanded, missions, loadingMissions, onMissionAdded, onProofAdded }) {
   const s = STATUS_STYLES[exp.status] || STATUS_STYLES.planned;
   return (
     <div className="rounded-[20px] border border-[#E2E8F0] bg-white overflow-hidden">
@@ -47,8 +117,12 @@ function ExperimentCard({ exp, onStatusChange, onExpand, expanded }) {
           {exp.estimated_hours && <span className="flex items-center gap-1"><Clock size={12} /> ~{exp.estimated_hours}h</span>}
           {exp.deadline && <span>Due {new Date(exp.deadline).toLocaleDateString()}</span>}
           {exp.deliverable && <span className="flex items-center gap-1"><BookOpen size={12} /> {exp.deliverable}</span>}
+          {!expanded && missions.length > 0 && (
+            <span className="flex items-center gap-1"><Target size={12} /> {missions.length} mission{missions.length > 1 ? 's' : ''}</span>
+          )}
         </div>
       </div>
+
       {expanded && (
         <div className="border-t border-[#E2E8F0] p-5 space-y-4">
           {exp.expected_learning && (
@@ -61,7 +135,7 @@ function ExperimentCard({ exp, onStatusChange, onExpand, expanded }) {
                 {exp.mission_steps.map((s, i) => (
                   <li key={i} className="flex gap-3 text-sm text-[#334155]">
                     <span className="shrink-0 font-bold" style={{ color: '#8B0C21' }}>{i + 1}.</span>
-                    <span>{typeof s === 'string' ? s : s.step || s.description || JSON.stringify(s)}</span>
+                    <span>{typeof s === 'string' ? s : s.step || s.description || s.title || JSON.stringify(s)}</span>
                   </li>
                 ))}
               </ol>
@@ -79,24 +153,38 @@ function ExperimentCard({ exp, onStatusChange, onExpand, expanded }) {
               <ul className="space-y-1">{exp.reflection_questions.map((q, i) => <li key={i} className="text-sm text-[#334155]">· {q}</li>)}</ul>
             </div>
           )}
-          <div className="flex gap-2 flex-wrap pt-2">
-            {['planned', 'in_progress', 'completed', 'skipped'].map(s => (
-              <button key={s} onClick={() => onStatusChange(exp.id, s)}
+
+          {/* Status buttons */}
+          <div className="flex gap-2 flex-wrap">
+            {['planned', 'in_progress', 'completed', 'skipped'].map(st => (
+              <button key={st} onClick={() => onStatusChange(exp.id, st)}
                 className="rounded-lg px-3 py-1.5 text-xs font-semibold transition border"
-                style={exp.status === s ? { background: '#8B0C21', color: '#fff', borderColor: '#8B0C21' } : { background: 'white', color: '#334155', borderColor: '#E2E8F0' }}>
-                {STATUS_STYLES[s].label}
+                style={exp.status === st ? { background: '#8B0C21', color: '#fff', borderColor: '#8B0C21' } : { background: 'white', color: '#334155', borderColor: '#E2E8F0' }}>
+                {STATUS_STYLES[st].label}
               </button>
             ))}
           </div>
+
+          {/* Missions */}
+          <MissionsSection
+            experiment={exp}
+            missions={missions}
+            loadingMissions={loadingMissions}
+            onMissionAdded={onMissionAdded}
+            onProofAdded={onProofAdded}
+          />
         </div>
       )}
     </div>
   );
 }
 
+// ── New experiment modal ──────────────────────────────────────────────────────
 function NewExperimentModal({ onClose, onSave }) {
   const [data, setData] = useState({ title: '', objective: '', path_name: '', estimated_hours: 3, deliverable: '', experiment_type: '' });
   const [generating, setGenerating] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const submittingRef = useRef(false);
 
   const generateGuide = async () => {
     if (!data.title) return;
@@ -121,6 +209,13 @@ function NewExperimentModal({ onClose, onSave }) {
     });
     setData(d => ({ ...d, ...result }));
     setGenerating(false);
+  };
+
+  const handleSave = async () => {
+    if (submittingRef.current) return;
+    submittingRef.current = true;
+    setSaving(true);
+    try { await onSave(data); } finally { setSaving(false); submittingRef.current = false; }
   };
 
   return (
@@ -154,11 +249,10 @@ function NewExperimentModal({ onClose, onSave }) {
             <input type="date" className="w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-3 text-sm outline-none focus:border-[#8B0C21]"
               value={data.deadline || ''} onChange={e => setData(d => ({ ...d, deadline: e.target.value }))} />
           </label>
-
           {data.mission_steps?.length > 0 && (
             <div className="rounded-xl p-4" style={{ background: '#F8ECEF', border: '1px solid rgba(139,12,33,0.2)' }}>
               <p className="text-xs font-bold uppercase tracking-wide mb-2" style={{ color: '#8B0C21' }}>Mission Guide generated</p>
-              <ol className="space-y-1">{data.mission_steps.map((s, i) => <li key={i} className="text-sm text-[#334155]">{i+1}. {s}</li>)}</ol>
+              <ol className="space-y-1">{data.mission_steps.map((s, i) => <li key={i} className="text-sm text-[#334155]">{i+1}. {typeof s === 'string' ? s : s.title || s.description}</li>)}</ol>
             </div>
           )}
         </div>
@@ -169,10 +263,10 @@ function NewExperimentModal({ onClose, onSave }) {
             style={{ borderColor: '#8B0C21', color: '#8B0C21', background: 'white' }}>
             {generating ? 'Generating guide...' : 'Generate Mission Guide'}
           </button>
-          <button onClick={() => onSave(data)}
-            className="flex-1 rounded-[10px] py-3 text-sm font-semibold text-white transition hover:-translate-y-px"
+          <button onClick={handleSave} disabled={saving}
+            className="flex-1 rounded-[10px] py-3 text-sm font-semibold text-white transition hover:-translate-y-px disabled:opacity-60"
             style={{ background: '#8B0C21', boxShadow: '0 8px 24px rgba(139,12,33,0.18)' }}>
-            Save Experiment
+            {saving ? 'Saving...' : 'Save Experiment'}
           </button>
         </div>
       </div>
@@ -180,12 +274,17 @@ function NewExperimentModal({ onClose, onSave }) {
   );
 }
 
+// ── Main page ─────────────────────────────────────────────────────────────────
+
 export default function ExperimentsPage() {
   const [experiments, setExperiments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showNew, setShowNew] = useState(false);
   const [expandedId, setExpandedId] = useState(null);
   const [filter, setFilter] = useState('all');
+  // missions keyed by experiment_id
+  const [missionsMap, setMissionsMap] = useState({});
+  const [loadingMissionsFor, setLoadingMissionsFor] = useState(null);
 
   const load = async () => {
     const data = await base44.entities.Experiments.list('-created_date', 50);
@@ -195,6 +294,20 @@ export default function ExperimentsPage() {
 
   useEffect(() => { load(); }, []);
 
+  const loadMissionsForExp = useCallback(async (expId) => {
+    if (missionsMap[expId] !== undefined) return; // already loaded
+    setLoadingMissionsFor(expId);
+    const ms = await base44.entities.Missions.filter({ experiment_id: expId }, '-created_date', 50);
+    setMissionsMap(prev => ({ ...prev, [expId]: ms }));
+    setLoadingMissionsFor(null);
+  }, [missionsMap]);
+
+  const handleExpand = (expId) => {
+    const next = expandedId === expId ? null : expId;
+    setExpandedId(next);
+    if (next) loadMissionsForExp(next);
+  };
+
   const save = async (data) => {
     await base44.entities.Experiments.create({ ...data, status: 'planned' });
     setShowNew(false);
@@ -203,7 +316,15 @@ export default function ExperimentsPage() {
 
   const updateStatus = async (id, status) => {
     await base44.entities.Experiments.update(id, { status });
-    load();
+    setExperiments(prev => prev.map(e => e.id === id ? { ...e, status } : e));
+  };
+
+  const handleMissionAdded = (expId, mission) => {
+    setMissionsMap(prev => ({ ...prev, [expId]: [...(prev[expId] || []), mission] }));
+  };
+
+  const handleProofAdded = () => {
+    // nothing to update in the experiments view, but could toast here
   };
 
   const filtered = filter === 'all' ? experiments : experiments.filter(e => e.status === filter);
@@ -249,10 +370,17 @@ export default function ExperimentsPage() {
       ) : (
         <div className="space-y-4">
           {filtered.map(exp => (
-            <ExperimentCard key={exp.id} exp={exp}
+            <ExperimentCard
+              key={exp.id}
+              exp={exp}
               expanded={expandedId === exp.id}
-              onExpand={() => setExpandedId(expandedId === exp.id ? null : exp.id)}
-              onStatusChange={updateStatus} />
+              onExpand={() => handleExpand(exp.id)}
+              onStatusChange={updateStatus}
+              missions={missionsMap[exp.id] || []}
+              loadingMissions={loadingMissionsFor === exp.id}
+              onMissionAdded={(m) => handleMissionAdded(exp.id, m)}
+              onProofAdded={handleProofAdded}
+            />
           ))}
         </div>
       )}

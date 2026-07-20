@@ -8,8 +8,14 @@ const CAT_LABELS = { report: 'Research Report', model: 'Financial Model', case_s
 
 function EntryModal({ onClose, onSave }) {
   const [data, setData] = useState({ title: '', category: 'article', path_tested: '', description: '', skills_demonstrated: '', external_url: '', outcome: '', reflection: '', visibility: 'private', completed_at: '' });
+  const [saving, setSaving] = useState(false);
   const ch = e => setData(d => ({ ...d, [e.target.name]: e.target.value }));
-  const save = () => onSave({ ...data, skills_demonstrated: data.skills_demonstrated ? data.skills_demonstrated.split(',').map(s => s.trim()) : [] });
+  const save = async () => {
+    setSaving(true);
+    try {
+      await onSave({ ...data, skills_demonstrated: data.skills_demonstrated ? data.skills_demonstrated.split(',').map(s => s.trim()) : [] });
+    } finally { setSaving(false); }
+  };
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(5,8,22,0.5)' }}>
       <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-[24px] bg-white p-6 sm:p-8">
@@ -76,23 +82,77 @@ function EntryModal({ onClose, onSave }) {
         </div>
         <div className="mt-6 flex gap-3">
           <button onClick={onClose} className="flex-1 rounded-[10px] border border-[#E2E8F0] py-3 text-sm font-semibold text-[#334155] hover:bg-[#F8FAFC]">Cancel</button>
-          <button onClick={save} className="flex-1 rounded-[10px] py-3 text-sm font-semibold text-white"
-            style={{ background: '#8B0C21', boxShadow: '0 8px 24px rgba(139,12,33,0.18)' }}>Save Entry</button>
+          <button onClick={save} disabled={saving || !data.title.trim()} className="flex-1 rounded-[10px] py-3 text-sm font-semibold text-white disabled:opacity-60"
+            style={{ background: '#8B0C21', boxShadow: '0 8px 24px rgba(139,12,33,0.18)' }}>{saving ? 'Saving...' : 'Save Entry'}</button>
         </div>
       </div>
     </div>
   );
 }
 
+// ── Proof card with mission/experiment context ─────────────────────────────────
+function ProofCard({ entry, missionsMap, experimentsMap }) {
+  const mission = entry.mission_id ? missionsMap[entry.mission_id] : null;
+  const experiment = entry.experiment_id ? experimentsMap[entry.experiment_id] : (mission?.experiment_id ? experimentsMap[mission.experiment_id] : null);
+
+  return (
+    <div className="rounded-[20px] border border-[#E2E8F0] bg-white p-5">
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex-1 min-w-0">
+          <div className="flex flex-wrap items-center gap-2 mb-2">
+            <span className="rounded-full px-2.5 py-1 text-xs font-bold" style={{ background: '#F8ECEF', color: '#8B0C21' }}>{CAT_LABELS[entry.category] || entry.category}</span>
+            {entry.path_tested && <span className="rounded-full px-2.5 py-1 text-xs text-[#64748B] border border-[#E2E8F0]">{entry.path_tested}</span>}
+            {entry.visibility === 'public' && <span className="rounded-full px-2.5 py-1 text-xs font-bold" style={{ background: '#F0FDF4', color: '#15803D' }}>Public</span>}
+          </div>
+          <h3 className="font-heading font-bold text-[#050816]">{entry.title}</h3>
+          {entry.description && <p className="mt-1 text-sm text-[#334155] line-clamp-2">{entry.description}</p>}
+        </div>
+        {entry.external_url && (
+          <a href={entry.external_url} target="_blank" rel="noopener noreferrer" className="shrink-0 text-[#64748B] hover:text-[#8B0C21] transition">
+            <ExternalLink size={16} />
+          </a>
+        )}
+      </div>
+
+      {entry.skills_demonstrated?.length > 0 && (
+        <div className="mt-3 flex flex-wrap gap-1.5">
+          {entry.skills_demonstrated.map((s, i) => (
+            <span key={i} className="rounded-full border border-[#E2E8F0] px-2.5 py-0.5 text-xs text-[#334155]">{s}</span>
+          ))}
+        </div>
+      )}
+      {entry.outcome && <p className="mt-3 text-xs text-[#64748B]"><strong>Outcome:</strong> {entry.outcome}</p>}
+      {entry.completion_note && <p className="mt-1 text-xs text-[#64748B]"><strong>Note:</strong> {entry.completion_note}</p>}
+
+      {/* Mission / experiment links */}
+      {(mission || experiment) && (
+        <div className="mt-3 pt-3 border-t border-[#F1F5F9] flex flex-wrap gap-3 text-xs text-[#64748B]">
+          {mission && <span>Mission: <span className="font-semibold text-[#334155]">{mission.title}</span></span>}
+          {experiment && <span>Experiment: <span className="font-semibold text-[#334155]">{experiment.title}</span></span>}
+        </div>
+      )}
+      {entry.completed_at && <p className="mt-2 text-xs text-[#94A3B8]">{new Date(entry.completed_at).toLocaleDateString()}</p>}
+    </div>
+  );
+}
+
 export default function ProofOfWorkPage() {
   const [entries, setEntries] = useState([]);
+  const [missions, setMissions] = useState([]);
+  const [experiments, setExperiments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showNew, setShowNew] = useState(false);
   const [filter, setFilter] = useState('all');
 
   const load = async () => {
-    const data = await base44.entities.ProofOfWork.list('-created_date', 100);
-    setEntries(data);
+    const [proofData, missionData, expData] = await Promise.all([
+      base44.entities.ProofOfWork.list('-created_date', 100),
+      base44.entities.Missions.list('-created_date', 100),
+      base44.entities.Experiments.list('-created_date', 100),
+    ]);
+    setEntries(proofData);
+    setMissions(missionData);
+    setExperiments(expData);
     setLoading(false);
   };
 
@@ -103,6 +163,10 @@ export default function ProofOfWorkPage() {
     setShowNew(false);
     load();
   };
+
+  // Build lookup maps
+  const missionsMap = Object.fromEntries(missions.map(m => [m.id, m]));
+  const experimentsMap = Object.fromEntries(experiments.map(e => [e.id, e]));
 
   const categories = ['all', ...new Set(entries.map(e => e.category))];
   const filtered = filter === 'all' ? entries : entries.filter(e => e.category === filter);
@@ -145,33 +209,7 @@ export default function ProofOfWorkPage() {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2">
           {filtered.map(e => (
-            <div key={e.id} className="rounded-[20px] border border-[#E2E8F0] bg-white p-5">
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex-1 min-w-0">
-                  <div className="flex flex-wrap items-center gap-2 mb-2">
-                    <span className="rounded-full px-2.5 py-1 text-xs font-bold" style={{ background: '#F8ECEF', color: '#8B0C21' }}>{CAT_LABELS[e.category] || e.category}</span>
-                    {e.path_tested && <span className="rounded-full px-2.5 py-1 text-xs text-[#64748B] border border-[#E2E8F0]">{e.path_tested}</span>}
-                    {e.visibility === 'public' && <span className="rounded-full px-2.5 py-1 text-xs font-bold" style={{ background: '#F0FDF4', color: '#15803D' }}>Public</span>}
-                  </div>
-                  <h3 className="font-heading font-bold text-[#050816]">{e.title}</h3>
-                  {e.description && <p className="mt-1 text-sm text-[#334155] line-clamp-2">{e.description}</p>}
-                </div>
-                {e.external_url && (
-                  <a href={e.external_url} target="_blank" rel="noopener noreferrer" className="shrink-0 text-[#64748B] hover:text-[#8B0C21] transition">
-                    <ExternalLink size={16} />
-                  </a>
-                )}
-              </div>
-              {e.skills_demonstrated?.length > 0 && (
-                <div className="mt-3 flex flex-wrap gap-1.5">
-                  {e.skills_demonstrated.map((s, i) => (
-                    <span key={i} className="rounded-full border border-[#E2E8F0] px-2.5 py-0.5 text-xs text-[#334155]">{s}</span>
-                  ))}
-                </div>
-              )}
-              {e.outcome && <p className="mt-3 text-xs text-[#64748B]"><strong>Outcome:</strong> {e.outcome}</p>}
-              {e.completed_at && <p className="mt-1 text-xs text-[#94A3B8]">{new Date(e.completed_at).toLocaleDateString()}</p>}
-            </div>
+            <ProofCard key={e.id} entry={e} missionsMap={missionsMap} experimentsMap={experimentsMap} />
           ))}
         </div>
       )}
