@@ -99,48 +99,64 @@ Be honest about fit AND misfit. Do not claim any path is objectively correct. Fi
     }
   });
 
-  // Save path recommendations
-  const savedRecs = await base44.entities.PathRecommendations.bulkCreate(
-    (result.path_recommendations || []).map(r => ({
-      ...r,
-      path_name: r.path_name,
-      status: 'exploring',
-    }))
-  );
+  // Save all records; track IDs so we can roll back on failure
+  const savedRecIds = [];
+  const savedExpIds = [];
+  let savedRoadmapId = null;
+  let savedAmbitionId = null;
 
-  // Save experiments linked to primary path
-  const experimentDeadline = new Date();
-  experimentDeadline.setDate(experimentDeadline.getDate() + 30);
-  const deadlineStr = experimentDeadline.toISOString().split('T')[0];
+  try {
+    const savedRecs = await base44.entities.PathRecommendations.bulkCreate(
+      (result.path_recommendations || []).slice(0, 3).map(r => ({
+        ...r,
+        status: 'exploring',
+      }))
+    );
+    savedRecs.forEach(r => savedRecIds.push(r.id));
 
-  await base44.entities.Experiments.bulkCreate(
-    (result.experiments || []).slice(0, 3).map(e => ({
-      ...e,
-      path_name: primaryPath,
-      status: 'planned',
-      deadline: deadlineStr,
-    }))
-  );
+    const experimentDeadline = new Date();
+    experimentDeadline.setDate(experimentDeadline.getDate() + 30);
+    const deadlineStr = experimentDeadline.toISOString().split('T')[0];
 
-  // Save a minimal roadmap for compatibility
-  await base44.entities.Roadmap.create({
-    title: `30-Day Path Test: ${primaryPath}`,
-    thirty_day_plan: (result.experiments || []).map((e, i) => ({
-      week: `Week ${Math.floor(i * 10 / 7) + 1}`,
-      focus: e.title,
-      outcome: e.deliverable,
-    })),
-    feasibility_assessment: result.feasibility_note || '',
-  });
+    const savedExps = await base44.entities.Experiments.bulkCreate(
+      (result.experiments || []).slice(0, 3).map(e => ({
+        ...e,
+        path_name: primaryPath,
+        status: 'planned',
+        deadline: deadlineStr,
+      }))
+    );
+    savedExps.forEach(e => savedExpIds.push(e.id));
 
-  // Save ambition profile for dashboard display
-  await base44.entities.AmbitionProfile.create({
-    archetype: result.archetype || 'Path Explorer',
-    identity_statement: result.identity_statement || `Testing ${primaryPath} to find the right fit.`,
-    best_fit_paths: (result.path_recommendations || []).map(r => r.path_name),
-    motivations: [],
-    strengths: [],
-  });
+    const roadmap = await base44.entities.Roadmap.create({
+      title: `30-Day Path Test: ${primaryPath}`,
+      thirty_day_plan: (result.experiments || []).map((e, i) => ({
+        week: `Week ${Math.floor(i * 10 / 7) + 1}`,
+        focus: e.title,
+        outcome: e.deliverable,
+      })),
+      feasibility_assessment: result.feasibility_note || '',
+    });
+    savedRoadmapId = roadmap.id;
 
-  return savedRecs;
+    const ambition = await base44.entities.AmbitionProfile.create({
+      archetype: result.archetype || 'Path Explorer',
+      identity_statement: result.identity_statement || `Testing ${primaryPath} to find the right fit.`,
+      best_fit_paths: (result.path_recommendations || []).map(r => r.path_name),
+      motivations: [],
+      strengths: [],
+    });
+    savedAmbitionId = ambition.id;
+
+    return savedRecs;
+  } catch (saveError) {
+    // Roll back any partially saved records to avoid duplicates on retry
+    await Promise.allSettled([
+      ...savedRecIds.map(id => base44.entities.PathRecommendations.delete(id)),
+      ...savedExpIds.map(id => base44.entities.Experiments.delete(id)),
+      savedRoadmapId ? base44.entities.Roadmap.delete(savedRoadmapId) : Promise.resolve(),
+      savedAmbitionId ? base44.entities.AmbitionProfile.delete(savedAmbitionId) : Promise.resolve(),
+    ]);
+    throw saveError;
+  }
 }

@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { generatePathTest } from '@/lib/path-generator';
 import { CompassIcon } from '@/components/UnscriptedLogo';
+import { ArrowLeft, RefreshCw } from 'lucide-react';
 
 const LABELS = [
   'Analyzing your priorities and available time...',
@@ -13,19 +14,55 @@ const LABELS = [
 export default function Generating() {
   const nav = useNavigate();
   const [labelIdx, setLabelIdx] = useState(0);
+  const [error, setError] = useState(null);
+  const [retrying, setRetrying] = useState(false);
 
-  useEffect(() => {
-    let active = true;
-    const interval = setInterval(() => {
-      if (active) setLabelIdx(i => Math.min(i + 1, LABELS.length - 1));
-    }, 2500);
-    const run = async () => {
+  const run = useCallback(async () => {
+    setError(null);
+    setRetrying(true);
+    setLabelIdx(0);
+    let intervalId;
+    try {
+      intervalId = setInterval(() => {
+        setLabelIdx(i => Math.min(i + 1, LABELS.length - 1));
+      }, 2500);
       await generatePathTest();
-      if (active) nav('/path-results');
-    };
-    run();
-    return () => { active = false; clearInterval(interval); };
-  }, []);
+      nav('/path-results');
+    } catch (e) {
+      console.error('Path generation failed:', e);
+      setError(e?.message || 'Something went wrong generating your path test. Please try again.');
+    } finally {
+      clearInterval(intervalId);
+      setRetrying(false);
+    }
+  }, [nav]);
+
+  useEffect(() => { run(); }, []);
+
+  if (error) {
+    return (
+      <main className="grid min-h-screen place-items-center px-6 text-center text-white" style={{ background: '#081225' }}>
+        <div className="max-w-md">
+          <div className="mx-auto mb-6 flex h-14 w-14 items-center justify-center rounded-full" style={{ background: 'rgba(139,12,33,0.25)', border: '1px solid rgba(139,12,33,0.4)' }}>
+            <span className="text-2xl">⚠</span>
+          </div>
+          <h1 className="font-heading text-2xl font-bold">Generation failed</h1>
+          <p className="mt-3 text-sm text-slate-400 leading-6">{error}</p>
+          <div className="mt-8 flex flex-col items-center gap-3">
+            <button onClick={run}
+              className="flex items-center gap-2 rounded-[10px] px-6 py-3 text-sm font-semibold text-white transition hover:-translate-y-px"
+              style={{ background: '#8B0C21', boxShadow: '0 8px 24px rgba(139,12,33,0.18)' }}>
+              <RefreshCw size={15} /> Retry
+            </button>
+            <button onClick={() => nav('/paths-intake')}
+              className="flex items-center gap-2 text-sm font-semibold text-slate-400 hover:text-white transition">
+              <ArrowLeft size={14} /> Back to path selection
+            </button>
+          </div>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="grid min-h-screen place-items-center px-6 text-center text-white" style={{ background: '#081225' }}>
