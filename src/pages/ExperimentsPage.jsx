@@ -1,9 +1,10 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { Plus, ChevronDown, ChevronUp, Clock, BookOpen, Target, FileText, Loader2 } from 'lucide-react';
 import PageHeader from '@/components/PageHeader';
 import AddMissionModal from '@/components/experiments/AddMissionModal';
-import AddProofModal from '@/components/experiments/AddProofModal';
+import AddProofModal, { ProofSuccessToast } from '@/components/experiments/AddProofModal';
 
 const STATUS_STYLES = {
   planned:     { bg: '#F1F5F9', text: '#334155', label: 'Planned' },
@@ -31,7 +32,7 @@ function MissionRow({ mission, experiment, onProofAdded }) {
           mission={mission}
           experiment={experiment}
           onClose={() => setShowProof(false)}
-          onSaved={(proof) => { setShowProof(false); onProofAdded(proof); }}
+          onSaved={(proof) => { setShowProof(false); onProofAdded(proof, mission.title); }}
         />
       )}
       <div className="flex-1 min-w-0">
@@ -277,6 +278,7 @@ function NewExperimentModal({ onClose, onSave }) {
 // ── Main page ─────────────────────────────────────────────────────────────────
 
 export default function ExperimentsPage() {
+  const navigate = useNavigate();
   const [experiments, setExperiments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showNew, setShowNew] = useState(false);
@@ -285,6 +287,8 @@ export default function ExperimentsPage() {
   // missions keyed by experiment_id
   const [missionsMap, setMissionsMap] = useState({});
   const [loadingMissionsFor, setLoadingMissionsFor] = useState(null);
+  const [successToast, setSuccessToast] = useState(null);
+  const toastTimer = useRef(null);
 
   const load = async () => {
     const data = await base44.entities.Experiments.list('-created_date', 50);
@@ -323,8 +327,10 @@ export default function ExperimentsPage() {
     setMissionsMap(prev => ({ ...prev, [expId]: [...(prev[expId] || []), mission] }));
   };
 
-  const handleProofAdded = () => {
-    // nothing to update in the experiments view, but could toast here
+  const handleProofAdded = (proof, missionTitle) => {
+    setSuccessToast({ proof, missionTitle });
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    toastTimer.current = setTimeout(() => setSuccessToast(null), 8000);
   };
 
   const filtered = filter === 'all' ? experiments : experiments.filter(e => e.status === filter);
@@ -332,6 +338,15 @@ export default function ExperimentsPage() {
   return (
     <main className="mx-auto max-w-5xl px-5 py-10 sm:px-8">
       {showNew && <NewExperimentModal onClose={() => setShowNew(false)} onSave={save} />}
+      {successToast && (
+        <ProofSuccessToast
+          proof={successToast.proof}
+          missionTitle={successToast.missionTitle}
+          onViewProof={() => { setSuccessToast(null); navigate('/proof'); }}
+          onReturnToMission={() => setSuccessToast(null)}
+          onDismiss={() => setSuccessToast(null)}
+        />
+      )}
       <PageHeader
         eyebrow="Experiments"
         title="Test paths. Learn from results."

@@ -1,154 +1,224 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
-import { Plus, ExternalLink, X } from 'lucide-react';
+import { Plus, ExternalLink, Search, Play, FileText, Film, Image, FileSpreadsheet, Music, File, ChevronDown, Eye, EyeOff, Trash2, X } from 'lucide-react';
 import PageHeader from '@/components/PageHeader';
+import AddProofModal, { ProofSuccessToast } from '@/components/experiments/AddProofModal';
 
-const CATEGORIES = ['report', 'model', 'case_study', 'article', 'post', 'newsletter', 'video', 'podcast', 'prototype', 'landing_page', 'service_pilot', 'interview_notes', 'simulation', 'presentation', 'database', 'community', 'volunteer', 'other'];
-const CAT_LABELS = { report: 'Research Report', model: 'Financial Model', case_study: 'Case Study', article: 'Article', post: 'Post', newsletter: 'Newsletter', video: 'Video', podcast: 'Podcast', prototype: 'Prototype', landing_page: 'Landing Page', service_pilot: 'Service Pilot', interview_notes: 'Interview Notes', simulation: 'Simulation', presentation: 'Presentation', database: 'Database', community: 'Community', volunteer: 'Volunteer', other: 'Other' };
+// ── Helpers ────────────────────────────────────────────────────────────────────
+function fmtSize(bytes) {
+  if (!bytes) return '';
+  if (bytes >= 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+  return (bytes / 1024).toFixed(0) + ' KB';
+}
 
-function EntryModal({ onClose, onSave }) {
-  const [data, setData] = useState({ title: '', category: 'article', path_tested: '', description: '', skills_demonstrated: '', external_url: '', outcome: '', reflection: '', visibility: 'private', completed_at: '' });
-  const [saving, setSaving] = useState(false);
-  const ch = e => setData(d => ({ ...d, [e.target.name]: e.target.value }));
-  const save = async () => {
-    setSaving(true);
-    try {
-      await onSave({ ...data, skills_demonstrated: data.skills_demonstrated ? data.skills_demonstrated.split(',').map(s => s.trim()) : [] });
-    } finally { setSaving(false); }
-  };
+function fmtDate(d) {
+  if (!d) return '';
+  return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+const VIDEO_EXTS = new Set(['mp4','webm','mov','avi','mkv','m4v','wmv','ogv','3gp','3g2']);
+const IMAGE_EXTS = new Set(['png','jpg','jpeg','webp','svg']);
+const AUDIO_EXTS = new Set(['mp3','wav']);
+const SHEET_EXTS = new Set(['csv','xls','xlsx']);
+
+function getExt(name) { return (name || '').split('.').pop().toLowerCase(); }
+
+function FileIcon({ name, mime, size = 18 }) {
+  const ext = getExt(name);
+  if (VIDEO_EXTS.has(ext) || (mime || '').startsWith('video/')) return <Film size={size} style={{ color: '#8B0C21' }} />;
+  if (IMAGE_EXTS.has(ext) || (mime || '').startsWith('image/')) return <Image size={size} style={{ color: '#2563EB' }} />;
+  if (AUDIO_EXTS.has(ext) || (mime || '').startsWith('audio/')) return <Music size={size} style={{ color: '#7C3AED' }} />;
+  if (SHEET_EXTS.has(ext)) return <FileSpreadsheet size={size} style={{ color: '#15803D' }} />;
+  if (ext === 'pdf') return <FileText size={size} style={{ color: '#EA580C' }} />;
+  return <File size={size} className="text-[#64748B]" />;
+}
+
+function isVideoFile(name, mime) {
+  return VIDEO_EXTS.has(getExt(name)) || (mime || '').startsWith('video/');
+}
+
+// ── Delete confirmation ────────────────────────────────────────────────────────
+function DeleteConfirmModal({ proofTitle, onConfirm, onCancel }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(5,8,22,0.5)' }}>
-      <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-[24px] bg-white p-6 sm:p-8">
-        <div className="flex justify-between mb-6">
-          <h2 className="font-heading text-xl font-bold text-[#050816]">Add Proof of Work</h2>
-          <button onClick={onClose}><X size={20} className="text-[#64748B]" /></button>
-        </div>
-        <div className="space-y-4">
-          <label className="block">
-            <span className="text-sm font-semibold text-[#334155] block mb-1">Title</span>
-            <input name="title" value={data.title} onChange={ch} placeholder="What did you build, create, or complete?"
-              className="w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-3 text-sm outline-none focus:border-[#8B0C21]" />
-          </label>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <label className="block">
-              <span className="text-sm font-semibold text-[#334155] block mb-1">Category</span>
-              <select name="category" value={data.category} onChange={ch}
-                className="w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-3 text-sm outline-none focus:border-[#8B0C21]">
-                {CATEGORIES.map(c => <option key={c} value={c}>{CAT_LABELS[c]}</option>)}
-              </select>
-            </label>
-            <label className="block">
-              <span className="text-sm font-semibold text-[#334155] block mb-1">Path tested</span>
-              <input name="path_tested" value={data.path_tested} onChange={ch} placeholder="e.g. Investment Banking"
-                className="w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-3 text-sm outline-none focus:border-[#8B0C21]" />
-            </label>
-          </div>
-          <label className="block">
-            <span className="text-sm font-semibold text-[#334155] block mb-1">Description</span>
-            <textarea rows={3} name="description" value={data.description} onChange={ch} placeholder="What is this, and why did you make it?"
-              className="w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-3 text-sm outline-none focus:border-[#8B0C21]" />
-          </label>
-          <label className="block">
-            <span className="text-sm font-semibold text-[#334155] block mb-1">Skills demonstrated (comma-separated)</span>
-            <input name="skills_demonstrated" value={data.skills_demonstrated} onChange={ch} placeholder="Financial modeling, writing, Python..."
-              className="w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-3 text-sm outline-none focus:border-[#8B0C21]" />
-          </label>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <label className="block">
-              <span className="text-sm font-semibold text-[#334155] block mb-1">External link (optional)</span>
-              <input name="external_url" value={data.external_url} onChange={ch} placeholder="https://..."
-                className="w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-3 text-sm outline-none focus:border-[#8B0C21]" />
-            </label>
-            <label className="block">
-              <span className="text-sm font-semibold text-[#334155] block mb-1">Date completed</span>
-              <input type="date" name="completed_at" value={data.completed_at} onChange={ch}
-                className="w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-3 text-sm outline-none focus:border-[#8B0C21]" />
-            </label>
-          </div>
-          <label className="block">
-            <span className="text-sm font-semibold text-[#334155] block mb-1">Outcome</span>
-            <input name="outcome" value={data.outcome} onChange={ch} placeholder="What happened? What did you learn?"
-              className="w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-3 text-sm outline-none focus:border-[#8B0C21]" />
-          </label>
-          <label className="block">
-            <span className="text-sm font-semibold text-[#334155] block mb-1">Reflection</span>
-            <textarea rows={2} name="reflection" value={data.reflection} onChange={ch} placeholder="What would you do differently?"
-              className="w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-3 text-sm outline-none focus:border-[#8B0C21]" />
-          </label>
-          <div className="flex items-center gap-3">
-            <input type="checkbox" id="vis" checked={data.visibility === 'public'} onChange={e => setData(d => ({ ...d, visibility: e.target.checked ? 'public' : 'private' }))} className="h-4 w-4 rounded accent-[#8B0C21]" />
-            <label htmlFor="vis" className="text-sm text-[#334155]">Mark as public</label>
-          </div>
-        </div>
-        <div className="mt-6 flex gap-3">
-          <button onClick={onClose} className="flex-1 rounded-[10px] border border-[#E2E8F0] py-3 text-sm font-semibold text-[#334155] hover:bg-[#F8FAFC]">Cancel</button>
-          <button onClick={save} disabled={saving || !data.title.trim()} className="flex-1 rounded-[10px] py-3 text-sm font-semibold text-white disabled:opacity-60"
-            style={{ background: '#8B0C21', boxShadow: '0 8px 24px rgba(139,12,33,0.18)' }}>{saving ? 'Saving...' : 'Save Entry'}</button>
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" style={{ background: 'rgba(5,8,22,0.5)' }}>
+      <div className="w-full max-w-sm rounded-[20px] bg-white p-6">
+        <h3 className="font-heading text-lg font-bold text-[#050816] mb-2">Delete proof?</h3>
+        <p className="text-sm text-[#334155]">This will permanently delete <strong>"{proofTitle}"</strong>. The linked mission and experiment will not be affected.</p>
+        <div className="mt-5 flex gap-3">
+          <button onClick={onCancel} className="flex-1 rounded-[10px] border border-[#E2E8F0] py-2.5 text-sm font-semibold text-[#334155] hover:bg-[#F8FAFC]">Cancel</button>
+          <button onClick={onConfirm} className="flex-1 rounded-[10px] py-2.5 text-sm font-semibold text-white" style={{ background: '#DC2626' }}>Delete</button>
         </div>
       </div>
     </div>
   );
 }
 
-// ── Proof card with mission/experiment context ─────────────────────────────────
-function ProofCard({ entry, missionsMap, experimentsMap }) {
+// ── Video / File Preview ───────────────────────────────────────────────────────
+function FilePreviewModal({ entry, onClose }) {
+  const vid = isVideoFile(entry.file_name, entry.mime_type);
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" style={{ background: 'rgba(5,8,22,0.85)' }}>
+      <div className="w-full max-w-3xl rounded-[20px] bg-white overflow-hidden">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-[#E2E8F0]">
+          <p className="font-semibold text-[#050816] truncate">{entry.file_name || entry.title}</p>
+          <button onClick={onClose} aria-label="Close preview"><X size={20} className="text-[#64748B]" /></button>
+        </div>
+        <div className="p-5 bg-[#F8FAFC] flex items-center justify-center min-h-[300px]">
+          {vid && entry.file_url ? (
+            <video src={entry.file_url} controls className="max-w-full max-h-[60vh] rounded-xl"
+              preload="metadata" aria-label={entry.file_name}>
+              Your browser does not support video playback.
+            </video>
+          ) : entry.file_url ? (
+            <div className="text-center">
+              <div className="mx-auto w-16 h-16 rounded-2xl flex items-center justify-center mb-4" style={{ background: '#F8ECEF' }}>
+                <FileIcon name={entry.file_name} mime={entry.mime_type} size={28} />
+              </div>
+              <p className="text-sm font-semibold text-[#050816] mb-1">{entry.file_name}</p>
+              {entry.file_size && <p className="text-xs text-[#64748B] mb-4">{fmtSize(entry.file_size)}</p>}
+              <a href={entry.file_url} target="_blank" rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 rounded-[10px] px-5 py-2.5 text-sm font-semibold text-white"
+                style={{ background: '#8B0C21' }}>
+                <ExternalLink size={14} /> Open File
+              </a>
+            </div>
+          ) : (
+            <p className="text-sm text-[#64748B]">No file attached.</p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Proof Card ─────────────────────────────────────────────────────────────────
+function ProofCard({ entry, missionsMap, experimentsMap, onDelete, onNavigateToProof }) {
   const mission = entry.mission_id ? missionsMap[entry.mission_id] : null;
-  const experiment = entry.experiment_id ? experimentsMap[entry.experiment_id] : (mission?.experiment_id ? experimentsMap[mission.experiment_id] : null);
+  const experiment = entry.experiment_id ? experimentsMap[entry.experiment_id] : null;
+  const [showPreview, setShowPreview] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const vid = isVideoFile(entry.file_name, entry.mime_type);
 
   return (
     <div className="rounded-[20px] border border-[#E2E8F0] bg-white p-5">
-      <div className="flex items-start justify-between gap-3">
+      {showPreview && <FilePreviewModal entry={entry} onClose={() => setShowPreview(false)} />}
+
+      {/* Header */}
+      <div className="flex items-start justify-between gap-3 mb-3">
         <div className="flex-1 min-w-0">
-          <div className="flex flex-wrap items-center gap-2 mb-2">
-            <span className="rounded-full px-2.5 py-1 text-xs font-bold" style={{ background: '#F8ECEF', color: '#8B0C21' }}>{CAT_LABELS[entry.category] || entry.category}</span>
-            {entry.path_tested && <span className="rounded-full px-2.5 py-1 text-xs text-[#64748B] border border-[#E2E8F0]">{entry.path_tested}</span>}
-            {entry.visibility === 'public' && <span className="rounded-full px-2.5 py-1 text-xs font-bold" style={{ background: '#F0FDF4', color: '#15803D' }}>Public</span>}
+          <div className="flex flex-wrap items-center gap-2 mb-1.5">
+            <span className="rounded-full px-2.5 py-0.5 text-xs font-bold" style={{ background: '#F8ECEF', color: '#8B0C21' }}>
+              {entry.category?.replace(/_/g,' ').replace(/\b\w/g,l=>l.toUpperCase()) || 'Other'}
+            </span>
+            {entry.visibility === 'public'
+              ? <span className="rounded-full px-2.5 py-0.5 text-xs font-bold flex items-center gap-1" style={{ background: '#F0FDF4', color: '#15803D' }}><Eye size={10} />Public</span>
+              : <span className="rounded-full px-2.5 py-0.5 text-xs font-bold flex items-center gap-1" style={{ background: '#F8FAFC', color: '#64748B' }}><EyeOff size={10} />Private</span>}
           </div>
-          <h3 className="font-heading font-bold text-[#050816]">{entry.title}</h3>
+          <h3 className="font-heading font-bold text-[#050816] leading-snug">{entry.title}</h3>
           {entry.description && <p className="mt-1 text-sm text-[#334155] line-clamp-2">{entry.description}</p>}
         </div>
-        {entry.external_url && (
-          <a href={entry.external_url} target="_blank" rel="noopener noreferrer" className="shrink-0 text-[#64748B] hover:text-[#8B0C21] transition">
-            <ExternalLink size={16} />
-          </a>
-        )}
+
+        {/* More actions */}
+        <div className="relative shrink-0">
+          <button onClick={() => setMenuOpen(v => !v)}
+            className="rounded-lg p-1.5 text-[#94A3B8] hover:text-[#334155] hover:bg-[#F1F5F9] transition"
+            aria-label="More actions">
+            <ChevronDown size={16} />
+          </button>
+          {menuOpen && (
+            <div className="absolute right-0 top-8 z-10 w-36 rounded-xl border border-[#E2E8F0] bg-white shadow-lg py-1">
+              <button onClick={() => { setMenuOpen(false); onDelete(entry); }}
+                className="w-full flex items-center gap-2 px-4 py-2 text-xs text-red-600 hover:bg-red-50">
+                <Trash2 size={13} /> Delete
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
+      {/* File preview row */}
+      {entry.file_url && (
+        <div className="mb-3 flex items-center gap-3 rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2.5">
+          <div className="shrink-0 w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: '#F8ECEF' }}>
+            <FileIcon name={entry.file_name} mime={entry.mime_type} size={16} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-semibold text-[#334155] truncate">{entry.file_name || 'Attached file'}</p>
+            {entry.file_size && <p className="text-[10px] text-[#94A3B8]">{fmtSize(entry.file_size)}</p>}
+          </div>
+          <button onClick={() => setShowPreview(true)}
+            className="shrink-0 flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-white"
+            style={{ background: '#8B0C21' }}>
+            {vid ? <><Play size={11} />Play</> : <><ExternalLink size={11} />Open</>}
+          </button>
+        </div>
+      )}
+
+      {/* External URL */}
+      {entry.external_url && (
+        <a href={entry.external_url} target="_blank" rel="noopener noreferrer"
+          className="mb-3 flex items-center gap-1.5 text-xs text-[#8B0C21] hover:underline">
+          <ExternalLink size={11} /> {entry.external_url}
+        </a>
+      )}
+
+      {/* Skills */}
       {entry.skills_demonstrated?.length > 0 && (
-        <div className="mt-3 flex flex-wrap gap-1.5">
+        <div className="mb-3 flex flex-wrap gap-1.5">
           {entry.skills_demonstrated.map((s, i) => (
-            <span key={i} className="rounded-full border border-[#E2E8F0] px-2.5 py-0.5 text-xs text-[#334155]">{s}</span>
+            <span key={i} className="rounded-full border border-[#E2E8F0] px-2.5 py-0.5 text-[10px] text-[#334155]">{s}</span>
           ))}
         </div>
       )}
-      {entry.outcome && <p className="mt-3 text-xs text-[#64748B]"><strong>Outcome:</strong> {entry.outcome}</p>}
-      {entry.completion_note && <p className="mt-1 text-xs text-[#64748B]"><strong>Note:</strong> {entry.completion_note}</p>}
 
-      {/* Mission / experiment links */}
+      {/* Mission / Experiment links */}
       {(mission || experiment) && (
-        <div className="mt-3 pt-3 border-t border-[#F1F5F9] flex flex-wrap gap-3 text-xs text-[#64748B]">
-          {mission && <span>Mission: <span className="font-semibold text-[#334155]">{mission.title}</span></span>}
-          {experiment && <span>Experiment: <span className="font-semibold text-[#334155]">{experiment.title}</span></span>}
+        <div className="pt-3 border-t border-[#F1F5F9] flex flex-wrap gap-3">
+          {mission && (
+            <button onClick={() => onNavigateToProof('experiments')}
+              className="text-xs text-[#64748B] hover:text-[#8B0C21] transition text-left">
+              Mission: <span className="font-semibold text-[#334155] hover:text-[#8B0C21]">{mission.title}</span>
+            </button>
+          )}
+          {experiment && (
+            <button onClick={() => onNavigateToProof('experiments')}
+              className="text-xs text-[#64748B] hover:text-[#8B0C21] transition text-left">
+              Experiment: <span className="font-semibold text-[#334155] hover:text-[#8B0C21]">{experiment.title}</span>
+            </button>
+          )}
+          {experiment?.path_name && (
+            <span className="text-xs text-[#94A3B8]">Path: {experiment.path_name}</span>
+          )}
         </div>
       )}
-      {entry.completed_at && <p className="mt-2 text-xs text-[#94A3B8]">{new Date(entry.completed_at).toLocaleDateString()}</p>}
+
+      <p className="mt-2 text-[10px] text-[#94A3B8]">Submitted {fmtDate(entry.created_date || entry.completed_at)}</p>
     </div>
   );
 }
 
+// ── Main Page ──────────────────────────────────────────────────────────────────
 export default function ProofOfWorkPage() {
+  const navigate = useNavigate();
   const [entries, setEntries] = useState([]);
   const [missions, setMissions] = useState([]);
   const [experiments, setExperiments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showNew, setShowNew] = useState(false);
-  const [filter, setFilter] = useState('all');
+  const [search, setSearch] = useState('');
+  const [filterPath, setFilterPath] = useState('all');
+  const [filterExp, setFilterExp] = useState('all');
+  const [filterVis, setFilterVis] = useState('all');
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [successToast, setSuccessToast] = useState(null); // { proof, missionTitle }
+  const toastTimer = useRef(null);
 
   const load = async () => {
     const [proofData, missionData, expData] = await Promise.all([
-      base44.entities.ProofOfWork.list('-created_date', 100),
-      base44.entities.Missions.list('-created_date', 100),
-      base44.entities.Experiments.list('-created_date', 100),
+      base44.entities.ProofOfWork.list('-created_date', 200),
+      base44.entities.Missions.list('-created_date', 200),
+      base44.entities.Experiments.list('-created_date', 200),
     ]);
     setEntries(proofData);
     setMissions(missionData);
@@ -158,60 +228,144 @@ export default function ProofOfWorkPage() {
 
   useEffect(() => { load(); }, []);
 
-  const save = async (data) => {
-    await base44.entities.ProofOfWork.create(data);
-    setShowNew(false);
-    load();
-  };
-
-  // Build lookup maps
+  // Build maps
   const missionsMap = Object.fromEntries(missions.map(m => [m.id, m]));
   const experimentsMap = Object.fromEntries(experiments.map(e => [e.id, e]));
 
-  const categories = ['all', ...new Set(entries.map(e => e.category))];
-  const filtered = filter === 'all' ? entries : entries.filter(e => e.category === filter);
+  // Filter options
+  const paths = ['all', ...new Set(experiments.map(e => e.path_name).filter(Boolean))];
+  const expOptions = ['all', ...experiments.map(e => e.id)];
+
+  // Filtered list
+  const filtered = entries.filter(e => {
+    const mission = e.mission_id ? missionsMap[e.mission_id] : null;
+    const experiment = e.experiment_id ? experimentsMap[e.experiment_id] : null;
+    if (filterPath !== 'all' && (experiment?.path_name || '') !== filterPath) return false;
+    if (filterExp !== 'all' && e.experiment_id !== filterExp) return false;
+    if (filterVis !== 'all' && (e.visibility || 'private') !== filterVis) return false;
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      const matchTitle = e.title?.toLowerCase().includes(q);
+      const matchMission = mission?.title?.toLowerCase().includes(q);
+      const matchExp = experiment?.title?.toLowerCase().includes(q);
+      const matchFile = e.file_name?.toLowerCase().includes(q);
+      if (!matchTitle && !matchMission && !matchExp && !matchFile) return false;
+    }
+    return true;
+  });
+
+  const handleProofSaved = (proof) => {
+    setShowNew(false);
+    load();
+    const mission = missionsMap[proof.mission_id];
+    setSuccessToast({ proof, missionTitle: mission?.title || '' });
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    toastTimer.current = setTimeout(() => setSuccessToast(null), 8000);
+  };
+
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    await base44.entities.ProofOfWork.delete(deleteTarget.id);
+    setDeleteTarget(null);
+    load();
+  };
+
+  // For standalone "Add Proof" from this page — we need a mission+experiment to pass
+  // We'll show a simple selector or skip the modal here since this page shows history.
+  // The modal is primarily triggered from ExperimentsPage. Here we just show history.
 
   return (
     <main className="mx-auto max-w-5xl px-5 py-10 sm:px-8">
-      {showNew && <EntryModal onClose={() => setShowNew(false)} onSave={save} />}
+      {deleteTarget && (
+        <DeleteConfirmModal
+          proofTitle={deleteTarget.title}
+          onConfirm={handleDelete}
+          onCancel={() => setDeleteTarget(null)}
+        />
+      )}
+
+      {successToast && (
+        <ProofSuccessToast
+          proof={successToast.proof}
+          missionTitle={successToast.missionTitle}
+          onViewProof={() => { setSuccessToast(null); }}
+          onReturnToMission={() => { setSuccessToast(null); navigate('/experiments'); }}
+          onDismiss={() => setSuccessToast(null)}
+        />
+      )}
+
       <PageHeader
         eyebrow="Proof of work"
-        title="Your real-world evidence."
-        description="Every completed experiment, project, and published piece — documented and owned by you."
-        action={
-          <button onClick={() => setShowNew(true)}
-            className="flex items-center gap-2 rounded-[10px] px-5 py-3 text-sm font-semibold text-white transition hover:-translate-y-px"
-            style={{ background: '#8B0C21', boxShadow: '0 8px 24px rgba(139,12,33,0.18)' }}>
-            <Plus size={16} /> Add Entry
-          </button>
-        }
+        title="Proof of Work"
+        description="Review the work you have completed while testing your paths."
       />
 
-      <div className="mb-6 flex gap-2 flex-wrap">
-        {categories.map(c => (
-          <button key={c} onClick={() => setFilter(c)}
-            className="rounded-full px-4 py-1.5 text-xs font-semibold transition border"
-            style={filter === c ? { background: '#8B0C21', color: '#fff', borderColor: '#8B0C21' } : { background: 'white', color: '#334155', borderColor: '#E2E8F0' }}>
-            {c === 'all' ? 'All' : CAT_LABELS[c] || c}
-          </button>
-        ))}
+      {/* Search + Filters */}
+      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:flex-wrap">
+        <div className="relative flex-1 min-w-[200px]">
+          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#94A3B8]" />
+          <input value={search} onChange={e => setSearch(e.target.value)}
+            placeholder="Search by title, mission, experiment, or filename…"
+            className="w-full rounded-xl border border-[#E2E8F0] bg-white pl-9 pr-4 py-2.5 text-sm outline-none focus:border-[#8B0C21]" />
+        </div>
+        {paths.length > 1 && (
+          <select value={filterPath} onChange={e => setFilterPath(e.target.value)}
+            className="rounded-xl border border-[#E2E8F0] bg-white px-3 py-2.5 text-sm outline-none focus:border-[#8B0C21]">
+            <option value="all">All paths</option>
+            {paths.filter(p => p !== 'all').map(p => <option key={p} value={p}>{p}</option>)}
+          </select>
+        )}
+        {experiments.length > 0 && (
+          <select value={filterExp} onChange={e => setFilterExp(e.target.value)}
+            className="rounded-xl border border-[#E2E8F0] bg-white px-3 py-2.5 text-sm outline-none focus:border-[#8B0C21]">
+            <option value="all">All experiments</option>
+            {experiments.map(ex => <option key={ex.id} value={ex.id}>{ex.title}</option>)}
+          </select>
+        )}
+        <select value={filterVis} onChange={e => setFilterVis(e.target.value)}
+          className="rounded-xl border border-[#E2E8F0] bg-white px-3 py-2.5 text-sm outline-none focus:border-[#8B0C21]">
+          <option value="all">All visibility</option>
+          <option value="private">Private</option>
+          <option value="public">Public</option>
+        </select>
       </div>
 
       {loading ? (
-        <div className="py-20 text-center text-[#64748B]">Loading portfolio...</div>
+        <div className="py-20 text-center text-[#64748B]">Loading proof history…</div>
       ) : filtered.length === 0 ? (
         <div className="rounded-[24px] border border-dashed border-[#E2E8F0] p-16 text-center">
-          <h3 className="font-heading text-xl font-bold text-[#050816]">No entries yet.</h3>
-          <p className="mt-2 text-sm text-[#64748B]">Every project, case study, article, or interview counts. Start documenting.</p>
-          <button onClick={() => setShowNew(true)} className="mt-6 inline-flex items-center gap-2 rounded-[10px] px-6 py-3 text-sm font-semibold text-white"
-            style={{ background: '#8B0C21' }}><Plus size={16} /> Add first entry</button>
+          <h3 className="font-heading text-xl font-bold text-[#050816]">
+            {entries.length === 0 ? 'No proof submitted yet.' : 'No results match your filters.'}
+          </h3>
+          <p className="mt-2 text-sm text-[#64748B]">
+            {entries.length === 0
+              ? 'Open a mission from Experiments and click Add Proof of Work to document your first submission.'
+              : 'Try adjusting your search or filters.'}
+          </p>
+          {entries.length === 0 && (
+            <button onClick={() => navigate('/experiments')}
+              className="mt-6 inline-flex items-center gap-2 rounded-[10px] px-6 py-3 text-sm font-semibold text-white"
+              style={{ background: '#8B0C21' }}>
+              <Plus size={16} /> Go to Experiments
+            </button>
+          )}
         </div>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2">
-          {filtered.map(e => (
-            <ProofCard key={e.id} entry={e} missionsMap={missionsMap} experimentsMap={experimentsMap} />
-          ))}
-        </div>
+        <>
+          <p className="text-xs text-[#94A3B8] mb-4">{filtered.length} submission{filtered.length !== 1 ? 's' : ''} — newest first</p>
+          <div className="grid gap-4 sm:grid-cols-2">
+            {filtered.map(e => (
+              <ProofCard
+                key={e.id}
+                entry={e}
+                missionsMap={missionsMap}
+                experimentsMap={experimentsMap}
+                onDelete={setDeleteTarget}
+                onNavigateToProof={(path) => navigate(`/${path}`)}
+              />
+            ))}
+          </div>
+        </>
       )}
     </main>
   );

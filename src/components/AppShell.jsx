@@ -12,7 +12,7 @@ const coreLinks = [
 
 const buildLinks = [
   ['/outreach', 'Outreach', Users],
-  ['/proof', 'Proof of Work', FileText],
+  ['/proof', 'Proof', FileText],
   ['/reflection', 'Reflect', RotateCcw],
 ];
 
