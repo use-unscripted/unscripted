@@ -44,36 +44,42 @@ export default function WeeklyReflectionPage() {
 
   const save = async () => {
     setSaving(true);
-    if (current.id) await base44.entities.WeeklyReflections.update(current.id, current);
-    else {
-      const created = await base44.entities.WeeklyReflections.create(current);
-      setCurrent(created);
+    try {
+      if (current.id) await base44.entities.WeeklyReflections.update(current.id, current);
+      else {
+        const created = await base44.entities.WeeklyReflections.create(current);
+        setCurrent(created);
+      }
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    } finally {
+      setSaving(false);
     }
-    setSaving(false);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 3000);
   };
 
   const generate = async () => {
     setGenerating(true);
-    const result = await base44.integrations.Core.InvokeLLM({
-      prompt: `You are Unscripted. Based on this student's weekly reflection, generate: 1) A direct weekly learning summary, 2) Path-fit adjustments (which paths feel stronger/weaker and why), 3) Workload adjustments, 4) Specific recommendations for next week. Be honest but constructive. Never shame. Reflection: ${JSON.stringify(current)}`,
-      response_json_schema: {
-        type: 'object',
-        properties: {
-          summary: { type: 'string' },
-          path_adjustments: { type: 'array', items: { type: 'string' } },
+    try {
+      const result = await base44.integrations.Core.InvokeLLM({
+        prompt: `You are Unscripted. Based on this student's weekly reflection, generate: 1) A direct weekly learning summary, 2) Path-fit adjustments (which paths feel stronger/weaker and why), 3) Workload adjustments, 4) Specific recommendations for next week. Be honest but constructive. Never shame. Reflection: ${JSON.stringify(current)}`,
+        response_json_schema: {
+          type: 'object',
+          properties: {
+            summary: { type: 'string' },
+            path_adjustments: { type: 'array', items: { type: 'string' } },
+          }
         }
+      });
+      const updated = { ...current, generated_summary: result.summary, path_adjustments: result.path_adjustments };
+      if (current.id) await base44.entities.WeeklyReflections.update(current.id, updated);
+      else {
+        const created = await base44.entities.WeeklyReflections.create(updated);
+        setCurrent(created);
       }
-    });
-    const updated = { ...current, generated_summary: result.summary, path_adjustments: result.path_adjustments };
-    if (current.id) await base44.entities.WeeklyReflections.update(current.id, updated);
-    else {
-      const created = await base44.entities.WeeklyReflections.create(updated);
-      setCurrent(created);
+      setCurrent(c => ({ ...c, ...updated }));
+    } finally {
+      setGenerating(false);
     }
-    setCurrent(c => ({ ...c, ...updated }));
-    setGenerating(false);
   };
 
   return (
