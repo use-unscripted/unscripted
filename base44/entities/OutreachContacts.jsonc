@@ -5,6 +5,12 @@
     "user_id": {
       "type": "string"
     },
+    "experiment_id": {
+      "type": "string"
+    },
+    "mission_id": {
+      "type": "string"
+    },
     "name": {
       "type": "string"
     },
@@ -17,13 +23,40 @@
     "email": {
       "type": "string"
     },
+    "phone": {
+      "type": "string"
+    },
     "profile_url": {
       "type": "string"
+    },
+    "website_url": {
+      "type": "string"
+    },
+    "contact_type": {
+      "type": "string",
+      "enum": [
+        "informational_interview",
+        "networking",
+        "mentor",
+        "recruiter",
+        "alumni",
+        "industry_professional",
+        "founder",
+        "investor",
+        "potential_customer",
+        "potential_partner",
+        "other"
+      ],
+      "default": "networking"
     },
     "reason_for_contact": {
       "type": "string"
     },
     "date_contacted": {
+      "type": "string",
+      "format": "date"
+    },
+    "last_contacted_date": {
       "type": "string",
       "format": "date"
     },
@@ -39,7 +72,11 @@
         "responded",
         "no_response",
         "call_scheduled",
-        "completed"
+        "completed",
+        "follow_up_needed",
+        "planning",
+        "closed",
+        "other"
       ],
       "default": "not_sent"
     },
