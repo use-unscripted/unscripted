@@ -3,6 +3,18 @@ import { base44 } from '@/api/base44Client';
 const str = { type: 'string' };
 const strArr = { type: 'array', items: { type: 'string' } };
 
+const missionStepSchema = {
+  type: 'object',
+  properties: {
+    order: { type: 'number' },
+    title: { type: 'string' },
+    description: { type: 'string' },
+    estimated_minutes: { type: 'number' },
+    status: { type: 'string' },
+    proof_required: { type: 'string' },
+  }
+};
+
 const pathRecSchema = {
   type: 'object',
   properties: {
@@ -30,12 +42,46 @@ const experimentSchema = {
     deliverable: str,
     completion_criteria: str,
     proof_required: str,
-    mission_steps: strArr,
+    mission_steps: { type: 'array', items: missionStepSchema },
     reflection_questions: strArr,
     common_mistakes: strArr,
     alternative_version: str,
   }
 };
+
+// Normalize a single mission step: if it's a string, convert to a valid object
+function normalizeMissionStep(step, index) {
+  if (typeof step === 'string') {
+    return {
+      order: index + 1,
+      title: step,
+      description: step,
+      estimated_minutes: 30,
+      status: 'not_started',
+      proof_required: '',
+    };
+  }
+  // It's already an object — fill in any missing required fields
+  return {
+    order: step.order ?? index + 1,
+    title: step.title || `Step ${index + 1}`,
+    description: step.description || step.title || `Step ${index + 1}`,
+    estimated_minutes: step.estimated_minutes ?? 30,
+    status: step.status || 'not_started',
+    proof_required: step.proof_required || '',
+  };
+}
+
+function normalizeExperiment(exp) {
+  return {
+    ...exp,
+    mission_steps: Array.isArray(exp.mission_steps)
+      ? exp.mission_steps.map(normalizeMissionStep)
+      : [],
+    reflection_questions: Array.isArray(exp.reflection_questions) ? exp.reflection_questions : [],
+    common_mistakes: Array.isArray(exp.common_mistakes) ? exp.common_mistakes : [],
+  };
+}
 
 export async function generatePathTest() {
   const user = await base44.auth.me();
@@ -120,7 +166,7 @@ Be honest about fit AND misfit. Do not claim any path is objectively correct. Fi
 
     const savedExps = await base44.entities.Experiments.bulkCreate(
       (result.experiments || []).slice(0, 3).map(e => ({
-        ...e,
+        ...normalizeExperiment(e),
         path_name: primaryPath,
         status: 'planned',
         deadline: deadlineStr,
