@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { Plus, ExternalLink, Search, Play, FileText, Film, Image, FileSpreadsheet, Music, File, ChevronDown, Eye, EyeOff, Trash2, X } from 'lucide-react';
 import PageHeader from '@/components/PageHeader';
-import AddProofModal, { ProofSuccessToast } from '@/components/experiments/AddProofModal';
+import { ProofSuccessToast } from '@/components/experiments/AddProofModal';
+import AddProofStandaloneModal from '@/components/experiments/AddProofStandaloneModal';
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 function fmtSize(bytes) {
@@ -284,6 +285,19 @@ export default function ProofOfWorkPage() {
         />
       )}
 
+      {showNew && (
+        <AddProofStandaloneModal
+          onClose={() => setShowNew(false)}
+          onSaved={(proof, missionTitle) => {
+            setShowNew(false);
+            load();
+            setSuccessToast({ proof, missionTitle: missionTitle || '' });
+            if (toastTimer.current) clearTimeout(toastTimer.current);
+            toastTimer.current = setTimeout(() => setSuccessToast(null), 8000);
+          }}
+        />
+      )}
+
       {successToast && (
         <ProofSuccessToast
           proof={successToast.proof}
@@ -298,6 +312,14 @@ export default function ProofOfWorkPage() {
         eyebrow="Proof of work"
         title="Proof of Work"
         description="Review the work you have completed while testing your paths."
+        action={
+          <button
+            onClick={() => setShowNew(true)}
+            className="inline-flex items-center gap-2 rounded-[10px] px-5 py-2.5 text-sm font-semibold text-white shrink-0"
+            style={{ background: '#8B0C21', boxShadow: '0 8px 24px rgba(139,12,33,0.18)' }}>
+            <Plus size={16} /> Add Proof of Work
+          </button>
+        }
       />
 
       {/* Search + Filters */}
@@ -339,14 +361,14 @@ export default function ProofOfWorkPage() {
           </h3>
           <p className="mt-2 text-sm text-[#64748B]">
             {entries.length === 0
-              ? 'Open a mission from Experiments and click Add Proof of Work to document your first submission.'
+              ? 'Add work from your experiments and missions to build a record of what you have learned and completed.'
               : 'Try adjusting your search or filters.'}
           </p>
           {entries.length === 0 && (
-            <button onClick={() => navigate('/experiments')}
+            <button onClick={() => setShowNew(true)}
               className="mt-6 inline-flex items-center gap-2 rounded-[10px] px-6 py-3 text-sm font-semibold text-white"
               style={{ background: '#8B0C21' }}>
-              <Plus size={16} /> Go to Experiments
+              <Plus size={16} /> Add Proof of Work
             </button>
           )}
         </div>
