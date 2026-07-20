@@ -1,6 +1,17 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, Component } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
+
+class CardErrorBoundary extends Component {
+  state = { hasError: false };
+  static getDerivedStateFromError() { return { hasError: true }; }
+  componentDidCatch(err) { console.error('[ProofOfWorkPage] Card render error:', err?.message || err); }
+  render() {
+    if (this.state.hasError)
+      return <div className="rounded-[20px] border border-dashed border-[#E2E8F0] p-6 text-center text-xs text-[#94A3B8]">This record could not be displayed.</div>;
+    return this.props.children;
+  }
+}
 import { Plus, ExternalLink, Search, Play, FileText, Film, Image, FileSpreadsheet, Music, File, ChevronDown, Eye, EyeOff, Trash2, X } from 'lucide-react';
 import PageHeader from '@/components/PageHeader';
 import { ProofSuccessToast } from '@/components/experiments/AddProofModal';
@@ -431,14 +442,15 @@ export default function ProofOfWorkPage() {
           <p className="text-xs text-[#94A3B8] mb-4">{filtered.length} submission{filtered.length !== 1 ? 's' : ''} — newest first</p>
           <div className="grid gap-4 sm:grid-cols-2">
             {filtered.map(e => (
-              <ProofCard
-                key={e.id}
-                entry={e}
-                missionsMap={missionsMap}
-                experimentsMap={experimentsMap}
-                onDelete={setDeleteTarget}
-                onNavigateToProof={(path) => navigate(`/${path}`)}
-              />
+              <CardErrorBoundary key={e.id}>
+                <ProofCard
+                  entry={e}
+                  missionsMap={missionsMap}
+                  experimentsMap={experimentsMap}
+                  onDelete={setDeleteTarget}
+                  onNavigateToProof={(path) => navigate(`/${path}`)}
+                />
+              </CardErrorBoundary>
             ))}
           </div>
         </>

@@ -134,11 +134,11 @@ export default function AddProofStandaloneModal({ onClose, onSaved, preselectedM
   // Load user's experiments and missions
   useEffect(() => {
     Promise.all([
-      base44.entities.Experiments.list('-created_date', 200),
-      base44.entities.Missions.list('-created_date', 200),
+      base44.entities.Experiments.list('-created_date', 200).catch(() => []),
+      base44.entities.Missions.list('-created_date', 200).catch(() => []),
     ]).then(([exps, mis]) => {
-      setExperiments(exps);
-      setMissions(mis);
+      setExperiments(Array.isArray(exps) ? exps : []);
+      setMissions(Array.isArray(mis) ? mis : []);
       setLoadingData(false);
     });
   }, []);
