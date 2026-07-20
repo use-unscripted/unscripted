@@ -36,7 +36,11 @@ export default function PathsIntake() {
   const submit = async () => {
     if (!primary) return;
     setSaving(true);
-    await base44.auth.updateMe({ onboarding_completed: true, primary_path: primary, comparison_path: comparison });
+    try {
+      await base44.auth.updateMe({ onboarding_completed: true, primary_path: primary, comparison_path: comparison });
+    } catch (e) {
+      console.error('updateMe failed, continuing:', e);
+    }
     nav('/generating');
   };
 
