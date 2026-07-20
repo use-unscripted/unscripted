@@ -25,7 +25,7 @@ export default function Hero() {
             Unscripted helps college students compare realistic career and life paths, complete guided real-world experiments, and learn what actually fits — before making a major commitment.
           </p>
           <div className="mt-9 flex flex-wrap justify-center gap-3">
-            <Link to="/register"
+            <Link to="/onboarding"
               className="flex items-center gap-2 rounded-[10px] px-7 py-3.5 text-sm font-semibold text-white transition hover:-translate-y-px"
               style={{ background: '#8B0C21', boxShadow: '0 8px 24px rgba(139,12,33,0.18)' }}>
               Start My 30-Day Path Test <ArrowRight size={17} />
@@ -35,6 +35,10 @@ export default function Hero() {
               See How It Works
             </a>
           </div>
+          <p className="mt-4 text-sm text-[#64748B]">
+            Already have an account?{' '}
+            <Link to="/login" className="font-semibold underline" style={{ color: '#8B0C21' }}>Log in</Link>
+          </p>
         </div>
       </section>
 

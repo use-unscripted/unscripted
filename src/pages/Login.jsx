@@ -37,12 +37,12 @@ export default function Login() {
     <AuthLayout
       icon={LogIn}
       title="Welcome back"
-      subtitle="Log in to your account"
+      subtitle="Log in to continue your path test, experiments, and Mission Guides."
       footer={
         <>
-          Don't have an account?{" "}
-          <Link to="/register" className="text-primary font-medium hover:underline">
-            Create one
+          New to Unscripted?{" "}
+          <Link to="/onboarding" className="text-primary font-medium hover:underline">
+            Start your free path test
           </Link>
         </>
       }

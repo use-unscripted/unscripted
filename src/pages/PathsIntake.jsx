@@ -1,8 +1,8 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { base44 } from '@/api/base44Client';
+import { useState, useEffect } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { LogoWordmark } from '@/components/UnscriptedLogo';
+import { saveDraft, loadDraft } from '@/lib/guest-draft';
 
 const EXAMPLE_PATHS = [
   'Investment banking / finance',
@@ -24,7 +24,6 @@ const EXAMPLE_PATHS = [
 
 export default function PathsIntake() {
   const nav = useNavigate();
-  const [saving, setSaving] = useState(false);
   const [primaryPath, setPrimaryPath] = useState('');
   const [customPrimary, setCustomPrimary] = useState('');
   const [comparisonPath, setComparisonPath] = useState('');
@@ -33,15 +32,25 @@ export default function PathsIntake() {
   const primary = primaryPath === 'other' ? customPrimary : primaryPath;
   const comparison = comparisonPath === 'other' ? customComparison : comparisonPath;
 
-  const submit = async () => {
-    if (!primary) return;
-    setSaving(true);
-    try {
-      await base44.auth.updateMe({ onboarding_completed: true, primary_path: primary, comparison_path: comparison });
-    } catch (e) {
-      console.error('updateMe failed, continuing:', e);
+  // Restore draft on mount
+  useEffect(() => {
+    const draft = loadDraft();
+    if (draft?.primary_path) {
+      const known = EXAMPLE_PATHS.find(p => p === draft.primary_path);
+      if (known) setPrimaryPath(draft.primary_path);
+      else { setPrimaryPath('other'); setCustomPrimary(draft.primary_path); }
     }
-    nav('/generating');
+    if (draft?.comparison_path) {
+      const known = EXAMPLE_PATHS.find(p => p === draft.comparison_path);
+      if (known) setComparisonPath(draft.comparison_path);
+      else { setComparisonPath('other'); setCustomComparison(draft.comparison_path); }
+    }
+  }, []);
+
+  const submit = () => {
+    if (!primary) return;
+    saveDraft({ primary_path: primary, comparison_path: comparison, current_step: 3 });
+    nav('/onboarding-review');
   };
 
   const selectClass = (selected) =>
@@ -52,7 +61,10 @@ export default function PathsIntake() {
       <div className="mx-auto max-w-2xl">
         <div className="mb-10 flex items-center justify-between">
           <LogoWordmark />
-          <span className="text-xs font-bold text-[#64748B]">STEP 3 OF 3</span>
+          <div className="flex items-center gap-4">
+            <span className="text-xs font-bold text-[#64748B]">STEP 4 OF 4</span>
+            <Link to="/login" className="text-xs font-semibold text-[#64748B] hover:text-[#050816] transition">Log in</Link>
+          </div>
         </div>
 
         <div className="mb-2 flex justify-between text-xs text-[#64748B]">
@@ -118,10 +130,10 @@ export default function PathsIntake() {
               className="flex items-center gap-2 px-3 py-2 text-sm font-semibold text-[#64748B] hover:text-[#050816] transition">
               <ArrowLeft size={16} /> Back
             </button>
-            <button onClick={submit} disabled={saving || !primary}
+            <button onClick={submit} disabled={!primary}
               className="flex items-center gap-2 rounded-[10px] px-6 py-3 text-sm font-semibold text-white transition hover:-translate-y-px disabled:opacity-60"
               style={{ background: '#8B0C21', boxShadow: '0 8px 24px rgba(139,12,33,0.18)' }}>
-              {saving ? 'Building your test...' : 'Build My 30-Day Path Test'} <ArrowRight size={16} />
+              Review My Test <ArrowRight size={16} />
             </button>
           </div>
         </section>

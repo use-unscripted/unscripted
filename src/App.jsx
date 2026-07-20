@@ -20,6 +20,8 @@ import GoalIntake from '@/pages/GoalIntake';
 import Generating from '@/pages/Generating';
 import AmbitionProfile from '@/pages/AmbitionProfile';
 import PostAuth from '@/pages/PostAuth';
+import OnboardingReview from '@/pages/OnboardingReview';
+import ClaimOnboarding from '@/pages/ClaimOnboarding';
 
 // New onboarding flow pages
 import PathsIntake from '@/pages/PathsIntake';
@@ -64,9 +66,12 @@ const AuthenticatedApp = () => {
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/post-auth" element={<PostAuth />} />
+      {/* Public onboarding — no account required */}
+      <Route path="/onboarding" element={<Onboarding />} />
+      <Route path="/paths-intake" element={<PathsIntake />} />
+      <Route path="/onboarding-review" element={<OnboardingReview />} />
       <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
-        <Route path="/onboarding" element={<Onboarding />} />
-        <Route path="/paths-intake" element={<PathsIntake />} />
+        <Route path="/claim-onboarding" element={<ClaimOnboarding />} />
         <Route path="/goals" element={<GoalIntake />} />
         <Route path="/generating" element={<Generating />} />
         <Route path="/profile" element={<AmbitionProfile />} />

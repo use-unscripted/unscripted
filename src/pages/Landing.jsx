@@ -8,32 +8,25 @@ import { CompassIcon } from '@/components/UnscriptedLogo';
 
 export default function Landing() {
   const nav = useNavigate();
-  const [authState, setAuthState] = useState('loading');
-  const [authUser, setAuthUser] = useState(null);
+  const [authChecked, setAuthChecked] = useState(false);
 
   useEffect(() => {
     base44.auth.isAuthenticated().then(async (authed) => {
-      if (!authed) { setAuthState('guest'); return; }
+      if (!authed) { setAuthChecked(true); return; }
       try {
         const user = await base44.auth.me();
-        setAuthUser(user);
-        setAuthState(user?.onboarding_completed ? 'done' : 'no-onboarding');
+        if (user?.onboarding_completed) {
+          nav('/dashboard', { replace: true });
+        } else {
+          nav('/claim-onboarding', { replace: true });
+        }
       } catch {
-        setAuthState('guest');
+        setAuthChecked(true);
       }
     });
   }, []);
 
-  useEffect(() => {
-    if (authState === 'done') nav('/dashboard', { replace: true });
-    if (authState === 'no-onboarding') {
-      if (authUser?.college && !authUser?.primary_path) nav('/paths-intake', { replace: true });
-      else if (authUser?.college) nav('/paths-intake', { replace: true });
-      else nav('/onboarding', { replace: true });
-    }
-  }, [authState]);
-
-  if (authState === 'loading' || authState === 'done' || authState === 'no-onboarding') {
+  if (!authChecked) {
     return (
       <div className="grid min-h-screen place-items-center" style={{ background: '#FAFAF9' }}>
         <div className="flex flex-col items-center gap-4">

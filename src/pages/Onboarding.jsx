@@ -1,8 +1,8 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { base44 } from '@/api/base44Client';
+import { useState, useEffect } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { LogoWordmark } from '@/components/UnscriptedLogo';
+import { saveDraft, loadDraft } from '@/lib/guest-draft';
 
 const STEPS = [
   {
@@ -124,49 +124,63 @@ function CapacityStep({ step, data, onChange, hours, setHours }) {
 export default function Onboarding() {
   const nav = useNavigate();
   const [step, setStep] = useState(0);
-  const [saving, setSaving] = useState(false);
   const [data, setData] = useState({});
   const [hours, setHours] = useState(8);
 
-  const change = e => setData({ ...data, [e.target.name]: e.target.type === 'range' ? Number(e.target.value) : e.target.value });
-  const check = (name, val) => setData({ ...data, [name]: val });
+  // Restore draft on mount
+  useEffect(() => {
+    const draft = loadDraft();
+    if (draft) {
+      const { draft_version, guest_session_id, started_at, updated_at, completed, current_step, available_hours_per_week, primary_path, comparison_path, ...fields } = draft;
+      setData(fields);
+      if (available_hours_per_week) setHours(available_hours_per_week);
+      if (current_step != null && current_step < STEPS.length) setStep(current_step);
+    }
+  }, []);
+
+  const persist = (newData, newStep, newHours) => {
+    saveDraft({ ...newData, available_hours_per_week: newHours ?? hours, current_step: newStep ?? step });
+  };
+
+  const change = e => {
+    const val = e.target.type === 'range' ? Number(e.target.value) : e.target.value;
+    const next = { ...data, [e.target.name]: val };
+    setData(next);
+    persist(next, step, hours);
+  };
+
+  const check = (name, val) => {
+    const next = { ...data, [name]: val };
+    setData(next);
+    persist(next, step, hours);
+  };
 
   const currentStep = STEPS[step];
   const isLast = step === STEPS.length - 1;
 
-  const next = async () => {
-    if (!isLast) return setStep(step + 1);
-    setSaving(true);
-    try {
-      await base44.entities.StudentProfile.create({
-        ...data,
-        available_hours_per_week: hours,
-        career_interests: data.paths_considering,
-        pressured_paths: data.pressured_path,
-        secret_paths: data.curious_path,
-        desired_lifestyle: data.desired_lifestyle,
-        biggest_blocker: data.biggest_blocker,
-        commitments: data.fixed_commitments,
-      });
-      await base44.auth.updateMe({
-        college: data.college,
-        major: data.major,
-        graduation_year: data.graduation_year,
-        school_year: data.school_year,
-      });
-    } catch (e) {
-      console.error('Onboarding save error, continuing:', e);
-    } finally {
-      setSaving(false);
+  const goBack = () => {
+    if (step > 0) {
+      persist(data, step - 1, hours);
+      setStep(step - 1);
+    } else {
+      nav('/');
     }
-    nav('/paths-intake');
   };
 
-  const pct = Math.round(((step + 1) / STEPS.length) * 100);
+  const next = () => {
+    persist(data, step + 1, hours);
+    if (!isLast) {
+      setStep(step + 1);
+    } else {
+      nav('/paths-intake');
+    }
+  };
+
+  const pct = Math.round(((step + 1) / (STEPS.length + 1)) * 100); // +1 for paths step
 
   const renderStep = () => {
     if (currentStep.type === 'sliders') return <PrioritiesStep step={currentStep} data={data} onChange={change} onCheck={check} />;
-    if (currentStep.hoursField) return <CapacityStep step={currentStep} data={data} onChange={change} hours={hours} setHours={setHours} />;
+    if (currentStep.hoursField) return <CapacityStep step={currentStep} data={data} onChange={change} hours={hours} setHours={h => { setHours(h); persist(data, step, h); }} />;
     return (
       <div className="grid gap-5 sm:grid-cols-2">
         {currentStep.fields.map(f => (
@@ -183,7 +197,10 @@ export default function Onboarding() {
       <div className="mx-auto max-w-3xl">
         <div className="mb-10 flex items-center justify-between">
           <LogoWordmark />
-          <span className="text-xs font-bold text-[#64748B]">STEP {step + 1} OF {STEPS.length}</span>
+          <div className="flex items-center gap-4">
+            <span className="text-xs font-bold text-[#64748B]">STEP {step + 1} OF {STEPS.length + 1}</span>
+            <Link to="/login" className="text-xs font-semibold text-[#64748B] hover:text-[#050816] transition">Log in</Link>
+          </div>
         </div>
 
         <div className="mb-2 flex justify-between text-xs text-[#64748B]">
@@ -200,20 +217,21 @@ export default function Onboarding() {
           <p className="mb-8 text-sm text-[#64748B]">{currentStep.subtitle}</p>
           {renderStep()}
           <div className="mt-10 flex justify-between">
-            <button onClick={() => step ? setStep(step - 1) : nav('/')}
+            <button onClick={goBack}
               className="flex items-center gap-2 px-3 py-2 text-sm font-semibold text-[#64748B] hover:text-[#050816] transition">
               <ArrowLeft size={16} /> Back
             </button>
-            <button onClick={next} disabled={saving}
-              className="flex items-center gap-2 rounded-[10px] px-6 py-3 text-sm font-semibold text-white transition hover:-translate-y-px disabled:opacity-60"
+            <button onClick={next}
+              className="flex items-center gap-2 rounded-[10px] px-6 py-3 text-sm font-semibold text-white transition hover:-translate-y-px"
               style={{ background: '#8B0C21', boxShadow: '0 8px 24px rgba(139,12,33,0.18)' }}>
-              {saving ? 'Saving...' : isLast ? 'See My Path Options' : 'Continue'} <ArrowRight size={16} />
+              {isLast ? 'Choose My Paths' : 'Continue'} <ArrowRight size={16} />
             </button>
           </div>
         </section>
 
         <p className="mt-6 text-center text-xs text-[#94A3B8]">
-          We gather only what we need to recommend useful paths and experiments. You are always the decision-maker.
+          No account required yet. We gather only what we need to recommend useful paths.{' '}
+          <Link to="/login" className="underline hover:text-[#334155]">Already have an account?</Link>
         </p>
       </div>
     </main>

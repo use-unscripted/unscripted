@@ -64,6 +64,48 @@
     },
     "thirty_day_success": {
       "type": "string"
+    },
+    "available_hours_per_week": {
+      "type": "number"
+    },
+    "financial_priorities": {
+      "type": "string"
+    },
+    "priority_autonomy": {
+      "type": "number"
+    },
+    "priority_stability": {
+      "type": "number"
+    },
+    "priority_impact": {
+      "type": "number"
+    },
+    "priority_creativity": {
+      "type": "number"
+    },
+    "priority_ownership": {
+      "type": "number"
+    },
+    "willing_financial_risk": {
+      "type": "boolean"
+    },
+    "willing_long_hours": {
+      "type": "boolean"
+    },
+    "willing_to_relocate": {
+      "type": "boolean"
+    },
+    "class_schedule": {
+      "type": "string"
+    },
+    "high_energy_times": {
+      "type": "string"
+    },
+    "low_energy_times": {
+      "type": "string"
+    },
+    "guest_session_id": {
+      "type": "string"
     }
   },
   "required": [
