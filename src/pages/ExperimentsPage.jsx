@@ -1,7 +1,9 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
-import { Plus, ChevronDown, ChevronUp, Clock, BookOpen, Target, FileText, Loader2, Calendar, Trash2, Users } from 'lucide-react';
+import { Plus, ChevronDown, ChevronUp, Clock, BookOpen, Target, FileText, Loader2, Calendar, Trash2, Users, Wand2 } from 'lucide-react';
+import MissionGuideGenerator from '@/components/experiments/MissionGuideGenerator';
+import MissionGuideHistory from '@/components/experiments/MissionGuideHistory';
 import OutreachPlanModal from '@/components/outreach/OutreachPlanModal';
 import AddToCalendarModal from '@/components/calendar/AddToCalendarModal';
 import PageHeader from '@/components/PageHeader';
@@ -141,8 +143,10 @@ function MissionsSection({ experiment, missions, loadingMissions, onMissionAdded
 }
 
 // ── Experiment card ───────────────────────────────────────────────────────────
-function ExperimentCard({ exp, onStatusChange, onExpand, expanded, missions, loadingMissions, onMissionAdded, onProofAdded, onMissionDeleted, onDelete, onEdited, onFindPeople, paths }) {
+function ExperimentCard({ exp, onStatusChange, onExpand, expanded, missions, loadingMissions, onMissionAdded, onProofAdded, onMissionDeleted, onDelete, onEdited, onFindPeople, paths, guides, onGenerateGuide, onGuideSetActive, onGuideDeleted, onGuideDuplicated }) {
   const s = STATUS_STYLES[exp.status] || STATUS_STYLES.planned;
+  const hasGuides = guides && guides.length > 0;
+  const activeGuide = guides?.find(g => g.is_active);
 
   return (
     <div className="rounded-[20px] border border-[#E2E8F0] bg-white overflow-hidden">
@@ -225,6 +229,34 @@ function ExperimentCard({ exp, onStatusChange, onExpand, expanded, missions, loa
             ))}
           </div>
 
+          {/* Mission Guide */}
+          <div className="border-t border-[#E2E8F0] pt-4">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-xs font-bold uppercase tracking-wide text-[#64748B] flex items-center gap-1.5">
+                <Wand2 size={12} /> Mission Guide
+                {activeGuide && <span className="rounded-full px-2 py-0.5 text-[10px] font-bold" style={{ background: '#F0FDF4', color: '#15803D' }}>Active: v{activeGuide.version_number}</span>}
+              </p>
+              <button
+                onClick={onGenerateGuide}
+                className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold text-white transition hover:-translate-y-px"
+                style={{ background: '#8B0C21', boxShadow: '0 4px 12px rgba(139,12,33,0.18)' }}>
+                <Wand2 size={11} />
+                {hasGuides ? 'Generate Another Mission Guide' : 'Generate Mission Guide'}
+              </button>
+            </div>
+            {hasGuides && (
+              <MissionGuideHistory
+                guides={guides}
+                onSetActive={onGuideSetActive}
+                onDeleted={onGuideDeleted}
+                onDuplicated={onGuideDuplicated}
+              />
+            )}
+            {!hasGuides && (
+              <p className="text-xs text-[#94A3B8] italic">No guides yet. Generate one to get step-by-step instructions.</p>
+            )}
+          </div>
+
           {/* Missions */}
           <MissionsSection
             experiment={exp}
@@ -243,34 +275,8 @@ function ExperimentCard({ exp, onStatusChange, onExpand, expanded, missions, loa
 // ── New experiment modal ──────────────────────────────────────────────────────
 function NewExperimentModal({ onClose, onSave }) {
   const [data, setData] = useState({ title: '', objective: '', path_name: '', estimated_hours: 3, deliverable: '', experiment_type: '' });
-  const [generating, setGenerating] = useState(false);
   const [saving, setSaving] = useState(false);
   const submittingRef = useRef(false);
-
-  const generateGuide = async () => {
-    if (!data.title) return;
-    setGenerating(true);
-    const result = await base44.integrations.Core.InvokeLLM({
-      prompt: `You are Unscripted. Generate a detailed Mission Guide for this experiment: "${data.title}" related to path: "${data.path_name}". Include specific step-by-step instructions a college student can follow. Be practical and specific.`,
-      response_json_schema: {
-        type: 'object',
-        properties: {
-          expected_learning: { type: 'string' },
-          estimated_hours: { type: 'number' },
-          prerequisites: { type: 'string' },
-          tools: { type: 'array', items: { type: 'string' } },
-          mission_steps: { type: 'array', items: { type: 'string' } },
-          proof_required: { type: 'string' },
-          reflection_questions: { type: 'array', items: { type: 'string' } },
-          common_mistakes: { type: 'array', items: { type: 'string' } },
-          alternative_version: { type: 'string' },
-          completion_criteria: { type: 'string' },
-        }
-      }
-    });
-    setData(d => ({ ...d, ...result }));
-    setGenerating(false);
-  };
 
   const handleSave = async () => {
     if (submittingRef.current) return;
@@ -283,7 +289,7 @@ function NewExperimentModal({ onClose, onSave }) {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(5,8,22,0.5)' }}>
       <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-[24px] bg-white p-6 sm:p-8">
         <h2 className="font-heading text-2xl font-bold text-[#050816] mb-1">New Experiment</h2>
-        <p className="text-sm text-[#64748B] mb-6">Define what you want to test. We'll generate a step-by-step Mission Guide.</p>
+        <p className="text-sm text-[#64748B] mb-6">Define what you want to test. Open the experiment after saving to generate a Mission Guide.</p>
         <div className="space-y-4">
           <div>
             <label className="text-sm font-semibold text-[#334155] block mb-1">Choose an experiment type</label>
@@ -310,20 +316,9 @@ function NewExperimentModal({ onClose, onSave }) {
             <input type="date" className="w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-3 text-sm outline-none focus:border-[#8B0C21]"
               value={data.deadline || ''} onChange={e => setData(d => ({ ...d, deadline: e.target.value }))} />
           </label>
-          {data.mission_steps?.length > 0 && (
-            <div className="rounded-xl p-4" style={{ background: '#F8ECEF', border: '1px solid rgba(139,12,33,0.2)' }}>
-              <p className="text-xs font-bold uppercase tracking-wide mb-2" style={{ color: '#8B0C21' }}>Mission Guide generated</p>
-              <ol className="space-y-1">{data.mission_steps.map((s, i) => <li key={i} className="text-sm text-[#334155]">{i+1}. {typeof s === 'string' ? s : s.title || s.description}</li>)}</ol>
-            </div>
-          )}
         </div>
         <div className="mt-6 flex gap-3">
           <button onClick={onClose} className="flex-1 rounded-[10px] border border-[#E2E8F0] py-3 text-sm font-semibold text-[#334155] transition hover:bg-[#F8FAFC]">Cancel</button>
-          <button onClick={generateGuide} disabled={generating || !data.title}
-            className="flex-1 rounded-[10px] border py-3 text-sm font-semibold transition disabled:opacity-60"
-            style={{ borderColor: '#8B0C21', color: '#8B0C21', background: 'white' }}>
-            {generating ? 'Generating guide...' : 'Generate Mission Guide'}
-          </button>
           <button onClick={handleSave} disabled={saving}
             className="flex-1 rounded-[10px] py-3 text-sm font-semibold text-white transition hover:-translate-y-px disabled:opacity-60"
             style={{ background: '#8B0C21', boxShadow: '0 8px 24px rgba(139,12,33,0.18)' }}>
@@ -349,6 +344,9 @@ export default function ExperimentsPage() {
   // missions keyed by experiment_id
   const [missionsMap, setMissionsMap] = useState({});
   const [loadingMissionsFor, setLoadingMissionsFor] = useState(null);
+  // guides keyed by experiment_id
+  const [guidesMap, setGuidesMap] = useState({});
+  const [showGuideGeneratorFor, setShowGuideGeneratorFor] = useState(null); // experiment id
   const [successToast, setSuccessToast] = useState(null);
   const toastTimer = useRef(null);
   const [outreachPlanTarget, setOutreachPlanTarget] = useState(null); // { exp, path }
@@ -369,16 +367,21 @@ export default function ExperimentsPage() {
     if (missionsMap[expId] !== undefined) return; // already loaded
     setLoadingMissionsFor(expId);
     const ms = await base44.entities.Missions.filter({ experiment_id: expId }, '-created_date', 50);
-    // Exclude soft-deleted missions
     const active = (ms || []).filter(m => !m.deletion_status || m.deletion_status === 'active');
     setMissionsMap(prev => ({ ...prev, [expId]: active }));
     setLoadingMissionsFor(null);
   }, [missionsMap]);
 
+  const loadGuidesForExp = useCallback(async (expId) => {
+    const gs = await base44.entities.MissionGuides.filter({ experiment_id: expId }, '-version_number', 50).catch(() => []);
+    const active = (gs || []).filter(g => !g.deletion_status || g.deletion_status === 'active');
+    setGuidesMap(prev => ({ ...prev, [expId]: active }));
+  }, []);
+
   const handleExpand = (expId) => {
     const next = expandedId === expId ? null : expId;
     setExpandedId(next);
-    if (next) loadMissionsForExp(next);
+    if (next) { loadMissionsForExp(next); loadGuidesForExp(next); }
   };
 
   const save = async (data) => {
@@ -409,6 +412,36 @@ export default function ExperimentsPage() {
     setExperiments(prev => prev.map(e => e.id === updated.id ? { ...e, ...updated } : e));
   };
 
+  const handleGuideGenerated = (expId, newGuide, makeActive) => {
+    setGuidesMap(prev => {
+      const existing = (prev[expId] || []).map(g =>
+        makeActive && g.is_active ? { ...g, is_active: false, status: 'inactive' } : g
+      );
+      return { ...prev, [expId]: [...existing, newGuide] };
+    });
+    setShowGuideGeneratorFor(null);
+    // If user chose 'compare', open is already handled by the generator component via activeDecision
+  };
+
+  const handleGuideSetActive = (expId, guide) => {
+    setGuidesMap(prev => ({
+      ...prev,
+      [expId]: (prev[expId] || []).map(g =>
+        g.id === guide.id
+          ? { ...g, is_active: true, status: 'active' }
+          : { ...g, is_active: false, status: g.status === 'active' ? 'inactive' : g.status }
+      ),
+    }));
+  };
+
+  const handleGuideDeleted = (expId, guideId) => {
+    setGuidesMap(prev => ({ ...prev, [expId]: (prev[expId] || []).filter(g => g.id !== guideId) }));
+  };
+
+  const handleGuideDuplicated = (expId, newGuide) => {
+    setGuidesMap(prev => ({ ...prev, [expId]: [...(prev[expId] || []), newGuide] }));
+  };
+
   const handleProofAdded = (proof, missionTitle) => {
     setSuccessToast({ proof, missionTitle });
     if (toastTimer.current) clearTimeout(toastTimer.current);
@@ -423,6 +456,18 @@ export default function ExperimentsPage() {
 
   return (
     <main className="mx-auto max-w-5xl px-5 py-10 sm:px-8">
+      {showGuideGeneratorFor && (() => {
+        const exp = experiments.find(e => e.id === showGuideGeneratorFor);
+        if (!exp) return null;
+        return (
+          <MissionGuideGenerator
+            experiment={exp}
+            existingGuides={guidesMap[showGuideGeneratorFor] || []}
+            onGenerated={(guide, makeActive) => handleGuideGenerated(showGuideGeneratorFor, guide, makeActive)}
+            onClose={() => setShowGuideGeneratorFor(null)}
+          />
+        );
+      })()}
       {outreachPlanTarget && (
         <OutreachPlanModal
           path={outreachPlanTarget.path || { path_name: outreachPlanTarget.exp?.path_name || 'This Path', id: outreachPlanTarget.exp?.path_recommendation_id }}
@@ -503,12 +548,17 @@ export default function ExperimentsPage() {
             onProofAdded={handleProofAdded}
             onMissionDeleted={(missionId) => handleMissionDeleted(exp.id, missionId)}
             onDelete={handleExperimentDeleted}
-            onEdited={handleExperimentEdited}
-            paths={paths}
-            onFindPeople={() => {
-              const matchedPath = paths.find(p => p.path_name === exp.path_name);
-              setOutreachPlanTarget({ exp, path: matchedPath || { path_name: exp.path_name || 'This Path' } });
-            }}
+              onEdited={handleExperimentEdited}
+              paths={paths}
+              onFindPeople={() => {
+                const matchedPath = paths.find(p => p.path_name === exp.path_name);
+                setOutreachPlanTarget({ exp, path: matchedPath || { path_name: exp.path_name || 'This Path' } });
+              }}
+              guides={guidesMap[exp.id] || []}
+              onGenerateGuide={() => setShowGuideGeneratorFor(exp.id)}
+              onGuideSetActive={(guide) => handleGuideSetActive(exp.id, guide)}
+              onGuideDeleted={(guideId) => handleGuideDeleted(exp.id, guideId)}
+              onGuideDuplicated={(newGuide) => handleGuideDuplicated(exp.id, newGuide)}
             />
           ))}
         </div>
