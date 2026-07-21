@@ -13,7 +13,7 @@ const ALL_STATUS_OPTIONS = [
   { value: 'planning', label: 'Planning', bg: '#EFF6FF', text: '#1D4ED8' },
   { value: 'sent', label: 'Contacted', bg: '#FFFBEB', text: '#B45309' },
   { value: 'follow_up_needed', label: 'Follow-up needed', bg: '#FEF3C7', text: '#D97706' },
-  { value: 'call_scheduled', label: 'Meeting scheduled', bg: '#F8ECEF', text: '#8B0C21' },
+  { value: 'call_scheduled', label: 'Meeting scheduled', bg: '#EEF2F6', text: '#274C77' },
   { value: 'responded', label: 'Completed', bg: '#F0FDF4', text: '#15803D' },
   { value: 'no_response', label: 'No response', bg: '#F1F5F9', text: '#64748B' },
   { value: 'completed', label: 'Closed', bg: '#F0FDF4', text: '#15803D' },
@@ -54,7 +54,7 @@ function ContactCard({ c, experimentsMap, missionsMap, onEdit, onStatusChange, o
         <div className="flex-1 min-w-0">
           <div className="flex flex-wrap items-center gap-2 mb-1">
             {c.contact_type && (
-              <span className="rounded-full px-2.5 py-0.5 text-xs font-bold" style={{ background: '#F8ECEF', color: '#8B0C21' }}>
+              <span className="rounded-full px-2.5 py-0.5 text-xs font-bold" style={{ background: '#EEF2F6', color: 'var(--brand-navy-700)' }}>
                 {CONTACT_TYPE_LABELS[c.contact_type] || c.contact_type}
               </span>
             )}
@@ -100,7 +100,7 @@ function ContactCard({ c, experimentsMap, missionsMap, onEdit, onStatusChange, o
       {/* Contact methods */}
       <div className="flex flex-wrap gap-3 mb-3">
         {c.email && (
-          <a href={`mailto:${c.email}`} className="flex items-center gap-1 text-xs text-[#64748B] hover:text-[#8B0C21] transition">
+          <a href={`mailto:${c.email}`} className="flex items-center gap-1 text-xs text-[#64748B] hover:text-[#274C77] transition">
             <Mail size={12} />{c.email}
           </a>
         )}

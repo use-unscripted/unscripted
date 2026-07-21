@@ -21,7 +21,7 @@ const STATUS_CFG = {
   paused:        { label: 'Paused',         bg: '#FFFBEB', text: '#B45309' },
   completed:     { label: 'Completed',      bg: '#EFF6FF', text: '#1D4ED8' },
   archived:      { label: 'Archived',       bg: '#F1F5F9', text: '#94A3B8' },
-  exploring:     { label: 'Exploring',      bg: '#F8ECEF', text: '#8B0C21' },
+  exploring:     { label: 'Exploring',      bg: '#EEF2F6', text: '#274C77' },
   deprioritized: { label: 'Deprioritized',  bg: '#F1F5F9', text: '#94A3B8' },
 };
 
@@ -82,7 +82,7 @@ function PausedPathPanel({ path, experiments, missions, proof, contacts, reflect
       <div className="flex flex-wrap gap-3">
         <button onClick={onResume}
           className="flex items-center gap-2 rounded-[10px] px-5 py-2.5 text-sm font-semibold text-white"
-          style={{ background: '#8B0C21', boxShadow: '0 8px 24px rgba(139,12,33,0.15)' }}>
+          style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}>
           <RotateCcw size={14} /> Resume This Path
         </button>
         <button onClick={onArchive}
@@ -111,7 +111,7 @@ function PathCard({ path, experiments, missions, proof, contacts, reflections, o
           <div className="flex-1 min-w-0">
             <div className="flex flex-wrap items-center gap-2 mb-2">
               {path.is_primary_focus && (
-                <span className="rounded-full px-2.5 py-1 text-xs font-bold flex items-center gap-1" style={{ background: '#F8ECEF', color: '#8B0C21' }}>
+                <span className="rounded-full px-2.5 py-1 text-xs font-bold flex items-center gap-1" style={{ background: '#EEF2F6', color: 'var(--brand-navy-900)' }}>
                   <Star size={11} /> Primary Focus
                 </span>
               )}
@@ -130,7 +130,7 @@ function PathCard({ path, experiments, missions, proof, contacts, reflections, o
                   <span>{completedExps.length}/{pathExps.length}</span>
                 </div>
                 <div className="h-1.5 rounded-full overflow-hidden bg-[#F1F5F9]">
-                  <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: '#8B0C21' }} />
+                  <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: 'var(--brand-navy-900)' }} />
                 </div>
               </div>
             )}
@@ -148,7 +148,7 @@ function PathCard({ path, experiments, missions, proof, contacts, reflections, o
         <div className="mt-4 flex flex-wrap gap-2">
           <button onClick={onBuildOutreachPlan}
             className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition"
-            style={{ background: '#F8ECEF', color: '#8B0C21', border: '1px solid rgba(139,12,33,0.2)' }}>
+            style={{ background: 'var(--background-tertiary)', color: 'var(--brand-navy-700)', border: '1px solid var(--border-light)' }}>
             <Users size={12} /> Build Outreach Plan
           </button>
           <button onClick={() => onAction('edit', path)}
@@ -170,7 +170,7 @@ function PathCard({ path, experiments, missions, proof, contacts, reflections, o
           {path.status === 'paused' && (
             <button onClick={() => onAction('resume', path)}
               className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold text-white"
-              style={{ background: '#8B0C21' }}>
+              style={{ background: 'var(--brand-navy-900)' }}>
               <Play size={12} /> Resume
             </button>
           )}
@@ -246,8 +246,8 @@ function PathCard({ path, experiments, missions, proof, contacts, reflections, o
           {(path.first_experiment || d.day_to_day) && (
             <div className="grid gap-4 sm:grid-cols-2">
               {path.first_experiment && (
-                <div className="rounded-xl p-4" style={{ background: '#F8ECEF', border: '1px solid rgba(139,12,33,0.2)' }}>
-                  <p className="text-xs font-bold uppercase tracking-[.12em] mb-2" style={{ color: '#8B0C21' }}>Suggested first experiment</p>
+                <div className="rounded-xl p-4" style={{ background: 'var(--background-tertiary)', border: '1px solid var(--border-light)' }}>
+                   <p className="text-xs font-bold uppercase tracking-[.12em] mb-2" style={{ color: 'var(--brand-navy-900)' }}>Suggested first experiment</p>
                   <p className="text-sm text-[#334155]">{path.first_experiment}</p>
                 </div>
               )}
@@ -278,7 +278,7 @@ function PathCard({ path, experiments, missions, proof, contacts, reflections, o
                 path.last_active_at && path.status === 'active' && { date: path.last_active_at, label: 'Last active' },
               ].filter(Boolean).map((evt, i) => (
                 <div key={i} className="flex items-center gap-3 text-xs text-[#64748B]">
-                  <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: '#8B0C21' }} />
+                  <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: 'var(--brand-navy-900)' }} />
                   <span className="font-medium">{fmtDate(evt.date)}</span>
                   <span>{evt.label}</span>
                 </div>
@@ -296,7 +296,7 @@ function PathCard({ path, experiments, missions, proof, contacts, reflections, o
 
           <a href={`/experiments/new?pathName=${encodeURIComponent(path.path_name)}`}
             className="inline-flex items-center gap-2 text-sm font-semibold transition hover:opacity-80"
-            style={{ color: '#8B0C21' }}>
+            style={{ color: 'var(--brand-navy-900)' }}>
             Start an Experiment for This Path <ArrowRight size={15} />
           </a>
         </div>
@@ -317,7 +317,7 @@ function SortFilterBar({ paths, sortBy, setSortBy, filters, setFilters }) {
 
   const clearFilters = () => setFilters(DEFAULT_FILTERS);
 
-  const sel = 'rounded-xl border border-[#E2E8F0] bg-white px-3 py-2 text-sm text-[#334155] focus:border-[#8B0C21] focus:outline-none';
+  const sel = 'rounded-xl border border-[#E2E8F0] bg-white px-3 py-2 text-sm text-[#334155] focus:border-[#1F3A5F] focus:outline-none';
 
   return (
     <div className="mb-5 rounded-[16px] border border-[#E2E8F0] bg-white p-4">
@@ -326,7 +326,7 @@ function SortFilterBar({ paths, sortBy, setSortBy, filters, setFilters }) {
           <SlidersHorizontal size={14} className="text-[#64748B]" />
           <span className="text-xs font-bold uppercase tracking-[.12em] text-[#64748B]">Sort & Filter</span>
           {hasActiveFilters && (
-            <span className="rounded-full px-2 py-0.5 text-[10px] font-bold" style={{ background: '#F8ECEF', color: '#8B0C21' }}>
+            <span className="rounded-full px-2 py-0.5 text-[10px] font-bold" style={{ background: '#EEF2F6', color: 'var(--brand-navy-700)' }}>
               {activeCount} active
             </span>
           )}
@@ -541,7 +541,7 @@ export default function PathComparison() {
         action={
           <button onClick={() => setShowCreate(true)}
             className="flex items-center gap-2 rounded-[10px] px-5 py-2.5 text-sm font-semibold text-white shrink-0"
-            style={{ background: '#8B0C21', boxShadow: '0 8px 24px rgba(139,12,33,0.18)' }}>
+            style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}>
             <Plus size={16} /> Create Another Path
           </button>
         }
@@ -555,7 +555,7 @@ export default function PathComparison() {
           <p className="mt-2 text-sm text-[#64748B]">Create your first path to start tracking experiments, reflections, and progress.</p>
           <button onClick={() => setShowCreate(true)}
             className="mt-6 inline-flex items-center gap-2 rounded-[10px] px-6 py-3 text-sm font-semibold text-white"
-            style={{ background: '#8B0C21' }}>
+            style={{ background: 'var(--brand-navy-900)' }}>
             <Plus size={16} /> Create a Path
           </button>
         </div>
@@ -604,7 +604,7 @@ export default function PathComparison() {
           )}
 
           <div className="mt-8 rounded-[20px] p-5 text-center text-sm text-[#64748B]"
-            style={{ background: '#F8ECEF', border: '1px solid rgba(139,12,33,0.15)' }}>
+            style={{ background: 'var(--background-tertiary)', border: '1px solid var(--border-light)' }}>
             These paths are recommendations and tests — not permanent commitments. Your goal is to learn what fits you, not to pick one and stay forever.
           </div>
         </>

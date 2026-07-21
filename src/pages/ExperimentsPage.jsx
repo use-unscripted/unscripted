@@ -74,12 +74,12 @@ function PathDropdown({ paths, value, onChange, error }) {
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Search paths..."
-            className="w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] pl-8 pr-4 py-2.5 text-sm outline-none focus:border-[#8B0C21]"
+            className="w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] pl-8 pr-4 py-2.5 text-sm outline-none focus:border-[#1F3A5F]"
           />
         </div>
       )}
       <select
-        className={`w-full rounded-xl border bg-[#FAFAF9] px-4 py-3 text-sm outline-none focus:border-[#8B0C21] ${error ? 'border-red-400' : 'border-[#E2E8F0]'}`}
+        className={`w-full rounded-xl border bg-[#FAFAF9] px-4 py-3 text-sm outline-none focus:border-[#1F3A5F] ${error ? 'border-red-400' : 'border-[#E2E8F0]'}`}
         value={value}
         onChange={e => onChange(e.target.value)}
       >
@@ -288,7 +288,7 @@ function ExperimentCard({ exp, onStatusChange, onExpand, expanded, missions, loa
               <ol className="space-y-2">
                 {exp.mission_steps.map((step, i) => (
                   <li key={i} className="flex gap-3 text-sm text-[#334155]">
-                    <span className="shrink-0 font-bold" style={{ color: '#8B0C21' }}>{i + 1}.</span>
+                    <span className="shrink-0 font-bold" style={{ color: 'var(--brand-navy-900)' }}>{i + 1}.</span>
                     <span>{typeof step === 'string' ? step : step.step || step.description || step.title || JSON.stringify(step)}</span>
                   </li>
                 ))}
@@ -296,8 +296,8 @@ function ExperimentCard({ exp, onStatusChange, onExpand, expanded, missions, loa
             </div>
           )}
           {exp.proof_required && (
-            <div className="rounded-xl p-3" style={{ background: '#F8ECEF', border: '1px solid rgba(139,12,33,0.2)' }}>
-              <p className="text-xs font-bold uppercase tracking-wide mb-1" style={{ color: '#8B0C21' }}>Proof required</p>
+            <div className="rounded-xl p-3" style={{ background: 'var(--background-tertiary)', border: '1px solid var(--border-light)' }}>
+              <p className="text-xs font-bold uppercase tracking-wide mb-1" style={{ color: 'var(--brand-navy-900)' }}>Proof required</p>
               <p className="text-sm text-[#334155]">{exp.proof_required}</p>
             </div>
           )}
@@ -314,7 +314,7 @@ function ExperimentCard({ exp, onStatusChange, onExpand, expanded, missions, loa
               {['planned', 'in_progress', 'completed', 'skipped'].map(st => (
                 <button key={st} onClick={() => onStatusChange(exp.id, st)}
                   className="rounded-lg px-3 py-1.5 text-xs font-semibold transition border"
-                  style={exp.status === st ? { background: '#8B0C21', color: '#fff', borderColor: '#8B0C21' } : { background: 'white', color: '#334155', borderColor: '#E2E8F0' }}>
+                  style={exp.status === st ? { background: 'var(--brand-navy-900)', color: '#fff', borderColor: 'var(--brand-navy-900)' } : { background: 'white', color: '#334155', borderColor: '#E2E8F0' }}>
                   {STATUS_STYLES[st].label}
                 </button>
               ))}
@@ -479,7 +479,7 @@ function PausedSection({ experiments, missions, guides, onResumed, onDelete, onE
                         <p className="text-xs font-bold uppercase tracking-wide text-[#64748B] mb-1">Mission Guides ({expGuides.length})</p>
                         {expGuides.map(g => (
                           <div key={g.id} className="flex items-center gap-2 text-xs text-[#334155]">
-                            <Wand2 size={11} className="text-[#8B0C21]" />
+                            <Wand2 size={11} style={{ color: 'var(--brand-navy-700)' }} />
                             <span>{g.guide_title} — v{g.version_number}</span>
                             {g.is_active && <span className="rounded-full px-1.5 py-0.5 font-bold" style={{ background: '#F0FDF4', color: '#15803D' }}>Active</span>}
                           </div>
@@ -536,7 +536,7 @@ function NewExperimentModal({ onClose, onSave, paths }) {
         <div className="space-y-4">
           <div>
             <label className="text-sm font-semibold text-[#334155] block mb-1">Choose an experiment type</label>
-            <select className="w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-3 text-sm outline-none focus:border-[#8B0C21]"
+            <select className="w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-3 text-sm outline-none focus:border-[#1F3A5F]"
               value={data.experiment_type} onChange={e => setData(d => ({ ...d, experiment_type: e.target.value, title: d.title || e.target.value }))}>
               <option value="">Select or type your own below</option>
               {EXPERIMENT_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
@@ -545,7 +545,7 @@ function NewExperimentModal({ onClose, onSave, paths }) {
 
           <label className="block">
             <span className="text-sm font-semibold text-[#334155] block mb-1">Experiment title</span>
-            <input className="w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-3 text-sm outline-none focus:border-[#8B0C21]"
+            <input className="w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-3 text-sm outline-none focus:border-[#1F3A5F]"
               placeholder="e.g. Interview 3 investment bankers" value={data.title || ''} onChange={e => setData(d => ({ ...d, title: e.target.value }))} />
           </label>
 
@@ -560,13 +560,13 @@ function NewExperimentModal({ onClose, onSave, paths }) {
           ].map(f => (
             <label key={f.name} className="block">
               <span className="text-sm font-semibold text-[#334155] block mb-1">{f.label}</span>
-              <input className="w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-3 text-sm outline-none focus:border-[#8B0C21]"
+              <input className="w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-3 text-sm outline-none focus:border-[#1F3A5F]"
                 placeholder={f.placeholder} value={data[f.name] || ''} onChange={e => setData(d => ({ ...d, [f.name]: e.target.value }))} />
             </label>
           ))}
           <label className="block">
             <span className="text-sm font-semibold text-[#334155] block mb-1">Deadline</span>
-            <input type="date" className="w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-3 text-sm outline-none focus:border-[#8B0C21]"
+            <input type="date" className="w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-3 text-sm outline-none focus:border-[#1F3A5F]"
               value={data.deadline || ''} onChange={e => setData(d => ({ ...d, deadline: e.target.value }))} />
           </label>
         </div>
@@ -887,7 +887,7 @@ export default function ExperimentsPage() {
               {filter !== 'all' ? (
                 <>
                   <h3 className="font-heading text-xl font-bold text-[#050816]">No {filter.replace('_', ' ')} experiments.</h3>
-                  <button onClick={() => setFilter('all')} className="mt-4 text-sm font-semibold" style={{ color: '#8B0C21' }}>Show all</button>
+                  <button onClick={() => setFilter('all')} className="mt-4 text-sm font-semibold" style={{ color: 'var(--brand-navy-900)' }}>Show all</button>
                 </>
               ) : (
                 <>
