@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import PageHeader from '@/components/PageHeader';
-import { Plus, X, AlertTriangle, CheckCircle, Clock, ChevronDown, ChevronUp } from 'lucide-react';
+import { Plus, X, AlertTriangle, CheckCircle, Clock, ChevronDown, ChevronUp, Calendar } from 'lucide-react';
+import ICSExportPanel from '@/components/calendar/ICSExportPanel';
+import AddToCalendarModal from '@/components/calendar/AddToCalendarModal';
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
@@ -189,7 +191,8 @@ export default function WeeklyCalendar() {
   const [experiments, setExperiments] = useState([]);
   const [taskModal, setTaskModal] = useState(null);
   const [blockModal, setBlockModal] = useState(null);
-  const [tab, setTab] = useState('plan'); // 'plan' | 'commitments'
+  const [calendarModal, setCalendarModal] = useState(null); // task to export
+  const [tab, setTab] = useState('plan'); // 'plan' | 'commitments' | 'export'
   const [expandedDay, setExpandedDay] = useState(null);
 
   const load = async () => {
@@ -263,6 +266,13 @@ export default function WeeklyCalendar() {
           onSave={saveBlock}
         />
       )}
+      {calendarModal && (
+        <AddToCalendarModal
+          item={calendarModal}
+          itemType="task"
+          onClose={() => setCalendarModal(null)}
+        />
+      )}
 
       <PageHeader
         eyebrow="Weekly plan"
@@ -316,8 +326,8 @@ export default function WeeklyCalendar() {
       )}
 
       {/* Tab switcher */}
-      <div className="mb-6 flex gap-2">
-        {[['plan', 'Mission Tasks'], ['commitments', 'Fixed Commitments']].map(([val, label]) => (
+      <div className="mb-6 flex gap-2 flex-wrap">
+        {[['plan', 'Mission Tasks'], ['commitments', 'Fixed Commitments'], ['export', 'Export to Calendar']].map(([val, label]) => (
           <button key={val} onClick={() => setTab(val)}
             className="rounded-[10px] px-4 py-2.5 text-sm font-semibold transition"
             style={tab === val ? { background: '#8B0C21', color: '#fff' } : { background: '#F1F5F9', color: '#334155' }}>
@@ -326,7 +336,9 @@ export default function WeeklyCalendar() {
         ))}
       </div>
 
-      {tab === 'plan' ? (
+      {tab === 'export' ? (
+        <ICSExportPanel />
+      ) : tab === 'plan' ? (
         <div className="space-y-3">
           {DAYS.map(day => {
             const dayTasks = tasks.filter(t => t.day === day);
@@ -371,6 +383,11 @@ export default function WeeklyCalendar() {
                               </div>
                             </div>
                             <div className="flex gap-1 shrink-0">
+                              <button onClick={() => setCalendarModal({ ...t, title: t.task_title })}
+                                className="rounded-lg p-1.5 text-[#94A3B8] hover:text-[#8B0C21] transition"
+                                title="Add to Calendar">
+                                <Calendar size={13} />
+                              </button>
                               <button onClick={() => setTaskModal(t)}
                                 className="rounded-lg px-2 py-1 text-xs font-semibold text-[#334155] hover:bg-[#E2E8F0] transition">
                                 Edit

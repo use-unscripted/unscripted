@@ -1,7 +1,8 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
-import { Plus, ChevronDown, ChevronUp, Clock, BookOpen, Target, FileText, Loader2 } from 'lucide-react';
+import { Plus, ChevronDown, ChevronUp, Clock, BookOpen, Target, FileText, Loader2, Calendar } from 'lucide-react';
+import AddToCalendarModal from '@/components/calendar/AddToCalendarModal';
 import PageHeader from '@/components/PageHeader';
 import AddMissionModal from '@/components/experiments/AddMissionModal';
 import AddProofModal, { ProofSuccessToast } from '@/components/experiments/AddProofModal';
@@ -25,6 +26,7 @@ const EXPERIMENT_TYPES = [
 // ── Mission row inside expanded card ──────────────────────────────────────────
 function MissionRow({ mission, experiment, onProofAdded }) {
   const [showProof, setShowProof] = useState(false);
+  const [showCal, setShowCal] = useState(false);
   const s = STATUS_STYLES[mission.status] || STATUS_STYLES.planned;
   return (
     <div className="flex items-center justify-between gap-3 rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-3">
@@ -36,6 +38,13 @@ function MissionRow({ mission, experiment, onProofAdded }) {
           onSaved={(proof) => { setShowProof(false); onProofAdded(proof, mission.title); }}
         />
       )}
+      {showCal && (
+        <AddToCalendarModal
+          item={mission}
+          itemType="mission"
+          onClose={() => setShowCal(false)}
+        />
+      )}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
           <span className="rounded-full px-2 py-0.5 text-xs font-bold" style={{ background: s.bg, color: s.text }}>{s.label}</span>
@@ -43,12 +52,20 @@ function MissionRow({ mission, experiment, onProofAdded }) {
         </div>
         {mission.objective && <p className="mt-0.5 text-xs text-[#64748B] line-clamp-1">{mission.objective}</p>}
       </div>
-      <button
-        onClick={() => setShowProof(true)}
-        className="shrink-0 flex items-center gap-1.5 rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-xs font-semibold text-[#334155] hover:bg-white transition"
-      >
-        <FileText size={12} /> Add Proof
-      </button>
+      <div className="flex gap-2 shrink-0">
+        <button
+          onClick={() => setShowCal(true)}
+          className="flex items-center gap-1.5 rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-xs font-semibold text-[#334155] hover:bg-white transition"
+        >
+          <Calendar size={12} /> Add to Calendar
+        </button>
+        <button
+          onClick={() => setShowProof(true)}
+          className="flex items-center gap-1.5 rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-xs font-semibold text-[#334155] hover:bg-white transition"
+        >
+          <FileText size={12} /> Add Proof
+        </button>
+      </div>
     </div>
   );
 }

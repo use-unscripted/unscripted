@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import PageHeader from '@/components/PageHeader';
 import Field from '@/components/onboarding/Field';
+import ICSExportPanel from '@/components/calendar/ICSExportPanel';
 
 export default function Settings() {
   const [user, setUser] = useState({});
@@ -23,7 +24,7 @@ export default function Settings() {
         title="Keep your context current."
         description="Your direction can change. Update the facts that shape future roadmaps."
       />
-      <section className="grid gap-5 rounded-[24px] border border-[#E2E8F0] bg-white p-7 shadow-sm sm:grid-cols-2">
+      <section className="mb-8 grid gap-5 rounded-[24px] border border-[#E2E8F0] bg-white p-7 shadow-sm sm:grid-cols-2">
         <Field label="Full name" value={user.full_name} name="full_name" onChange={change} />
         <Field label="Email" value={user.email} name="email" onChange={change} />
         <Field label="College" value={user.college} name="college" onChange={change} />
@@ -44,6 +45,13 @@ export default function Settings() {
           Log out
         </button>
       </section>
+
+      <div className="mb-3">
+        <p className="text-xs font-bold uppercase tracking-[.14em] mb-1" style={{ color: '#8B0C21' }}>Calendar</p>
+        <h2 className="font-heading text-xl font-bold text-[#050816] mb-1">Export to Calendar</h2>
+        <p className="text-sm text-[#334155]">Download .ics files to add your Unscripted schedule to Google Calendar, Apple Calendar, Outlook, or any standard calendar app.</p>
+      </div>
+      <ICSExportPanel />
     </main>
   );
 }
