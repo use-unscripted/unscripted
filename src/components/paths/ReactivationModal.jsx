@@ -2,7 +2,7 @@ import { useState, useRef } from 'react';
 import { X, Loader2, ArrowRight } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 
-const inputCls = 'w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-3 text-sm text-[#050816] placeholder-[#94A3B8] outline-none focus:border-[#8B0C21] resize-none';
+const inputCls = 'w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-3 text-sm text-[#050816] placeholder-[#94A3B8] outline-none focus:border-[#1F3A5F] resize-none';
 
 const SURVEY_QUESTIONS = [
   { name: 'since_last_exploration', label: 'What have you done since you last explored this path?', placeholder: 'Classes, projects, conversations, internships, etc.' },
@@ -177,10 +177,10 @@ Be concrete, practical, and encouraging without being vague.`,
                     onClick={() => setForm(f => ({ ...f, continue_old_or_new: opt.val }))}
                     className="flex-1 rounded-xl border p-3 text-left transition"
                     style={form.continue_old_or_new === opt.val
-                      ? { borderColor: '#8B0C21', background: '#F8ECEF' }
+                      ? { borderColor: 'var(--brand-navy-900)', background: '#EEF2F6' }
                       : { borderColor: '#E2E8F0', background: 'white' }}
                   >
-                    <p className="text-sm font-semibold" style={{ color: form.continue_old_or_new === opt.val ? '#8B0C21' : '#050816' }}>{opt.label}</p>
+                    <p className="text-sm font-semibold" style={{ color: form.continue_old_or_new === opt.val ? 'var(--brand-navy-900)' : '#050816' }}>{opt.label}</p>
                     <p className="text-xs text-[#64748B] mt-0.5">{opt.desc}</p>
                   </button>
                 ))}
@@ -191,7 +191,7 @@ Be concrete, practical, and encouraging without being vague.`,
               <button onClick={onClose} className="flex-1 rounded-[10px] border border-[#E2E8F0] py-3 text-sm font-semibold text-[#334155] hover:bg-[#F8FAFC]">Cancel</button>
               <button onClick={handleSubmitSurvey} disabled={generating}
                 className="flex-1 rounded-[10px] py-3 text-sm font-semibold text-white transition disabled:opacity-60"
-                style={{ background: '#8B0C21' }}>
+                style={{ background: 'var(--brand-navy-900)' }}>
                 {generating ? <span className="flex items-center justify-center gap-2"><Loader2 size={15} className="animate-spin" />Generating plan…</span>
                   : <span className="flex items-center justify-center gap-2">Generate Updated Plan <ArrowRight size={14} /></span>}
               </button>
@@ -202,8 +202,8 @@ Be concrete, practical, and encouraging without being vague.`,
         {step === 'primary' && (
           <div className="space-y-5 mt-5">
             {generatedPlan && (
-              <div className="rounded-[20px] p-5" style={{ background: '#081225', border: '1px solid rgba(139,12,33,0.3)' }}>
-                <p className="text-xs font-bold uppercase tracking-wide mb-3" style={{ color: '#8B0C21' }}>Your Updated Plan</p>
+              <div className="rounded-[20px] p-5" style={{ background: '#081225', border: '1px solid rgba(31,58,95,0.4)' }}>
+                <p className="text-xs font-bold uppercase tracking-wide mb-3" style={{ color: 'var(--brand-gold-500)' }}>Your Updated Plan</p>
                 <pre className="text-sm text-slate-300 whitespace-pre-wrap font-body leading-6">{generatedPlan}</pre>
               </div>
             )}
@@ -215,13 +215,13 @@ Be concrete, practical, and encouraging without being vague.`,
                 <button
                   onClick={() => setMakePrimary(true)}
                   className="flex-1 rounded-xl border p-3 text-sm font-semibold transition"
-                  style={makePrimary ? { borderColor: '#8B0C21', background: '#F8ECEF', color: '#8B0C21' } : { borderColor: '#E2E8F0', background: 'white', color: '#334155' }}>
+                  style={makePrimary ? { borderColor: 'var(--brand-navy-900)', background: '#EEF2F6', color: 'var(--brand-navy-900)' } : { borderColor: '#E2E8F0', background: 'white', color: '#334155' }}>
                   Yes — make it Primary Focus
                 </button>
                 <button
                   onClick={() => setMakePrimary(false)}
                   className="flex-1 rounded-xl border p-3 text-sm font-semibold transition"
-                  style={!makePrimary ? { borderColor: '#8B0C21', background: '#F8ECEF', color: '#8B0C21' } : { borderColor: '#E2E8F0', background: 'white', color: '#334155' }}>
+                  style={!makePrimary ? { borderColor: 'var(--brand-navy-900)', background: '#EEF2F6', color: 'var(--brand-navy-900)' } : { borderColor: '#E2E8F0', background: 'white', color: '#334155' }}>
                   No — keep current primary
                 </button>
               </div>
@@ -231,7 +231,7 @@ Be concrete, practical, and encouraging without being vague.`,
               <button onClick={onClose} disabled={saving} className="flex-1 rounded-[10px] border border-[#E2E8F0] py-3 text-sm font-semibold text-[#334155] hover:bg-[#F8FAFC] disabled:opacity-50">Cancel</button>
               <button onClick={handleFinish} disabled={saving}
                 className="flex-1 rounded-[10px] py-3 text-sm font-semibold text-white transition disabled:opacity-60"
-                style={{ background: '#8B0C21' }}>
+                style={{ background: 'var(--brand-navy-900)' }}>
                 {saving ? <span className="flex items-center justify-center gap-2"><Loader2 size={15} className="animate-spin" />Saving…</span> : 'Resume This Path'}
               </button>
             </div>
