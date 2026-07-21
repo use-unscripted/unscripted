@@ -8,12 +8,14 @@ import AddMissionModal from '@/components/experiments/AddMissionModal';
 import AddProofModal, { ProofSuccessToast } from '@/components/experiments/AddProofModal';
 import PathSwitcher from '@/components/PathSwitcher';
 import SoftDeleteConfirm, { softDeletePayload } from '@/components/SoftDeleteConfirm';
+import ExperimentActionsMenu from '@/components/experiments/ExperimentActionsMenu';
 
 const STATUS_STYLES = {
   planned:     { bg: '#F1F5F9', text: '#334155', label: 'Planned' },
   in_progress: { bg: '#FFFBEB', text: '#B45309', label: 'In Progress' },
   completed:   { bg: '#F0FDF4', text: '#15803D', label: 'Completed' },
   skipped:     { bg: '#F8FAFC', text: '#94A3B8', label: 'Skipped' },
+  paused:      { bg: '#EFF6FF', text: '#1D4ED8', label: 'Paused' },
 };
 
 const EXPERIMENT_TYPES = [
@@ -138,26 +140,11 @@ function MissionsSection({ experiment, missions, loadingMissions, onMissionAdded
 }
 
 // ── Experiment card ───────────────────────────────────────────────────────────
-function ExperimentCard({ exp, onStatusChange, onExpand, expanded, missions, loadingMissions, onMissionAdded, onProofAdded, onMissionDeleted, onDelete }) {
+function ExperimentCard({ exp, onStatusChange, onExpand, expanded, missions, loadingMissions, onMissionAdded, onProofAdded, onMissionDeleted, onDelete, onEdited }) {
   const s = STATUS_STYLES[exp.status] || STATUS_STYLES.planned;
-  const [confirmDelete, setConfirmDelete] = useState(false);
-
-  const handleSoftDelete = async () => {
-    const user = await base44.auth.me();
-    await base44.entities.Experiments.update(exp.id, softDeletePayload(user.id));
-    setConfirmDelete(false);
-    onDelete(exp.id);
-  };
 
   return (
     <div className="rounded-[20px] border border-[#E2E8F0] bg-white overflow-hidden">
-      {confirmDelete && (
-        <SoftDeleteConfirm
-          itemName={exp.title}
-          onConfirm={handleSoftDelete}
-          onCancel={() => setConfirmDelete(false)}
-        />
-      )}
       <div className="p-5">
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1">
@@ -169,11 +156,12 @@ function ExperimentCard({ exp, onStatusChange, onExpand, expanded, missions, loa
             <p className="mt-1 text-sm text-[#334155]">{exp.objective}</p>
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            <button onClick={() => setConfirmDelete(true)}
-              className="rounded-xl border border-[#E2E8F0] p-2 text-[#94A3B8] hover:text-red-500 hover:border-red-200 transition"
-              title="Delete experiment">
-              <Trash2 size={15} />
-            </button>
+            <ExperimentActionsMenu
+              exp={exp}
+              onDeleted={onDelete}
+              onPaused={(id, status) => onStatusChange(id, status)}
+              onEdited={onEdited}
+            />
             <button onClick={onExpand} className="rounded-xl border border-[#E2E8F0] p-2 hover:bg-[#F8FAFC]">
               {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
             </button>
@@ -410,6 +398,10 @@ export default function ExperimentsPage() {
     if (expandedId === expId) setExpandedId(null);
   };
 
+  const handleExperimentEdited = (updated) => {
+    setExperiments(prev => prev.map(e => e.id === updated.id ? { ...e, ...updated } : e));
+  };
+
   const handleProofAdded = (proof, missionTitle) => {
     setSuccessToast({ proof, missionTitle });
     if (toastTimer.current) clearTimeout(toastTimer.current);
@@ -496,6 +488,7 @@ export default function ExperimentsPage() {
               onProofAdded={handleProofAdded}
               onMissionDeleted={(missionId) => handleMissionDeleted(exp.id, missionId)}
               onDelete={handleExperimentDeleted}
+              onEdited={handleExperimentEdited}
             />
           ))}
         </div>

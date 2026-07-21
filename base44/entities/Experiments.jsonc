@@ -55,7 +55,8 @@
         "planned",
         "in_progress",
         "completed",
-        "skipped"
+        "skipped",
+        "paused"
       ],
       "default": "draft"
     },
@@ -115,6 +116,9 @@
     "restored_at": {
       "type": "string",
       "format": "date-time"
+    },
+    "status_before_deletion": {
+      "type": "string"
     }
   },
   "required": [

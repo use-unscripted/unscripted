@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
-import { RotateCcw, Trash2, Clock, X, AlertTriangle } from 'lucide-react';
+import { RotateCcw, Trash2, Clock, AlertTriangle, Loader2 } from 'lucide-react';
 import PageHeader from '@/components/PageHeader';
 import { restorePayload } from '@/components/SoftDeleteConfirm';
+import ExperimentPermanentDeleteModal from '@/components/experiments/ExperimentPermanentDeleteModal';
 
 const TABS = [
   { id: 'experiments', label: 'Experiments', entity: 'Experiments', nameField: 'title' },
@@ -12,11 +13,15 @@ const TABS = [
   { id: 'proof', label: 'Proof of Work', entity: 'ProofOfWork', nameField: 'title' },
 ];
 
+const STATUS_LABELS = {
+  planned: 'Planned', in_progress: 'In Progress', completed: 'Completed',
+  skipped: 'Skipped', paused: 'Paused', draft: 'Draft',
+};
+
 function daysRemaining(purgeAt) {
   if (!purgeAt) return '?';
   const diff = new Date(purgeAt) - new Date();
-  const days = Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
-  return days;
+  return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
 }
 
 function fmtDate(d) {
@@ -29,7 +34,7 @@ function getItemName(item, nameField) {
   return item[nameField] || 'Untitled';
 }
 
-// ── Permanent Delete Confirm ──────────────────────────────────────────────────
+// ── Standard Permanent Delete Confirm (non-experiment) ────────────────────────
 function PermanentDeleteConfirm({ itemName, onConfirm, onCancel }) {
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" style={{ background: 'rgba(5,8,22,0.6)' }}>
@@ -41,9 +46,7 @@ function PermanentDeleteConfirm({ itemName, onConfirm, onCancel }) {
           <h3 className="font-heading text-lg font-bold text-[#050816]">Permanently delete?</h3>
         </div>
         <p className="text-sm text-[#334155] mb-1">"{itemName}"</p>
-        <p className="text-sm text-[#64748B] mb-5">
-          This cannot be recovered. Linked experiments, paths, missions, and users will not be affected.
-        </p>
+        <p className="text-sm text-[#64748B] mb-5">This cannot be recovered.</p>
         <div className="flex gap-3">
           <button onClick={onCancel}
             className="flex-1 rounded-[10px] border border-[#E2E8F0] py-2.5 text-sm font-semibold text-[#334155] hover:bg-[#F8FAFC] transition">
@@ -59,8 +62,82 @@ function PermanentDeleteConfirm({ itemName, onConfirm, onCancel }) {
   );
 }
 
-// ── Deleted Item Card ──────────────────────────────────────────────────────────
-function DeletedItemCard({ item, tab, experimentsMap, missionsMap, onRestore, onPermanentDelete }) {
+// ── Experiment counts loader + card ──────────────────────────────────────────
+function ExperimentDeletedCard({ exp, onRestore, onPermanentDelete, actionLoading }) {
+  const [counts, setCounts] = useState(null);
+  const days = daysRemaining(exp.purge_at);
+  const urgent = days <= 3;
+  const statusLabel = STATUS_LABELS[exp.status_before_deletion || exp.status] || 'Unknown';
+
+  useEffect(() => {
+    Promise.all([
+      base44.entities.Missions.filter({ experiment_id: exp.id }, '-created_date', 500).catch(() => []),
+      base44.entities.ProofOfWork.filter({ experiment_id: exp.id }, '-created_date', 500).catch(() => []),
+      base44.entities.OutreachContacts.filter({ experiment_id: exp.id }, '-created_date', 500).catch(() => []),
+      base44.entities.WeeklyReflections.filter({ experiment_id: exp.id }, '-created_date', 500).catch(() => []),
+    ]).then(([missions, proof, contacts, reflections]) => {
+      setCounts({ missions: missions.length, proof: proof.length, contacts: contacts.length, reflections: reflections.length });
+    });
+  }, [exp.id]);
+
+  return (
+    <div className="rounded-[16px] border border-[#E2E8F0] bg-white p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex-1 min-w-0">
+          <div className="flex flex-wrap items-center gap-2 mb-1">
+            <span className="rounded-full px-2.5 py-0.5 text-[10px] font-bold" style={{ background: '#F8ECEF', color: '#8B0C21' }}>Experiment</span>
+            <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold flex items-center gap-1 ${urgent ? 'bg-red-50 text-red-600' : 'bg-amber-50 text-amber-700'}`}>
+              <Clock size={9} /> {days === 0 ? 'Expires today' : `${days} day${days !== 1 ? 's' : ''} left`}
+            </span>
+            <span className="rounded-full px-2.5 py-0.5 text-[10px] font-semibold bg-[#F1F5F9] text-[#334155]">{statusLabel} before deletion</span>
+          </div>
+          <p className="font-semibold text-sm text-[#050816] truncate">{exp.title}</p>
+          {exp.path_name && <p className="text-[10px] text-[#8B0C21] font-semibold mt-0.5">Path: {exp.path_name}</p>}
+          {exp.objective && <p className="text-[10px] text-[#64748B] mt-0.5 line-clamp-1">{exp.objective}</p>}
+          <p className="text-[10px] text-[#94A3B8] mt-0.5">Deleted {fmtDate(exp.deleted_at)}</p>
+
+          {/* Linked counts */}
+          {counts === null ? (
+            <p className="text-[10px] text-[#94A3B8] mt-2 flex items-center gap-1"><Loader2 size={9} className="animate-spin" /> Loading linked records…</p>
+          ) : (
+            <div className="mt-2 flex flex-wrap gap-3">
+              {[
+                { label: 'Mission', count: counts.missions },
+                { label: 'Proof', count: counts.proof },
+                { label: 'Contact', count: counts.contacts },
+                { label: 'Reflection', count: counts.reflections },
+              ].map(({ label, count }) => (
+                <span key={label} className="text-[10px] text-[#64748B]">
+                  {count} {label}{count !== 1 ? 's' : ''}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="flex gap-2 shrink-0 mt-1">
+          <button
+            onClick={() => onRestore(exp)}
+            disabled={actionLoading === exp.id}
+            className="flex items-center gap-1 rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-xs font-semibold text-[#334155] hover:border-green-400 hover:text-green-700 transition disabled:opacity-50"
+          >
+            {actionLoading === exp.id ? <Loader2 size={11} className="animate-spin" /> : <RotateCcw size={11} />} Restore
+          </button>
+          <button
+            onClick={() => onPermanentDelete(exp)}
+            disabled={actionLoading === exp.id}
+            className="flex items-center gap-1 rounded-lg border border-red-100 px-3 py-1.5 text-xs font-semibold text-red-400 hover:border-red-400 hover:text-red-600 transition disabled:opacity-50"
+          >
+            <Trash2 size={11} />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Standard deleted item card (non-experiment) ───────────────────────────────
+function DeletedItemCard({ item, tab, experimentsMap, missionsMap, onRestore, onPermanentDelete, actionLoading }) {
   const name = getItemName(item, tab.nameField);
   const days = daysRemaining(item.purge_at);
   const urgent = days <= 3;
@@ -81,34 +158,25 @@ function DeletedItemCard({ item, tab, experimentsMap, missionsMap, onRestore, on
           </div>
           <p className="font-semibold text-sm text-[#050816] truncate">{name}</p>
           <p className="text-[10px] text-[#94A3B8] mt-0.5">Deleted {fmtDate(item.deleted_at)}</p>
-
-          {/* Context */}
           <div className="mt-1.5 flex flex-wrap gap-3">
-            {/* For experiments themselves, show path */}
-            {tab.id === 'experiments' && item.path_name && (
-              <p className="text-[10px] text-[#94A3B8]">Path: <span className="font-semibold">{item.path_name}</span></p>
-            )}
-            {tab.id === 'experiments' && item.objective && (
-              <p className="text-[10px] text-[#64748B] line-clamp-1">{item.objective}</p>
-            )}
-            {/* For other items, show their linked experiment/mission */}
-            {tab.id !== 'experiments' && exp ? (
+            {exp ? (
               <p className="text-[10px] text-[#64748B]">Experiment: <span className="font-semibold">{exp.title}</span></p>
-            ) : tab.id !== 'experiments' && item.experiment_id ? (
+            ) : item.experiment_id ? (
               <p className="text-[10px] text-[#94A3B8] italic">Experiment no longer exists — can restore as unlinked</p>
             ) : null}
-            {tab.id !== 'experiments' && exp?.path_name && <p className="text-[10px] text-[#94A3B8]">Path: {exp.path_name}</p>}
+            {exp?.path_name && <p className="text-[10px] text-[#94A3B8]">Path: {exp.path_name}</p>}
             {mission && <p className="text-[10px] text-[#94A3B8]">Mission: {mission.title}</p>}
           </div>
         </div>
-
         <div className="flex gap-2 shrink-0 mt-1">
           <button onClick={() => onRestore(item, tab)}
-            className="flex items-center gap-1 rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-xs font-semibold text-[#334155] hover:border-green-400 hover:text-green-700 transition">
-            <RotateCcw size={11} /> Restore
+            disabled={actionLoading === item.id}
+            className="flex items-center gap-1 rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-xs font-semibold text-[#334155] hover:border-green-400 hover:text-green-700 transition disabled:opacity-50">
+            {actionLoading === item.id ? <Loader2 size={11} className="animate-spin" /> : <RotateCcw size={11} />} Restore
           </button>
           <button onClick={() => onPermanentDelete(item, tab)}
-            className="flex items-center gap-1 rounded-lg border border-red-100 px-3 py-1.5 text-xs font-semibold text-red-400 hover:border-red-400 hover:text-red-600 transition">
+            disabled={actionLoading === item.id}
+            className="flex items-center gap-1 rounded-lg border border-red-100 px-3 py-1.5 text-xs font-semibold text-red-400 hover:border-red-400 hover:text-red-600 transition disabled:opacity-50">
             <Trash2 size={11} />
           </button>
         </div>
@@ -124,7 +192,8 @@ export default function RecentlyDeleted() {
   const [loading, setLoading] = useState(true);
   const [experiments, setExperiments] = useState([]);
   const [missions, setMissions] = useState([]);
-  const [confirmPerm, setConfirmPerm] = useState(null); // { item, tab }
+  const [confirmPerm, setConfirmPerm] = useState(null); // { item, tab } — for non-experiment tabs
+  const [permExpTarget, setPermExpTarget] = useState(null); // experiment for custom modal
   const [actionLoading, setActionLoading] = useState(null);
 
   const load = async () => {
@@ -155,19 +224,33 @@ export default function RecentlyDeleted() {
   const experimentsMap = Object.fromEntries(experiments.map(e => [e.id, e]));
   const missionsMap = Object.fromEntries(missions.map(m => [m.id, m]));
 
+  // Restore a non-experiment item
   const handleRestore = async (item, tab) => {
     setActionLoading(item.id);
     try {
       await base44.entities[tab.entity].update(item.id, restorePayload());
-      setItems(prev => ({
-        ...prev,
-        [tab.id]: prev[tab.id].filter(x => x.id !== item.id),
-      }));
+      setItems(prev => ({ ...prev, [tab.id]: prev[tab.id].filter(x => x.id !== item.id) }));
     } finally {
       setActionLoading(null);
     }
   };
 
+  // Restore an experiment — return to prior status
+  const handleRestoreExperiment = async (exp) => {
+    setActionLoading(exp.id);
+    try {
+      const priorStatus = exp.status_before_deletion || exp.status || 'planned';
+      await base44.entities.Experiments.update(exp.id, {
+        ...restorePayload(),
+        status: priorStatus,
+      });
+      setItems(prev => ({ ...prev, experiments: prev.experiments.filter(x => x.id !== exp.id) }));
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  // Permanent delete non-experiment
   const handlePermanentDelete = async () => {
     if (!confirmPerm) return;
     const { item, tab } = confirmPerm;
@@ -175,13 +258,16 @@ export default function RecentlyDeleted() {
     setConfirmPerm(null);
     try {
       await base44.entities[tab.entity].delete(item.id);
-      setItems(prev => ({
-        ...prev,
-        [tab.id]: prev[tab.id].filter(x => x.id !== item.id),
-      }));
+      setItems(prev => ({ ...prev, [tab.id]: prev[tab.id].filter(x => x.id !== item.id) }));
     } finally {
       setActionLoading(null);
     }
+  };
+
+  // Called by ExperimentPermanentDeleteModal after it handles deletion
+  const handleExperimentPermDeleted = (expId) => {
+    setPermExpTarget(null);
+    setItems(prev => ({ ...prev, experiments: prev.experiments.filter(x => x.id !== expId) }));
   };
 
   const currentTab = TABS.find(t => t.id === activeTab);
@@ -196,6 +282,13 @@ export default function RecentlyDeleted() {
           onCancel={() => setConfirmPerm(null)}
         />
       )}
+      {permExpTarget && (
+        <ExperimentPermanentDeleteModal
+          exp={permExpTarget}
+          onDeleted={handleExperimentPermDeleted}
+          onCancel={() => setPermExpTarget(null)}
+        />
+      )}
 
       <PageHeader
         eyebrow="Settings"
@@ -204,12 +297,12 @@ export default function RecentlyDeleted() {
       />
 
       {/* Tabs */}
-      <div className="flex gap-1 mb-6 border-b border-[#E2E8F0]">
+      <div className="flex gap-1 mb-6 border-b border-[#E2E8F0] overflow-x-auto">
         {TABS.map(tab => {
           const count = (items[tab.id] || []).length;
           return (
             <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-              className={`px-4 py-2.5 text-sm font-semibold transition border-b-2 -mb-px ${activeTab === tab.id ? 'border-[#8B0C21] text-[#8B0C21]' : 'border-transparent text-[#64748B] hover:text-[#334155]'}`}>
+              className={`shrink-0 px-4 py-2.5 text-sm font-semibold transition border-b-2 -mb-px ${activeTab === tab.id ? 'border-[#8B0C21] text-[#8B0C21]' : 'border-transparent text-[#64748B] hover:text-[#334155]'}`}>
               {tab.label} {count > 0 && <span className="ml-1 rounded-full px-1.5 py-0.5 text-[10px] font-bold bg-[#F8ECEF] text-[#8B0C21]">{count}</span>}
             </button>
           );
@@ -225,17 +318,30 @@ export default function RecentlyDeleted() {
         </div>
       ) : (
         <div className="space-y-3">
-          {currentItems.map(item => (
-            <DeletedItemCard
-              key={item.id}
-              item={item}
-              tab={currentTab}
-              experimentsMap={experimentsMap}
-              missionsMap={missionsMap}
-              onRestore={(i, t) => handleRestore(i, t)}
-              onPermanentDelete={(i, t) => setConfirmPerm({ item: i, tab: t })}
-            />
-          ))}
+          {activeTab === 'experiments' ? (
+            currentItems.map(exp => (
+              <ExperimentDeletedCard
+                key={exp.id}
+                exp={exp}
+                actionLoading={actionLoading}
+                onRestore={handleRestoreExperiment}
+                onPermanentDelete={setPermExpTarget}
+              />
+            ))
+          ) : (
+            currentItems.map(item => (
+              <DeletedItemCard
+                key={item.id}
+                item={item}
+                tab={currentTab}
+                experimentsMap={experimentsMap}
+                missionsMap={missionsMap}
+                actionLoading={actionLoading}
+                onRestore={handleRestore}
+                onPermanentDelete={(i, t) => setConfirmPerm({ item: i, tab: t })}
+              />
+            ))
+          )}
         </div>
       )}
     </main>
