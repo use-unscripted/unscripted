@@ -1,5 +1,5 @@
 import { Outlet, NavLink } from 'react-router-dom';
-import { LayoutDashboard, Beaker, CalendarDays, Users, FileText, RotateCcw, Settings, LogOut, Target } from 'lucide-react';
+import { LayoutDashboard, Beaker, CalendarDays, Users, FileText, RotateCcw, Settings, LogOut, Target, BookOpen } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { CompassIcon } from '@/components/UnscriptedLogo';
 
@@ -14,6 +14,7 @@ const buildLinks = [
   ['/outreach', 'Outreach', Users],
   ['/proof', 'Proof', FileText],
   ['/reflection', 'Reflect', RotateCcw],
+  ['/resume', 'Resume', BookOpen],
 ];
 
 function NavGroup({ label, links }) {

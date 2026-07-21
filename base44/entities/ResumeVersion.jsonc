@@ -1,0 +1,25 @@
+{
+  "name": "ResumeVersion",
+  "type": "object",
+  "properties": {
+    "resume_id": {
+      "type": "string"
+    },
+    "user_id": {
+      "type": "string"
+    },
+    "version_number": {
+      "type": "number"
+    },
+    "snapshot": {
+      "type": "object"
+    },
+    "version_note": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "resume_id",
+    "snapshot"
+  ]
+}

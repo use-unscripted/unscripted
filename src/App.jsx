@@ -44,6 +44,7 @@ import WeeklyReflectionPage from '@/pages/WeeklyReflectionPage';
 import ResourceHub from '@/pages/ResourceHub';
 import CreatorLibrary from '@/pages/CreatorLibrary';
 import GoalsPage from '@/pages/GoalsPage';
+import ResumeBuilder from '@/pages/ResumeBuilder';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError } = useAuth();
@@ -93,6 +94,7 @@ const AuthenticatedApp = () => {
           <Route path="/resources" element={<ResourceHub />} />
           <Route path="/creators" element={<CreatorLibrary />} />
           <Route path="/goals-tracker" element={<GoalsPage />} />
+          <Route path="/resume" element={<ResumeBuilder />} />
         </Route>
       </Route>
       <Route path="*" element={<PageNotFound />} />
