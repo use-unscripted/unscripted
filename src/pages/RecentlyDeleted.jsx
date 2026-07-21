@@ -85,14 +85,14 @@ function ExperimentDeletedCard({ exp, onRestore, onPermanentDelete, actionLoadin
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
           <div className="flex flex-wrap items-center gap-2 mb-1">
-            <span className="rounded-full px-2.5 py-0.5 text-[10px] font-bold" style={{ background: '#F8ECEF', color: '#8B0C21' }}>Experiment</span>
+            <span className="rounded-full px-2.5 py-0.5 text-[10px] font-bold" style={{ background: '#EEF2F6', color: 'var(--brand-navy-900)' }}>Experiment</span>
             <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold flex items-center gap-1 ${urgent ? 'bg-red-50 text-red-600' : 'bg-amber-50 text-amber-700'}`}>
               <Clock size={9} /> {days === 0 ? 'Expires today' : `${days} day${days !== 1 ? 's' : ''} left`}
             </span>
             <span className="rounded-full px-2.5 py-0.5 text-[10px] font-semibold bg-[#F1F5F9] text-[#334155]">{statusLabel} before deletion</span>
           </div>
           <p className="font-semibold text-sm text-[#050816] truncate">{exp.title}</p>
-          {exp.path_name && <p className="text-[10px] text-[#8B0C21] font-semibold mt-0.5">Path: {exp.path_name}</p>}
+          {exp.path_name && <p className="text-[10px] font-semibold mt-0.5" style={{ color: 'var(--brand-navy-700)' }}>Path: {exp.path_name}</p>}
           {exp.objective && <p className="text-[10px] text-[#64748B] mt-0.5 line-clamp-1">{exp.objective}</p>}
           <p className="text-[10px] text-[#94A3B8] mt-0.5">Deleted {fmtDate(exp.deleted_at)}</p>
 
@@ -149,7 +149,7 @@ function DeletedItemCard({ item, tab, experimentsMap, missionsMap, onRestore, on
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
           <div className="flex flex-wrap items-center gap-2 mb-1">
-            <span className="rounded-full px-2.5 py-0.5 text-[10px] font-bold" style={{ background: '#F8ECEF', color: '#8B0C21' }}>
+            <span className="rounded-full px-2.5 py-0.5 text-[10px] font-bold" style={{ background: '#EEF2F6', color: 'var(--brand-navy-900)' }}>
               {tab.label.replace(/s$/, '')}
             </span>
             <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold flex items-center gap-1 ${urgent ? 'bg-red-50 text-red-600' : 'bg-amber-50 text-amber-700'}`}>
@@ -302,8 +302,8 @@ export default function RecentlyDeleted() {
           const count = (items[tab.id] || []).length;
           return (
             <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-              className={`shrink-0 px-4 py-2.5 text-sm font-semibold transition border-b-2 -mb-px ${activeTab === tab.id ? 'border-[#8B0C21] text-[#8B0C21]' : 'border-transparent text-[#64748B] hover:text-[#334155]'}`}>
-              {tab.label} {count > 0 && <span className="ml-1 rounded-full px-1.5 py-0.5 text-[10px] font-bold bg-[#F8ECEF] text-[#8B0C21]">{count}</span>}
+              className={`shrink-0 px-4 py-2.5 text-sm font-semibold transition border-b-2 -mb-px ${activeTab === tab.id ? 'border-[#1F3A5F] text-[#1F3A5F]' : 'border-transparent text-[#64748B] hover:text-[#334155]'}`}>
+              {tab.label} {count > 0 && <span className="ml-1 rounded-full px-1.5 py-0.5 text-[10px] font-bold bg-[#EEF2F6] text-[#1F3A5F]">{count}</span>}
             </button>
           );
         })}

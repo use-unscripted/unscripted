@@ -3,7 +3,7 @@ import { Download, Calendar, FileDown, ListTodo } from 'lucide-react';
 import { downloadICSFromForm } from '@/components/calendar/AddToCalendarModal';
 import { base44 } from '@/api/base44Client';
 
-const inputCls = 'w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-3 py-2.5 text-sm outline-none focus:border-[#8B0C21]';
+const inputCls = 'w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-3 py-2.5 text-sm outline-none focus:border-[#1F3A5F]';
 
 export default function ICSExportPanel() {
   const [weekStart, setWeekStart] = useState(() => {
@@ -140,7 +140,7 @@ export default function ICSExportPanel() {
   return (
     <div className="rounded-[20px] border border-[#E2E8F0] bg-white p-6">
       <div className="flex items-center gap-2 mb-1">
-        <Calendar size={16} style={{ color: '#8B0C21' }} />
+        <Calendar size={16} style={{ color: 'var(--brand-navy-900)' }} />
         <h3 className="font-heading font-bold text-[#050816]">Export to Calendar</h3>
       </div>
       <p className="text-xs text-[#64748B] mb-5">
@@ -156,8 +156,8 @@ export default function ICSExportPanel() {
         <div className="rounded-[16px] border border-[#E2E8F0] p-4">
           <div className="flex items-start justify-between gap-4 flex-wrap">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: '#F8ECEF' }}>
-                <FileDown size={16} style={{ color: '#8B0C21' }} />
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: '#EEF2F6' }}>
+                <FileDown size={16} style={{ color: 'var(--brand-navy-900)' }} />
               </div>
               <div>
                 <p className="text-sm font-semibold text-[#050816]">Export one week</p>
@@ -166,10 +166,10 @@ export default function ICSExportPanel() {
             </div>
             <div className="flex items-center gap-2 flex-wrap">
               <input type="date" value={weekStart} onChange={e => setWeekStart(e.target.value)}
-                className="rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-3 py-2 text-xs outline-none focus:border-[#8B0C21]" />
+                className="rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-3 py-2 text-xs outline-none focus:border-[#1F3A5F]" />
               <button onClick={downloadWeek} disabled={downloading === 'week'}
                 className="flex items-center gap-1.5 rounded-[10px] px-4 py-2 text-xs font-semibold text-white disabled:opacity-60"
-                style={{ background: '#8B0C21' }}>
+                style={{ background: 'var(--brand-navy-900)' }}>
                 <Download size={12} />
                 {downloading === 'week' ? 'Exporting…' : 'Download'}
               </button>
@@ -181,8 +181,8 @@ export default function ICSExportPanel() {
         <div className="rounded-[16px] border border-[#E2E8F0] p-4">
           <div className="flex items-center justify-between gap-4 flex-wrap">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: '#F8ECEF' }}>
-                <ListTodo size={16} style={{ color: '#8B0C21' }} />
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: '#EEF2F6' }}>
+                <ListTodo size={16} style={{ color: 'var(--brand-navy-900)' }} />
               </div>
               <div>
                 <p className="text-sm font-semibold text-[#050816]">Export all active missions</p>
@@ -191,7 +191,7 @@ export default function ICSExportPanel() {
             </div>
             <button onClick={downloadMissions} disabled={downloading === 'missions'}
               className="flex items-center gap-1.5 rounded-[10px] px-4 py-2 text-xs font-semibold text-white disabled:opacity-60"
-              style={{ background: '#8B0C21' }}>
+              style={{ background: 'var(--brand-navy-900)' }}>
               <Download size={12} />
               {downloading === 'missions' ? 'Exporting…' : 'Download'}
             </button>
