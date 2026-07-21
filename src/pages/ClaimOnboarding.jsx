@@ -84,6 +84,11 @@ export default function ClaimOnboarding() {
           low_energy_times: draft.low_energy_times,
           available_hours_per_week: draft.available_hours_per_week || 8,
           guest_session_id: draft.guest_session_id,
+          personal_notes: draft.personal_notes || '',
+          long_term_ambitions: draft.long_term_ambitions || '',
+          responsibilities_constraints: draft.responsibilities_constraints || '',
+          things_to_avoid: draft.things_to_avoid || '',
+          priorities_for_recommendations: draft.priorities_for_recommendations || '',
         });
 
         // ── Save path selections to user meta ──

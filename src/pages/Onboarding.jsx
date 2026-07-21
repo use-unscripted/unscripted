@@ -52,6 +52,11 @@ const STEPS = [
     ],
     hoursField: true,
   },
+  {
+    label: 'Anything else you want Unscripted to know?',
+    subtitle: 'Add personal context, ambitions, responsibilities, concerns, or goals that were not covered above. This is optional.',
+    type: 'personal_notes',
+  },
 ];
 
 function Field({ field, value, onChange }) {
@@ -94,6 +99,71 @@ function PrioritiesStep({ step, data, onChange, onCheck }) {
           ))}
         </div>
       </div>
+    </div>
+  );
+}
+
+function PersonalNotesStep({ data, onChange }) {
+  const baseClass = 'mt-2 w-full rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-3 text-sm text-[#050816] placeholder-[#94A3B8] outline-none transition focus:border-[#8B0C21] focus:bg-white';
+  return (
+    <div className="space-y-5">
+      <label className="block text-sm font-semibold text-[#334155]">
+        Personal notes and context
+        <span className="ml-2 text-xs font-normal text-[#94A3B8]">Optional</span>
+        <textarea
+          rows={4} name="personal_notes" value={data.personal_notes || ''} onChange={onChange}
+          maxLength={3000}
+          placeholder="Anything about your situation, background, or current life that would help personalize your recommendations..."
+          className={baseClass}
+        />
+        {(data.personal_notes || '').length > 0 && (
+          <p className="mt-1 text-right text-xs text-[#94A3B8]">{(data.personal_notes || '').length}/3000</p>
+        )}
+      </label>
+
+      <label className="block text-sm font-semibold text-[#334155]">
+        Long-term ambitions
+        <span className="ml-2 text-xs font-normal text-[#94A3B8]">Optional</span>
+        <textarea
+          rows={3} name="long_term_ambitions" value={data.long_term_ambitions || ''} onChange={onChange}
+          placeholder="What do you ultimately want to build, achieve, or become in the next 5–10 years?"
+          className={baseClass}
+        />
+      </label>
+
+      <label className="block text-sm font-semibold text-[#334155]">
+        Responsibilities or constraints
+        <span className="ml-2 text-xs font-normal text-[#94A3B8]">Optional</span>
+        <textarea
+          rows={3} name="responsibilities_constraints" value={data.responsibilities_constraints || ''} onChange={onChange}
+          placeholder="e.g. family responsibilities, commuting, athletics, financial limits, health routines, academic requirements..."
+          className={baseClass}
+        />
+      </label>
+
+      <label className="block text-sm font-semibold text-[#334155]">
+        Things I do not want
+        <span className="ml-2 text-xs font-normal text-[#94A3B8]">Optional</span>
+        <textarea
+          rows={3} name="things_to_avoid" value={data.things_to_avoid || ''} onChange={onChange}
+          placeholder="Careers, lifestyles, or commitments you want to avoid — be specific about what you're ruling out and why..."
+          className={baseClass}
+        />
+      </label>
+
+      <label className="block text-sm font-semibold text-[#334155]">
+        Anything the recommendations should prioritize
+        <span className="ml-2 text-xs font-normal text-[#94A3B8]">Optional</span>
+        <textarea
+          rows={3} name="priorities_for_recommendations" value={data.priorities_for_recommendations || ''} onChange={onChange}
+          placeholder="Specific factors, values, or goals that should weigh heavily in how we evaluate paths for you..."
+          className={baseClass}
+        />
+      </label>
+
+      <p className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-3 text-xs text-[#64748B]">
+        🔒 Your notes are private to your account and are used only to personalize your Unscripted experience.
+      </p>
     </div>
   );
 }
@@ -180,6 +250,7 @@ export default function Onboarding() {
 
   const renderStep = () => {
     if (currentStep.type === 'sliders') return <PrioritiesStep step={currentStep} data={data} onChange={change} onCheck={check} />;
+    if (currentStep.type === 'personal_notes') return <PersonalNotesStep data={data} onChange={change} />;
     if (currentStep.hoursField) return <CapacityStep step={currentStep} data={data} onChange={change} hours={hours} setHours={h => { setHours(h); persist(data, step, h); }} />;
     return (
       <div className="grid gap-5 sm:grid-cols-2">

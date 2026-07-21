@@ -106,6 +106,21 @@
     },
     "guest_session_id": {
       "type": "string"
+    },
+    "personal_notes": {
+      "type": "string"
+    },
+    "long_term_ambitions": {
+      "type": "string"
+    },
+    "responsibilities_constraints": {
+      "type": "string"
+    },
+    "things_to_avoid": {
+      "type": "string"
+    },
+    "priorities_for_recommendations": {
+      "type": "string"
     }
   },
   "required": [

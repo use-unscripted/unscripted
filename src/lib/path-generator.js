@@ -96,6 +96,16 @@ export async function generatePathTest() {
   const comparisonPath = user.comparison_path || '';
   const availableHours = profile.available_hours_per_week || schedule.available_hours_per_week || 8;
 
+  const hasPersonalNotes = profile.personal_notes || profile.long_term_ambitions || profile.responsibilities_constraints || profile.things_to_avoid || profile.priorities_for_recommendations;
+  const personalNotesSection = hasPersonalNotes ? `
+
+Additional context provided by the student (treat as context, not verified fact — do not override structured answers above):
+${profile.personal_notes ? `- Personal notes: ${profile.personal_notes}` : ''}
+${profile.long_term_ambitions ? `- Long-term ambitions: ${profile.long_term_ambitions}` : ''}
+${profile.responsibilities_constraints ? `- Responsibilities/constraints: ${profile.responsibilities_constraints}` : ''}
+${profile.things_to_avoid ? `- Things to avoid: ${profile.things_to_avoid}` : ''}
+${profile.priorities_for_recommendations ? `- Priorities for recommendations: ${profile.priorities_for_recommendations}` : ''}` : '';
+
   const prompt = `You are Unscripted, a path-experimentation platform for college students. Your only job is to help this student test whether their chosen paths actually fit them.
 
 Student profile:
@@ -111,7 +121,7 @@ Student profile:
 - Available hours/week: ${availableHours}
 - Priority scores: autonomy=${profile.priority_autonomy || 3}, stability=${profile.priority_stability || 3}, impact=${profile.priority_impact || 3}, creativity=${profile.priority_creativity || 3}, ownership=${profile.priority_ownership || 3}
 - Willing to take financial risk: ${profile.willing_financial_risk ? 'yes' : 'no'}
-- Willing to work long hours early: ${profile.willing_long_hours ? 'yes' : 'no'}
+- Willing to work long hours early: ${profile.willing_long_hours ? 'yes' : 'no'}${personalNotesSection}
 
 TASK: Generate exactly 3 path recommendations:
 1. Best apparent fit (based on their profile)

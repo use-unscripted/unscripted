@@ -62,7 +62,7 @@ export default function PathsIntake() {
         <div className="mb-10 flex items-center justify-between">
           <LogoWordmark />
           <div className="flex items-center gap-4">
-            <span className="text-xs font-bold text-[#64748B]">STEP 4 OF 4</span>
+            <span className="text-xs font-bold text-[#64748B]">STEP 5 OF 5</span>
             <Link to="/login" className="text-xs font-semibold text-[#64748B] hover:text-[#050816] transition">Log in</Link>
           </div>
         </div>

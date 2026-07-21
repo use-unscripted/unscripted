@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { ArrowRight, ArrowLeft, Clock, Target, Zap } from 'lucide-react';
+import { ArrowRight, ArrowLeft, Clock, Target, Zap, FileText, X, Pencil, Check } from 'lucide-react';
 import { LogoWordmark } from '@/components/UnscriptedLogo';
 import { loadDraft, saveDraft } from '@/lib/guest-draft';
 import { base44 } from '@/api/base44Client';
@@ -32,6 +32,31 @@ export default function OnboardingReview() {
       }
     }).finally(() => setChecking(false));
   }, []);
+
+  const [editingNotes, setEditingNotes] = useState(false);
+  const [notesForm, setNotesForm] = useState({
+    personal_notes: draft.personal_notes || '',
+    long_term_ambitions: draft.long_term_ambitions || '',
+    responsibilities_constraints: draft.responsibilities_constraints || '',
+    things_to_avoid: draft.things_to_avoid || '',
+    priorities_for_recommendations: draft.priorities_for_recommendations || '',
+  });
+
+  const hasNotes = draft.personal_notes || draft.long_term_ambitions || draft.responsibilities_constraints || draft.things_to_avoid || draft.priorities_for_recommendations;
+
+  const saveNotes = () => {
+    const updated = saveDraft(notesForm);
+    setDraft(updated);
+    setEditingNotes(false);
+  };
+
+  const removeNotes = () => {
+    const cleared = { personal_notes: '', long_term_ambitions: '', responsibilities_constraints: '', things_to_avoid: '', priorities_for_recommendations: '' };
+    const updated = saveDraft(cleared);
+    setDraft(updated);
+    setNotesForm(cleared);
+    setEditingNotes(false);
+  };
 
   if (checking || !draft) return null;
 
@@ -120,6 +145,91 @@ export default function OnboardingReview() {
             )}
           </div>
         </div>
+
+        {/* Personal notes summary */}
+        {(hasNotes || editingNotes) && !editingNotes && (
+          <div className="mb-6 rounded-[24px] border border-[#E2E8F0] bg-white p-7 shadow-sm">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <FileText size={16} style={{ color: '#8B0C21' }} />
+                <p className="text-xs font-bold uppercase tracking-[.14em]" style={{ color: '#8B0C21' }}>Personal context</p>
+              </div>
+              <div className="flex gap-2">
+                <button onClick={() => setEditingNotes(true)}
+                  className="flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-semibold text-[#334155] border border-[#E2E8F0] hover:bg-[#F8FAFC]">
+                  <Pencil size={11} /> Edit
+                </button>
+                <button onClick={removeNotes}
+                  className="flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-semibold text-red-600 border border-red-100 hover:bg-red-50">
+                  <X size={11} /> Remove
+                </button>
+              </div>
+            </div>
+            <div className="space-y-3">
+              {draft.personal_notes && (
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-wide text-[#94A3B8] mb-0.5">Notes</p>
+                  <p className="text-sm text-[#334155] line-clamp-3">{draft.personal_notes}</p>
+                </div>
+              )}
+              {draft.long_term_ambitions && (
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-wide text-[#94A3B8] mb-0.5">Long-term ambitions</p>
+                  <p className="text-sm text-[#334155] line-clamp-2">{draft.long_term_ambitions}</p>
+                </div>
+              )}
+              {draft.responsibilities_constraints && (
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-wide text-[#94A3B8] mb-0.5">Responsibilities</p>
+                  <p className="text-sm text-[#334155] line-clamp-2">{draft.responsibilities_constraints}</p>
+                </div>
+              )}
+              {draft.things_to_avoid && (
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-wide text-[#94A3B8] mb-0.5">Things to avoid</p>
+                  <p className="text-sm text-[#334155] line-clamp-2">{draft.things_to_avoid}</p>
+                </div>
+              )}
+              {draft.priorities_for_recommendations && (
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-wide text-[#94A3B8] mb-0.5">Priorities</p>
+                  <p className="text-sm text-[#334155] line-clamp-2">{draft.priorities_for_recommendations}</p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {editingNotes && (
+          <div className="mb-6 rounded-[24px] border border-[#8B0C21] bg-white p-7 shadow-sm">
+            <p className="text-xs font-bold uppercase tracking-[.14em] mb-4" style={{ color: '#8B0C21' }}>Edit personal context</p>
+            {[
+              { name: 'personal_notes', label: 'Personal notes and context', maxLength: 3000 },
+              { name: 'long_term_ambitions', label: 'Long-term ambitions' },
+              { name: 'responsibilities_constraints', label: 'Responsibilities or constraints' },
+              { name: 'things_to_avoid', label: 'Things I do not want' },
+              { name: 'priorities_for_recommendations', label: 'Anything the recommendations should prioritize' },
+            ].map(f => (
+              <label key={f.name} className="block text-sm font-semibold text-[#334155] mb-4">
+                {f.label}
+                <textarea rows={3} value={notesForm[f.name]} maxLength={f.maxLength}
+                  onChange={e => setNotesForm(n => ({ ...n, [f.name]: e.target.value }))}
+                  className="mt-1 w-full rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-3 text-sm font-normal text-[#050816] placeholder-[#94A3B8] outline-none focus:border-[#8B0C21]" />
+              </label>
+            ))}
+            <div className="flex gap-3">
+              <button onClick={() => setEditingNotes(false)}
+                className="flex-1 rounded-[10px] border border-[#E2E8F0] py-2.5 text-sm font-semibold text-[#334155] hover:bg-[#F8FAFC]">
+                Cancel
+              </button>
+              <button onClick={saveNotes}
+                className="flex-1 flex items-center justify-center gap-2 rounded-[10px] py-2.5 text-sm font-semibold text-white"
+                style={{ background: '#8B0C21' }}>
+                <Check size={14} /> Save notes
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* CTA */}
         <div className="rounded-[24px] border border-[#E2E8F0] bg-white p-7 shadow-sm text-center">
