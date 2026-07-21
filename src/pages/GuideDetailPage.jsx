@@ -1,0 +1,176 @@
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { base44 } from '@/api/base44Client';
+import { ArrowLeft, Clock, CheckCircle2, Star, Loader2 } from 'lucide-react';
+
+const STATUS_CFG = {
+  active:    { bg: '#F0FDF4', text: '#15803D', label: 'Active' },
+  draft:     { bg: '#F1F5F9', text: '#64748B', label: 'Draft' },
+  inactive:  { bg: '#F1F5F9', text: '#64748B', label: 'Inactive' },
+  completed: { bg: '#EFF6FF', text: '#1D4ED8', label: 'Completed' },
+};
+
+function fmtDate(d) {
+  if (!d) return '—';
+  return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+export default function GuideDetailPage() {
+  const navigate = useNavigate();
+  const params = new URLSearchParams(window.location.search);
+  const guideId = params.get('id');
+
+  const [guide, setGuide] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [settingActive, setSettingActive] = useState(false);
+
+  useEffect(() => {
+    if (!guideId) { setError('No guide ID provided.'); setLoading(false); return; }
+    base44.entities.MissionGuides.get(guideId)
+      .then(g => { setGuide(g); setLoading(false); })
+      .catch(() => { setError('Guide not found.'); setLoading(false); });
+  }, [guideId]);
+
+  const handleSetActive = async () => {
+    if (!guide || settingActive) return;
+    setSettingActive(true);
+    try {
+      // Deactivate siblings
+      const siblings = await base44.entities.MissionGuides.filter({ experiment_id: guide.experiment_id }, '-version_number', 50).catch(() => []);
+      await Promise.all(
+        siblings.filter(g => g.is_active && g.id !== guide.id)
+          .map(g => base44.entities.MissionGuides.update(g.id, { is_active: false, status: 'inactive' }))
+      );
+      await base44.entities.MissionGuides.update(guide.id, { is_active: true, status: 'active' });
+      setGuide(g => ({ ...g, is_active: true, status: 'active' }));
+    } finally {
+      setSettingActive(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-32">
+        <Loader2 size={28} className="animate-spin text-[#8B0C21]" />
+      </div>
+    );
+  }
+
+  if (error || !guide) {
+    return (
+      <div className="mx-auto max-w-2xl px-5 py-16 text-center">
+        <p className="text-[#64748B] mb-4">{error || 'Guide not found.'}</p>
+        <button onClick={() => navigate('/experiments')} className="text-sm font-semibold text-[#8B0C21] underline">
+          Back to Missions
+        </button>
+      </div>
+    );
+  }
+
+  const cfg = STATUS_CFG[guide.status] || STATUS_CFG.draft;
+
+  return (
+    <main className="mx-auto max-w-3xl px-5 py-10 sm:px-8">
+      {/* Back */}
+      <button
+        onClick={() => navigate('/experiments')}
+        className="flex items-center gap-2 text-sm font-semibold text-[#64748B] hover:text-[#334155] mb-6 transition"
+      >
+        <ArrowLeft size={15} /> Back to Missions
+      </button>
+
+      {/* Header */}
+      <div className="mb-6">
+        <div className="flex flex-wrap items-center gap-2 mb-2">
+          <span className="text-xs font-bold text-[#94A3B8]">Version {guide.version_number}</span>
+          <span className="rounded-full px-2.5 py-1 text-xs font-bold" style={{ background: cfg.bg, color: cfg.text }}>{cfg.label}</span>
+          {guide.is_active && (
+            <span className="flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold" style={{ background: '#F0FDF4', color: '#15803D' }}>
+              <CheckCircle2 size={11} /> Active Guide
+            </span>
+          )}
+        </div>
+        <h1 className="font-heading text-3xl font-bold text-[#050816]">{guide.guide_title}</h1>
+        <div className="flex flex-wrap gap-4 mt-2 text-xs text-[#94A3B8]">
+          <span>Generated {fmtDate(guide.created_date)}</span>
+          {guide.estimated_time && <span className="flex items-center gap-1"><Clock size={11} /> {guide.estimated_time}</span>}
+          <span>{guide.steps?.length || 0} steps</span>
+        </div>
+      </div>
+
+      {/* Set as Active */}
+      {!guide.is_active && (
+        <button
+          onClick={handleSetActive}
+          disabled={settingActive}
+          className="mb-6 flex items-center gap-2 rounded-[10px] border border-[#E2E8F0] px-4 py-2.5 text-sm font-semibold text-[#334155] hover:bg-[#F8FAFC] transition disabled:opacity-60"
+        >
+          {settingActive ? <Loader2 size={14} className="animate-spin" /> : <Star size={14} />}
+          Set as Active Guide
+        </button>
+      )}
+
+      {/* Objective */}
+      {guide.objective && (
+        <section className="mb-6">
+          <p className="text-xs font-bold uppercase tracking-wide text-[#64748B] mb-2">Objective</p>
+          <p className="text-sm text-[#334155] leading-relaxed">{guide.objective}</p>
+        </section>
+      )}
+
+      {/* Steps */}
+      {guide.steps?.length > 0 && (
+        <section className="mb-6">
+          <p className="text-xs font-bold uppercase tracking-wide text-[#64748B] mb-3">Steps</p>
+          <ol className="space-y-4">
+            {guide.steps.map((s, i) => (
+              <li key={i} className="flex gap-4">
+                <span
+                  className="shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold text-white mt-0.5"
+                  style={{ background: '#8B0C21' }}
+                >{i + 1}</span>
+                <div className="flex-1">
+                  {s.title && <p className="font-semibold text-[#050816] text-sm">{s.title}</p>}
+                  {s.description && <p className="text-sm text-[#64748B] mt-0.5 leading-relaxed">{s.description}</p>}
+                  {s.estimated_time && <p className="text-xs text-[#94A3B8] mt-1 flex items-center gap-1"><Clock size={10} /> {s.estimated_time}</p>}
+                </div>
+              </li>
+            ))}
+          </ol>
+        </section>
+      )}
+
+      {/* Deliverable */}
+      {guide.deliverable && (
+        <section className="mb-4 rounded-xl p-4" style={{ background: '#F8ECEF', border: '1px solid rgba(139,12,33,0.2)' }}>
+          <p className="text-xs font-bold uppercase tracking-wide mb-1" style={{ color: '#8B0C21' }}>Deliverable</p>
+          <p className="text-sm text-[#334155]">{guide.deliverable}</p>
+        </section>
+      )}
+
+      {/* Proof required */}
+      {guide.proof_requirement && (
+        <section className="mb-4 rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] p-4">
+          <p className="text-xs font-bold uppercase tracking-wide text-[#64748B] mb-1">Proof Required</p>
+          <p className="text-sm text-[#334155]">{guide.proof_requirement}</p>
+        </section>
+      )}
+
+      {/* Reflection questions */}
+      {guide.reflection_questions?.length > 0 && (
+        <section className="mb-4">
+          <p className="text-xs font-bold uppercase tracking-wide text-[#64748B] mb-2">Reflection Questions</p>
+          <ul className="space-y-2">
+            {guide.reflection_questions.map((q, i) => (
+              <li key={i} className="flex gap-2 text-sm text-[#334155]">
+                <span className="shrink-0 font-bold" style={{ color: '#8B0C21' }}>·</span>
+                <span>{q}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+    </main>
+  );
+}

@@ -46,6 +46,7 @@ import CreatorLibrary from '@/pages/CreatorLibrary';
 import GoalsPage from '@/pages/GoalsPage';
 import ResumeBuilder from '@/pages/ResumeBuilder';
 import RecentlyDeleted from '@/pages/RecentlyDeleted';
+import GuideDetailPage from '@/pages/GuideDetailPage';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError } = useAuth();
@@ -97,6 +98,7 @@ const AuthenticatedApp = () => {
           <Route path="/goals-tracker" element={<GoalsPage />} />
           <Route path="/resume" element={<ResumeBuilder />} />
           <Route path="/recently-deleted" element={<RecentlyDeleted />} />
+          <Route path="/guide" element={<GuideDetailPage />} />
         </Route>
       </Route>
       <Route path="*" element={<PageNotFound />} />

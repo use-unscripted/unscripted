@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Clock, CheckCircle2, ChevronDown, ChevronUp, Star, Copy, Trash2, Eye, GitCompare, Loader2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Clock, CheckCircle2, ChevronDown, ChevronUp, Star, Copy, Trash2, Eye, GitCompare, Loader2, ExternalLink, Pencil, X } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { softDeletePayload } from '@/components/SoftDeleteConfirm';
 
@@ -16,80 +17,63 @@ function fmtDate(d) {
   return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
-function GuideDetailModal({ guide, onClose }) {
+// ── Inline guide preview (no modal, expands in place) ────────────────────────
+function GuideInlinePreview({ guide }) {
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" style={{ background: 'rgba(5,8,22,0.5)' }}>
-      <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-[24px] bg-white p-6 sm:p-8">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <p className="text-xs font-bold uppercase tracking-wide text-[#64748B]">Version {guide.version_number}</p>
-            <h2 className="font-heading text-xl font-bold text-[#050816]">{guide.guide_title}</h2>
-          </div>
-          <button onClick={onClose} className="text-[#64748B] hover:text-[#334155] text-xl font-bold leading-none">×</button>
+    <div className="border-t border-[#E2E8F0] bg-white px-4 pt-3 pb-4 space-y-3">
+      {guide.objective && (
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-wide text-[#94A3B8] mb-0.5">Objective</p>
+          <p className="text-xs text-[#334155] leading-relaxed">{guide.objective}</p>
         </div>
-
-        {guide.objective && (
-          <div className="mb-4">
-            <p className="text-xs font-bold uppercase tracking-wide text-[#64748B] mb-1">Objective</p>
-            <p className="text-sm text-[#334155]">{guide.objective}</p>
-          </div>
-        )}
-
-        <div className="flex gap-4 text-xs text-[#64748B] mb-5">
-          {guide.estimated_time && <span className="flex items-center gap-1"><Clock size={11} /> {guide.estimated_time}</span>}
-          <span>{guide.steps?.length || 0} steps</span>
-          <span>Generated {fmtDate(guide.created_date)}</span>
+      )}
+      {guide.steps?.length > 0 && (
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-wide text-[#94A3B8] mb-1.5">Steps ({guide.steps.length})</p>
+          <ol className="space-y-2">
+            {guide.steps.map((s, i) => (
+              <li key={i} className="flex gap-2.5 text-xs">
+                <span className="shrink-0 w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold text-white mt-0.5"
+                  style={{ background: '#8B0C21' }}>{i + 1}</span>
+                <div>
+                  {s.title && <p className="font-semibold text-[#050816]">{s.title}</p>}
+                  {s.description && <p className="text-[#64748B] mt-0.5">{s.description}</p>}
+                  {s.estimated_time && <p className="text-[#94A3B8] mt-0.5 flex items-center gap-0.5"><Clock size={9} />{s.estimated_time}</p>}
+                </div>
+              </li>
+            ))}
+          </ol>
         </div>
-
-        {guide.steps?.length > 0 && (
-          <div className="mb-4">
-            <p className="text-xs font-bold uppercase tracking-wide text-[#64748B] mb-2">Steps</p>
-            <ol className="space-y-3">
-              {guide.steps.map((s, i) => (
-                <li key={i} className="flex gap-3 text-sm">
-                  <span className="shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold text-white mt-0.5"
-                    style={{ background: '#8B0C21' }}>{i + 1}</span>
-                  <div>
-                    {s.title && <p className="font-semibold text-[#050816]">{s.title}</p>}
-                    {s.description && <p className="text-[#64748B] mt-0.5">{s.description}</p>}
-                    {s.estimated_time && <p className="text-xs text-[#94A3B8] mt-0.5">{s.estimated_time}</p>}
-                  </div>
-                </li>
-              ))}
-            </ol>
-          </div>
-        )}
-
-        {guide.deliverable && (
-          <div className="mb-3 rounded-xl p-3" style={{ background: '#F8ECEF', border: '1px solid rgba(139,12,33,0.2)' }}>
-            <p className="text-xs font-bold uppercase tracking-wide mb-1" style={{ color: '#8B0C21' }}>Deliverable</p>
-            <p className="text-sm text-[#334155]">{guide.deliverable}</p>
-          </div>
-        )}
-
-        {guide.proof_requirement && (
-          <div className="mb-3">
-            <p className="text-xs font-bold uppercase tracking-wide text-[#64748B] mb-1">Proof required</p>
-            <p className="text-sm text-[#334155]">{guide.proof_requirement}</p>
-          </div>
-        )}
-
-        {guide.reflection_questions?.length > 0 && (
-          <div className="mb-3">
-            <p className="text-xs font-bold uppercase tracking-wide text-[#64748B] mb-1">Reflection questions</p>
-            <ul className="space-y-1">{guide.reflection_questions.map((q, i) => <li key={i} className="text-sm text-[#334155]">· {q}</li>)}</ul>
-          </div>
-        )}
-
-        <button onClick={onClose}
-          className="mt-4 w-full rounded-[10px] border border-[#E2E8F0] py-2.5 text-sm font-semibold text-[#334155] hover:bg-[#F8FAFC]">
-          Close
-        </button>
-      </div>
+      )}
+      {guide.deliverable && (
+        <div className="rounded-lg p-2.5" style={{ background: '#F8ECEF', border: '1px solid rgba(139,12,33,0.15)' }}>
+          <p className="text-[10px] font-bold uppercase tracking-wide mb-0.5" style={{ color: '#8B0C21' }}>Deliverable</p>
+          <p className="text-xs text-[#334155]">{guide.deliverable}</p>
+        </div>
+      )}
+      {guide.proof_requirement && (
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-wide text-[#94A3B8] mb-0.5">Proof Required</p>
+          <p className="text-xs text-[#334155]">{guide.proof_requirement}</p>
+        </div>
+      )}
+      {guide.reflection_questions?.length > 0 && (
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-wide text-[#94A3B8] mb-1">Reflection Questions</p>
+          <ul className="space-y-1">
+            {guide.reflection_questions.map((q, i) => (
+              <li key={i} className="text-xs text-[#334155] flex gap-1.5">
+                <span style={{ color: '#8B0C21' }}>·</span><span>{q}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 }
 
+// ── Compare modal ─────────────────────────────────────────────────────────────
 function GuideCompareModal({ guideA, guideB, onClose }) {
   const fields = [
     { label: 'Objective', keyA: guideA.objective, keyB: guideB.objective },
@@ -97,16 +81,13 @@ function GuideCompareModal({ guideA, guideB, onClose }) {
     { label: 'Deliverable', keyA: guideA.deliverable, keyB: guideB.deliverable },
     { label: 'Proof Required', keyA: guideA.proof_requirement, keyB: guideB.proof_requirement },
   ];
-
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" style={{ background: 'rgba(5,8,22,0.5)' }}>
       <div className="w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-[24px] bg-white p-6 sm:p-8">
         <div className="flex items-center justify-between mb-5">
           <h2 className="font-heading text-xl font-bold text-[#050816]">Compare Guides</h2>
-          <button onClick={onClose} className="text-[#64748B] hover:text-[#334155] text-xl font-bold">×</button>
+          <button onClick={onClose}><X size={20} className="text-[#64748B]" /></button>
         </div>
-
-        {/* Headers */}
         <div className="grid grid-cols-2 gap-4 mb-4">
           {[guideA, guideB].map((g, i) => (
             <div key={i} className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] p-3">
@@ -116,8 +97,6 @@ function GuideCompareModal({ guideA, guideB, onClose }) {
             </div>
           ))}
         </div>
-
-        {/* Field-by-field comparison */}
         {fields.map(f => {
           const differ = f.keyA !== f.keyB;
           return (
@@ -137,8 +116,6 @@ function GuideCompareModal({ guideA, guideB, onClose }) {
             </div>
           );
         })}
-
-        {/* Steps comparison */}
         <div className="mb-4">
           <p className="text-xs font-bold uppercase tracking-wide text-[#64748B] mb-2 flex items-center gap-2">
             Steps
@@ -160,8 +137,6 @@ function GuideCompareModal({ guideA, guideB, onClose }) {
             ))}
           </div>
         </div>
-
-        {/* Reflection questions */}
         <div className="mb-4">
           <p className="text-xs font-bold uppercase tracking-wide text-[#64748B] mb-2">Reflection Questions</p>
           <div className="grid grid-cols-2 gap-4">
@@ -173,12 +148,37 @@ function GuideCompareModal({ guideA, guideB, onClose }) {
             ))}
           </div>
         </div>
-
-        <button onClick={onClose}
-          className="w-full rounded-[10px] border border-[#E2E8F0] py-2.5 text-sm font-semibold text-[#334155] hover:bg-[#F8FAFC]">
-          Close
-        </button>
+        <button onClick={onClose} className="w-full rounded-[10px] border border-[#E2E8F0] py-2.5 text-sm font-semibold text-[#334155] hover:bg-[#F8FAFC]">Close</button>
       </div>
+    </div>
+  );
+}
+
+// ── Rename row ────────────────────────────────────────────────────────────────
+function RenameRow({ guide, onRenamed, onCancel }) {
+  const [title, setTitle] = useState(guide.guide_title);
+  const [saving, setSaving] = useState(false);
+  const handleSave = async () => {
+    if (!title.trim() || saving) return;
+    setSaving(true);
+    await base44.entities.MissionGuides.update(guide.id, { guide_title: title.trim() });
+    onRenamed({ ...guide, guide_title: title.trim() });
+  };
+  return (
+    <div className="border-t border-[#E2E8F0] bg-[#F8FAFC] px-4 py-3 flex gap-2 items-center">
+      <input
+        autoFocus
+        value={title}
+        onChange={e => setTitle(e.target.value)}
+        onKeyDown={e => { if (e.key === 'Enter') handleSave(); if (e.key === 'Escape') onCancel(); }}
+        className="flex-1 rounded-lg border border-[#E2E8F0] bg-white px-3 py-1.5 text-sm outline-none focus:border-[#8B0C21]"
+      />
+      <button onClick={handleSave} disabled={saving || !title.trim()}
+        className="rounded-lg px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-60"
+        style={{ background: '#8B0C21' }}>
+        {saving ? 'Saving…' : 'Save'}
+      </button>
+      <button onClick={onCancel} className="rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-xs font-semibold text-[#334155] hover:bg-white">Cancel</button>
     </div>
   );
 }
@@ -190,10 +190,14 @@ function GuideCompareModal({ guideA, guideB, onClose }) {
  *   onSetActive     – (guide) => void
  *   onDeleted       – (guideId) => void
  *   onDuplicated    – (newGuide) => void
+ *   onRenamed       – (updatedGuide) => void  (optional)
+ *   onGenerateAnother – () => void  (optional)
  */
-export default function MissionGuideHistory({ guides = [], onSetActive, onDeleted, onDuplicated }) {
-  const [openId, setOpenId] = useState(null);
-  const [viewGuide, setViewGuide] = useState(null);
+export default function MissionGuideHistory({ guides = [], onSetActive, onDeleted, onDuplicated, onRenamed, onGenerateAnother }) {
+  const navigate = useNavigate();
+  const [openId, setOpenId] = useState(null);    // expanded actions row
+  const [previewId, setPreviewId] = useState(null); // inline preview
+  const [renameId, setRenameId] = useState(null);
   const [compareIds, setCompareIds] = useState([]);
   const [showCompare, setShowCompare] = useState(false);
   const [actionLoading, setActionLoading] = useState(null);
@@ -205,15 +209,12 @@ export default function MissionGuideHistory({ guides = [], onSetActive, onDelete
   const handleSetActive = async (guide) => {
     setActionLoading(guide.id + '_active');
     try {
-      // Deactivate others
       await Promise.all(guides.filter(g => g.is_active && g.id !== guide.id).map(g =>
         base44.entities.MissionGuides.update(g.id, { is_active: false, status: 'inactive' })
       ));
       await base44.entities.MissionGuides.update(guide.id, { is_active: true, status: 'active' });
       onSetActive(guide);
-    } finally {
-      setActionLoading(null);
-    }
+    } finally { setActionLoading(null); }
   };
 
   const handleDelete = async (guide) => {
@@ -222,9 +223,7 @@ export default function MissionGuideHistory({ guides = [], onSetActive, onDelete
       const user = await base44.auth.me();
       await base44.entities.MissionGuides.update(guide.id, softDeletePayload(user.id));
       onDeleted(guide.id);
-    } finally {
-      setActionLoading(null);
-    }
+    } finally { setActionLoading(null); }
   };
 
   const handleDuplicate = async (guide) => {
@@ -244,9 +243,7 @@ export default function MissionGuideHistory({ guides = [], onSetActive, onDelete
         user_id: user.id,
       });
       onDuplicated(dup);
-    } finally {
-      setActionLoading(null);
-    }
+    } finally { setActionLoading(null); }
   };
 
   const toggleCompare = (id) => {
@@ -259,102 +256,150 @@ export default function MissionGuideHistory({ guides = [], onSetActive, onDelete
   const compareGuideB = guides.find(g => g.id === compareIds[1]);
 
   return (
-    <div className="border-t border-[#E2E8F0] pt-4 mt-4">
-      {viewGuide && <GuideDetailModal guide={viewGuide} onClose={() => setViewGuide(null)} />}
+    <div className="space-y-2">
       {showCompare && compareGuideA && compareGuideB && (
         <GuideCompareModal guideA={compareGuideA} guideB={compareGuideB} onClose={() => setShowCompare(false)} />
       )}
 
-      <div className="flex items-center justify-between mb-3">
-        <p className="text-xs font-bold uppercase tracking-wide text-[#64748B]">
-          Mission Guide History ({guides.length})
-        </p>
-        {compareIds.length === 2 && (
-          <button
-            onClick={() => setShowCompare(true)}
-            className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition"
-            style={{ background: '#EFF6FF', color: '#1D4ED8', border: '1px solid #BFDBFE' }}>
-            <GitCompare size={12} /> Compare Selected
+      {/* Compare toolbar */}
+      {compareIds.length > 0 && (
+        <div className="flex items-center gap-3 rounded-xl bg-blue-50 border border-blue-100 px-4 py-2.5 text-xs">
+          <span className="text-blue-700 font-semibold">
+            {compareIds.length === 1 ? 'Select one more guide to compare' : 'Ready to compare'}
+          </span>
+          {compareIds.length === 2 && (
+            <button onClick={() => setShowCompare(true)}
+              className="flex items-center gap-1 rounded-lg px-2.5 py-1 font-semibold"
+              style={{ background: '#EFF6FF', color: '#1D4ED8', border: '1px solid #BFDBFE' }}>
+              <GitCompare size={12} /> Compare
+            </button>
+          )}
+          <button onClick={() => setCompareIds([])} className="ml-auto text-blue-400 hover:text-blue-600">
+            <X size={13} />
           </button>
-        )}
-        {compareIds.length === 1 && (
-          <p className="text-xs text-[#94A3B8]">Select one more to compare</p>
-        )}
-      </div>
+        </div>
+      )}
 
-      <div className="space-y-2">
-        {sorted.map(guide => {
-          const cfg = STATUS_CFG[guide.status] || STATUS_CFG.draft;
-          const isOpen = openId === guide.id;
-          const isSelected = compareIds.includes(guide.id);
+      {sorted.map(guide => {
+        const cfg = STATUS_CFG[guide.status] || STATUS_CFG.draft;
+        const isOpen = openId === guide.id;
+        const isPreviewing = previewId === guide.id;
+        const isRenaming = renameId === guide.id;
+        const isSelected = compareIds.includes(guide.id);
 
-          return (
-            <div key={guide.id}
-              className="rounded-xl border overflow-hidden transition"
-              style={{ borderColor: isSelected ? '#93C5FD' : '#E2E8F0', background: isSelected ? '#EFF6FF' : 'white' }}>
-              {/* Header row */}
-              <div className="flex items-center gap-3 px-4 py-3">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-xs font-bold text-[#94A3B8]">v{guide.version_number}</span>
-                    <span className="rounded-full px-2 py-0.5 text-[10px] font-bold" style={{ background: cfg.bg, color: cfg.text }}>{cfg.label}</span>
-                    {guide.is_active && <CheckCircle2 size={12} className="text-green-600" />}
-                    <span className="text-sm font-semibold text-[#050816] truncate">{guide.guide_title}</span>
-                  </div>
-                  <div className="flex gap-3 mt-0.5 text-xs text-[#94A3B8]">
-                    <span>{fmtDate(guide.created_date)}</span>
-                    {guide.estimated_time && <span>· {guide.estimated_time}</span>}
-                    <span>· {guide.steps?.length || 0} steps</span>
-                  </div>
-                  {guide.objective && <p className="text-xs text-[#64748B] mt-0.5 line-clamp-1">{guide.objective}</p>}
+        return (
+          <div key={guide.id}
+            className="rounded-xl border overflow-hidden transition"
+            style={{ borderColor: isSelected ? '#93C5FD' : '#E2E8F0', background: isSelected ? '#EFF6FF' : 'white' }}>
+
+            {/* Summary row */}
+            <div className="flex items-center gap-3 px-4 py-3">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-xs font-bold text-[#94A3B8]">v{guide.version_number}</span>
+                  <span className="rounded-full px-2 py-0.5 text-[10px] font-bold" style={{ background: cfg.bg, color: cfg.text }}>{cfg.label}</span>
+                  {guide.is_active && <CheckCircle2 size={12} className="text-green-600 shrink-0" />}
+                  <span className="text-sm font-semibold text-[#050816] truncate">{guide.guide_title}</span>
                 </div>
+                <div className="flex flex-wrap gap-2 mt-0.5 text-xs text-[#94A3B8]">
+                  <span>{fmtDate(guide.created_date)}</span>
+                  {guide.estimated_time && <span>· {guide.estimated_time}</span>}
+                  <span>· {guide.steps?.length || 0} steps</span>
+                </div>
+                {guide.objective && <p className="text-xs text-[#64748B] mt-0.5 line-clamp-1">{guide.objective}</p>}
+              </div>
+              <div className="flex items-center gap-1 shrink-0">
+                <button
+                  onClick={() => setPreviewId(isPreviewing ? null : guide.id)}
+                  title="Preview guide inline"
+                  className="rounded-lg border border-[#E2E8F0] p-1.5 hover:bg-[#F8FAFC] transition"
+                >
+                  <Eye size={13} className={isPreviewing ? 'text-[#8B0C21]' : 'text-[#94A3B8]'} />
+                </button>
                 <button onClick={() => setOpenId(isOpen ? null : guide.id)}
-                  className="shrink-0 rounded-lg border border-[#E2E8F0] p-1.5 hover:bg-[#F8FAFC]">
+                  className="rounded-lg border border-[#E2E8F0] p-1.5 hover:bg-[#F8FAFC]">
                   {isOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                 </button>
               </div>
-
-              {/* Expanded actions */}
-              {isOpen && (
-                <div className="border-t border-[#E2E8F0] bg-[#F8FAFC] px-4 py-3 flex flex-wrap gap-2">
-                  <button onClick={() => setViewGuide(guide)}
-                    className="flex items-center gap-1.5 rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-xs font-semibold text-[#334155] hover:bg-white transition">
-                    <Eye size={12} /> Open
-                  </button>
-                  <button onClick={() => toggleCompare(guide.id)}
-                    className="flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold transition"
-                    style={isSelected
-                      ? { borderColor: '#93C5FD', background: '#EFF6FF', color: '#1D4ED8' }
-                      : { borderColor: '#E2E8F0', background: 'white', color: '#334155' }}>
-                    <GitCompare size={12} /> {isSelected ? 'Selected' : 'Compare'}
-                  </button>
-                  {!guide.is_active && (
-                    <button
-                      onClick={() => handleSetActive(guide)}
-                      disabled={actionLoading === guide.id + '_active'}
-                      className="flex items-center gap-1.5 rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-xs font-semibold text-[#334155] hover:bg-white transition disabled:opacity-60">
-                      {actionLoading === guide.id + '_active' ? <Loader2 size={12} className="animate-spin" /> : <Star size={12} />}
-                      Set as Active
-                    </button>
-                  )}
-                  <button onClick={() => handleDuplicate(guide)}
-                    disabled={actionLoading === guide.id + '_dup'}
-                    className="flex items-center gap-1.5 rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-xs font-semibold text-[#334155] hover:bg-white transition disabled:opacity-60">
-                    {actionLoading === guide.id + '_dup' ? <Loader2 size={12} className="animate-spin" /> : <Copy size={12} />}
-                    Duplicate
-                  </button>
-                  <button onClick={() => handleDelete(guide)}
-                    disabled={actionLoading === guide.id + '_delete'}
-                    className="flex items-center gap-1.5 rounded-lg border border-red-100 px-3 py-1.5 text-xs font-semibold text-red-400 hover:text-red-600 hover:border-red-200 transition disabled:opacity-60">
-                    {actionLoading === guide.id + '_delete' ? <Loader2 size={12} className="animate-spin" /> : <Trash2 size={12} />}
-                    Delete
-                  </button>
-                </div>
-              )}
             </div>
-          );
-        })}
-      </div>
+
+            {/* Inline preview */}
+            {isPreviewing && <GuideInlinePreview guide={guide} />}
+
+            {/* Rename row */}
+            {isRenaming && (
+              <RenameRow
+                guide={guide}
+                onRenamed={(updated) => { onRenamed?.(updated); setRenameId(null); }}
+                onCancel={() => setRenameId(null)}
+              />
+            )}
+
+            {/* Actions row */}
+            {isOpen && (
+              <div className="border-t border-[#E2E8F0] bg-[#F8FAFC] px-4 py-3 flex flex-wrap gap-2">
+                {/* Open Guide — navigates to exact record by ID */}
+                <button
+                  onClick={() => navigate(`/guide?id=${guide.id}`)}
+                  className="flex items-center gap-1.5 rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-xs font-semibold text-[#334155] hover:bg-white transition">
+                  <ExternalLink size={12} /> Open Guide
+                </button>
+
+                <button
+                  onClick={() => setPreviewId(isPreviewing ? null : guide.id)}
+                  className="flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold transition"
+                  style={isPreviewing
+                    ? { borderColor: '#8B0C21', background: '#F8ECEF', color: '#8B0C21' }
+                    : { borderColor: '#E2E8F0', background: 'white', color: '#334155' }}>
+                  <Eye size={12} /> {isPreviewing ? 'Hide Preview' : 'Preview'}
+                </button>
+
+                <button onClick={() => toggleCompare(guide.id)}
+                  className="flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold transition"
+                  style={isSelected
+                    ? { borderColor: '#93C5FD', background: '#EFF6FF', color: '#1D4ED8' }
+                    : { borderColor: '#E2E8F0', background: 'white', color: '#334155' }}>
+                  <GitCompare size={12} /> {isSelected ? 'Selected' : 'Compare'}
+                </button>
+
+                {!guide.is_active && (
+                  <button onClick={() => handleSetActive(guide)} disabled={actionLoading === guide.id + '_active'}
+                    className="flex items-center gap-1.5 rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-xs font-semibold text-[#334155] hover:bg-white transition disabled:opacity-60">
+                    {actionLoading === guide.id + '_active' ? <Loader2 size={12} className="animate-spin" /> : <Star size={12} />}
+                    Set as Active
+                  </button>
+                )}
+
+                <button onClick={() => setRenameId(isRenaming ? null : guide.id)}
+                  className="flex items-center gap-1.5 rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-xs font-semibold text-[#334155] hover:bg-white transition">
+                  <Pencil size={12} /> Rename
+                </button>
+
+                <button onClick={() => handleDuplicate(guide)} disabled={actionLoading === guide.id + '_dup'}
+                  className="flex items-center gap-1.5 rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-xs font-semibold text-[#334155] hover:bg-white transition disabled:opacity-60">
+                  {actionLoading === guide.id + '_dup' ? <Loader2 size={12} className="animate-spin" /> : <Copy size={12} />}
+                  Duplicate
+                </button>
+
+                <button onClick={() => handleDelete(guide)} disabled={actionLoading === guide.id + '_delete'}
+                  className="flex items-center gap-1.5 rounded-lg border border-red-100 px-3 py-1.5 text-xs font-semibold text-red-400 hover:text-red-600 hover:border-red-200 transition disabled:opacity-60">
+                  {actionLoading === guide.id + '_delete' ? <Loader2 size={12} className="animate-spin" /> : <Trash2 size={12} />}
+                  Delete
+                </button>
+              </div>
+            )}
+          </div>
+        );
+      })}
+
+      {/* Generate another */}
+      {onGenerateAnother && (
+        <button
+          onClick={onGenerateAnother}
+          className="w-full rounded-xl border border-dashed border-[#E2E8F0] py-2.5 text-xs font-semibold text-[#64748B] hover:border-[#8B0C21] hover:text-[#8B0C21] transition mt-1">
+          + Generate Another Mission Guide
+        </button>
+      )}
     </div>
   );
 }

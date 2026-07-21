@@ -143,7 +143,7 @@ function MissionsSection({ experiment, missions, loadingMissions, onMissionAdded
 }
 
 // ── Experiment card ───────────────────────────────────────────────────────────
-function ExperimentCard({ exp, onStatusChange, onExpand, expanded, missions, loadingMissions, onMissionAdded, onProofAdded, onMissionDeleted, onDelete, onEdited, onFindPeople, paths, guides, onGenerateGuide, onGuideSetActive, onGuideDeleted, onGuideDuplicated }) {
+function ExperimentCard({ exp, onStatusChange, onExpand, expanded, missions, loadingMissions, onMissionAdded, onProofAdded, onMissionDeleted, onDelete, onEdited, onFindPeople, paths, guides, onGenerateGuide, onGuideSetActive, onGuideDeleted, onGuideDuplicated, onGuideRenamed }) {
   const s = STATUS_STYLES[exp.status] || STATUS_STYLES.planned;
   const hasGuides = guides && guides.length > 0;
   const activeGuide = guides?.find(g => g.is_active);
@@ -178,6 +178,9 @@ function ExperimentCard({ exp, onStatusChange, onExpand, expanded, missions, loa
         {exp.deliverable && <span className="flex items-center gap-1"><BookOpen size={12} /> {exp.deliverable}</span>}
         {!expanded && missions.length > 0 && (
           <span className="flex items-center gap-1"><Target size={12} /> {missions.length} mission{missions.length > 1 ? 's' : ''}</span>
+        )}
+        {!expanded && guides && guides.length > 0 && (
+          <span className="flex items-center gap-1"><Wand2 size={12} /> {guides.length} guide{guides.length > 1 ? 's' : ''}</span>
         )}
         <button onClick={onFindPeople}
           className="flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-semibold transition"
@@ -250,6 +253,8 @@ function ExperimentCard({ exp, onStatusChange, onExpand, expanded, missions, loa
                 onSetActive={onGuideSetActive}
                 onDeleted={onGuideDeleted}
                 onDuplicated={onGuideDuplicated}
+                onRenamed={onGuideRenamed}
+                onGenerateAnother={onGenerateGuide}
               />
             )}
             {!hasGuides && (
@@ -442,6 +447,13 @@ export default function ExperimentsPage() {
     setGuidesMap(prev => ({ ...prev, [expId]: [...(prev[expId] || []), newGuide] }));
   };
 
+  const handleGuideRenamed = (expId, updatedGuide) => {
+    setGuidesMap(prev => ({
+      ...prev,
+      [expId]: (prev[expId] || []).map(g => g.id === updatedGuide.id ? { ...g, guide_title: updatedGuide.guide_title } : g),
+    }));
+  };
+
   const handleProofAdded = (proof, missionTitle) => {
     setSuccessToast({ proof, missionTitle });
     if (toastTimer.current) clearTimeout(toastTimer.current);
@@ -559,6 +571,7 @@ export default function ExperimentsPage() {
               onGuideSetActive={(guide) => handleGuideSetActive(exp.id, guide)}
               onGuideDeleted={(guideId) => handleGuideDeleted(exp.id, guideId)}
               onGuideDuplicated={(newGuide) => handleGuideDuplicated(exp.id, newGuide)}
+              onGuideRenamed={(updatedGuide) => handleGuideRenamed(exp.id, updatedGuide)}
             />
           ))}
         </div>
