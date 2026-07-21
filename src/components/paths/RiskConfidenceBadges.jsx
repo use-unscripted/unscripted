@@ -208,8 +208,8 @@ export function RiskConfidenceLegend() {
         <div>
           <div className="flex items-center gap-1.5 mb-2">
             <TrendingUp size={12} className="text-[#64748B]" />
-            <p className="text-[11px] font-bold text-[#334155]">Fit Confidence</p>
-            <span className="text-[10px] text-[#94A3B8]">Higher = better</span>
+            <p className="font-bold text-[#334155] text-xs">Fit Confidence</p>
+            <span className="text-[#94A3B8] text-xs mr-3">Higher = better</span>
           </div>
           <div className="flex flex-col gap-1">
             {[
