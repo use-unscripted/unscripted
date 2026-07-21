@@ -8,6 +8,12 @@
     "experiment_id": {
       "type": "string"
     },
+    "mission_id": {
+      "type": "string"
+    },
+    "path_name": {
+      "type": "string"
+    },
     "week_start": {
       "type": "string",
       "format": "date"
