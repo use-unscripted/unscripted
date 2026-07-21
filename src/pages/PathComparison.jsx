@@ -543,6 +543,7 @@ export default function PathComparison() {
           path={editTarget}
           onClose={() => setEditTarget(null)}
           onSaved={() => { setEditTarget(null); load(); }}
+          onDeleted={() => { setEditTarget(null); load(); }}
         />
       )}
       {resumeTarget && (
