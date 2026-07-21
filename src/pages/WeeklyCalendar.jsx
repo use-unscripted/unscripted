@@ -115,7 +115,7 @@ function BlockModal({ block, onClose, onSave }) {
         <div className="mt-5 flex gap-3">
           <button onClick={onClose} className="flex-1 rounded-[10px] border border-[#E2E8F0] py-2.5 text-sm font-semibold text-[#334155]">Cancel</button>
           <button onClick={() => onSave(data)} className="flex-1 rounded-[10px] py-2.5 text-sm font-semibold text-white"
-            style={{ background: '#8B0C21' }}>Save</button>
+            style={{ background: 'var(--brand-navy-900)' }}>Save</button>
         </div>
       </div>
     </div>
@@ -177,7 +177,7 @@ function TaskModal({ task, experiments, blocks, onClose, onSave }) {
           <button onClick={onClose} className="flex-1 rounded-[10px] border border-[#E2E8F0] py-2.5 text-sm font-semibold text-[#334155]">Cancel</button>
           <button onClick={() => { if (data.task_title?.trim()) onSave(data); }} disabled={conflict}
             className="flex-1 rounded-[10px] py-2.5 text-sm font-semibold text-white disabled:opacity-50"
-            style={{ background: '#8B0C21' }}>Save</button>
+            style={{ background: 'var(--brand-navy-900)' }}>Save</button>
         </div>
       </div>
     </div>
@@ -286,7 +286,7 @@ export default function WeeklyCalendar() {
             </button>
             <button onClick={() => setTaskModal('new')}
               className="flex items-center gap-1.5 rounded-[10px] px-4 py-2.5 text-sm font-semibold text-white transition hover:-translate-y-px"
-              style={{ background: '#8B0C21', boxShadow: '0 8px 24px rgba(139,12,33,0.18)' }}>
+              style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}>
               <Plus size={14} /> Add Task
             </button>
           </div>
@@ -309,7 +309,7 @@ export default function WeeklyCalendar() {
           <p className="text-xs font-bold uppercase tracking-wide text-[#64748B] mb-1">Tasks complete</p>
           <p className="font-heading text-2xl font-bold text-[#050816]">{done}/{tasks.length}</p>
           <div className="mt-2 h-1.5 rounded-full overflow-hidden" style={{ background: '#E2E8F0' }}>
-            <div className="h-full rounded-full" style={{ width: `${pct}%`, background: '#8B0C21' }} />
+            <div className="h-full rounded-full" style={{ width: `${pct}%`, background: 'var(--brand-navy-900)' }} />
           </div>
         </div>
       </div>
@@ -330,7 +330,7 @@ export default function WeeklyCalendar() {
         {[['plan', 'Mission Tasks'], ['commitments', 'Fixed Commitments'], ['export', 'Export to Calendar']].map(([val, label]) => (
           <button key={val} onClick={() => setTab(val)}
             className="rounded-[10px] px-4 py-2.5 text-sm font-semibold transition"
-            style={tab === val ? { background: '#8B0C21', color: '#fff' } : { background: '#F1F5F9', color: '#334155' }}>
+            style={tab === val ? { background: 'var(--brand-navy-900)', color: '#fff' } : { background: '#F1F5F9', color: '#334155' }}>
             {label}
           </button>
         ))}
@@ -384,7 +384,7 @@ export default function WeeklyCalendar() {
                             </div>
                             <div className="flex gap-1 shrink-0">
                               <button onClick={() => setCalendarModal({ ...t, title: t.task_title })}
-                                className="rounded-lg p-1.5 text-[#94A3B8] hover:text-[#8B0C21] transition"
+                                className="rounded-lg p-1.5 text-[#94A3B8] hover:text-[#274C77] transition"
                                 title="Add to Calendar">
                                 <Calendar size={13} />
                               </button>
@@ -403,7 +403,7 @@ export default function WeeklyCalendar() {
                     </div>
                     <button onClick={() => setTaskModal({ day, task_title: '', task_type: 'career', completed: false })}
                       className="mt-3 flex items-center gap-1.5 text-xs font-semibold transition hover:opacity-80"
-                      style={{ color: '#8B0C21' }}>
+                      style={{ color: 'var(--brand-navy-700)' }}>
                       <Plus size={12} /> Add task for {day}
                     </button>
                   </div>
@@ -420,7 +420,7 @@ export default function WeeklyCalendar() {
               <p className="mt-2 text-sm text-[#64748B]">Add your classes, work shifts, sleep, and other recurring blocks so your available hours are calculated correctly.</p>
               <button onClick={() => setBlockModal('new')}
                 className="mt-5 inline-flex items-center gap-2 rounded-[10px] px-5 py-2.5 text-sm font-semibold text-white"
-                style={{ background: '#8B0C21' }}>
+                style={{ background: 'var(--brand-navy-900)' }}>
                 <Plus size={14} /> Add first commitment
               </button>
             </div>

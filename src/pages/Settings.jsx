@@ -6,7 +6,7 @@ import { Trash2 } from 'lucide-react';
 import Field from '@/components/onboarding/Field';
 import ICSExportPanel from '@/components/calendar/ICSExportPanel';
 
-const textareaCls = 'mt-1 w-full rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-3 text-sm text-[#050816] placeholder-[#94A3B8] outline-none focus:border-[#8B0C21] resize-none';
+const textareaCls = 'mt-1 w-full rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-3 text-sm text-[#050816] placeholder-[#94A3B8] outline-none focus:border-[#274C77] resize-none';
 
 const NOTES_FIELDS = [
   { name: 'personal_notes', label: 'Personal notes and context', placeholder: 'Anything about your situation or background that should personalize your recommendations...', maxLength: 3000 },
@@ -63,7 +63,7 @@ export default function Settings() {
         <button
           onClick={save}
           className="rounded-[10px] px-5 py-3 font-semibold text-white transition hover:-translate-y-px sm:col-span-2"
-          style={{ background: '#8B0C21', boxShadow: '0 8px 24px rgba(139,12,33,0.18)' }}
+          style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}
         >
           {saved ? 'Saved ✓' : 'Save changes'}
         </button>
@@ -76,7 +76,7 @@ export default function Settings() {
       </section>
 
       <div className="mb-3 mt-10">
-        <p className="text-xs font-bold uppercase tracking-[.14em] mb-1" style={{ color: '#8B0C21' }}>Personal context</p>
+        <p className="text-xs font-bold uppercase tracking-[.14em] mb-1" style={{ color: 'var(--brand-navy-700)' }}>Personal context</p>
         <h2 className="font-heading text-xl font-bold text-[#050816] mb-1">Personal Context</h2>
         <p className="text-sm text-[#334155] mb-5">Add context, ambitions, constraints, or priorities that personalize your path recommendations. Changes influence future recommendations but do not rewrite past ones.</p>
       </div>
@@ -97,20 +97,20 @@ export default function Settings() {
         </p>
         <button onClick={saveNotes} disabled={!profile}
           className="w-full rounded-[10px] px-5 py-3 font-semibold text-white transition hover:-translate-y-px disabled:opacity-60"
-          style={{ background: '#8B0C21', boxShadow: '0 8px 24px rgba(139,12,33,0.18)' }}>
+          style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}>
           {notesSaved ? 'Saved ✓' : 'Save personal context'}
         </button>
       </section>
 
       <div className="mb-3">
-        <p className="text-xs font-bold uppercase tracking-[.14em] mb-1" style={{ color: '#8B0C21' }}>Calendar</p>
+        <p className="text-xs font-bold uppercase tracking-[.14em] mb-1" style={{ color: 'var(--brand-navy-700)' }}>Calendar</p>
         <h2 className="font-heading text-xl font-bold text-[#050816] mb-1">Export to Calendar</h2>
         <p className="text-sm text-[#334155]">Download .ics files to add your Unscripted schedule to Google Calendar, Apple Calendar, Outlook, or any standard calendar app.</p>
       </div>
       <ICSExportPanel />
 
       <div className="mt-10">
-        <p className="text-xs font-bold uppercase tracking-[.14em] mb-1" style={{ color: '#8B0C21' }}>Data</p>
+        <p className="text-xs font-bold uppercase tracking-[.14em] mb-1" style={{ color: 'var(--brand-navy-700)' }}>Data</p>
         <h2 className="font-heading text-xl font-bold text-[#050816] mb-1">Recently Deleted</h2>
         <p className="text-sm text-[#334155] mb-4">Mission Guides, contacts, reflections, and proof of work you've deleted are kept for 30 days before permanent removal.</p>
         <Link to="/recently-deleted"

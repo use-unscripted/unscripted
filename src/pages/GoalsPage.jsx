@@ -12,7 +12,7 @@ const FEASIBILITY_STYLES = {
 
 const TIMEFRAME_ORDER = ['annual', 'monthly', 'weekly'];
 const TIMEFRAME_LABELS = { annual: 'Annual Goals', monthly: 'Monthly Goals', weekly: 'Weekly Goals' };
-const CAT_COLORS = { career: '#8B0C21', financial: '#15803D', academic: '#0369A1', project: '#B45309', brand: '#7C3AED', networking: '#0891B2', wellness: '#15803D', other: '#64748B' };
+const CAT_COLORS = { career: '#274C77', financial: '#15803D', academic: '#0369A1', project: '#B45309', brand: '#7C3AED', networking: '#0891B2', wellness: '#15803D', other: '#64748B' };
 
 export default function GoalsPage() {
   const [goals, setGoals] = useState([]);
@@ -58,7 +58,7 @@ export default function GoalsPage() {
         {TIMEFRAME_ORDER.map(t => (
           <button key={t} onClick={() => setTab(t)}
             className="flex-1 rounded-lg py-2.5 text-sm font-semibold transition"
-            style={tab === t ? { background: '#8B0C21', color: '#fff' } : { color: '#64748B' }}>
+            style={tab === t ? { background: 'var(--brand-navy-900)', color: '#fff' } : { color: '#64748B' }}>
             {TIMEFRAME_LABELS[t]}
             <span className="ml-2 text-xs opacity-70">({goals.filter(g => g.timeframe === t).length})</span>
           </button>
@@ -86,7 +86,7 @@ export default function GoalsPage() {
                         {g.category}
                       </span>
                       <span className="rounded-full px-2.5 py-0.5 text-xs font-bold capitalize"
-                        style={g.priority === 'high' ? { background: '#F8ECEF', color: '#8B0C21' } : g.priority === 'medium' ? { background: '#FFFBEB', color: '#B45309' } : { background: '#F1F5F9', color: '#64748B' }}>
+                        style={g.priority === 'high' ? { background: '#EEF2F6', color: '#1F3A5F' } : g.priority === 'medium' ? { background: '#FFFBEB', color: '#B45309' } : { background: '#F1F5F9', color: '#64748B' }}>
                         {g.priority} priority
                       </span>
                       {g.feasibility_status && (

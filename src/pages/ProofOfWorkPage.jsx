@@ -40,7 +40,7 @@ function getExt(name) { return (name || '').split('.').pop().toLowerCase(); }
 
 function FileIcon({ name, mime, size = 18 }) {
   const ext = getExt(name);
-  if (VIDEO_EXTS.has(ext) || (mime || '').startsWith('video/')) return <Film size={size} style={{ color: '#8B0C21' }} />;
+  if (VIDEO_EXTS.has(ext) || (mime || '').startsWith('video/')) return <Film size={size} style={{ color: 'var(--brand-navy-700)' }} />;
   if (IMAGE_EXTS.has(ext) || (mime || '').startsWith('image/')) return <Image size={size} style={{ color: '#2563EB' }} />;
   if (AUDIO_EXTS.has(ext) || (mime || '').startsWith('audio/')) return <Music size={size} style={{ color: '#7C3AED' }} />;
   if (SHEET_EXTS.has(ext)) return <FileSpreadsheet size={size} style={{ color: '#15803D' }} />;
@@ -79,7 +79,7 @@ function FilePreviewModal({ entry, onClose }) {
               {entry.file_size && <p className="text-xs text-[#64748B] mb-4">{fmtSize(entry.file_size)}</p>}
               <a href={entry.file_url} target="_blank" rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 rounded-[10px] px-5 py-2.5 text-sm font-semibold text-white"
-                style={{ background: '#8B0C21' }}>
+                style={{ background: 'var(--brand-navy-900)' }}>
                 <ExternalLink size={14} /> Open File
               </a>
             </div>
@@ -127,7 +127,7 @@ function ProofCard({ entry, missionsMap, experimentsMap, onDelete, onNavigateToP
       <div className="flex items-start justify-between gap-3 mb-3">
         <div className="flex-1 min-w-0">
           <div className="flex flex-wrap items-center gap-2 mb-1.5">
-            <span className="rounded-full px-2.5 py-0.5 text-xs font-bold" style={{ background: '#F8ECEF', color: '#8B0C21' }}>
+            <span className="rounded-full px-2.5 py-0.5 text-xs font-bold" style={{ background: '#EEF2F6', color: 'var(--brand-navy-700)' }}>
               {safeEntry.category.replace(/_/g,' ').replace(/\b\w/g,l=>l.toUpperCase())}
             </span>
             {safeEntry.visibility === 'public'
@@ -159,7 +159,7 @@ function ProofCard({ entry, missionsMap, experimentsMap, onDelete, onNavigateToP
       {/* File preview row */}
       {safeEntry.file_url && (
         <div className="mb-3 flex items-center gap-3 rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2.5">
-          <div className="shrink-0 w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: '#F8ECEF' }}>
+          <div className="shrink-0 w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: '#EEF2F6' }}>
             <FileIcon name={safeEntry.file_name} mime={safeEntry.mime_type} size={16} />
           </div>
           <div className="flex-1 min-w-0">
@@ -168,7 +168,7 @@ function ProofCard({ entry, missionsMap, experimentsMap, onDelete, onNavigateToP
           </div>
           <button onClick={() => setShowPreview(true)}
             className="shrink-0 flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-white"
-            style={{ background: '#8B0C21' }}>
+            style={{ background: 'var(--brand-navy-900)' }}>
             {vid ? <><Play size={11} />Play</> : <><ExternalLink size={11} />Open</>}
           </button>
         </div>
@@ -177,7 +177,7 @@ function ProofCard({ entry, missionsMap, experimentsMap, onDelete, onNavigateToP
       {/* External URL */}
       {safeEntry.external_url && (
         <a href={safeEntry.external_url} target="_blank" rel="noopener noreferrer"
-          className="mb-3 flex items-center gap-1.5 text-xs text-[#8B0C21] hover:underline">
+          className="mb-3 flex items-center gap-1.5 text-xs hover:underline" style={{ color: 'var(--brand-navy-700)' }}>
           <ExternalLink size={11} /> {safeEntry.external_url}
         </a>
       )}
@@ -196,7 +196,7 @@ function ProofCard({ entry, missionsMap, experimentsMap, onDelete, onNavigateToP
         <div className="pt-3 border-t border-[#F1F5F9] flex flex-wrap gap-3">
           {mission ? (
             <button onClick={() => onNavigateToProof('experiments')}
-              className="text-xs text-[#64748B] hover:text-[#8B0C21] transition text-left">
+              className="text-xs text-[#64748B] hover:text-[#274C77] transition text-left">
               Mission: <span className="font-semibold text-[#334155]">{mission.title}</span>
             </button>
           ) : safeEntry.mission_id ? (
@@ -204,7 +204,7 @@ function ProofCard({ entry, missionsMap, experimentsMap, onDelete, onNavigateToP
           ) : null}
           {experiment ? (
             <button onClick={() => onNavigateToProof('experiments')}
-              className="text-xs text-[#64748B] hover:text-[#8B0C21] transition text-left">
+              className="text-xs text-[#64748B] hover:text-[#274C77] transition text-left">
               Experiment: <span className="font-semibold text-[#334155]">{experiment.title}</span>
             </button>
           ) : safeEntry.experiment_id ? (
@@ -377,7 +377,7 @@ export default function ProofOfWorkPage() {
           <button
             onClick={() => setShowNew(true)}
             className="inline-flex items-center gap-2 rounded-[10px] px-5 py-2.5 text-sm font-semibold text-white shrink-0"
-            style={{ background: '#8B0C21', boxShadow: '0 8px 24px rgba(139,12,33,0.18)' }}>
+            style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}>
             <Plus size={16} /> Add Proof of Work
           </button>
         }
@@ -389,7 +389,7 @@ export default function ProofOfWorkPage() {
           <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#94A3B8]" />
           <input value={search} onChange={e => setSearch(e.target.value)}
             placeholder="Search by title, mission, experiment, or filename…"
-            className="w-full rounded-xl border border-[#E2E8F0] bg-white pl-9 pr-4 py-2.5 text-sm outline-none focus:border-[#8B0C21]" />
+            className="w-full rounded-xl border border-[#E2E8F0] bg-white pl-9 pr-4 py-2.5 text-sm outline-none focus:border-[#274C77]" />
         </div>
         {paths.length > 1 && (
           <select value={filterPath} onChange={e => setFilterPath(e.target.value)}
