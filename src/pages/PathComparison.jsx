@@ -5,6 +5,7 @@ import PageHeader from '@/components/PageHeader';
 import CreatePathModal from '@/components/paths/CreatePathModal';
 import EditPathModal from '@/components/paths/EditPathModal';
 import ReactivationModal from '@/components/paths/ReactivationModal';
+import { RiskBadge, ConfidenceBadge, RiskConfidenceLegend } from '@/components/paths/RiskConfidenceBadges';
 
 const STATUS_CFG = {
   active:    { label: 'Active',    bg: '#F0FDF4', text: '#15803D' },
@@ -15,7 +16,6 @@ const STATUS_CFG = {
   exploring: { label: 'Exploring', bg: '#F8ECEF', text: '#8B0C21' },
   deprioritized: { label: 'Deprioritized', bg: '#F1F5F9', text: '#94A3B8' },
 };
-const RISK_COLORS = { low: { bg: '#F0FDF4', text: '#15803D' }, medium: { bg: '#FFFBEB', text: '#B45309' }, high: { bg: '#FEF2F2', text: '#B91C1C' } };
 
 function fmtDate(d) {
   if (!d) return null;
@@ -89,7 +89,6 @@ function PausedPathPanel({ path, experiments, missions, proof, contacts, reflect
 // ── Path card ─────────────────────────────────────────────────────────────────
 function PathCard({ path, experiments, missions, proof, contacts, reflections, onAction, expanded, onToggle }) {
   const cfg = statusCfg(path.status);
-  const riskCfg = RISK_COLORS[path.risk_level] || RISK_COLORS.medium;
   const d = path.generated_detail || {};
 
   const pathExps = experiments.filter(e => e.path_name === path.path_name);
@@ -109,12 +108,8 @@ function PathCard({ path, experiments, missions, proof, contacts, reflections, o
                 </span>
               )}
               <span className="rounded-full px-2.5 py-1 text-xs font-bold" style={{ background: cfg.bg, color: cfg.text }}>{cfg.label}</span>
-              {path.risk_level && (
-                <span className="rounded-full px-2.5 py-1 text-xs font-bold" style={{ background: riskCfg.bg, color: riskCfg.text }}>{path.risk_level} risk</span>
-              )}
-              {path.confidence_level && (
-                <span className="rounded-full px-2.5 py-1 text-xs font-bold" style={{ background: '#F1F5F9', color: '#334155' }}>{path.confidence_level} confidence</span>
-              )}
+              {path.risk_level && <RiskBadge riskLevel={path.risk_level} />}
+              {path.confidence_level && <ConfidenceBadge confidenceLevel={path.confidence_level} />}
             </div>
             <h2 className="font-heading text-xl font-bold text-[#050816]">{path.path_name}</h2>
             {path.path_category && <p className="text-xs text-[#94A3B8] mt-0.5">{path.path_category}</p>}
@@ -440,6 +435,8 @@ export default function PathComparison() {
         </div>
       ) : (
         <>
+          <RiskConfidenceLegend />
+
           {/* Primary Focus */}
           {primary.length > 0 && (
             <section className="mb-8">
