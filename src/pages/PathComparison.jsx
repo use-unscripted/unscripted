@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo, useCallback } from 'react';
+import { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { Plus, Star, Pencil, Pause, Play, Archive, ArchiveRestore, ChevronDown, ChevronUp, Clock, CheckCircle2, History, ArrowRight, RotateCcw, SlidersHorizontal, X, Users } from 'lucide-react';
@@ -14,6 +14,7 @@ import {
   filtersToParams, filtersFromParams,
   ACTIVE_STATUSES, PAUSED_STATUSES, HISTORY_STATUSES,
 } from '@/lib/path-sort-filter';
+import { autoAssessPathRisk } from '@/lib/risk-assessor';
 
 const STATUS_CFG = {
   active:        { label: 'Active',         bg: '#F0FDF4', text: '#15803D' },
@@ -95,7 +96,7 @@ function PausedPathPanel({ path, experiments, missions, proof, contacts, reflect
 }
 
 // ── Path card ─────────────────────────────────────────────────────────────────
-function PathCard({ path, experiments, missions, proof, contacts, reflections, onAction, expanded, onToggle, onBuildOutreachPlan }) {
+function PathCard({ path, experiments, missions, proof, contacts, reflections, onAction, expanded, onToggle, onBuildOutreachPlan, onAutoAssess, assessing }) {
   const cfg = statusCfg(path.status);
   const d = path.generated_detail || {};
 
@@ -116,7 +117,7 @@ function PathCard({ path, experiments, missions, proof, contacts, reflections, o
                 </span>
               )}
               <span className="rounded-full px-2.5 py-1 text-xs font-bold" style={{ background: cfg.bg, color: cfg.text }}>{cfg.label}</span>
-              {path.risk_level ? <RiskBadge riskLevel={path.risk_level} /> : <RiskNotAssessed onAssess={() => onAction('edit', path)} />}
+              {path.risk_level ? <RiskBadge riskLevel={path.risk_level} /> : <RiskNotAssessed onAutoAssess={onAutoAssess} onAssess={() => onAction('edit', path)} assessing={assessing} />}
               {path.confidence_level && <ConfidenceBadge confidenceLevel={path.confidence_level} />}
             </div>
             <h2 className="font-heading text-xl font-bold text-[#050816]">{path.path_name}</h2>
@@ -443,6 +444,7 @@ export default function PathComparison() {
   const [resumeTarget, setResumeTarget] = useState(null);
   const [outreachPlanTarget, setOutreachPlanTarget] = useState(null);
 
+  const [assessingIds, setAssessingIds] = useState(new Set());
   const [sortBy, setSortByState] = useState(initSort);
   const [filters, setFiltersState] = useState(initFilters);
 
@@ -512,6 +514,16 @@ export default function PathComparison() {
     if (updates[action]) {
       await updates[action]();
       load();
+    }
+  };
+
+  const handleAutoAssess = async (path) => {
+    setAssessingIds(prev => new Set([...prev, path.id]));
+    try {
+      await autoAssessPathRisk(path);
+      load();
+    } finally {
+      setAssessingIds(prev => { const next = new Set(prev); next.delete(path.id); return next; });
     }
   };
 
@@ -612,6 +624,8 @@ export default function PathComparison() {
                   expanded={expandedId === p.id}
                   onToggle={() => setExpandedId(expandedId === p.id ? null : p.id)}
                   onBuildOutreachPlan={() => setOutreachPlanTarget(p)}
+                  onAutoAssess={() => handleAutoAssess(p)}
+                  assessing={assessingIds.has(p.id)}
                 />
               ))}
             </div>

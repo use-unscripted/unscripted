@@ -25,6 +25,7 @@ const pathRecSchema = {
     main_tradeoffs: str,
     readiness_score: { type: 'number' },
     confidence_level: { type: 'string', enum: ['low', 'medium', 'high'] },
+    risk_level: { type: 'string', enum: ['low', 'medium', 'high'] },
     current_gaps: strArr,
     first_experiment: str,
     path_fit_signals: strArr,
