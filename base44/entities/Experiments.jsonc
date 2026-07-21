@@ -8,6 +8,9 @@
     "path_name": {
       "type": "string"
     },
+    "path_id": {
+      "type": "string"
+    },
     "path_recommendation_id": {
       "type": "string"
     },
@@ -92,6 +95,37 @@
     },
     "alternative_version": {
       "type": "string"
+    },
+    "paused_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "pause_reason": {
+      "type": "string"
+    },
+    "resumed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "status_history": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "from_status": {
+            "type": "string"
+          },
+          "to_status": {
+            "type": "string"
+          },
+          "changed_at": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          }
+        }
+      }
     },
     "deletion_status": {
       "type": "string",

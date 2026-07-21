@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
-import { MoreHorizontal, Pencil, PauseCircle, Trash2, X } from 'lucide-react';
+import { MoreHorizontal, Pencil, PauseCircle, Play, Trash2, X } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { softDeletePayload } from '@/components/SoftDeleteConfirm';
+import PauseExperimentModal from '@/components/experiments/PauseExperimentModal';
 
 // ── Experiment-specific soft-delete confirmation ──────────────────────────────
 function ExperimentDeleteConfirm({ expTitle, onConfirm, onCancel }) {
@@ -46,7 +47,7 @@ function EditExperimentModal({ exp, onClose, onSaved }) {
 
   const handleSave = async () => {
     setSaving(true);
-    const updated = await base44.entities.Experiments.update(exp.id, data);
+    await base44.entities.Experiments.update(exp.id, data);
     setSaving(false);
     onSaved({ ...exp, ...data });
   };
@@ -99,25 +100,19 @@ function EditExperimentModal({ exp, onClose, onSaved }) {
 }
 
 // ── Main component ────────────────────────────────────────────────────────────
-export default function ExperimentActionsMenu({ exp, onDeleted, onPaused, onEdited }) {
+export default function ExperimentActionsMenu({ exp, onDeleted, onPaused, onResumed, onEdited }) {
   const [open, setOpen] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
+  const [showPause, setShowPause] = useState(false);
   const menuRef = useRef(null);
 
-  // Close on outside click
   useEffect(() => {
     if (!open) return;
     const handler = (e) => { if (menuRef.current && !menuRef.current.contains(e.target)) setOpen(false); };
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
   }, [open]);
-
-  const handlePause = async () => {
-    setOpen(false);
-    await base44.entities.Experiments.update(exp.id, { status: 'paused' });
-    onPaused(exp.id, 'paused');
-  };
 
   const handleDeleteConfirmed = async () => {
     const user = await base44.auth.me();
@@ -128,6 +123,8 @@ export default function ExperimentActionsMenu({ exp, onDeleted, onPaused, onEdit
     setShowDeleteConfirm(false);
     onDeleted(exp.id);
   };
+
+  const isPaused = exp.status === 'paused';
 
   return (
     <>
@@ -143,6 +140,13 @@ export default function ExperimentActionsMenu({ exp, onDeleted, onPaused, onEdit
           exp={exp}
           onClose={() => setShowEdit(false)}
           onSaved={(updated) => { setShowEdit(false); onEdited(updated); }}
+        />
+      )}
+      {showPause && (
+        <PauseExperimentModal
+          exp={exp}
+          onClose={() => setShowPause(false)}
+          onPaused={(updated) => { setShowPause(false); onPaused(exp.id, 'paused', updated); }}
         />
       )}
 
@@ -163,13 +167,23 @@ export default function ExperimentActionsMenu({ exp, onDeleted, onPaused, onEdit
             >
               <Pencil size={14} /> Edit Experiment
             </button>
-            <button
-              onClick={handlePause}
-              disabled={exp.status === 'paused'}
-              className="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-[#334155] hover:bg-[#F8FAFC] transition disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              <PauseCircle size={14} /> Pause Experiment
-            </button>
+            {!isPaused && (
+              <button
+                onClick={() => { setOpen(false); setShowPause(true); }}
+                className="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-[#334155] hover:bg-[#F8FAFC] transition"
+              >
+                <PauseCircle size={14} /> Pause Experiment
+              </button>
+            )}
+            {isPaused && onResumed && (
+              <button
+                onClick={() => { setOpen(false); onResumed(exp); }}
+                className="w-full flex items-center gap-2.5 px-4 py-2 text-sm font-semibold hover:bg-[#F0FDF4] transition"
+                style={{ color: '#15803D' }}
+              >
+                <Play size={14} /> Resume Experiment
+              </button>
+            )}
             <div className="my-1 border-t border-[#F1F5F9]" />
             <button
               onClick={() => { setOpen(false); setShowDeleteConfirm(true); }}

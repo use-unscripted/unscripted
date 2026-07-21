@@ -6,7 +6,7 @@ import PageHeader from '@/components/PageHeader';
 import CreatePathModal from '@/components/paths/CreatePathModal';
 import EditPathModal from '@/components/paths/EditPathModal';
 import ReactivationModal from '@/components/paths/ReactivationModal';
-import { RiskBadge, ConfidenceBadge, RiskConfidenceLegend } from '@/components/paths/RiskConfidenceBadges';
+import { RiskBadge, ConfidenceBadge, RiskConfidenceLegend, RiskNotAssessed } from '@/components/paths/RiskConfidenceBadges';
 import OutreachPlanModal from '@/components/outreach/OutreachPlanModal';
 import {
   SORT_OPTIONS, DEFAULT_FILTERS,
@@ -116,7 +116,7 @@ function PathCard({ path, experiments, missions, proof, contacts, reflections, o
                 </span>
               )}
               <span className="rounded-full px-2.5 py-1 text-xs font-bold" style={{ background: cfg.bg, color: cfg.text }}>{cfg.label}</span>
-              {path.risk_level && <RiskBadge riskLevel={path.risk_level} />}
+              {path.risk_level ? <RiskBadge riskLevel={path.risk_level} /> : <RiskNotAssessed />}
               {path.confidence_level && <ConfidenceBadge confidenceLevel={path.confidence_level} />}
             </div>
             <h2 className="font-heading text-xl font-bold text-[#050816]">{path.path_name}</h2>
