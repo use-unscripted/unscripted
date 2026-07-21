@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
-import { Plus, Star, Pencil, Pause, Play, Archive, ChevronDown, ChevronUp, Clock, CheckCircle2, History, ArrowRight, RotateCcw, SlidersHorizontal, X, Users } from 'lucide-react';
+import { Plus, Star, Pencil, Pause, Play, Archive, ArchiveRestore, ChevronDown, ChevronUp, Clock, CheckCircle2, History, ArrowRight, RotateCcw, SlidersHorizontal, X, Users } from 'lucide-react';
 import PageHeader from '@/components/PageHeader';
 import CreatePathModal from '@/components/paths/CreatePathModal';
 import EditPathModal from '@/components/paths/EditPathModal';
@@ -184,6 +184,12 @@ function PathCard({ path, experiments, missions, proof, contacts, reflections, o
             <button onClick={() => onAction('archive', path)}
               className="flex items-center gap-1.5 rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-xs font-semibold text-[#64748B] hover:bg-[#F8FAFC]">
               <Archive size={12} /> Archive
+            </button>
+          )}
+          {path.status === 'archived' && (
+            <button onClick={() => onAction('unarchive', path)}
+              className="flex items-center gap-1.5 rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-xs font-semibold text-[#334155] hover:bg-[#F0FDF4] hover:border-green-200 hover:text-green-700 transition">
+              <ArchiveRestore size={12} /> Un-archive
             </button>
           )}
         </div>
@@ -492,7 +498,8 @@ export default function PathComparison() {
       },
       pause:    () => base44.entities.PathRecommendations.update(path.id, { status: 'paused',    paused_at: today,    is_primary_focus: false }),
       complete: () => base44.entities.PathRecommendations.update(path.id, { status: 'completed', completed_at: today, is_primary_focus: false }),
-      archive:  () => base44.entities.PathRecommendations.update(path.id, { status: 'archived',  is_primary_focus: false }),
+      archive:   () => base44.entities.PathRecommendations.update(path.id, { status: 'archived',  is_primary_focus: false }),
+      unarchive: () => base44.entities.PathRecommendations.update(path.id, { status: 'exploring' }),
     };
 
     if (updates[action]) {

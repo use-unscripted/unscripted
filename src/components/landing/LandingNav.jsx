@@ -4,7 +4,7 @@ import { LogoFull } from '@/components/UnscriptedLogo';
 export default function LandingNav() {
   return (
     <nav className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5">
-      <LogoFull height={36} />
+      <LogoFull height={52} />
       <div className="hidden items-center gap-6 sm:flex">
         <a href="#how-it-works" className="text-sm font-semibold transition" style={{ color: 'var(--text-secondary)' }}
           onMouseEnter={e => e.currentTarget.style.color = 'var(--text-primary)'}
