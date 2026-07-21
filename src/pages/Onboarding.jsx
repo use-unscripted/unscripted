@@ -60,7 +60,7 @@ const STEPS = [
 ];
 
 function Field({ field, value, onChange }) {
-  const baseClass = 'mt-2 w-full rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-3 text-sm text-[#050816] placeholder-[#94A3B8] outline-none transition focus:border-[#8B0C21] focus:bg-white';
+  const baseClass = 'mt-2 w-full rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-3 text-sm text-[#050816] placeholder-[#94A3B8] outline-none transition focus:border-[#1F3A5F] focus:bg-white';
   return (
     <label className="block text-sm font-semibold text-[#334155]">
       {field.label}
@@ -87,7 +87,7 @@ const TIMEFRAME_OPTIONS = [
 ];
 
 function VisionField({ data, onChange, onCheck }) {
-  const baseClass = 'mt-2 w-full rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-3 text-sm text-[#050816] placeholder-[#94A3B8] outline-none transition focus:border-[#8B0C21] focus:bg-white';
+  const baseClass = 'mt-2 w-full rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-3 text-sm text-[#050816] placeholder-[#94A3B8] outline-none transition focus:border-[#1F3A5F] focus:bg-white';
   const selectedThemes = Array.isArray(data.vision_themes) ? data.vision_themes : [];
 
   const toggleTheme = (theme) => {
@@ -123,7 +123,7 @@ function VisionField({ data, onChange, onCheck }) {
               onClick={() => toggleTheme(theme)}
               className="rounded-full border px-3 py-1 text-xs font-semibold transition"
               style={selectedThemes.includes(theme)
-                ? { background: '#8B0C21', color: '#fff', borderColor: '#8B0C21' }
+                ? { background: 'var(--brand-navy-900)', color: '#fff', borderColor: 'var(--brand-navy-900)' }
                 : { background: 'white', color: '#334155', borderColor: '#E2E8F0' }}
             >
               {theme}
@@ -167,15 +167,15 @@ function PrioritiesStep({ step, data, onChange, onCheck }) {
           <label key={s.name} className="block mb-5">
             <div className="mb-2 flex items-center justify-between">
               <span className="text-sm font-semibold text-[#334155]">{s.label}</span>
-              <span className="text-sm font-bold" style={{ color: '#8B0C21' }}>{data[s.name] || 3}/5</span>
+              <span className="text-sm font-bold" style={{ color: 'var(--brand-navy-900)' }}>{data[s.name] || 3}/5</span>
             </div>
-            <input type="range" min="1" max="5" name={s.name} value={data[s.name] || 3} onChange={onChange} className="w-full accent-[#8B0C21]" />
+            <input type="range" min="1" max="5" name={s.name} value={data[s.name] || 3} onChange={onChange} className="w-full accent-[#1F3A5F]" />
           </label>
         ))}
         <div className="mt-4 space-y-3 border-t border-[#E2E8F0] pt-4">
           {step.checkboxes.map(c => (
             <label key={c.name} className="flex cursor-pointer items-center gap-3">
-              <input type="checkbox" checked={!!data[c.name]} onChange={e => onCheck(c.name, e.target.checked)} className="h-4 w-4 rounded accent-[#8B0C21]" />
+              <input type="checkbox" checked={!!data[c.name]} onChange={e => onCheck(c.name, e.target.checked)} className="h-4 w-4 rounded accent-[#1F3A5F]" />
               <span className="text-sm text-[#334155]">{c.label}</span>
             </label>
           ))}
@@ -186,7 +186,7 @@ function PrioritiesStep({ step, data, onChange, onCheck }) {
 }
 
 function PersonalNotesStep({ data, onChange }) {
-  const baseClass = 'mt-2 w-full rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-3 text-sm text-[#050816] placeholder-[#94A3B8] outline-none transition focus:border-[#8B0C21] focus:bg-white';
+  const baseClass = 'mt-2 w-full rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-3 text-sm text-[#050816] placeholder-[#94A3B8] outline-none transition focus:border-[#1F3A5F] focus:bg-white';
   return (
     <div className="space-y-5">
       <label className="block text-sm font-semibold text-[#334155]">
@@ -265,7 +265,7 @@ function CapacityStep({ step, data, onChange, hours, setHours }) {
           Realistic available hours per week for path-testing
           <input type="number" min="1" max="40" value={hours}
             onChange={e => setHours(Number(e.target.value))}
-            className="mt-2 w-full rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-3 text-sm outline-none focus:border-[#8B0C21]" />
+            className="mt-2 w-full rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-3 text-sm outline-none focus:border-[#1F3A5F]" />
           <p className="mt-1 text-xs text-[#94A3B8]">Be conservative. This determines what we can realistically assign you.</p>
         </label>
       </div>
@@ -361,11 +361,11 @@ export default function Onboarding() {
           <span>{pct}% complete</span>
         </div>
         <div className="mb-10 h-1.5 rounded-full overflow-hidden" style={{ background: '#E2E8F0' }}>
-          <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: '#8B0C21' }} />
+        <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: 'var(--brand-navy-900)' }} />
         </div>
 
         <section className="rounded-[24px] border border-[#E2E8F0] bg-white p-7 shadow-sm sm:p-10">
-          <p className="text-xs font-bold uppercase tracking-[.14em]" style={{ color: '#8B0C21' }}>Path-test intake</p>
+          <p className="text-xs font-bold uppercase tracking-[.14em]" style={{ color: 'var(--brand-navy-700)' }}>Path-test intake</p>
           <h1 className="font-heading mb-2 mt-3 text-2xl font-bold tracking-tight text-[#050816]">{currentStep.label}</h1>
           <p className="mb-8 text-sm text-[#64748B]">{currentStep.subtitle}</p>
           {renderStep()}
@@ -376,7 +376,7 @@ export default function Onboarding() {
             </button>
             <button onClick={next}
               className="flex items-center gap-2 rounded-[10px] px-6 py-3 text-sm font-semibold text-white transition hover:-translate-y-px"
-              style={{ background: '#8B0C21', boxShadow: '0 8px 24px rgba(139,12,33,0.18)' }}>
+              style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}>
               {isLast ? 'Choose My Paths' : 'Continue'} <ArrowRight size={16} />
             </button>
           </div>
