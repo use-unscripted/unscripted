@@ -1,0 +1,58 @@
+{
+  "name": "PathReactivations",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string"
+    },
+    "path_id": {
+      "type": "string"
+    },
+    "path_name": {
+      "type": "string"
+    },
+    "reactivated_at": {
+      "type": "string",
+      "format": "date"
+    },
+    "since_last_exploration": {
+      "type": "string"
+    },
+    "goals_changed": {
+      "type": "string"
+    },
+    "weekly_hours_changed": {
+      "type": "string"
+    },
+    "new_skills": {
+      "type": "string"
+    },
+    "relevant_experience": {
+      "type": "string"
+    },
+    "what_interests_now": {
+      "type": "string"
+    },
+    "concerns_about_restarting": {
+      "type": "string"
+    },
+    "continue_old_or_new": {
+      "type": "string",
+      "enum": [
+        "continue_old",
+        "start_new",
+        "undecided"
+      ]
+    },
+    "updated_plan": {
+      "type": "string"
+    },
+    "generated_summary": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "path_id",
+    "path_name"
+  ]
+}

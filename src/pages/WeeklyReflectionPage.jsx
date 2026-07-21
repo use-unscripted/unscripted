@@ -3,6 +3,7 @@ import { base44 } from '@/api/base44Client';
 import { ArrowRight, CheckCircle, Plus, Search, X, ExternalLink } from 'lucide-react';
 import PageHeader from '@/components/PageHeader';
 import { useNavigate } from 'react-router-dom';
+import PathSwitcher from '@/components/PathSwitcher';
 
 const QUESTIONS = [
   { name: 'completed_items', label: 'What did you complete this week?', placeholder: 'List the experiments, conversations, or outputs you finished' },
@@ -305,6 +306,8 @@ function ReflectionForm({ experiments, missions, initialData, onSaved, onCancel 
 // ── Main Page ──────────────────────────────────────────────────────────────────
 export default function WeeklyReflectionPage() {
   const navigate = useNavigate();
+  const [userPaths, setUserPaths] = useState([]);
+  const [selectedPathId, setSelectedPathId] = useState('all');
   const [reflections, setReflections] = useState([]);
   const [experiments, setExperiments] = useState([]);
   const [missions, setMissions] = useState([]);
@@ -320,14 +323,16 @@ export default function WeeklyReflectionPage() {
 
   const load = async () => {
     try {
-      const [data, exps, mis] = await Promise.all([
+      const [data, exps, mis, ps] = await Promise.all([
         base44.entities.WeeklyReflections.list('-created_date', 100).catch(() => []),
         base44.entities.Experiments.list('-created_date', 200).catch(() => []),
         base44.entities.Missions.list('-created_date', 200).catch(() => []),
+        base44.entities.PathRecommendations.list('-created_date', 100).catch(() => []),
       ]);
       setReflections(Array.isArray(data) ? data : []);
       setExperiments(Array.isArray(exps) ? exps : []);
       setMissions(Array.isArray(mis) ? mis : []);
+      setUserPaths(Array.isArray(ps) ? ps : []);
     } finally {
       setLoading(false);
     }
@@ -361,8 +366,15 @@ export default function WeeklyReflectionPage() {
     setView('history');
   };
 
+  const selectedPath = selectedPathId === 'all' ? null : userPaths.find(p => p.id === selectedPathId);
+
   // History filtering
   const filteredReflections = reflections.filter(r => {
+    if (selectedPath) {
+      const exp = r.experiment_id ? experimentsMap[r.experiment_id] : null;
+      const matchesPath = r.path_name === selectedPath.path_name || exp?.path_name === selectedPath.path_name;
+      if (!matchesPath) return false;
+    }
     if (filterExp !== 'all' && (r.experiment_id || '') !== filterExp) return false;
     if (search.trim()) {
       const q = search.toLowerCase();
@@ -388,6 +400,18 @@ export default function WeeklyReflectionPage() {
           onOpenExp={() => { setSuccessToast(null); navigate('/experiments'); }}
           onDismiss={() => setSuccessToast(null)}
         />
+      )}
+
+      {userPaths.length > 0 && (
+        <div className="mb-4 flex items-center gap-3 flex-wrap">
+          <PathSwitcher
+            paths={userPaths.filter(p => p.status !== 'archived')}
+            selectedId={selectedPathId}
+            onChange={setSelectedPathId}
+            showAll
+          />
+          {selectedPath && <span className="text-xs text-[#94A3B8]">Reflections for <strong className="text-[#334155]">{selectedPath.path_name}</strong></span>}
+        </div>
       )}
 
       <PageHeader

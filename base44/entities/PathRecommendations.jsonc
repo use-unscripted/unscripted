@@ -11,6 +11,9 @@
     "path_name": {
       "type": "string"
     },
+    "path_category": {
+      "type": "string"
+    },
     "fit_reason": {
       "type": "string"
     },
@@ -40,12 +43,70 @@
     "status": {
       "type": "string",
       "enum": [
-        "exploring",
+        "draft",
         "active",
         "paused",
+        "completed",
+        "archived",
+        "exploring",
         "deprioritized"
       ],
       "default": "exploring"
+    },
+    "is_primary_focus": {
+      "type": "boolean",
+      "default": false
+    },
+    "description": {
+      "type": "string"
+    },
+    "why_it_fits": {
+      "type": "string"
+    },
+    "why_it_may_not_fit": {
+      "type": "string"
+    },
+    "risk_level": {
+      "type": "string",
+      "enum": [
+        "low",
+        "medium",
+        "high"
+      ]
+    },
+    "lifestyle_implications": {
+      "type": "string"
+    },
+    "skill_gaps": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "weekly_hours": {
+      "type": "number"
+    },
+    "notes": {
+      "type": "string"
+    },
+    "goals": {
+      "type": "string"
+    },
+    "started_at": {
+      "type": "string",
+      "format": "date"
+    },
+    "last_active_at": {
+      "type": "string",
+      "format": "date"
+    },
+    "paused_at": {
+      "type": "string",
+      "format": "date"
+    },
+    "completed_at": {
+      "type": "string",
+      "format": "date"
     },
     "path_fit_signals": {
       "type": "array",

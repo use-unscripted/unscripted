@@ -1,223 +1,545 @@
 import { useEffect, useState } from 'react';
 import { base44 } from '@/api/base44Client';
-import { ArrowRight, ChevronDown, ChevronUp } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Plus, Star, Pencil, Pause, Play, Archive, ChevronDown, ChevronUp, Clock, CheckCircle2, History, ArrowRight, RotateCcw } from 'lucide-react';
 import PageHeader from '@/components/PageHeader';
+import CreatePathModal from '@/components/paths/CreatePathModal';
+import EditPathModal from '@/components/paths/EditPathModal';
+import ReactivationModal from '@/components/paths/ReactivationModal';
 
-const PRIORITIES = ['income', 'lifestyle', 'autonomy', 'stability', 'creativity', 'impact', 'flexibility', 'prestige'];
-
+const STATUS_CFG = {
+  active:    { label: 'Active',    bg: '#F0FDF4', text: '#15803D' },
+  draft:     { label: 'Draft',     bg: '#F1F5F9', text: '#64748B' },
+  paused:    { label: 'Paused',    bg: '#FFFBEB', text: '#B45309' },
+  completed: { label: 'Completed', bg: '#EFF6FF', text: '#1D4ED8' },
+  archived:  { label: 'Archived',  bg: '#F1F5F9', text: '#94A3B8' },
+  exploring: { label: 'Exploring', bg: '#F8ECEF', text: '#8B0C21' },
+  deprioritized: { label: 'Deprioritized', bg: '#F1F5F9', text: '#94A3B8' },
+};
 const RISK_COLORS = { low: { bg: '#F0FDF4', text: '#15803D' }, medium: { bg: '#FFFBEB', text: '#B45309' }, high: { bg: '#FEF2F2', text: '#B91C1C' } };
 
-function PathCard({ rec, expanded, onToggle }) {
-  const d = rec.generated_detail || {};
-  const risk = d.risk_level || 'medium';
-  const rc = RISK_COLORS[risk] || RISK_COLORS.medium;
+function fmtDate(d) {
+  if (!d) return null;
+  return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+function statusCfg(s) { return STATUS_CFG[s] || STATUS_CFG.exploring; }
+
+// ── Paused / Completed path reopen panel ─────────────────────────────────────
+function PausedPathPanel({ path, experiments, missions, proof, contacts, reflections, onResume, onArchive }) {
+  const pathExps = experiments.filter(e => e.path_name === path.path_name);
+  const completedExps = pathExps.filter(e => e.status === 'completed');
+  const pathProof = proof.filter(p => p.path_tested === path.path_name || pathExps.some(e => e.id === p.experiment_id));
+  const pathContacts = contacts.filter(c => c.path_being_tested === path.path_name || pathExps.some(e => e.id === c.experiment_id));
+  const pathReflections = reflections.filter(r => r.path_name === path.path_name || pathExps.some(e => e.id === r.experiment_id));
+
+  return (
+    <div className="rounded-[20px] border-2 p-6 space-y-5" style={{ borderColor: 'rgba(180,83,9,0.3)', background: '#FFFDF7' }}>
+      <div className="rounded-xl p-4" style={{ background: '#FFFBEB', border: '1px solid rgba(180,83,9,0.2)' }}>
+        <p className="text-sm font-bold text-[#B45309]">You previously explored this path.</p>
+        {path.last_active_at && <p className="text-xs text-[#334155] mt-1">Last active: {fmtDate(path.last_active_at)}</p>}
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-4 text-center">
+        {[
+          { label: 'Experiments', val: pathExps.length },
+          { label: 'Missions done', val: missions.filter(m => pathExps.some(e => e.id === m.experiment_id) && m.status === 'completed').length },
+          { label: 'Proof submitted', val: pathProof.length },
+          { label: 'Contacts', val: pathContacts.length },
+        ].map(({ label, val }) => (
+          <div key={label} className="rounded-xl border border-[#E2E8F0] bg-white p-3">
+            <p className="font-heading text-2xl font-bold text-[#050816]">{val}</p>
+            <p className="text-xs text-[#64748B] mt-0.5">{label}</p>
+          </div>
+        ))}
+      </div>
+
+      {completedExps.length > 0 && (
+        <div>
+          <p className="text-xs font-bold uppercase tracking-wide text-[#64748B] mb-2">Completed experiments</p>
+          <div className="space-y-1.5">
+            {completedExps.map(e => (
+              <div key={e.id} className="flex items-center gap-2 text-sm">
+                <CheckCircle2 size={13} className="text-green-600 shrink-0" />
+                <span className="text-[#334155]">{e.title}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {pathReflections.length > 0 && (
+        <p className="text-xs text-[#64748B]">{pathReflections.length} reflection{pathReflections.length > 1 ? 's' : ''} saved on this path.</p>
+      )}
+
+      <div className="flex flex-wrap gap-3">
+        <button onClick={onResume}
+          className="flex items-center gap-2 rounded-[10px] px-5 py-2.5 text-sm font-semibold text-white"
+          style={{ background: '#8B0C21', boxShadow: '0 8px 24px rgba(139,12,33,0.15)' }}>
+          <RotateCcw size={14} /> Resume This Path
+        </button>
+        <button onClick={onArchive}
+          className="flex items-center gap-2 rounded-[10px] border border-[#E2E8F0] px-5 py-2.5 text-sm font-semibold text-[#334155] hover:bg-[#F8FAFC]">
+          <Archive size={14} /> Archive Path
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ── Path card ─────────────────────────────────────────────────────────────────
+function PathCard({ path, experiments, missions, proof, contacts, reflections, onAction, expanded, onToggle }) {
+  const cfg = statusCfg(path.status);
+  const riskCfg = RISK_COLORS[path.risk_level] || RISK_COLORS.medium;
+  const d = path.generated_detail || {};
+
+  const pathExps = experiments.filter(e => e.path_name === path.path_name);
+  const completedExps = pathExps.filter(e => e.status === 'completed');
+  const pct = pathExps.length ? Math.round(completedExps.length / pathExps.length * 100) : 0;
+  const isPausedOrCompleted = ['paused', 'completed'].includes(path.status);
 
   return (
     <div className="rounded-[20px] border border-[#E2E8F0] bg-white overflow-hidden">
       <div className="p-6">
         <div className="flex items-start justify-between gap-4">
-          <div className="flex-1">
-            <div className="flex items-center gap-3 flex-wrap">
-              <h2 className="font-heading text-xl font-bold text-[#050816]">{rec.path_name}</h2>
-              <span className="rounded-full px-2.5 py-1 text-xs font-bold" style={{ background: rc.bg, color: rc.text }}>
-                {risk} risk
-              </span>
-              {rec.confidence_level && (
-                <span className="rounded-full px-2.5 py-1 text-xs font-bold" style={{ background: '#F8ECEF', color: '#8B0C21' }}>
-                  {rec.confidence_level} fit confidence
+          <div className="flex-1 min-w-0">
+            <div className="flex flex-wrap items-center gap-2 mb-2">
+              {path.is_primary_focus && (
+                <span className="rounded-full px-2.5 py-1 text-xs font-bold flex items-center gap-1" style={{ background: '#F8ECEF', color: '#8B0C21' }}>
+                  <Star size={11} /> Primary Focus
                 </span>
               )}
+              <span className="rounded-full px-2.5 py-1 text-xs font-bold" style={{ background: cfg.bg, color: cfg.text }}>{cfg.label}</span>
+              {path.risk_level && (
+                <span className="rounded-full px-2.5 py-1 text-xs font-bold" style={{ background: riskCfg.bg, color: riskCfg.text }}>{path.risk_level} risk</span>
+              )}
+              {path.confidence_level && (
+                <span className="rounded-full px-2.5 py-1 text-xs font-bold" style={{ background: '#F1F5F9', color: '#334155' }}>{path.confidence_level} confidence</span>
+              )}
             </div>
-            <p className="mt-2 text-sm text-[#334155]">{rec.fit_reason}</p>
+            <h2 className="font-heading text-xl font-bold text-[#050816]">{path.path_name}</h2>
+            {path.path_category && <p className="text-xs text-[#94A3B8] mt-0.5">{path.path_category}</p>}
+            <p className="mt-2 text-sm text-[#334155] line-clamp-2">{path.why_it_fits || path.fit_reason}</p>
+
+            {/* Progress bar */}
+            {pathExps.length > 0 && (
+              <div className="mt-3">
+                <div className="flex justify-between text-xs text-[#94A3B8] mb-1">
+                  <span>Experiment progress</span>
+                  <span>{completedExps.length}/{pathExps.length}</span>
+                </div>
+                <div className="h-1.5 rounded-full overflow-hidden bg-[#F1F5F9]">
+                  <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: '#8B0C21' }} />
+                </div>
+              </div>
+            )}
+
+            {path.last_active_at && (
+              <p className="mt-2 text-xs text-[#94A3B8] flex items-center gap-1"><Clock size={11} /> Last active {fmtDate(path.last_active_at)}</p>
+            )}
           </div>
-          <button onClick={onToggle} className="shrink-0 rounded-xl border border-[#E2E8F0] p-2 hover:bg-[#F8FAFC] transition">
+
+          <button onClick={onToggle} className="shrink-0 rounded-xl border border-[#E2E8F0] p-2 hover:bg-[#F8FAFC]">
             {expanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
           </button>
         </div>
 
-        {rec.concern && (
-          <div className="mt-4 rounded-xl p-3" style={{ background: '#FFFBEB', border: '1px solid rgba(180,83,9,0.2)' }}>
-            <p className="text-xs font-bold text-[#B45309] uppercase tracking-wide mb-1">Potential concern</p>
-            <p className="text-sm text-[#334155]">{rec.concern}</p>
-          </div>
-        )}
+        {/* Action buttons */}
+        <div className="mt-4 flex flex-wrap gap-2">
+          <button onClick={() => onAction('edit', path)}
+            className="flex items-center gap-1.5 rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-xs font-semibold text-[#334155] hover:bg-[#F8FAFC]">
+            <Pencil size={12} /> Edit
+          </button>
+          {!path.is_primary_focus && ['active', 'exploring', 'draft'].includes(path.status) && (
+            <button onClick={() => onAction('make_primary', path)}
+              className="flex items-center gap-1.5 rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-xs font-semibold text-[#334155] hover:bg-[#F8ECEF]">
+              <Star size={12} /> Make Primary
+            </button>
+          )}
+          {['active', 'exploring', 'draft'].includes(path.status) && (
+            <button onClick={() => onAction('pause', path)}
+              className="flex items-center gap-1.5 rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-xs font-semibold text-[#334155] hover:bg-[#F8FAFC]">
+              <Pause size={12} /> Pause
+            </button>
+          )}
+          {path.status === 'paused' && (
+            <button onClick={() => onAction('resume', path)}
+              className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold text-white"
+              style={{ background: '#8B0C21' }}>
+              <Play size={12} /> Resume
+            </button>
+          )}
+          {!['archived'].includes(path.status) && (
+            <button onClick={() => onAction('complete', path)}
+              className="flex items-center gap-1.5 rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-xs font-semibold text-[#334155] hover:bg-[#F8FAFC]">
+              <CheckCircle2 size={12} /> Mark Complete
+            </button>
+          )}
+          {path.status !== 'archived' && (
+            <button onClick={() => onAction('archive', path)}
+              className="flex items-center gap-1.5 rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-xs font-semibold text-[#64748B] hover:bg-[#F8FAFC]">
+              <Archive size={12} /> Archive
+            </button>
+          )}
+        </div>
       </div>
 
       {expanded && (
         <div className="border-t border-[#E2E8F0] p-6 space-y-5">
-          {d.day_to_day && (
-            <div>
-              <p className="text-xs font-bold uppercase tracking-[.12em] text-[#64748B] mb-2">Day-to-day reality</p>
-              <p className="text-sm text-[#334155] leading-6">{d.day_to_day}</p>
+          {isPausedOrCompleted && (
+            <PausedPathPanel
+              path={path}
+              experiments={experiments}
+              missions={missions}
+              proof={proof}
+              contacts={contacts}
+              reflections={reflections}
+              onResume={() => onAction('resume', path)}
+              onArchive={() => onAction('archive', path)}
+            />
+          )}
+
+          {(path.why_it_may_not_fit || path.concern) && (
+            <div className="rounded-xl p-3" style={{ background: '#FFFBEB', border: '1px solid rgba(180,83,9,0.2)' }}>
+              <p className="text-xs font-bold text-[#B45309] uppercase tracking-wide mb-1">Potential concern</p>
+              <p className="text-sm text-[#334155]">{path.why_it_may_not_fit || path.concern}</p>
             </div>
           )}
-          {d.lifestyle && (
+
+          {(path.lifestyle_implications || d.lifestyle) && (
             <div>
               <p className="text-xs font-bold uppercase tracking-[.12em] text-[#64748B] mb-2">Lifestyle</p>
-              <p className="text-sm text-[#334155] leading-6">{d.lifestyle}</p>
+              <p className="text-sm text-[#334155]">{path.lifestyle_implications || d.lifestyle}</p>
             </div>
           )}
+
           {d.income_trajectory && (
             <div>
               <p className="text-xs font-bold uppercase tracking-[.12em] text-[#64748B] mb-2">Income trajectory</p>
               <p className="text-sm text-[#334155]">{d.income_trajectory}</p>
             </div>
           )}
-          <div className="grid gap-4 sm:grid-cols-2">
-            {d.advantages?.length > 0 && (
-              <div>
-                <p className="text-xs font-bold uppercase tracking-[.12em] mb-2" style={{ color: '#15803D' }}>Advantages</p>
-                <ul className="space-y-1">{d.advantages.map((a, i) => <li key={i} className="text-sm text-[#334155]">· {a}</li>)}</ul>
-              </div>
-            )}
-            {d.drawbacks?.length > 0 && (
-              <div>
-                <p className="text-xs font-bold uppercase tracking-[.12em] mb-2" style={{ color: '#B91C1C' }}>Drawbacks</p>
-                <ul className="space-y-1">{d.drawbacks.map((d2, i) => <li key={i} className="text-sm text-[#334155]">· {d2}</li>)}</ul>
-              </div>
-            )}
-          </div>
-          {rec.current_gaps?.length > 0 && (
+
+          {path.goals && (
             <div>
-              <p className="text-xs font-bold uppercase tracking-[.12em] text-[#64748B] mb-2">Your current gaps</p>
-              <div className="flex flex-wrap gap-2">{rec.current_gaps.map((g, i) => (
-                <span key={i} className="rounded-full border border-[#E2E8F0] px-3 py-1 text-xs text-[#334155]">{g}</span>
-              ))}</div>
+              <p className="text-xs font-bold uppercase tracking-[.12em] text-[#64748B] mb-2">Your goals</p>
+              <p className="text-sm text-[#334155]">{path.goals}</p>
             </div>
           )}
-          {rec.first_experiment && (
-            <div className="rounded-xl p-4" style={{ background: '#F8ECEF', border: '1px solid rgba(139,12,33,0.2)' }}>
-              <p className="text-xs font-bold uppercase tracking-[.12em] mb-2" style={{ color: '#8B0C21' }}>First low-risk experiment</p>
-              <p className="text-sm text-[#334155]">{rec.first_experiment}</p>
+
+          {(path.skill_gaps?.length > 0 || path.current_gaps?.length > 0) && (
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[.12em] text-[#64748B] mb-2">Skill gaps</p>
+              <div className="flex flex-wrap gap-2">
+                {(path.skill_gaps || path.current_gaps || []).map((g, i) => (
+                  <span key={i} className="rounded-full border border-[#E2E8F0] px-3 py-1 text-xs text-[#334155]">{g}</span>
+                ))}
+              </div>
             </div>
           )}
-          <Link
-            to={`/experiments/new?recId=${rec.id}&pathName=${encodeURIComponent(rec.path_name)}`}
+
+          {(path.first_experiment || d.day_to_day) && (
+            <div className="grid gap-4 sm:grid-cols-2">
+              {path.first_experiment && (
+                <div className="rounded-xl p-4" style={{ background: '#F8ECEF', border: '1px solid rgba(139,12,33,0.2)' }}>
+                  <p className="text-xs font-bold uppercase tracking-[.12em] mb-2" style={{ color: '#8B0C21' }}>Suggested first experiment</p>
+                  <p className="text-sm text-[#334155]">{path.first_experiment}</p>
+                </div>
+              )}
+              {d.day_to_day && (
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-[.12em] text-[#64748B] mb-2">Day-to-day reality</p>
+                  <p className="text-sm text-[#334155]">{d.day_to_day}</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {path.notes && (
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[.12em] text-[#64748B] mb-2">Notes</p>
+              <p className="text-sm text-[#334155]">{path.notes}</p>
+            </div>
+          )}
+
+          {/* Path history timeline */}
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[.12em] text-[#64748B] mb-3 flex items-center gap-1.5"><History size={12} /> Path history</p>
+            <div className="space-y-1.5">
+              {[
+                path.created_date && { date: path.created_date, label: 'Path created' },
+                path.started_at && { date: path.started_at, label: 'Became active' },
+                path.paused_at && { date: path.paused_at, label: 'Paused' },
+                path.completed_at && { date: path.completed_at, label: 'Completed' },
+                path.last_active_at && path.status === 'active' && { date: path.last_active_at, label: 'Last active' },
+              ].filter(Boolean).map((evt, i) => (
+                <div key={i} className="flex items-center gap-3 text-xs text-[#64748B]">
+                  <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: '#8B0C21' }} />
+                  <span className="font-medium">{fmtDate(evt.date)}</span>
+                  <span>{evt.label}</span>
+                </div>
+              ))}
+              {pathExps.map(e => (
+                <div key={e.id} className="flex items-center gap-3 text-xs text-[#94A3B8]">
+                  <div className="w-1.5 h-1.5 rounded-full shrink-0 bg-[#E2E8F0]" />
+                  <span className="font-medium">{fmtDate(e.created_date)}</span>
+                  <span>Experiment: {e.title}</span>
+                  {e.status === 'completed' && <CheckCircle2 size={11} className="text-green-600" />}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <a href={`/experiments/new?pathName=${encodeURIComponent(path.path_name)}`}
             className="inline-flex items-center gap-2 text-sm font-semibold transition hover:opacity-80"
             style={{ color: '#8B0C21' }}>
             Start an Experiment for This Path <ArrowRight size={15} />
-          </Link>
+          </a>
         </div>
       )}
     </div>
   );
 }
 
+// ── Section wrapper ───────────────────────────────────────────────────────────
+function PathSection({ title, paths, ...rest }) {
+  if (paths.length === 0) return null;
+  return (
+    <section className="mb-8">
+      <h3 className="font-heading text-base font-bold text-[#050816] mb-3 flex items-center gap-2">
+        {title}
+        <span className="text-xs font-normal text-[#94A3B8]">({paths.length})</span>
+      </h3>
+      <div className="space-y-4">
+        {paths.map(p => <PathCard key={p.id} path={p} {...rest} />)}
+      </div>
+    </section>
+  );
+}
+
+// ── Main page ─────────────────────────────────────────────────────────────────
 export default function PathComparison() {
-  const [recs, setRecs] = useState([]);
+  const [paths, setPaths] = useState([]);
+  const [experiments, setExperiments] = useState([]);
+  const [missions, setMissions] = useState([]);
+  const [proof, setProof] = useState([]);
+  const [contacts, setContacts] = useState([]);
+  const [reflections, setReflections] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [generating, setGenerating] = useState(false);
   const [expandedId, setExpandedId] = useState(null);
-  const [sortBy, setSortBy] = useState('fit');
+  const [showCreate, setShowCreate] = useState(false);
+  const [editTarget, setEditTarget] = useState(null);
+  const [resumeTarget, setResumeTarget] = useState(null);
 
   const load = async () => {
-    const data = await base44.entities.PathRecommendations.list('-created_date', 10);
-    setRecs(data);
+    const [ps, exps, mis, prf, cts, refs] = await Promise.all([
+      base44.entities.PathRecommendations.list('-created_date', 100).catch(() => []),
+      base44.entities.Experiments.list('-created_date', 200).catch(() => []),
+      base44.entities.Missions.list('-created_date', 200).catch(() => []),
+      base44.entities.ProofOfWork.list('-created_date', 200).catch(() => []),
+      base44.entities.OutreachContacts.list('-created_date', 200).catch(() => []),
+      base44.entities.WeeklyReflections.list('-created_date', 200).catch(() => []),
+    ]);
+    setPaths(Array.isArray(ps) ? ps : []);
+    setExperiments(Array.isArray(exps) ? exps : []);
+    setMissions(Array.isArray(mis) ? mis : []);
+    setProof(Array.isArray(prf) ? prf : []);
+    setContacts(Array.isArray(cts) ? cts : []);
+    setReflections(Array.isArray(refs) ? refs : []);
     setLoading(false);
   };
 
   useEffect(() => { load(); }, []);
 
-  const generatePaths = async () => {
-    setGenerating(true);
-    const [profiles, goals] = await Promise.all([
-      base44.entities.StudentProfile.list('-created_date', 1),
-      base44.entities.Goals.list('-created_date', 20),
-    ]);
-    const result = await base44.integrations.Core.InvokeLLM({
-      prompt: `You are Unscripted, a life-design platform for ambitious college students. Based on this student's profile and goals, recommend 4 realistic career and life paths. Include both traditional and non-traditional options where appropriate. Be honest about tradeoffs. The student must remain the decision-maker.
+  const handleAction = async (action, path) => {
+    const today = new Date().toISOString().split('T')[0];
 
-Student profile: ${JSON.stringify(profiles[0])}
-Goals: ${JSON.stringify(goals)}`,
-      response_json_schema: {
-        type: 'object',
-        properties: {
-          paths: {
-            type: 'array',
-            items: {
-              type: 'object',
-              properties: {
-                path_name: { type: 'string' },
-                fit_reason: { type: 'string' },
-                concern: { type: 'string' },
-                readiness_score: { type: 'number' },
-                confidence_level: { type: 'string' },
-                current_gaps: { type: 'array', items: { type: 'string' } },
-                first_experiment: { type: 'string' },
-                generated_detail: {
-                  type: 'object',
-                  properties: {
-                    day_to_day: { type: 'string' },
-                    lifestyle: { type: 'string' },
-                    income_trajectory: { type: 'string' },
-                    risk_level: { type: 'string' },
-                    advantages: { type: 'array', items: { type: 'string' } },
-                    drawbacks: { type: 'array', items: { type: 'string' } },
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    });
-    await base44.entities.PathRecommendations.bulkCreate(result.paths || []);
-    await load();
-    setGenerating(false);
+    if (action === 'edit') { setEditTarget(path); return; }
+    if (action === 'resume') { setResumeTarget(path); return; }
+
+    const updates = {
+      make_primary: async () => {
+        // Unset all other primaries first
+        const primaries = paths.filter(p => p.is_primary_focus && p.id !== path.id);
+        await Promise.all(primaries.map(p => base44.entities.PathRecommendations.update(p.id, { is_primary_focus: false })));
+        await base44.entities.PathRecommendations.update(path.id, { is_primary_focus: true });
+      },
+      pause: () => base44.entities.PathRecommendations.update(path.id, { status: 'paused', paused_at: today, is_primary_focus: false }),
+      complete: () => base44.entities.PathRecommendations.update(path.id, { status: 'completed', completed_at: today, is_primary_focus: false }),
+      archive: () => base44.entities.PathRecommendations.update(path.id, { status: 'archived', is_primary_focus: false }),
+    };
+
+    if (updates[action]) {
+      await updates[action]();
+      load();
+    }
+  };
+
+  // Group paths
+  const primary = paths.filter(p => p.is_primary_focus && ['active', 'exploring', 'draft'].includes(p.status));
+  const otherActive = paths.filter(p => !p.is_primary_focus && ['active', 'exploring', 'draft'].includes(p.status));
+  const paused = paths.filter(p => p.status === 'paused');
+  const completed = paths.filter(p => p.status === 'completed');
+  const archived = paths.filter(p => p.status === 'archived');
+
+  const sharedProps = {
+    experiments, missions, proof, contacts, reflections,
+    onAction: handleAction,
+    expandedId,
+    expanded: false,
+    onToggle: () => {},
   };
 
   return (
     <main className="mx-auto max-w-5xl px-5 py-10 sm:px-8">
+      {showCreate && (
+        <CreatePathModal
+          existingRecommendations={paths}
+          onClose={() => setShowCreate(false)}
+          onCreated={() => { setShowCreate(false); load(); }}
+        />
+      )}
+      {editTarget && (
+        <EditPathModal
+          path={editTarget}
+          onClose={() => setEditTarget(null)}
+          onSaved={() => { setEditTarget(null); load(); }}
+        />
+      )}
+      {resumeTarget && (
+        <ReactivationModal
+          path={resumeTarget}
+          onClose={() => setResumeTarget(null)}
+          onReactivated={() => { setResumeTarget(null); load(); }}
+        />
+      )}
+
       <PageHeader
-        eyebrow="Path comparison"
-        title="Three paths worth testing."
-        description="These recommendations are based on your profile and selected paths. None is objectively correct. Your job is to test and learn."
+        eyebrow="Paths"
+        title="Your career paths."
+        description="Explore multiple paths simultaneously. Test, pause, resume, and compare — none is permanent until you decide it is."
+        action={
+          <button onClick={() => setShowCreate(true)}
+            className="flex items-center gap-2 rounded-[10px] px-5 py-2.5 text-sm font-semibold text-white shrink-0"
+            style={{ background: '#8B0C21', boxShadow: '0 8px 24px rgba(139,12,33,0.18)' }}>
+            <Plus size={16} /> Create Another Path
+          </button>
+        }
       />
 
       {loading ? (
-        <div className="py-20 text-center text-[#64748B]">Loading your paths...</div>
-      ) : recs.length === 0 ? (
+        <div className="py-20 text-center text-[#64748B]">Loading your paths…</div>
+      ) : paths.length === 0 ? (
         <div className="rounded-[24px] border border-dashed border-[#E2E8F0] p-16 text-center">
-          <h3 className="font-heading text-xl font-bold text-[#050816]">No path recommendations yet.</h3>
-          <p className="mt-2 text-sm text-[#64748B]">Complete your intake first, or generate recommendations now.</p>
-          <button onClick={generatePaths} disabled={generating}
-            className="mt-6 inline-flex items-center gap-2 rounded-[10px] px-6 py-3 text-sm font-semibold text-white transition hover:-translate-y-px disabled:opacity-60"
-            style={{ background: '#8B0C21', boxShadow: '0 8px 24px rgba(139,12,33,0.18)' }}>
-            {generating ? 'Generating...' : 'Generate My Path Recommendations'} <ArrowRight size={16} />
+          <h3 className="font-heading text-xl font-bold text-[#050816]">No paths yet.</h3>
+          <p className="mt-2 text-sm text-[#64748B]">Create your first path to start tracking experiments, reflections, and progress.</p>
+          <button onClick={() => setShowCreate(true)}
+            className="mt-6 inline-flex items-center gap-2 rounded-[10px] px-6 py-3 text-sm font-semibold text-white"
+            style={{ background: '#8B0C21' }}>
+            <Plus size={16} /> Create a Path
           </button>
         </div>
       ) : (
         <>
-          <div className="mb-6 flex items-center justify-between">
-            <p className="text-sm text-[#64748B]">{recs.length} paths recommended based on your profile</p>
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-[#64748B]">Sort by:</span>
-              <select value={sortBy} onChange={e => setSortBy(e.target.value)}
-                className="rounded-lg border border-[#E2E8F0] bg-white px-3 py-1.5 text-xs text-[#334155] outline-none">
-                {PRIORITIES.map(p => <option key={p} value={p}>{p.charAt(0).toUpperCase() + p.slice(1)}</option>)}
-              </select>
-            </div>
-          </div>
+          {/* Primary Focus */}
+          {primary.length > 0 && (
+            <section className="mb-8">
+              <h3 className="font-heading text-base font-bold text-[#050816] mb-3 flex items-center gap-2">
+                <Star size={16} style={{ color: '#8B0C21' }} /> Primary Focus
+              </h3>
+              <div className="space-y-4">
+                {primary.map(p => (
+                  <PathCard key={p.id} path={p}
+                    experiments={experiments} missions={missions} proof={proof} contacts={contacts} reflections={reflections}
+                    onAction={handleAction}
+                    expanded={expandedId === p.id}
+                    onToggle={() => setExpandedId(expandedId === p.id ? null : p.id)}
+                  />
+                ))}
+              </div>
+            </section>
+          )}
 
-          <div className="space-y-4">
-            {recs.map(rec => (
-              <PathCard key={rec.id} rec={rec}
-                expanded={expandedId === rec.id}
-                onToggle={() => setExpandedId(expandedId === rec.id ? null : rec.id)} />
-            ))}
-          </div>
+          {/* Other Active */}
+          {otherActive.length > 0 && (
+            <section className="mb-8">
+              <h3 className="font-heading text-base font-bold text-[#050816] mb-3">
+                Other Active Paths <span className="text-xs font-normal text-[#94A3B8]">({otherActive.length})</span>
+              </h3>
+              <div className="space-y-4">
+                {otherActive.map(p => (
+                  <PathCard key={p.id} path={p}
+                    experiments={experiments} missions={missions} proof={proof} contacts={contacts} reflections={reflections}
+                    onAction={handleAction}
+                    expanded={expandedId === p.id}
+                    onToggle={() => setExpandedId(expandedId === p.id ? null : p.id)}
+                  />
+                ))}
+              </div>
+            </section>
+          )}
 
-          <div className="mt-8 rounded-[20px] p-6 text-center" style={{ background: '#F8ECEF', border: '1px solid rgba(139,12,33,0.2)' }}>
-            <p className="text-sm font-semibold text-[#334155]">
-              These are recommendations based on what you shared, not a verdict. The goal is to help you test paths intelligently — not choose one permanently.
-            </p>
-          </div>
+          {/* Paused */}
+          {paused.length > 0 && (
+            <section className="mb-8">
+              <h3 className="font-heading text-base font-bold text-[#050816] mb-3">
+                Paused Paths <span className="text-xs font-normal text-[#94A3B8]">({paused.length})</span>
+              </h3>
+              <div className="space-y-4">
+                {paused.map(p => (
+                  <PathCard key={p.id} path={p}
+                    experiments={experiments} missions={missions} proof={proof} contacts={contacts} reflections={reflections}
+                    onAction={handleAction}
+                    expanded={expandedId === p.id}
+                    onToggle={() => setExpandedId(expandedId === p.id ? null : p.id)}
+                  />
+                ))}
+              </div>
+            </section>
+          )}
 
-          <button onClick={generatePaths} disabled={generating}
-            className="mt-4 text-sm font-semibold transition hover:opacity-80" style={{ color: '#8B0C21' }}>
-            {generating ? 'Regenerating...' : 'Regenerate recommendations'}
-          </button>
+          {/* Completed */}
+          {completed.length > 0 && (
+            <section className="mb-8">
+              <h3 className="font-heading text-base font-bold text-[#050816] mb-3">
+                Completed Paths <span className="text-xs font-normal text-[#94A3B8]">({completed.length})</span>
+              </h3>
+              <div className="space-y-4">
+                {completed.map(p => (
+                  <PathCard key={p.id} path={p}
+                    experiments={experiments} missions={missions} proof={proof} contacts={contacts} reflections={reflections}
+                    onAction={handleAction}
+                    expanded={expandedId === p.id}
+                    onToggle={() => setExpandedId(expandedId === p.id ? null : p.id)}
+                  />
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* Path History (archived) */}
+          {archived.length > 0 && (
+            <section className="mb-8">
+              <h3 className="font-heading text-base font-bold text-[#050816] mb-3 flex items-center gap-2">
+                <History size={15} /> Path History
+                <span className="text-xs font-normal text-[#94A3B8]">({archived.length})</span>
+              </h3>
+              <div className="space-y-4">
+                {archived.map(p => (
+                  <PathCard key={p.id} path={p}
+                    experiments={experiments} missions={missions} proof={proof} contacts={contacts} reflections={reflections}
+                    onAction={handleAction}
+                    expanded={expandedId === p.id}
+                    onToggle={() => setExpandedId(expandedId === p.id ? null : p.id)}
+                  />
+                ))}
+              </div>
+            </section>
+          )}
+
+          <div className="mt-4 rounded-[20px] p-5 text-center text-sm text-[#64748B]"
+            style={{ background: '#F8ECEF', border: '1px solid rgba(139,12,33,0.15)' }}>
+            These paths are recommendations and tests — not permanent commitments. Your goal is to learn what fits you, not to pick one and stay forever.
+          </div>
         </>
       )}
     </main>

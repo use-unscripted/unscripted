@@ -15,6 +15,7 @@ class CardErrorBoundary extends Component {
 import { Plus, ExternalLink, Search, Play, FileText, Film, Image, FileSpreadsheet, Music, File, ChevronDown, Eye, EyeOff, Trash2, X } from 'lucide-react';
 import PageHeader from '@/components/PageHeader';
 import { ProofSuccessToast } from '@/components/experiments/AddProofModal';
+import PathSwitcher from '@/components/PathSwitcher';
 import AddProofStandaloneModal from '@/components/experiments/AddProofStandaloneModal';
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
@@ -236,6 +237,8 @@ function ProofCard({ entry, missionsMap, experimentsMap, onDelete, onNavigateToP
 // ── Main Page ──────────────────────────────────────────────────────────────────
 export default function ProofOfWorkPage() {
   const navigate = useNavigate();
+  const [userPaths, setUserPaths] = useState([]);
+  const [selectedPathId, setSelectedPathId] = useState('all');
   const [entries, setEntries] = useState([]);
   const [missions, setMissions] = useState([]);
   const [experiments, setExperiments] = useState([]);
@@ -254,14 +257,16 @@ export default function ProofOfWorkPage() {
     setLoadError(false);
     setLoading(true);
     try {
-      const [proofData, missionData, expData] = await Promise.all([
+      const [proofData, missionData, expData, psData] = await Promise.all([
         base44.entities.ProofOfWork.list('-created_date', 200).catch(() => []),
         base44.entities.Missions.list('-created_date', 200).catch(() => []),
         base44.entities.Experiments.list('-created_date', 200).catch(() => []),
+        base44.entities.PathRecommendations.list('-created_date', 100).catch(() => []),
       ]);
       setEntries(Array.isArray(proofData) ? proofData : []);
       setMissions(Array.isArray(missionData) ? missionData : []);
       setExperiments(Array.isArray(expData) ? expData : []);
+      setUserPaths(Array.isArray(psData) ? psData : []);
     } catch (err) {
       console.error('[ProofOfWorkPage] Failed to load data:', err?.message || err);
       setLoadError(true);
@@ -355,6 +360,24 @@ export default function ProofOfWorkPage() {
           onReturnToMission={() => { setSuccessToast(null); navigate('/experiments'); }}
           onDismiss={() => setSuccessToast(null)}
         />
+      )}
+
+      {userPaths.length > 0 && (
+        <div className="mb-4 flex items-center gap-3 flex-wrap">
+          <PathSwitcher
+            paths={userPaths.filter(p => p.status !== 'archived')}
+            selectedId={selectedPathId}
+            onChange={(id) => {
+              setSelectedPathId(id);
+              if (id === 'all') { setFilterPath('all'); }
+              else {
+                const p = userPaths.find(x => x.id === id);
+                if (p) setFilterPath(p.path_name);
+              }
+            }}
+            showAll
+          />
+        </div>
       )}
 
       <PageHeader

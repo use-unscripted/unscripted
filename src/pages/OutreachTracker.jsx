@@ -4,6 +4,7 @@ import { base44 } from '@/api/base44Client';
 import { Plus, Mail, CheckCircle, Clock, ExternalLink, Phone, Pencil, ChevronDown, Beaker } from 'lucide-react';
 import PageHeader from '@/components/PageHeader';
 import AddContactModal, { ContactSuccessToast } from '@/components/outreach/AddContactModal';
+import PathSwitcher from '@/components/PathSwitcher';
 
 const ALL_STATUS_OPTIONS = [
   { value: 'not_sent', label: 'Not contacted', bg: '#F1F5F9', text: '#334155' },
@@ -153,6 +154,8 @@ function ContactCard({ c, experimentsMap, missionsMap, onEdit, onStatusChange, o
 
 export default function OutreachTracker() {
   const navigate = useNavigate();
+  const [paths, setPaths] = useState([]);
+  const [selectedPathId, setSelectedPathId] = useState('all');
   const [contacts, setContacts] = useState([]);
   const [experiments, setExperiments] = useState([]);
   const [missions, setMissions] = useState([]);
@@ -169,14 +172,16 @@ export default function OutreachTracker() {
   const load = async () => {
     setLoadError(false);
     try {
-      const [c, e, m] = await Promise.all([
+      const [c, e, m, ps] = await Promise.all([
         base44.entities.OutreachContacts.list('-updated_date', 200).catch(() => null),
         base44.entities.Experiments.list('-created_date', 200).catch(() => []),
         base44.entities.Missions.list('-created_date', 200).catch(() => []),
+        base44.entities.PathRecommendations.list('-created_date', 100).catch(() => []),
       ]);
       if (c === null) { setLoadError(true); } else { setContacts(Array.isArray(c) ? c : []); }
       setExperiments(Array.isArray(e) ? e : []);
       setMissions(Array.isArray(m) ? m : []);
+      setPaths(Array.isArray(ps) ? ps : []);
     } catch {
       setLoadError(true);
     } finally {
@@ -208,10 +213,17 @@ export default function OutreachTracker() {
     toastTimer.current = setTimeout(() => setSuccessToast(null), 8000);
   };
 
+  const selectedPath = selectedPathId === 'all' ? null : paths.find(p => p.id === selectedPathId);
+  const pathExps = selectedPath ? experiments.filter(e => e.path_name === selectedPath.path_name) : experiments;
+
   const overdue = contacts.filter(c => c.followup_date && new Date(c.followup_date) < new Date() && !['completed','responded'].includes(c.response_status));
 
   // Filtered contacts
   const filtered = contacts.filter(c => {
+    if (selectedPath) {
+      const matchesPath = c.path_being_tested === selectedPath.path_name || pathExps.some(e => e.id === c.experiment_id);
+      if (!matchesPath) return false;
+    }
     if (filterStatus !== 'all' && c.response_status !== filterStatus) return false;
     if (filterExp !== 'all' && c.experiment_id !== filterExp) return false;
     if (search.trim()) {
@@ -257,6 +269,30 @@ export default function OutreachTracker() {
           </button>
         }
       />
+
+      {paths.length > 0 && (
+        <div className="mb-4 flex items-center gap-3 flex-wrap">
+          <PathSwitcher
+            paths={paths.filter(p => p.status !== 'archived')}
+            selectedId={selectedPathId}
+            onChange={setSelectedPathId}
+            showAll
+          />
+          {selectedPath && <span className="text-xs text-[#94A3B8]">Contacts for <strong className="text-[#334155]">{selectedPath.path_name}</strong></span>}
+        </div>
+      )}
+
+      {paths.length > 0 && (
+        <div className="mb-4 flex items-center gap-3 flex-wrap">
+          <PathSwitcher
+            paths={paths.filter(p => p.status !== 'archived')}
+            selectedId={selectedPathId}
+            onChange={setSelectedPathId}
+            showAll
+          />
+          {selectedPath && <span className="text-xs text-[#94A3B8]">Contacts for <strong className="text-[#334155]">{selectedPath.path_name}</strong></span>}
+        </div>
+      )}
 
       {overdue.length > 0 && (
         <div className="mb-6 rounded-[16px] p-4" style={{ background: '#FFFBEB', border: '1px solid rgba(180,83,9,0.25)' }}>

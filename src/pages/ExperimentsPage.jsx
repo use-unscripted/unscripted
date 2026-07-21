@@ -5,6 +5,7 @@ import { Plus, ChevronDown, ChevronUp, Clock, BookOpen, Target, FileText, Loader
 import PageHeader from '@/components/PageHeader';
 import AddMissionModal from '@/components/experiments/AddMissionModal';
 import AddProofModal, { ProofSuccessToast } from '@/components/experiments/AddProofModal';
+import PathSwitcher from '@/components/PathSwitcher';
 
 const STATUS_STYLES = {
   planned:     { bg: '#F1F5F9', text: '#334155', label: 'Planned' },
@@ -279,6 +280,8 @@ function NewExperimentModal({ onClose, onSave }) {
 
 export default function ExperimentsPage() {
   const navigate = useNavigate();
+  const [paths, setPaths] = useState([]);
+  const [selectedPathId, setSelectedPathId] = useState('all');
   const [experiments, setExperiments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showNew, setShowNew] = useState(false);
@@ -291,8 +294,12 @@ export default function ExperimentsPage() {
   const toastTimer = useRef(null);
 
   const load = async () => {
-    const data = await base44.entities.Experiments.list('-created_date', 50);
-    setExperiments(data);
+    const [data, ps] = await Promise.all([
+      base44.entities.Experiments.list('-created_date', 50).catch(() => []),
+      base44.entities.PathRecommendations.list('-created_date', 100).catch(() => []),
+    ]);
+    setExperiments(Array.isArray(data) ? data : []);
+    setPaths(Array.isArray(ps) ? ps : []);
     setLoading(false);
   };
 
@@ -333,7 +340,11 @@ export default function ExperimentsPage() {
     toastTimer.current = setTimeout(() => setSuccessToast(null), 8000);
   };
 
-  const filtered = filter === 'all' ? experiments : experiments.filter(e => e.status === filter);
+  const selectedPath = selectedPathId === 'all' ? null : paths.find(p => p.id === selectedPathId);
+  const pathFiltered = selectedPath
+    ? experiments.filter(e => e.path_name === selectedPath.path_name)
+    : experiments;
+  const filtered = filter === 'all' ? pathFiltered : pathFiltered.filter(e => e.status === filter);
 
   return (
     <main className="mx-auto max-w-5xl px-5 py-10 sm:px-8">
@@ -359,6 +370,18 @@ export default function ExperimentsPage() {
           </button>
         }
       />
+
+      {paths.length > 0 && (
+        <div className="mb-4 flex items-center gap-3">
+          <PathSwitcher
+            paths={paths.filter(p => p.status !== 'archived')}
+            selectedId={selectedPathId}
+            onChange={setSelectedPathId}
+            showAll
+          />
+          {selectedPath && <span className="text-xs text-[#94A3B8]">Showing experiments for <strong className="text-[#334155]">{selectedPath.path_name}</strong></span>}
+        </div>
+      )}
 
       <div className="mb-6 flex gap-2 flex-wrap">
         {['all', 'planned', 'in_progress', 'completed', 'skipped'].map(f => (
