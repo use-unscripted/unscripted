@@ -138,10 +138,26 @@ function MissionsSection({ experiment, missions, loadingMissions, onMissionAdded
 }
 
 // ── Experiment card ───────────────────────────────────────────────────────────
-function ExperimentCard({ exp, onStatusChange, onExpand, expanded, missions, loadingMissions, onMissionAdded, onProofAdded, onMissionDeleted }) {
+function ExperimentCard({ exp, onStatusChange, onExpand, expanded, missions, loadingMissions, onMissionAdded, onProofAdded, onMissionDeleted, onDelete }) {
   const s = STATUS_STYLES[exp.status] || STATUS_STYLES.planned;
+  const [confirmDelete, setConfirmDelete] = useState(false);
+
+  const handleSoftDelete = async () => {
+    const user = await base44.auth.me();
+    await base44.entities.Experiments.update(exp.id, softDeletePayload(user.id));
+    setConfirmDelete(false);
+    onDelete(exp.id);
+  };
+
   return (
     <div className="rounded-[20px] border border-[#E2E8F0] bg-white overflow-hidden">
+      {confirmDelete && (
+        <SoftDeleteConfirm
+          itemName={exp.title}
+          onConfirm={handleSoftDelete}
+          onCancel={() => setConfirmDelete(false)}
+        />
+      )}
       <div className="p-5">
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1">
@@ -152,9 +168,16 @@ function ExperimentCard({ exp, onStatusChange, onExpand, expanded, missions, loa
             <h3 className="font-heading font-bold text-[#050816]">{exp.title}</h3>
             <p className="mt-1 text-sm text-[#334155]">{exp.objective}</p>
           </div>
-          <button onClick={onExpand} className="shrink-0 rounded-xl border border-[#E2E8F0] p-2 hover:bg-[#F8FAFC]">
-            {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-          </button>
+          <div className="flex items-center gap-2 shrink-0">
+            <button onClick={() => setConfirmDelete(true)}
+              className="rounded-xl border border-[#E2E8F0] p-2 text-[#94A3B8] hover:text-red-500 hover:border-red-200 transition"
+              title="Delete experiment">
+              <Trash2 size={15} />
+            </button>
+            <button onClick={onExpand} className="rounded-xl border border-[#E2E8F0] p-2 hover:bg-[#F8FAFC]">
+              {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+            </button>
+          </div>
         </div>
         <div className="mt-3 flex items-center gap-4 text-xs text-[#64748B]">
           {exp.estimated_hours && <span className="flex items-center gap-1"><Clock size={12} /> ~{exp.estimated_hours}h</span>}
@@ -382,6 +405,11 @@ export default function ExperimentsPage() {
     setMissionsMap(prev => ({ ...prev, [expId]: (prev[expId] || []).filter(m => m.id !== missionId) }));
   };
 
+  const handleExperimentDeleted = (expId) => {
+    setExperiments(prev => prev.filter(e => e.id !== expId));
+    if (expandedId === expId) setExpandedId(null);
+  };
+
   const handleProofAdded = (proof, missionTitle) => {
     setSuccessToast({ proof, missionTitle });
     if (toastTimer.current) clearTimeout(toastTimer.current);
@@ -467,6 +495,7 @@ export default function ExperimentsPage() {
               onMissionAdded={(m) => handleMissionAdded(exp.id, m)}
               onProofAdded={handleProofAdded}
               onMissionDeleted={(missionId) => handleMissionDeleted(exp.id, missionId)}
+              onDelete={handleExperimentDeleted}
             />
           ))}
         </div>

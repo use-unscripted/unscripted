@@ -1,6 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.38';
 
-const ENTITY_NAMES = ['Missions', 'OutreachContacts', 'WeeklyReflections', 'ProofOfWork'];
+const ENTITY_NAMES = ['Experiments', 'Missions', 'OutreachContacts', 'WeeklyReflections', 'ProofOfWork'];
 
 Deno.serve(async (req) => {
   try {

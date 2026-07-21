@@ -5,6 +5,7 @@ import PageHeader from '@/components/PageHeader';
 import { restorePayload } from '@/components/SoftDeleteConfirm';
 
 const TABS = [
+  { id: 'experiments', label: 'Experiments', entity: 'Experiments', nameField: 'title' },
   { id: 'missions', label: 'Mission Guides', entity: 'Missions', nameField: 'title' },
   { id: 'contacts', label: 'Contacts', entity: 'OutreachContacts', nameField: 'name' },
   { id: 'reflections', label: 'Reflections', entity: 'WeeklyReflections', nameField: 'week_start' },
@@ -83,12 +84,20 @@ function DeletedItemCard({ item, tab, experimentsMap, missionsMap, onRestore, on
 
           {/* Context */}
           <div className="mt-1.5 flex flex-wrap gap-3">
-            {exp ? (
+            {/* For experiments themselves, show path */}
+            {tab.id === 'experiments' && item.path_name && (
+              <p className="text-[10px] text-[#94A3B8]">Path: <span className="font-semibold">{item.path_name}</span></p>
+            )}
+            {tab.id === 'experiments' && item.objective && (
+              <p className="text-[10px] text-[#64748B] line-clamp-1">{item.objective}</p>
+            )}
+            {/* For other items, show their linked experiment/mission */}
+            {tab.id !== 'experiments' && exp ? (
               <p className="text-[10px] text-[#64748B]">Experiment: <span className="font-semibold">{exp.title}</span></p>
-            ) : item.experiment_id ? (
+            ) : tab.id !== 'experiments' && item.experiment_id ? (
               <p className="text-[10px] text-[#94A3B8] italic">Experiment no longer exists — can restore as unlinked</p>
             ) : null}
-            {exp?.path_name && <p className="text-[10px] text-[#94A3B8]">Path: {exp.path_name}</p>}
+            {tab.id !== 'experiments' && exp?.path_name && <p className="text-[10px] text-[#94A3B8]">Path: {exp.path_name}</p>}
             {mission && <p className="text-[10px] text-[#94A3B8]">Mission: {mission.title}</p>}
           </div>
         </div>
@@ -110,7 +119,7 @@ function DeletedItemCard({ item, tab, experimentsMap, missionsMap, onRestore, on
 
 // ── Main Page ─────────────────────────────────────────────────────────────────
 export default function RecentlyDeleted() {
-  const [activeTab, setActiveTab] = useState('missions');
+  const [activeTab, setActiveTab] = useState('experiments');
   const [items, setItems] = useState({});
   const [loading, setLoading] = useState(true);
   const [experiments, setExperiments] = useState([]);
