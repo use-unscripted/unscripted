@@ -184,7 +184,7 @@ export function RiskConfidenceLegend() {
           <div className="flex items-center gap-1.5 mb-2">
             <ShieldAlert size={12} className="text-[#64748B]" />
             <p className="text-[11px] font-bold text-[#334155]">Risk</p>
-            <span className="text-[10px] text-[#94A3B8] mx-3 my-1">Lower = better</span>
+            <span className="text-[10px] text-[#94A3B8] mx-2">Lower = better</span>
           </div>
           <div className="flex flex-col gap-1">
             {[
