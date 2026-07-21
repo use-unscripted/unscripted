@@ -24,7 +24,7 @@ function NavGroup({ label, links }) {
       {links.map(([to, label, Icon]) => (
         <NavLink key={to} to={to}
           className={({ isActive }) =>
-            `flex items-center gap-3 rounded-xl px-4 py-2.5 text-sm font-semibold transition ${isActive ? 'text-white' : 'text-slate-300 hover:text-white'}`
+            `nav-link flex items-center gap-3 rounded-xl px-4 py-2.5 text-sm font-semibold ${isActive ? 'text-white' : 'text-slate-300 hover:text-white'}`
           }
           style={({ isActive }) => isActive
             ? { background: 'var(--brand-navy-700)', borderLeft: '3px solid var(--brand-gold-500)', paddingLeft: '13px' }
@@ -82,7 +82,7 @@ export default function AppShell() {
         {mobileLinks.map(([to, label, Icon]) => (
           <NavLink key={to} to={to}
             className={({ isActive }) =>
-              `flex flex-col items-center gap-0.5 px-2 py-1 text-[10px] font-semibold transition ${isActive ? '' : 'text-slate-400'}`
+              `nav-link flex flex-col items-center gap-0.5 px-2 py-1 text-[10px] font-semibold ${isActive ? '' : 'text-slate-400'}`
             }
             style={({ isActive }) => isActive ? { color: 'var(--brand-navy-900)' } : {}}>
             <Icon size={18} />

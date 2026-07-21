@@ -41,7 +41,7 @@ export default function PathSwitcher({ paths = [], selectedId, onChange, showAll
     <div className={`relative ${className}`} ref={ref}>
       <button
         onClick={() => setOpen(v => !v)}
-        className="flex items-center gap-2 rounded-xl border bg-white px-3 py-2 text-sm font-semibold transition min-w-[180px] max-w-[280px]"
+        className="ui-press flex items-center gap-2 rounded-xl border bg-white px-3 py-2 text-sm font-semibold min-w-[180px] max-w-[280px]"
         style={{ borderColor: 'var(--border-light)', color: 'var(--text-primary)' }}
         onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--brand-navy-700)'}
         onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border-light)'}
@@ -61,7 +61,7 @@ export default function PathSwitcher({ paths = [], selectedId, onChange, showAll
       </button>
 
       {open && (
-        <div className="absolute left-0 top-full mt-1.5 z-50 w-72 rounded-[16px] border border-[#E2E8F0] bg-white shadow-xl py-1.5 overflow-hidden">
+        <div className="anim-scale-in absolute left-0 top-full mt-1.5 z-50 w-72 rounded-[16px] border border-[#E2E8F0] bg-white shadow-xl py-1.5 overflow-hidden">
           {showAll && (
             <button
               onClick={() => { onChange('all'); setOpen(false); }}

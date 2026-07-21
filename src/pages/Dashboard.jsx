@@ -85,7 +85,7 @@ export default function Dashboard() {
     <main className="mx-auto max-w-5xl px-5 py-10 sm:px-8">
 
       {/* Path switcher row */}
-      <div className="mb-6 flex items-center justify-between gap-4 flex-wrap">
+      <div className="anim-fade-up mb-6 flex items-center justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-3 flex-wrap">
           <PathSwitcher
             paths={paths.filter(p => !['archived'].includes(p.status))}
@@ -108,7 +108,7 @@ export default function Dashboard() {
       </div>
 
       {/* Primary Focus banner */}
-      <section className="mb-6 rounded-[22px] p-7 text-white" style={{ background: 'linear-gradient(135deg, var(--brand-navy-900) 0%, var(--brand-navy-700) 100%)', border: '1px solid rgba(39,76,119,0.4)' }}>
+      <section className="anim-fade-up mb-6 rounded-[22px] p-7 text-white" style={{ animationDelay: '60ms', background: 'linear-gradient(135deg, var(--brand-navy-900) 0%, var(--brand-navy-700) 100%)', border: '1px solid rgba(39,76,119,0.4)' }}>
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-2">
@@ -145,7 +145,7 @@ export default function Dashboard() {
               <span>{completedExps.length}/{filteredExps.length} experiments · {pct}%</span>
             </div>
             <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.12)' }}>
-              <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: 'var(--brand-gold-500)' }} />
+              <div className="h-full rounded-full progress-fill" style={{ width: `${pct}%`, background: 'var(--brand-gold-500)' }} />
             </div>
           </div>
         )}
@@ -172,7 +172,7 @@ export default function Dashboard() {
 
       {/* Other active paths strip */}
       {otherActivePaths.length > 0 && (
-        <section className="mb-6">
+        <section className="anim-fade-up mb-6" style={{ animationDelay: '120ms' }}>
           <p className="text-xs font-bold uppercase tracking-[.12em] mb-3" style={{ color: 'var(--text-muted)' }}>Other Active Paths</p>
           <div className="flex gap-3 flex-wrap">
             {otherActivePaths.map(p => {
@@ -181,7 +181,7 @@ export default function Dashboard() {
               const donePct = pathExps.length ? Math.round(pathExps.filter(e => e.status === 'completed').length / pathExps.length * 100) : 0;
               return (
                 <button key={p.id} onClick={() => setSelectedPathId(p.id)}
-                  className="rounded-[16px] bg-white p-4 text-left transition min-w-[160px]"
+                  className="ui-lift rounded-[16px] bg-white p-4 text-left min-w-[160px]"
                   style={{ border: '1px solid var(--border-light)' }}
                   onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--brand-navy-700)'}
                   onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border-light)'}>
@@ -192,7 +192,7 @@ export default function Dashboard() {
                   {pathExps.length > 0 && (
                     <div className="mt-2">
                       <div className="h-1 rounded-full overflow-hidden" style={{ background: 'var(--background-tertiary)' }}>
-                        <div className="h-full rounded-full" style={{ width: `${donePct}%`, background: 'var(--brand-navy-700)' }} />
+                        <div className="h-full rounded-full progress-fill" style={{ width: `${donePct}%`, background: 'var(--brand-navy-700)' }} />
                       </div>
                       <p className="text-[10px] mt-0.5" style={{ color: 'var(--text-muted)' }}>{donePct}% done</p>
                     </div>
@@ -201,7 +201,7 @@ export default function Dashboard() {
               );
             })}
             <Link to="/paths"
-              className="rounded-[16px] border-dashed p-4 flex items-center gap-2 text-sm transition min-w-[120px]"
+              className="ui-lift rounded-[16px] border-dashed p-4 flex items-center gap-2 text-sm min-w-[120px]"
               style={{ border: '1px dashed var(--border-light)', color: 'var(--text-muted)' }}
               onMouseEnter={e => { e.currentTarget.style.color = 'var(--brand-navy-700)'; e.currentTarget.style.borderColor = 'var(--brand-navy-700)'; }}
               onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.borderColor = 'var(--border-light)'; }}>
@@ -213,7 +213,7 @@ export default function Dashboard() {
 
       {/* Overdue outreach */}
       {overdueOutreach.length > 0 && (
-        <div className="mb-5 flex items-start gap-3 rounded-[16px] p-4" style={{ background: '#FFFBEB', border: '1px solid rgba(180,83,9,0.2)' }}>
+        <div className="anim-scale-in mb-5 flex items-start gap-3 rounded-[16px] p-4" style={{ background: '#FFFBEB', border: '1px solid rgba(180,83,9,0.2)' }}>
           <AlertTriangle size={16} className="shrink-0 text-[#B45309] mt-0.5" />
           <div className="flex-1">
             <p className="text-sm font-semibold text-[#B45309]">{overdueOutreach.length} overdue follow-up{overdueOutreach.length > 1 ? 's' : ''}</p>
@@ -224,9 +224,9 @@ export default function Dashboard() {
       )}
 
       {/* Main content grid */}
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="anim-stagger grid gap-6 lg:grid-cols-2">
         {/* This week's missions */}
-        <section className="rounded-[20px] bg-white p-5" style={{ border: '1px solid var(--border-light)' }}>
+        <section className="anim-fade-up rounded-[20px] bg-white p-5" style={{ border: '1px solid var(--border-light)' }}>
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-heading text-lg font-bold" style={{ color: 'var(--text-primary)' }}>This Week's Missions</h2>
             <Link to="/experiments" className="text-xs font-semibold" style={{ color: 'var(--brand-navy-700)' }}>All missions →</Link>
@@ -254,7 +254,7 @@ export default function Dashboard() {
         </section>
 
         {/* Proof of work */}
-        <section className="rounded-[20px] bg-white p-5" style={{ border: '1px solid var(--border-light)' }}>
+        <section className="anim-fade-up rounded-[20px] bg-white p-5" style={{ border: '1px solid var(--border-light)' }}>
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-heading text-lg font-bold" style={{ color: 'var(--text-primary)' }}>Proof of Work</h2>
             <Link to="/proof" className="text-xs font-semibold" style={{ color: 'var(--brand-navy-700)' }}>All entries →</Link>
@@ -279,7 +279,7 @@ export default function Dashboard() {
         </section>
 
         {/* Outreach */}
-        <section className="rounded-[20px] bg-white p-5" style={{ border: '1px solid var(--border-light)' }}>
+        <section className="anim-fade-up rounded-[20px] bg-white p-5" style={{ border: '1px solid var(--border-light)' }}>
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-heading text-lg font-bold" style={{ color: 'var(--text-primary)' }}>Upcoming Conversations</h2>
             <Link to="/outreach" className="text-xs font-semibold" style={{ color: 'var(--brand-navy-700)' }}>All outreach →</Link>
@@ -309,7 +309,7 @@ export default function Dashboard() {
         </section>
 
         {/* Weekly reflection */}
-        <section className="rounded-[20px] bg-white p-5" style={{ border: '1px solid var(--border-light)' }}>
+        <section className="anim-fade-up rounded-[20px] bg-white p-5" style={{ border: '1px solid var(--border-light)' }}>
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-heading text-lg font-bold" style={{ color: 'var(--text-primary)' }}>Weekly Reflection</h2>
             <Link to="/reflection" className="text-xs font-semibold" style={{ color: 'var(--brand-navy-700)' }}>Go →</Link>
@@ -339,14 +339,14 @@ export default function Dashboard() {
       </div>
 
       {/* Quick links */}
-      <div className="mt-6 grid gap-3 sm:grid-cols-3">
+      <div className="anim-stagger mt-6 grid gap-3 sm:grid-cols-3">
         {[
           { to: '/proof', label: 'Submit proof', sub: 'Document a completed mission', Icon: FileText },
           { to: '/outreach', label: 'Track outreach', sub: 'Log a new contact or follow-up', Icon: Users },
           { to: '/reflection', label: 'Reflect', sub: 'Update your path assessment', Icon: RotateCcw },
         ].map(({ to, label, sub, Icon }) => (
           <Link key={to} to={to}
-            className="flex items-center gap-3 rounded-[16px] bg-white p-4 transition hover:shadow-sm hover:-translate-y-0.5"
+            className="anim-fade-up ui-lift flex items-center gap-3 rounded-[16px] bg-white p-4"
             style={{ border: '1px solid var(--border-light)' }}
             onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--brand-navy-700)'}
             onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border-light)'}>

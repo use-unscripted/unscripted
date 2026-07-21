@@ -10,7 +10,7 @@ import { X } from 'lucide-react';
 export default function SoftDeleteConfirm({ itemName, onConfirm, onCancel }) {
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" style={{ background: 'rgba(5,8,22,0.5)' }}>
-      <div className="w-full max-w-sm rounded-[20px] bg-white p-6 shadow-2xl">
+      <div className="anim-modal w-full max-w-sm rounded-[20px] bg-white p-6 shadow-2xl">
         <div className="flex items-start justify-between gap-3 mb-3">
           <h3 className="font-heading text-lg font-bold text-[#050816]">Move to Recently Deleted?</h3>
           <button onClick={onCancel}><X size={18} className="text-[#94A3B8]" /></button>
