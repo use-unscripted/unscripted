@@ -166,15 +166,18 @@ export default function OutreachTracker() {
   const toastTimer = useRef(null);
 
   const load = async () => {
-    const [c, e, m] = await Promise.all([
-      base44.entities.OutreachContacts.list('-updated_date', 200),
-      base44.entities.Experiments.list('-created_date', 200),
-      base44.entities.Missions.list('-created_date', 200),
-    ]);
-    setContacts(c);
-    setExperiments(e);
-    setMissions(m);
-    setLoading(false);
+    try {
+      const [c, e, m] = await Promise.all([
+        base44.entities.OutreachContacts.list('-updated_date', 200).catch(() => []),
+        base44.entities.Experiments.list('-created_date', 200).catch(() => []),
+        base44.entities.Missions.list('-created_date', 200).catch(() => []),
+      ]);
+      setContacts(Array.isArray(c) ? c : []);
+      setExperiments(Array.isArray(e) ? e : []);
+      setMissions(Array.isArray(m) ? m : []);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => { load(); }, []);
