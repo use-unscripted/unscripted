@@ -181,23 +181,17 @@ export function RiskConfidenceLegend() {
 
         {/* Risk */}
         <div>
-          <div className="flex items-center gap-1.5 mb-2">
-            <ShieldAlert size={12} className="text-[#64748B]" />
+          <div className="flex items-center gap-2 mb-3">
+            <ShieldAlert size={13} className="text-[#64748B]" />
             <p className="font-bold text-[#334155] text-xs">Risk</p>
-            <span className="text-[#94A3B8] px-1 py-2 ml-4 mr-5 mb-1 text-xs">Lower = better</span>
+            <span className="text-[#94A3B8] text-xs">Lower = better</span>
           </div>
-          <div className="flex flex-col gap-1">
-            {[
-            RISK_CFG.very_low,
-            RISK_CFG.low,
-            RISK_CFG.moderate,
-            RISK_CFG.high,
-            RISK_CFG.very_high].
-            map((cfg) =>
-            <span key={cfg.label} className="inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[10px] font-semibold border w-fit"
-            style={{ background: cfg.bg, color: cfg.text, borderColor: cfg.border }}>
-                <ShieldAlert size={9} aria-hidden="true" />
-                {cfg.label}
+          <div className="flex flex-col gap-1.5">
+            {[RISK_CFG.very_low, RISK_CFG.low, RISK_CFG.moderate, RISK_CFG.high, RISK_CFG.very_high].map((cfg) =>
+              <span key={cfg.label} className="inline-flex items-center gap-2 rounded-full px-3 py-1 text-[11px] font-semibold border w-fit"
+                style={{ background: cfg.bg, color: cfg.text, borderColor: cfg.border }}>
+                <ShieldAlert size={10} aria-hidden="true" />
+                <span className="w-[100px]">{cfg.label}</span>
                 <RiskBar score={cfg.score} barColor={cfg.barColor} label={cfg.label} />
               </span>
             )}
@@ -206,22 +200,17 @@ export function RiskConfidenceLegend() {
 
         {/* Confidence */}
         <div>
-          <div className="flex items-center gap-1.5 mb-2">
-            <TrendingUp size={12} className="text-[#64748B]" />
+          <div className="flex items-center gap-2 mb-3">
+            <TrendingUp size={13} className="text-[#64748B]" />
             <p className="font-bold text-[#334155] text-xs">Fit Confidence</p>
-            <span className="text-[#94A3B8] text-xs mr-5 mb-1 ml-4">Higher = better</span>
+            <span className="text-[#94A3B8] text-xs">Higher = better</span>
           </div>
-          <div className="flex flex-col gap-1 mb-2">
-            {[
-            CONFIDENCE_CFG.very_high,
-            CONFIDENCE_CFG.high,
-            CONFIDENCE_CFG.moderate,
-            CONFIDENCE_CFG.low,
-            CONFIDENCE_CFG.very_low].
-            map((cfg) =>
-            <span key={cfg.label} className="inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[10px] font-semibold border w-fit"
-            style={{ background: cfg.bg, color: cfg.text, borderColor: cfg.border }}>
-                <TrendingUp size={9} aria-hidden="true" /> {cfg.label}
+          <div className="flex flex-col gap-1.5">
+            {[CONFIDENCE_CFG.very_high, CONFIDENCE_CFG.high, CONFIDENCE_CFG.moderate, CONFIDENCE_CFG.low, CONFIDENCE_CFG.very_low].map((cfg) =>
+              <span key={cfg.label} className="inline-flex items-center gap-2 rounded-full px-3 py-1 text-[11px] font-semibold border w-fit"
+                style={{ background: cfg.bg, color: cfg.text, borderColor: cfg.border }}>
+                <TrendingUp size={10} aria-hidden="true" />
+                {cfg.label}
               </span>
             )}
           </div>
