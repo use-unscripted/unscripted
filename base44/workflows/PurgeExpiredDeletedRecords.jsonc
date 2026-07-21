@@ -1,0 +1,62 @@
+{
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "purge_expired_deleted_records",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "run_purge": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "purgeDeletedRecords",
+            "args": {}
+          },
+          "then": "check_result",
+          "x-base44": {
+            "title": "Purge expired records",
+            "description": "Deletes all soft-deleted records past their purge_at date"
+          }
+        }
+      },
+      {
+        "check_result": {
+          "switch": [
+            {
+              "when": "${ .run_purge.success == true }",
+              "then": "end"
+            },
+            {
+              "when": "${ true }",
+              "then": "end"
+            }
+          ],
+          "x-base44": {
+            "title": "Check result"
+          }
+        }
+      }
+    ]
+  },
+  "description": "Runs daily. Finds soft-deleted records whose purge_at has passed and permanently deletes them.",
+  "name": "Purge Expired Deleted Records",
+  "trigger": {
+    "condition": null,
+    "config": {
+      "trigger_type": "scheduled",
+      "events": [],
+      "schedule_mode": "recurring",
+      "cron_expression": "0 3 * * *",
+      "one_time_date": null,
+      "timezone": "America/New_York",
+      "interval_value": null,
+      "interval_unit": null,
+      "interval_anchor": null,
+      "ends_type": "never",
+      "ends_on_date": null,
+      "ends_after_count": null
+    }
+  }
+}

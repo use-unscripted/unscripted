@@ -1,10 +1,11 @@
 import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
-import { Plus, Mail, CheckCircle, Clock, ExternalLink, Phone, Pencil, ChevronDown, Beaker } from 'lucide-react';
+import { Plus, Mail, CheckCircle, Clock, ExternalLink, Phone, Pencil, ChevronDown, Beaker, Trash2 } from 'lucide-react';
 import PageHeader from '@/components/PageHeader';
 import AddContactModal, { ContactSuccessToast } from '@/components/outreach/AddContactModal';
 import PathSwitcher from '@/components/PathSwitcher';
+import SoftDeleteConfirm, { softDeletePayload } from '@/components/SoftDeleteConfirm';
 
 const ALL_STATUS_OPTIONS = [
   { value: 'not_sent', label: 'Not contacted', bg: '#F1F5F9', text: '#334155' },
@@ -30,8 +31,9 @@ function fmtDate(d) {
   return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
-function ContactCard({ c, experimentsMap, missionsMap, onEdit, onStatusChange, onToggleThankYou }) {
+function ContactCard({ c, experimentsMap, missionsMap, onEdit, onStatusChange, onToggleThankYou, onDelete }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const exp = c.experiment_id ? experimentsMap[c.experiment_id] : null;
   const mission = c.mission_id ? missionsMap[c.mission_id] : null;
   const s = ALL_STATUS_OPTIONS.find(x => x.value === c.response_status) || ALL_STATUS_OPTIONS[0];
@@ -39,6 +41,13 @@ function ContactCard({ c, experimentsMap, missionsMap, onEdit, onStatusChange, o
 
   return (
     <div className="rounded-[20px] border border-[#E2E8F0] bg-white p-5">
+      {confirmDelete && (
+        <SoftDeleteConfirm
+          itemName={c.name}
+          onConfirm={() => { setConfirmDelete(false); onDelete(c); }}
+          onCancel={() => setConfirmDelete(false)}
+        />
+      )}
       {/* Header */}
       <div className="flex items-start justify-between gap-3 mb-3">
         <div className="flex-1 min-w-0">
@@ -77,6 +86,10 @@ function ContactCard({ c, experimentsMap, missionsMap, onEdit, onStatusChange, o
               <button onClick={() => { setMenuOpen(false); onToggleThankYou(c); }}
                 className="w-full flex items-center gap-2 px-4 py-2 text-xs text-[#334155] hover:bg-[#F8FAFC]">
                 <CheckCircle size={13} /> {c.thank_you_sent ? 'Unmark thank-you' : 'Mark thank-you sent'}
+              </button>
+              <button onClick={() => { setMenuOpen(false); setConfirmDelete(true); }}
+                className="w-full flex items-center gap-2 px-4 py-2 text-xs text-red-500 hover:bg-red-50">
+                <Trash2 size={13} /> Delete contact
               </button>
             </div>
           )}
@@ -178,7 +191,7 @@ export default function OutreachTracker() {
         base44.entities.Missions.list('-created_date', 200).catch(() => []),
         base44.entities.PathRecommendations.list('-created_date', 100).catch(() => []),
       ]);
-      if (c === null) { setLoadError(true); } else { setContacts(Array.isArray(c) ? c : []); }
+      if (c === null) { setLoadError(true); } else { setContacts(Array.isArray(c) ? c.filter(x => !x.deletion_status || x.deletion_status === 'active') : []); }
       setExperiments(Array.isArray(e) ? e : []);
       setMissions(Array.isArray(m) ? m : []);
       setPaths(Array.isArray(ps) ? ps : []);
@@ -203,6 +216,12 @@ export default function OutreachTracker() {
     const thank_you_sent = !c.thank_you_sent;
     await base44.entities.OutreachContacts.update(c.id, { thank_you_sent });
     setContacts(prev => prev.map(x => x.id === c.id ? { ...x, thank_you_sent } : x));
+  };
+
+  const handleDelete = async (c) => {
+    const user = await base44.auth.me();
+    await base44.entities.OutreachContacts.update(c.id, softDeletePayload(user.id));
+    setContacts(prev => prev.filter(x => x.id !== c.id));
   };
 
   const handleSaved = (saved, experimentTitle, missionTitle) => {
@@ -383,6 +402,7 @@ export default function OutreachTracker() {
                 onEdit={setModal}
                 onStatusChange={updateStatus}
                 onToggleThankYou={toggleThankYou}
+                onDelete={handleDelete}
               />
             ))}
           </div>

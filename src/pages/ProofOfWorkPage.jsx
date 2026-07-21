@@ -13,6 +13,7 @@ class CardErrorBoundary extends Component {
   }
 }
 import { Plus, ExternalLink, Search, Play, FileText, Film, Image, FileSpreadsheet, Music, File, ChevronDown, Eye, EyeOff, Trash2, X } from 'lucide-react';
+import SoftDeleteConfirm, { softDeletePayload } from '@/components/SoftDeleteConfirm';
 import PageHeader from '@/components/PageHeader';
 import { ProofSuccessToast } from '@/components/experiments/AddProofModal';
 import PathSwitcher from '@/components/PathSwitcher';
@@ -51,21 +52,7 @@ function isVideoFile(name, mime) {
   return VIDEO_EXTS.has(getExt(name)) || (mime || '').startsWith('video/');
 }
 
-// ── Delete confirmation ────────────────────────────────────────────────────────
-function DeleteConfirmModal({ proofTitle, onConfirm, onCancel }) {
-  return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" style={{ background: 'rgba(5,8,22,0.5)' }}>
-      <div className="w-full max-w-sm rounded-[20px] bg-white p-6">
-        <h3 className="font-heading text-lg font-bold text-[#050816] mb-2">Delete proof?</h3>
-        <p className="text-sm text-[#334155]">This will permanently delete <strong>"{proofTitle}"</strong>. The linked mission and experiment will not be affected.</p>
-        <div className="mt-5 flex gap-3">
-          <button onClick={onCancel} className="flex-1 rounded-[10px] border border-[#E2E8F0] py-2.5 text-sm font-semibold text-[#334155] hover:bg-[#F8FAFC]">Cancel</button>
-          <button onClick={onConfirm} className="flex-1 rounded-[10px] py-2.5 text-sm font-semibold text-white" style={{ background: '#DC2626' }}>Delete</button>
-        </div>
-      </div>
-    </div>
-  );
-}
+// Soft-delete modal imported from SoftDeleteConfirm component
 
 // ── Video / File Preview ───────────────────────────────────────────────────────
 function FilePreviewModal({ entry, onClose }) {
@@ -258,12 +245,13 @@ export default function ProofOfWorkPage() {
     setLoading(true);
     try {
       const [proofData, missionData, expData, psData] = await Promise.all([
-        base44.entities.ProofOfWork.list('-created_date', 200).catch(() => []),
+      base44.entities.ProofOfWork.filter({ deletion_status: 'active' }, '-created_date', 200).catch(() =>
+        base44.entities.ProofOfWork.list('-created_date', 200).catch(() => [])),
         base44.entities.Missions.list('-created_date', 200).catch(() => []),
         base44.entities.Experiments.list('-created_date', 200).catch(() => []),
         base44.entities.PathRecommendations.list('-created_date', 100).catch(() => []),
       ]);
-      setEntries(Array.isArray(proofData) ? proofData : []);
+      setEntries(Array.isArray(proofData) ? proofData.filter(e => !e.deletion_status || e.deletion_status === 'active') : []);
       setMissions(Array.isArray(missionData) ? missionData : []);
       setExperiments(Array.isArray(expData) ? expData : []);
       setUserPaths(Array.isArray(psData) ? psData : []);
@@ -321,19 +309,20 @@ export default function ProofOfWorkPage() {
   const handleDelete = async () => {
     if (!deleteTarget) return;
     try {
-      await base44.entities.ProofOfWork.delete(deleteTarget.id);
+      const user = await base44.auth.me();
+      await base44.entities.ProofOfWork.update(deleteTarget.id, softDeletePayload(user.id));
+      setEntries(prev => prev.filter(e => e.id !== deleteTarget.id));
     } catch (err) {
-      console.error('[ProofOfWorkPage] Failed to delete record:', deleteTarget.id, err?.message || err);
+      console.error('[ProofOfWorkPage] Failed to soft-delete record:', deleteTarget.id, err?.message || err);
     }
     setDeleteTarget(null);
-    load();
   };
 
   return (
     <main className="mx-auto max-w-5xl px-5 py-10 sm:px-8">
       {deleteTarget && (
-        <DeleteConfirmModal
-          proofTitle={deleteTarget.title}
+        <SoftDeleteConfirm
+          itemName={deleteTarget.title}
           onConfirm={handleDelete}
           onCancel={() => setDeleteTarget(null)}
         />

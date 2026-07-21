@@ -87,6 +87,30 @@
     "completed_at": {
       "type": "string",
       "format": "date"
+    },
+    "deletion_status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "deleted",
+        "permanently_deleted"
+      ],
+      "default": "active"
+    },
+    "deleted_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "purge_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "deleted_by_user_id": {
+      "type": "string"
+    },
+    "restored_at": {
+      "type": "string",
+      "format": "date-time"
     }
   },
   "required": [

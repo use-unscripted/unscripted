@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import PageHeader from '@/components/PageHeader';
+import { Trash2 } from 'lucide-react';
 import Field from '@/components/onboarding/Field';
 import ICSExportPanel from '@/components/calendar/ICSExportPanel';
 
@@ -106,6 +108,16 @@ export default function Settings() {
         <p className="text-sm text-[#334155]">Download .ics files to add your Unscripted schedule to Google Calendar, Apple Calendar, Outlook, or any standard calendar app.</p>
       </div>
       <ICSExportPanel />
+
+      <div className="mt-10">
+        <p className="text-xs font-bold uppercase tracking-[.14em] mb-1" style={{ color: '#8B0C21' }}>Data</p>
+        <h2 className="font-heading text-xl font-bold text-[#050816] mb-1">Recently Deleted</h2>
+        <p className="text-sm text-[#334155] mb-4">Mission Guides, contacts, reflections, and proof of work you've deleted are kept for 30 days before permanent removal.</p>
+        <Link to="/recently-deleted"
+          className="inline-flex items-center gap-2 rounded-[10px] border border-[#E2E8F0] px-5 py-3 text-sm font-semibold text-[#334155] hover:bg-[#F8FAFC] transition">
+          <Trash2 size={15} /> View Recently Deleted
+        </Link>
+      </div>
     </main>
   );
 }

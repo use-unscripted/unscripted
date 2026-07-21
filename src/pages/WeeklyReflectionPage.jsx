@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { base44 } from '@/api/base44Client';
-import { ArrowRight, CheckCircle, Plus, Search, X, ExternalLink } from 'lucide-react';
+import { ArrowRight, CheckCircle, Plus, Search, X, ExternalLink, Trash2 } from 'lucide-react';
+import SoftDeleteConfirm, { softDeletePayload } from '@/components/SoftDeleteConfirm';
 import PageHeader from '@/components/PageHeader';
 import { useNavigate } from 'react-router-dom';
 import PathSwitcher from '@/components/PathSwitcher';
@@ -315,6 +316,7 @@ export default function WeeklyReflectionPage() {
   const [view, setView] = useState('form'); // 'form' | 'history'
   const [editingReflection, setEditingReflection] = useState(null); // null = new form
   const [successToast, setSuccessToast] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
   const toastTimer = useRef(null);
 
   // History filters
@@ -329,7 +331,7 @@ export default function WeeklyReflectionPage() {
         base44.entities.Missions.list('-created_date', 200).catch(() => []),
         base44.entities.PathRecommendations.list('-created_date', 100).catch(() => []),
       ]);
-      setReflections(Array.isArray(data) ? data : []);
+      setReflections(Array.isArray(data) ? data.filter(r => !r.deletion_status || r.deletion_status === 'active') : []);
       setExperiments(Array.isArray(exps) ? exps : []);
       setMissions(Array.isArray(mis) ? mis : []);
       setUserPaths(Array.isArray(ps) ? ps : []);
@@ -389,8 +391,23 @@ export default function WeeklyReflectionPage() {
     return true;
   });
 
+  const handleDeleteReflection = async () => {
+    if (!deleteTarget) return;
+    const user = await base44.auth.me();
+    await base44.entities.WeeklyReflections.update(deleteTarget.id, softDeletePayload(user.id));
+    setReflections(prev => prev.filter(r => r.id !== deleteTarget.id));
+    setDeleteTarget(null);
+  };
+
   return (
     <main className="mx-auto max-w-3xl px-5 py-10 sm:px-8">
+      {deleteTarget && (
+        <SoftDeleteConfirm
+          itemName={`Week of ${new Date(deleteTarget.week_start + 'T12:00:00').toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}`}
+          onConfirm={handleDeleteReflection}
+          onCancel={() => setDeleteTarget(null)}
+        />
+      )}
       {successToast && (
         <SuccessToast
           reflection={successToast.reflection}
@@ -531,6 +548,10 @@ export default function WeeklyReflectionPage() {
                           <ExternalLink size={11} /> Open Mission
                         </button>
                       )}
+                      <button onClick={() => setDeleteTarget(r)}
+                        className="rounded-[8px] border border-red-100 px-3 py-1.5 text-xs font-semibold text-red-400 hover:border-red-400 hover:text-red-600 transition flex items-center gap-1">
+                        <Trash2 size={11} /> Delete
+                      </button>
                     </div>
                   </div>
                 );

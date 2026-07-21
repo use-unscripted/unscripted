@@ -1,12 +1,13 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
-import { Plus, ChevronDown, ChevronUp, Clock, BookOpen, Target, FileText, Loader2, Calendar } from 'lucide-react';
+import { Plus, ChevronDown, ChevronUp, Clock, BookOpen, Target, FileText, Loader2, Calendar, Trash2 } from 'lucide-react';
 import AddToCalendarModal from '@/components/calendar/AddToCalendarModal';
 import PageHeader from '@/components/PageHeader';
 import AddMissionModal from '@/components/experiments/AddMissionModal';
 import AddProofModal, { ProofSuccessToast } from '@/components/experiments/AddProofModal';
 import PathSwitcher from '@/components/PathSwitcher';
+import SoftDeleteConfirm, { softDeletePayload } from '@/components/SoftDeleteConfirm';
 
 const STATUS_STYLES = {
   planned:     { bg: '#F1F5F9', text: '#334155', label: 'Planned' },
@@ -24,12 +25,28 @@ const EXPERIMENT_TYPES = [
 ];
 
 // ── Mission row inside expanded card ──────────────────────────────────────────
-function MissionRow({ mission, experiment, onProofAdded }) {
+function MissionRow({ mission, experiment, onProofAdded, onDeleted }) {
   const [showProof, setShowProof] = useState(false);
   const [showCal, setShowCal] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const s = STATUS_STYLES[mission.status] || STATUS_STYLES.planned;
+
+  const handleSoftDelete = async () => {
+    const user = await base44.auth.me();
+    await base44.entities.Missions.update(mission.id, softDeletePayload(user.id));
+    setConfirmDelete(false);
+    onDeleted(mission.id);
+  };
+
   return (
     <div className="flex items-center justify-between gap-3 rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-3">
+      {confirmDelete && (
+        <SoftDeleteConfirm
+          itemName={mission.title}
+          onConfirm={handleSoftDelete}
+          onCancel={() => setConfirmDelete(false)}
+        />
+      )}
       {showProof && (
         <AddProofModal
           mission={mission}
@@ -65,13 +82,20 @@ function MissionRow({ mission, experiment, onProofAdded }) {
         >
           <FileText size={12} /> Add Proof
         </button>
+        <button
+          onClick={() => setConfirmDelete(true)}
+          className="flex items-center gap-1.5 rounded-lg border border-[#E2E8F0] px-2 py-1.5 text-xs text-red-300 hover:text-red-500 hover:border-red-200 transition"
+          title="Delete mission"
+        >
+          <Trash2 size={12} />
+        </button>
       </div>
     </div>
   );
 }
 
 // ── Missions section inside expanded card ─────────────────────────────────────
-function MissionsSection({ experiment, missions, loadingMissions, onMissionAdded, onProofAdded }) {
+function MissionsSection({ experiment, missions, loadingMissions, onMissionAdded, onProofAdded, onMissionDeleted }) {
   const [showAdd, setShowAdd] = useState(false);
   const hasMissions = missions.length > 0;
 
@@ -103,7 +127,7 @@ function MissionsSection({ experiment, missions, loadingMissions, onMissionAdded
       ) : hasMissions ? (
         <div className="space-y-2">
           {missions.map(m => (
-            <MissionRow key={m.id} mission={m} experiment={experiment} onProofAdded={onProofAdded} />
+            <MissionRow key={m.id} mission={m} experiment={experiment} onProofAdded={onProofAdded} onDeleted={onMissionDeleted} />
           ))}
         </div>
       ) : (
@@ -114,7 +138,7 @@ function MissionsSection({ experiment, missions, loadingMissions, onMissionAdded
 }
 
 // ── Experiment card ───────────────────────────────────────────────────────────
-function ExperimentCard({ exp, onStatusChange, onExpand, expanded, missions, loadingMissions, onMissionAdded, onProofAdded }) {
+function ExperimentCard({ exp, onStatusChange, onExpand, expanded, missions, loadingMissions, onMissionAdded, onProofAdded, onMissionDeleted }) {
   const s = STATUS_STYLES[exp.status] || STATUS_STYLES.planned;
   return (
     <div className="rounded-[20px] border border-[#E2E8F0] bg-white overflow-hidden">
@@ -191,6 +215,7 @@ function ExperimentCard({ exp, onStatusChange, onExpand, expanded, missions, loa
             loadingMissions={loadingMissions}
             onMissionAdded={onMissionAdded}
             onProofAdded={onProofAdded}
+            onMissionDeleted={onMissionDeleted}
           />
         </div>
       )}
@@ -315,7 +340,7 @@ export default function ExperimentsPage() {
       base44.entities.Experiments.list('-created_date', 50).catch(() => []),
       base44.entities.PathRecommendations.list('-created_date', 100).catch(() => []),
     ]);
-    setExperiments(Array.isArray(data) ? data : []);
+    setExperiments(Array.isArray(data) ? data.filter(e => !e.deletion_status || e.deletion_status === 'active') : []);
     setPaths(Array.isArray(ps) ? ps : []);
     setLoading(false);
   };
@@ -326,7 +351,9 @@ export default function ExperimentsPage() {
     if (missionsMap[expId] !== undefined) return; // already loaded
     setLoadingMissionsFor(expId);
     const ms = await base44.entities.Missions.filter({ experiment_id: expId }, '-created_date', 50);
-    setMissionsMap(prev => ({ ...prev, [expId]: ms }));
+    // Exclude soft-deleted missions
+    const active = (ms || []).filter(m => !m.deletion_status || m.deletion_status === 'active');
+    setMissionsMap(prev => ({ ...prev, [expId]: active }));
     setLoadingMissionsFor(null);
   }, [missionsMap]);
 
@@ -349,6 +376,10 @@ export default function ExperimentsPage() {
 
   const handleMissionAdded = (expId, mission) => {
     setMissionsMap(prev => ({ ...prev, [expId]: [...(prev[expId] || []), mission] }));
+  };
+
+  const handleMissionDeleted = (expId, missionId) => {
+    setMissionsMap(prev => ({ ...prev, [expId]: (prev[expId] || []).filter(m => m.id !== missionId) }));
   };
 
   const handleProofAdded = (proof, missionTitle) => {
@@ -435,6 +466,7 @@ export default function ExperimentsPage() {
               loadingMissions={loadingMissionsFor === exp.id}
               onMissionAdded={(m) => handleMissionAdded(exp.id, m)}
               onProofAdded={handleProofAdded}
+              onMissionDeleted={(missionId) => handleMissionDeleted(exp.id, missionId)}
             />
           ))}
         </div>
