@@ -211,7 +211,7 @@ export function RiskConfidenceLegend() {
             <p className="font-bold text-[#334155] text-xs">Fit Confidence</p>
             <span className="text-[#94A3B8] text-xs mr-5 mb-1 ml-4">Higher = better</span>
           </div>
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-1 mb-2">
             {[
             CONFIDENCE_CFG.very_high,
             CONFIDENCE_CFG.high,
