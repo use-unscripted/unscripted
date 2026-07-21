@@ -5,6 +5,9 @@
     "user_id": {
       "type": "string"
     },
+    "experiment_id": {
+      "type": "string"
+    },
     "week_start": {
       "type": "string",
       "format": "date"

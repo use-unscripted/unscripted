@@ -23,6 +23,7 @@ function getMonday(d) {
 
 export default function WeeklyReflectionPage() {
   const [reflections, setReflections] = useState([]);
+  const [experiments, setExperiments] = useState([]);
   const [current, setCurrent] = useState({});
   const [saving, setSaving] = useState(false);
   const [generating, setGenerating] = useState(false);
@@ -32,8 +33,12 @@ export default function WeeklyReflectionPage() {
   const weekStart = getMonday(new Date());
 
   useEffect(() => {
-    base44.entities.WeeklyReflections.list('-created_date', 20).then(data => {
-      setReflections(data);
+    Promise.all([
+      base44.entities.WeeklyReflections.list('-created_date', 20).catch(() => []),
+      base44.entities.Experiments.list('-created_date', 200).catch(() => []),
+    ]).then(([data, exps]) => {
+      setReflections(Array.isArray(data) ? data : []);
+      setExperiments(Array.isArray(exps) ? exps : []);
       const thisWeek = data.find(r => r.week_start === weekStart);
       if (thisWeek) setCurrent(thisWeek);
       else setCurrent({ week_start: weekStart });
@@ -107,6 +112,22 @@ export default function WeeklyReflectionPage() {
             <p className="text-xs font-bold uppercase tracking-wide mb-1" style={{ color: '#8B0C21' }}>Week of {new Date(weekStart).toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}</p>
             <p className="text-sm text-[#334155]">Answer honestly. These reflections adjust your roadmap over time. There are no correct answers.</p>
           </div>
+
+          {/* Experiment selector */}
+          {experiments.length > 0 && (
+            <div className="mb-5 rounded-[20px] border border-[#E2E8F0] bg-white p-5">
+              <span className="text-sm font-semibold text-[#050816] block mb-2">Which experiment are you reflecting on? <span className="text-xs font-normal text-[#94A3B8]">(optional)</span></span>
+              <select
+                value={current.experiment_id || ''}
+                onChange={e => setCurrent(c => ({ ...c, experiment_id: e.target.value || undefined }))}
+                className="w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-3 text-sm outline-none focus:border-[#8B0C21]">
+                <option value="">No specific experiment — general reflection</option>
+                {experiments.map(exp => (
+                  <option key={exp.id} value={exp.id}>{exp.title}{exp.path_name ? ` — ${exp.path_name}` : ''}</option>
+                ))}
+              </select>
+            </div>
+          )}
 
           <div className="space-y-5">
             {QUESTIONS.map(q => (
@@ -187,18 +208,24 @@ export default function WeeklyReflectionPage() {
             <div className="rounded-[24px] border border-dashed border-[#E2E8F0] p-12 text-center text-[#64748B]">
               No past reflections yet. Complete your first weekly reflection above.
             </div>
-          ) : reflections.map(r => (
-            <div key={r.id} className="rounded-[20px] border border-[#E2E8F0] bg-white p-5 cursor-pointer hover:shadow-sm transition"
-              onClick={() => { setCurrent(r); setView('form'); }}>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-heading font-bold text-[#050816]">Week of {new Date(r.week_start).toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}</p>
-                  {r.generated_summary && <p className="mt-1 text-sm text-[#64748B] line-clamp-2">{r.generated_summary}</p>}
+          ) : reflections.map(r => {
+            const linkedExp = r.experiment_id ? experiments.find(e => e.id === r.experiment_id) : null;
+            return (
+              <div key={r.id} className="rounded-[20px] border border-[#E2E8F0] bg-white p-5 cursor-pointer hover:shadow-sm transition"
+                onClick={() => { setCurrent(r); setView('form'); }}>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-heading font-bold text-[#050816]">Week of {new Date(r.week_start).toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}</p>
+                    {linkedExp && (
+                      <p className="mt-0.5 text-xs font-semibold" style={{ color: '#8B0C21' }}>{linkedExp.title}{linkedExp.path_name ? ` — ${linkedExp.path_name}` : ''}</p>
+                    )}
+                    {r.generated_summary && <p className="mt-1 text-sm text-[#64748B] line-clamp-2">{r.generated_summary}</p>}
+                  </div>
+                  {r.generated_summary && <CheckCircle size={20} className="shrink-0" style={{ color: '#15803D' }} />}
                 </div>
-                {r.generated_summary && <CheckCircle size={20} className="shrink-0" style={{ color: '#15803D' }} />}
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </main>
