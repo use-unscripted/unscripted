@@ -24,7 +24,7 @@ const STEPS = [
     subtitle: 'Be honest. These answers shape which paths we recommend testing.',
     type: 'sliders',
     fields: [
-      { name: 'desired_lifestyle', label: 'Describe the life you want at 30', placeholder: 'Work style, income, location, freedom, pace — be specific', rows: 3 },
+      { name: 'desired_lifestyle', label: 'Where do you see yourself in five to ten years?', placeholder: 'Think about the type of work, lifestyle, impact, financial position, relationships, location, or autonomy you may want. Your answer can change over time.', rows: 4, type: 'vision' },
       { name: 'biggest_blocker', label: 'Your biggest current blocker or uncertainty', placeholder: 'What keeps you stuck?' },
       { name: 'financial_priorities', label: 'Financial priorities', placeholder: 'Income target, financial independence, debt concerns...' },
     ],
@@ -73,10 +73,92 @@ function Field({ field, value, onChange }) {
   );
 }
 
+const VISION_THEMES = [
+  'Financial independence', 'Creative work', 'Autonomy & flexibility',
+  'Leadership & impact', 'Building something', 'Helping others',
+  'Travel & location freedom', 'Stability & security', 'Status & recognition',
+  'Community & relationships', 'Learning & growth', 'Work-life balance',
+];
+
+const TIMEFRAME_OPTIONS = [
+  { value: 'five_years', label: 'In five years' },
+  { value: 'ten_years', label: 'In ten years' },
+  { value: 'unsure', label: 'I am not sure yet' },
+];
+
+function VisionField({ data, onChange, onCheck }) {
+  const baseClass = 'mt-2 w-full rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-3 text-sm text-[#050816] placeholder-[#94A3B8] outline-none transition focus:border-[#8B0C21] focus:bg-white';
+  const selectedThemes = Array.isArray(data.vision_themes) ? data.vision_themes : [];
+
+  const toggleTheme = (theme) => {
+    const next = selectedThemes.includes(theme)
+      ? selectedThemes.filter(t => t !== theme)
+      : [...selectedThemes, theme];
+    onCheck('vision_themes', next);
+  };
+
+  return (
+    <div className="space-y-4">
+      <label className="block text-sm font-semibold text-[#334155]">
+        Where do you see yourself in five to ten years?
+        <span className="ml-2 text-xs font-normal text-[#94A3B8]">Optional</span>
+        <p className="mt-1 mb-2 text-xs font-normal text-[#64748B]">Think about the type of work, lifestyle, impact, financial position, relationships, location, or autonomy you may want. Your answer can change over time.</p>
+        <textarea
+          rows={4}
+          name="desired_lifestyle"
+          value={data.desired_lifestyle || ''}
+          onChange={onChange}
+          placeholder="Describe what you're working toward — or what you're uncertain about..."
+          className={baseClass}
+        />
+      </label>
+
+      <div>
+        <p className="text-xs font-semibold text-[#64748B] uppercase tracking-wide mb-2">Themes that resonate <span className="font-normal normal-case">(optional — select any)</span></p>
+        <div className="flex flex-wrap gap-2">
+          {VISION_THEMES.map(theme => (
+            <button
+              key={theme}
+              type="button"
+              onClick={() => toggleTheme(theme)}
+              className="rounded-full border px-3 py-1 text-xs font-semibold transition"
+              style={selectedThemes.includes(theme)
+                ? { background: '#8B0C21', color: '#fff', borderColor: '#8B0C21' }
+                : { background: 'white', color: '#334155', borderColor: '#E2E8F0' }}
+            >
+              {theme}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <p className="text-xs font-semibold text-[#64748B] uppercase tracking-wide mb-2">Preferred timeframe <span className="font-normal normal-case">(optional)</span></p>
+        <div className="flex flex-wrap gap-2">
+          {TIMEFRAME_OPTIONS.map(opt => (
+            <button
+              key={opt.value}
+              type="button"
+              onClick={() => onCheck('vision_timeframe', data.vision_timeframe === opt.value ? null : opt.value)}
+              className="rounded-full border px-3 py-1.5 text-xs font-semibold transition"
+              style={data.vision_timeframe === opt.value
+                ? { background: '#050816', color: '#fff', borderColor: '#050816' }
+                : { background: 'white', color: '#334155', borderColor: '#E2E8F0' }}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function PrioritiesStep({ step, data, onChange, onCheck }) {
   return (
     <div className="space-y-6">
-      {step.fields.map(f => (
+      <VisionField data={data} onChange={onChange} onCheck={onCheck} />
+      {step.fields.filter(f => f.type !== 'vision').map(f => (
         <Field key={f.name} field={f} value={data[f.name]} onChange={onChange} />
       ))}
       <div className="border-t border-[#E2E8F0] pt-6">
@@ -220,7 +302,7 @@ export default function Onboarding() {
   };
 
   const check = (name, val) => {
-    const next = { ...data, [name]: val };
+    const next = { ...data, [name]: val === null ? undefined : val };
     setData(next);
     persist(next, step, hours);
   };

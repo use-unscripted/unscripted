@@ -23,6 +23,20 @@
     "desired_lifestyle": {
       "type": "string"
     },
+    "vision_themes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "vision_timeframe": {
+      "type": "string",
+      "enum": [
+        "five_years",
+        "ten_years",
+        "unsure"
+      ]
+    },
     "income_goals": {
       "type": "string"
     },

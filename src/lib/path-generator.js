@@ -115,7 +115,7 @@ Student profile:
 - Year: ${profile.school_year || user.school_year || 'Unknown'}
 - Primary path to test: ${primaryPath}
 - Comparison path: ${comparisonPath || 'none specified'}
-- Desired lifestyle: ${profile.desired_lifestyle || 'Not specified'}
+- Future vision (5–10 years): ${profile.desired_lifestyle || 'Not specified'}${profile.vision_timeframe ? ` (timeframe: ${profile.vision_timeframe.replace('_', ' ')})` : ''}${Array.isArray(profile.vision_themes) && profile.vision_themes.length ? ` [themes: ${profile.vision_themes.join(', ')}]` : ''}
 - Biggest blocker: ${profile.biggest_blocker || 'Not specified'}
 - Fixed commitments: ${profile.commitments || 'Not specified'}
 - Available hours/week: ${availableHours}
