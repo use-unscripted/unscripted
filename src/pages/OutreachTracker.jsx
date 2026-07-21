@@ -162,19 +162,23 @@ export default function OutreachTracker() {
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterExp, setFilterExp] = useState('all');
+  const [loadError, setLoadError] = useState(false);
   const [successToast, setSuccessToast] = useState(null);
   const toastTimer = useRef(null);
 
   const load = async () => {
+    setLoadError(false);
     try {
       const [c, e, m] = await Promise.all([
-        base44.entities.OutreachContacts.list('-updated_date', 200).catch(() => []),
+        base44.entities.OutreachContacts.list('-updated_date', 200).catch(() => null),
         base44.entities.Experiments.list('-created_date', 200).catch(() => []),
         base44.entities.Missions.list('-created_date', 200).catch(() => []),
       ]);
-      setContacts(Array.isArray(c) ? c : []);
+      if (c === null) { setLoadError(true); } else { setContacts(Array.isArray(c) ? c : []); }
       setExperiments(Array.isArray(e) ? e : []);
       setMissions(Array.isArray(m) ? m : []);
+    } catch {
+      setLoadError(true);
     } finally {
       setLoading(false);
     }
@@ -307,7 +311,16 @@ export default function OutreachTracker() {
       </div>
 
       {loading ? (
-        <div className="py-20 text-center text-[#64748B]">Loading contacts…</div>
+        <div className="py-20 text-center text-[#64748B]">Loading outreach contacts…</div>
+      ) : loadError ? (
+        <div className="rounded-[24px] border border-dashed border-red-200 p-16 text-center">
+          <h3 className="font-heading text-xl font-bold text-[#050816]">We couldn't load your outreach contacts.</h3>
+          <p className="mt-2 text-sm text-[#64748B]">There was a problem fetching your records. Please try again.</p>
+          <div className="mt-6 flex justify-center gap-3">
+            <button onClick={load} className="inline-flex items-center gap-2 rounded-[10px] px-5 py-2.5 text-sm font-semibold text-white" style={{ background: '#8B0C21' }}>Retry</button>
+            <button onClick={() => navigate('/dashboard')} className="inline-flex items-center gap-2 rounded-[10px] border border-[#E2E8F0] px-5 py-2.5 text-sm font-semibold text-[#334155] hover:bg-[#F8FAFC]">Return to Dashboard</button>
+          </div>
+        </div>
       ) : contacts.length === 0 ? (
         <div className="rounded-[24px] border border-dashed border-[#E2E8F0] p-16 text-center">
           <Mail size={32} className="mx-auto mb-4 text-[#CBD5E1]" />

@@ -87,6 +87,7 @@ const AuthenticatedApp = () => {
           <Route path="/paths" element={<PathComparison />} />
           <Route path="/experiments" element={<ExperimentsPage />} />
           <Route path="/outreach" element={<OutreachTracker />} />
+          <Route path="/OutreachTracker" element={<Navigate to="/outreach" replace />} />
           <Route path="/proof" element={<ProofOfWorkPage />} />
           <Route path="/reflection" element={<WeeklyReflectionPage />} />
           <Route path="/resources" element={<ResourceHub />} />
