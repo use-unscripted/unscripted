@@ -2,7 +2,7 @@ import { useState, useRef } from 'react';
 import { X, Loader2 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 
-const inputCls = 'w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-3 text-sm text-[#050816] placeholder-[#94A3B8] outline-none focus:border-[#8B0C21]';
+const inputCls = 'w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-3 text-sm text-[#050816] placeholder-[#94A3B8] outline-none focus:border-[#1F3A5F]';
 
 export default function EditPathModal({ path, onClose, onSaved }) {
   const submittingRef = useRef(false);
@@ -64,27 +64,27 @@ export default function EditPathModal({ path, onClose, onSaved }) {
           <div>
             <label className="block text-sm font-semibold text-[#334155] mb-1.5">Goals for this path</label>
             <textarea rows={2} name="goals" value={form.goals} onChange={ch} placeholder="What do you want to learn or prove?"
-              className="w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-3 text-sm outline-none focus:border-[#8B0C21] resize-none placeholder-[#94A3B8]" />
+              className="w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-3 text-sm outline-none focus:border-[#1F3A5F] resize-none placeholder-[#94A3B8]" />
           </div>
           <div>
             <label className="block text-sm font-semibold text-[#334155] mb-1.5">Why it fits you</label>
             <textarea rows={2} name="why_it_fits" value={form.why_it_fits} onChange={ch} placeholder="Your strengths, interests, or alignment..."
-              className="w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-3 text-sm outline-none focus:border-[#8B0C21] resize-none placeholder-[#94A3B8]" />
+              className="w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-3 text-sm outline-none focus:border-[#1F3A5F] resize-none placeholder-[#94A3B8]" />
           </div>
           <div>
             <label className="block text-sm font-semibold text-[#334155] mb-1.5">Why it may not fit</label>
             <textarea rows={2} name="why_it_may_not_fit" value={form.why_it_may_not_fit} onChange={ch} placeholder="Honest concerns or potential mismatches..."
-              className="w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-3 text-sm outline-none focus:border-[#8B0C21] resize-none placeholder-[#94A3B8]" />
+              className="w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-3 text-sm outline-none focus:border-[#1F3A5F] resize-none placeholder-[#94A3B8]" />
           </div>
           <div>
             <label className="block text-sm font-semibold text-[#334155] mb-1.5">Lifestyle implications</label>
             <textarea rows={2} name="lifestyle_implications" value={form.lifestyle_implications} onChange={ch} placeholder="Work hours, income, location, autonomy..."
-              className="w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-3 text-sm outline-none focus:border-[#8B0C21] resize-none placeholder-[#94A3B8]" />
+              className="w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-3 text-sm outline-none focus:border-[#1F3A5F] resize-none placeholder-[#94A3B8]" />
           </div>
           <div>
             <label className="block text-sm font-semibold text-[#334155] mb-1.5">Notes</label>
             <textarea rows={2} name="notes" value={form.notes} onChange={ch} placeholder="Anything else to track..."
-              className="w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-3 text-sm outline-none focus:border-[#8B0C21] resize-none placeholder-[#94A3B8]" />
+              className="w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-3 text-sm outline-none focus:border-[#1F3A5F] resize-none placeholder-[#94A3B8]" />
           </div>
           <div className="grid gap-4 sm:grid-cols-3">
             <div>
@@ -110,7 +110,7 @@ export default function EditPathModal({ path, onClose, onSaved }) {
           <button onClick={onClose} disabled={saving} className="flex-1 rounded-[10px] border border-[#E2E8F0] py-3 text-sm font-semibold text-[#334155] disabled:opacity-50">Cancel</button>
           <button onClick={handleSave} disabled={saving}
             className="flex-1 rounded-[10px] py-3 text-sm font-semibold text-white disabled:opacity-60"
-            style={{ background: '#8B0C21' }}>
+            style={{ background: 'var(--brand-navy-900)' }}>
             {saving ? <span className="flex items-center justify-center gap-2"><Loader2 size={15} className="animate-spin" />Saving…</span> : 'Save Changes'}
           </button>
         </div>
