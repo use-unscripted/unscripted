@@ -1,20 +1,27 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
-import { Plus, Star, Pencil, Pause, Play, Archive, ChevronDown, ChevronUp, Clock, CheckCircle2, History, ArrowRight, RotateCcw } from 'lucide-react';
+import { Plus, Star, Pencil, Pause, Play, Archive, ChevronDown, ChevronUp, Clock, CheckCircle2, History, ArrowRight, RotateCcw, SlidersHorizontal, X } from 'lucide-react';
 import PageHeader from '@/components/PageHeader';
 import CreatePathModal from '@/components/paths/CreatePathModal';
 import EditPathModal from '@/components/paths/EditPathModal';
 import ReactivationModal from '@/components/paths/ReactivationModal';
 import { RiskBadge, ConfidenceBadge, RiskConfidenceLegend } from '@/components/paths/RiskConfidenceBadges';
+import {
+  SORT_OPTIONS, DEFAULT_FILTERS,
+  sortPaths, filterPaths,
+  filtersToParams, filtersFromParams,
+  ACTIVE_STATUSES, PAUSED_STATUSES, HISTORY_STATUSES,
+} from '@/lib/path-sort-filter';
 
 const STATUS_CFG = {
-  active:    { label: 'Active',    bg: '#F0FDF4', text: '#15803D' },
-  draft:     { label: 'Draft',     bg: '#F1F5F9', text: '#64748B' },
-  paused:    { label: 'Paused',    bg: '#FFFBEB', text: '#B45309' },
-  completed: { label: 'Completed', bg: '#EFF6FF', text: '#1D4ED8' },
-  archived:  { label: 'Archived',  bg: '#F1F5F9', text: '#94A3B8' },
-  exploring: { label: 'Exploring', bg: '#F8ECEF', text: '#8B0C21' },
-  deprioritized: { label: 'Deprioritized', bg: '#F1F5F9', text: '#94A3B8' },
+  active:        { label: 'Active',         bg: '#F0FDF4', text: '#15803D' },
+  draft:         { label: 'Draft',          bg: '#F1F5F9', text: '#64748B' },
+  paused:        { label: 'Paused',         bg: '#FFFBEB', text: '#B45309' },
+  completed:     { label: 'Completed',      bg: '#EFF6FF', text: '#1D4ED8' },
+  archived:      { label: 'Archived',       bg: '#F1F5F9', text: '#94A3B8' },
+  exploring:     { label: 'Exploring',      bg: '#F8ECEF', text: '#8B0C21' },
+  deprioritized: { label: 'Deprioritized',  bg: '#F1F5F9', text: '#94A3B8' },
 };
 
 function fmtDate(d) {
@@ -115,7 +122,6 @@ function PathCard({ path, experiments, missions, proof, contacts, reflections, o
             {path.path_category && <p className="text-xs text-[#94A3B8] mt-0.5">{path.path_category}</p>}
             <p className="mt-2 text-sm text-[#334155] line-clamp-2">{path.why_it_fits || path.fit_reason}</p>
 
-            {/* Progress bar */}
             {pathExps.length > 0 && (
               <div className="mt-3">
                 <div className="flex justify-between text-xs text-[#94A3B8] mb-1">
@@ -138,19 +144,18 @@ function PathCard({ path, experiments, missions, proof, contacts, reflections, o
           </button>
         </div>
 
-        {/* Action buttons */}
         <div className="mt-4 flex flex-wrap gap-2">
           <button onClick={() => onAction('edit', path)}
             className="flex items-center gap-1.5 rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-xs font-semibold text-[#334155] hover:bg-[#F8FAFC]">
             <Pencil size={12} /> Edit
           </button>
-          {!path.is_primary_focus && ['active', 'exploring', 'draft'].includes(path.status) && (
+          {!path.is_primary_focus && ACTIVE_STATUSES.includes(path.status) && (
             <button onClick={() => onAction('make_primary', path)}
               className="flex items-center gap-1.5 rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-xs font-semibold text-[#334155] hover:bg-[#F8ECEF]">
               <Star size={12} /> Make Primary
             </button>
           )}
-          {['active', 'exploring', 'draft'].includes(path.status) && (
+          {ACTIVE_STATUSES.includes(path.status) && (
             <button onClick={() => onAction('pause', path)}
               className="flex items-center gap-1.5 rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-xs font-semibold text-[#334155] hover:bg-[#F8FAFC]">
               <Pause size={12} /> Pause
@@ -163,7 +168,7 @@ function PathCard({ path, experiments, missions, proof, contacts, reflections, o
               <Play size={12} /> Resume
             </button>
           )}
-          {!['archived'].includes(path.status) && (
+          {path.status !== 'archived' && (
             <button onClick={() => onAction('complete', path)}
               className="flex items-center gap-1.5 rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-xs font-semibold text-[#334155] hover:bg-[#F8FAFC]">
               <CheckCircle2 size={12} /> Mark Complete
@@ -256,14 +261,13 @@ function PathCard({ path, experiments, missions, proof, contacts, reflections, o
             </div>
           )}
 
-          {/* Path history timeline */}
           <div>
             <p className="text-xs font-bold uppercase tracking-[.12em] text-[#64748B] mb-3 flex items-center gap-1.5"><History size={12} /> Path history</p>
             <div className="space-y-1.5">
               {[
                 path.created_date && { date: path.created_date, label: 'Path created' },
-                path.started_at && { date: path.started_at, label: 'Became active' },
-                path.paused_at && { date: path.paused_at, label: 'Paused' },
+                path.started_at   && { date: path.started_at,   label: 'Became active' },
+                path.paused_at    && { date: path.paused_at,    label: 'Paused' },
                 path.completed_at && { date: path.completed_at, label: 'Completed' },
                 path.last_active_at && path.status === 'active' && { date: path.last_active_at, label: 'Last active' },
               ].filter(Boolean).map((evt, i) => (
@@ -295,24 +299,119 @@ function PathCard({ path, experiments, missions, proof, contacts, reflections, o
   );
 }
 
-// ── Section wrapper ───────────────────────────────────────────────────────────
-function PathSection({ title, paths, ...rest }) {
-  if (paths.length === 0) return null;
+// ── Sort + Filter bar ─────────────────────────────────────────────────────────
+function SortFilterBar({ paths, sortBy, setSortBy, filters, setFilters }) {
+  const categories = useMemo(() => {
+    const cats = [...new Set(paths.map(p => p.path_category).filter(Boolean))].sort();
+    return cats;
+  }, [paths]);
+
+  const hasActiveFilters = Object.values(filters).some(v => v !== 'all');
+  const activeCount = Object.values(filters).filter(v => v !== 'all').length;
+
+  const clearFilters = () => setFilters(DEFAULT_FILTERS);
+
+  const sel = 'rounded-xl border border-[#E2E8F0] bg-white px-3 py-2 text-sm text-[#334155] focus:border-[#8B0C21] focus:outline-none';
+
   return (
-    <section className="mb-8">
-      <h3 className="font-heading text-base font-bold text-[#050816] mb-3 flex items-center gap-2">
-        {title}
-        <span className="text-xs font-normal text-[#94A3B8]">({paths.length})</span>
-      </h3>
-      <div className="space-y-4">
-        {paths.map(p => <PathCard key={p.id} path={p} {...rest} />)}
+    <div className="mb-5 rounded-[16px] border border-[#E2E8F0] bg-white p-4">
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="flex items-center gap-2 shrink-0">
+          <SlidersHorizontal size={14} className="text-[#64748B]" />
+          <span className="text-xs font-bold uppercase tracking-[.12em] text-[#64748B]">Sort & Filter</span>
+          {hasActiveFilters && (
+            <span className="rounded-full px-2 py-0.5 text-[10px] font-bold" style={{ background: '#F8ECEF', color: '#8B0C21' }}>
+              {activeCount} active
+            </span>
+          )}
+        </div>
+
+        {/* Sort */}
+        <select
+          value={sortBy}
+          onChange={e => setSortBy(e.target.value)}
+          aria-label="Sort paths by"
+          className={sel}
+        >
+          {SORT_OPTIONS.map(o => (
+            <option key={o.value} value={o.value}>{o.label}</option>
+          ))}
+        </select>
+
+        {/* Status group */}
+        <select
+          value={filters.statusGroup}
+          onChange={e => setFilters(f => ({ ...f, statusGroup: e.target.value }))}
+          aria-label="Filter by status"
+          className={sel}
+        >
+          <option value="all">All statuses</option>
+          <option value="active">Active only</option>
+          <option value="paused">Paused only</option>
+          <option value="history">History</option>
+        </select>
+
+        {/* Risk */}
+        <select
+          value={filters.risk}
+          onChange={e => setFilters(f => ({ ...f, risk: e.target.value }))}
+          aria-label="Filter by risk level"
+          className={sel}
+        >
+          <option value="all">All risk levels</option>
+          <option value="low">Low risk</option>
+          <option value="medium">Moderate risk</option>
+          <option value="high">High risk</option>
+        </select>
+
+        {/* Confidence */}
+        <select
+          value={filters.confidence}
+          onChange={e => setFilters(f => ({ ...f, confidence: e.target.value }))}
+          aria-label="Filter by confidence level"
+          className={sel}
+        >
+          <option value="all">All confidence levels</option>
+          <option value="high">High confidence</option>
+          <option value="medium">Moderate confidence</option>
+          <option value="low">Low confidence</option>
+        </select>
+
+        {/* Category */}
+        {categories.length > 0 && (
+          <select
+            value={filters.category}
+            onChange={e => setFilters(f => ({ ...f, category: e.target.value }))}
+            aria-label="Filter by category"
+            className={sel}
+          >
+            <option value="all">All categories</option>
+            {categories.map(c => <option key={c} value={c}>{c}</option>)}
+          </select>
+        )}
+
+        {hasActiveFilters && (
+          <button
+            onClick={clearFilters}
+            className="flex items-center gap-1 rounded-lg border border-[#E2E8F0] px-3 py-2 text-xs font-semibold text-[#64748B] hover:text-red-600 hover:border-red-200 transition"
+            aria-label="Clear all filters"
+          >
+            <X size={12} /> Clear filters
+          </button>
+        )}
       </div>
-    </section>
+    </div>
   );
 }
 
 // ── Main page ─────────────────────────────────────────────────────────────────
 export default function PathComparison() {
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  // Initialise from URL so filters survive refresh
+  const { sortBy: initSort, filters: initFilters } = filtersFromParams(location.search);
+
   const [paths, setPaths] = useState([]);
   const [experiments, setExperiments] = useState([]);
   const [missions, setMissions] = useState([]);
@@ -324,6 +423,25 @@ export default function PathComparison() {
   const [showCreate, setShowCreate] = useState(false);
   const [editTarget, setEditTarget] = useState(null);
   const [resumeTarget, setResumeTarget] = useState(null);
+
+  const [sortBy, setSortByState] = useState(initSort);
+  const [filters, setFiltersState] = useState(initFilters);
+
+  // Keep URL in sync whenever sort/filter changes
+  const setSortBy = useCallback((val) => {
+    setSortByState(val);
+  }, []);
+  const setFilters = useCallback((updater) => {
+    setFiltersState(updater);
+  }, []);
+
+  useEffect(() => {
+    const qs = filtersToParams(sortBy, filters);
+    const newSearch = qs ? `?${qs}` : '';
+    if (location.search !== newSearch) {
+      navigate({ search: newSearch }, { replace: true });
+    }
+  }, [sortBy, filters]);
 
   const load = async () => {
     const [ps, exps, mis, prf, cts, refs] = await Promise.all([
@@ -345,6 +463,14 @@ export default function PathComparison() {
 
   useEffect(() => { load(); }, []);
 
+  // Derived: sorted then filtered — recomputed whenever sort, filters, or raw paths change
+  const displayedPaths = useMemo(() => {
+    const sorted = sortPaths(paths, sortBy);
+    return filterPaths(sorted, filters);
+  }, [paths, sortBy, filters]);
+
+  const hasActiveFilters = Object.values(filters).some(v => v !== 'all');
+
   const handleAction = async (action, path) => {
     const today = new Date().toISOString().split('T')[0];
 
@@ -353,14 +479,13 @@ export default function PathComparison() {
 
     const updates = {
       make_primary: async () => {
-        // Unset all other primaries first
         const primaries = paths.filter(p => p.is_primary_focus && p.id !== path.id);
         await Promise.all(primaries.map(p => base44.entities.PathRecommendations.update(p.id, { is_primary_focus: false })));
         await base44.entities.PathRecommendations.update(path.id, { is_primary_focus: true });
       },
-      pause: () => base44.entities.PathRecommendations.update(path.id, { status: 'paused', paused_at: today, is_primary_focus: false }),
+      pause:    () => base44.entities.PathRecommendations.update(path.id, { status: 'paused',    paused_at: today,    is_primary_focus: false }),
       complete: () => base44.entities.PathRecommendations.update(path.id, { status: 'completed', completed_at: today, is_primary_focus: false }),
-      archive: () => base44.entities.PathRecommendations.update(path.id, { status: 'archived', is_primary_focus: false }),
+      archive:  () => base44.entities.PathRecommendations.update(path.id, { status: 'archived',  is_primary_focus: false }),
     };
 
     if (updates[action]) {
@@ -369,20 +494,7 @@ export default function PathComparison() {
     }
   };
 
-  // Group paths
-  const primary = paths.filter(p => p.is_primary_focus && ['active', 'exploring', 'draft'].includes(p.status));
-  const otherActive = paths.filter(p => !p.is_primary_focus && ['active', 'exploring', 'draft'].includes(p.status));
-  const paused = paths.filter(p => p.status === 'paused');
-  const completed = paths.filter(p => p.status === 'completed');
-  const archived = paths.filter(p => p.status === 'archived');
-
-  const sharedProps = {
-    experiments, missions, proof, contacts, reflections,
-    onAction: handleAction,
-    expandedId,
-    expanded: false,
-    onToggle: () => {},
-  };
+  const cardProps = { experiments, missions, proof, contacts, reflections, onAction: handleAction };
 
   return (
     <main className="mx-auto max-w-5xl px-5 py-10 sm:px-8">
@@ -437,103 +549,46 @@ export default function PathComparison() {
         <>
           <RiskConfidenceLegend />
 
-          {/* Primary Focus */}
-          {primary.length > 0 && (
-            <section className="mb-8">
-              <h3 className="font-heading text-base font-bold text-[#050816] mb-3 flex items-center gap-2">
-                <Star size={16} style={{ color: '#8B0C21' }} /> Primary Focus
-              </h3>
-              <div className="space-y-4">
-                {primary.map(p => (
-                  <PathCard key={p.id} path={p}
-                    experiments={experiments} missions={missions} proof={proof} contacts={contacts} reflections={reflections}
-                    onAction={handleAction}
-                    expanded={expandedId === p.id}
-                    onToggle={() => setExpandedId(expandedId === p.id ? null : p.id)}
-                  />
-                ))}
-              </div>
-            </section>
+          <SortFilterBar
+            paths={paths}
+            sortBy={sortBy}
+            setSortBy={setSortBy}
+            filters={filters}
+            setFilters={setFilters}
+          />
+
+          {/* Result count */}
+          <p className="mb-4 text-xs text-[#94A3B8]">
+            {displayedPaths.length} path{displayedPaths.length !== 1 ? 's' : ''} shown
+            {paths.length !== displayedPaths.length ? ` of ${paths.length}` : ''}
+          </p>
+
+          {displayedPaths.length === 0 ? (
+            <div className="rounded-[24px] border border-dashed border-[#E2E8F0] py-16 text-center">
+              <p className="text-sm font-semibold text-[#050816]">No paths match these filters.</p>
+              <p className="text-xs text-[#94A3B8] mt-1">Try adjusting your sort or filter options.</p>
+              <button
+                onClick={() => setFilters(DEFAULT_FILTERS)}
+                className="mt-4 inline-flex items-center gap-1.5 rounded-[10px] border border-[#E2E8F0] px-4 py-2 text-xs font-semibold text-[#334155] hover:bg-[#F8FAFC]"
+              >
+                <X size={12} /> Clear Filters
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {displayedPaths.map(p => (
+                <PathCard
+                  key={p.id}
+                  path={p}
+                  {...cardProps}
+                  expanded={expandedId === p.id}
+                  onToggle={() => setExpandedId(expandedId === p.id ? null : p.id)}
+                />
+              ))}
+            </div>
           )}
 
-          {/* Other Active */}
-          {otherActive.length > 0 && (
-            <section className="mb-8">
-              <h3 className="font-heading text-base font-bold text-[#050816] mb-3">
-                Other Active Paths <span className="text-xs font-normal text-[#94A3B8]">({otherActive.length})</span>
-              </h3>
-              <div className="space-y-4">
-                {otherActive.map(p => (
-                  <PathCard key={p.id} path={p}
-                    experiments={experiments} missions={missions} proof={proof} contacts={contacts} reflections={reflections}
-                    onAction={handleAction}
-                    expanded={expandedId === p.id}
-                    onToggle={() => setExpandedId(expandedId === p.id ? null : p.id)}
-                  />
-                ))}
-              </div>
-            </section>
-          )}
-
-          {/* Paused */}
-          {paused.length > 0 && (
-            <section className="mb-8">
-              <h3 className="font-heading text-base font-bold text-[#050816] mb-3">
-                Paused Paths <span className="text-xs font-normal text-[#94A3B8]">({paused.length})</span>
-              </h3>
-              <div className="space-y-4">
-                {paused.map(p => (
-                  <PathCard key={p.id} path={p}
-                    experiments={experiments} missions={missions} proof={proof} contacts={contacts} reflections={reflections}
-                    onAction={handleAction}
-                    expanded={expandedId === p.id}
-                    onToggle={() => setExpandedId(expandedId === p.id ? null : p.id)}
-                  />
-                ))}
-              </div>
-            </section>
-          )}
-
-          {/* Completed */}
-          {completed.length > 0 && (
-            <section className="mb-8">
-              <h3 className="font-heading text-base font-bold text-[#050816] mb-3">
-                Completed Paths <span className="text-xs font-normal text-[#94A3B8]">({completed.length})</span>
-              </h3>
-              <div className="space-y-4">
-                {completed.map(p => (
-                  <PathCard key={p.id} path={p}
-                    experiments={experiments} missions={missions} proof={proof} contacts={contacts} reflections={reflections}
-                    onAction={handleAction}
-                    expanded={expandedId === p.id}
-                    onToggle={() => setExpandedId(expandedId === p.id ? null : p.id)}
-                  />
-                ))}
-              </div>
-            </section>
-          )}
-
-          {/* Path History (archived) */}
-          {archived.length > 0 && (
-            <section className="mb-8">
-              <h3 className="font-heading text-base font-bold text-[#050816] mb-3 flex items-center gap-2">
-                <History size={15} /> Path History
-                <span className="text-xs font-normal text-[#94A3B8]">({archived.length})</span>
-              </h3>
-              <div className="space-y-4">
-                {archived.map(p => (
-                  <PathCard key={p.id} path={p}
-                    experiments={experiments} missions={missions} proof={proof} contacts={contacts} reflections={reflections}
-                    onAction={handleAction}
-                    expanded={expandedId === p.id}
-                    onToggle={() => setExpandedId(expandedId === p.id ? null : p.id)}
-                  />
-                ))}
-              </div>
-            </section>
-          )}
-
-          <div className="mt-4 rounded-[20px] p-5 text-center text-sm text-[#64748B]"
+          <div className="mt-8 rounded-[20px] p-5 text-center text-sm text-[#64748B]"
             style={{ background: '#F8ECEF', border: '1px solid rgba(139,12,33,0.15)' }}>
             These paths are recommendations and tests — not permanent commitments. Your goal is to learn what fits you, not to pick one and stay forever.
           </div>
