@@ -105,19 +105,19 @@ function ContactCard({ c, experimentsMap, missionsMap, onEdit, onStatusChange, o
           </a>
         )}
         {c.phone && (
-          <a href={`tel:${c.phone}`} className="flex items-center gap-1 text-xs text-[#64748B] hover:text-[#8B0C21] transition">
+          <a href={`tel:${c.phone}`} className="flex items-center gap-1 text-xs text-[#64748B] hover:text-[#274C77] transition">
             <Phone size={12} />{c.phone}
           </a>
         )}
         {c.profile_url && (
           <a href={c.profile_url.startsWith('http') ? c.profile_url : 'https://' + c.profile_url} target="_blank" rel="noopener noreferrer"
-            className="flex items-center gap-1 text-xs text-[#64748B] hover:text-[#8B0C21] transition">
+            className="flex items-center gap-1 text-xs text-[#64748B] hover:text-[#274C77] transition">
             <ExternalLink size={12} />LinkedIn
           </a>
         )}
         {c.website_url && (
           <a href={c.website_url} target="_blank" rel="noopener noreferrer"
-            className="flex items-center gap-1 text-xs text-[#64748B] hover:text-[#8B0C21] transition">
+            className="flex items-center gap-1 text-xs text-[#64748B] hover:text-[#274C77] transition">
             <ExternalLink size={12} />Website
           </a>
         )}
@@ -292,7 +292,7 @@ export default function OutreachTracker() {
         action={
           <button onClick={() => setModal('new')}
             className="inline-flex items-center gap-2 rounded-[10px] px-5 py-2.5 text-sm font-semibold text-white shrink-0"
-            style={{ background: '#8B0C21', boxShadow: '0 8px 24px rgba(139,12,33,0.18)' }}>
+            style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}>
             <Plus size={16} /> Add Contact
           </button>
         }
@@ -311,7 +311,7 @@ export default function OutreachTracker() {
             <button
               onClick={() => setOutreachPlanPath(selectedPath)}
               className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition"
-              style={{ background: '#F8ECEF', color: '#8B0C21', border: '1px solid rgba(139,12,33,0.2)' }}>
+              style={{ background: 'var(--background-tertiary)', color: 'var(--brand-navy-700)', border: '1px solid var(--border-light)' }}>
               <Users size={12} /> Suggested Outreach
             </button>
           )}
@@ -331,17 +331,17 @@ export default function OutreachTracker() {
           <Mail size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#94A3B8]" />
           <input value={search} onChange={e => setSearch(e.target.value)}
             placeholder="Search by name, company, email, experiment…"
-            className="w-full rounded-xl border border-[#E2E8F0] bg-white pl-9 pr-4 py-2.5 text-sm outline-none focus:border-[#8B0C21]" />
+            className="w-full rounded-xl border border-[#E2E8F0] bg-white pl-9 pr-4 py-2.5 text-sm outline-none focus:border-[#1F3A5F]" />
         </div>
         {experiments.length > 0 && (
           <select value={filterExp} onChange={e => setFilterExp(e.target.value)}
-            className="rounded-xl border border-[#E2E8F0] bg-white px-3 py-2.5 text-sm outline-none focus:border-[#8B0C21]">
+            className="rounded-xl border border-[#E2E8F0] bg-white px-3 py-2.5 text-sm outline-none focus:border-[#1F3A5F]">
             <option value="all">All experiments</option>
             {experiments.map(exp => <option key={exp.id} value={exp.id}>{exp.title}</option>)}
           </select>
         )}
         <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)}
-          className="rounded-xl border border-[#E2E8F0] bg-white px-3 py-2.5 text-sm outline-none focus:border-[#8B0C21]">
+          className="rounded-xl border border-[#E2E8F0] bg-white px-3 py-2.5 text-sm outline-none focus:border-[#1F3A5F]">
           <option value="all">All statuses</option>
           {ALL_STATUS_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
         </select>
@@ -349,7 +349,7 @@ export default function OutreachTracker() {
 
       {/* Email Templates */}
       <div className="mb-6">
-        <button onClick={() => setTemplates(!templates)} className="text-sm font-semibold transition hover:opacity-80" style={{ color: '#8B0C21' }}>
+        <button onClick={() => setTemplates(!templates)} className="text-sm font-semibold transition hover:opacity-80" style={{ color: 'var(--brand-navy-700)' }}>
           {templates ? 'Hide' : 'View'} outreach templates →
         </button>
         {templates && (
@@ -362,7 +362,7 @@ export default function OutreachTracker() {
               { label: 'Thank-you note', body: 'Hi [Name],\n\nThank you for taking the time to speak with me. Your insight about [specific thing they said] was genuinely valuable and I\'ve already begun [action taken].\n\nI\'ll keep you updated on my progress. Thank you again for your generosity.\n\n[Your Name]' },
             ].map(t => (
               <div key={t.label} className="rounded-[16px] border border-[#E2E8F0] bg-white p-4">
-                <p className="text-xs font-bold uppercase tracking-wide mb-2" style={{ color: '#8B0C21' }}>{t.label}</p>
+                <p className="text-xs font-bold uppercase tracking-wide mb-2" style={{ color: 'var(--brand-navy-900)' }}>{t.label}</p>
                 <pre className="text-xs text-[#334155] whitespace-pre-wrap font-body leading-5">{t.body}</pre>
               </div>
             ))}
@@ -377,7 +377,7 @@ export default function OutreachTracker() {
           <h3 className="font-heading text-xl font-bold text-[#050816]">We couldn't load your outreach contacts.</h3>
           <p className="mt-2 text-sm text-[#64748B]">There was a problem fetching your records. Please try again.</p>
           <div className="mt-6 flex justify-center gap-3">
-            <button onClick={load} className="inline-flex items-center gap-2 rounded-[10px] px-5 py-2.5 text-sm font-semibold text-white" style={{ background: '#8B0C21' }}>Retry</button>
+            <button onClick={load} className="inline-flex items-center gap-2 rounded-[10px] px-5 py-2.5 text-sm font-semibold text-white" style={{ background: 'var(--brand-navy-900)' }}>Retry</button>
             <button onClick={() => navigate('/dashboard')} className="inline-flex items-center gap-2 rounded-[10px] border border-[#E2E8F0] px-5 py-2.5 text-sm font-semibold text-[#334155] hover:bg-[#F8FAFC]">Return to Dashboard</button>
           </div>
         </div>
@@ -387,7 +387,7 @@ export default function OutreachTracker() {
           <h3 className="font-heading text-xl font-bold text-[#050816]">No contacts added yet.</h3>
           <p className="mt-2 text-sm text-[#64748B]">Add people connected to your experiments so you can track outreach, conversations, and follow-ups.</p>
           <button onClick={() => setModal('new')} className="mt-6 inline-flex items-center gap-2 rounded-[10px] px-6 py-3 text-sm font-semibold text-white"
-            style={{ background: '#8B0C21' }}><Plus size={16} /> Add Contact</button>
+            style={{ background: 'var(--brand-navy-900)' }}><Plus size={16} /> Add Contact</button>
         </div>
       ) : filtered.length === 0 ? (
         <div className="rounded-[24px] border border-dashed border-[#E2E8F0] p-12 text-center">
