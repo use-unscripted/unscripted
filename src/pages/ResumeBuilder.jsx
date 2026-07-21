@@ -53,7 +53,7 @@ function TemplatePicker({ onSelect, onCancel }) {
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {TEMPLATES.map(t => (
             <button key={t.id} onClick={() => onSelect(t)}
-              className="rounded-[16px] border-2 border-[#E2E8F0] p-4 text-left hover:border-[#8B0C21] transition group">
+              className="rounded-[16px] border-2 border-[#E2E8F0] p-4 text-left hover:border-[#1F3A5F] transition group">
               <div className="w-full h-16 rounded-lg mb-2 flex items-center justify-center"
                 style={{ background: `${t.accentColor}15` }}>
                 <div className="w-3/4 space-y-1">
@@ -62,7 +62,7 @@ function TemplatePicker({ onSelect, onCancel }) {
                   <div className="h-1 rounded-full bg-gray-200 w-4/6" />
                 </div>
               </div>
-              <p className="text-xs font-bold text-[#050816] group-hover:text-[#8B0C21] leading-tight">{t.name}</p>
+              <p className="text-xs font-bold text-[#050816] group-hover:text-[#1F3A5F] leading-tight">{t.name}</p>
               <p className="text-[10px] text-[#64748B] mt-0.5 leading-tight">{t.description}</p>
             </button>
           ))}
@@ -90,13 +90,13 @@ function VersionHistory({ versions, currentResume, onRestore, onClose }) {
           <button onClick={onClose}><X size={18} className="text-[#94A3B8]" /></button>
         </div>
         <div className="overflow-y-auto flex-1 space-y-2">
-          <div className="rounded-xl border-2 border-[#8B0C21] bg-[#F8ECEF] p-3">
+          <div className="rounded-xl border-2 p-3" style={{ borderColor: 'var(--brand-navy-700)', background: '#EEF2F6' }}>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-bold text-[#8B0C21]">Current Version</p>
+                <p className="text-xs font-bold" style={{ color: 'var(--brand-navy-900)' }}>Current Version</p>
                 <p className="text-[10px] text-[#64748B]">Last edited: {fmtDate(currentResume.updated_date)}</p>
               </div>
-              <span className="rounded-full px-2 py-0.5 text-[10px] font-bold bg-[#8B0C21] text-white">Live</span>
+              <span className="rounded-full px-2 py-0.5 text-[10px] font-bold text-white" style={{ background: 'var(--brand-navy-900)' }}>Live</span>
             </div>
           </div>
           {versions.length === 0 && (
@@ -113,7 +113,7 @@ function VersionHistory({ versions, currentResume, onRestore, onClose }) {
                   <p className="text-[10px] text-[#94A3B8]">{fmtDate(v.created_date)}</p>
                 </div>
                 <button onClick={() => doRestore(v)} disabled={!!restoring}
-                  className="flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-semibold border border-[#E2E8F0] hover:border-[#8B0C21] hover:text-[#8B0C21] transition disabled:opacity-50">
+                  className="flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-semibold border border-[#E2E8F0] hover:border-[#1F3A5F] hover:text-[#1F3A5F] transition disabled:opacity-50">
                   <RotateCcw size={11} /> Restore
                 </button>
               </div>
@@ -193,7 +193,7 @@ function GoogleDocsModal({ resume, onClose }) {
             </p>
             <p className="text-xs text-[#94A3B8] mb-4">PDF and Word export work without Google connected.</p>
             <button onClick={handleExport}
-              className="w-full rounded-[10px] py-3 text-sm font-semibold text-white" style={{ background: '#8B0C21' }}>
+              className="w-full rounded-[10px] py-3 text-sm font-semibold text-white" style={{ background: 'var(--brand-navy-900)' }}>
               Connect Google & Export
             </button>
           </>
@@ -205,7 +205,7 @@ function GoogleDocsModal({ resume, onClose }) {
             <p className="text-sm font-semibold text-[#050816]">Google Doc created!</p>
             {docUrl && docUrl !== '#' && (
               <a href={docUrl} target="_blank" rel="noopener noreferrer"
-                className="mt-3 inline-block text-sm text-[#8B0C21] underline">Open Google Doc</a>
+                className="mt-3 inline-block text-sm underline" style={{ color: 'var(--brand-navy-700)' }}>Open Google Doc</a>
             )}
           </div>
         )}
@@ -396,7 +396,7 @@ export default function ResumeBuilder() {
         action={
           <button onClick={() => setShowTemplates(true)}
             className="flex items-center gap-2 rounded-[10px] px-5 py-2.5 text-sm font-semibold text-white shrink-0"
-            style={{ background: '#8B0C21', boxShadow: '0 8px 24px rgba(139,12,33,0.18)' }}>
+            style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}>
             <Plus size={16} /> New Resume
           </button>
         }
@@ -411,7 +411,7 @@ export default function ResumeBuilder() {
           ) : resumes.length === 0 ? (
             <div className="rounded-[16px] border border-dashed border-[#E2E8F0] p-4 text-center">
               <p className="text-xs text-[#94A3B8]">No resumes yet.</p>
-              <button onClick={() => setShowTemplates(true)} className="mt-2 text-xs font-semibold text-[#8B0C21] hover:underline">
+              <button onClick={() => setShowTemplates(true)} className="mt-2 text-xs font-semibold hover:underline" style={{ color: 'var(--brand-navy-700)' }}>
                 Create one
               </button>
             </div>
@@ -419,7 +419,7 @@ export default function ResumeBuilder() {
             <div className="space-y-2">
               {resumes.map(r => (
                 <div key={r.id}
-                  className={`rounded-[14px] border p-3 cursor-pointer transition ${selectedId === r.id ? 'border-[#8B0C21] bg-[#F8ECEF]' : 'border-[#E2E8F0] bg-white hover:border-[#8B0C21]/40'}`}
+                  className={`rounded-[14px] border p-3 cursor-pointer transition ${selectedId === r.id ? 'border-[#1F3A5F] bg-[#EEF2F6]' : 'border-[#E2E8F0] bg-white hover:border-[#274C77]'}`}
                   onClick={() => selectResume(r)}>
                   <div className="flex items-start justify-between gap-1">
                     <p className="text-xs font-semibold text-[#050816] leading-tight truncate">{r.resume_name}</p>
@@ -442,7 +442,7 @@ export default function ResumeBuilder() {
               <p className="text-sm font-semibold text-[#050816]">No resume selected</p>
               <p className="text-xs text-[#64748B] mt-1">Select a resume from the left or create a new one.</p>
               <button onClick={() => setShowTemplates(true)}
-                className="mt-4 rounded-[10px] px-5 py-2.5 text-sm font-semibold text-white" style={{ background: '#8B0C21' }}>
+                className="mt-4 rounded-[10px] px-5 py-2.5 text-sm font-semibold text-white" style={{ background: 'var(--brand-navy-900)' }}>
                 New Resume
               </button>
             </div>
@@ -453,22 +453,24 @@ export default function ResumeBuilder() {
             <div className="flex flex-wrap items-center gap-2 mb-5">
               {/* Resume name */}
               <input value={draft.resume_name || ''} onChange={e => setDraft(d => ({ ...d, resume_name: e.target.value }))}
-                className="rounded-xl border border-[#E2E8F0] px-3 py-2 text-sm font-semibold text-[#050816] outline-none focus:border-[#8B0C21] min-w-[180px]" />
+                className="rounded-xl border border-[#E2E8F0] px-3 py-2 text-sm font-semibold text-[#050816] outline-none focus:border-[#1F3A5F] min-w-[180px]" />
 
               {/* Target role */}
               <input value={draft.target_role || ''} onChange={e => setDraft(d => ({ ...d, target_role: e.target.value }))}
                 placeholder="Target role (optional)"
-                className="rounded-xl border border-[#E2E8F0] px-3 py-2 text-sm text-[#334155] outline-none focus:border-[#8B0C21] min-w-[160px]" />
+                className="rounded-xl border border-[#E2E8F0] px-3 py-2 text-sm text-[#334155] outline-none focus:border-[#1F3A5F] min-w-[160px]" />
 
               <div className="ml-auto flex items-center gap-2 flex-wrap">
                 {/* View toggle */}
                 <div className="flex rounded-xl border border-[#E2E8F0] overflow-hidden">
                   <button onClick={() => setView('edit')}
-                    className={`flex items-center gap-1.5 px-3 py-2 text-xs font-semibold transition ${view === 'edit' ? 'bg-[#8B0C21] text-white' : 'text-[#64748B] hover:bg-[#F8FAFC]'}`}>
+                    className={`flex items-center gap-1.5 px-3 py-2 text-xs font-semibold transition ${view === 'edit' ? 'text-white' : 'text-[#64748B] hover:bg-[#F8FAFC]'}`}
+                    style={view === 'edit' ? { background: 'var(--brand-navy-900)' } : {}}>
                     <Edit3 size={12} /> Edit
                   </button>
                   <button onClick={() => setView('preview')}
-                    className={`flex items-center gap-1.5 px-3 py-2 text-xs font-semibold transition ${view === 'preview' ? 'bg-[#8B0C21] text-white' : 'text-[#64748B] hover:bg-[#F8FAFC]'}`}>
+                    className={`flex items-center gap-1.5 px-3 py-2 text-xs font-semibold transition ${view === 'preview' ? 'text-white' : 'text-[#64748B] hover:bg-[#F8FAFC]'}`}
+                    style={view === 'preview' ? { background: 'var(--brand-navy-900)' } : {}}>
                     <Eye size={12} /> Preview
                   </button>
                 </div>
@@ -485,7 +487,7 @@ export default function ResumeBuilder() {
 
                 <button onClick={saveDraft} disabled={saving}
                   className="rounded-xl px-4 py-2 text-xs font-semibold text-white flex items-center gap-1.5 disabled:opacity-60"
-                  style={{ background: saveSuccess ? '#15803D' : '#8B0C21' }}>
+                  style={{ background: saveSuccess ? '#15803D' : 'var(--brand-navy-900)' }}>
                   {saveSuccess ? <><Check size={12} /> Saved</> : <><Save size={12} /> {saving ? 'Saving…' : 'Save'}</>}
                 </button>
               </div>
@@ -499,7 +501,7 @@ export default function ResumeBuilder() {
                 className="flex-1 text-xs outline-none text-[#334155] placeholder-[#94A3B8]" />
               <button onClick={saveVersion} disabled={savingVersion}
                 className="shrink-0 rounded-lg px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-50"
-                style={{ background: '#8B0C21' }}>
+                style={{ background: 'var(--brand-navy-900)' }}>
                 {savingVersion ? 'Saving…' : 'Save Version'}
               </button>
             </div>

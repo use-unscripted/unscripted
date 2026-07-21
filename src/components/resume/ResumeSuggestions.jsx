@@ -74,7 +74,7 @@ export default function ResumeSuggestions({ resume, onAddEntry }) {
             </div>
             <div className="flex gap-1.5 shrink-0">
               <button onClick={() => { onAddEntry(s.section, { ...s.entry, ...s.prefill }); setDismissed(d => new Set([...d, s.id])); }}
-                className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-[10px] font-semibold text-white" style={{ background: '#8B0C21' }}>
+                className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-[10px] font-semibold text-white" style={{ background: 'var(--brand-navy-900)' }}>
                 <Plus size={10} /> Add
               </button>
               <button onClick={() => setDismissed(d => new Set([...d, s.id]))}

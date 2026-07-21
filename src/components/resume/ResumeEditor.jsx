@@ -37,13 +37,13 @@ function BulletAIPopover({ bullet, onApply, onClose }) {
   return (
     <div className="absolute z-50 left-0 top-full mt-1 w-80 rounded-xl border border-[#E2E8F0] bg-white shadow-lg p-4">
       <div className="flex items-center justify-between mb-3">
-        <p className="text-xs font-bold text-[#050816] flex items-center gap-1.5"><Sparkles size={12} style={{ color: '#8B0C21' }} /> AI Bullet Help</p>
+        <p className="text-xs font-bold text-[#050816] flex items-center gap-1.5"><Sparkles size={12} style={{ color: 'var(--brand-navy-700)' }} /> AI Bullet Help</p>
         <button onClick={onClose}><X size={14} className="text-[#94A3B8]" /></button>
       </div>
       <div className="flex flex-wrap gap-1.5 mb-3">
         {actions.map(a => (
           <button key={a.id} onClick={() => run(a.id)} disabled={loading}
-            className="rounded-full border border-[#E2E8F0] px-2.5 py-1 text-[10px] font-semibold text-[#334155] hover:border-[#8B0C21] hover:text-[#8B0C21] transition disabled:opacity-50">
+            className="rounded-full border border-[#E2E8F0] px-2.5 py-1 text-[10px] font-semibold text-[#334155] hover:border-[#1F3A5F] hover:text-[#1F3A5F] transition disabled:opacity-50">
             {a.label}
           </button>
         ))}
@@ -57,7 +57,7 @@ function BulletAIPopover({ bullet, onApply, onClose }) {
       {result && mode !== 'claims' && (
         <div className="flex gap-2">
           <button onClick={() => onApply(result)}
-            className="flex-1 rounded-lg py-2 text-xs font-semibold text-white" style={{ background: '#8B0C21' }}>
+            className="flex-1 rounded-lg py-2 text-xs font-semibold text-white" style={{ background: 'var(--brand-navy-900)' }}>
             Apply
           </button>
           <button onClick={() => onApply(original)}
@@ -113,24 +113,24 @@ function EntryEditor({ entry, onChange, onRemove, onDuplicate }) {
             <div>
               <label className="block text-[10px] font-semibold text-[#64748B] mb-1">Title / Role</label>
               <input value={entry.title} onChange={e => set('title', e.target.value)} placeholder="e.g. Analyst Intern"
-                className="w-full rounded-lg border border-[#E2E8F0] px-2.5 py-1.5 text-xs outline-none focus:border-[#8B0C21]" />
+                className="w-full rounded-lg border border-[#E2E8F0] px-2.5 py-1.5 text-xs outline-none focus:border-[#1F3A5F]" />
             </div>
             <div>
               <label className="block text-[10px] font-semibold text-[#64748B] mb-1">Organization</label>
               <input value={entry.org} onChange={e => set('org', e.target.value)} placeholder="e.g. Goldman Sachs"
-                className="w-full rounded-lg border border-[#E2E8F0] px-2.5 py-1.5 text-xs outline-none focus:border-[#8B0C21]" />
+                className="w-full rounded-lg border border-[#E2E8F0] px-2.5 py-1.5 text-xs outline-none focus:border-[#1F3A5F]" />
             </div>
           </div>
           <div className="grid grid-cols-3 gap-2">
             <div>
               <label className="block text-[10px] font-semibold text-[#64748B] mb-1">Location</label>
               <input value={entry.location} onChange={e => set('location', e.target.value)} placeholder="City, State"
-                className="w-full rounded-lg border border-[#E2E8F0] px-2.5 py-1.5 text-xs outline-none focus:border-[#8B0C21]" />
+                className="w-full rounded-lg border border-[#E2E8F0] px-2.5 py-1.5 text-xs outline-none focus:border-[#1F3A5F]" />
             </div>
             <div>
               <label className="block text-[10px] font-semibold text-[#64748B] mb-1">Start</label>
               <input type="month" value={entry.startDate} onChange={e => set('startDate', e.target.value)}
-                className="w-full rounded-lg border border-[#E2E8F0] px-2.5 py-1.5 text-xs outline-none focus:border-[#8B0C21]" />
+                className="w-full rounded-lg border border-[#E2E8F0] px-2.5 py-1.5 text-xs outline-none focus:border-[#1F3A5F]" />
             </div>
             <div>
               <label className="block text-[10px] font-semibold text-[#64748B] mb-1">
@@ -138,9 +138,9 @@ function EntryEditor({ entry, onChange, onRemove, onDuplicate }) {
               </label>
               <div className="flex gap-1 items-center">
                 <input type="month" value={entry.current ? '' : entry.endDate} onChange={e => set('endDate', e.target.value)} disabled={entry.current}
-                  className="w-full rounded-lg border border-[#E2E8F0] px-2.5 py-1.5 text-xs outline-none focus:border-[#8B0C21] disabled:opacity-40" />
+                  className="w-full rounded-lg border border-[#E2E8F0] px-2.5 py-1.5 text-xs outline-none focus:border-[#1F3A5F] disabled:opacity-40" />
                 <label className="flex items-center gap-1 text-[10px] text-[#64748B] cursor-pointer whitespace-nowrap">
-                  <input type="checkbox" checked={!!entry.current} onChange={e => set('current', e.target.checked)} className="accent-[#8B0C21]" />
+                  <input type="checkbox" checked={!!entry.current} onChange={e => set('current', e.target.checked)} className="accent-[#1F3A5F]" />
                   Now
                 </label>
               </div>
@@ -159,10 +159,10 @@ function EntryEditor({ entry, onChange, onRemove, onDuplicate }) {
                 </div>
                 <textarea value={b} onChange={e => setBullet(i, e.target.value)} rows={2}
                   placeholder="Start with an action verb…"
-                  className="flex-1 rounded-lg border border-[#E2E8F0] px-2.5 py-1.5 text-xs resize-none outline-none focus:border-[#8B0C21]" />
+                  className="flex-1 rounded-lg border border-[#E2E8F0] px-2.5 py-1.5 text-xs resize-none outline-none focus:border-[#1F3A5F]" />
                 <div className="flex flex-col gap-0.5 pt-1 shrink-0">
                   <button type="button" title="AI Help" onClick={() => setAiTarget(aiTarget === i ? null : i)}
-                    className="text-[#94A3B8] hover:text-[#8B0C21]"><Sparkles size={11} /></button>
+                    className="text-[#94A3B8] hover:text-[#274C77]"><Sparkles size={11} /></button>
                   <button type="button" onClick={() => removeBullet(i)} disabled={entry.bullets.length === 1}
                     className="text-red-300 hover:text-red-500 disabled:opacity-20"><X size={11} /></button>
                 </div>
@@ -176,7 +176,7 @@ function EntryEditor({ entry, onChange, onRemove, onDuplicate }) {
               </div>
             ))}
             <button type="button" onClick={addBullet}
-              className="mt-1 flex items-center gap-1 text-[10px] font-semibold text-[#64748B] hover:text-[#8B0C21]">
+              className="mt-1 flex items-center gap-1 text-[10px] font-semibold text-[#64748B] hover:text-[#274C77]">
               <Plus size={11} /> Add bullet
             </button>
           </div>
@@ -196,7 +196,7 @@ function SkillsEditor({ data, onChange }) {
       <textarea rows={3} value={raw}
         onChange={e => onChange({ ...data, skills: e.target.value.split(',').map(s => s.trim()).filter(Boolean) })}
         placeholder="Python, Excel, Financial Modeling, Communication…"
-        className="w-full rounded-xl border border-[#E2E8F0] px-3 py-2 text-xs resize-none outline-none focus:border-[#8B0C21]" />
+        className="w-full rounded-xl border border-[#E2E8F0] px-3 py-2 text-xs resize-none outline-none focus:border-[#1F3A5F]" />
     </div>
   );
 }
@@ -219,7 +219,7 @@ function ContactEditor({ contact, onChange }) {
         <div key={f.k} className={f.k === 'name' ? 'col-span-2' : ''}>
           <label className="block text-[10px] font-semibold text-[#64748B] mb-1">{f.label}</label>
           <input value={contact?.[f.k] || ''} onChange={e => set(f.k, e.target.value)} placeholder={f.placeholder}
-            className="w-full rounded-lg border border-[#E2E8F0] px-2.5 py-1.5 text-xs outline-none focus:border-[#8B0C21]" />
+            className="w-full rounded-lg border border-[#E2E8F0] px-2.5 py-1.5 text-xs outline-none focus:border-[#1F3A5F]" />
         </div>
       ))}
       <p className="col-span-2 text-[10px] text-[#94A3B8]">Home address is not required and not collected.</p>
@@ -250,7 +250,7 @@ function SectionPanel({ section, data, onChange, onMoveUp, onMoveDown, onToggleV
           <input autoFocus value={nameInput} onChange={e => setNameInput(e.target.value)}
             onBlur={() => { onRename(nameInput); setRenaming(false); }}
             onKeyDown={e => e.key === 'Enter' && (onRename(nameInput), setRenaming(false))}
-            className="flex-1 rounded-lg border border-[#8B0C21] px-2 py-1 text-xs font-bold outline-none" />
+            className="flex-1 rounded-lg border px-2 py-1 text-xs font-bold outline-none" style={{ borderColor: 'var(--brand-navy-700)' }} />
         ) : (
           <button onClick={() => setExpanded(e => !e)} className="flex-1 text-left text-sm font-bold text-[#050816]">
             {section.label}
@@ -299,7 +299,7 @@ function SectionPanel({ section, data, onChange, onMoveUp, onMoveDown, onToggleV
                 />
               ))}
               <button onClick={addEntry}
-                className="mt-1 flex items-center gap-1.5 rounded-lg border border-dashed border-[#E2E8F0] px-3 py-2 text-xs font-semibold text-[#64748B] hover:border-[#8B0C21] hover:text-[#8B0C21] w-full justify-center transition">
+                className="mt-1 flex items-center gap-1.5 rounded-lg border border-dashed border-[#E2E8F0] px-3 py-2 text-xs font-semibold text-[#64748B] hover:border-[#1F3A5F] hover:text-[#1F3A5F] w-full justify-center transition">
                 <Plus size={13} /> Add entry
               </button>
             </>
@@ -379,7 +379,7 @@ export default function ResumeEditor({ resume, onChange }) {
         />
       ))}
       <button onClick={addCustomSection}
-        className="w-full flex items-center justify-center gap-2 rounded-[16px] border border-dashed border-[#E2E8F0] py-3 text-sm font-semibold text-[#64748B] hover:border-[#8B0C21] hover:text-[#8B0C21] transition mt-2">
+        className="w-full flex items-center justify-center gap-2 rounded-[16px] border border-dashed border-[#E2E8F0] py-3 text-sm font-semibold text-[#64748B] hover:border-[#1F3A5F] hover:text-[#1F3A5F] transition mt-2">
         <Plus size={14} /> Add custom section
       </button>
     </div>

@@ -24,7 +24,7 @@ function getMonday(d) {
   return new Date(date.setDate(diff)).toISOString().split('T')[0];
 }
 
-const inputCls = 'w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-3 text-sm text-[#050816] placeholder-[#94A3B8] outline-none focus:border-[#8B0C21]';
+const inputCls = 'w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-3 text-sm text-[#050816] placeholder-[#94A3B8] outline-none focus:border-[#1F3A5F]';
 
 // ── Success Toast ──────────────────────────────────────────────────────────────
 function SuccessToast({ reflection, experiment, mission, onView, onOpenExp, onDismiss }) {
@@ -45,7 +45,7 @@ function SuccessToast({ reflection, experiment, mission, onView, onOpenExp, onDi
         </button>
       </div>
       <div className="flex gap-2">
-        <button onClick={onView} className="flex-1 rounded-[8px] py-2 text-xs font-semibold text-white" style={{ background: '#8B0C21' }}>
+        <button onClick={onView} className="flex-1 rounded-[8px] py-2 text-xs font-semibold text-white" style={{ background: 'var(--brand-navy-900)' }}>
           View Reflection
         </button>
         {experiment && (
@@ -158,8 +158,8 @@ function ReflectionForm({ experiments, missions, initialData, onSaved, onCancel 
 
   return (
     <div>
-      <div className="mb-6 rounded-[16px] p-4" style={{ background: '#F8ECEF', border: '1px solid rgba(139,12,33,0.2)' }}>
-        <p className="text-xs font-bold uppercase tracking-wide mb-1" style={{ color: '#8B0C21' }}>
+      <div className="mb-6 rounded-[16px] p-4" style={{ background: 'var(--background-tertiary)', border: '1px solid var(--border-light)' }}>
+        <p className="text-xs font-bold uppercase tracking-wide mb-1" style={{ color: 'var(--brand-navy-900)' }}>
           Week of {new Date(form.week_start).toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}
         </p>
         <p className="text-sm text-[#334155]">Answer honestly. These reflections adjust your roadmap over time. There are no correct answers.</p>
@@ -229,7 +229,7 @@ function ReflectionForm({ experiments, missions, initialData, onSaved, onCancel 
           <label key={q.name} className="block rounded-[20px] border border-[#E2E8F0] bg-white p-5">
             <span className="text-sm font-semibold text-[#050816] block mb-3">{q.label}</span>
             <textarea rows={3} name={q.name} value={form[q.name] || ''} onChange={ch} placeholder={q.placeholder}
-              className="w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-3 text-sm text-[#050816] placeholder-[#94A3B8] outline-none focus:border-[#8B0C21] resize-none" />
+              className="w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-3 text-sm text-[#050816] placeholder-[#94A3B8] outline-none focus:border-[#1F3A5F] resize-none" />
           </label>
         ))}
 
@@ -255,27 +255,27 @@ function ReflectionForm({ experiments, missions, initialData, onSaved, onCancel 
           {form.path_decision === 'modify' && (
             <textarea rows={2} name="path_modification_note" value={form.path_modification_note || ''} onChange={ch}
               placeholder="What specifically would you change about how you are testing this path?"
-              className="w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-3 text-sm text-[#050816] placeholder-[#94A3B8] outline-none focus:border-[#8B0C21] resize-none" />
+              className="w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-3 text-sm text-[#050816] placeholder-[#94A3B8] outline-none focus:border-[#1F3A5F] resize-none" />
           )}
           {form.path_decision === 'stop' && (
             <textarea rows={2} name="path_stop_reason" value={form.path_stop_reason || ''} onChange={ch}
               placeholder="What did you learn that made this path a poor fit?"
-              className="w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-3 text-sm text-[#050816] placeholder-[#94A3B8] outline-none focus:border-[#8B0C21] resize-none" />
+              className="w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-3 text-sm text-[#050816] placeholder-[#94A3B8] outline-none focus:border-[#1F3A5F] resize-none" />
           )}
         </div>
       </div>
 
       {/* AI analysis output */}
       {form.generated_summary && (
-        <div className="mt-6 rounded-[20px] p-6" style={{ background: '#081225', border: '1px solid rgba(139,12,33,0.3)' }}>
-          <p className="text-xs font-bold uppercase tracking-wide mb-3" style={{ color: '#8B0C21' }}>Unscripted's analysis</p>
+        <div className="mt-6 rounded-[20px] p-6" style={{ background: '#081225', border: '1px solid rgba(31,58,95,0.5)' }}>
+          <p className="text-xs font-bold uppercase tracking-wide mb-3" style={{ color: 'var(--brand-gold-500)' }}>Unscripted's analysis</p>
           <p className="text-sm text-slate-300 leading-6">{form.generated_summary}</p>
           {form.path_adjustments?.length > 0 && (
             <div className="mt-4">
               <p className="text-xs font-bold uppercase tracking-wide text-slate-500 mb-2">Path adjustments</p>
               <ul className="space-y-2">{form.path_adjustments.map((a, i) => (
                 <li key={i} className="flex gap-2 text-sm text-slate-300">
-                  <ArrowRight size={14} className="shrink-0 mt-0.5" style={{ color: '#8B0C21' }} />{a}
+                  <ArrowRight size={14} className="shrink-0 mt-0.5" style={{ color: 'var(--brand-gold-500)' }} />{a}
                 </li>
               ))}</ul>
             </div>
@@ -291,12 +291,12 @@ function ReflectionForm({ experiments, missions, initialData, onSaved, onCancel 
         )}
         <button onClick={save} disabled={saving}
           className="flex-1 rounded-[10px] py-3 text-sm font-semibold text-white transition disabled:opacity-60"
-          style={{ background: '#8B0C21', boxShadow: '0 8px 24px rgba(139,12,33,0.18)' }}>
+          style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}>
           {saving ? 'Saving...' : isEdit ? 'Update Reflection' : 'Save Reflection'}
         </button>
         <button onClick={generate} disabled={generating || !form.experiment_id || !hasContent}
           className="flex-1 rounded-[10px] border py-3 text-sm font-semibold transition disabled:opacity-60"
-          style={{ borderColor: '#8B0C21', color: '#8B0C21', background: 'white' }}>
+          style={{ borderColor: 'var(--brand-navy-700)', color: 'var(--brand-navy-700)', background: 'white' }}>
           {generating ? 'Generating...' : 'Generate Insights'} <ArrowRight size={14} className="inline ml-1" />
         </button>
       </div>
@@ -439,12 +439,12 @@ export default function WeeklyReflectionPage() {
           <div className="flex gap-2">
             <button onClick={() => { setEditingReflection(null); setView('form'); }}
               className="rounded-[10px] px-4 py-2.5 text-sm font-semibold transition"
-              style={view === 'form' ? { background: '#8B0C21', color: '#fff' } : { background: '#F1F5F9', color: '#334155' }}>
+              style={view === 'form' ? { background: 'var(--brand-navy-900)', color: '#fff' } : { background: '#F1F5F9', color: '#334155' }}>
               New Reflection
             </button>
             <button onClick={() => setView('history')}
               className="rounded-[10px] px-4 py-2.5 text-sm font-semibold transition"
-              style={view === 'history' ? { background: '#8B0C21', color: '#fff' } : { background: '#F1F5F9', color: '#334155' }}>
+              style={view === 'history' ? { background: 'var(--brand-navy-900)', color: '#fff' } : { background: '#F1F5F9', color: '#334155' }}>
               History {reflections.length > 0 && `(${reflections.length})`}
             </button>
           </div>
@@ -469,11 +469,11 @@ export default function WeeklyReflectionPage() {
               <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#94A3B8]" />
               <input value={search} onChange={e => setSearch(e.target.value)}
                 placeholder="Search reflections…"
-                className="w-full rounded-xl border border-[#E2E8F0] bg-white pl-9 pr-4 py-2.5 text-sm outline-none focus:border-[#8B0C21]" />
+                className="w-full rounded-xl border border-[#E2E8F0] bg-white pl-9 pr-4 py-2.5 text-sm outline-none focus:border-[#1F3A5F]" />
             </div>
             {experiments.length > 0 && (
               <select value={filterExp} onChange={e => setFilterExp(e.target.value)}
-                className="rounded-xl border border-[#E2E8F0] bg-white px-3 py-2.5 text-sm outline-none focus:border-[#8B0C21]">
+                className="rounded-xl border border-[#E2E8F0] bg-white px-3 py-2.5 text-sm outline-none focus:border-[#1F3A5F]">
                 <option value="all">All experiments</option>
                 {experiments.map(exp => <option key={exp.id} value={exp.id}>{exp.title}</option>)}
               </select>
@@ -481,7 +481,7 @@ export default function WeeklyReflectionPage() {
             <button
               onClick={() => { setEditingReflection(null); setView('form'); }}
               className="inline-flex items-center gap-2 rounded-[10px] px-4 py-2.5 text-sm font-semibold text-white shrink-0"
-              style={{ background: '#8B0C21' }}>
+              style={{ background: 'var(--brand-navy-900)' }}>
               <Plus size={15} /> Add
             </button>
           </div>
@@ -507,7 +507,7 @@ export default function WeeklyReflectionPage() {
 
                         {/* Experiment */}
                         {linkedExp ? (
-                          <p className="mt-0.5 text-xs font-semibold" style={{ color: '#8B0C21' }}>
+                          <p className="mt-0.5 text-xs font-semibold" style={{ color: 'var(--brand-navy-700)' }}>
                             {linkedExp.title}{linkedExp.path_name ? ` — ${linkedExp.path_name}` : ''}
                           </p>
                         ) : r.experiment_id ? (

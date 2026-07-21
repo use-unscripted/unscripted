@@ -72,7 +72,7 @@ function FilePreviewModal({ entry, onClose }) {
             </video>
           ) : entry.file_url ? (
             <div className="text-center">
-              <div className="mx-auto w-16 h-16 rounded-2xl flex items-center justify-center mb-4" style={{ background: '#F8ECEF' }}>
+              <div className="mx-auto w-16 h-16 rounded-2xl flex items-center justify-center mb-4" style={{ background: '#EEF2F6' }}>
                 <FileIcon name={entry.file_name} mime={entry.mime_type} size={28} />
               </div>
               <p className="text-sm font-semibold text-[#050816] mb-1">{entry.file_name}</p>
@@ -393,20 +393,20 @@ export default function ProofOfWorkPage() {
         </div>
         {paths.length > 1 && (
           <select value={filterPath} onChange={e => setFilterPath(e.target.value)}
-            className="rounded-xl border border-[#E2E8F0] bg-white px-3 py-2.5 text-sm outline-none focus:border-[#8B0C21]">
+            className="rounded-xl border border-[#E2E8F0] bg-white px-3 py-2.5 text-sm outline-none focus:border-[#1F3A5F]">
             <option value="all">All paths</option>
             {paths.filter(p => p !== 'all').map(p => <option key={p} value={p}>{p}</option>)}
           </select>
         )}
         {experiments.length > 0 && (
           <select value={filterExp} onChange={e => setFilterExp(e.target.value)}
-            className="rounded-xl border border-[#E2E8F0] bg-white px-3 py-2.5 text-sm outline-none focus:border-[#8B0C21]">
+            className="rounded-xl border border-[#E2E8F0] bg-white px-3 py-2.5 text-sm outline-none focus:border-[#1F3A5F]">
             <option value="all">All experiments</option>
             {experiments.map(ex => <option key={ex.id} value={ex.id}>{ex.title}</option>)}
           </select>
         )}
         <select value={filterVis} onChange={e => setFilterVis(e.target.value)}
-          className="rounded-xl border border-[#E2E8F0] bg-white px-3 py-2.5 text-sm outline-none focus:border-[#8B0C21]">
+          className="rounded-xl border border-[#E2E8F0] bg-white px-3 py-2.5 text-sm outline-none focus:border-[#1F3A5F]">
           <option value="all">All visibility</option>
           <option value="private">Private</option>
           <option value="public">Public</option>
@@ -422,7 +422,7 @@ export default function ProofOfWorkPage() {
           <div className="mt-6 flex justify-center gap-3">
             <button onClick={load}
               className="inline-flex items-center gap-2 rounded-[10px] px-5 py-2.5 text-sm font-semibold text-white"
-              style={{ background: '#8B0C21' }}>
+              style={{ background: 'var(--brand-navy-900)' }}>
               Retry
             </button>
             <button onClick={() => navigate('/dashboard')}
@@ -444,7 +444,7 @@ export default function ProofOfWorkPage() {
           {entries.length === 0 && (
             <button onClick={() => setShowNew(true)}
               className="mt-6 inline-flex items-center gap-2 rounded-[10px] px-6 py-3 text-sm font-semibold text-white"
-              style={{ background: '#8B0C21' }}>
+              style={{ background: 'var(--brand-navy-900)' }}>
               <Plus size={16} /> Add Proof of Work
             </button>
           )}

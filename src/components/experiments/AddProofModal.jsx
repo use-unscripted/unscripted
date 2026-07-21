@@ -2,7 +2,7 @@ import { useState, useRef, useCallback } from 'react';
 import { X, Loader2, Upload, FileText, Film, CheckCircle, AlertCircle, RefreshCw, Trash2 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 
-const inputCls = 'w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-3 text-sm outline-none focus:border-[#8B0C21]';
+const inputCls = 'w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-3 text-sm outline-none focus:border-[#1F3A5F]';
 
 // Supported file types and size limits
 const VIDEO_EXTS = new Set(['mp4','webm','mov','avi','mkv','m4v','wmv','ogv','3gp','3g2']);
@@ -59,19 +59,19 @@ function FileDropZone({ file, uploadState, onSelect, onRemove }) {
     return (
       <div className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] p-4">
         <div className="flex items-start gap-3">
-          <div className="shrink-0 w-9 h-9 rounded-lg flex items-center justify-center" style={{ background: '#F8ECEF' }}>
-            {vid ? <Film size={18} style={{ color: '#8B0C21' }} /> : <FileText size={18} style={{ color: '#8B0C21' }} />}
+          <div className="shrink-0 w-9 h-9 rounded-lg flex items-center justify-center" style={{ background: '#EEF2F6' }}>
+            {vid ? <Film size={18} style={{ color: 'var(--brand-navy-700)' }} /> : <FileText size={18} style={{ color: 'var(--brand-navy-700)' }} />}
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold text-[#050816] truncate">{file.name}</p>
             <p className="text-xs text-[#64748B]">{fmtSize(file.size)} · {getExt(file.name).toUpperCase()}</p>
             {uploadState === 'uploading' && (
               <div className="mt-2">
-                <div className="flex items-center gap-2 text-xs text-[#8B0C21]">
+                <div className="flex items-center gap-2 text-xs" style={{ color: 'var(--brand-navy-700)' }}>
                   <Loader2 size={12} className="animate-spin" /> Uploading...
                 </div>
                 <div className="mt-1.5 h-1.5 w-full rounded-full bg-[#E2E8F0] overflow-hidden">
-                  <div className="h-full rounded-full animate-pulse" style={{ width: '60%', background: '#8B0C21', transition: 'width 0.4s ease' }} />
+                  <div className="h-full rounded-full animate-pulse" style={{ width: '60%', background: 'var(--brand-navy-700)', transition: 'width 0.4s ease' }} />
                 </div>
               </div>
             )}
@@ -96,7 +96,7 @@ function FileDropZone({ file, uploadState, onSelect, onRemove }) {
     <div
       onDrop={handleDrop} onDragOver={handleDragOver} onDragLeave={handleDragLeave}
       onClick={() => inputRef.current?.click()}
-      className={`rounded-xl border-2 border-dashed px-6 py-8 text-center cursor-pointer transition ${dragging ? 'border-[#8B0C21] bg-[#F8ECEF]' : 'border-[#E2E8F0] bg-[#F8FAFC] hover:border-[#8B0C21] hover:bg-[#F8ECEF]'}`}
+      className={`rounded-xl border-2 border-dashed px-6 py-8 text-center cursor-pointer transition ${dragging ? 'border-[#1F3A5F] bg-[#EEF2F6]' : 'border-[#E2E8F0] bg-[#F8FAFC] hover:border-[#1F3A5F] hover:bg-[#EEF2F6]'}`}
     >
       <input ref={inputRef} type="file"
         accept=".pdf,.txt,.html,.png,.jpg,.jpeg,.webp,.svg,.csv,.xls,.xlsx,.json,.mp3,.wav,.mp4,.webm,.mov,.avi,.mkv,.m4v,.wmv,.ogv,.3gp,.3g2"
@@ -130,7 +130,7 @@ export function ProofSuccessToast({ proof, missionTitle, onViewProof, onReturnTo
       </div>
       <div className="flex gap-2">
         <button onClick={onViewProof} className="flex-1 rounded-[8px] py-2 text-xs font-semibold text-white"
-          style={{ background: '#8B0C21' }}>View Proof</button>
+          style={{ background: 'var(--brand-navy-900)' }}>View Proof</button>
         <button onClick={onReturnToMission} className="flex-1 rounded-[8px] border border-[#E2E8F0] py-2 text-xs font-semibold text-[#334155] hover:bg-[#F8FAFC]">
           Return to Mission
         </button>
@@ -313,7 +313,7 @@ export default function AddProofModal({ mission, experiment, onClose, onSaved })
             {uploadState === 'error' && (
               <div className="mt-2 flex items-center gap-2">
                 <p className="text-xs text-red-600">Upload failed.</p>
-                <button onClick={() => { setUploadState('idle'); setUploadedUrl(''); }} className="text-xs text-[#8B0C21] underline flex items-center gap-1">
+                <button onClick={() => { setUploadState('idle'); setUploadedUrl(''); }} className="text-xs underline flex items-center gap-1" style={{ color: 'var(--brand-navy-700)' }}>
                   <RefreshCw size={11} /> Retry
                 </button>
               </div>
@@ -350,7 +350,7 @@ export default function AddProofModal({ mission, experiment, onClose, onSaved })
           </button>
           <button onClick={handleSave} disabled={!canSave}
             className="flex-1 rounded-[10px] py-3 text-sm font-semibold text-white transition disabled:opacity-60"
-            style={{ background: '#8B0C21', boxShadow: '0 8px 24px rgba(139,12,33,0.18)' }}>
+            style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}>
             {saving
               ? <span className="flex items-center justify-center gap-2"><Loader2 size={15} className="animate-spin" />Saving Proof…</span>
               : uploadState === 'uploading'

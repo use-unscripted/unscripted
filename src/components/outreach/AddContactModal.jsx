@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { X, Loader2, CheckCircle } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 
-const inputCls = 'w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-2.5 text-sm outline-none focus:border-[#8B0C21]';
+const inputCls = 'w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-2.5 text-sm outline-none focus:border-[#1F3A5F]';
 
 const CONTACT_TYPES = [
   ['informational_interview','Informational Interview'],['networking','Networking Contact'],
@@ -59,7 +59,7 @@ export function ContactSuccessToast({ contact, experimentTitle, missionTitle, on
       </div>
       <div className="flex gap-2">
         <button onClick={onViewContact} className="flex-1 rounded-[8px] py-2 text-xs font-semibold text-white"
-          style={{ background: '#8B0C21' }}>View Contact</button>
+          style={{ background: 'var(--brand-navy-900)' }}>View Contact</button>
         <button onClick={onOpenExperiment} className="flex-1 rounded-[8px] border border-[#E2E8F0] py-2 text-xs font-semibold text-[#334155] hover:bg-[#F8FAFC]">
           Open Experiment
         </button>
@@ -341,7 +341,7 @@ export default function AddContactModal({ contact, onClose, onSaved }) {
           </button>
           <button onClick={handleSave} disabled={saving || loadingData}
             className="flex-1 rounded-[10px] py-3 text-sm font-semibold text-white transition disabled:opacity-60"
-            style={{ background: '#8B0C21', boxShadow: '0 8px 24px rgba(139,12,33,0.18)' }}>
+            style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}>
             {saving
               ? <span className="flex items-center justify-center gap-2"><Loader2 size={15} className="animate-spin" />Saving…</span>
               : isEdit ? 'Save Changes' : 'Save Contact'}
