@@ -17,7 +17,7 @@ export function LogoFull({ className = '', height = 36 }) {
 export function CompassIcon({ size = 24, className = '' }) {
   return (
     <img
-      src="https://media.base44.com/images/public/6a591b5064fe15dff1df6a81/eb1f9cbfe_image.png"
+      src="https://media.base44.com/images/public/6a591b5064fe15dff1df6a81/0dfc2fe8f_image.png"
       alt="Unscripted compass"
       width={size}
       height={size}
