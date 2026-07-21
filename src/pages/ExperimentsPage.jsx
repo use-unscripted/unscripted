@@ -1,7 +1,8 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
-import { Plus, ChevronDown, ChevronUp, Clock, BookOpen, Target, FileText, Loader2, Calendar, Trash2 } from 'lucide-react';
+import { Plus, ChevronDown, ChevronUp, Clock, BookOpen, Target, FileText, Loader2, Calendar, Trash2, Users } from 'lucide-react';
+import OutreachPlanModal from '@/components/outreach/OutreachPlanModal';
 import AddToCalendarModal from '@/components/calendar/AddToCalendarModal';
 import PageHeader from '@/components/PageHeader';
 import AddMissionModal from '@/components/experiments/AddMissionModal';
@@ -140,7 +141,7 @@ function MissionsSection({ experiment, missions, loadingMissions, onMissionAdded
 }
 
 // ── Experiment card ───────────────────────────────────────────────────────────
-function ExperimentCard({ exp, onStatusChange, onExpand, expanded, missions, loadingMissions, onMissionAdded, onProofAdded, onMissionDeleted, onDelete, onEdited }) {
+function ExperimentCard({ exp, onStatusChange, onExpand, expanded, missions, loadingMissions, onMissionAdded, onProofAdded, onMissionDeleted, onDelete, onEdited, onFindPeople, paths }) {
   const s = STATUS_STYLES[exp.status] || STATUS_STYLES.planned;
 
   return (
@@ -167,13 +168,18 @@ function ExperimentCard({ exp, onStatusChange, onExpand, expanded, missions, loa
             </button>
           </div>
         </div>
-        <div className="mt-3 flex items-center gap-4 text-xs text-[#64748B]">
-          {exp.estimated_hours && <span className="flex items-center gap-1"><Clock size={12} /> ~{exp.estimated_hours}h</span>}
-          {exp.deadline && <span>Due {new Date(exp.deadline).toLocaleDateString()}</span>}
-          {exp.deliverable && <span className="flex items-center gap-1"><BookOpen size={12} /> {exp.deliverable}</span>}
-          {!expanded && missions.length > 0 && (
-            <span className="flex items-center gap-1"><Target size={12} /> {missions.length} mission{missions.length > 1 ? 's' : ''}</span>
-          )}
+        <div className="mt-3 flex items-center gap-4 text-xs text-[#64748B] flex-wrap">
+        {exp.estimated_hours && <span className="flex items-center gap-1"><Clock size={12} /> ~{exp.estimated_hours}h</span>}
+        {exp.deadline && <span>Due {new Date(exp.deadline).toLocaleDateString()}</span>}
+        {exp.deliverable && <span className="flex items-center gap-1"><BookOpen size={12} /> {exp.deliverable}</span>}
+        {!expanded && missions.length > 0 && (
+          <span className="flex items-center gap-1"><Target size={12} /> {missions.length} mission{missions.length > 1 ? 's' : ''}</span>
+        )}
+        <button onClick={onFindPeople}
+          className="flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-semibold transition"
+          style={{ background: '#F8ECEF', color: '#8B0C21', border: '1px solid rgba(139,12,33,0.2)' }}>
+          <Users size={11} /> Find People to Learn From
+        </button>
         </div>
       </div>
 
@@ -345,6 +351,7 @@ export default function ExperimentsPage() {
   const [loadingMissionsFor, setLoadingMissionsFor] = useState(null);
   const [successToast, setSuccessToast] = useState(null);
   const toastTimer = useRef(null);
+  const [outreachPlanTarget, setOutreachPlanTarget] = useState(null); // { exp, path }
 
   const load = async () => {
     const [data, ps] = await Promise.all([
@@ -416,6 +423,14 @@ export default function ExperimentsPage() {
 
   return (
     <main className="mx-auto max-w-5xl px-5 py-10 sm:px-8">
+      {outreachPlanTarget && (
+        <OutreachPlanModal
+          path={outreachPlanTarget.path || { path_name: outreachPlanTarget.exp?.path_name || 'This Path', id: outreachPlanTarget.exp?.path_recommendation_id }}
+          experiment={outreachPlanTarget.exp}
+          onClose={() => setOutreachPlanTarget(null)}
+          onContactSaved={() => {}}
+        />
+      )}
       {showNew && <NewExperimentModal onClose={() => setShowNew(false)} onSave={save} />}
       {successToast && (
         <ProofSuccessToast
@@ -477,18 +492,23 @@ export default function ExperimentsPage() {
         <div className="space-y-4">
           {filtered.map(exp => (
             <ExperimentCard
-              key={exp.id}
-              exp={exp}
-              expanded={expandedId === exp.id}
-              onExpand={() => handleExpand(exp.id)}
-              onStatusChange={updateStatus}
-              missions={missionsMap[exp.id] || []}
-              loadingMissions={loadingMissionsFor === exp.id}
-              onMissionAdded={(m) => handleMissionAdded(exp.id, m)}
-              onProofAdded={handleProofAdded}
-              onMissionDeleted={(missionId) => handleMissionDeleted(exp.id, missionId)}
-              onDelete={handleExperimentDeleted}
-              onEdited={handleExperimentEdited}
+            key={exp.id}
+            exp={exp}
+            expanded={expandedId === exp.id}
+            onExpand={() => handleExpand(exp.id)}
+            onStatusChange={updateStatus}
+            missions={missionsMap[exp.id] || []}
+            loadingMissions={loadingMissionsFor === exp.id}
+            onMissionAdded={(m) => handleMissionAdded(exp.id, m)}
+            onProofAdded={handleProofAdded}
+            onMissionDeleted={(missionId) => handleMissionDeleted(exp.id, missionId)}
+            onDelete={handleExperimentDeleted}
+            onEdited={handleExperimentEdited}
+            paths={paths}
+            onFindPeople={() => {
+              const matchedPath = paths.find(p => p.path_name === exp.path_name);
+              setOutreachPlanTarget({ exp, path: matchedPath || { path_name: exp.path_name || 'This Path' } });
+            }}
             />
           ))}
         </div>

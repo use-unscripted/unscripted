@@ -1,7 +1,8 @@
 import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
-import { Plus, Mail, CheckCircle, Clock, ExternalLink, Phone, Pencil, ChevronDown, Beaker, Trash2 } from 'lucide-react';
+import { Plus, Mail, CheckCircle, Clock, ExternalLink, Phone, Pencil, ChevronDown, Beaker, Trash2, Users } from 'lucide-react';
+import OutreachPlanModal from '@/components/outreach/OutreachPlanModal';
 import PageHeader from '@/components/PageHeader';
 import AddContactModal, { ContactSuccessToast } from '@/components/outreach/AddContactModal';
 import PathSwitcher from '@/components/PathSwitcher';
@@ -175,6 +176,7 @@ export default function OutreachTracker() {
   const [loading, setLoading] = useState(true);
   const [modal, setModal] = useState(null); // null | 'new' | contact object
   const [templates, setTemplates] = useState(false);
+  const [outreachPlanPath, setOutreachPlanPath] = useState(null);
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterExp, setFilterExp] = useState('all');
@@ -257,6 +259,13 @@ export default function OutreachTracker() {
 
   return (
     <main className="mx-auto max-w-6xl px-5 py-10 sm:px-8">
+      {outreachPlanPath && (
+        <OutreachPlanModal
+          path={outreachPlanPath}
+          onClose={() => setOutreachPlanPath(null)}
+          onContactSaved={() => load()}
+        />
+      )}
       {modal && (
         <AddContactModal
           contact={modal === 'new' ? null : modal}
@@ -298,18 +307,14 @@ export default function OutreachTracker() {
             showAll
           />
           {selectedPath && <span className="text-xs text-[#94A3B8]">Contacts for <strong className="text-[#334155]">{selectedPath.path_name}</strong></span>}
-        </div>
-      )}
-
-      {paths.length > 0 && (
-        <div className="mb-4 flex items-center gap-3 flex-wrap">
-          <PathSwitcher
-            paths={paths.filter(p => p.status !== 'archived')}
-            selectedId={selectedPathId}
-            onChange={setSelectedPathId}
-            showAll
-          />
-          {selectedPath && <span className="text-xs text-[#94A3B8]">Contacts for <strong className="text-[#334155]">{selectedPath.path_name}</strong></span>}
+          {selectedPath && (
+            <button
+              onClick={() => setOutreachPlanPath(selectedPath)}
+              className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition"
+              style={{ background: '#F8ECEF', color: '#8B0C21', border: '1px solid rgba(139,12,33,0.2)' }}>
+              <Users size={12} /> Suggested Outreach
+            </button>
+          )}
         </div>
       )}
 

@@ -1,12 +1,13 @@
 import { useEffect, useState, useMemo, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
-import { Plus, Star, Pencil, Pause, Play, Archive, ChevronDown, ChevronUp, Clock, CheckCircle2, History, ArrowRight, RotateCcw, SlidersHorizontal, X } from 'lucide-react';
+import { Plus, Star, Pencil, Pause, Play, Archive, ChevronDown, ChevronUp, Clock, CheckCircle2, History, ArrowRight, RotateCcw, SlidersHorizontal, X, Users } from 'lucide-react';
 import PageHeader from '@/components/PageHeader';
 import CreatePathModal from '@/components/paths/CreatePathModal';
 import EditPathModal from '@/components/paths/EditPathModal';
 import ReactivationModal from '@/components/paths/ReactivationModal';
 import { RiskBadge, ConfidenceBadge, RiskConfidenceLegend } from '@/components/paths/RiskConfidenceBadges';
+import OutreachPlanModal from '@/components/outreach/OutreachPlanModal';
 import {
   SORT_OPTIONS, DEFAULT_FILTERS,
   sortPaths, filterPaths,
@@ -94,7 +95,7 @@ function PausedPathPanel({ path, experiments, missions, proof, contacts, reflect
 }
 
 // ── Path card ─────────────────────────────────────────────────────────────────
-function PathCard({ path, experiments, missions, proof, contacts, reflections, onAction, expanded, onToggle }) {
+function PathCard({ path, experiments, missions, proof, contacts, reflections, onAction, expanded, onToggle, onBuildOutreachPlan }) {
   const cfg = statusCfg(path.status);
   const d = path.generated_detail || {};
 
@@ -145,6 +146,11 @@ function PathCard({ path, experiments, missions, proof, contacts, reflections, o
         </div>
 
         <div className="mt-4 flex flex-wrap gap-2">
+          <button onClick={onBuildOutreachPlan}
+            className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition"
+            style={{ background: '#F8ECEF', color: '#8B0C21', border: '1px solid rgba(139,12,33,0.2)' }}>
+            <Users size={12} /> Build Outreach Plan
+          </button>
           <button onClick={() => onAction('edit', path)}
             className="flex items-center gap-1.5 rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-xs font-semibold text-[#334155] hover:bg-[#F8FAFC]">
             <Pencil size={12} /> Edit
@@ -423,6 +429,7 @@ export default function PathComparison() {
   const [showCreate, setShowCreate] = useState(false);
   const [editTarget, setEditTarget] = useState(null);
   const [resumeTarget, setResumeTarget] = useState(null);
+  const [outreachPlanTarget, setOutreachPlanTarget] = useState(null);
 
   const [sortBy, setSortByState] = useState(initSort);
   const [filters, setFiltersState] = useState(initFilters);
@@ -519,6 +526,13 @@ export default function PathComparison() {
           onReactivated={() => { setResumeTarget(null); load(); }}
         />
       )}
+      {outreachPlanTarget && (
+        <OutreachPlanModal
+          path={outreachPlanTarget}
+          onClose={() => setOutreachPlanTarget(null)}
+          onContactSaved={() => {}}
+        />
+      )}
 
       <PageHeader
         eyebrow="Paths"
@@ -583,6 +597,7 @@ export default function PathComparison() {
                   {...cardProps}
                   expanded={expandedId === p.id}
                   onToggle={() => setExpandedId(expandedId === p.id ? null : p.id)}
+                  onBuildOutreachPlan={() => setOutreachPlanTarget(p)}
                 />
               ))}
             </div>
