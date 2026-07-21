@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -31,9 +31,27 @@
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
     --radius: 0.5rem;
-    --font-heading: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
-    --font-body: 'Inter', ui-sans-serif, system-ui, sans-serif;
-    --font-display: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
+    --font-heading: 'Montserrat', 'Inter', Arial, ui-sans-serif, system-ui, sans-serif;
+    --font-body: 'Inter', Arial, ui-sans-serif, system-ui, sans-serif;
+    --font-display: 'Montserrat', 'Inter', Arial, ui-sans-serif, system-ui, sans-serif;
+
+    /* Brand color tokens */
+    --brand-navy-900: #1F3A5F;
+    --brand-navy-700: #274C77;
+    --brand-gold-500: #D6B66A;
+    --brand-gold-600: #CDAA54;
+    --brand-charcoal: #1E293B;
+    --brand-charcoal-dark: #222222;
+    --brand-white: #FFFFFF;
+
+    /* Supporting neutrals */
+    --background-primary: #FFFFFF;
+    --background-secondary: #F7F8FA;
+    --background-tertiary: #EEF2F6;
+    --border-light: #DCE3EA;
+    --text-primary: #1E293B;
+    --text-secondary: #526274;
+    --text-muted: #718096;
     --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;

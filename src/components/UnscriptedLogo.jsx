@@ -1,32 +1,33 @@
-// Four-point compass/star in maroon #8B0C21 — no container, no gradient, no shadow
-export function CompassIcon({ size = 20, className = '' }) {
+// Unscripted brand logo components — navy/gold compass from uploaded brand assets
+
+// Full horizontal logo: wordmark + compass (for headers, auth, landing)
+export function LogoFull({ className = '', height = 36 }) {
   return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 100 100"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
+    <img
+      src="https://media.base44.com/images/public/6a591b5064fe15dff1df6a81/3542e4101_image.png"
+      alt="Unscripted"
+      height={height}
+      style={{ height: `${height}px`, width: 'auto', display: 'block' }}
       className={className}
-    >
-      <path
-        d="M50 2 L62 44 L98 50 L62 56 L50 98 L38 56 L2 50 L38 44 Z"
-        fill="#8B0C21"
-      />
-    </svg>
+    />
   );
 }
 
-export function LogoWordmark({ className = '' }) {
+// Compass-only icon (for sidebar, mobile nav, favicon placeholders)
+export function CompassIcon({ size = 24, className = '' }) {
   return (
-    <div className={`flex items-center gap-2.5 ${className}`}>
-      <CompassIcon size={22} />
-      <span
-        className="font-heading text-lg font-bold tracking-tight"
-        style={{ color: '#050816' }}
-      >
-        Unscripted
-      </span>
-    </div>
+    <img
+      src="https://media.base44.com/images/public/6a591b5064fe15dff1df6a81/eb1f9cbfe_image.png"
+      alt="Unscripted compass"
+      width={size}
+      height={size}
+      style={{ width: `${size}px`, height: `${size}px`, objectFit: 'contain', display: 'block' }}
+      className={className}
+    />
   );
+}
+
+// Alias — used by components that still import LogoWordmark
+export function LogoWordmark({ className = '', height = 32 }) {
+  return <LogoFull className={className} height={height} />;
 }

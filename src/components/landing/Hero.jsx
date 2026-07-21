@@ -14,30 +14,31 @@ export default function Hero() {
       {/* Hero */}
       <section className="mx-auto max-w-7xl px-6 pb-20 pt-16 lg:pt-24">
         <div className="mx-auto max-w-3xl text-center">
-          <div className="mb-6 inline-flex w-fit rounded-full px-3.5 py-1.5 text-xs font-bold uppercase tracking-[.1em]"
-            style={{ background: '#F8ECEF', border: '1px solid rgba(139,12,33,0.25)', color: '#8B0C21' }}>
+          <div className="mb-6 inline-flex w-fit rounded-full px-3.5 py-1.5 text-xs font-bold uppercase tracking-[.12em]"
+            style={{ background: 'var(--background-tertiary)', border: '1px solid var(--border-light)', color: 'var(--brand-navy-700)' }}>
             Write your own path
           </div>
-          <h1 className="font-heading text-[3rem] font-extrabold leading-[1.04] tracking-[-0.03em] text-[#050816] sm:text-[4rem]">
+          <h1 className="font-heading text-[3rem] font-extrabold leading-[1.04] tracking-[-0.02em] sm:text-[4rem]" style={{ color: 'var(--text-primary)' }}>
             Don't guess your next path. Test it.
           </h1>
-          <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-[#334155] font-body">
+          <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 font-body" style={{ color: 'var(--text-secondary)' }}>
             Unscripted helps college students compare realistic career and life paths, complete guided real-world experiments, and learn what actually fits — before making a major commitment.
           </p>
           <div className="mt-9 flex flex-wrap justify-center gap-3">
             <Link to="/onboarding"
               className="flex items-center gap-2 rounded-[10px] px-7 py-3.5 text-sm font-semibold text-white transition hover:-translate-y-px"
-              style={{ background: '#8B0C21', boxShadow: '0 8px 24px rgba(139,12,33,0.18)' }}>
+              style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}>
               Start My 30-Day Path Test <ArrowRight size={17} />
             </Link>
             <a href="#how-it-works"
-              className="rounded-[10px] border border-[#E2E8F0] bg-white px-7 py-3.5 text-sm font-semibold text-[#050816] transition hover:bg-[#FCF6F7]">
+              className="rounded-[10px] px-7 py-3.5 text-sm font-semibold transition"
+              style={{ background: 'white', border: '1px solid var(--border-light)', color: 'var(--text-primary)' }}>
               See How It Works
             </a>
           </div>
-          <p className="mt-4 text-sm text-[#64748B]">
+          <p className="mt-4 text-sm" style={{ color: 'var(--text-muted)' }}>
             Already have an account?{' '}
-            <Link to="/login" className="font-semibold underline" style={{ color: '#8B0C21' }}>Log in</Link>
+            <Link to="/login" className="font-semibold underline" style={{ color: 'var(--brand-navy-700)' }}>Log in</Link>
           </p>
         </div>
       </section>
@@ -46,10 +47,10 @@ export default function Hero() {
       <section id="how-it-works" className="mx-auto max-w-7xl px-6 pb-24">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {steps.map(({ n, title, body }) => (
-            <div key={n} className="rounded-[18px] border border-[#E2E8F0] bg-white p-6">
-              <span className="font-heading text-3xl font-bold" style={{ color: 'rgba(139,12,33,0.15)' }}>{n}</span>
-              <h3 className="font-heading mt-3 text-base font-bold text-[#050816]">{title}</h3>
-              <p className="mt-2 text-sm leading-6 text-[#334155]">{body}</p>
+            <div key={n} className="rounded-[18px] bg-white p-6" style={{ border: '1px solid var(--border-light)' }}>
+              <span className="font-heading text-3xl font-bold" style={{ color: 'rgba(31,58,95,0.15)' }}>{n}</span>
+              <h3 className="font-heading mt-3 text-base font-bold" style={{ color: 'var(--text-primary)' }}>{title}</h3>
+              <p className="mt-2 text-sm leading-6" style={{ color: 'var(--text-secondary)' }}>{body}</p>
             </div>
           ))}
         </div>

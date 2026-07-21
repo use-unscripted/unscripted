@@ -53,7 +53,7 @@ function PathDropdown({ paths, value, onChange, error }) {
         <p className="text-sm font-semibold text-[#334155] mb-1">No paths available</p>
         <p className="text-xs text-[#64748B]">You need to create or activate a path before creating an experiment.</p>
         <div className="mt-3 flex gap-2 justify-center flex-wrap">
-          <a href="/paths" className="rounded-lg px-3 py-1.5 text-xs font-semibold text-white" style={{ background: '#8B0C21' }}>Create a Path</a>
+          <a href="/paths" className="rounded-lg px-3 py-1.5 text-xs font-semibold text-white" style={{ background: 'var(--brand-navy-900)' }}>Create a Path</a>
           <a href="/paths" className="rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-xs font-semibold text-[#334155]">View Path Recommendations</a>
         </div>
       </div>
@@ -178,7 +178,7 @@ function MissionsSection({ experiment, missions, loadingMissions, onMissionAdded
         </p>
         <button onClick={() => setShowAdd(true)}
           className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold text-white transition hover:-translate-y-px"
-          style={{ background: '#8B0C21', boxShadow: '0 4px 12px rgba(139,12,33,0.18)' }}>
+          style={{ background: 'var(--brand-navy-900)', boxShadow: '0 4px 12px rgba(31,58,95,0.25)' }}>
           <Plus size={12} /> {hasMissions ? 'Add Another Mission' : 'Add Mission'}
         </button>
       </div>
@@ -213,7 +213,7 @@ function ExperimentCard({ exp, onStatusChange, onExpand, expanded, missions, loa
           <div className="flex-1">
             <div className="flex flex-wrap items-center gap-2 mb-2">
               <span className="rounded-full px-2.5 py-1 text-xs font-bold" style={{ background: s.bg, color: s.text }}>{s.label}</span>
-              {exp.path_name && <span className="rounded-full px-2.5 py-1 text-xs font-semibold" style={{ background: '#F8ECEF', color: '#8B0C21' }}>{exp.path_name}</span>}
+              {exp.path_name && <span className="rounded-full px-2.5 py-1 text-xs font-semibold" style={{ background: 'var(--background-tertiary)', color: 'var(--brand-navy-700)' }}>{exp.path_name}</span>}
               {isPaused && exp.paused_at && (
                 <span className="text-xs text-[#94A3B8]">Paused {fmtDate(exp.paused_at)}</span>
               )}
@@ -247,7 +247,7 @@ function ExperimentCard({ exp, onStatusChange, onExpand, expanded, missions, loa
           {!isPaused && (
             <button onClick={onFindPeople}
               className="flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-semibold transition"
-              style={{ background: '#F8ECEF', color: '#8B0C21', border: '1px solid rgba(139,12,33,0.2)' }}>
+              style={{ background: 'var(--background-tertiary)', color: 'var(--brand-navy-700)', border: '1px solid var(--border-light)' }}>
               <Users size={11} /> Find People to Learn From
             </button>
           )}
@@ -330,7 +330,7 @@ function ExperimentCard({ exp, onStatusChange, onExpand, expanded, missions, loa
               </p>
               <button onClick={onGenerateGuide}
                 className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold text-white transition hover:-translate-y-px"
-                style={{ background: '#8B0C21', boxShadow: '0 4px 12px rgba(139,12,33,0.18)' }}>
+                style={{ background: 'var(--brand-navy-900)', boxShadow: '0 4px 12px rgba(31,58,95,0.25)' }}>
                 <Wand2 size={11} />
                 {hasGuides ? 'Generate Another Mission Guide' : 'Generate Mission Guide'}
               </button>
@@ -415,7 +415,7 @@ function PausedSection({ experiments, missions, guides, onResumed, onDelete, onE
                         <span className="rounded-full px-2.5 py-1 text-xs font-bold flex items-center gap-1" style={{ background: s.bg, color: s.text }}>
                           <PauseCircle size={10} /> {s.label}
                         </span>
-                        {exp.path_name && <span className="rounded-full px-2.5 py-1 text-xs font-semibold" style={{ background: '#F8ECEF', color: '#8B0C21' }}>{exp.path_name}</span>}
+                        {exp.path_name && <span className="rounded-full px-2.5 py-1 text-xs font-semibold" style={{ background: 'var(--background-tertiary)', color: 'var(--brand-navy-700)' }}>{exp.path_name}</span>}
                       </div>
                       <h3 className="font-heading font-bold text-[#050816]">{exp.title}</h3>
                       <p className="mt-1 text-sm text-[#334155] line-clamp-2">{exp.objective}</p>
@@ -574,7 +574,7 @@ function NewExperimentModal({ onClose, onSave, paths }) {
           <button onClick={onClose} className="flex-1 rounded-[10px] border border-[#E2E8F0] py-3 text-sm font-semibold text-[#334155] transition hover:bg-[#F8FAFC]">Cancel</button>
           <button onClick={handleSave} disabled={saving}
             className="flex-1 rounded-[10px] py-3 text-sm font-semibold text-white transition hover:-translate-y-px disabled:opacity-60"
-            style={{ background: '#8B0C21', boxShadow: '0 8px 24px rgba(139,12,33,0.18)' }}>
+            style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}>
             {saving ? 'Saving...' : 'Save Experiment'}
           </button>
         </div>
@@ -829,7 +829,7 @@ export default function ExperimentsPage() {
         action={
           <button onClick={() => setShowNew(true)}
             className="flex items-center gap-2 rounded-[10px] px-5 py-3 text-sm font-semibold text-white transition hover:-translate-y-px"
-            style={{ background: '#8B0C21', boxShadow: '0 8px 24px rgba(139,12,33,0.18)' }}>
+            style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}>
             <Plus size={16} /> New Experiment
           </button>
         }
@@ -875,7 +875,7 @@ export default function ExperimentsPage() {
               ].map(f => (
                 <button key={f.key} onClick={() => setFilter(f.key)}
                   className="rounded-full px-3 py-1 text-xs font-semibold transition border"
-                  style={filter === f.key ? { background: '#8B0C21', color: '#fff', borderColor: '#8B0C21' } : { background: 'white', color: '#334155', borderColor: '#E2E8F0' }}>
+                  style={filter === f.key ? { background: 'var(--brand-navy-900)', color: '#fff', borderColor: 'var(--brand-navy-900)' } : { background: 'white', color: 'var(--text-secondary)', borderColor: 'var(--border-light)' }}>
                   {f.label}
                 </button>
               ))}
@@ -895,8 +895,8 @@ export default function ExperimentsPage() {
                   <p className="mt-2 text-sm text-[#64748B]">Start your first experiment to test a path in the real world.</p>
                   <button onClick={() => setShowNew(true)}
                     className="mt-6 inline-flex items-center gap-2 rounded-[10px] px-6 py-3 text-sm font-semibold text-white"
-                    style={{ background: '#8B0C21', boxShadow: '0 8px 24px rgba(139,12,33,0.18)' }}>
-                    <Plus size={16} /> Create first experiment
+                    style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}>
+                                      <Plus size={16} /> Create first experiment
                   </button>
                 </>
               )}

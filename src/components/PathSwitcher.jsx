@@ -7,7 +7,7 @@ const STATUS_CFG = {
   paused:    { label: 'Paused',    bg: '#FFFBEB', text: '#B45309', Icon: PauseCircle },
   completed: { label: 'Completed', bg: '#EFF6FF', text: '#1D4ED8', Icon: CheckCircle2 },
   archived:  { label: 'Archived',  bg: '#F1F5F9', text: '#94A3B8', Icon: Archive },
-  exploring: { label: 'Exploring', bg: '#F8ECEF', text: '#8B0C21', Icon: Circle },
+  exploring: { label: 'Exploring', bg: '#EEF2F6', text: '#274C77', Icon: Circle },
 };
 
 function statusCfg(s) { return STATUS_CFG[s] || STATUS_CFG.exploring; }
@@ -41,11 +41,14 @@ export default function PathSwitcher({ paths = [], selectedId, onChange, showAll
     <div className={`relative ${className}`} ref={ref}>
       <button
         onClick={() => setOpen(v => !v)}
-        className="flex items-center gap-2 rounded-xl border border-[#E2E8F0] bg-white px-3 py-2 text-sm font-semibold text-[#050816] hover:border-[#8B0C21] transition min-w-[180px] max-w-[280px]"
+        className="flex items-center gap-2 rounded-xl border bg-white px-3 py-2 text-sm font-semibold transition min-w-[180px] max-w-[280px]"
+        style={{ borderColor: 'var(--border-light)', color: 'var(--text-primary)' }}
+        onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--brand-navy-700)'}
+        onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border-light)'}
       >
         {selected ? (
           <>
-            {selected.is_primary_focus && <Star size={13} className="shrink-0" style={{ color: '#8B0C21' }} />}
+            {selected.is_primary_focus && <Star size={13} className="shrink-0" style={{ color: 'var(--brand-gold-500)' }} />}
             <span className="flex-1 truncate text-left">{selected.path_name}</span>
             <span className="shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold" style={{ background: cfg.bg, color: cfg.text }}>
               {cfg.label}
@@ -62,7 +65,7 @@ export default function PathSwitcher({ paths = [], selectedId, onChange, showAll
           {showAll && (
             <button
               onClick={() => { onChange('all'); setOpen(false); }}
-              className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition hover:bg-[#F8FAFC] ${selectedId === 'all' ? 'bg-[#F8ECEF]' : ''}`}
+              className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition hover:bg-[#EEF2F6] ${selectedId === 'all' ? 'bg-[#EEF2F6]' : ''}`}
             >
               <span className="font-semibold text-[#334155]">All Paths</span>
             </button>
@@ -77,9 +80,9 @@ export default function PathSwitcher({ paths = [], selectedId, onChange, showAll
                   <button
                     key={p.id}
                     onClick={() => { onChange(p.id); setOpen(false); }}
-                    className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition hover:bg-[#F8FAFC] ${selectedId === p.id ? 'bg-[#F8ECEF]' : ''}`}
+                    className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition hover:bg-[#EEF2F6] ${selectedId === p.id ? 'bg-[#EEF2F6]' : ''}`}
                   >
-                    {p.is_primary_focus && <Star size={13} className="shrink-0" style={{ color: '#8B0C21' }} />}
+                    {p.is_primary_focus && <Star size={13} className="shrink-0" style={{ color: 'var(--brand-gold-500)' }} />}
                     {!p.is_primary_focus && <div className="w-[13px] shrink-0" />}
                     <span className="flex-1 font-semibold text-[#050816] text-left truncate">{p.path_name}</span>
                     <span className="shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold" style={{ background: c.bg, color: c.text }}>
@@ -100,7 +103,7 @@ export default function PathSwitcher({ paths = [], selectedId, onChange, showAll
                   <button
                     key={p.id}
                     onClick={() => { onChange(p.id); setOpen(false); }}
-                    className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition hover:bg-[#F8FAFC] ${selectedId === p.id ? 'bg-[#F8ECEF]' : ''}`}
+                    className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition hover:bg-[#EEF2F6] ${selectedId === p.id ? 'bg-[#EEF2F6]' : ''}`}
                   >
                     <div className="w-[13px] shrink-0" />
                     <span className="flex-1 font-semibold text-[#334155] text-left truncate">{p.path_name}</span>

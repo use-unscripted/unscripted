@@ -20,13 +20,16 @@ const buildLinks = [
 function NavGroup({ label, links }) {
   return (
     <div className="mb-4">
-      <p className="mb-1 px-4 text-[10px] font-bold uppercase tracking-[.12em] text-slate-600">{label}</p>
+      <p className="mb-1 px-4 text-[10px] font-bold uppercase tracking-[.14em]" style={{ color: 'var(--brand-gold-500)' }}>{label}</p>
       {links.map(([to, label, Icon]) => (
         <NavLink key={to} to={to}
           className={({ isActive }) =>
-            `flex items-center gap-3 rounded-xl px-4 py-2.5 text-sm font-medium transition ${isActive ? 'text-white' : 'text-slate-400 hover:bg-white/5 hover:text-white'}`
+            `flex items-center gap-3 rounded-xl px-4 py-2.5 text-sm font-semibold transition ${isActive ? 'text-white' : 'text-slate-300 hover:text-white'}`
           }
-          style={({ isActive }) => isActive ? { background: 'rgba(139,12,33,0.30)', border: '1px solid rgba(139,12,33,0.40)' } : {}}>
+          style={({ isActive }) => isActive
+            ? { background: 'var(--brand-navy-700)', borderLeft: '3px solid var(--brand-gold-500)', paddingLeft: '13px' }
+            : { borderLeft: '3px solid transparent' }
+          }>
           <Icon size={16} />
           {label}
         </NavLink>
@@ -45,13 +48,13 @@ const mobileLinks = [
 
 export default function AppShell() {
   return (
-    <div className="min-h-screen font-body" style={{ background: '#FAFAF9' }}>
+    <div className="min-h-screen font-body" style={{ background: 'var(--background-secondary)' }}>
       {/* Sidebar */}
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-60 flex-col p-5 lg:flex" style={{ background: '#081225' }}>
+      <aside className="fixed inset-y-0 left-0 z-30 hidden w-60 flex-col p-5 lg:flex" style={{ background: 'var(--brand-navy-900)' }}>
         <NavLink to="/dashboard" className="mb-8 block">
-          <div className="flex items-center gap-2.5">
-            <CompassIcon size={20} />
-            <span className="font-heading text-base font-bold tracking-tight text-white">Unscripted</span>
+          <div className="flex items-center gap-2.5 px-1">
+            <CompassIcon size={28} />
+            <span className="font-heading text-sm font-bold tracking-[0.12em] text-white uppercase">Unscripted</span>
           </div>
         </NavLink>
 
@@ -61,11 +64,11 @@ export default function AppShell() {
           <NavGroup label="Account" links={[['/settings', 'Settings', Settings]]} />
         </nav>
 
-        <p className="rounded-xl p-3 text-xs leading-5 text-slate-500 mt-4" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
+        <p className="rounded-xl p-3 text-xs leading-5 text-slate-400 mt-4" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
           Write your unscripted path.
         </p>
         <button onClick={() => base44.auth.logout('/')}
-          className="mt-3 flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium text-slate-500 transition hover:bg-white/5 hover:text-white">
+          className="mt-3 flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium text-slate-400 transition hover:bg-white/5 hover:text-white">
           <LogOut size={15} /> Log out
         </button>
       </aside>
@@ -75,12 +78,13 @@ export default function AppShell() {
       </main>
 
       {/* Mobile bottom nav */}
-      <nav className="fixed inset-x-0 bottom-0 z-30 flex justify-around border-t border-[#E2E8F0] bg-white px-2 py-2 lg:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-30 flex justify-around border-t bg-white px-2 py-2 lg:hidden" style={{ borderColor: 'var(--border-light)' }}>
         {mobileLinks.map(([to, label, Icon]) => (
           <NavLink key={to} to={to}
             className={({ isActive }) =>
-              `flex flex-col items-center gap-0.5 px-2 py-1 text-[10px] font-semibold transition ${isActive ? 'text-[#8B0C21]' : 'text-[#64748B]'}`
-            }>
+              `flex flex-col items-center gap-0.5 px-2 py-1 text-[10px] font-semibold transition ${isActive ? '' : 'text-slate-400'}`
+            }
+            style={({ isActive }) => isActive ? { color: 'var(--brand-navy-900)' } : {}}>
             <Icon size={18} />
             {label}
           </NavLink>
