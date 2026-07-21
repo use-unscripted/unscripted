@@ -31,7 +31,7 @@ export default function Landing() {
       <div className="grid min-h-screen place-items-center" style={{ background: '#FAFAF9' }}>
         <div className="flex flex-col items-center gap-4">
           <CompassIcon size={32} className="animate-pulse" />
-          <div className="w-5 h-5 rounded-full border-2 border-[#E2E8F0] border-t-[#8B0C21] animate-spin" />
+          <div className="w-5 h-5 rounded-full border-2 border-[#E2E8F0] border-t-[#1F3A5F] animate-spin" />
         </div>
       </div>
     );

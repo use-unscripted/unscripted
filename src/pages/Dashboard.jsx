@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { ArrowRight, Flame, CheckCircle, Clock, AlertTriangle, Users, FileText, RotateCcw, Star, Plus, Target } from 'lucide-react';
 import PathSwitcher from '@/components/PathSwitcher';
+import ScrollReveal, { StaggerGroup } from '@/components/ScrollReveal';
 
 function daysUntil(dateStr) {
   if (!dateStr) return null;
@@ -85,7 +86,7 @@ export default function Dashboard() {
     <main className="mx-auto max-w-5xl px-5 py-10 sm:px-8">
 
       {/* Path switcher row */}
-      <div className="anim-fade-up mb-6 flex items-center justify-between gap-4 flex-wrap">
+      <ScrollReveal delay={0} className="mb-6 flex items-center justify-between gap-4 flex-wrap" as="div">
         <div className="flex items-center gap-3 flex-wrap">
           <PathSwitcher
             paths={paths.filter(p => !['archived'].includes(p.status))}
@@ -105,10 +106,10 @@ export default function Dashboard() {
             Manage paths →
           </Link>
         </div>
-      </div>
+      </ScrollReveal>
 
       {/* Primary Focus banner */}
-      <section className="anim-fade-up mb-6 rounded-[22px] p-7 text-white" style={{ animationDelay: '60ms', background: 'linear-gradient(135deg, var(--brand-navy-900) 0%, var(--brand-navy-700) 100%)', border: '1px solid rgba(39,76,119,0.4)' }}>
+      <ScrollReveal delay={70} as="section" className="mb-6 rounded-[22px] p-7 text-white" style={{ background: 'linear-gradient(135deg, var(--brand-navy-900) 0%, var(--brand-navy-700) 100%)', border: '1px solid rgba(39,76,119,0.4)' }}>
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-2">
@@ -168,11 +169,11 @@ export default function Dashboard() {
             <p className="text-sm text-slate-300">No experiments yet. <Link to="/experiments" className="font-semibold" style={{ color: 'var(--brand-gold-500)' }}>Start your first mission →</Link></p>
           </div>
         )}
-      </section>
+      </ScrollReveal>
 
       {/* Other active paths strip */}
       {otherActivePaths.length > 0 && (
-        <section className="anim-fade-up mb-6" style={{ animationDelay: '120ms' }}>
+        <ScrollReveal delay={0} as="section" className="mb-6">
           <p className="text-xs font-bold uppercase tracking-[.12em] mb-3" style={{ color: 'var(--text-muted)' }}>Other Active Paths</p>
           <div className="flex gap-3 flex-wrap">
             {otherActivePaths.map(p => {
@@ -208,25 +209,25 @@ export default function Dashboard() {
               <Plus size={14} /> Add path
             </Link>
           </div>
-        </section>
+        </ScrollReveal>
       )}
 
       {/* Overdue outreach */}
       {overdueOutreach.length > 0 && (
-        <div className="anim-scale-in mb-5 flex items-start gap-3 rounded-[16px] p-4" style={{ background: '#FFFBEB', border: '1px solid rgba(180,83,9,0.2)' }}>
+        <ScrollReveal delay={0} className="mb-5 flex items-start gap-3 rounded-[16px] p-4" style={{ background: '#FFFBEB', border: '1px solid rgba(180,83,9,0.2)' }}>
           <AlertTriangle size={16} className="shrink-0 text-[#B45309] mt-0.5" />
           <div className="flex-1">
             <p className="text-sm font-semibold text-[#B45309]">{overdueOutreach.length} overdue follow-up{overdueOutreach.length > 1 ? 's' : ''}</p>
             <p className="text-xs mt-0.5" style={{ color: 'var(--text-secondary)' }}>Follow up, reschedule, or mark complete.</p>
           </div>
           <Link to="/outreach" className="text-xs font-semibold" style={{ color: 'var(--brand-navy-700)' }}>Review →</Link>
-        </div>
+        </ScrollReveal>
       )}
 
       {/* Main content grid */}
-      <div className="anim-stagger grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-6 lg:grid-cols-2">
         {/* This week's missions */}
-        <section className="anim-fade-up rounded-[20px] bg-white p-5" style={{ border: '1px solid var(--border-light)' }}>
+        <ScrollReveal delay={0} as="section" className="rounded-[20px] bg-white p-5" style={{ border: '1px solid var(--border-light)' }}>
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-heading text-lg font-bold" style={{ color: 'var(--text-primary)' }}>This Week's Missions</h2>
             <Link to="/experiments" className="text-xs font-semibold" style={{ color: 'var(--brand-navy-700)' }}>All missions →</Link>
@@ -251,10 +252,10 @@ export default function Dashboard() {
               })}
             </div>
           )}
-        </section>
+        </ScrollReveal>
 
         {/* Proof of work */}
-        <section className="anim-fade-up rounded-[20px] bg-white p-5" style={{ border: '1px solid var(--border-light)' }}>
+        <ScrollReveal delay={100} as="section" className="rounded-[20px] bg-white p-5" style={{ border: '1px solid var(--border-light)' }}>
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-heading text-lg font-bold" style={{ color: 'var(--text-primary)' }}>Proof of Work</h2>
             <Link to="/proof" className="text-xs font-semibold" style={{ color: 'var(--brand-navy-700)' }}>All entries →</Link>
@@ -276,10 +277,10 @@ export default function Dashboard() {
               ))}
             </div>
           )}
-        </section>
+        </ScrollReveal>
 
         {/* Outreach */}
-        <section className="anim-fade-up rounded-[20px] bg-white p-5" style={{ border: '1px solid var(--border-light)' }}>
+        <ScrollReveal delay={60} as="section" className="rounded-[20px] bg-white p-5" style={{ border: '1px solid var(--border-light)' }}>
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-heading text-lg font-bold" style={{ color: 'var(--text-primary)' }}>Upcoming Conversations</h2>
             <Link to="/outreach" className="text-xs font-semibold" style={{ color: 'var(--brand-navy-700)' }}>All outreach →</Link>
@@ -306,10 +307,10 @@ export default function Dashboard() {
               )}
             </div>
           )}
-        </section>
+        </ScrollReveal>
 
         {/* Weekly reflection */}
-        <section className="anim-fade-up rounded-[20px] bg-white p-5" style={{ border: '1px solid var(--border-light)' }}>
+        <ScrollReveal delay={160} as="section" className="rounded-[20px] bg-white p-5" style={{ border: '1px solid var(--border-light)' }}>
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-heading text-lg font-bold" style={{ color: 'var(--text-primary)' }}>Weekly Reflection</h2>
             <Link to="/reflection" className="text-xs font-semibold" style={{ color: 'var(--brand-navy-700)' }}>Go →</Link>
@@ -335,18 +336,18 @@ export default function Dashboard() {
               )}
             </div>
           )}
-        </section>
+        </ScrollReveal>
       </div>
 
       {/* Quick links */}
-      <div className="anim-stagger mt-6 grid gap-3 sm:grid-cols-3">
+      <StaggerGroup base={0} step={80} className="mt-6 grid gap-3 sm:grid-cols-3">
         {[
           { to: '/proof', label: 'Submit proof', sub: 'Document a completed mission', Icon: FileText },
           { to: '/outreach', label: 'Track outreach', sub: 'Log a new contact or follow-up', Icon: Users },
           { to: '/reflection', label: 'Reflect', sub: 'Update your path assessment', Icon: RotateCcw },
         ].map(({ to, label, sub, Icon }) => (
           <Link key={to} to={to}
-            className="anim-fade-up ui-lift flex items-center gap-3 rounded-[16px] bg-white p-4"
+            className="ui-lift flex items-center gap-3 rounded-[16px] bg-white p-4"
             style={{ border: '1px solid var(--border-light)' }}
             onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--brand-navy-700)'}
             onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border-light)'}>
@@ -359,7 +360,7 @@ export default function Dashboard() {
             </div>
           </Link>
         ))}
-      </div>
+      </StaggerGroup>
     </main>
   );
 }
