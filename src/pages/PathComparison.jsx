@@ -174,10 +174,16 @@ function PathCard({ path, experiments, missions, proof, contacts, reflections, o
               <Play size={12} /> Resume
             </button>
           )}
-          {path.status !== 'archived' && (
+          {path.status !== 'archived' && path.status !== 'completed' && (
             <button onClick={() => onAction('complete', path)}
               className="flex items-center gap-1.5 rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-xs font-semibold text-[#334155] hover:bg-[#F8FAFC]">
               <CheckCircle2 size={12} /> Mark Complete
+            </button>
+          )}
+          {path.status === 'completed' && (
+            <button onClick={() => onAction('uncomplete', path)}
+              className="flex items-center gap-1.5 rounded-lg border border-blue-200 px-3 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-50 transition">
+              <RotateCcw size={12} /> Mark Not Complete
             </button>
           )}
           {path.status !== 'archived' && (
@@ -498,8 +504,9 @@ export default function PathComparison() {
       },
       pause:    () => base44.entities.PathRecommendations.update(path.id, { status: 'paused',    paused_at: today,    is_primary_focus: false }),
       complete: () => base44.entities.PathRecommendations.update(path.id, { status: 'completed', completed_at: today, is_primary_focus: false }),
-      archive:   () => base44.entities.PathRecommendations.update(path.id, { status: 'archived',  is_primary_focus: false }),
-      unarchive: () => base44.entities.PathRecommendations.update(path.id, { status: 'exploring' }),
+      archive:    () => base44.entities.PathRecommendations.update(path.id, { status: 'archived',  is_primary_focus: false }),
+      unarchive:  () => base44.entities.PathRecommendations.update(path.id, { status: 'exploring' }),
+      uncomplete: () => base44.entities.PathRecommendations.update(path.id, { status: 'exploring', completed_at: null }),
     };
 
     if (updates[action]) {
