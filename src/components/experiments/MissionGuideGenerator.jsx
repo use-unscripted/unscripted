@@ -179,7 +179,7 @@ This is Version ${nextVersion}.`;
               onClick={() => { setActiveDecision('make_active'); handleSave(true); }}
               disabled={saving}
               className="w-full rounded-xl border-2 px-4 py-3 text-sm font-semibold text-left transition hover:bg-[#F8ECEF] disabled:opacity-60"
-              style={{ borderColor: '#8B0C21', color: '#8B0C21' }}>
+              style={{ borderColor: 'var(--brand-navy-700)', color: 'var(--brand-navy-700)' }}>
               Make this the active guide
               {hasActive && <span className="block text-xs font-normal text-[#B45309] mt-0.5">Will deactivate your current guide</span>}
             </button>
@@ -232,7 +232,7 @@ This is Version ${nextVersion}.`;
         <div className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] p-3 mb-5">
           <p className="text-xs font-bold uppercase tracking-wide text-[#64748B] mb-0.5">Experiment</p>
           <p className="text-sm font-semibold text-[#050816]">{experiment.title}</p>
-          {experiment.path_name && <p className="text-xs text-[#8B0C21]">{experiment.path_name}</p>}
+          {experiment.path_name && <p className="text-xs" style={{ color: 'var(--brand-navy-700)' }}>{experiment.path_name}</p>}
         </div>
 
         {/* Variation picker — only for subsequent guides */}
@@ -246,7 +246,7 @@ This is Version ${nextVersion}.`;
                   onClick={() => setVariation(variation === opt.value ? '' : opt.value)}
                   className="w-full rounded-xl border px-4 py-3 text-sm text-left transition"
                   style={variation === opt.value
-                    ? { borderColor: '#8B0C21', background: '#F8ECEF', color: '#8B0C21' }
+                    ? { borderColor: 'var(--brand-navy-700)', background: 'var(--background-tertiary)', color: 'var(--brand-navy-700)' }
                     : { borderColor: '#E2E8F0', background: 'white', color: '#334155' }}>
                   <span className="font-semibold">{opt.label}</span>
                   <span className="block text-xs text-[#94A3B8] mt-0.5">{opt.description}</span>
@@ -259,7 +259,7 @@ This is Version ${nextVersion}.`;
                 placeholder="Describe what you want to change or focus on..."
                 value={customInstruction}
                 onChange={e => setCustomInstruction(e.target.value)}
-                className="mt-3 w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-3 text-sm outline-none focus:border-[#8B0C21]"
+                className="mt-3 w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-3 text-sm outline-none focus:border-[#1F3A5F]"
               />
             )}
           </div>
@@ -284,7 +284,7 @@ This is Version ${nextVersion}.`;
             onClick={handleGenerate}
             disabled={generating || (variation === 'custom' && !customInstruction.trim())}
             className="flex-1 rounded-[10px] py-3 text-sm font-semibold text-white transition disabled:opacity-60 flex items-center justify-center gap-2"
-            style={{ background: '#8B0C21', boxShadow: '0 8px 24px rgba(139,12,33,0.18)' }}>
+            style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}>
             {generating ? (
               <><Loader2 size={15} className="animate-spin" /> Generating...</>
             ) : (
