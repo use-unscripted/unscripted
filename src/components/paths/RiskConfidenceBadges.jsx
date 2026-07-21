@@ -137,25 +137,43 @@ export function RiskBadge({ riskLevel, showBar = true }) {
 
 // Shown when no risk data exists yet
 export function RiskNotAssessed({ onAssess }) {
+  const [open, setOpen] = useState(false);
   return (
     <span
       role="img"
       aria-label="Risk not yet assessed"
-      className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold border border-[#E2E8F0] text-[#94A3B8] bg-[#F8FAFC]">
-      
+      className="relative inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold border border-[#E2E8F0] text-[#94A3B8] bg-[#F8FAFC]">
       <AlertTriangle size={11} aria-hidden="true" />
       Risk not yet assessed
-      {onAssess &&
       <button
         type="button"
-        onClick={(e) => {e.stopPropagation();onAssess();}}
-        className="ml-1 text-[#8B0C21] font-bold hover:underline text-[10px]">
-        
-          Assess
+        onClick={(e) => { e.stopPropagation(); setOpen(v => !v); }}
+        aria-label="How to set risk level"
+        className="ml-0.5 opacity-50 hover:opacity-100 transition">
+        <Info size={10} />
+      </button>
+      {open && (
+        <>
+          <span className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+          <span
+            role="tooltip"
+            className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 z-50 w-56 rounded-xl border border-[#E2E8F0] bg-white p-3 text-[11px] leading-relaxed text-[#334155] shadow-xl">
+            Click <strong>Edit</strong> on this path card to set the risk level.
+            <button type="button" onClick={() => setOpen(false)} className="absolute top-1.5 right-1.5 text-[#94A3B8] hover:text-[#334155]" aria-label="Close"><X size={10} /></button>
+          </span>
+        </>
+      )}
+      {onAssess && (
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); onAssess(); }}
+          className="ml-1 font-bold hover:underline text-[10px]"
+          style={{ color: 'var(--brand-navy-900)' }}>
+          Edit
         </button>
-      }
-    </span>);
-
+      )}
+    </span>
+  );
 }
 
 export function ConfidenceBadge({ confidenceLevel }) {

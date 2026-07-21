@@ -116,7 +116,7 @@ function PathCard({ path, experiments, missions, proof, contacts, reflections, o
                 </span>
               )}
               <span className="rounded-full px-2.5 py-1 text-xs font-bold" style={{ background: cfg.bg, color: cfg.text }}>{cfg.label}</span>
-              {path.risk_level ? <RiskBadge riskLevel={path.risk_level} /> : <RiskNotAssessed />}
+              {path.risk_level ? <RiskBadge riskLevel={path.risk_level} /> : <RiskNotAssessed onAssess={() => onAction('edit', path)} />}
               {path.confidence_level && <ConfidenceBadge confidenceLevel={path.confidence_level} />}
             </div>
             <h2 className="font-heading text-xl font-bold text-[#050816]">{path.path_name}</h2>
