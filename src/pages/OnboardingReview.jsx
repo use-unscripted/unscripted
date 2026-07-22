@@ -35,14 +35,27 @@ export default function OnboardingReview() {
 
   const [editingNotes, setEditingNotes] = useState(false);
   const [notesForm, setNotesForm] = useState({
-    personal_notes: draft.personal_notes || '',
-    long_term_ambitions: draft.long_term_ambitions || '',
-    responsibilities_constraints: draft.responsibilities_constraints || '',
-    things_to_avoid: draft.things_to_avoid || '',
-    priorities_for_recommendations: draft.priorities_for_recommendations || '',
+    personal_notes: '',
+    long_term_ambitions: '',
+    responsibilities_constraints: '',
+    things_to_avoid: '',
+    priorities_for_recommendations: '',
   });
 
-  const hasNotes = draft.personal_notes || draft.long_term_ambitions || draft.responsibilities_constraints || draft.things_to_avoid || draft.priorities_for_recommendations;
+  // Sync notesForm once draft is loaded
+  useEffect(() => {
+    if (draft) {
+      setNotesForm({
+        personal_notes: draft.personal_notes || '',
+        long_term_ambitions: draft.long_term_ambitions || '',
+        responsibilities_constraints: draft.responsibilities_constraints || '',
+        things_to_avoid: draft.things_to_avoid || '',
+        priorities_for_recommendations: draft.priorities_for_recommendations || '',
+      });
+    }
+  }, [draft]);
+
+  const hasNotes = draft && (draft.personal_notes || draft.long_term_ambitions || draft.responsibilities_constraints || draft.things_to_avoid || draft.priorities_for_recommendations);
 
   const saveNotes = () => {
     const updated = saveDraft(notesForm);
