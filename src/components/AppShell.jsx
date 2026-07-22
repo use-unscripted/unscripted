@@ -3,6 +3,18 @@ import { LayoutDashboard, Beaker, CalendarDays, Users, FileText, RotateCcw, Sett
 import { base44 } from '@/api/base44Client';
 import { CompassIcon } from '@/components/UnscriptedLogo';
 
+function CompassSVG() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ margin: '0 2px', marginTop: '-1px', flexShrink: 0 }}>
+      <polygon points="50,2 56,48 44,48" fill="#5BA4CF" />
+      <polygon points="50,98 56,52 44,52" fill="#1F6FAB" />
+      <polygon points="98,50 52,44 52,56" fill="#C9A84C" />
+      <polygon points="2,50 48,44 48,56" fill="#C9A84C" />
+      <polygon points="50,44 56,50 50,56 44,50" fill="white" opacity="0.9" />
+    </svg>
+  );
+}
+
 const coreLinks = [
 ['/dashboard', 'Dashboard', LayoutDashboard],
 ['/experiments', 'Missions', Beaker],
@@ -54,19 +66,7 @@ export default function AppShell() {
         <NavLink to="/dashboard" className="block -mx-5 px-5 py-3 mb-8 text-sm">
           <div className="flex items-center justify-center gap-0 font-heading font-bold text-white uppercase select-none" style={{ fontSize: '14px', letterSpacing: '0.20em' }}>
             <span>UNSCRIP</span>
-            {/* Compass — 4-point star matching brand compass, gold east/west, blue north/south */}
-            <svg width="22" height="22" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ margin: '0 2px', marginTop: '-1px', flexShrink: 0 }}>
-              {/* North point — blue */}
-              <polygon points="50,2 56,48 44,48" fill="#5BA4CF" />
-              {/* South point — dark blue */}
-              <polygon points="50,98 56,52 44,52" fill="#1F6FAB" />
-              {/* East point — gold */}
-              <polygon points="98,50 52,44 52,56" fill="#C9A84C" />
-              {/* West point — gold */}
-              <polygon points="2,50 48,44 48,56" fill="#C9A84C" />
-              {/* Center diamond */}
-              <polygon points="50,44 56,50 50,56 44,50" fill="white" opacity="0.9" />
-            </svg>
+            <CompassSVG />
             <span>ED</span>
           </div>
         </NavLink>
