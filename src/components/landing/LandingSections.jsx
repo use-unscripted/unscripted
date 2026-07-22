@@ -131,7 +131,7 @@ export default function LandingSections() {
                 You don't need to choose your entire life today. You need a better way to test what comes next.
               </h2>
               <ScrollReveal delay={180}>
-                <Link to="/register"
+                <Link to="/onboarding"
                   className="mt-10 inline-flex items-center gap-2 rounded-[10px] bg-white px-7 py-4 text-sm font-semibold transition hover:-translate-y-px hover:shadow-xl"
                   style={{ color: 'var(--brand-navy-900)', boxShadow: '0 4px 16px rgba(31,58,95,0.18)' }}>
                   Start My 30-Day Path Test <ArrowRight size={17} />
