@@ -94,8 +94,8 @@ export default function OnboardingReview() {
         {/* Completion badge */}
         <div className="mb-8 flex flex-col items-center text-center">
           <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full"
-            style={{ background: '#F8ECEF', border: '2px solid rgba(139,12,33,0.25)' }}>
-            <Target size={28} style={{ color: '#8B0C21' }} />
+            style={{ background: '#EEF2F6', border: '2px solid rgba(31,58,95,0.25)' }}>
+            <Target size={28} style={{ color: 'var(--brand-navy-900)' }} />
           </div>
           <h1 className="font-heading text-3xl font-bold tracking-tight text-[#050816]">
             Your 30-Day Path Test Is Ready
@@ -107,13 +107,13 @@ export default function OnboardingReview() {
 
         {/* Summary card */}
         <div className="mb-6 rounded-[24px] border border-[#E2E8F0] bg-white p-7 shadow-sm">
-          <p className="text-xs font-bold uppercase tracking-[.14em] mb-5" style={{ color: '#8B0C21' }}>Your intake summary</p>
+          <p className="text-xs font-bold uppercase tracking-[.14em] mb-5" style={{ color: 'var(--brand-navy-700)' }}>Your intake summary</p>
 
           <div className="space-y-4">
             {draft.name && (
               <div className="flex gap-3">
-                <div className="mt-0.5 h-5 w-5 shrink-0 rounded-full flex items-center justify-center" style={{ background: '#F8ECEF' }}>
-                  <span className="text-[10px] font-bold" style={{ color: '#8B0C21' }}>1</span>
+                <div className="mt-0.5 h-5 w-5 shrink-0 rounded-full flex items-center justify-center" style={{ background: '#EEF2F6' }}>
+                  <span className="text-[10px] font-bold" style={{ color: 'var(--brand-navy-900)' }}>1</span>
                 </div>
                 <div>
                   <p className="text-xs font-bold uppercase tracking-wide text-[#94A3B8]">About you</p>
@@ -123,8 +123,8 @@ export default function OnboardingReview() {
             )}
 
             <div className="flex gap-3">
-              <div className="mt-0.5 h-5 w-5 shrink-0 rounded-full flex items-center justify-center" style={{ background: '#F8ECEF' }}>
-                <span className="text-[10px] font-bold" style={{ color: '#8B0C21' }}>2</span>
+              <div className="mt-0.5 h-5 w-5 shrink-0 rounded-full flex items-center justify-center" style={{ background: '#EEF2F6' }}>
+                <span className="text-[10px] font-bold" style={{ color: 'var(--brand-navy-900)' }}>2</span>
               </div>
               <div>
                 <p className="text-xs font-bold uppercase tracking-wide text-[#94A3B8]">Primary path to test</p>
@@ -136,8 +136,8 @@ export default function OnboardingReview() {
             </div>
 
             <div className="flex gap-3">
-              <div className="mt-0.5 h-5 w-5 shrink-0 rounded-full flex items-center justify-center" style={{ background: '#F8ECEF' }}>
-                <Clock size={11} style={{ color: '#8B0C21' }} />
+              <div className="mt-0.5 h-5 w-5 shrink-0 rounded-full flex items-center justify-center" style={{ background: '#EEF2F6' }}>
+                <Clock size={11} style={{ color: 'var(--brand-navy-900)' }} />
               </div>
               <div>
                 <p className="text-xs font-bold uppercase tracking-wide text-[#94A3B8]">Weekly availability</p>
@@ -147,8 +147,8 @@ export default function OnboardingReview() {
 
             {tradeoffs && (
               <div className="flex gap-3">
-                <div className="mt-0.5 h-5 w-5 shrink-0 rounded-full flex items-center justify-center" style={{ background: '#F8ECEF' }}>
-                  <Zap size={11} style={{ color: '#8B0C21' }} />
+                <div className="mt-0.5 h-5 w-5 shrink-0 rounded-full flex items-center justify-center" style={{ background: '#EEF2F6' }}>
+                  <Zap size={11} style={{ color: 'var(--brand-navy-900)' }} />
                 </div>
                 <div>
                   <p className="text-xs font-bold uppercase tracking-wide text-[#94A3B8]">Tradeoff to explore</p>
@@ -164,8 +164,8 @@ export default function OnboardingReview() {
           <div className="mb-6 rounded-[24px] border border-[#E2E8F0] bg-white p-7 shadow-sm">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
-                <FileText size={16} style={{ color: '#8B0C21' }} />
-                <p className="text-xs font-bold uppercase tracking-[.14em]" style={{ color: '#8B0C21' }}>Personal context</p>
+                <FileText size={16} style={{ color: 'var(--brand-navy-900)' }} />
+                <p className="text-xs font-bold uppercase tracking-[.14em]" style={{ color: 'var(--brand-navy-700)' }}>Personal context</p>
               </div>
               <div className="flex gap-2">
                 <button onClick={() => setEditingNotes(true)}
@@ -214,8 +214,8 @@ export default function OnboardingReview() {
         )}
 
         {editingNotes && (
-          <div className="mb-6 rounded-[24px] border border-[#8B0C21] bg-white p-7 shadow-sm">
-            <p className="text-xs font-bold uppercase tracking-[.14em] mb-4" style={{ color: '#8B0C21' }}>Edit personal context</p>
+          <div className="mb-6 rounded-[24px] border border-[#1F3A5F] bg-white p-7 shadow-sm">
+            <p className="text-xs font-bold uppercase tracking-[.14em] mb-4" style={{ color: 'var(--brand-navy-700)' }}>Edit personal context</p>
             {[
               { name: 'personal_notes', label: 'Personal notes and context', maxLength: 3000 },
               { name: 'long_term_ambitions', label: 'Long-term ambitions' },
@@ -227,7 +227,7 @@ export default function OnboardingReview() {
                 {f.label}
                 <textarea rows={3} value={notesForm[f.name]} maxLength={f.maxLength}
                   onChange={e => setNotesForm(n => ({ ...n, [f.name]: e.target.value }))}
-                  className="mt-1 w-full rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-3 text-sm font-normal text-[#050816] placeholder-[#94A3B8] outline-none focus:border-[#8B0C21]" />
+                  className="mt-1 w-full rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-3 text-sm font-normal text-[#050816] placeholder-[#94A3B8] outline-none focus:border-[#1F3A5F]" />
               </label>
             ))}
             <div className="flex gap-3">
@@ -237,7 +237,7 @@ export default function OnboardingReview() {
               </button>
               <button onClick={saveNotes}
                 className="flex-1 flex items-center justify-center gap-2 rounded-[10px] py-2.5 text-sm font-semibold text-white"
-                style={{ background: '#8B0C21' }}>
+                style={{ background: 'var(--brand-navy-900)' }}>
                 <Check size={14} /> Save notes
               </button>
             </div>
@@ -251,12 +251,12 @@ export default function OnboardingReview() {
           </p>
           <button onClick={handleCreateAccount}
             className="w-full flex items-center justify-center gap-2 rounded-[10px] py-3.5 text-sm font-semibold text-white transition hover:-translate-y-px"
-            style={{ background: '#8B0C21', boxShadow: '0 8px 24px rgba(139,12,33,0.18)' }}>
+            style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}>
             Create My Free Account <ArrowRight size={16} />
           </button>
           <p className="mt-4 text-sm text-[#94A3B8]">
             Already have an account?{' '}
-            <Link to="/login" className="font-semibold underline" style={{ color: '#8B0C21' }}>Log in</Link>
+            <Link to="/login" className="font-semibold underline" style={{ color: 'var(--brand-navy-900)' }}>Log in</Link>
           </p>
         </div>
 

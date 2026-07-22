@@ -54,7 +54,7 @@ export default function PathsIntake() {
   };
 
   const selectClass = (selected) =>
-    `w-full rounded-xl border px-4 py-3 text-sm outline-none transition focus:border-[#8B0C21] ${selected ? 'border-[#8B0C21] bg-[#F8ECEF]' : 'border-[#E2E8F0] bg-[#F8FAFC]'}`;
+    `w-full rounded-xl border px-4 py-3 text-sm outline-none transition focus:border-[#1F3A5F] ${selected ? 'border-[#1F3A5F] bg-[#EEF2F6]' : 'border-[#E2E8F0] bg-[#F8FAFC]'}`;
 
   return (
     <main className="min-h-screen px-5 py-10" style={{ background: '#FAFAF9' }}>
@@ -72,11 +72,11 @@ export default function PathsIntake() {
           <span>Almost done</span>
         </div>
         <div className="mb-10 h-1.5 rounded-full overflow-hidden" style={{ background: '#E2E8F0' }}>
-          <div className="h-full rounded-full" style={{ width: '100%', background: '#8B0C21' }} />
+          <div className="h-full rounded-full" style={{ width: '100%', background: 'var(--brand-navy-900)' }} />
         </div>
 
         <section className="rounded-[24px] border border-[#E2E8F0] bg-white p-7 shadow-sm sm:p-10">
-          <p className="text-xs font-bold uppercase tracking-[.14em]" style={{ color: '#8B0C21' }}>Path selection</p>
+          <p className="text-xs font-bold uppercase tracking-[.14em]" style={{ color: 'var(--brand-navy-700)' }}>Path selection</p>
           <h1 className="font-heading mb-2 mt-3 text-2xl font-bold tracking-tight text-[#050816]">Which paths should we build your 30-day test around?</h1>
           <p className="mb-8 text-sm text-[#64748B]">
             We will generate three path recommendations, then build a 30-day experiment plan for the one you select. You are not committing — you are choosing what to test first.
@@ -85,7 +85,7 @@ export default function PathsIntake() {
           <div className="space-y-6">
             <div>
               <label className="block text-sm font-semibold text-[#334155] mb-2">
-                Primary path to test <span style={{ color: '#8B0C21' }}>*</span>
+                Primary path to test <span style={{ color: 'var(--brand-navy-900)' }}>*</span>
               </label>
               <select className={selectClass(primaryPath)}
                 value={primaryPath} onChange={e => setPrimaryPath(e.target.value)}>
@@ -95,7 +95,7 @@ export default function PathsIntake() {
               </select>
               {primaryPath === 'other' && (
                 <input
-                  className="mt-3 w-full rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-3 text-sm outline-none focus:border-[#8B0C21]"
+                  className="mt-3 w-full rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-3 text-sm outline-none focus:border-[#1F3A5F]"
                   placeholder="Describe the path you want to test"
                   value={customPrimary}
                   onChange={e => setCustomPrimary(e.target.value)}
@@ -116,7 +116,7 @@ export default function PathsIntake() {
               </select>
               {comparisonPath === 'other' && (
                 <input
-                  className="mt-3 w-full rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-3 text-sm outline-none focus:border-[#8B0C21]"
+                  className="mt-3 w-full rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-3 text-sm outline-none focus:border-[#1F3A5F]"
                   placeholder="Describe the comparison path"
                   value={customComparison}
                   onChange={e => setCustomComparison(e.target.value)}
@@ -132,7 +132,7 @@ export default function PathsIntake() {
             </button>
             <button onClick={submit} disabled={!primary}
               className="flex items-center gap-2 rounded-[10px] px-6 py-3 text-sm font-semibold text-white transition hover:-translate-y-px disabled:opacity-60"
-              style={{ background: '#8B0C21', boxShadow: '0 8px 24px rgba(139,12,33,0.18)' }}>
+              style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}>
               Review My Test <ArrowRight size={16} />
             </button>
           </div>
