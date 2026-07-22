@@ -51,7 +51,7 @@ export default function AppShell() {
     <div className="min-h-screen font-body" style={{ background: 'var(--background-secondary)' }}>
       {/* Sidebar */}
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-60 flex-col lg:flex py-5 px-4" style={{ background: 'var(--brand-navy-900)' }}>
-        <NavLink to="/dashboard" className="block -mx-5 px-5 py-3 mb-8 mr-1">
+        <NavLink to="/dashboard" className="block -mx-5 px-5 py-3 mb-8 text-sm">
           <div className="flex items-center justify-center gap-0 font-heading font-bold text-white uppercase select-none" style={{ fontSize: '14px', letterSpacing: '0.20em' }}>
             <span>UNSCRIP</span>
             {/* Compass — 4-point star matching brand compass, gold east/west, blue north/south */}
