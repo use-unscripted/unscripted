@@ -1,7 +1,7 @@
 import { Outlet, NavLink } from 'react-router-dom';
 import { LayoutDashboard, Beaker, CalendarDays, Users, FileText, RotateCcw, Settings, LogOut, Target, BookOpen } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
-import { CompassIcon } from '@/components/UnscriptedLogo';
+import { LogoFull } from '@/components/UnscriptedLogo';
 
 const coreLinks = [
   ['/dashboard', 'Dashboard', LayoutDashboard],
@@ -52,9 +52,8 @@ export default function AppShell() {
       {/* Sidebar */}
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-60 flex-col p-5 lg:flex" style={{ background: 'var(--brand-navy-900)' }}>
         <NavLink to="/dashboard" className="mb-8 block">
-          <div className="flex items-center gap-2.5 px-1">
-            <CompassIcon size={28} />
-            <span className="font-heading text-sm font-bold tracking-[0.12em] text-white uppercase">Unscripted</span>
+          <div className="px-1">
+            <LogoFull height={32} />
           </div>
         </NavLink>
 
