@@ -24,7 +24,7 @@ function ExperimentDeleteConfirm({ expTitle, onConfirm, onCancel }) {
           </button>
           <button onClick={onConfirm}
             className="flex-1 rounded-[10px] py-2.5 text-sm font-semibold text-white transition"
-            style={{ background: '#8B0C21' }}>
+            style={{ background: 'var(--brand-navy-900)' }}>
             Move to Recently Deleted
           </button>
         </div>
@@ -52,7 +52,7 @@ function EditExperimentModal({ exp, onClose, onSaved }) {
     onSaved({ ...exp, ...data });
   };
 
-  const inputCls = 'w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-3 text-sm outline-none focus:border-[#8B0C21]';
+  const inputCls = 'w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-3 text-sm outline-none focus:border-[#1F3A5F]';
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" style={{ background: 'rgba(5,8,22,0.5)' }}>
@@ -90,8 +90,8 @@ function EditExperimentModal({ exp, onClose, onSaved }) {
           <button onClick={onClose} className="flex-1 rounded-[10px] border border-[#E2E8F0] py-2.5 text-sm font-semibold text-[#334155] hover:bg-[#F8FAFC] transition">Cancel</button>
           <button onClick={handleSave} disabled={saving}
             className="flex-1 rounded-[10px] py-2.5 text-sm font-semibold text-white transition disabled:opacity-60"
-            style={{ background: '#8B0C21' }}>
-            {saving ? 'Saving…' : 'Save Changes'}
+            style={{ background: 'var(--brand-navy-900)' }}>
+             {saving ? 'Saving…' : 'Save Changes'}
           </button>
         </div>
       </div>

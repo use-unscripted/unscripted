@@ -15,7 +15,7 @@ import { useState, useRef } from 'react';
 import { X, Loader2, Users, Beaker, User, ExternalLink, CheckCircle, ChevronRight, AlertTriangle, BookOpen, Save, Target } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 
-const inputCls = 'w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-2.5 text-sm outline-none focus:border-[#8B0C21]';
+const inputCls = 'w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-2.5 text-sm outline-none focus:border-[#1F3A5F]';
 const selCls = inputCls;
 
 // ── Step 1: Survey ─────────────────────────────────────────────────────────────
@@ -40,7 +40,7 @@ function SurveyStep({ pathName, survey, setSurvey, onNext, onClose }) {
   return (
     <div className="space-y-5">
       <div>
-        <p className="text-[10px] font-bold uppercase tracking-widest text-[#8B0C21] mb-1">Path</p>
+        <p className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: 'var(--brand-navy-700)' }}>Path</p>
         <p className="text-base font-heading font-bold text-[#050816]">{pathName}</p>
       </div>
 
@@ -147,7 +147,7 @@ function SurveyStep({ pathName, survey, setSurvey, onNext, onClose }) {
         </button>
         <button onClick={onNext} disabled={!canNext}
           className="flex-1 flex items-center justify-center gap-2 rounded-[10px] py-3 text-sm font-semibold text-white disabled:opacity-50"
-          style={{ background: '#8B0C21', boxShadow: '0 8px 24px rgba(139,12,33,0.18)' }}>
+          style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}>
           Generate Plan <ChevronRight size={15} />
         </button>
       </div>
@@ -160,7 +160,7 @@ function ArchetypeCard({ archetype }) {
   return (
     <div className="rounded-[16px] border border-[#E2E8F0] bg-[#F8FAFC] p-4">
       <div className="flex items-center gap-2 mb-2">
-        <User size={14} style={{ color: '#8B0C21' }} />
+        <User size={14} style={{ color: 'var(--brand-navy-900)' }} />
         <p className="text-sm font-bold text-[#050816]">{archetype.title}</p>
       </div>
       <p className="text-xs text-[#334155] mb-2">{archetype.why_useful}</p>
@@ -178,7 +178,7 @@ function OutreachExperimentCard({ exp }) {
   return (
     <div className="rounded-[16px] border border-[#E2E8F0] bg-white p-4 space-y-2">
       <div className="flex items-center gap-2">
-        <Beaker size={14} style={{ color: '#8B0C21' }} />
+        <Beaker size={14} style={{ color: 'var(--brand-navy-900)' }} />
         <p className="text-sm font-bold text-[#050816]">{exp.title}</p>
       </div>
       <p className="text-xs text-[#334155]">{exp.objective}</p>
@@ -189,7 +189,7 @@ function OutreachExperimentCard({ exp }) {
         {exp.deliverable && <span><span className="font-semibold">Deliverable:</span> {exp.deliverable}</span>}
       </div>
       {exp.why_it_tests_path && (
-        <p className="text-xs rounded-lg px-3 py-2" style={{ background: '#F8ECEF', color: '#8B0C21' }}>
+        <p className="text-xs rounded-lg px-3 py-2" style={{ background: '#EEF2F6', color: 'var(--brand-navy-900)' }}>
           <span className="font-semibold">Why it tests this path:</span> {exp.why_it_tests_path}
         </p>
       )}
@@ -209,7 +209,7 @@ function MessageTemplate({ template }) {
     <div className="rounded-[16px] border border-[#E2E8F0] bg-white p-4">
       <div className="flex items-center justify-between mb-2">
         <p className="text-xs font-bold uppercase tracking-wide text-[#64748B]">{template.label}</p>
-        <button onClick={copy} className="text-xs font-semibold transition" style={{ color: '#8B0C21' }}>
+        <button onClick={copy} className="text-xs font-semibold transition" style={{ color: 'var(--brand-navy-900)' }}>
           {copied ? '✓ Copied' : 'Copy'}
         </button>
       </div>
@@ -291,7 +291,7 @@ function ContactSuggestionCard({ suggestion, pathName, experimentId, onSaved, on
             <p className="text-xs text-[#64748B] mt-1">{suggestion.why_relevant}</p>
             {suggestion.source_url && (
               <a href={suggestion.source_url} target="_blank" rel="noopener noreferrer"
-                className="flex items-center gap-1 mt-1 text-[10px] hover:underline" style={{ color: '#8B0C21' }}>
+                className="flex items-center gap-1 mt-1 text-[10px] hover:underline" style={{ color: 'var(--brand-navy-900)' }}>
                 <ExternalLink size={10} /> View public profile
               </a>
             )}
@@ -319,7 +319,7 @@ function ContactSuggestionCard({ suggestion, pathName, experimentId, onSaved, on
           <div className="flex flex-wrap gap-2">
             <button onClick={() => setShowSaveModal(true)}
               className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold text-white transition"
-              style={{ background: '#8B0C21' }}>
+              style={{ background: 'var(--brand-navy-900)' }}>
               <Save size={11} /> Save to Outreach
             </button>
             <button onClick={handleCreateMission} disabled={missionLoading}
@@ -424,7 +424,7 @@ function SaveContactConfirmModal({ suggestion, pathName, experimentId, experimen
           </button>
           <button onClick={handleSave} disabled={saving || !form.name.trim()}
             className="flex-1 flex items-center justify-center gap-2 rounded-[10px] py-3 text-sm font-semibold text-white disabled:opacity-60"
-            style={{ background: '#8B0C21' }}>
+            style={{ background: 'var(--brand-navy-900)' }}>
             {saving ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle size={14} />}
             {saving ? 'Saving…' : 'Confirm & Save'}
           </button>
@@ -463,7 +463,7 @@ function ResultsStep({ plan, pathName, experimentId, experiments, onContactSaved
           <button key={t.id} onClick={() => setActiveTab(t.id)}
             className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition border"
             style={activeTab === t.id
-              ? { background: '#8B0C21', color: '#fff', borderColor: '#8B0C21' }
+              ? { background: 'var(--brand-navy-900)', color: '#fff', borderColor: 'var(--brand-navy-900)' }
               : { background: 'white', color: '#334155', borderColor: '#E2E8F0' }}>
             <t.icon size={11} /> {t.label}
             <span className="ml-0.5 rounded-full px-1.5 py-0.5 text-[10px]"
@@ -677,7 +677,7 @@ Return only valid JSON. Do not add commentary outside the JSON.`,
 
         {step === 'generating' && (
           <div className="py-16 flex flex-col items-center gap-4 text-center">
-            <Loader2 size={36} className="animate-spin" style={{ color: '#8B0C21' }} />
+            <Loader2 size={36} className="animate-spin" style={{ color: 'var(--brand-navy-900)' }} />
             <p className="font-heading text-lg font-bold text-[#050816]">Generating your personalized outreach plan…</p>
             <p className="text-sm text-[#64748B] max-w-sm">
               Building outreach experiments, contact archetypes, and message templates tailored to {path.path_name}.

@@ -5,17 +5,17 @@ export default function ProfileCard({ label, children, dark = false }) {
         className="rounded-[20px] p-6 text-white"
         style={{
           background: '#081225',
-          border: '1px solid rgba(139,12,33,0.35)',
+          border: '1px solid rgba(31,58,95,0.35)',
         }}
       >
-        <p className="text-xs font-bold uppercase tracking-[.14em]" style={{ color: '#8B0C21' }}>{label}</p>
+        <p className="text-xs font-bold uppercase tracking-[.14em]" style={{ color: 'var(--brand-navy-700)' }}>{label}</p>
         <div className="mt-4">{children}</div>
       </section>
     );
   }
   return (
     <section className="rounded-[20px] border border-[#E2E8F0] bg-white p-6 shadow-sm">
-      <p className="text-xs font-bold uppercase tracking-[.14em]" style={{ color: '#8B0C21' }}>{label}</p>
+      <p className="text-xs font-bold uppercase tracking-[.14em]" style={{ color: 'var(--brand-navy-700)' }}>{label}</p>
       <div className="mt-4">{children}</div>
     </section>
   );

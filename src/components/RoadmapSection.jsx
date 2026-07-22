@@ -8,8 +8,8 @@ export default function RoadmapSection({ title, items }) {
       <div className="mt-5 space-y-3">
         {items.map((x, i) => (
           <div key={i} className="flex gap-3 rounded-xl p-4" style={{ background: '#FAFAF9', border: '1px solid #E2E8F0' }}>
-            <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full" style={{ background: '#F8ECEF' }}>
-              <Check size={11} style={{ color: '#8B0C21' }} />
+            <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full" style={{ background: '#EEF2F6' }}>
+              <Check size={11} style={{ color: 'var(--brand-navy-900)' }} />
             </span>
             <div>
               <p className="text-sm font-semibold text-[#050816]">

@@ -1,7 +1,7 @@
 const accents = {
-  blue:   { bg: '#F8ECEF', text: '#8B0C21' },
+  blue:   { bg: '#EEF2F6', text: '#1F3A5F' },
   green:  { bg: '#F0FDF4', text: '#15803D' },
-  violet: { bg: '#F8ECEF', text: '#8B0C21' },
+  violet: { bg: '#EEF2F6', text: '#274C77' },
   amber:  { bg: '#FFFBEB', text: '#B45309' },
 };
 

@@ -121,7 +121,7 @@ export default function ResumeExport({ resume }) {
     <div className="flex flex-wrap gap-2 mt-2">
       <button onClick={handlePDF} disabled={!!loading}
         className="flex items-center gap-2 rounded-[10px] border border-[#E2E8F0] px-4 py-2.5 text-sm font-semibold text-[#334155] hover:bg-[#F8FAFC] disabled:opacity-50 transition">
-        <FileText size={15} style={{ color: '#8B0C21' }} />
+        <FileText size={15} style={{ color: 'var(--brand-navy-900)' }} />
         {loading === 'pdf' ? 'Preparing…' : 'Download PDF'}
       </button>
       <button onClick={handleDOCX} disabled={!!loading}

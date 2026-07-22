@@ -34,7 +34,7 @@ function GuideInlinePreview({ guide }) {
             {guide.steps.map((s, i) => (
               <li key={i} className="flex gap-2.5 text-xs">
                 <span className="shrink-0 w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold text-white mt-0.5"
-                  style={{ background: '#8B0C21' }}>{i + 1}</span>
+                  style={{ background: 'var(--brand-navy-900)' }}>{i + 1}</span>
                 <div>
                   {s.title && <p className="font-semibold text-[#050816]">{s.title}</p>}
                   {s.description && <p className="text-[#64748B] mt-0.5">{s.description}</p>}
@@ -46,8 +46,8 @@ function GuideInlinePreview({ guide }) {
         </div>
       )}
       {guide.deliverable && (
-        <div className="rounded-lg p-2.5" style={{ background: '#F8ECEF', border: '1px solid rgba(139,12,33,0.15)' }}>
-          <p className="text-[10px] font-bold uppercase tracking-wide mb-0.5" style={{ color: '#8B0C21' }}>Deliverable</p>
+        <div className="rounded-lg p-2.5" style={{ background: '#EEF2F6', border: '1px solid rgba(31,58,95,0.15)' }}>
+          <p className="text-[10px] font-bold uppercase tracking-wide mb-0.5" style={{ color: 'var(--brand-navy-700)' }}>Deliverable</p>
           <p className="text-xs text-[#334155]">{guide.deliverable}</p>
         </div>
       )}
@@ -63,7 +63,7 @@ function GuideInlinePreview({ guide }) {
           <ul className="space-y-1">
             {guide.reflection_questions.map((q, i) => (
               <li key={i} className="text-xs text-[#334155] flex gap-1.5">
-                <span style={{ color: '#8B0C21' }}>·</span><span>{q}</span>
+                <span style={{ color: 'var(--brand-navy-900)' }}>·</span><span>{q}</span>
               </li>
             ))}
           </ul>
@@ -171,11 +171,11 @@ function RenameRow({ guide, onRenamed, onCancel }) {
         value={title}
         onChange={e => setTitle(e.target.value)}
         onKeyDown={e => { if (e.key === 'Enter') handleSave(); if (e.key === 'Escape') onCancel(); }}
-        className="flex-1 rounded-lg border border-[#E2E8F0] bg-white px-3 py-1.5 text-sm outline-none focus:border-[#8B0C21]"
+        className="flex-1 rounded-lg border border-[#E2E8F0] bg-white px-3 py-1.5 text-sm outline-none focus:border-[#1F3A5F]"
       />
       <button onClick={handleSave} disabled={saving || !title.trim()}
         className="rounded-lg px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-60"
-        style={{ background: '#8B0C21' }}>
+        style={{ background: 'var(--brand-navy-900)' }}>
         {saving ? 'Saving…' : 'Save'}
       </button>
       <button onClick={onCancel} className="rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-xs font-semibold text-[#334155] hover:bg-white">Cancel</button>
@@ -314,7 +314,7 @@ export default function MissionGuideHistory({ guides = [], onSetActive, onDelete
                   title="Preview guide inline"
                   className="rounded-lg border border-[#E2E8F0] p-1.5 hover:bg-[#F8FAFC] transition"
                 >
-                  <Eye size={13} className={isPreviewing ? 'text-[#8B0C21]' : 'text-[#94A3B8]'} />
+                  <Eye size={13} className={isPreviewing ? 'text-[#1F3A5F]' : 'text-[#94A3B8]'} />
                 </button>
                 <button onClick={() => setOpenId(isOpen ? null : guide.id)}
                   className="rounded-lg border border-[#E2E8F0] p-1.5 hover:bg-[#F8FAFC]">
@@ -349,7 +349,7 @@ export default function MissionGuideHistory({ guides = [], onSetActive, onDelete
                   onClick={() => setPreviewId(isPreviewing ? null : guide.id)}
                   className="flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold transition"
                   style={isPreviewing
-                    ? { borderColor: '#8B0C21', background: '#F8ECEF', color: '#8B0C21' }
+                    ? { borderColor: '#1F3A5F', background: '#EEF2F6', color: '#1F3A5F' }
                     : { borderColor: '#E2E8F0', background: 'white', color: '#334155' }}>
                   <Eye size={12} /> {isPreviewing ? 'Hide Preview' : 'Preview'}
                 </button>
@@ -396,7 +396,7 @@ export default function MissionGuideHistory({ guides = [], onSetActive, onDelete
       {onGenerateAnother && (
         <button
           onClick={onGenerateAnother}
-          className="w-full rounded-xl border border-dashed border-[#E2E8F0] py-2.5 text-xs font-semibold text-[#64748B] hover:border-[#8B0C21] hover:text-[#8B0C21] transition mt-1">
+          className="w-full rounded-xl border border-dashed border-[#E2E8F0] py-2.5 text-xs font-semibold text-[#64748B] hover:border-[#1F3A5F] hover:text-[#1F3A5F] transition mt-1">
           + Generate Another Mission Guide
         </button>
       )}

@@ -52,7 +52,7 @@ export default function GuideDetailPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-32">
-        <Loader2 size={28} className="animate-spin text-[#8B0C21]" />
+        <Loader2 size={28} className="animate-spin text-[var(--brand-navy-900)]" />
       </div>
     );
   }
@@ -61,7 +61,7 @@ export default function GuideDetailPage() {
     return (
       <div className="mx-auto max-w-2xl px-5 py-16 text-center">
         <p className="text-[#64748B] mb-4">{error || 'Guide not found.'}</p>
-        <button onClick={() => navigate('/experiments')} className="text-sm font-semibold text-[#8B0C21] underline">
+        <button onClick={() => navigate('/experiments')} className="text-sm font-semibold text-[var(--brand-navy-900)] underline">
           Back to Missions
         </button>
       </div>
@@ -128,7 +128,7 @@ export default function GuideDetailPage() {
               <li key={i} className="flex gap-4">
                 <span
                   className="shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold text-white mt-0.5"
-                  style={{ background: '#8B0C21' }}
+                  style={{ background: 'var(--brand-navy-900)' }}
                 >{i + 1}</span>
                 <div className="flex-1">
                   {s.title && <p className="font-semibold text-[#050816] text-sm">{s.title}</p>}
@@ -143,8 +143,8 @@ export default function GuideDetailPage() {
 
       {/* Deliverable */}
       {guide.deliverable && (
-        <section className="mb-4 rounded-xl p-4" style={{ background: '#F8ECEF', border: '1px solid rgba(139,12,33,0.2)' }}>
-          <p className="text-xs font-bold uppercase tracking-wide mb-1" style={{ color: '#8B0C21' }}>Deliverable</p>
+        <section className="mb-4 rounded-xl p-4" style={{ background: '#EEF2F6', border: '1px solid rgba(31,58,95,0.15)' }}>
+          <p className="text-xs font-bold uppercase tracking-wide mb-1" style={{ color: 'var(--brand-navy-900)' }}>Deliverable</p>
           <p className="text-sm text-[#334155]">{guide.deliverable}</p>
         </section>
       )}
@@ -164,7 +164,7 @@ export default function GuideDetailPage() {
           <ul className="space-y-2">
             {guide.reflection_questions.map((q, i) => (
               <li key={i} className="flex gap-2 text-sm text-[#334155]">
-                <span className="shrink-0 font-bold" style={{ color: '#8B0C21' }}>·</span>
+                <span className="shrink-0 font-bold" style={{ color: 'var(--brand-navy-900)' }}>·</span>
                 <span>{q}</span>
               </li>
             ))}

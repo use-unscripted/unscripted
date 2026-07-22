@@ -83,12 +83,12 @@ export default function ResumeExperimentModal({ exp, missions = [], onClose, onR
               key={opt.value}
               onClick={() => setChoice(opt.value)}
               className="w-full rounded-xl border p-3 text-left transition"
-              style={choice === opt.value ? { borderColor: '#8B0C21', background: '#F8ECEF' } : { borderColor: '#E2E8F0', background: 'white' }}
+              style={choice === opt.value ? { borderColor: '#1F3A5F', background: '#EEF2F6' } : { borderColor: '#E2E8F0', background: 'white' }}
             >
               <div className="flex items-center gap-2">
                 <div className="w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0"
-                  style={{ borderColor: choice === opt.value ? '#8B0C21' : '#CBD5E1' }}>
-                  {choice === opt.value && <div className="w-2 h-2 rounded-full" style={{ background: '#8B0C21' }} />}
+                  style={{ borderColor: choice === opt.value ? '#1F3A5F' : '#CBD5E1' }}>
+                  {choice === opt.value && <div className="w-2 h-2 rounded-full" style={{ background: 'var(--brand-navy-900)' }} />}
                 </div>
                 <span className="text-sm font-semibold text-[#050816]">{opt.label}</span>
               </div>
@@ -102,12 +102,12 @@ export default function ResumeExperimentModal({ exp, missions = [], onClose, onR
             <label className="block">
               <span className="text-sm font-semibold text-[#334155] block mb-1">Revised deadline</span>
               <input type="date" value={newDeadline} onChange={e => setNewDeadline(e.target.value)}
-                className="w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-2.5 text-sm outline-none focus:border-[#8B0C21]" />
+                className="w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-2.5 text-sm outline-none focus:border-[#1F3A5F]" />
             </label>
             <label className="block">
               <span className="text-sm font-semibold text-[#334155] block mb-1">Updated weekly hours</span>
               <input type="number" value={newHours} onChange={e => setNewHours(e.target.value)} min={1} max={40}
-                className="w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-2.5 text-sm outline-none focus:border-[#8B0C21]" />
+                className="w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-2.5 text-sm outline-none focus:border-[#1F3A5F]" />
             </label>
           </div>
         )}
@@ -121,7 +121,7 @@ export default function ResumeExperimentModal({ exp, missions = [], onClose, onR
             value={notes}
             onChange={e => setNotes(e.target.value)}
             placeholder="New skills, updated goals, different availability..."
-            className="w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-3 text-sm outline-none focus:border-[#8B0C21] resize-none"
+            className="w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-3 text-sm outline-none focus:border-[#1F3A5F] resize-none"
           />
         </label>
 
@@ -132,7 +132,7 @@ export default function ResumeExperimentModal({ exp, missions = [], onClose, onR
           </button>
           <button onClick={handleResume} disabled={saving}
             className="flex-1 rounded-[10px] py-2.5 text-sm font-semibold text-white transition disabled:opacity-60"
-            style={{ background: '#8B0C21' }}>
+            style={{ background: 'var(--brand-navy-900)' }}>
             {saving ? 'Resuming…' : 'Resume Experiment'}
           </button>
         </div>

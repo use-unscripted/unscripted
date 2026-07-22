@@ -23,26 +23,26 @@ function GoalRow({ goal, onChange, onRemove }) {
     <div className="rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] p-4 space-y-3">
       <div className="grid gap-3 sm:grid-cols-2">
         <input
-          className="rounded-lg border border-[#E2E8F0] bg-white px-3 py-2.5 text-sm text-[#050816] placeholder-[#94A3B8] outline-none focus:border-[#8B0C21] sm:col-span-2"
+          className="rounded-lg border border-[#E2E8F0] bg-white px-3 py-2.5 text-sm text-[#050816] placeholder-[#94A3B8] outline-none focus:border-[#1F3A5F] sm:col-span-2"
           placeholder="What is this goal?"
           value={goal.goal_text}
           onChange={e => onChange({ ...goal, goal_text: e.target.value })}
         />
         <input
-          className="rounded-lg border border-[#E2E8F0] bg-white px-3 py-2.5 text-sm text-[#050816] placeholder-[#94A3B8] outline-none focus:border-[#8B0C21]"
+          className="rounded-lg border border-[#E2E8F0] bg-white px-3 py-2.5 text-sm text-[#050816] placeholder-[#94A3B8] outline-none focus:border-[#1F3A5F]"
           placeholder="Measurable outcome"
           value={goal.measurable_outcome}
           onChange={e => onChange({ ...goal, measurable_outcome: e.target.value })}
         />
         <select
-          className="rounded-lg border border-[#E2E8F0] bg-white px-3 py-2.5 text-sm text-[#334155] outline-none focus:border-[#8B0C21]"
+          className="rounded-lg border border-[#E2E8F0] bg-white px-3 py-2.5 text-sm text-[#334155] outline-none focus:border-[#1F3A5F]"
           value={goal.category}
           onChange={e => onChange({ ...goal, category: e.target.value })}
         >
           {CATEGORIES.map(c => <option key={c} value={c}>{c.charAt(0).toUpperCase() + c.slice(1)}</option>)}
         </select>
         <select
-          className="rounded-lg border border-[#E2E8F0] bg-white px-3 py-2.5 text-sm text-[#334155] outline-none focus:border-[#8B0C21]"
+          className="rounded-lg border border-[#E2E8F0] bg-white px-3 py-2.5 text-sm text-[#334155] outline-none focus:border-[#1F3A5F]"
           value={goal.priority}
           onChange={e => onChange({ ...goal, priority: e.target.value })}
         >
@@ -51,7 +51,7 @@ function GoalRow({ goal, onChange, onRemove }) {
           <option value="low">Low priority</option>
         </select>
         <input type="number" min="0" max="40"
-          className="rounded-lg border border-[#E2E8F0] bg-white px-3 py-2.5 text-sm text-[#050816] outline-none focus:border-[#8B0C21]"
+          className="rounded-lg border border-[#E2E8F0] bg-white px-3 py-2.5 text-sm text-[#050816] outline-none focus:border-[#1F3A5F]"
           placeholder="Estimated hours/week"
           value={goal.estimated_hours || ''}
           onChange={e => onChange({ ...goal, estimated_hours: Number(e.target.value) })}
@@ -65,17 +65,17 @@ function GoalRow({ goal, onChange, onRemove }) {
 function ScheduleBlockRow({ block, onChange, onRemove }) {
   return (
     <div className="grid gap-2 rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] p-3 sm:grid-cols-5">
-      <select className="rounded-lg border border-[#E2E8F0] bg-white px-2 py-2 text-xs text-[#334155] outline-none focus:border-[#8B0C21]"
+      <select className="rounded-lg border border-[#E2E8F0] bg-white px-2 py-2 text-xs text-[#334155] outline-none focus:border-[#1F3A5F]"
         value={block.block_type} onChange={e => onChange({ ...block, block_type: e.target.value })}>
         {BLOCK_TYPES.map(b => <option key={b.value} value={b.value}>{b.label}</option>)}
       </select>
-      <select className="rounded-lg border border-[#E2E8F0] bg-white px-2 py-2 text-xs text-[#334155] outline-none focus:border-[#8B0C21]"
+      <select className="rounded-lg border border-[#E2E8F0] bg-white px-2 py-2 text-xs text-[#334155] outline-none focus:border-[#1F3A5F]"
         value={block.day} onChange={e => onChange({ ...block, day: e.target.value })}>
         {DAYS.map(d => <option key={d} value={d}>{d}</option>)}
       </select>
-      <input type="time" className="rounded-lg border border-[#E2E8F0] bg-white px-2 py-2 text-xs text-[#334155] outline-none focus:border-[#8B0C21]"
+      <input type="time" className="rounded-lg border border-[#E2E8F0] bg-white px-2 py-2 text-xs text-[#334155] outline-none focus:border-[#1F3A5F]"
         value={block.start_time || ''} onChange={e => onChange({ ...block, start_time: e.target.value })} />
-      <input type="time" className="rounded-lg border border-[#E2E8F0] bg-white px-2 py-2 text-xs text-[#334155] outline-none focus:border-[#8B0C21]"
+      <input type="time" className="rounded-lg border border-[#E2E8F0] bg-white px-2 py-2 text-xs text-[#334155] outline-none focus:border-[#1F3A5F]"
         value={block.end_time || ''} onChange={e => onChange({ ...block, end_time: e.target.value })} />
       <button onClick={onRemove} className="text-xs font-semibold text-[#B91C1C] hover:underline">Remove</button>
     </div>
@@ -132,11 +132,11 @@ export default function GoalIntake() {
         </div>
 
         <div className="mb-2 h-1.5 rounded-full overflow-hidden" style={{ background: '#E2E8F0' }}>
-          <div className="h-full rounded-full" style={{ width: '90%', background: '#8B0C21' }} />
+          <div className="h-full rounded-full" style={{ width: '90%', background: 'var(--brand-navy-900)' }} />
         </div>
 
         <div className="mb-6 mt-8">
-          <p className="text-xs font-bold uppercase tracking-[.14em]" style={{ color: '#8B0C21' }}>Step 2 of 2</p>
+          <p className="text-xs font-bold uppercase tracking-[.14em]" style={{ color: 'var(--brand-navy-700)' }}>Step 2 of 2</p>
           <h1 className="font-heading mt-2 text-3xl font-bold text-[#050816]">Goals and schedule.</h1>
           <p className="mt-2 text-sm text-[#64748B]">Be honest about what you can actually do with the time you have. Unscripted will tell you if your goals are realistic.</p>
         </div>
@@ -146,7 +146,7 @@ export default function GoalIntake() {
           {tabs.map(({ id, label, icon: Icon }) => (
             <button key={id} onClick={() => setTab(id)}
               className="flex flex-1 items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-semibold transition"
-              style={tab === id ? { background: '#8B0C21', color: '#fff' } : { color: '#64748B' }}>
+              style={tab === id ? { background: 'var(--brand-navy-900)', color: '#fff' } : { color: '#64748B' }}>
               <Icon size={15} />{label}
             </button>
           ))}
@@ -164,7 +164,7 @@ export default function GoalIntake() {
                   onRemove={() => removeGoal(goalsForTab, setGoalsForTab, i)} />
               ))}
               <button onClick={() => setGoalsForTab([...goalsForTab, newGoal(tab)])}
-                className="text-sm font-semibold transition hover:opacity-80" style={{ color: '#8B0C21' }}>
+                className="text-sm font-semibold transition hover:opacity-80" style={{ color: 'var(--brand-navy-900)' }}>
                 + Add {tab} goal
               </button>
             </div>
@@ -178,7 +178,7 @@ export default function GoalIntake() {
                     onRemove={() => removeGoal(weeklyGoals, setWeeklyGoals, i)} />
                 ))}
                 <button onClick={() => setWeeklyGoals([...weeklyGoals, newGoal('weekly')])}
-                  className="text-sm font-semibold transition hover:opacity-80" style={{ color: '#8B0C21' }}>
+                  className="text-sm font-semibold transition hover:opacity-80" style={{ color: 'var(--brand-navy-900)' }}>
                   + Add weekly goal
                 </button>
               </div>
@@ -193,7 +193,7 @@ export default function GoalIntake() {
                       onRemove={() => removeBlock(i)} />
                   ))}
                   <button onClick={() => setScheduleBlocks([...scheduleBlocks, newBlock()])}
-                    className="text-sm font-semibold transition hover:opacity-80" style={{ color: '#8B0C21' }}>
+                    className="text-sm font-semibold transition hover:opacity-80" style={{ color: 'var(--brand-navy-900)' }}>
                     + Add schedule block
                   </button>
                 </div>
@@ -204,20 +204,20 @@ export default function GoalIntake() {
                   <span className="text-sm font-semibold text-[#334155]">Available hours/week for growth</span>
                   <input type="number" min="1" max="40" value={availableHours}
                     onChange={e => setAvailableHours(Number(e.target.value))}
-                    className="mt-2 w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-3 text-sm outline-none focus:border-[#8B0C21]" />
+                    className="mt-2 w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-3 text-sm outline-none focus:border-[#1F3A5F]" />
                   <p className="mt-1 text-xs text-[#94A3B8]">Be conservative and honest.</p>
                 </label>
                 <label className="block">
                   <span className="text-sm font-semibold text-[#334155]">High-energy times</span>
                   <input type="text" value={highEnergyTimes} onChange={e => setHighEnergyTimes(e.target.value)}
                     placeholder="e.g. 7–10am, after gym"
-                    className="mt-2 w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-3 text-sm outline-none focus:border-[#8B0C21]" />
+                    className="mt-2 w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-3 text-sm outline-none focus:border-[#1F3A5F]" />
                 </label>
                 <label className="block">
                   <span className="text-sm font-semibold text-[#334155]">Low-energy times</span>
                   <input type="text" value={lowEnergyTimes} onChange={e => setLowEnergyTimes(e.target.value)}
                     placeholder="e.g. 2–4pm after lunch"
-                    className="mt-2 w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-3 text-sm outline-none focus:border-[#8B0C21]" />
+                    className="mt-2 w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-3 text-sm outline-none focus:border-[#1F3A5F]" />
                 </label>
               </div>
             </div>
@@ -232,13 +232,13 @@ export default function GoalIntake() {
           {tab !== 'weekly' ? (
             <button onClick={() => setTab(tab === 'annual' ? 'monthly' : 'weekly')}
               className="flex items-center gap-2 rounded-[10px] px-6 py-3 text-sm font-semibold text-white transition hover:-translate-y-px"
-              style={{ background: '#8B0C21', boxShadow: '0 8px 24px rgba(139,12,33,0.18)' }}>
+              style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}>
               Next <ArrowRight size={16} />
             </button>
           ) : (
             <button onClick={submit} disabled={saving}
               className="flex items-center gap-2 rounded-[10px] px-6 py-3 text-sm font-semibold text-white transition hover:-translate-y-px disabled:opacity-60"
-              style={{ background: '#8B0C21', boxShadow: '0 8px 24px rgba(139,12,33,0.18)' }}>
+              style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}>
               {saving ? 'Building your profile...' : 'Build My Unscripted Profile'} <ArrowRight size={16} />
             </button>
           )}

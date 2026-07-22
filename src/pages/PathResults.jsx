@@ -6,7 +6,7 @@ import { LogoWordmark } from '@/components/UnscriptedLogo';
 
 const LABELS = ['Best apparent fit', 'Strong alternative', 'Contrarian option'];
 const LABEL_STYLES = [
-  { bg: '#F8ECEF', color: '#8B0C21' },
+  { bg: '#EEF2F6', color: 'var(--brand-navy-900)' },
   { bg: '#EFF6FF', color: '#1D4ED8' },
   { bg: '#F1F5F9', color: '#475569' },
 ];
@@ -23,7 +23,7 @@ function ReadinessBar({ score }) {
         <span className="font-bold">{score ? `${score}/10` : 'Not scored'}</span>
       </div>
       <div className="h-1.5 rounded-full overflow-hidden" style={{ background: '#E2E8F0' }}>
-        <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: '#8B0C21' }} />
+        <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: 'var(--brand-navy-900)' }} />
       </div>
     </div>
   );
@@ -49,7 +49,7 @@ function PathCard({ rec, index }) {
             <h3 className="font-heading text-xl font-bold text-[#050816]">{rec.path_name}</h3>
           </div>
           <button onClick={() => setExpanded(e => !e)}
-            className="shrink-0 text-xs font-semibold transition hover:opacity-70" style={{ color: '#8B0C21' }}>
+            className="shrink-0 text-xs font-semibold transition hover:opacity-70" style={{ color: 'var(--brand-navy-900)' }}>
             {expanded ? 'Collapse' : 'See details'}
           </button>
         </div>
@@ -96,10 +96,10 @@ function PathCard({ rec, index }) {
               </div>
             )}
             {rec.first_experiment && (
-              <div className="rounded-xl p-4" style={{ background: '#F8ECEF', border: '1px solid rgba(139,12,33,0.2)' }}>
+              <div className="rounded-xl p-4" style={{ background: '#EEF2F6', border: '1px solid rgba(31,58,95,0.15)' }}>
                 <div className="flex items-center gap-2 mb-1">
-                  <Zap size={13} style={{ color: '#8B0C21' }} />
-                  <p className="text-xs font-bold uppercase tracking-wide" style={{ color: '#8B0C21' }}>One low-risk experiment to start</p>
+                  <Zap size={13} style={{ color: 'var(--brand-navy-900)' }} />
+                  <p className="text-xs font-bold uppercase tracking-wide" style={{ color: 'var(--brand-navy-900)' }}>One low-risk experiment to start</p>
                 </div>
                 <p className="text-sm text-[#334155]">{rec.first_experiment}</p>
               </div>
@@ -136,7 +136,7 @@ export default function PathResults() {
         </div>
 
         <div className="mb-3">
-          <p className="text-xs font-bold uppercase tracking-[.14em]" style={{ color: '#8B0C21' }}>Your path recommendations</p>
+          <p className="text-xs font-bold uppercase tracking-[.14em]" style={{ color: 'var(--brand-navy-900)' }}>Your path recommendations</p>
           <h1 className="font-heading mt-2 text-3xl font-bold tracking-tight text-[#050816]">Three paths worth testing.</h1>
           <p className="mt-3 text-sm text-[#64748B] max-w-xl">
             These are working hypotheses, not conclusions. None of them is objectively correct. Your job is to test the primary one and use what you learn to update your assessment.
@@ -149,18 +149,18 @@ export default function PathResults() {
 
         {recs.length === 0 && (
           <div className="rounded-[20px] border border-dashed border-[#E2E8F0] p-12 text-center text-[#64748B]">
-            No path recommendations found. <Link to="/generating" style={{ color: '#8B0C21' }} className="font-semibold">Regenerate →</Link>
+            No path recommendations found. <Link to="/generating" style={{ color: 'var(--brand-navy-900)' }} className="font-semibold">Regenerate →</Link>
           </div>
         )}
 
-        <div className="rounded-[20px] p-6" style={{ background: '#081225', border: '1px solid rgba(139,12,33,0.3)' }}>
-          <p className="text-xs font-bold uppercase tracking-wide mb-2" style={{ color: '#8B0C21' }}>Your 30-day experiment plan is ready</p>
+        <div className="rounded-[20px] p-6" style={{ background: '#081225', border: '1px solid rgba(31,58,95,0.3)' }}>
+          <p className="text-xs font-bold uppercase tracking-wide mb-2" style={{ color: 'var(--brand-navy-900)' }}>Your 30-day experiment plan is ready</p>
           <p className="text-sm text-slate-300 mb-5">
             We've built 3 experiments for your primary path. Open your dashboard to see your first missions and schedule them into your week.
           </p>
           <Link to="/dashboard"
             className="inline-flex items-center gap-2 rounded-[10px] px-6 py-3.5 text-sm font-semibold text-white transition hover:-translate-y-px"
-            style={{ background: '#8B0C21', boxShadow: '0 8px 24px rgba(139,12,33,0.18)' }}>
+            style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}>
             Open My Dashboard <ArrowRight size={17} />
           </Link>
         </div>

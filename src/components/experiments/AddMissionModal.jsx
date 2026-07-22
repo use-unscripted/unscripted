@@ -9,7 +9,7 @@ const STATUS_OPTIONS = [
   { value: 'skipped', label: 'Skipped' },
 ];
 
-const inputCls = 'w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-3 text-sm outline-none focus:border-[#8B0C21]';
+const inputCls = 'w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-3 text-sm outline-none focus:border-[#1F3A5F]';
 
 export default function AddMissionModal({ experiment, onClose, onSaved }) {
   const [data, setData] = useState({
@@ -69,7 +69,7 @@ export default function AddMissionModal({ experiment, onClose, onSaved }) {
         <div className="mb-5 rounded-xl p-3 border border-[#E2E8F0] bg-[#F8FAFC]">
           <p className="text-xs font-bold uppercase tracking-wide text-[#64748B] mb-0.5">Linked experiment</p>
           <p className="text-sm font-semibold text-[#050816]">{experiment.title}</p>
-          {experiment.path_name && <p className="text-xs text-[#8B0C21] mt-0.5">{experiment.path_name}</p>}
+          {experiment.path_name && <p className="text-xs mt-0.5" style={{ color: 'var(--brand-navy-700)' }}>{experiment.path_name}</p>}
         </div>
 
         {error && <div className="mb-4 p-3 rounded-lg bg-red-50 text-red-700 text-sm" role="alert">{error}</div>}
@@ -120,7 +120,7 @@ export default function AddMissionModal({ experiment, onClose, onSaved }) {
           </button>
           <button onClick={handleSave} disabled={saving || !data.title.trim()}
             className="flex-1 rounded-[10px] py-3 text-sm font-semibold text-white transition disabled:opacity-60"
-            style={{ background: '#8B0C21', boxShadow: '0 8px 24px rgba(139,12,33,0.18)' }}>
+            style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}>
             {saving ? <span className="flex items-center justify-center gap-2"><Loader2 size={15} className="animate-spin" />Saving...</span> : 'Save Mission'}
           </button>
         </div>

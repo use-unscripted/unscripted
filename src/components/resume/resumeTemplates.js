@@ -15,7 +15,7 @@ export const TEMPLATES = [
     id: 'startup',
     name: 'Startup & Operations',
     description: 'Modern single-column optimized for high-growth roles.',
-    accentColor: '#8B0C21',
+    accentColor: '#1F3A5F',
   },
   {
     id: 'healthcare',

@@ -51,7 +51,7 @@ export default function PauseExperimentModal({ exp, onClose, onPaused }) {
             value={reason}
             onChange={e => setReason(e.target.value)}
             placeholder="e.g. Focusing on a different path for now, need more time..."
-            className="w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-3 text-sm outline-none focus:border-[#8B0C21] resize-none"
+            className="w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-3 text-sm outline-none focus:border-[#1F3A5F] resize-none"
           />
         </label>
 

@@ -134,7 +134,7 @@ export default function ClaimOnboarding() {
       <main className="grid min-h-screen place-items-center px-6 text-center text-white" style={{ background: '#081225' }}>
         <div className="max-w-md">
           <div className="mx-auto mb-6 flex h-14 w-14 items-center justify-center rounded-full"
-            style={{ background: 'rgba(139,12,33,0.25)', border: '1px solid rgba(139,12,33,0.4)' }}>
+            style={{ background: 'rgba(31,58,95,0.25)', border: '1px solid rgba(31,58,95,0.4)' }}>
             <span className="text-2xl">⚠</span>
           </div>
           <h1 className="font-heading text-2xl font-bold">
@@ -144,7 +144,7 @@ export default function ClaimOnboarding() {
           <div className="mt-8 flex flex-col items-center gap-3">
             <button onClick={run}
               className="flex items-center gap-2 rounded-[10px] px-6 py-3 text-sm font-semibold text-white transition hover:-translate-y-px"
-              style={{ background: '#8B0C21', boxShadow: '0 8px 24px rgba(139,12,33,0.18)' }}>
+              style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}>
               <RefreshCw size={15} /> {errorType === 'generate' ? 'Retry Generation' : 'Retry'}
             </button>
             {errorType === 'import' && (
@@ -169,7 +169,7 @@ export default function ClaimOnboarding() {
         <p className="mt-3 text-slate-400">{PHASES[phaseIdx]}</p>
         <div className="mx-auto mt-8 h-1.5 w-64 overflow-hidden rounded-full" style={{ background: 'rgba(255,255,255,0.08)' }}>
           <div className="h-full animate-pulse rounded-full"
-            style={{ width: `${Math.round((phaseIdx + 1) / PHASES.length * 100)}%`, background: '#8B0C21', transition: 'width 0.5s ease' }} />
+            style={{ width: `${Math.round((phaseIdx + 1) / PHASES.length * 100)}%`, background: 'var(--brand-navy-900)', transition: 'width 0.5s ease' }} />
         </div>
         <p className="mt-6 text-xs text-slate-500">This usually takes 20–30 seconds.</p>
       </div>

@@ -1,13 +1,13 @@
 import { Check } from 'lucide-react';
 
 const typeStyles = {
-  networking: { bg: '#F8ECEF', text: '#8B0C21' },
-  content:    { bg: '#F8ECEF', text: '#8B0C21' },
+  networking: { bg: '#EEF2F6', text: '#1F3A5F' },
+  content:    { bg: '#EEF2F6', text: '#274C77' },
   project:    { bg: '#F1F5F9', text: '#334155' },
   skill:      { bg: '#FFFBEB', text: '#B45309' },
   wellness:   { bg: '#F0FDF4', text: '#15803D' },
   career:     { bg: '#F8FAFC', text: '#475569' },
-  reflection: { bg: '#F8ECEF', text: '#8B0C21' },
+  reflection: { bg: '#EEF2F6', text: '#274C77' },
 };
 
 export default function TaskRow({ task, onToggle }) {
@@ -15,7 +15,7 @@ export default function TaskRow({ task, onToggle }) {
   return (
     <button
       onClick={() => onToggle(task)}
-      className="w-full rounded-[16px] border border-[#E2E8F0] bg-white p-4 text-left transition hover:border-[rgba(139,12,33,0.25)] hover:-translate-y-0.5 hover:shadow-sm"
+      className="w-full rounded-[16px] border border-[#E2E8F0] bg-white p-4 text-left transition hover:border-[rgba(31,58,95,0.25)] hover:-translate-y-0.5 hover:shadow-sm"
     >
       <div className="flex items-start gap-3">
         <span

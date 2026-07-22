@@ -20,7 +20,7 @@ export default function InterestPicker({ selected, onToggle }) {
             className="rounded-[16px] border p-5 text-left text-sm font-semibold transition"
             style={
               selected.includes(x)
-                ? { borderColor: '#8B0C21', background: '#F8ECEF', color: '#8B0C21' }
+                ? { borderColor: '#1F3A5F', background: '#EEF2F6', color: '#1F3A5F' }
                 : { borderColor: '#E2E8F0', background: 'white', color: '#334155' }
             }
           >

@@ -2,7 +2,7 @@ import { useState, useRef } from 'react';
 import { X, Loader2, ArrowRight, ChevronRight } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 
-const inputCls = 'w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-3 text-sm text-[#050816] placeholder-[#94A3B8] outline-none focus:border-[#8B0C21]';
+const inputCls = 'w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-3 text-sm text-[#050816] placeholder-[#94A3B8] outline-none focus:border-[#1F3A5F]';
 
 const RISK_LEVELS = ['low', 'medium', 'high'];
 const CONFIDENCE_LEVELS = ['low', 'medium', 'high'];
@@ -149,12 +149,12 @@ Generate a structured path profile for them to save and test. Be realistic and h
               ...(unactivatedRecs.length > 0 ? [{ id: 'from_rec', label: 'Activate a prior recommendation', desc: `${unactivatedRecs.length} recommendation${unactivatedRecs.length > 1 ? 's' : ''} not yet activated` }] : []),
             ].map(opt => (
               <button key={opt.id} onClick={() => { setMode(opt.id); setStep(1); }}
-                className="w-full flex items-center justify-between rounded-[16px] border border-[#E2E8F0] bg-white p-4 text-left transition hover:border-[#8B0C21] hover:bg-[#F8ECEF] group">
+                className="w-full flex items-center justify-between rounded-[16px] border border-[#E2E8F0] bg-white p-4 text-left transition hover:border-[#1F3A5F] hover:bg-[#EEF2F6] group">
                 <div>
-                  <p className="text-sm font-bold text-[#050816] group-hover:text-[#8B0C21]">{opt.label}</p>
+                  <p className="text-sm font-bold text-[#050816] group-hover:text-[#1F3A5F]">{opt.label}</p>
                   <p className="text-xs text-[#64748B] mt-0.5">{opt.desc}</p>
                 </div>
-                <ChevronRight size={16} className="text-[#94A3B8] group-hover:text-[#8B0C21]" />
+                <ChevronRight size={16} className="text-[#94A3B8] group-hover:text-[#1F3A5F]" />
               </button>
             ))}
           </div>
@@ -177,7 +177,7 @@ Generate a structured path profile for them to save and test. Be realistic and h
           <div className="space-y-3">
             {unactivatedRecs.map(rec => (
               <button key={rec.id} onClick={() => handleSelectRec(rec)} disabled={saving}
-                className="w-full rounded-[16px] border border-[#E2E8F0] p-4 text-left transition hover:border-[#8B0C21] hover:bg-[#F8ECEF] disabled:opacity-60">
+                className="w-full rounded-[16px] border border-[#E2E8F0] p-4 text-left transition hover:border-[#1F3A5F] hover:bg-[#EEF2F6] disabled:opacity-60">
                 <p className="text-sm font-bold text-[#050816]">{rec.path_name}</p>
                 <p className="text-xs text-[#64748B] mt-1 line-clamp-2">{rec.fit_reason}</p>
                 <span className="mt-2 inline-block rounded-full px-2 py-0.5 text-[10px] font-bold" style={{ background: '#F1F5F9', color: '#64748B' }}>{rec.status}</span>
@@ -218,14 +218,14 @@ Generate a structured path profile for them to save and test. Be realistic and h
               <div key={q.name}>
                 <label className="block text-sm font-semibold text-[#334155] mb-1.5">{q.label}</label>
                 <textarea rows={2} name={q.name} value={survey[q.name]} onChange={chSurvey} placeholder={q.placeholder}
-                  className="w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-3 text-sm outline-none focus:border-[#8B0C21] resize-none placeholder-[#94A3B8]" />
+                  className="w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-3 text-sm outline-none focus:border-[#1F3A5F] resize-none placeholder-[#94A3B8]" />
               </div>
             ))}
             <div className="flex gap-3 mt-4">
               <button onClick={() => setMode(null)} className="flex-1 rounded-[10px] border border-[#E2E8F0] py-3 text-sm font-semibold text-[#334155]">Back</button>
               <button onClick={handleGenerateFromSurvey} disabled={generating}
                 className="flex-1 rounded-[10px] py-3 text-sm font-semibold text-white disabled:opacity-60"
-                style={{ background: '#8B0C21' }}>
+                style={{ background: 'var(--brand-navy-900)' }}>
                 {generating ? <span className="flex items-center justify-center gap-2"><Loader2 size={15} className="animate-spin" />Generating…</span>
                   : <span className="flex items-center justify-center gap-2">Generate Path Profile <ArrowRight size={14} /></span>}
               </button>
@@ -247,7 +247,7 @@ Generate a structured path profile for them to save and test. Be realistic and h
                 <label className="block text-sm font-semibold text-[#334155] mb-1.5">{f.label}</label>
                 {f.rows ? (
                   <textarea rows={f.rows} name={f.name} value={form[f.name]} onChange={ch} placeholder={f.placeholder}
-                    className="w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-3 text-sm outline-none focus:border-[#8B0C21] resize-none placeholder-[#94A3B8]" />
+                    className="w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-3 text-sm outline-none focus:border-[#1F3A5F] resize-none placeholder-[#94A3B8]" />
                 ) : (
                   <input name={f.name} value={form[f.name]} onChange={ch} placeholder={f.placeholder} className={inputCls} />
                 )}
@@ -278,7 +278,7 @@ Generate a structured path profile for them to save and test. Be realistic and h
                 className="flex-1 rounded-[10px] border border-[#E2E8F0] py-3 text-sm font-semibold text-[#334155]">Back</button>
               <button onClick={handleSave} disabled={saving}
                 className="flex-1 rounded-[10px] py-3 text-sm font-semibold text-white disabled:opacity-60"
-                style={{ background: '#8B0C21' }}>
+                style={{ background: 'var(--brand-navy-900)' }}>
                 {saving ? <span className="flex items-center justify-center gap-2"><Loader2 size={15} className="animate-spin" />Saving…</span> : 'Save Path'}
               </button>
             </div>

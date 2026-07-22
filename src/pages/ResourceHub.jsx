@@ -11,7 +11,7 @@ const CATEGORY_LABELS = {
   accelerators: 'Accelerators', scholarships: 'Scholarships', fellowships: 'Fellowships', other: 'Other',
 };
 
-const PRICE_STYLES = { free: { bg: '#F0FDF4', text: '#15803D' }, paid: { bg: '#F8ECEF', text: '#8B0C21' }, freemium: { bg: '#FFFBEB', text: '#B45309' } };
+const PRICE_STYLES = { free: { bg: '#F0FDF4', text: '#15803D' }, paid: { bg: '#EEF2F6', text: 'var(--brand-navy-900)' }, freemium: { bg: '#FFFBEB', text: '#B45309' } };
 
 // Default curated resources shown when database is empty
 const DEFAULT_RESOURCES = [
@@ -51,7 +51,7 @@ export default function ResourceHub() {
         {categories.map(c => (
           <button key={c} onClick={() => setFilter(c)}
             className="rounded-full px-4 py-1.5 text-xs font-semibold transition border"
-            style={filter === c ? { background: '#8B0C21', color: '#fff', borderColor: '#8B0C21' } : { background: 'white', color: '#334155', borderColor: '#E2E8F0' }}>
+            style={filter === c ? { background: 'var(--brand-navy-900)', color: '#fff', borderColor: 'var(--brand-navy-900)' } : { background: 'white', color: '#334155', borderColor: '#E2E8F0' }}>
             {c === 'all' ? 'All categories' : CATEGORY_LABELS[c] || c}
           </button>
         ))}
@@ -64,10 +64,10 @@ export default function ResourceHub() {
           {filtered.map((r, i) => {
             const ps = PRICE_STYLES[r.price_type] || PRICE_STYLES.free;
             return (
-              <div key={r.id || i} className={`rounded-[20px] border bg-white p-5 flex flex-col ${r.featured ? 'border-[rgba(139,12,33,0.35)]' : 'border-[#E2E8F0]'}`}>
+              <div key={r.id || i} className={`rounded-[20px] border bg-white p-5 flex flex-col ${r.featured ? 'border-[rgba(31,58,95,0.35)]' : 'border-[#E2E8F0]'}`}>
                 <div className="flex items-start justify-between gap-3 mb-3">
                   <div>
-                    {r.featured && <div className="flex items-center gap-1 text-xs font-bold mb-1" style={{ color: '#8B0C21' }}><Star size={11} /> Featured</div>}
+                    {r.featured && <div className="flex items-center gap-1 text-xs font-bold mb-1" style={{ color: 'var(--brand-navy-900)' }}><Star size={11} /> Featured</div>}
                     <h3 className="font-heading font-bold text-[#050816]">{r.name}</h3>
                     <span className="text-xs" style={{ color: '#64748B' }}>{CATEGORY_LABELS[r.category] || r.category}</span>
                   </div>
@@ -77,8 +77,8 @@ export default function ResourceHub() {
                 </div>
                 <p className="text-sm text-[#334155] leading-6 flex-1">{r.description}</p>
                 {r.recommendation_reason && (
-                  <div className="mt-3 rounded-xl p-3" style={{ background: '#F8ECEF', border: '1px solid rgba(139,12,33,0.15)' }}>
-                    <p className="text-xs font-semibold mb-1" style={{ color: '#8B0C21' }}>Why Unscripted recommends it</p>
+                  <div className="mt-3 rounded-xl p-3" style={{ background: '#EEF2F6', border: '1px solid rgba(31,58,95,0.15)' }}>
+                    <p className="text-xs font-semibold mb-1" style={{ color: 'var(--brand-navy-900)' }}>Why Unscripted recommends it</p>
                     <p className="text-xs text-[#334155]">{r.recommendation_reason}</p>
                   </div>
                 )}
@@ -90,7 +90,7 @@ export default function ResourceHub() {
                   {r.external_url && (
                     <a href={r.external_url} target="_blank" rel="noopener noreferrer"
                       className="flex items-center gap-1.5 rounded-[10px] px-3 py-1.5 text-xs font-semibold text-white transition hover:-translate-y-px"
-                      style={{ background: '#8B0C21' }}>
+                      style={{ background: 'var(--brand-navy-900)' }}>
                       Visit <ExternalLink size={11} />
                     </a>
                   )}

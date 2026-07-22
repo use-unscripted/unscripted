@@ -20,7 +20,7 @@ export default function Roadmap() {
         action={
           <Link to="/calendar"
             className="flex items-center gap-2 rounded-[10px] px-5 py-3 text-sm font-semibold text-white transition hover:-translate-y-px"
-            style={{ background: '#8B0C21', boxShadow: '0 8px 24px rgba(139,12,33,0.18)' }}>
+            style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}>
             <CalendarDays size={16} /> Open this week
           </Link>
         }
@@ -28,10 +28,10 @@ export default function Roadmap() {
 
       {/* Feasibility assessment */}
       {r.feasibility_assessment && (
-        <div className="mb-6 flex items-start gap-3 rounded-[20px] p-6" style={{ background: '#081225', border: '1px solid rgba(139,12,33,0.30)' }}>
-          <AlertTriangle size={18} className="shrink-0 mt-0.5" style={{ color: '#8B0C21' }} />
+        <div className="mb-6 flex items-start gap-3 rounded-[20px] p-6" style={{ background: '#081225', border: '1px solid rgba(31,58,95,0.30)' }}>
+          <AlertTriangle size={18} className="shrink-0 mt-0.5" style={{ color: 'var(--brand-navy-900)' }} />
           <div>
-            <p className="text-xs font-bold uppercase tracking-wide mb-2" style={{ color: '#8B0C21' }}>Feasibility assessment</p>
+            <p className="text-xs font-bold uppercase tracking-wide mb-2" style={{ color: 'var(--brand-navy-900)' }}>Feasibility assessment</p>
             <p className="text-sm text-slate-300 leading-6">{r.feasibility_assessment}</p>
           </div>
         </div>

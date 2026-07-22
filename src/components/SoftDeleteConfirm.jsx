@@ -28,7 +28,7 @@ export default function SoftDeleteConfirm({ itemName, onConfirm, onCancel }) {
           </button>
           <button onClick={onConfirm}
             className="flex-1 rounded-[10px] py-2.5 text-sm font-semibold text-white transition"
-            style={{ background: '#8B0C21' }}>
+            style={{ background: 'var(--brand-navy-900)' }}>
             Move to Recently Deleted
           </button>
         </div>

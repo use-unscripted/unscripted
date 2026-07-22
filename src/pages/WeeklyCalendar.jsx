@@ -76,26 +76,26 @@ function BlockModal({ block, onClose, onSave }) {
           <label className="block sm:col-span-2">
             <span className="text-xs font-semibold text-[#334155] block mb-1">Type</span>
             <select name="block_type" value={data.block_type} onChange={ch}
-              className="w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-3 py-2.5 text-sm outline-none focus:border-[#8B0C21]">
+              className="w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-3 py-2.5 text-sm outline-none focus:border-[#1F3A5F]">
               {BLOCK_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
             </select>
           </label>
           <label className="block sm:col-span-2">
             <span className="text-xs font-semibold text-[#334155] block mb-1">Label (optional)</span>
             <input name="title" value={data.title || ''} onChange={ch} placeholder="e.g. BIO 301, Morning workout"
-              className="w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-3 py-2.5 text-sm outline-none focus:border-[#8B0C21]" />
+              className="w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-3 py-2.5 text-sm outline-none focus:border-[#1F3A5F]" />
           </label>
           <label className="block">
             <span className="text-xs font-semibold text-[#334155] block mb-1">Day</span>
             <select name="day" value={data.day} onChange={ch}
-              className="w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-3 py-2.5 text-sm outline-none focus:border-[#8B0C21]">
+              className="w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-3 py-2.5 text-sm outline-none focus:border-[#1F3A5F]">
               {DAYS.map(d => <option key={d} value={d}>{d}</option>)}
             </select>
           </label>
           <label className="block">
             <span className="text-xs font-semibold text-[#334155] block mb-1">Energy level</span>
             <select name="energy_level" value={data.energy_level || 'medium'} onChange={ch}
-              className="w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-3 py-2.5 text-sm outline-none focus:border-[#8B0C21]">
+              className="w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-3 py-2.5 text-sm outline-none focus:border-[#1F3A5F]">
               <option value="high">High</option>
               <option value="medium">Medium</option>
               <option value="low">Low</option>
@@ -104,12 +104,12 @@ function BlockModal({ block, onClose, onSave }) {
           <label className="block">
             <span className="text-xs font-semibold text-[#334155] block mb-1">Start time</span>
             <input type="time" name="start_time" value={data.start_time || ''} onChange={ch}
-              className="w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-3 py-2.5 text-sm outline-none focus:border-[#8B0C21]" />
+              className="w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-3 py-2.5 text-sm outline-none focus:border-[#1F3A5F]" />
           </label>
           <label className="block">
             <span className="text-xs font-semibold text-[#334155] block mb-1">End time</span>
             <input type="time" name="end_time" value={data.end_time || ''} onChange={ch}
-              className="w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-3 py-2.5 text-sm outline-none focus:border-[#8B0C21]" />
+              className="w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-3 py-2.5 text-sm outline-none focus:border-[#1F3A5F]" />
           </label>
         </div>
         <div className="mt-5 flex gap-3">
@@ -137,19 +137,19 @@ function TaskModal({ task, experiments, blocks, onClose, onSave }) {
           <label className="block sm:col-span-2">
             <span className="text-xs font-semibold text-[#334155] block mb-1">Task title *</span>
             <input name="task_title" value={data.task_title || ''} onChange={ch} placeholder="What will you do?"
-              className="w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-3 py-2.5 text-sm outline-none focus:border-[#8B0C21]" />
+              className="w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-3 py-2.5 text-sm outline-none focus:border-[#1F3A5F]" />
           </label>
           <label className="block">
             <span className="text-xs font-semibold text-[#334155] block mb-1">Type</span>
             <select name="task_type" value={data.task_type || 'career'} onChange={ch}
-              className="w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-3 py-2.5 text-sm outline-none focus:border-[#8B0C21]">
+              className="w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-3 py-2.5 text-sm outline-none focus:border-[#1F3A5F]">
               {TASK_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
             </select>
           </label>
           <label className="block">
             <span className="text-xs font-semibold text-[#334155] block mb-1">Linked mission</span>
             <select name="roadmap_id" value={data.roadmap_id || ''} onChange={ch}
-              className="w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-3 py-2.5 text-sm outline-none focus:border-[#8B0C21]">
+              className="w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-3 py-2.5 text-sm outline-none focus:border-[#1F3A5F]">
               <option value="">None</option>
               {experiments.map(e => <option key={e.id} value={e.id}>{e.title}</option>)}
             </select>
@@ -157,14 +157,14 @@ function TaskModal({ task, experiments, blocks, onClose, onSave }) {
           <label className="block">
             <span className="text-xs font-semibold text-[#334155] block mb-1">Day</span>
             <select name="day" value={data.day || 'Monday'} onChange={ch}
-              className="w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-3 py-2.5 text-sm outline-none focus:border-[#8B0C21]">
+              className="w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-3 py-2.5 text-sm outline-none focus:border-[#1F3A5F]">
               {DAYS.map(d => <option key={d} value={d}>{d}</option>)}
             </select>
           </label>
           <label className="block">
             <span className="text-xs font-semibold text-[#334155] block mb-1">Time (optional)</span>
             <input type="time" name="time" value={data.time || ''} onChange={ch}
-              className={`w-full rounded-xl border px-3 py-2.5 text-sm outline-none focus:border-[#8B0C21] ${conflict ? 'border-[#B91C1C] bg-[#FEF2F2]' : 'border-[#E2E8F0] bg-[#FAFAF9]'}`} />
+              className={`w-full rounded-xl border px-3 py-2.5 text-sm outline-none focus:border-[#1F3A5F] ${conflict ? 'border-[#B91C1C] bg-[#FEF2F2]' : 'border-[#E2E8F0] bg-[#FAFAF9]'}`} />
           </label>
         </div>
         {conflict && (

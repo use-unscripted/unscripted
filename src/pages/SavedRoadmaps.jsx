@@ -20,13 +20,13 @@ export default function SavedRoadmaps() {
           <Link
             to="/roadmap"
             key={r.id}
-            className="flex items-center gap-5 rounded-[20px] border border-[#E2E8F0] bg-white p-6 transition hover:-translate-y-0.5 hover:shadow-md hover:border-[rgba(139,12,33,0.25)]"
+            className="flex items-center gap-5 rounded-[20px] border border-[#E2E8F0] bg-white p-6 transition hover:-translate-y-0.5 hover:shadow-md hover:border-[rgba(31,58,95,0.25)]"
           >
             <span
               className="grid h-12 w-12 place-items-center rounded-xl shrink-0"
               style={{ background: '#F8ECEF' }}
             >
-              <Map style={{ color: '#8B0C21' }} size={20} />
+              <Map style={{ color: 'var(--brand-navy-900)' }} size={20} />
             </span>
             <div className="min-w-0 flex-1">
               <h2 className="font-heading truncate font-bold text-[#07111F]">{r.title}</h2>

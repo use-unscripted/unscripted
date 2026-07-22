@@ -21,7 +21,7 @@ const TIMEZONES = [
   'Australia/Sydney', 'UTC',
 ];
 
-const inputCls = 'w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-3 py-2.5 text-sm outline-none focus:border-[#8B0C21]';
+const inputCls = 'w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-3 py-2.5 text-sm outline-none focus:border-[#1F3A5F]';
 
 export default function AddToCalendarModal({ item, itemType, onClose }) {
   // itemType: 'mission' | 'task' | 'outreach'
@@ -91,7 +91,7 @@ export default function AddToCalendarModal({ item, itemType, onClose }) {
       <div className="w-full max-w-md rounded-[24px] bg-white p-6 shadow-2xl">
         <div className="flex items-center justify-between mb-5">
           <div className="flex items-center gap-2">
-            <Calendar size={18} style={{ color: '#8B0C21' }} />
+            <Calendar size={18} style={{ color: 'var(--brand-navy-900)' }} />
             <h2 className="font-heading text-lg font-bold text-[#050816]">Add to Calendar</h2>
           </div>
           <button onClick={onClose}><X size={18} className="text-[#64748B]" /></button>
@@ -108,7 +108,7 @@ export default function AddToCalendarModal({ item, itemType, onClose }) {
               <button onClick={() => setDone(false)} className="flex-1 rounded-[10px] border border-[#E2E8F0] py-2.5 text-sm font-semibold text-[#334155] hover:bg-[#F8FAFC]">
                 Export Again
               </button>
-              <button onClick={onClose} className="flex-1 rounded-[10px] py-2.5 text-sm font-semibold text-white" style={{ background: '#8B0C21' }}>
+              <button onClick={onClose} className="flex-1 rounded-[10px] py-2.5 text-sm font-semibold text-white" style={{ background: 'var(--brand-navy-900)' }}>
                 Done
               </button>
             </div>
@@ -180,7 +180,7 @@ export default function AddToCalendarModal({ item, itemType, onClose }) {
               </button>
               <button onClick={handleDownload} disabled={downloading || !form.date}
                 className="flex-1 flex items-center justify-center gap-2 rounded-[10px] py-2.5 text-sm font-semibold text-white disabled:opacity-60"
-                style={{ background: '#8B0C21' }}>
+                style={{ background: 'var(--brand-navy-900)' }}>
                 <Download size={14} />
                 {downloading ? 'Preparing…' : 'Download .ics'}
               </button>

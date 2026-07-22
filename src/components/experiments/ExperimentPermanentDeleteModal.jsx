@@ -102,7 +102,7 @@ export default function ExperimentPermanentDeleteModal({ exp, onDeleted, onCance
         <div className="space-y-2 mb-4">
           <button
             onClick={() => { setMode('unlink'); setTyped(''); }}
-            className={`w-full text-left rounded-xl border p-3 transition ${mode === 'unlink' ? 'border-[#8B0C21] bg-[#F8ECEF]' : 'border-[#E2E8F0] hover:border-[#CBD5E1]'}`}
+            className={`w-full text-left rounded-xl border p-3 transition ${mode === 'unlink' ? 'border-[#1F3A5F] bg-[#EEF2F6]' : 'border-[#E2E8F0] hover:border-[#CBD5E1]'}`}
           >
             <p className="text-sm font-semibold text-[#050816]">Delete only this experiment</p>
             <p className="text-xs text-[#64748B] mt-0.5">Missions, proof, contacts, and reflections are kept as unlinked records.</p>
