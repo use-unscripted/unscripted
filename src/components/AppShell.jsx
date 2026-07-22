@@ -1,7 +1,7 @@
 import { Outlet, NavLink } from 'react-router-dom';
 import { LayoutDashboard, Beaker, CalendarDays, Users, FileText, RotateCcw, Settings, LogOut, Target, BookOpen } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
-import { LogoFull } from '@/components/UnscriptedLogo';
+import { CompassIcon } from '@/components/UnscriptedLogo';
 
 const coreLinks = [
   ['/dashboard', 'Dashboard', LayoutDashboard],
@@ -51,9 +51,14 @@ export default function AppShell() {
     <div className="min-h-screen font-body" style={{ background: 'var(--background-secondary)' }}>
       {/* Sidebar */}
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-60 flex-col p-5 lg:flex" style={{ background: 'var(--brand-navy-900)' }}>
-        <NavLink to="/dashboard" className="mb-8 block">
-          <div className="px-1">
-            <LogoFull height={32} />
+        <NavLink to="/dashboard" className="mb-8 block -mx-5 px-5 py-3">
+          <div className="flex items-center justify-center gap-0 font-heading font-bold text-white uppercase select-none" style={{ fontSize: '14px', letterSpacing: '0.20em' }}>
+            <span>UNSCRIP</span>
+            {/* Compass star as the "T" */}
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="mx-0.5 shrink-0" style={{ marginTop: '-1px' }}>
+              <path d="M12 2 L13.2 10.8 L22 12 L13.2 13.2 L12 22 L10.8 13.2 L2 12 L10.8 10.8 Z" fill="var(--brand-gold-500)" />
+            </svg>
+            <span>ED</span>
           </div>
         </NavLink>
 
