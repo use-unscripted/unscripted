@@ -1,0 +1,28 @@
+{
+  "name": "University",
+  "type": "object",
+  "properties": {
+    "canonical_name": {
+      "type": "string"
+    },
+    "approved_domains": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "logo_url": {
+      "type": "string"
+    },
+    "location": {
+      "type": "string"
+    },
+    "active": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "canonical_name"
+  ]
+}

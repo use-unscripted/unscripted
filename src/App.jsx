@@ -47,6 +47,9 @@ import GoalsPage from '@/pages/GoalsPage';
 import ResumeBuilder from '@/pages/ResumeBuilder';
 import RecentlyDeleted from '@/pages/RecentlyDeleted';
 import GuideDetailPage from '@/pages/GuideDetailPage';
+import CampusNetwork from '@/pages/CampusNetwork';
+import NetworkProfilePage from '@/pages/NetworkProfilePage';
+import InviteAccept from '@/pages/InviteAccept';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError } = useAuth();
@@ -99,7 +102,11 @@ const AuthenticatedApp = () => {
           <Route path="/resume" element={<ResumeBuilder />} />
           <Route path="/recently-deleted" element={<RecentlyDeleted />} />
           <Route path="/guide" element={<GuideDetailPage />} />
+          <Route path="/network" element={<CampusNetwork />} />
+          <Route path="/network/profile/:userId" element={<NetworkProfilePage />} />
         </Route>
+        <Route path="/invite/:token" element={<InviteAccept />} />
+        <Route path="/invite" element={<InviteAccept />} />
       </Route>
       <Route path="*" element={<PageNotFound />} />
     </Routes>

@@ -1,0 +1,30 @@
+{
+  "name": "Follow",
+  "type": "object",
+  "properties": {
+    "follower_user_id": {
+      "type": "string"
+    },
+    "followed_user_id": {
+      "type": "string"
+    },
+    "follower_university_id": {
+      "type": "string"
+    },
+    "followed_university_id": {
+      "type": "string"
+    },
+    "active": {
+      "type": "boolean",
+      "default": true
+    },
+    "unfollowed_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "follower_user_id",
+    "followed_user_id"
+  ]
+}

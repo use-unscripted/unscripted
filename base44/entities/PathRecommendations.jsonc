@@ -116,6 +116,23 @@
     },
     "generated_detail": {
       "type": "object"
+    },
+    "network_visibility": {
+      "type": "string",
+      "enum": [
+        "private",
+        "followers",
+        "my_university",
+        "all_unscripted"
+      ],
+      "default": "private"
+    },
+    "network_summary": {
+      "type": "string"
+    },
+    "network_shared_at": {
+      "type": "string",
+      "format": "date-time"
     }
   },
   "required": [

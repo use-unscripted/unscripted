@@ -1,0 +1,44 @@
+{
+  "name": "NetworkNotification",
+  "type": "object",
+  "properties": {
+    "recipient_user_id": {
+      "type": "string"
+    },
+    "sender_user_id": {
+      "type": "string"
+    },
+    "sender_display_name": {
+      "type": "string"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "new_follower",
+        "invite_accepted",
+        "follow_back_suggestion"
+      ]
+    },
+    "related_profile_id": {
+      "type": "string"
+    },
+    "related_proof_id": {
+      "type": "string"
+    },
+    "message": {
+      "type": "string"
+    },
+    "read": {
+      "type": "boolean",
+      "default": false
+    },
+    "dismissed": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "required": [
+    "recipient_user_id",
+    "type"
+  ]
+}

@@ -1,0 +1,53 @@
+{
+  "name": "CampusInvite",
+  "type": "object",
+  "properties": {
+    "inviter_user_id": {
+      "type": "string"
+    },
+    "inviter_university_name": {
+      "type": "string"
+    },
+    "token": {
+      "type": "string"
+    },
+    "active": {
+      "type": "boolean",
+      "default": true
+    },
+    "revoked": {
+      "type": "boolean",
+      "default": false
+    },
+    "max_uses": {
+      "type": "number",
+      "default": 50
+    },
+    "use_count": {
+      "type": "number",
+      "default": 0
+    },
+    "expires_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "claims": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "claimed_user_id": {
+            "type": "string"
+          },
+          "claimed_at": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "required": [
+    "inviter_user_id",
+    "token"
+  ]
+}

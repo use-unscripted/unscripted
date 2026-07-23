@@ -1,0 +1,82 @@
+{
+  "name": "NetworkProfile",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string"
+    },
+    "display_name": {
+      "type": "string"
+    },
+    "profile_slug": {
+      "type": "string"
+    },
+    "profile_image_url": {
+      "type": "string"
+    },
+    "bio": {
+      "type": "string"
+    },
+    "university_id": {
+      "type": "string"
+    },
+    "university_name": {
+      "type": "string"
+    },
+    "verification_status": {
+      "type": "string",
+      "enum": [
+        "unverified",
+        "pending",
+        "verified",
+        "rejected"
+      ],
+      "default": "unverified"
+    },
+    "major": {
+      "type": "string"
+    },
+    "academic_year": {
+      "type": "string"
+    },
+    "show_major": {
+      "type": "boolean",
+      "default": false
+    },
+    "show_academic_year": {
+      "type": "boolean",
+      "default": false
+    },
+    "show_path_categories": {
+      "type": "boolean",
+      "default": false
+    },
+    "public_path_categories": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "profile_visibility": {
+      "type": "string",
+      "enum": [
+        "private",
+        "my_university",
+        "all_unscripted"
+      ],
+      "default": "private"
+    },
+    "discoverable": {
+      "type": "boolean",
+      "default": false
+    },
+    "active": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "user_id",
+    "display_name"
+  ]
+}
