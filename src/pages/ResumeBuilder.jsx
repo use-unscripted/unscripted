@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Plus, FileText, Clock, Copy, Trash2, ChevronRight, RotateCcw, Save, Eye, Edit3, X, Check } from 'lucide-react';
 import PageHeader from '@/components/PageHeader';
-import { TEMPLATES, DEFAULT_SECTIONS, BLANK_CONTACT, CLASSIC_FINANCE_SECTIONS, DEFAULT_SKILL_GROUPS, newEntry } from '@/components/resume/resumeTemplates';
+import { TEMPLATES, DEFAULT_SECTIONS, BLANK_CONTACT, CLASSIC_FINANCE_SECTIONS, DEFAULT_SKILL_GROUPS } from '@/components/resume/resumeTemplates';
 import ResumeEditor from '@/components/resume/ResumeEditor';
 import ResumePreview from '@/components/resume/ResumePreview';
 import ResumeExport from '@/components/resume/ResumeExport';
@@ -17,6 +17,9 @@ function buildDefaultContent(templateId) {
       if (s.type === 'list') content[s.id] = [];
       if (s.type === 'education_cf') content[s.id] = [];
       if (s.type === 'skills_grouped') content[s.id] = DEFAULT_SKILL_GROUPS.map(g => ({ ...g }));
+      if (s.type === 'cert') content[s.id] = [];
+      if (s.type === 'awards_cf') content[s.id] = [];
+      if (s.type === 'research') content[s.id] = [];
     }
     return content;
   }
@@ -59,7 +62,7 @@ function TemplatePicker({ onSelect, onCancel }) {
           <h2 className="font-heading text-xl font-bold text-[#050816]">Choose a Template</h2>
           <button onClick={onCancel}><X size={18} className="text-[#94A3B8]" /></button>
         </div>
-        <p className="text-xs text-[#64748B] mb-4">All templates use clean, ATS-friendly one-column layouts with standard section headings and readable fonts. No template guarantees employment or ATS approval.</p>
+        <p className="text-xs text-[#64748B] mb-4">All templates use clean, ATS-friendly one-column layouts. The Classic Finance template is recommended for finance, consulting, and traditional recruiting. No template guarantees employment or ATS approval.</p>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {TEMPLATES.map(t => (
             <button key={t.id} onClick={() => onSelect(t)}
@@ -280,10 +283,32 @@ export default function ResumeBuilder() {
   };
 
   const selectResume = async (r) => {
-    setSelectedId(r.id);
-    setDraft({ ...r });
+    let resume = { ...r };
+    // Ensure CF resumes have all approved sections (add missing ones without disrupting existing data)
+    if (resume.template_id === 'classic_finance') {
+      const content = { ...(resume.content || {}) };
+      const existingSections = content.sections || [];
+      const existingIds = new Set(existingSections.map(s => s.id));
+      const missingSections = CLASSIC_FINANCE_SECTIONS.filter(s => !existingIds.has(s.id));
+      if (missingSections.length > 0) {
+        const newSections = [...existingSections, ...missingSections];
+        const newContent = { ...content, sections: newSections };
+        for (const s of missingSections) {
+          if (s.type === 'list') newContent[s.id] = [];
+          if (s.type === 'education_cf') newContent[s.id] = newContent[s.id] || [];
+          if (s.type === 'skills_grouped') newContent[s.id] = newContent[s.id] || DEFAULT_SKILL_GROUPS.map(g => ({ ...g }));
+          if (s.type === 'cert') newContent[s.id] = [];
+          if (s.type === 'awards_cf') newContent[s.id] = [];
+          if (s.type === 'research') newContent[s.id] = [];
+        }
+        const newOrder = [...(resume.section_order || existingSections.map(s => s.id)), ...missingSections.map(s => s.id)];
+        resume = { ...resume, content: newContent, section_order: newOrder };
+      }
+    }
+    setSelectedId(resume.id);
+    setDraft(resume);
     isDirty.current = false;
-    await loadVersions(r.id);
+    await loadVersions(resume.id);
     setView('edit');
   };
 

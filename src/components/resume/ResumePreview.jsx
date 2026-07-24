@@ -2,28 +2,33 @@ import { TEMPLATES } from './resumeTemplates';
 
 // ── Date helpers ─────────────────────────────────────────────────────────────
 const MONTHS_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-const MONTHS_NUM   = ['01','02','03','04','05','06','07','08','09','10','11','12'];
 
-function fmtMonth(d) {
+function fmtMonthYear(month, year) {
+  if (!month && !year) return '';
+  if (!month) return year;
+  const m = parseInt(month, 10);
+  const label = MONTHS_SHORT[m - 1] || month;
+  return year ? `${label} ${year}` : label;
+}
+
+function fmtMonthInput(d) {
+  // Input is YYYY-MM from <input type="month">
   if (!d) return '';
   const [y, m] = d.split('-');
   if (!m) return y;
   return `${MONTHS_SHORT[parseInt(m,10)-1]} ${y}`;
 }
 
-function fmtMonthNum(d) {
-  // Returns MM/YYYY for Classic Finance style
+function fmtNumeric(d) {
   if (!d) return '';
   const [y, m] = d.split('-');
-  if (!m) return y;
-  return `${m}/${y}`;
+  return m ? `${m}/${y}` : y;
 }
 
-function DateRange({ start, end, current, numeric = false }) {
-  const fmt = numeric ? fmtMonthNum : fmtMonth;
+function DateRange({ start, end, current }) {
   if (!start && !end && !current) return null;
-  const s = fmt(start);
-  const e = current ? 'Present' : fmt(end);
+  const s = fmtNumeric(start);
+  const e = current ? 'Present' : fmtNumeric(end);
   if (!s && !e) return null;
   return <>{s}{s && e ? ' \u2013 ' : ''}{e}</>;
 }
@@ -32,7 +37,7 @@ function DateRange({ start, end, current, numeric = false }) {
 // CLASSIC FINANCE PREVIEW
 // ════════════════════════════════════════════════════════════════════════════
 
-const CF_FONTS = `@import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&display=swap');`;
+export const CF_FONTS = `@import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&display=swap');`;
 
 const cfStyle = {
   fontFamily: "'EB Garamond', 'Garamond', 'Times New Roman', Georgia, serif",
@@ -81,11 +86,7 @@ function CFContact({ contact }) {
         </div>
       )}
       {parts.length > 0 && (
-        <div style={{
-          fontFamily: "'EB Garamond', Garamond, serif",
-          fontSize: '11.5pt',
-          color: '#000',
-        }}>
+        <div style={{ fontFamily: "'EB Garamond', Garamond, serif", fontSize: '11pt', color: '#000' }}>
           {parts.map((p, i) => (
             <span key={i}>
               {p.includes('@') || p.startsWith('http') || p.includes('linkedin') || p.includes('www')
@@ -102,76 +103,105 @@ function CFContact({ contact }) {
 }
 
 function CFEducation({ entries }) {
-  const visible = (entries || []).filter(e => !e.hidden);
-  if (!visible.length) return null;
+  // Show only the active (non-hidden) entry
+  const active = (entries || []).find(e => !e.hidden);
+  if (!active) return null;
+
+  const e = active;
+  const gradDate = fmtMonthYear(e.gradMonth, e.gradYear);
+  const loc = e.location || (e.city && e.state ? `${e.city}, ${e.state}` : e.city || e.state || '');
+
+  // Build degree line: "Bachelor of Science (B.S.): Finance & Economics"
+  let degreeLine = '';
+  if (e.degree) {
+    degreeLine = e.degree;
+    if (e.degreeAbbrev) degreeLine += ` (${e.degreeAbbrev})`;
+    if (e.major) {
+      degreeLine += ': ' + e.major;
+      if (e.secondMajor) degreeLine += ` & ${e.secondMajor}`;
+    }
+  } else if (e.major) {
+    degreeLine = e.major;
+    if (e.secondMajor) degreeLine += ` & ${e.secondMajor}`;
+  }
+
+  // Minor / concentration line
+  const minorConc = [
+    e.minor ? `Minor: ${e.minor}` : '',
+    e.concentration ? `Concentration: ${e.concentration}` : '',
+  ].filter(Boolean).join(' | ');
+
   return (
     <div style={{ marginBottom: '4pt' }}>
-      {visible.map((e, idx) => {
-        const gradDate = e.gradMonth && e.gradYear
-          ? `${MONTHS_SHORT[parseInt(e.gradMonth,10)-1]} ${e.gradYear}`
-          : e.gradYear || '';
-        return (
-          <div key={e.id || idx} style={{ marginBottom: idx < visible.length - 1 ? '6pt' : '0' }}>
-            {/* Line 1: Institution | Date    GPA */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-              <div style={{ fontWeight: '700', fontSize: '11pt' }}>
-                {e.institution}
-                {e.location && <span style={{ fontWeight: '400' }}>{'\u00A0|\u00A0'}{e.location}</span>}
-                {gradDate && <span style={{ fontWeight: '400' }}>{'\u00A0'}{gradDate}</span>}
-              </div>
-              {e.gpa && e.showGpa !== false && (
-                <div style={{ fontWeight: '700', whiteSpace: 'nowrap', paddingLeft: '8pt' }}>
-                  GPA: <span style={{ fontWeight: '400' }}>{e.gpa}{e.gpaScale ? `/${e.gpaScale}` : ''}</span>
-                </div>
-              )}
-            </div>
-            {/* Line 2: Degree italic */}
-            {(e.degree || e.major) && (
-              <div style={{ fontStyle: 'italic', fontSize: '11pt' }}>
-                {[e.degree, e.major, e.secondMajor ? `& ${e.secondMajor}` : ''].filter(Boolean).join(' in ').replace(' in &', ' &')}
-                {e.minor ? `; Minor in ${e.minor}` : ''}
-              </div>
-            )}
-            {/* Coursework */}
-            {e.coursework && (
-              <div style={{ fontSize: '11pt' }}>
-                <span style={{ fontWeight: '700' }}>Relevant Coursework:</span>{' '}{e.coursework}
-              </div>
-            )}
-            {/* Honors */}
-            {e.honors && (
-              <div style={{ fontSize: '11pt' }}>
-                <span style={{ fontWeight: '700' }}>Honors &amp; Awards:</span>{' '}{e.honors}
-              </div>
-            )}
-            {/* Study abroad */}
-            {e.studyAbroad && (
-              <div style={{ fontSize: '11pt' }}>
-                <span style={{ fontWeight: '700' }}>Study Abroad:</span>{' '}{e.studyAbroad}
-              </div>
-            )}
+      {/* Line 1: Institution | Location    Cumulative GPA: X/Y */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: '8pt' }}>
+        <div style={{ fontWeight: '700', fontSize: '11pt', flex: 1 }}>
+          {e.institution}
+          {loc && <span style={{ fontWeight: '400' }}>{'\u00A0|\u00A0'}{loc}</span>}
+        </div>
+        {e.gpa && e.showGpa !== false && (
+          <div style={{ fontWeight: '700', whiteSpace: 'nowrap', paddingLeft: '8pt', flexShrink: 0 }}>
+            Cumulative GPA: <span style={{ fontWeight: '400' }}>{e.gpa}{e.gpaScale ? `/${e.gpaScale}` : ''}</span>
           </div>
-        );
-      })}
+        )}
+      </div>
+      {/* Line 2: Degree italic    Expected Graduation: Month Year */}
+      {(degreeLine || gradDate) && (
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: '8pt' }}>
+          <div style={{ fontStyle: 'italic', fontSize: '11pt', flex: 1 }}>
+            {degreeLine}
+          </div>
+          {gradDate && (
+            <div style={{ fontStyle: 'italic', whiteSpace: 'nowrap', flexShrink: 0, paddingLeft: '8pt' }}>
+              Expected Graduation: {gradDate}
+            </div>
+          )}
+        </div>
+      )}
+      {/* Minor / Concentration */}
+      {minorConc && (
+        <div style={{ fontSize: '11pt' }}>
+          {minorConc.split(' | ').map((part, i) => {
+            const [label, ...rest] = part.split(': ');
+            return (
+              <span key={i}>
+                {i > 0 && <span style={{ margin: '0 4pt' }}>|</span>}
+                <span style={{ fontWeight: '700' }}>{label}:</span>{' '}{rest.join(': ')}
+              </span>
+            );
+          })}
+        </div>
+      )}
+      {/* Coursework */}
+      {e.coursework && (
+        <div style={{ fontSize: '11pt' }}>
+          <span style={{ fontWeight: '700' }}>Relevant Coursework:</span>{' '}{e.coursework}
+        </div>
+      )}
+      {/* Honors */}
+      {e.honors && (
+        <div style={{ fontSize: '11pt' }}>
+          <span style={{ fontWeight: '700' }}>Honors &amp; Awards:</span>{' '}{e.honors}
+        </div>
+      )}
     </div>
   );
 }
 
 function CFEntry({ entry, isActivity = false }) {
   const bullets = (entry.bullets || []).filter(b => b && b.trim());
-  const startDate = entry.startDate ? fmtMonthNum(entry.startDate) : '';
-  const endDate = entry.current ? 'Present' : (entry.endDate ? fmtMonthNum(entry.endDate) : '');
+  const startDate = entry.startDate ? fmtNumeric(entry.startDate) : '';
+  const endDate = entry.current ? 'Present' : (entry.endDate ? fmtNumeric(entry.endDate) : '');
   const dateStr = [startDate, endDate].filter(Boolean).join(' \u2013 ');
 
-  // Build location/arrangement line
-  const locParts = [entry.location, entry.arrangement].filter(Boolean);
+  const locParts = [entry.location, entry.arrangement ? `(${entry.arrangement})` : ''].filter(Boolean);
   const locStr = locParts.join(' ');
 
   return (
     <div style={{ marginBottom: '6pt' }}>
-      {/* Line 1: Org | Location   Date */}
+      {/* Line 1: Org | Location (Arrangement)   Date */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: '8pt' }}>
-        <div style={{ fontWeight: '700', fontSize: '11pt', flexShrink: 0 }}>
+        <div style={{ fontWeight: '700', fontSize: '11pt', flex: 1 }}>
           {entry.org || entry.title}
           {locStr && <span style={{ fontWeight: '400' }}>{'\u00A0|\u00A0'}{locStr}</span>}
         </div>
@@ -197,14 +227,7 @@ function CFEntry({ entry, isActivity = false }) {
       {bullets.length > 0 && (
         <ul style={{ margin: '1pt 0 0 0', padding: '0', listStyle: 'none' }}>
           {bullets.map((b, i) => (
-            <li key={i} style={{
-              display: 'flex',
-              alignItems: 'flex-start',
-              gap: '4pt',
-              fontSize: '11pt',
-              lineHeight: '1.2',
-              marginBottom: '1pt',
-            }}>
+            <li key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '4pt', fontSize: '11pt', lineHeight: '1.2', marginBottom: '1pt' }}>
               <span style={{ flexShrink: 0, marginTop: '1pt' }}>&#9642;</span>
               <span>{b}</span>
             </li>
@@ -229,7 +252,96 @@ function CFSkillsGrouped({ groups }) {
   );
 }
 
-function ClassicFinanceResume({ resume }) {
+function CFCertifications({ entries }) {
+  const visible = (entries || []).filter(c => !c.hidden && c.name);
+  if (!visible.length) return null;
+  return (
+    <div>
+      {visible.map((c, i) => {
+        const dateStr = fmtMonthYear(c.month, c.year);
+        return (
+          <div key={c.id || i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', fontSize: '11pt', marginBottom: '2pt' }}>
+            <div>
+              <span style={{ fontWeight: '700' }}>{c.name}</span>
+              {c.issuer && <span style={{ fontWeight: '400' }}>{'\u00A0|\u00A0'}{c.issuer}</span>}
+            </div>
+            {dateStr && <div style={{ fontStyle: 'italic', whiteSpace: 'nowrap', paddingLeft: '8pt' }}>{dateStr}</div>}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function CFAwards({ entries }) {
+  const visible = (entries || []).filter(a => !a.hidden && a.name);
+  if (!visible.length) return null;
+  return (
+    <div>
+      {visible.map((a, i) => {
+        const dateStr = fmtMonthYear(a.month, a.year);
+        return (
+          <div key={a.id || i} style={{ fontSize: '11pt', marginBottom: '2pt' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+              <div>
+                <span style={{ fontWeight: '700' }}>{a.name}</span>
+                {a.issuer && <span>{'\u00A0|\u00A0'}{a.issuer}</span>}
+              </div>
+              {dateStr && <div style={{ fontStyle: 'italic', whiteSpace: 'nowrap', paddingLeft: '8pt' }}>{dateStr}</div>}
+            </div>
+            {a.description && <div style={{ fontStyle: 'italic' }}>{a.description}</div>}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function CFResearch({ entries }) {
+  const visible = (entries || []).filter(r => !r.hidden && r.title);
+  if (!visible.length) return null;
+  return (
+    <div>
+      {visible.map((r, i) => {
+        const startStr = fmtMonthYear(r.startMonth, r.startYear);
+        const endStr = r.current ? 'Present' : fmtMonthYear(r.endMonth, r.endYear);
+        const dateStr = [startStr, endStr].filter(Boolean).join(' \u2013 ');
+        const bullets = (r.bullets || []).filter(b => b && b.trim());
+        return (
+          <div key={r.id || i} style={{ marginBottom: '6pt' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: '8pt' }}>
+              <div style={{ fontWeight: '700', fontSize: '11pt', flex: 1 }}>
+                {r.title}
+                {r.institution && <span style={{ fontWeight: '400' }}>{'\u00A0|\u00A0'}{r.institution}</span>}
+                {r.location && <span style={{ fontWeight: '400' }}>{'\u00A0|\u00A0'}{r.location}</span>}
+              </div>
+              {dateStr && <div style={{ fontStyle: 'italic', whiteSpace: 'nowrap', flexShrink: 0 }}>{dateStr}</div>}
+            </div>
+            {r.role && (
+              <div style={{ fontStyle: 'italic', fontSize: '11pt' }}>
+                {r.role}
+                {r.advisor ? ` | Advisor: ${r.advisor}` : ''}
+                {r.link ? <>{' '}<a href={r.link} style={{ color: '#000' }}>{r.link}</a></> : null}
+              </div>
+            )}
+            {bullets.length > 0 && (
+              <ul style={{ margin: '1pt 0 0 0', padding: '0', listStyle: 'none' }}>
+                {bullets.map((b, bi) => (
+                  <li key={bi} style={{ display: 'flex', alignItems: 'flex-start', gap: '4pt', fontSize: '11pt', lineHeight: '1.2', marginBottom: '1pt' }}>
+                    <span style={{ flexShrink: 0, marginTop: '1pt' }}>&#9642;</span>
+                    <span>{b}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+export function ClassicFinanceResume({ resume }) {
   const content = resume?.content || {};
   const sectionOrder = resume?.section_order || [];
   const allSections = content.sections || [];
@@ -261,6 +373,36 @@ function ClassicFinanceResume({ resume }) {
             </div>
           );
         }
+        if (section.type === 'cert') {
+          const entries = (content[section.id] || []).filter(c => !c.hidden && c.name);
+          if (!entries.length) return null;
+          return (
+            <div key={section.id}>
+              <CFSectionHeading label={section.label || 'CERTIFICATIONS'} />
+              <CFCertifications entries={entries} />
+            </div>
+          );
+        }
+        if (section.type === 'awards_cf') {
+          const entries = (content[section.id] || []).filter(a => !a.hidden && a.name);
+          if (!entries.length) return null;
+          return (
+            <div key={section.id}>
+              <CFSectionHeading label={section.label || 'AWARDS'} />
+              <CFAwards entries={entries} />
+            </div>
+          );
+        }
+        if (section.type === 'research') {
+          const entries = (content[section.id] || []).filter(r => !r.hidden && r.title);
+          if (!entries.length) return null;
+          return (
+            <div key={section.id}>
+              <CFSectionHeading label={section.label || 'RESEARCH'} />
+              <CFResearch entries={entries} />
+            </div>
+          );
+        }
         if (section.type === 'list') {
           const entries = (content[section.id] || []).filter(e => !e.hidden);
           if (!entries.length) return null;
@@ -289,20 +431,20 @@ function ClassicFinanceResume({ resume }) {
 }
 
 // ════════════════════════════════════════════════════════════════════════════
-// STANDARD (non-Classic-Finance) PREVIEW  — existing behavior preserved
+// STANDARD PREVIEW (non-Classic-Finance)
 // ════════════════════════════════════════════════════════════════════════════
 
 function fmt(d) {
   if (!d) return '';
   const [y, m] = d.split('-');
   if (!m) return y;
-  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  return `${months[parseInt(m,10)-1]} ${y}`;
+  return `${MONTHS_SHORT[parseInt(m,10)-1]} ${y}`;
 }
 
 function ContactSection({ contact, accentColor }) {
   if (!contact) return null;
-  const parts = [contact.email, contact.phone, contact.linkedin, contact.github, contact.portfolio, contact.location]
+  const parts = [contact.email, contact.phone, contact.linkedin, contact.portfolio,
+    contact.location || (contact.city && contact.state ? `${contact.city}, ${contact.state}` : contact.city || contact.state || '')]
     .filter(Boolean);
   return (
     <div className="text-center mb-4 pb-3" style={{ borderBottom: `2px solid ${accentColor}` }}>
@@ -396,32 +538,11 @@ function StandardResume({ resume }) {
   const visible = ordered.filter(s => s.visible !== false);
 
   return (
-    <div
-      id="resume-preview-root"
-      style={{
-        fontFamily: 'Arial, Helvetica, sans-serif',
-        background: '#fff',
-        padding: '32px 40px',
-        minHeight: '1056px',
-        boxSizing: 'border-box',
-        color: '#111',
-      }}
-    >
+    <div id="resume-preview-root" style={{ fontFamily: 'Arial, Helvetica, sans-serif', background: '#fff', padding: '32px 40px', minHeight: '1056px', boxSizing: 'border-box', color: '#111' }}>
       {visible.map(section => {
-        if (section.type === 'contact') {
-          return <ContactSection key={section.id} contact={content.contact} accentColor={accentColor} />;
-        }
-        if (section.type === 'skills') {
-          return <SkillsSection key={section.id} section={section} data={content[section.id]} accentColor={accentColor} />;
-        }
-        return (
-          <ListSection
-            key={section.id}
-            section={section}
-            entries={content[section.id] || []}
-            accentColor={accentColor}
-          />
-        );
+        if (section.type === 'contact') return <ContactSection key={section.id} contact={content.contact} accentColor={accentColor} />;
+        if (section.type === 'skills') return <SkillsSection key={section.id} section={section} data={content[section.id]} accentColor={accentColor} />;
+        return <ListSection key={section.id} section={section} entries={content[section.id] || []} accentColor={accentColor} />;
       })}
     </div>
   );
@@ -449,6 +570,3 @@ export default function ResumePreview({ resume }) {
     </div>
   );
 }
-
-// Named export for use in PDF generation
-export { ClassicFinanceResume, CF_FONTS };

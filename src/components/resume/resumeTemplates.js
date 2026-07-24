@@ -8,12 +8,6 @@ export const TEMPLATES = [
     recommended: ['finance', 'consulting', 'private equity', 'investment banking', 'corporate finance', 'research'],
   },
   {
-    id: 'finance',
-    name: 'Finance & Investment Banking',
-    description: 'Clean, traditional layout favored by IB and PE recruiters.',
-    accentColor: '#1E3A5F',
-  },
-  {
     id: 'consulting',
     name: 'Consulting',
     description: 'Structured layout emphasizing impact and frameworks.',
@@ -43,119 +37,128 @@ export const TEMPLATES = [
     description: 'Versatile ATS-friendly template for any industry.',
     accentColor: '#374151',
   },
-  {
-    id: 'first',
-    name: 'First Resume',
-    description: 'Minimal template for students with limited work experience.',
-    accentColor: '#4B5563',
-  },
-  {
-    id: 'experienced',
-    name: 'Experienced Student',
-    description: 'Expanded layout for students with substantial internship history.',
-    accentColor: '#1F2937',
-  },
 ];
 
 export const DEFAULT_SECTIONS = [
   { id: 'contact', label: 'Contact', type: 'contact', visible: true },
   { id: 'education', label: 'Education', type: 'list', visible: true },
   { id: 'experience', label: 'Experience', type: 'list', visible: true },
-  { id: 'internships', label: 'Internships', type: 'list', visible: false },
-  { id: 'leadership', label: 'Leadership', type: 'list', visible: false },
-  { id: 'projects', label: 'Projects', type: 'list', visible: true },
   { id: 'skills', label: 'Skills', type: 'skills', visible: true },
-  { id: 'certifications', label: 'Certifications', type: 'list', visible: false },
-  { id: 'activities', label: 'Activities', type: 'list', visible: false },
-  { id: 'awards', label: 'Awards', type: 'list', visible: false },
 ];
 
-// Classic Finance template uses these sections by default
+// Classic Finance template — approved sections only
+// Certifications, Awards, Research are optional and appear near the bottom
 export const CLASSIC_FINANCE_SECTIONS = [
-  { id: 'contact', label: 'Contact', type: 'contact', visible: true },
-  { id: 'education', label: 'EDUCATION', type: 'education_cf', visible: true },
-  { id: 'experience', label: 'WORK EXPERIENCE', type: 'list', visible: true },
-  { id: 'activities', label: 'ACTIVITIES AND EXTRACURRICULAR', type: 'list', visible: true },
-  { id: 'skills_grouped', label: 'SKILLS, TRAINING, OTHER ACTIVITIES, & INTERESTS', type: 'skills_grouped', visible: true },
+  { id: 'contact',        label: 'CONTACT',                                        type: 'contact',        visible: true,  cf_locked: true },
+  { id: 'education',      label: 'EDUCATION',                                      type: 'education_cf',   visible: true,  cf_locked: true },
+  { id: 'experience',     label: 'WORK EXPERIENCE',                                type: 'list',           visible: true,  cf_locked: true },
+  { id: 'activities',     label: 'ACTIVITIES AND EXTRACURRICULAR',                 type: 'list',           visible: true,  cf_locked: true },
+  { id: 'skills_grouped', label: 'SKILLS, TRAINING, OTHER ACTIVITIES, & INTERESTS', type: 'skills_grouped', visible: true,  cf_locked: true },
+  { id: 'certifications', label: 'CERTIFICATIONS',                                 type: 'cert',           visible: false, cf_locked: true },
+  { id: 'awards',         label: 'AWARDS',                                         type: 'awards_cf',      visible: false, cf_locked: true },
+  { id: 'research',       label: 'RESEARCH',                                       type: 'research',       visible: false, cf_locked: true },
 ];
 
-export const BLANK_EDUCATION_CF = {
-  id: () => Math.random().toString(36).slice(2),
-  institution: '',
-  location: '',
-  gradMonth: '',
-  gradYear: '',
-  degree: '',
-  major: '',
-  secondMajor: '',
-  minor: '',
-  gpa: '',
-  gpaScale: '4',
-  showGpa: true,
-  coursework: '',
-  honors: '',
-  studyAbroad: '',
-  hidden: false,
+// Fixed skill group labels — not renameable
+export const CF_SKILL_GROUP_IDS = ['tech', 'virtual', 'other', 'interests'];
+export const CF_SKILL_GROUP_LABELS = {
+  tech:      'Technical Skills',
+  virtual:   'Virtual Programs',
+  other:     'Other Activities',
+  interests: 'Interests',
 };
+
+export const DEFAULT_SKILL_GROUPS = [
+  { id: 'tech',      label: 'Technical Skills',  items: '' },
+  { id: 'virtual',   label: 'Virtual Programs',  items: '' },
+  { id: 'other',     label: 'Other Activities',  items: '' },
+  { id: 'interests', label: 'Interests',         items: '' },
+];
 
 export function newEducationCF() {
   return {
     id: Math.random().toString(36).slice(2),
     institution: '',
-    location: '',
-    gradMonth: '',
-    gradYear: '',
+    city: '',
+    state: '',
     degree: '',
+    degreeAbbrev: '',
     major: '',
     secondMajor: '',
     minor: '',
+    concentration: '',
+    gradMonth: '',
+    gradYear: '',
     gpa: '',
-    gpaScale: '4',
+    gpaScale: '4.00',
     showGpa: true,
     coursework: '',
     honors: '',
-    studyAbroad: '',
     hidden: false,
   };
 }
 
-export const DEFAULT_SKILL_GROUPS = [
-  { id: 'tech', label: 'Technical Skills', items: '' },
-  { id: 'virtual', label: 'Virtual Programs', items: '' },
-  { id: 'other', label: 'Other Activities', items: '' },
-  { id: 'interests', label: 'Interests', items: '' },
-];
+export function newCert() {
+  return {
+    id: Math.random().toString(36).slice(2),
+    name: '',
+    issuer: '',
+    month: '',
+    year: '',
+    expMonth: '',
+    expYear: '',
+    credentialId: '',
+    credentialUrl: '',
+    hidden: false,
+  };
+}
 
-export function newSkillGroup() {
-  return { id: Math.random().toString(36).slice(2), label: 'Category', items: '' };
+export function newAward() {
+  return {
+    id: Math.random().toString(36).slice(2),
+    name: '',
+    issuer: '',
+    month: '',
+    year: '',
+    description: '',
+    hidden: false,
+  };
+}
+
+export function newResearch() {
+  return {
+    id: Math.random().toString(36).slice(2),
+    title: '',
+    institution: '',
+    location: '',
+    startMonth: '',
+    startYear: '',
+    endMonth: '',
+    endYear: '',
+    current: false,
+    role: '',
+    advisor: '',
+    bullets: [''],
+    link: '',
+    hidden: false,
+  };
 }
 
 export const BLANK_CONTACT = {
-  name: '', email: '', phone: '', linkedin: '', github: '', portfolio: '', location: '',
-};
-
-export const BLANK_ENTRY = {
-  id: () => Math.random().toString(36).slice(2),
-  title: '', org: '', location: '', startDate: '', endDate: '', current: false,
-  bullets: [''],
-  hidden: false,
+  name: '', email: '', phone: '', linkedin: '', portfolio: '', city: '', state: '',
 };
 
 export function newEntry() {
   return {
     id: Math.random().toString(36).slice(2),
     title: '', org: '', location: '', startDate: '', endDate: '', current: false,
+    sectorGroup: '', hoursPerWeek: '', arrangement: '',
+    linkLabel: '', linkUrl: '',
     bullets: [''],
     hidden: false,
   };
 }
 
-export function newSection(label) {
-  return {
-    id: Math.random().toString(36).slice(2),
-    label: label || 'Custom Section',
-    type: 'list',
-    visible: true,
-    custom: true,
-  };
-}
+// Months helper
+export const MONTHS_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+export const MONTH_OPTIONS = MONTHS_SHORT.map((label, i) => ({ val: String(i + 1).padStart(2, '0'), label }));

@@ -55,31 +55,54 @@ function buildCFHtml(resume) {
 
     if (section.type === 'education_cf') {
       body += `<div class="cf-section-heading">${esc(section.label || 'EDUCATION')}</div><hr class="cf-rule">`;
-      const entries = (content[section.id] || []).filter(e => !e.hidden);
-      for (const e of entries) {
-        const gradDate = e.gradMonth && e.gradYear
-          ? `${MONTHS_SHORT[parseInt(e.gradMonth,10)-1]} ${e.gradYear}`
-          : e.gradYear || '';
-        body += `<div class="cf-edu-block">`;
+      // Only the active (non-hidden) entry
+      const active = (content[section.id] || []).find(e => !e.hidden);
+      if (!active) continue;
+      const e = active;
+      const gradDate = e.gradMonth && e.gradYear
+        ? `${MONTHS_SHORT[parseInt(e.gradMonth,10)-1]} ${e.gradYear}`
+        : e.gradYear || '';
+      const loc = e.location || (e.city && e.state ? `${e.city}, ${e.state}` : e.city || e.state || '');
+      // Degree line
+      let degLine = '';
+      if (e.degree) {
+        degLine = e.degree;
+        if (e.degreeAbbrev) degLine += ` (${e.degreeAbbrev})`;
+        if (e.major) {
+          degLine += ': ' + e.major;
+          if (e.secondMajor) degLine += ` &amp; ${e.secondMajor}`;
+        }
+      } else if (e.major) {
+        degLine = e.major;
+        if (e.secondMajor) degLine += ` &amp; ${e.secondMajor}`;
+      }
+      const minorConc = [
+        e.minor ? `Minor: ${e.minor}` : '',
+        e.concentration ? `Concentration: ${e.concentration}` : '',
+      ].filter(Boolean).join(' | ');
+
+      body += `<div class="cf-edu-block">`;
+      // Line 1: Institution | Location    Cumulative GPA
+      body += `<div class="cf-row">`;
+      body += `<div class="cf-left"><b>${esc(e.institution)}</b>`;
+      if (loc) body += `&nbsp;|&nbsp;${esc(loc)}`;
+      body += `</div>`;
+      if (e.gpa && e.showGpa !== false) {
+        body += `<div class="cf-right"><b>Cumulative GPA:</b>&nbsp;${esc(e.gpa)}${e.gpaScale ? '/' + esc(e.gpaScale) : ''}</div>`;
+      }
+      body += `</div>`;
+      // Line 2: Degree italic    Expected Graduation
+      if (degLine || gradDate) {
         body += `<div class="cf-row">`;
-        body += `<div class="cf-left"><span class="cf-bold">${esc(e.institution)}</span>`;
-        if (e.location) body += `&nbsp;|&nbsp;${esc(e.location)}`;
-        if (gradDate) body += `&nbsp;${esc(gradDate)}`;
-        body += `</div>`;
-        if (e.gpa && e.showGpa !== false) {
-          body += `<div class="cf-right"><b>GPA:</b>&nbsp;${esc(e.gpa)}${e.gpaScale ? '/' + esc(e.gpaScale) : ''}</div>`;
-        }
-        body += `</div>`;
-        if (e.degree || e.major) {
-          let degLine = [e.degree, e.major, e.secondMajor ? `& ${e.secondMajor}` : ''].filter(Boolean).join(' in ').replace(' in &', ' &');
-          if (e.minor) degLine += `; Minor in ${e.minor}`;
-          body += `<div class="cf-italic">${esc(degLine)}</div>`;
-        }
-        if (e.coursework) body += `<div><b>Relevant Coursework:</b>&nbsp;${esc(e.coursework)}</div>`;
-        if (e.honors) body += `<div><b>Honors &amp; Awards:</b>&nbsp;${esc(e.honors)}</div>`;
-        if (e.studyAbroad) body += `<div><b>Study Abroad:</b>&nbsp;${esc(e.studyAbroad)}</div>`;
+        body += `<div class="cf-left cf-italic">${esc(degLine)}</div>`;
+        if (gradDate) body += `<div class="cf-right cf-italic">Expected Graduation: ${esc(gradDate)}</div>`;
         body += `</div>`;
       }
+      // Minor / concentration
+      if (minorConc) body += `<div>${minorConc.split(' | ').map(p => { const [lbl, ...rest] = p.split(': '); return `<b>${esc(lbl)}:</b>&nbsp;${esc(rest.join(': '))}`; }).join('&nbsp;|&nbsp;')}</div>`;
+      if (e.coursework) body += `<div><b>Relevant Coursework:</b>&nbsp;${esc(e.coursework)}</div>`;
+      if (e.honors) body += `<div><b>Honors &amp; Awards:</b>&nbsp;${esc(e.honors)}</div>`;
+      body += `</div>`;
       continue;
     }
 
@@ -116,6 +139,72 @@ function buildCFHtml(resume) {
           body += `<div class="cf-italic">${roleLine}</div>`;
         }
         const bullets = (e.bullets || []).filter(b => b && b.trim());
+        if (bullets.length) {
+          body += `<ul class="cf-bullets">`;
+          for (const b of bullets) body += `<li>${esc(b)}</li>`;
+          body += `</ul>`;
+        }
+        body += `</div>`;
+      }
+      continue;
+    }
+
+    if (section.type === 'cert') {
+      const entries = (content[section.id] || []).filter(c => !c.hidden && c.name);
+      if (!entries.length) continue;
+      body += `<div class="cf-section-heading">${esc(section.label || 'CERTIFICATIONS')}</div><hr class="cf-rule">`;
+      for (const c of entries) {
+        const dateStr = c.month && c.year
+          ? `${MONTHS_SHORT[parseInt(c.month,10)-1]} ${c.year}`
+          : (c.year || '');
+        body += `<div class="cf-row"><div><b>${esc(c.name)}</b>`;
+        if (c.issuer) body += `&nbsp;|&nbsp;${esc(c.issuer)}`;
+        body += `</div>`;
+        if (dateStr) body += `<div class="cf-right cf-italic">${esc(dateStr)}</div>`;
+        body += `</div>`;
+      }
+      continue;
+    }
+
+    if (section.type === 'awards_cf') {
+      const entries = (content[section.id] || []).filter(a => !a.hidden && a.name);
+      if (!entries.length) continue;
+      body += `<div class="cf-section-heading">${esc(section.label || 'AWARDS')}</div><hr class="cf-rule">`;
+      for (const a of entries) {
+        const dateStr = a.month && a.year
+          ? `${MONTHS_SHORT[parseInt(a.month,10)-1]} ${a.year}`
+          : (a.year || '');
+        body += `<div class="cf-row"><div><b>${esc(a.name)}</b>`;
+        if (a.issuer) body += `&nbsp;|&nbsp;${esc(a.issuer)}`;
+        body += `</div>`;
+        if (dateStr) body += `<div class="cf-right cf-italic">${esc(dateStr)}</div>`;
+        body += `</div>`;
+        if (a.description) body += `<div class="cf-italic">${esc(a.description)}</div>`;
+      }
+      continue;
+    }
+
+    if (section.type === 'research') {
+      const entries = (content[section.id] || []).filter(r => !r.hidden && r.title);
+      if (!entries.length) continue;
+      body += `<div class="cf-section-heading">${esc(section.label || 'RESEARCH')}</div><hr class="cf-rule">`;
+      for (const r of entries) {
+        const startStr = r.startMonth && r.startYear ? `${MONTHS_SHORT[parseInt(r.startMonth,10)-1]} ${r.startYear}` : (r.startYear || '');
+        const endStr = r.current ? 'Present' : (r.endMonth && r.endYear ? `${MONTHS_SHORT[parseInt(r.endMonth,10)-1]} ${r.endYear}` : (r.endYear || ''));
+        const dateStr = [startStr, endStr].filter(Boolean).join(' \u2013 ');
+        body += `<div class="cf-entry-block">`;
+        body += `<div class="cf-row"><div class="cf-left"><b>${esc(r.title)}</b>`;
+        if (r.institution) body += `&nbsp;|&nbsp;${esc(r.institution)}`;
+        if (r.location) body += `&nbsp;|&nbsp;${esc(r.location)}`;
+        body += `</div>`;
+        if (dateStr) body += `<div class="cf-right cf-italic">${esc(dateStr)}</div>`;
+        body += `</div>`;
+        if (r.role) {
+          body += `<div class="cf-italic">${esc(r.role)}`;
+          if (r.advisor) body += ` | Advisor: ${esc(r.advisor)}`;
+          body += `</div>`;
+        }
+        const bullets = (r.bullets || []).filter(b => b && b.trim());
         if (bullets.length) {
           body += `<ul class="cf-bullets">`;
           for (const b of bullets) body += `<li>${esc(b)}</li>`;
@@ -290,18 +379,61 @@ async function exportDOCX(resume) {
       body += `<div class="contact-line">${parts.map(p => esc(p)).join(' | ')}</div>`;
     } else if (section.type === 'education_cf') {
       body += `<h2>${esc(section.label || 'EDUCATION')}</h2>`;
-      const entries = (content[section.id] || []).filter(e => !e.hidden);
-      for (const e of entries) {
+      const active = (content[section.id] || []).find(e => !e.hidden);
+      if (active) {
+        const e = active;
         const gradDate = e.gradMonth && e.gradYear
           ? `${MONTHS_SHORT[parseInt(e.gradMonth,10)-1]} ${e.gradYear}` : e.gradYear || '';
-        body += `<div class="entry-header"><div><b>${esc(e.institution)}</b>${e.location ? ` | ${esc(e.location)}` : ''}${gradDate ? ` ${esc(gradDate)}` : ''}</div>`;
-        if (e.gpa && e.showGpa !== false) body += `<div><b>GPA:</b> ${esc(e.gpa)}${e.gpaScale ? '/' + esc(e.gpaScale) : ''}</div>`;
+        const loc = e.location || (e.city && e.state ? `${e.city}, ${e.state}` : e.city || e.state || '');
+        let degLine = '';
+        if (e.degree) {
+          degLine = e.degree;
+          if (e.degreeAbbrev) degLine += ` (${e.degreeAbbrev})`;
+          if (e.major) { degLine += ': ' + e.major; if (e.secondMajor) degLine += ` & ${e.secondMajor}`; }
+        } else if (e.major) { degLine = e.major; if (e.secondMajor) degLine += ` & ${e.secondMajor}`; }
+        body += `<div class="entry-header"><div><b>${esc(e.institution)}</b>${loc ? ` | ${esc(loc)}` : ''}</div>`;
+        if (e.gpa && e.showGpa !== false) body += `<div><b>Cumulative GPA:</b> ${esc(e.gpa)}${e.gpaScale ? '/' + esc(e.gpaScale) : ''}</div>`;
         body += `</div>`;
-        if (e.degree || e.major) {
-          body += `<div class="entry-italic">${esc([e.degree, e.major].filter(Boolean).join(' in '))}</div>`;
+        if (degLine) body += `<div class="entry-italic">${esc(degLine)}${gradDate ? ` &mdash; Expected Graduation: ${esc(gradDate)}` : ''}</div>`;
+        if (e.minor || e.concentration) {
+          const mc = [e.minor ? `Minor: ${e.minor}` : '', e.concentration ? `Concentration: ${e.concentration}` : ''].filter(Boolean).join(' | ');
+          body += `<div>${esc(mc)}</div>`;
         }
         if (e.coursework) body += `<div><b>Relevant Coursework:</b> ${esc(e.coursework)}</div>`;
         if (e.honors) body += `<div><b>Honors &amp; Awards:</b> ${esc(e.honors)}</div>`;
+      }
+    } else if (section.type === 'cert') {
+      const entries = (content[section.id] || []).filter(c => !c.hidden && c.name);
+      if (entries.length) {
+        body += `<h2>${esc(section.label || 'CERTIFICATIONS')}</h2>`;
+        for (const c of entries) {
+          const dateStr = c.month && c.year ? `${MONTHS_SHORT[parseInt(c.month,10)-1]} ${c.year}` : (c.year || '');
+          body += `<div class="entry-header"><div><b>${esc(c.name)}</b>${c.issuer ? ` | ${esc(c.issuer)}` : ''}</div><span class="entry-dates">${esc(dateStr)}</span></div>`;
+        }
+      }
+    } else if (section.type === 'awards_cf') {
+      const entries = (content[section.id] || []).filter(a => !a.hidden && a.name);
+      if (entries.length) {
+        body += `<h2>${esc(section.label || 'AWARDS')}</h2>`;
+        for (const a of entries) {
+          const dateStr = a.month && a.year ? `${MONTHS_SHORT[parseInt(a.month,10)-1]} ${a.year}` : (a.year || '');
+          body += `<div class="entry-header"><div><b>${esc(a.name)}</b>${a.issuer ? ` | ${esc(a.issuer)}` : ''}</div><span class="entry-dates">${esc(dateStr)}</span></div>`;
+          if (a.description) body += `<div class="entry-italic">${esc(a.description)}</div>`;
+        }
+      }
+    } else if (section.type === 'research') {
+      const entries = (content[section.id] || []).filter(r => !r.hidden && r.title);
+      if (entries.length) {
+        body += `<h2>${esc(section.label || 'RESEARCH')}</h2>`;
+        for (const r of entries) {
+          const startStr = r.startMonth && r.startYear ? `${MONTHS_SHORT[parseInt(r.startMonth,10)-1]} ${r.startYear}` : (r.startYear || '');
+          const endStr = r.current ? 'Present' : (r.endMonth && r.endYear ? `${MONTHS_SHORT[parseInt(r.endMonth,10)-1]} ${r.endYear}` : (r.endYear || ''));
+          const dateStr = [startStr, endStr].filter(Boolean).join(' – ');
+          body += `<div class="entry-header"><div><b>${esc(r.title)}</b>${r.institution ? ` | ${esc(r.institution)}` : ''}${r.location ? ` | ${esc(r.location)}` : ''}</div><span class="entry-dates">${esc(dateStr)}</span></div>`;
+          if (r.role) body += `<div class="entry-italic">${esc(r.role)}${r.advisor ? ` | Advisor: ${esc(r.advisor)}` : ''}</div>`;
+          const bullets = (r.bullets || []).filter(b => b && b.trim());
+          if (bullets.length) { body += '<ul>'; for (const b of bullets) body += `<li>${esc(b)}</li>`; body += '</ul>'; }
+        }
       }
     } else if (section.type === 'skills_grouped') {
       body += `<h2>${esc(section.label || 'SKILLS')}</h2>`;
