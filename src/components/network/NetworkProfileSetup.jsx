@@ -103,10 +103,10 @@ export default function NetworkProfileSetup({ currentUser, profile, onSaved }) {
         ...(form.profile_image_url ? { profile_image_url: form.profile_image_url } : {}),
       };
       if (profile?.id) {
-        await base44.entities.NetworkProfile.update(profile.id, payload);
+        await base44.entities.NetworkProfile.update(profile.id, { ...payload, verification_status: 'verified' });
       } else {
         payload.profile_slug = makeSlug(form.display_name);
-        payload.verification_status = 'unverified';
+        payload.verification_status = 'verified';
         await base44.entities.NetworkProfile.create(payload);
       }
       setSaved(true);

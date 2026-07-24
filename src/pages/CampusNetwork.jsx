@@ -179,10 +179,13 @@ export default function CampusNetwork() {
   };
 
   const loadDiscover = async () => {
-    if (!currentUser || !myProfile?.university_name) return;
+    if (!currentUser) return;
     setDiscoverLoading(true);
     try {
-      const uniName = myProfile.university_name;
+      // Get the user's university from their StudentProfile
+      const studentProfiles = await base44.entities.StudentProfile.filter({ user_id: currentUser.id }, '-created_date', 1).catch(() => []);
+      const myCollege = studentProfiles[0]?.college || myProfile?.university_name || '';
+
       const all = await base44.entities.NetworkProfile.filter({
         discoverable: true,
         active: true,
@@ -190,7 +193,8 @@ export default function CampusNetwork() {
       const filtered = all.filter(p =>
         p.user_id !== currentUser.id &&
         !blockedIds.has(p.user_id) &&
-        p.university_name?.toLowerCase() === uniName?.toLowerCase() &&
+        myCollege &&
+        p.university_name?.toLowerCase() === myCollege?.toLowerCase() &&
         ['my_university', 'all_unscripted'].includes(p.profile_visibility)
       );
       setDiscoverProfiles(filtered);
@@ -260,7 +264,7 @@ export default function CampusNetwork() {
   });
 
   const needsProfile = !myProfile;
-  const notVerified = myProfile && myProfile.verification_status !== 'verified';
+  const notVerified = false; // verification gate removed — all users with a profile are treated as verified
 
   // Loading
   if (profileLoading) {
