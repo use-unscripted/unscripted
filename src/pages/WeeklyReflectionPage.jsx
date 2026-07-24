@@ -113,12 +113,41 @@ function ReflectionForm({ experiments, missions, initialData, onSaved, onCancel 
 
     try {
       const user = await base44.auth.me();
-      const payload = {
-        ...form,
-        user_id: user.id,
-        path_name: selectedExp?.path_name || form.path_name || '',
-        mission_id: form.mission_id || undefined,
+      console.log('[WeeklyReflectionPage] Save: auth resolved, user_id=' + user.id);
+
+      // Normalize: entity schema expects arrays for completed_items, avoided_items, path_adjustments
+      // but the form stores them as plain strings from textarea inputs — wrap non-empty strings
+      const toArray = (val) => {
+        if (Array.isArray(val)) return val;
+        if (typeof val === 'string' && val.trim()) return [val.trim()];
+        return [];
       };
+
+      // Only include fields that exist in the WeeklyReflections schema
+      const payload = {
+        user_id: user.id,
+        experiment_id: form.experiment_id || undefined,
+        mission_id: form.mission_id || undefined,
+        path_name: selectedExp?.path_name || form.path_name || '',
+        week_start: form.week_start,
+        completed_items: toArray(form.completed_items),
+        avoided_items: toArray(form.avoided_items),
+        avoidance_reasons: form.avoidance_reasons?.trim() || undefined,
+        energy_sources: form.energy_sources?.trim() || undefined,
+        energy_drains: form.energy_drains?.trim() || undefined,
+        surprises: form.surprises?.trim() || undefined,
+        path_feedback: form.path_feedback?.trim() || undefined,
+        skill_gaps_noticed: form.skill_gaps_noticed?.trim() || undefined,
+        lessons: form.lessons?.trim() || undefined,
+        next_changes: form.next_changes?.trim() || undefined,
+        generated_summary: form.generated_summary?.trim() || undefined,
+        path_adjustments: toArray(form.path_adjustments),
+      };
+
+      // Remove undefined keys to avoid sending nulls that schema may reject
+      Object.keys(payload).forEach(k => { if (payload[k] === undefined) delete payload[k]; });
+
+      console.log('[WeeklyReflectionPage] Save: payload built, experiment_id=' + (payload.experiment_id || 'none'));
 
       let saved;
       if (isEdit) {
@@ -127,10 +156,11 @@ function ReflectionForm({ experiments, missions, initialData, onSaved, onCancel 
       } else {
         saved = await base44.entities.WeeklyReflections.create(payload);
       }
+      console.log('[WeeklyReflectionPage] Save: success, record_id=' + saved?.id);
       onSaved(saved);
     } catch (err) {
       console.error('[WeeklyReflectionPage] Save failed:', err?.message || err);
-      setSaveError('Failed to save reflection. Please try again.');
+      setSaveError("We couldn't save this reflection. Your answers are still here. Please try again.");
       setSaving(false);
       submittingRef.current = false;
     }
@@ -181,7 +211,9 @@ function ReflectionForm({ experiments, missions, initialData, onSaved, onCancel 
             No experiments found. Create one first from the Missions page.
           </p>
         ) : (
-          <select value={form.experiment_id} onChange={e => handleExpChange(e.target.value)} className={inputCls}>
+          <select value={form.experiment_id} onChange={e => handleExpChange(e.target.value)}
+            className="rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-3 text-sm text-[#050816] placeholder-[#94A3B8] outline-none focus:border-[#1F3A5F]"
+            style={{ maxWidth: '520px', minWidth: '240px', width: 'min(100%, 520px)' }}>
             <option value="">Select an experiment…</option>
             {experiments.map(exp => (
               <option key={exp.id} value={exp.id}>
@@ -332,7 +364,8 @@ export default function WeeklyReflectionPage() {
         base44.entities.PathRecommendations.list('-created_date', 100).catch(() => []),
       ]);
       setReflections(Array.isArray(data) ? data.filter(r => !r.deletion_status || r.deletion_status === 'active') : []);
-      setExperiments(Array.isArray(exps) ? exps : []);
+      // Exclude deleted experiments; include active, in_progress, paused, completed — excludable only if permanently_deleted
+      setExperiments(Array.isArray(exps) ? exps.filter(e => !e.deletion_status || e.deletion_status === 'active') : []);
       setMissions(Array.isArray(mis) ? mis : []);
       setUserPaths(Array.isArray(ps) ? ps : []);
     } finally {

@@ -218,6 +218,21 @@ function MessageTemplate({ template }) {
   );
 }
 
+// ── Safe LinkedIn search URL (never a guessed direct profile) ─────────────────
+function linkedInSearchUrl(name, organization, role) {
+  const parts = [name, organization, role].filter(Boolean).join(' ');
+  return `https://www.linkedin.com/search/results/people/?keywords=${encodeURIComponent(parts)}`;
+}
+
+// Detect if a URL is a direct LinkedIn profile (linkedin.com/in/...) — these must never come from AI
+function isLinkedInProfileUrl(url) {
+  if (!url) return false;
+  try {
+    const u = new URL(url.startsWith('http') ? url : 'https://' + url);
+    return u.hostname.includes('linkedin.com') && u.pathname.startsWith('/in/');
+  } catch { return false; }
+}
+
 // ── Public contact suggestion card ────────────────────────────────────────────
 function ContactSuggestionCard({ suggestion, pathName, experimentId, onSaved, onMissionCreated, dismissed, onDismiss, experiments }) {
   const [showSaveModal, setShowSaveModal] = useState(false);
@@ -282,27 +297,31 @@ function ContactSuggestionCard({ suggestion, pathName, experimentId, onSaved, on
             ) : (
               <div>
                 <div className="flex items-center gap-2 mb-0.5">
-                  <span className="rounded-full px-2 py-0.5 text-[10px] font-bold" style={{ background: '#F0FDF4', color: '#15803D' }}>Public Profile</span>
+                  <span className="rounded-full px-2 py-0.5 text-[10px] font-bold" style={{ background: '#EFF6FF', color: '#1D4ED8' }}>Suggested Contact</span>
                   <p className="text-sm font-bold text-[#050816]">{suggestion.name}</p>
                 </div>
-                <p className="text-xs text-[#334155]">{suggestion.role} · {suggestion.organization}</p>
+                <p className="text-xs text-[#334155]">{suggestion.role}{suggestion.role && suggestion.organization ? ' · ' : ''}{suggestion.organization}</p>
               </div>
             )}
             <p className="text-xs text-[#64748B] mt-1">{suggestion.why_relevant}</p>
-            {suggestion.source_url && (
-              <a href={suggestion.source_url} target="_blank" rel="noopener noreferrer"
-                className="flex items-center gap-1 mt-1 text-[10px] hover:underline" style={{ color: 'var(--brand-navy-900)' }}>
-                <ExternalLink size={10} /> View public profile
-              </a>
-            )}
-            {!isArchetype && suggestion.verified_date && (
-              <p className="text-[10px] text-[#94A3B8] mt-1">Reviewed: {suggestion.verified_date}</p>
-            )}
             {!isArchetype && (
-              <div className="mt-1.5 flex items-center gap-1 text-[10px] text-amber-600">
-                <AlertTriangle size={10} />
-                <span>Verify independently before outreach. Info may have changed.</span>
-              </div>
+              <>
+                {/* Never link directly to a LinkedIn profile URL from AI — always use verified search */}
+                <a
+                  href={linkedInSearchUrl(suggestion.name, suggestion.organization, suggestion.role)}
+                  target="_blank" rel="noopener noreferrer"
+                  className="flex items-center gap-1 mt-1.5 text-[10px] font-semibold hover:underline"
+                  style={{ color: 'var(--brand-navy-700)' }}>
+                  <ExternalLink size={10} /> Search on LinkedIn
+                </a>
+                <p className="text-[10px] text-[#94A3B8] mt-0.5">
+                  Direct profile not verified. Review search results and confirm this person's company and role before reaching out.
+                </p>
+                <div className="mt-1.5 flex items-center gap-1 text-[10px] text-amber-600">
+                  <AlertTriangle size={10} />
+                  <span>Verify identity independently. Role and company may have changed.</span>
+                </div>
+              </>
             )}
           </div>
           <button onClick={onDismiss} aria-label="Dismiss suggestion"
@@ -341,11 +360,12 @@ function SaveContactConfirmModal({ suggestion, pathName, experimentId, experimen
     ? experiments.find(e => e.id === experimentId)
     : experiments.find(e => e.path_name === pathName);
 
+  // Never pre-fill profile_url from AI-generated source_url — could be a fabricated LinkedIn link
   const [form, setForm] = useState({
     name: suggestion.name || '',
     company: suggestion.organization || '',
     role: suggestion.role || '',
-    profile_url: suggestion.source_url || '',
+    profile_url: '',
     reason_for_contact: suggestion.why_relevant || '',
     notes: suggestion.context || '',
     response_status: 'planning',
@@ -557,7 +577,7 @@ Generate a complete outreach plan with:
 2. contact_archetypes: 4–6 role archetypes most useful for this path. Each must include: title (specific job title like "Investment Banking Analyst"), why_useful (concrete 1–2 sentence explanation), where_to_find (array of 2–3 platforms or methods like ["LinkedIn", "Alumni network", "On-campus recruiting"]).
 
 3. contact_suggestions: ${wantPublicProfiles
-  ? `3–5 REAL publicly known professionals relevant to "${path.path_name}". CRITICAL RULES: (a) Only include people whose PUBLIC professional information you can verify (b) Include their exact public LinkedIn URL or verifiable source (c) Include the specific organization they are currently known to work at (d) Do NOT invent email addresses or phone numbers (e) If you are not confident about the person's current role, do NOT include them — show an archetype instead (f) Mark each as is_archetype: false and include verified_date: "2024" or similar. Each must have: name, role, organization, why_relevant, source_url, verified_date, context.`
+  ? `3–5 well-known professionals relevant to "${path.path_name}". CRITICAL RULES: (a) Only include people you are highly confident about based on their public professional reputation (b) Do NOT include any LinkedIn URLs or profile links — these will be generated safely as search queries by the app (c) Include the specific organization they are known to work at (d) Do NOT invent email addresses or phone numbers (e) If you are not highly confident about the person's current role, use an archetype instead (f) Set is_archetype: false. Each must have: name, role, organization, why_relevant, context.`
   : `3–5 useful contact ARCHETYPES formatted as contact suggestions (not real people). Each must have: archetype_title, why_relevant, context. Set is_archetype: true. Do NOT include real people's names.`
 }
 
