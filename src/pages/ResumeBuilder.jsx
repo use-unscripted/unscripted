@@ -2,14 +2,24 @@ import { useState, useEffect, useRef } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Plus, FileText, Clock, Copy, Trash2, ChevronRight, RotateCcw, Save, Eye, Edit3, X, Check } from 'lucide-react';
 import PageHeader from '@/components/PageHeader';
-import { TEMPLATES, DEFAULT_SECTIONS, BLANK_CONTACT, newEntry } from '@/components/resume/resumeTemplates';
+import { TEMPLATES, DEFAULT_SECTIONS, BLANK_CONTACT, CLASSIC_FINANCE_SECTIONS, DEFAULT_SKILL_GROUPS, newEntry } from '@/components/resume/resumeTemplates';
 import ResumeEditor from '@/components/resume/ResumeEditor';
 import ResumePreview from '@/components/resume/ResumePreview';
 import ResumeExport from '@/components/resume/ResumeExport';
 import ResumeSuggestions from '@/components/resume/ResumeSuggestions';
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
-function buildDefaultContent() {
+function buildDefaultContent(templateId) {
+  if (templateId === 'classic_finance') {
+    const sections = CLASSIC_FINANCE_SECTIONS.map(s => ({ ...s }));
+    const content = { sections, contact: { ...BLANK_CONTACT } };
+    for (const s of sections) {
+      if (s.type === 'list') content[s.id] = [];
+      if (s.type === 'education_cf') content[s.id] = [];
+      if (s.type === 'skills_grouped') content[s.id] = DEFAULT_SKILL_GROUPS.map(g => ({ ...g }));
+    }
+    return content;
+  }
   const sections = DEFAULT_SECTIONS.map(s => ({ ...s }));
   const content = { sections, contact: { ...BLANK_CONTACT } };
   for (const s of sections) {
@@ -53,14 +63,29 @@ function TemplatePicker({ onSelect, onCancel }) {
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {TEMPLATES.map(t => (
             <button key={t.id} onClick={() => onSelect(t)}
-              className="rounded-[16px] border-2 border-[#E2E8F0] p-4 text-left hover:border-[#1F3A5F] transition group">
+              className={`rounded-[16px] border-2 p-4 text-left hover:border-[#1F3A5F] transition group relative ${t.isDefault ? 'border-[#1F3A5F]' : 'border-[#E2E8F0]'}`}>
+              {t.isDefault && (
+                <span className="absolute -top-2 left-3 rounded-full px-2 py-0.5 text-[9px] font-bold text-white"
+                  style={{ background: 'var(--brand-navy-900)' }}>Recommended</span>
+              )}
               <div className="w-full h-16 rounded-lg mb-2 flex items-center justify-center"
-                style={{ background: `${t.accentColor}15` }}>
-                <div className="w-3/4 space-y-1">
-                  <div className="h-1.5 rounded-full" style={{ background: t.accentColor, opacity: 0.8 }} />
-                  <div className="h-1 rounded-full bg-gray-200 w-5/6" />
-                  <div className="h-1 rounded-full bg-gray-200 w-4/6" />
-                </div>
+                style={{ background: t.isDefault ? '#F7F8FA' : `${t.accentColor}15`, border: t.isDefault ? '1px solid #E2E8F0' : 'none' }}>
+                {t.isDefault ? (
+                  <div className="w-4/5 space-y-0.5 text-left">
+                    <div className="text-[7px] font-bold text-center text-gray-700" style={{ fontFamily: 'Georgia, serif' }}>YOUR NAME</div>
+                    <div className="h-px bg-gray-400 w-full" />
+                    <div className="text-[6px] font-bold text-gray-700" style={{ fontFamily: 'Georgia, serif' }}>EDUCATION</div>
+                    <div className="h-px bg-gray-400 w-full" />
+                    <div className="text-[5px] text-gray-500">Institution | Date</div>
+                    <div className="text-[4px] text-gray-400">Degree</div>
+                  </div>
+                ) : (
+                  <div className="w-3/4 space-y-1">
+                    <div className="h-1.5 rounded-full" style={{ background: t.accentColor, opacity: 0.8 }} />
+                    <div className="h-1 rounded-full bg-gray-200 w-5/6" />
+                    <div className="h-1 rounded-full bg-gray-200 w-4/6" />
+                  </div>
+                )}
               </div>
               <p className="text-xs font-bold text-[#050816] group-hover:text-[#1F3A5F] leading-tight">{t.name}</p>
               <p className="text-[10px] text-[#64748B] mt-0.5 leading-tight">{t.description}</p>
@@ -264,7 +289,7 @@ export default function ResumeBuilder() {
 
   const createResume = async (template) => {
     const user = await base44.auth.me();
-    const content = buildDefaultContent();
+    const content = buildDefaultContent(template.id);
     // Pre-fill name from user profile
     const profiles = await base44.entities.StudentProfile.filter({ user_id: user.id }, '-created_date', 1).catch(() => []);
     if (profiles[0]?.name) content.contact.name = profiles[0].name;

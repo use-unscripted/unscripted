@@ -1,36 +1,270 @@
 import { useState } from 'react';
 import { Download, FileText, File } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
-import ResumePreview from './ResumePreview';
-import { createRoot } from 'react-dom/client';
 
-// ── PDF Export ──────────────────────────────────────────────────────────────────
-async function exportPDF(resume) {
-  // Use browser print dialog targeting only the preview node
+const MONTHS_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+function fmtM(d) {
+  if (!d) return '';
+  const [y, m] = d.split('-');
+  if (!m) return y;
+  return `${MONTHS_SHORT[parseInt(m,10)-1]} ${y}`;
+}
+function fmtNum(d) {
+  if (!d) return '';
+  const [y, m] = d.split('-');
+  return m ? `${m}/${y}` : y;
+}
+
+// ── Classic Finance PDF ─────────────────────────────────────────────────────
+function buildCFHtml(resume) {
+  const content = resume?.content || {};
+  const sectionOrder = resume?.section_order || [];
+  const allSections = content.sections || [];
+  const ordered = sectionOrder.length > 0
+    ? [...sectionOrder.map(id => allSections.find(s => s.id === id)).filter(Boolean),
+       ...allSections.filter(s => !sectionOrder.includes(s.id))]
+    : allSections;
+  const visible = ordered.filter(s => s.visible !== false);
+
+  const esc = s => (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+  let body = '';
+
+  for (const section of visible) {
+    if (section.type === 'contact') {
+      const c = content.contact || {};
+      const loc = c.location || (c.city && c.state ? `${c.city}, ${c.state}` : c.city || c.state || '');
+      const parts = [loc, c.phone, c.email, c.linkedin, c.portfolio].filter(Boolean);
+      body += `<div class="cf-header">`;
+      if (c.name) body += `<div class="cf-name">${esc(c.name)}</div>`;
+      if (parts.length) {
+        const line = parts.map((p, i) => {
+          const sep = i < parts.length - 1 ? '<span class="sep">|</span>' : '';
+          if (p.includes('@')) return `<a href="mailto:${esc(p)}">${esc(p)}</a>${sep}`;
+          if (p.startsWith('http') || p.includes('linkedin') || p.includes('www')) {
+            const href = p.startsWith('http') ? p : `https://${p}`;
+            return `<a href="${esc(href)}">${esc(p)}</a>${sep}`;
+          }
+          return `${esc(p)}${sep}`;
+        }).join('');
+        body += `<div class="cf-contact-line">${line}</div>`;
+      }
+      body += `</div>`;
+      continue;
+    }
+
+    if (section.type === 'education_cf') {
+      body += `<div class="cf-section-heading">${esc(section.label || 'EDUCATION')}</div><hr class="cf-rule">`;
+      const entries = (content[section.id] || []).filter(e => !e.hidden);
+      for (const e of entries) {
+        const gradDate = e.gradMonth && e.gradYear
+          ? `${MONTHS_SHORT[parseInt(e.gradMonth,10)-1]} ${e.gradYear}`
+          : e.gradYear || '';
+        body += `<div class="cf-edu-block">`;
+        body += `<div class="cf-row">`;
+        body += `<div class="cf-left"><span class="cf-bold">${esc(e.institution)}</span>`;
+        if (e.location) body += `&nbsp;|&nbsp;${esc(e.location)}`;
+        if (gradDate) body += `&nbsp;${esc(gradDate)}`;
+        body += `</div>`;
+        if (e.gpa && e.showGpa !== false) {
+          body += `<div class="cf-right"><b>GPA:</b>&nbsp;${esc(e.gpa)}${e.gpaScale ? '/' + esc(e.gpaScale) : ''}</div>`;
+        }
+        body += `</div>`;
+        if (e.degree || e.major) {
+          let degLine = [e.degree, e.major, e.secondMajor ? `& ${e.secondMajor}` : ''].filter(Boolean).join(' in ').replace(' in &', ' &');
+          if (e.minor) degLine += `; Minor in ${e.minor}`;
+          body += `<div class="cf-italic">${esc(degLine)}</div>`;
+        }
+        if (e.coursework) body += `<div><b>Relevant Coursework:</b>&nbsp;${esc(e.coursework)}</div>`;
+        if (e.honors) body += `<div><b>Honors &amp; Awards:</b>&nbsp;${esc(e.honors)}</div>`;
+        if (e.studyAbroad) body += `<div><b>Study Abroad:</b>&nbsp;${esc(e.studyAbroad)}</div>`;
+        body += `</div>`;
+      }
+      continue;
+    }
+
+    if (section.type === 'skills_grouped') {
+      body += `<div class="cf-section-heading">${esc(section.label || 'SKILLS')}</div><hr class="cf-rule">`;
+      const groups = (content[section.id] || []).filter(g => !g.hidden && g.items && g.items.trim());
+      for (const g of groups) {
+        body += `<div><b>${esc(g.label)}:</b>&nbsp;${esc(g.items)}</div>`;
+      }
+      continue;
+    }
+
+    if (section.type === 'list') {
+      const entries = (content[section.id] || []).filter(e => !e.hidden);
+      if (!entries.length) continue;
+      const isActivity = section.id === 'activities' || (section.label || '').toLowerCase().includes('activit');
+      body += `<div class="cf-section-heading">${esc(section.label)}</div><hr class="cf-rule">`;
+      for (const e of entries) {
+        const startD = e.startDate ? fmtNum(e.startDate) : '';
+        const endD = e.current ? 'Present' : (e.endDate ? fmtNum(e.endDate) : '');
+        const dateStr = [startD, endD].filter(Boolean).join(' \u2013 ');
+        const loc = [e.location, e.arrangement].filter(Boolean).join(' ');
+        body += `<div class="cf-entry-block">`;
+        body += `<div class="cf-row">`;
+        body += `<div class="cf-left"><b>${esc(e.org || e.title)}</b>`;
+        if (loc) body += `&nbsp;|&nbsp;${esc(loc)}`;
+        body += `</div>`;
+        if (dateStr) body += `<div class="cf-right cf-italic">${esc(dateStr)}</div>`;
+        body += `</div>`;
+        if (e.title && e.org) {
+          let roleLine = esc(e.title);
+          if (e.sectorGroup) roleLine += `, ${esc(e.sectorGroup)}`;
+          if (e.hoursPerWeek) roleLine += ` (${esc(e.hoursPerWeek)} hrs/week)`;
+          body += `<div class="cf-italic">${roleLine}</div>`;
+        }
+        const bullets = (e.bullets || []).filter(b => b && b.trim());
+        if (bullets.length) {
+          body += `<ul class="cf-bullets">`;
+          for (const b of bullets) body += `<li>${esc(b)}</li>`;
+          body += `</ul>`;
+        }
+        body += `</div>`;
+      }
+      continue;
+    }
+
+    if (section.type === 'skills') {
+      const skills = content[section.id]?.skills || [];
+      if (!skills.length) continue;
+      body += `<div class="cf-section-heading">${esc(section.label)}</div><hr class="cf-rule">`;
+      body += `<div>${esc(skills.join(', '))}</div>`;
+    }
+  }
+
+  const contactData = content.contact || {};
+  const safeName = (contactData.name || 'Resume').replace(/[^a-zA-Z0-9 _-]/g, '').replace(/\s+/g, '_');
+
+  return { html: body, safeName };
+}
+
+async function exportCFPdf(resume) {
+  const { html, safeName } = buildCFHtml(resume);
+
+  const win = window.open('', '_blank', 'width=900,height=1200');
+  if (!win) return;
+
+  win.document.write(`<!DOCTYPE html><html><head>
+<meta charset="utf-8">
+<title>${safeName}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&display=swap" rel="stylesheet">
+<style>
+  @page { size: letter portrait; margin: 0.5in; }
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'EB Garamond', Garamond, 'Times New Roman', Georgia, serif;
+    font-size: 11pt;
+    line-height: 1.15;
+    color: #000;
+    background: #fff;
+    margin: 0;
+    padding: 0;
+  }
+  @media screen {
+    body { padding: 0.5in; max-width: 8.5in; }
+  }
+  .cf-header { text-align: center; margin-bottom: 6pt; }
+  .cf-name { font-weight: 700; font-size: 12pt; }
+  .cf-contact-line { font-size: 11.5pt; }
+  .cf-contact-line a { color: #000; text-decoration: none; }
+  .sep { margin: 0 4pt; }
+  .cf-section-heading {
+    font-weight: 700;
+    font-size: 11.5pt;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-top: 10pt;
+    margin-bottom: 1pt;
+  }
+  hr.cf-rule {
+    border: none;
+    border-top: 0.5pt solid #000;
+    margin: 0 0 3pt 0;
+  }
+  .cf-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 8pt;
+  }
+  .cf-left { flex: 1; }
+  .cf-right { flex-shrink: 0; white-space: nowrap; }
+  .cf-bold { font-weight: 700; }
+  .cf-italic { font-style: italic; }
+  .cf-edu-block { margin-bottom: 6pt; }
+  .cf-entry-block { margin-bottom: 6pt; }
+  .cf-bullets {
+    margin: 1pt 0 0 0;
+    padding: 0;
+    list-style: none;
+  }
+  .cf-bullets li {
+    display: flex;
+    align-items: flex-start;
+    gap: 4pt;
+    font-size: 11pt;
+    line-height: 1.2;
+    margin-bottom: 1pt;
+  }
+  .cf-bullets li::before {
+    content: "\\25AA";
+    flex-shrink: 0;
+    margin-top: 1pt;
+  }
+  b { font-weight: 700; }
+  a { color: #000; }
+  @media print {
+    body { padding: 0; }
+    .cf-section-heading { page-break-after: avoid; }
+    .cf-edu-block, .cf-entry-block { page-break-inside: avoid; }
+  }
+</style>
+</head><body>${html}</body></html>`);
+
+  win.document.close();
+  // Wait for fonts to load before printing
+  win.onload = () => {
+    setTimeout(() => {
+      win.focus();
+      win.print();
+    }, 800);
+  };
+  // Fallback in case onload already fired
+  setTimeout(() => {
+    try { win.focus(); win.print(); } catch(_) {}
+  }, 1500);
+}
+
+// ── Standard PDF Export ──────────────────────────────────────────────────────
+async function exportStandardPdf(resume) {
   const el = document.getElementById('resume-preview-root');
   if (!el) return;
 
-  const clone = el.cloneNode(true);
   const win = window.open('', '_blank', 'width=900,height=1100');
-  win.document.write(`
-    <!DOCTYPE html><html><head>
-    <title>${resume.resume_name || 'Resume'}</title>
-    <style>
-      @media print { @page { margin: 0; size: letter; } body { margin: 0; } }
-      body { font-family: Arial, Helvetica, sans-serif; margin: 0; background: #fff; }
-    </style>
-    </head><body>${el.outerHTML}</body></html>
-  `);
+  if (!win) return;
+
+  win.document.write(`<!DOCTYPE html><html><head>
+<meta charset="utf-8">
+<title>${resume.resume_name || 'Resume'}</title>
+<style>
+  @media print { @page { margin: 0; size: letter; } body { margin: 0; } }
+  body { font-family: Arial, Helvetica, sans-serif; margin: 0; background: #fff; }
+</style>
+</head><body>${el.outerHTML}</body></html>`);
   win.document.close();
   win.focus();
   setTimeout(() => { win.print(); }, 400);
 }
 
-// ── DOCX Export ─────────────────────────────────────────────────────────────────
+// ── DOCX Export (HTML-based .doc) ─────────────────────────────────────────────
+// Note: This produces a .doc file (HTML with Word namespace) not a true .docx.
+// It opens and is editable in Microsoft Word and Google Docs.
 async function exportDOCX(resume) {
-  // Build plain-text DOCX-like RTF (compatible without external lib)
-  // We generate a proper HTML string and let the user save via Blob with MIME application/msword
-  // which Word and Google Docs can open natively as a real document.
+  const isClassicFinance = resume?.template_id === 'classic_finance';
   const content = resume?.content || {};
   const sectionOrder = resume?.section_order || [];
   const sections = content.sections || [];
@@ -39,96 +273,146 @@ async function exportDOCX(resume) {
     : sections;
   const visible = ordered.filter(s => s.visible !== false);
 
-  function fmtDate(d) {
-    if (!d) return '';
-    const [y, m] = d.split('-');
-    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-    return m ? `${months[parseInt(m,10)-1]} ${y}` : y;
-  }
+  const esc = s => (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
-  let html = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
-<head><meta charset='utf-8'><title>${resume.resume_name || 'Resume'}</title>
-<style>
-  body { font-family: Arial, Helvetica, sans-serif; font-size: 11pt; margin: 1in; color: #111; }
-  h1 { font-size: 18pt; text-align: center; margin-bottom: 2pt; }
-  .contact-line { text-align: center; font-size: 9pt; color: #555; margin-bottom: 12pt; }
-  h2 { font-size: 11pt; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid #333; margin-top: 10pt; margin-bottom: 3pt; }
-  .entry-header { display: flex; justify-content: space-between; }
-  .entry-title { font-weight: bold; }
-  .entry-org { }
-  .entry-dates { font-style: italic; font-size: 9pt; }
-  ul { margin: 2pt 0 6pt 18pt; padding: 0; }
-  li { margin-bottom: 2pt; font-size: 10pt; }
-  .skills-line { font-size: 10pt; }
-</style></head><body>`;
+  const fontFamily = isClassicFinance
+    ? "'EB Garamond', Garamond, 'Times New Roman', Georgia, serif"
+    : "Arial, Helvetica, sans-serif";
+
+  let body = '';
 
   for (const section of visible) {
     if (section.type === 'contact') {
       const c = content.contact || {};
-      html += `<h1>${c.name || ''}</h1>`;
-      const parts = [c.email, c.phone, c.linkedin, c.github, c.portfolio, c.location].filter(Boolean);
-      html += `<div class="contact-line">${parts.join(' | ')}</div>`;
+      const loc = c.location || (c.city && c.state ? `${c.city}, ${c.state}` : c.city || c.state || '');
+      const parts = [loc, c.phone, c.email, c.linkedin, c.portfolio].filter(Boolean);
+      body += `<h1>${esc(c.name || '')}</h1>`;
+      body += `<div class="contact-line">${parts.map(p => esc(p)).join(' | ')}</div>`;
+    } else if (section.type === 'education_cf') {
+      body += `<h2>${esc(section.label || 'EDUCATION')}</h2>`;
+      const entries = (content[section.id] || []).filter(e => !e.hidden);
+      for (const e of entries) {
+        const gradDate = e.gradMonth && e.gradYear
+          ? `${MONTHS_SHORT[parseInt(e.gradMonth,10)-1]} ${e.gradYear}` : e.gradYear || '';
+        body += `<div class="entry-header"><div><b>${esc(e.institution)}</b>${e.location ? ` | ${esc(e.location)}` : ''}${gradDate ? ` ${esc(gradDate)}` : ''}</div>`;
+        if (e.gpa && e.showGpa !== false) body += `<div><b>GPA:</b> ${esc(e.gpa)}${e.gpaScale ? '/' + esc(e.gpaScale) : ''}</div>`;
+        body += `</div>`;
+        if (e.degree || e.major) {
+          body += `<div class="entry-italic">${esc([e.degree, e.major].filter(Boolean).join(' in '))}</div>`;
+        }
+        if (e.coursework) body += `<div><b>Relevant Coursework:</b> ${esc(e.coursework)}</div>`;
+        if (e.honors) body += `<div><b>Honors &amp; Awards:</b> ${esc(e.honors)}</div>`;
+      }
+    } else if (section.type === 'skills_grouped') {
+      body += `<h2>${esc(section.label || 'SKILLS')}</h2>`;
+      const groups = (content[section.id] || []).filter(g => !g.hidden && g.items && g.items.trim());
+      for (const g of groups) body += `<div><b>${esc(g.label)}:</b> ${esc(g.items)}</div>`;
+    } else if (section.type === 'list') {
+      const entries = (content[section.id] || []).filter(e => !e.hidden);
+      if (!entries.length) continue;
+      body += `<h2>${esc(section.label)}</h2>`;
+      for (const e of entries) {
+        const startD = e.startDate ? fmtM(e.startDate) : '';
+        const endD = e.current ? 'Present' : fmtM(e.endDate);
+        const dates = [startD, endD].filter(Boolean).join(' – ');
+        body += `<div class="entry-header"><div><b>${esc(e.org || e.title)}</b>${e.location ? ` | ${esc(e.location)}` : ''}</div><span class="entry-dates">${esc(dates)}</span></div>`;
+        if (e.title && e.org) body += `<div class="entry-italic">${esc(e.title)}${e.sectorGroup ? `, ${esc(e.sectorGroup)}` : ''}</div>`;
+        const bullets = (e.bullets || []).filter(b => b && b.trim());
+        if (bullets.length) {
+          body += '<ul>';
+          for (const b of bullets) body += `<li>${esc(b)}</li>`;
+          body += '</ul>';
+        }
+      }
     } else if (section.type === 'skills') {
       const skills = content[section.id]?.skills || [];
       if (skills.length) {
-        html += `<h2>${section.label}</h2><p class="skills-line">${skills.join(' · ')}</p>`;
-      }
-    } else {
-      const entries = (content[section.id] || []).filter(e => !e.hidden);
-      if (!entries.length) continue;
-      html += `<h2>${section.label}</h2>`;
-      for (const e of entries) {
-        const dates = [fmtDate(e.startDate), e.current ? 'Present' : fmtDate(e.endDate)].filter(Boolean).join(' – ');
-        html += `<div class="entry-header"><div><span class="entry-title">${e.title || ''}</span>${e.title && e.org ? ', ' : ''}<span class="entry-org">${e.org || ''}</span></div><span class="entry-dates">${dates}</span></div>`;
-        if (e.location) html += `<div style="font-size:9pt;color:#666;font-style:italic;">${e.location}</div>`;
-        const bullets = (e.bullets || []).filter(b => b.trim());
-        if (bullets.length) {
-          html += '<ul>';
-          for (const b of bullets) html += `<li>${b}</li>`;
-          html += '</ul>';
-        }
+        body += `<h2>${esc(section.label)}</h2><div>${esc(skills.join(', '))}</div>`;
       }
     }
   }
 
-  html += '</body></html>';
+  const contactName = (content.contact?.name || 'Resume').replace(/[^a-zA-Z0-9 _-]/g, '').replace(/\s+/g, '_');
+
+  const html = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+<head><meta charset='utf-8'><title>${esc(resume.resume_name || 'Resume')}</title>
+<style>
+  body { font-family: ${fontFamily}; font-size: 11pt; margin: 1in; color: #000; }
+  h1 { font-size: 12pt; text-align: center; margin-bottom: 2pt; font-weight: bold; }
+  .contact-line { text-align: center; font-size: 11pt; margin-bottom: 10pt; }
+  h2 { font-size: 11.5pt; text-transform: uppercase; letter-spacing: 1px; border-bottom: 0.5pt solid #000; margin-top: 10pt; margin-bottom: 3pt; font-weight: bold; }
+  .entry-header { display: flex; justify-content: space-between; font-size: 11pt; }
+  .entry-italic { font-style: italic; font-size: 11pt; }
+  .entry-dates { font-style: italic; font-size: 11pt; white-space: nowrap; }
+  ul { margin: 2pt 0 4pt 12pt; padding: 0; }
+  li { margin-bottom: 1pt; font-size: 11pt; }
+</style></head><body>${body}</body></html>`;
 
   const blob = new Blob([html], { type: 'application/msword' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `${resume.resume_name || 'Resume'}.doc`;
+  a.download = `${contactName}_Resume.doc`;
   a.click();
   URL.revokeObjectURL(url);
 }
 
+// ── Component ────────────────────────────────────────────────────────────────
 export default function ResumeExport({ resume }) {
   const [loading, setLoading] = useState('');
+  const [error, setError] = useState('');
+  const isClassicFinance = resume?.template_id === 'classic_finance';
 
   const handlePDF = async () => {
+    if (loading) return;
+    setError('');
     setLoading('pdf');
-    await exportPDF(resume);
-    setLoading('');
+    try {
+      if (isClassicFinance) {
+        await exportCFPdf(resume);
+      } else {
+        await exportStandardPdf(resume);
+      }
+    } catch (e) {
+      setError('PDF export failed. Please try again.');
+    } finally {
+      setLoading('');
+    }
   };
 
   const handleDOCX = async () => {
+    if (loading) return;
+    setError('');
     setLoading('docx');
-    await exportDOCX(resume);
-    setLoading('');
+    try {
+      await exportDOCX(resume);
+    } catch (e) {
+      setError('Word export failed. Please try again.');
+    } finally {
+      setLoading('');
+    }
   };
 
   return (
-    <div className="flex flex-wrap gap-2 mt-2">
-      <button onClick={handlePDF} disabled={!!loading}
-        className="flex items-center gap-2 rounded-[10px] border border-[#E2E8F0] px-4 py-2.5 text-sm font-semibold text-[#334155] hover:bg-[#F8FAFC] disabled:opacity-50 transition">
-        <FileText size={15} style={{ color: 'var(--brand-navy-900)' }} />
-        {loading === 'pdf' ? 'Preparing…' : 'Download PDF'}
-      </button>
-      <button onClick={handleDOCX} disabled={!!loading}
-        className="flex items-center gap-2 rounded-[10px] border border-[#E2E8F0] px-4 py-2.5 text-sm font-semibold text-[#334155] hover:bg-[#F8FAFC] disabled:opacity-50 transition">
-        <File size={15} style={{ color: '#1D4ED8' }} />
-        {loading === 'docx' ? 'Preparing…' : 'Download Word (.doc)'}
-      </button>
+    <div>
+      <div className="flex flex-wrap gap-2">
+        <button onClick={handlePDF} disabled={!!loading}
+          className="flex items-center gap-2 rounded-[10px] border border-[#E2E8F0] px-4 py-2.5 text-sm font-semibold text-[#334155] hover:bg-[#F8FAFC] disabled:opacity-50 transition">
+          <FileText size={15} style={{ color: 'var(--brand-navy-900)' }} />
+          {loading === 'pdf' ? 'Preparing PDF…' : 'Download PDF'}
+        </button>
+        <button onClick={handleDOCX} disabled={!!loading}
+          className="flex items-center gap-2 rounded-[10px] border border-[#E2E8F0] px-4 py-2.5 text-sm font-semibold text-[#334155] hover:bg-[#F8FAFC] disabled:opacity-50 transition">
+          <File size={15} style={{ color: '#1D4ED8' }} />
+          {loading === 'docx' ? 'Preparing…' : 'Download Word (.doc)'}
+        </button>
+      </div>
+      {isClassicFinance && (
+        <p className="mt-1.5 text-[10px] text-[#94A3B8]">
+          Word export produces a .doc file (HTML format) editable in Microsoft Word and Google Docs. True .docx requires an additional integration.
+        </p>
+      )}
+      {error && <p className="mt-2 text-xs text-red-600">{error}</p>}
     </div>
   );
 }
