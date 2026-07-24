@@ -835,12 +835,12 @@ export default function ResumeEditor({ resume, onChange }) {
 
   return (
     <div>
-      {isCF && (
-        <div className="mb-3 rounded-[14px] p-3 text-xs" style={{ background: '#EEF2F6', border: '1px solid var(--border-light)' }}>
-          <span className="font-bold" style={{ color: 'var(--brand-navy-900)' }}>Classic Finance template</span>
-          <span className="text-[#64748B]"> — Garamond, centered header, ATS-friendly one-column layout. Certifications, Awards, and Research are optional — enable them using the eye icon.</span>
-        </div>
-      )}
+      <div className="mb-3 rounded-[14px] p-3 text-xs" style={{ background: '#EEF2F6', border: '1px solid var(--border-light)' }}>
+        {isCF
+          ? <><span className="font-bold" style={{ color: 'var(--brand-navy-900)' }}>Classic Finance template</span><span className="text-[#64748B]"> — Garamond, centered header, ATS-friendly one-column layout.</span></>
+          : <span className="text-[#64748B]">Certifications, Awards, and Research sections are optional — enable them using the eye icon.</span>
+        }
+      </div>
       {ordered.map((section, idx) => (
         <SectionPanel
           key={section.id}
@@ -855,10 +855,6 @@ export default function ResumeEditor({ resume, onChange }) {
           isLast={idx === ordered.length - 1}
         />
       ))}
-      {/* No "Add custom section" for Classic Finance */}
-      {!isCF && (
-        <p className="text-xs text-center text-[#94A3B8] mt-2">Switch to the Classic Finance template to access the full structured resume builder.</p>
-      )}
     </div>
   );
 }

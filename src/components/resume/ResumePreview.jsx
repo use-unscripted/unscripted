@@ -525,6 +525,118 @@ function ListSection({ section, entries, accentColor }) {
   );
 }
 
+function EduSection({ section, entries, accentColor }) {
+  const active = (entries || []).find(e => !e.hidden);
+  if (!active) return null;
+  const e = active;
+  const gradDate = e.gradMonth && e.gradYear ? `${MONTHS_SHORT[parseInt(e.gradMonth,10)-1]} ${e.gradYear}` : e.gradYear || '';
+  const loc = e.city && e.state ? `${e.city}, ${e.state}` : e.city || e.state || '';
+  let degreeLine = e.degree || '';
+  if (e.degreeAbbrev) degreeLine += ` (${e.degreeAbbrev})`;
+  if (e.major) { degreeLine += degreeLine ? ': ' + e.major : e.major; if (e.secondMajor) degreeLine += ` & ${e.secondMajor}`; }
+  return (
+    <div className="mb-4">
+      <SectionHeading label={section.label} accentColor={accentColor} />
+      <div className="flex justify-between items-baseline gap-2">
+        <span className="text-xs font-bold text-gray-900">{e.institution}{loc && <span className="font-normal text-gray-600"> | {loc}</span>}</span>
+        {e.gpa && e.showGpa !== false && <span className="text-xs text-gray-700 whitespace-nowrap">GPA: {e.gpa}{e.gpaScale ? `/${e.gpaScale}` : ''}</span>}
+      </div>
+      {degreeLine && (
+        <div className="flex justify-between items-baseline gap-2">
+          <p className="text-xs italic text-gray-700">{degreeLine}</p>
+          {gradDate && <p className="text-xs italic text-gray-600 whitespace-nowrap">Expected: {gradDate}</p>}
+        </div>
+      )}
+      {(e.minor || e.concentration) && <p className="text-xs text-gray-700">{[e.minor && `Minor: ${e.minor}`, e.concentration && `Concentration: ${e.concentration}`].filter(Boolean).join(' | ')}</p>}
+      {e.coursework && <p className="text-xs text-gray-700"><span className="font-bold">Relevant Coursework:</span> {e.coursework}</p>}
+      {e.honors && <p className="text-xs text-gray-700"><span className="font-bold">Honors & Awards:</span> {e.honors}</p>}
+    </div>
+  );
+}
+
+function SkillsGroupedSection({ section, groups, accentColor }) {
+  const visible = (groups || []).filter(g => g.items && g.items.trim());
+  if (!visible.length) return null;
+  return (
+    <div className="mb-4">
+      <SectionHeading label={section.label} accentColor={accentColor} />
+      {visible.map(g => (
+        <p key={g.id} className="text-xs text-gray-700 leading-relaxed"><span className="font-bold">{g.label}:</span> {g.items}</p>
+      ))}
+    </div>
+  );
+}
+
+function CertSection({ section, entries, accentColor }) {
+  const visible = (entries || []).filter(c => c.name);
+  if (!visible.length) return null;
+  return (
+    <div className="mb-4">
+      <SectionHeading label={section.label} accentColor={accentColor} />
+      {visible.map((c, i) => {
+        const dateStr = c.month && c.year ? `${MONTHS_SHORT[parseInt(c.month,10)-1]} ${c.year}` : c.year || '';
+        return (
+          <div key={i} className="flex justify-between items-baseline gap-2 text-xs mb-1">
+            <span><span className="font-bold">{c.name}</span>{c.issuer && <span className="text-gray-600"> | {c.issuer}</span>}</span>
+            {dateStr && <span className="text-gray-600 whitespace-nowrap italic">{dateStr}</span>}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function AwardsSection({ section, entries, accentColor }) {
+  const visible = (entries || []).filter(a => a.name);
+  if (!visible.length) return null;
+  return (
+    <div className="mb-4">
+      <SectionHeading label={section.label} accentColor={accentColor} />
+      {visible.map((a, i) => {
+        const dateStr = a.month && a.year ? `${MONTHS_SHORT[parseInt(a.month,10)-1]} ${a.year}` : a.year || '';
+        return (
+          <div key={i} className="mb-1 text-xs">
+            <div className="flex justify-between items-baseline gap-2">
+              <span><span className="font-bold">{a.name}</span>{a.issuer && <span className="text-gray-600"> | {a.issuer}</span>}</span>
+              {dateStr && <span className="text-gray-600 whitespace-nowrap italic">{dateStr}</span>}
+            </div>
+            {a.description && <p className="italic text-gray-600">{a.description}</p>}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function ResearchSection({ section, entries, accentColor }) {
+  const visible = (entries || []).filter(r => r.title);
+  if (!visible.length) return null;
+  return (
+    <div className="mb-4">
+      <SectionHeading label={section.label} accentColor={accentColor} />
+      {visible.map((r, i) => {
+        const startStr = r.startMonth && r.startYear ? `${MONTHS_SHORT[parseInt(r.startMonth,10)-1]} ${r.startYear}` : r.startYear || '';
+        const endStr = r.current ? 'Present' : (r.endMonth && r.endYear ? `${MONTHS_SHORT[parseInt(r.endMonth,10)-1]} ${r.endYear}` : r.endYear || '');
+        const dateStr = [startStr, endStr].filter(Boolean).join(' – ');
+        return (
+          <div key={i} className="mb-2 text-xs">
+            <div className="flex justify-between items-baseline gap-2">
+              <span className="font-bold">{r.title}{r.institution && <span className="font-normal text-gray-600"> | {r.institution}</span>}</span>
+              {dateStr && <span className="italic text-gray-600 whitespace-nowrap">{dateStr}</span>}
+            </div>
+            {r.role && <p className="italic text-gray-700">{r.role}{r.advisor ? ` | Advisor: ${r.advisor}` : ''}</p>}
+            {(r.bullets || []).filter(b => b.trim()).length > 0 && (
+              <ul className="mt-0.5 ml-4 list-disc space-y-0.5">
+                {r.bullets.filter(b => b.trim()).map((b, bi) => <li key={bi} className="text-gray-700 leading-relaxed">{b}</li>)}
+              </ul>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 function StandardResume({ resume }) {
   const template = TEMPLATES.find(t => t.id === resume?.template_id) || TEMPLATES.find(t => t.id === 'general') || TEMPLATES[0];
   const accentColor = template.accentColor || '#374151';
@@ -541,6 +653,11 @@ function StandardResume({ resume }) {
     <div id="resume-preview-root" style={{ fontFamily: 'Arial, Helvetica, sans-serif', background: '#fff', padding: '32px 40px', minHeight: '1056px', boxSizing: 'border-box', color: '#111' }}>
       {visible.map(section => {
         if (section.type === 'contact') return <ContactSection key={section.id} contact={content.contact} accentColor={accentColor} />;
+        if (section.type === 'education_cf') return <EduSection key={section.id} section={section} entries={content[section.id] || []} accentColor={accentColor} />;
+        if (section.type === 'skills_grouped') return <SkillsGroupedSection key={section.id} section={section} groups={content[section.id] || []} accentColor={accentColor} />;
+        if (section.type === 'cert') return <CertSection key={section.id} section={section} entries={content[section.id] || []} accentColor={accentColor} />;
+        if (section.type === 'awards_cf') return <AwardsSection key={section.id} section={section} entries={content[section.id] || []} accentColor={accentColor} />;
+        if (section.type === 'research') return <ResearchSection key={section.id} section={section} entries={content[section.id] || []} accentColor={accentColor} />;
         if (section.type === 'skills') return <SkillsSection key={section.id} section={section} data={content[section.id]} accentColor={accentColor} />;
         return <ListSection key={section.id} section={section} entries={content[section.id] || []} accentColor={accentColor} />;
       })}

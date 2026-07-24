@@ -10,24 +10,16 @@ import ResumeSuggestions from '@/components/resume/ResumeSuggestions';
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 function buildDefaultContent(templateId) {
-  if (templateId === 'classic_finance') {
-    const sections = CLASSIC_FINANCE_SECTIONS.map(s => ({ ...s }));
-    const content = { sections, contact: { ...BLANK_CONTACT } };
-    for (const s of sections) {
-      if (s.type === 'list') content[s.id] = [];
-      if (s.type === 'education_cf') content[s.id] = [];
-      if (s.type === 'skills_grouped') content[s.id] = DEFAULT_SKILL_GROUPS.map(g => ({ ...g }));
-      if (s.type === 'cert') content[s.id] = [];
-      if (s.type === 'awards_cf') content[s.id] = [];
-      if (s.type === 'research') content[s.id] = [];
-    }
-    return content;
-  }
-  const sections = DEFAULT_SECTIONS.map(s => ({ ...s }));
+  const sourceSections = templateId === 'classic_finance' ? CLASSIC_FINANCE_SECTIONS : DEFAULT_SECTIONS;
+  const sections = sourceSections.map(s => ({ ...s }));
   const content = { sections, contact: { ...BLANK_CONTACT } };
   for (const s of sections) {
     if (s.type === 'list') content[s.id] = [];
-    if (s.type === 'skills') content[s.id] = { skills: [] };
+    if (s.type === 'education_cf') content[s.id] = [];
+    if (s.type === 'skills_grouped') content[s.id] = DEFAULT_SKILL_GROUPS.map(g => ({ ...g }));
+    if (s.type === 'cert') content[s.id] = [];
+    if (s.type === 'awards_cf') content[s.id] = [];
+    if (s.type === 'research') content[s.id] = [];
   }
   return content;
 }
@@ -273,26 +265,25 @@ export default function ResumeBuilder() {
 
   const selectResume = async (r) => {
     let resume = { ...r };
-    // Ensure CF resumes have all approved sections (add missing ones without disrupting existing data)
-    if (resume.template_id === 'classic_finance') {
-      const content = { ...(resume.content || {}) };
-      const existingSections = content.sections || [];
-      const existingIds = new Set(existingSections.map(s => s.id));
-      const missingSections = CLASSIC_FINANCE_SECTIONS.filter(s => !existingIds.has(s.id));
-      if (missingSections.length > 0) {
-        const newSections = [...existingSections, ...missingSections];
-        const newContent = { ...content, sections: newSections };
-        for (const s of missingSections) {
-          if (s.type === 'list') newContent[s.id] = [];
-          if (s.type === 'education_cf') newContent[s.id] = newContent[s.id] || [];
-          if (s.type === 'skills_grouped') newContent[s.id] = newContent[s.id] || DEFAULT_SKILL_GROUPS.map(g => ({ ...g }));
-          if (s.type === 'cert') newContent[s.id] = [];
-          if (s.type === 'awards_cf') newContent[s.id] = [];
-          if (s.type === 'research') newContent[s.id] = [];
-        }
-        const newOrder = [...(resume.section_order || existingSections.map(s => s.id)), ...missingSections.map(s => s.id)];
-        resume = { ...resume, content: newContent, section_order: newOrder };
+    // Ensure all resumes have all approved sections (add missing ones without disrupting existing data)
+    const sourceSections = resume.template_id === 'classic_finance' ? CLASSIC_FINANCE_SECTIONS : DEFAULT_SECTIONS;
+    const content = { ...(resume.content || {}) };
+    const existingSections = content.sections || [];
+    const existingIds = new Set(existingSections.map(s => s.id));
+    const missingSections = sourceSections.filter(s => !existingIds.has(s.id));
+    if (missingSections.length > 0) {
+      const newSections = [...existingSections, ...missingSections];
+      const newContent = { ...content, sections: newSections };
+      for (const s of missingSections) {
+        if (s.type === 'list') newContent[s.id] = newContent[s.id] || [];
+        if (s.type === 'education_cf') newContent[s.id] = newContent[s.id] || [];
+        if (s.type === 'skills_grouped') newContent[s.id] = newContent[s.id] || DEFAULT_SKILL_GROUPS.map(g => ({ ...g }));
+        if (s.type === 'cert') newContent[s.id] = newContent[s.id] || [];
+        if (s.type === 'awards_cf') newContent[s.id] = newContent[s.id] || [];
+        if (s.type === 'research') newContent[s.id] = newContent[s.id] || [];
       }
+      const newOrder = [...(resume.section_order || existingSections.map(s => s.id)), ...missingSections.map(s => s.id)];
+      resume = { ...resume, content: newContent, section_order: newOrder };
     }
     setSelectedId(resume.id);
     setDraft(resume);

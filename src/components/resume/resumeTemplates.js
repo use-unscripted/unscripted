@@ -40,10 +40,14 @@ export const TEMPLATES = [
 ];
 
 export const DEFAULT_SECTIONS = [
-  { id: 'contact', label: 'Contact', type: 'contact', visible: true },
-  { id: 'education', label: 'Education', type: 'list', visible: true },
-  { id: 'experience', label: 'Experience', type: 'list', visible: true },
-  { id: 'skills', label: 'Skills', type: 'skills', visible: true },
+  { id: 'contact',        label: 'CONTACT',                                          type: 'contact',        visible: true  },
+  { id: 'education',      label: 'EDUCATION',                                        type: 'education_cf',   visible: true  },
+  { id: 'experience',     label: 'WORK EXPERIENCE',                                  type: 'list',           visible: true  },
+  { id: 'activities',     label: 'ACTIVITIES AND EXTRACURRICULAR',                   type: 'list',           visible: true  },
+  { id: 'skills_grouped', label: 'SKILLS, TRAINING, OTHER ACTIVITIES, & INTERESTS',  type: 'skills_grouped', visible: true  },
+  { id: 'certifications', label: 'CERTIFICATIONS',                                   type: 'cert',           visible: false },
+  { id: 'awards',         label: 'AWARDS',                                           type: 'awards_cf',      visible: false },
+  { id: 'research',       label: 'RESEARCH',                                         type: 'research',       visible: false },
 ];
 
 // Classic Finance template — approved sections only
