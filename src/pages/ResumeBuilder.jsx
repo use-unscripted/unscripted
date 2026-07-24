@@ -72,23 +72,12 @@ function TemplatePicker({ onSelect, onCancel }) {
                   style={{ background: 'var(--brand-navy-900)' }}>Recommended</span>
               )}
               <div className="w-full h-16 rounded-lg mb-2 flex items-center justify-center"
-                style={{ background: t.isDefault ? '#F7F8FA' : `${t.accentColor}15`, border: t.isDefault ? '1px solid #E2E8F0' : 'none' }}>
-                {t.isDefault ? (
-                  <div className="w-4/5 space-y-0.5 text-left">
-                    <div className="text-[7px] font-bold text-center text-gray-700" style={{ fontFamily: 'Georgia, serif' }}>YOUR NAME</div>
-                    <div className="h-px bg-gray-400 w-full" />
-                    <div className="text-[6px] font-bold text-gray-700" style={{ fontFamily: 'Georgia, serif' }}>EDUCATION</div>
-                    <div className="h-px bg-gray-400 w-full" />
-                    <div className="text-[5px] text-gray-500">Institution | Date</div>
-                    <div className="text-[4px] text-gray-400">Degree</div>
-                  </div>
-                ) : (
+                style={{ background: `${t.accentColor}15` }}>
                   <div className="w-3/4 space-y-1">
                     <div className="h-1.5 rounded-full" style={{ background: t.accentColor, opacity: 0.8 }} />
                     <div className="h-1 rounded-full bg-gray-200 w-5/6" />
                     <div className="h-1 rounded-full bg-gray-200 w-4/6" />
                   </div>
-                )}
               </div>
               <p className="text-xs font-bold text-[#050816] group-hover:text-[#1F3A5F] leading-tight">{t.name}</p>
               <p className="text-[10px] text-[#64748B] mt-0.5 leading-tight">{t.description}</p>

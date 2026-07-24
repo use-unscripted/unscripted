@@ -3,7 +3,7 @@ export const TEMPLATES = [
     id: 'classic_finance',
     name: 'Classic Finance',
     description: 'A compact, one-column Garamond resume designed for finance, consulting, investing, research, and traditional professional recruiting.',
-    accentColor: '#111111',
+    accentColor: '#7B1D2E',
     isDefault: true,
     recommended: ['finance', 'consulting', 'private equity', 'investment banking', 'corporate finance', 'research'],
   },
