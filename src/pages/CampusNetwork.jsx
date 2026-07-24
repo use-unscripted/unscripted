@@ -300,11 +300,11 @@ export default function CampusNetwork() {
             style={{ background: 'var(--background-tertiary)', color: 'var(--text-secondary)', border: '1px solid var(--border-light)' }}>
             <Settings2 size={13} /> {myProfile ? 'Edit Profile' : 'Set Up Profile'}
           </button>
-          <Link to="/network/invite"
+          <button onClick={() => switchTab('invites')}
             className="flex items-center gap-1.5 rounded-[10px] px-3 py-2 text-xs font-semibold text-white"
             style={{ background: 'var(--brand-navy-900)' }}>
             <UserPlus size={13} /> Invite Friends
-          </Link>
+          </button>
         </div>
       </div>
 
