@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import ScrollReveal, { StaggerGroup } from '@/components/ScrollReveal';
+import UniversityMarquee from '@/components/landing/UniversityMarquee';
 
 const steps = [
   { n: '01', title: 'Compare realistic paths', body: 'See honest tradeoffs, lifestyle implications, and fit signals for 3 paths matched to your profile.' },
@@ -55,8 +56,11 @@ export default function Hero() {
         </div>
       </section>
 
+      {/* University marquee */}
+      <UniversityMarquee />
+
       {/* 4-step process */}
-      <section id="how-it-works" className="mx-auto max-w-7xl px-6 pb-24">
+      <section id="how-it-works" className="mx-auto max-w-7xl px-6 pt-16 pb-24">
         <StaggerGroup base={0} step={90} className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {steps.map(({ n, title, body }) => (
             <div key={n} className="rounded-[18px] bg-white p-6" style={{ border: '1px solid var(--border-light)' }}>

@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { ArrowRight, CheckCircle2 } from 'lucide-react';
 import ScrollReveal, { StaggerGroup } from '@/components/ScrollReveal';
 import { useParallax } from '@/hooks/useScrollReveal';
-import UniversityMarquee from '@/components/landing/UniversityMarquee';
+
 
 const paths = [
   'A traditional professional career',
@@ -38,8 +38,6 @@ function ParallaxSection({ children, strength = 0.10, style: extraStyle = {}, cl
 export default function LandingSections() {
   return (
     <>
-      <UniversityMarquee />
-
       {/* What are you trying to test? */}
       <section className="px-6 py-20" style={{ background: 'var(--background-secondary)', borderTop: '1px solid var(--border-light)' }}>
         <div className="mx-auto max-w-7xl">
