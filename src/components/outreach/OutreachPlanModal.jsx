@@ -361,8 +361,14 @@ function SaveContactConfirmModal({ suggestion, pathName, experimentId, experimen
     : experiments.find(e => e.path_name === pathName);
 
   // Never pre-fill profile_url from AI-generated source_url — could be a fabricated LinkedIn link
+  const placeholders = new Set(['n/a', 'na', 'unknown', 'tbd', '']);
+  const cleanName = (v) => {
+    const s = (v || '').trim();
+    return placeholders.has(s.toLowerCase()) ? '' : s;
+  };
+
   const [form, setForm] = useState({
-    name: suggestion.name || '',
+    name: cleanName(suggestion.name),
     company: suggestion.organization || '',
     role: suggestion.role || '',
     profile_url: '',
