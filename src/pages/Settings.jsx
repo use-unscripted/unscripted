@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import PageHeader from '@/components/PageHeader';
-import { Trash2 } from 'lucide-react';
+import { Trash2, RefreshCw, CheckCircle, ArrowRight } from 'lucide-react';
 import Field from '@/components/onboarding/Field';
 import ICSExportPanel from '@/components/calendar/ICSExportPanel';
+import { generatePathTest } from '@/lib/path-generator';
 
 const textareaCls = 'mt-1 w-full rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-3 text-sm text-[#050816] placeholder-[#94A3B8] outline-none focus:border-[#274C77] resize-none';
 
@@ -17,11 +18,15 @@ const NOTES_FIELDS = [
 ];
 
 export default function Settings() {
+  const navigate = useNavigate();
   const [user, setUser] = useState({});
   const [saved, setSaved] = useState(false);
   const [profile, setProfile] = useState(null);
   const [notes, setNotes] = useState({});
   const [notesSaved, setNotesSaved] = useState(false);
+  const [showRegenPrompt, setShowRegenPrompt] = useState(false);
+  const [regenerating, setRegenerating] = useState(false);
+  const [regenDone, setRegenDone] = useState(false);
 
   useEffect(() => {
     base44.auth.me().then(setUser);
@@ -43,7 +48,18 @@ export default function Settings() {
       await base44.entities.StudentProfile.update(profile.id, notes);
     }
     setNotesSaved(true);
+    setShowRegenPrompt(true);
     setTimeout(() => setNotesSaved(false), 3000);
+  };
+
+  const handleRegenerate = async () => {
+    setRegenerating(true);
+    try {
+      await generatePathTest();
+      setRegenDone(true);
+    } finally {
+      setRegenerating(false);
+    }
   };
 
   return (
@@ -100,6 +116,38 @@ export default function Settings() {
           style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}>
           {notesSaved ? 'Saved ✓' : 'Save personal context'}
         </button>
+
+        {showRegenPrompt && !regenDone && (
+          <div className="rounded-[16px] border border-[#274C77] bg-[#EEF2F6] p-5">
+            <p className="text-sm font-bold text-[#1F3A5F] mb-1">Want to refresh your recommended paths?</p>
+            <p className="text-xs text-[#334155] mb-4">Your personal context has been updated. Unscripted can generate new path recommendations tailored to your updated preferences — for example, if you now want to focus only on law-related roles.</p>
+            <div className="flex flex-wrap gap-2">
+              <button onClick={handleRegenerate} disabled={regenerating}
+                className="flex items-center gap-2 rounded-[10px] px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-60 transition"
+                style={{ background: 'var(--brand-navy-900)' }}>
+                <RefreshCw size={14} className={regenerating ? 'animate-spin' : ''} />
+                {regenerating ? 'Generating new paths…' : 'Yes, refresh my paths'}
+              </button>
+              <button onClick={() => setShowRegenPrompt(false)}
+                className="rounded-[10px] border border-[#E2E8F0] px-5 py-2.5 text-sm font-semibold text-[#334155] hover:bg-white transition">
+                No, keep existing paths
+              </button>
+            </div>
+          </div>
+        )}
+
+        {regenDone && (
+          <div className="rounded-[16px] border border-green-200 bg-green-50 p-5 flex items-start gap-3">
+            <CheckCircle size={18} className="text-green-600 shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm font-bold text-green-800">New paths generated!</p>
+              <p className="text-xs text-green-700 mt-0.5">Your updated preferences have been applied and new recommendations have been added to your paths.</p>
+              <Link to="/paths" className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-green-800 underline">
+                View new paths <ArrowRight size={12} />
+              </Link>
+            </div>
+          </div>
+        )}
       </section>
 
       <div className="mb-3">
