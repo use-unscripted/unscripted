@@ -647,6 +647,17 @@ export default function ExperimentsPage() {
     if (next) { loadMissionsForExp(next); loadGuidesForExp(next); }
   };
 
+  // Deep link: /experiments?experimentId=… opens that experiment directly
+  const deepLinkedRef = useRef(false);
+  useEffect(() => {
+    if (deepLinkedRef.current || !experiments.length) return;
+    const target = new URLSearchParams(window.location.search).get('experimentId');
+    if (!target || !experiments.some(e => e.id === target)) return;
+    deepLinkedRef.current = true;
+    setFilter('all');
+    handleExpand(target);
+  }, [experiments]);
+
   // Load missions/guides for all paused experiments upfront so the paused section has data
   const pausedExps = experiments.filter(e => e.status === 'paused');
   useEffect(() => {

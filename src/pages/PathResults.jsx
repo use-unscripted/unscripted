@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
-import { ArrowRight, AlertTriangle, TrendingUp, Zap } from 'lucide-react';
+import { ArrowRight, AlertTriangle, TrendingUp, Zap, Loader2, Rocket } from 'lucide-react';
 import { LogoWordmark } from '@/components/UnscriptedLogo';
 
 const LABELS = ['Best apparent fit', 'Strong alternative', 'Contrarian option'];
@@ -29,7 +29,7 @@ function ReadinessBar({ score }) {
   );
 }
 
-function PathCard({ rec, index }) {
+function PathCard({ rec, index, onStart, starting, disabled }) {
   const [expanded, setExpanded] = useState(index === 0);
   const labelStyle = LABEL_STYLES[index] || LABEL_STYLES[2];
 
@@ -106,21 +106,73 @@ function PathCard({ rec, index }) {
             )}
           </div>
         )}
+
+        <button
+          onClick={onStart}
+          disabled={disabled}
+          className="mt-5 w-full inline-flex items-center justify-center gap-2 rounded-[10px] px-6 py-3.5 text-sm font-semibold text-white transition hover:-translate-y-px disabled:opacity-60 disabled:hover:translate-y-0"
+          style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}
+        >
+          {starting
+            ? <><Loader2 size={16} className="animate-spin" /> Starting…</>
+            : <><Rocket size={16} /> Start This 30-Day Test</>}
+        </button>
       </div>
     </div>
   );
 }
 
 export default function PathResults() {
+  const navigate = useNavigate();
   const [recs, setRecs] = useState([]);
+  const [experiments, setExperiments] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [startingId, setStartingId] = useState(null);
+  const [startError, setStartError] = useState('');
 
   useEffect(() => {
-    base44.entities.PathRecommendations.list('-created_date', 3).then(data => {
-      setRecs(data.slice(0, 3));
+    (async () => {
+      const me = await base44.auth.me();
+      const [ps, exps] = await Promise.all([
+        base44.entities.PathRecommendations.filter({ created_by_id: me.id }, '-created_date', 20).catch(() => []),
+        base44.entities.Experiments.filter({ created_by_id: me.id }, '-created_date', 100).catch(() => []),
+      ]);
+      setRecs((Array.isArray(ps) ? ps : []).slice(0, 3));
+      setExperiments(Array.isArray(exps) ? exps : []);
       setLoading(false);
-    });
+    })();
   }, []);
+
+  const handleStart = async (rec) => {
+    if (startingId) return;
+    setStartingId(rec.id);
+    setStartError('');
+    try {
+      const active = experiments.filter(e => !e.deletion_status || e.deletion_status === 'active');
+      const match =
+        active.find(e => e.path_recommendation_id === rec.id) ||
+        active.find(e => e.path_name && e.path_name === rec.path_name);
+
+      // Promote this path to the user's primary focus, demote the others.
+      const others = recs.filter(p => p.id !== rec.id && p.is_primary_focus);
+      await Promise.all(others.map(p => base44.entities.PathRecommendations.update(p.id, { is_primary_focus: false })));
+      await base44.entities.PathRecommendations.update(rec.id, {
+        is_primary_focus: true,
+        status: 'active',
+        started_at: new Date().toISOString().split('T')[0],
+      });
+
+      if (match) {
+        await base44.entities.Experiments.update(match.id, { status: 'in_progress' });
+        navigate(`/experiments?experimentId=${match.id}`);
+      } else {
+        navigate(`/experiments/new?pathId=${encodeURIComponent(rec.id)}&pathName=${encodeURIComponent(rec.path_name || '')}`);
+      }
+    } catch {
+      setStartError('Could not start this test. Please try again.');
+      setStartingId(null);
+    }
+  };
 
   if (loading) return (
     <div className="grid min-h-screen place-items-center" style={{ background: '#FAFAF9' }}>
@@ -144,8 +196,19 @@ export default function PathResults() {
         </div>
 
         <div className="space-y-4 mb-8">
-          {recs.map((r, i) => <PathCard key={r.id} rec={r} index={i} />)}
+          {recs.map((r, i) => (
+            <PathCard
+              key={r.id}
+              rec={r}
+              index={i}
+              onStart={() => handleStart(r)}
+              starting={startingId === r.id}
+              disabled={!!startingId}
+            />
+          ))}
         </div>
+
+        {startError && <p className="mb-6 text-sm font-semibold text-red-600">{startError}</p>}
 
         {recs.length === 0 && (
           <div className="rounded-[20px] border border-dashed border-[#E2E8F0] p-12 text-center text-[#64748B]">
@@ -156,12 +219,11 @@ export default function PathResults() {
         <div className="rounded-[20px] p-6" style={{ background: '#081225', border: '1px solid rgba(31,58,95,0.3)' }}>
           <p className="text-xs font-bold uppercase tracking-wide mb-2" style={{ color: 'var(--brand-navy-900)' }}>Your 30-day experiment plan is ready</p>
           <p className="text-sm text-slate-300 mb-5">
-            We've built 3 experiments for your primary path. Open your dashboard to see your first missions and schedule them into your week.
+            Pick a path above to start its 30-day test. You can compare all three from your dashboard first.
           </p>
           <Link to="/dashboard"
-            className="inline-flex items-center gap-2 rounded-[10px] px-6 py-3.5 text-sm font-semibold text-white transition hover:-translate-y-px"
-            style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}>
-            Open My Dashboard <ArrowRight size={17} />
+            className="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-300 transition hover:text-white">
+            Open My Dashboard <ArrowRight size={15} />
           </Link>
         </div>
 
