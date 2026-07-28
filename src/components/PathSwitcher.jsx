@@ -56,7 +56,6 @@ export default function PathSwitcher({ paths = [], selectedId, onChange, showAll
       ref={dropdownRef}
       className="anim-scale-in w-72 rounded-[16px] border border-[#E2E8F0] bg-white shadow-xl py-1.5 overflow-y-auto"
       style={{ ...dropdownStyle, maxHeight: '320px' }}
-      style={{}}
       onWheel={e => e.stopPropagation()}
     >
       {showAll && (
