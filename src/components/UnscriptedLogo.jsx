@@ -11,7 +11,8 @@ export function LogoFull({ className = '', height = 36, style: extraStyle = {}, 
         height: `${height}px`,
         width: 'auto',
         display: 'block',
-        ...(invert ? { filter: 'invert(1) brightness(2)' } : {}),
+        mixBlendMode: 'multiply',
+        ...(invert ? { filter: 'invert(1) brightness(2)', mixBlendMode: 'normal' } : {}),
         ...extraStyle,
       }}
       className={className}

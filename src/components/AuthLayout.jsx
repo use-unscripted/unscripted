@@ -6,7 +6,7 @@ export default function AuthLayout({ title, subtitle, footer, children }) {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="flex justify-center mb-6">
-            <LogoFull height={38} />
+            <LogoFull height={56} />
           </div>
           <h1 className="font-heading text-2xl font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>{title}</h1>
           {subtitle && <p className="mt-2 text-sm" style={{ color: 'var(--text-muted)' }}>{subtitle}</p>}
