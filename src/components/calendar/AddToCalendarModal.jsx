@@ -24,12 +24,14 @@ const TIMEZONES = [
 const inputCls = 'w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-3 py-2.5 text-sm outline-none focus:border-[#1F3A5F]';
 
 export default function AddToCalendarModal({ item, itemType, onClose }) {
-  // itemType: 'mission' | 'task' | 'outreach'
+  // itemType: 'mission' | 'task' | 'outreach' | 'experiment'
   const defaultDate = item?.deadline || item?.date || item?.followup_date || '';
   const defaultTitle = itemType === 'mission'
     ? `[Mission] ${item?.title || ''}`
     : itemType === 'outreach'
     ? `Follow up: ${item?.name || ''}`
+    : itemType === 'experiment'
+    ? `[Experiment] ${item?.title || ''}`
     : item?.task_title || item?.title || '';
   const defaultDesc = item?.objective || item?.description || item?.reason_for_contact || '';
 

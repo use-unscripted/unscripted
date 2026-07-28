@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { ArrowLeft, ArrowRight, CheckCircle, Loader2, AlertCircle } from 'lucide-react';
 import { LogoWordmark } from '@/components/UnscriptedLogo';
+import AddToCalendarModal from '@/components/calendar/AddToCalendarModal';
 
 // Generate 3 path-specific experiment options based on path name
 function getExperimentOptions(pathName) {
@@ -224,12 +225,21 @@ function StepGenerating({ experiment, missionGuide, error }) {
 }
 
 // ─── Step 4: Success ─────────────────────────────────────────────────────────
-function StepSuccess({ experiment, missionGuide, onViewGuide, onAddToWeek }) {
+function StepSuccess({ experiment, missionGuide, onViewGuide }) {
+  const [showCal, setShowCal] = useState(false);
   const firstStep = missionGuide?.mission_steps?.[0];
   const firstStepText = typeof firstStep === 'string' ? firstStep : firstStep?.step || firstStep?.description || 'Start your first action';
 
   return (
     <div className="space-y-6">
+      {showCal && (
+        <AddToCalendarModal
+          item={experiment}
+          itemType="experiment"
+          onClose={() => setShowCal(false)}
+        />
+      )}
+
       <div className="rounded-[20px] text-center p-8 space-y-3" style={{ background: '#F0FDF4', border: '1px solid #86EFAC' }}>
         <CheckCircle className="mx-auto text-green-600" size={40} />
         <h2 className="font-heading text-2xl font-bold text-[#050816]">Mission Created</h2>
@@ -267,10 +277,10 @@ function StepSuccess({ experiment, missionGuide, onViewGuide, onAddToWeek }) {
           style={{ background: 'var(--brand-navy-900)' }}>
           View Full Mission Guide
         </button>
-        <button onClick={onAddToWeek}
+        <button onClick={() => setShowCal(true)}
           className="rounded-[12px] border py-3 text-sm font-semibold transition hover:bg-[#F8FAFC]"
           style={{ borderColor: '#E2E8F0', color: '#334155' }}>
-          Add to My Week
+          Add to Calendar
         </button>
         <Link to="/paths" className="col-span-2 text-center text-sm font-semibold transition hover:opacity-80" style={{ color: 'var(--brand-navy-900)' }}>
           ← Return to Path Comparison
@@ -596,7 +606,6 @@ Be specific. If the experiment involves outreach, include field-specific details
               experiment={experiment}
               missionGuide={missionGuide}
               onViewGuide={() => navigate('/experiments')}
-              onAddToWeek={() => navigate('/calendar')}
             />
           )}
         </div>
