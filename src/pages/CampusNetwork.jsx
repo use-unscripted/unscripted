@@ -36,6 +36,7 @@ export default function CampusNetwork() {
   const [filterMajor, setFilterMajor] = useState('');
   const [filterYear, setFilterYear] = useState('');
   const [filterPath, setFilterPath] = useState('');
+  const [filterUniversity, setFilterUniversity] = useState('');
 
   // Profile editor
   const [showProfileEditor, setShowProfileEditor] = useState(false);
@@ -182,10 +183,6 @@ export default function CampusNetwork() {
     if (!currentUser) return;
     setDiscoverLoading(true);
     try {
-      // Get the user's university from their StudentProfile
-      const studentProfiles = await base44.entities.StudentProfile.filter({ user_id: currentUser.id }, '-created_date', 1).catch(() => []);
-      const myCollege = studentProfiles[0]?.college || myProfile?.university_name || '';
-
       const all = await base44.entities.NetworkProfile.filter({
         discoverable: true,
         active: true,
@@ -193,8 +190,6 @@ export default function CampusNetwork() {
       const filtered = all.filter(p =>
         p.user_id !== currentUser.id &&
         !blockedIds.has(p.user_id) &&
-        myCollege &&
-        p.university_name?.toLowerCase() === myCollege?.toLowerCase() &&
         ['my_university', 'all_unscripted'].includes(p.profile_visibility)
       );
       setDiscoverProfiles(filtered);
@@ -257,11 +252,16 @@ export default function CampusNetwork() {
   // Filtered discover results
   const filteredDiscover = discoverProfiles.filter(p => {
     if (searchQuery && !p.display_name?.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+    if (filterUniversity && !p.university_name?.toLowerCase().includes(filterUniversity.toLowerCase())) return false;
     if (filterMajor && !p.major?.toLowerCase().includes(filterMajor.toLowerCase())) return false;
     if (filterYear && p.academic_year !== filterYear) return false;
     if (filterPath && !p.public_path_categories?.some(c => c.toLowerCase().includes(filterPath.toLowerCase()))) return false;
     return true;
   });
+
+  // Derive unique universities from all discoverable profiles
+  const availableUniversities = [...new Set(discoverProfiles.map(p => p.university_name).filter(Boolean))].sort();
+  const myUniversityName = myProfile?.university_name || '';
 
   const needsProfile = !myProfile;
   const notVerified = false; // verification gate removed — all users with a profile are treated as verified
@@ -435,35 +435,84 @@ export default function CampusNetwork() {
               desc={notVerified ? 'University verification is needed to discover students.' : 'Create your campus profile to start discovering.'} />
           ) : (
             <>
-              {/* Search */}
+              {/* University quick-filter pills */}
+              {myUniversityName && (
+                <div className="mb-3 flex flex-wrap gap-2 items-center">
+                  <span className="text-xs font-semibold" style={{ color: 'var(--text-muted)' }}>Show:</span>
+                  <button
+                    onClick={() => setFilterUniversity(filterUniversity === myUniversityName ? '' : myUniversityName)}
+                    className="rounded-full px-3 py-1 text-xs font-semibold transition border"
+                    style={filterUniversity === myUniversityName
+                      ? { background: 'var(--brand-navy-900)', color: 'white', borderColor: 'var(--brand-navy-900)' }
+                      : { background: 'white', color: 'var(--text-secondary)', borderColor: 'var(--border-light)' }}>
+                    My University ({myUniversityName})
+                  </button>
+                  <button
+                    onClick={() => setFilterUniversity('')}
+                    className="rounded-full px-3 py-1 text-xs font-semibold transition border"
+                    style={filterUniversity === ''
+                      ? { background: 'var(--brand-navy-900)', color: 'white', borderColor: 'var(--brand-navy-900)' }
+                      : { background: 'white', color: 'var(--text-secondary)', borderColor: 'var(--border-light)' }}>
+                    All Universities
+                  </button>
+                </div>
+              )}
+
+              {/* Search + filters */}
               <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center">
                 <div className="relative flex-1">
                   <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-muted)' }} />
                   <input type="text" value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
-                    placeholder="Search by display name…"
+                    placeholder="Search by name…"
                     className="w-full rounded-xl border border-[#E2E8F0] bg-white pl-9 pr-4 py-2.5 text-sm outline-none focus:border-[#274C77]"
                     aria-label="Search students by name" />
                 </div>
+                <input type="text" value={filterUniversity} onChange={e => setFilterUniversity(e.target.value)}
+                  placeholder="Search by university" aria-label="Filter by university"
+                  className="rounded-xl border border-[#E2E8F0] bg-white px-3 py-2.5 text-sm outline-none focus:border-[#274C77] w-full sm:w-44" />
                 <input type="text" value={filterMajor} onChange={e => setFilterMajor(e.target.value)}
                   placeholder="Filter by major" aria-label="Filter by major"
-                  className="rounded-xl border border-[#E2E8F0] bg-white px-3 py-2.5 text-sm outline-none focus:border-[#274C77] w-full sm:w-36" />
-                <input type="text" value={filterPath} onChange={e => setFilterPath(e.target.value)}
-                  placeholder="Filter by path interest" aria-label="Filter by path interest"
-                  className="rounded-xl border border-[#E2E8F0] bg-white px-3 py-2.5 text-sm outline-none focus:border-[#274C77] w-full sm:w-36" />
+                  className="rounded-xl border border-[#E2E8F0] bg-white px-3 py-2.5 text-sm outline-none focus:border-[#274C77] w-full sm:w-32" />
               </div>
 
               {discoverLoading ? <LoadingCards count={4} /> : filteredDiscover.length === 0 ? (
-                <EmptyState icon={<Users size={28} />} title="No students found"
-                  desc="No discoverable students at your university yet — or your filters returned no results. Try adjusting the search."
-                  action={<button onClick={() => switchTab('invites')} className="mt-3 inline-flex items-center gap-2 rounded-[10px] px-4 py-2 text-sm font-semibold text-white" style={{ background: 'var(--brand-navy-900)' }}>Invite friends</button>}
+                <EmptyState icon={<Users size={28} />}
+                  title={filterUniversity ? `No students found at "${filterUniversity}"` : 'No students found'}
+                  desc={
+                    filterUniversity
+                      ? 'No discoverable students from that university yet. They may not have set up their network profile, or set their profile to discoverable.'
+                      : 'No discoverable students match your search. Try a different name or university.'
+                  }
+                  action={
+                    <div className="flex gap-2 mt-3 justify-center flex-wrap">
+                      {filterUniversity && (
+                        <button onClick={() => setFilterUniversity('')}
+                          className="inline-flex items-center gap-2 rounded-[10px] px-4 py-2 text-sm font-semibold border"
+                          style={{ border: '1px solid var(--border-light)', color: 'var(--text-secondary)' }}>
+                          Clear filter
+                        </button>
+                      )}
+                      <button onClick={() => switchTab('invites')}
+                        className="inline-flex items-center gap-2 rounded-[10px] px-4 py-2 text-sm font-semibold text-white"
+                        style={{ background: 'var(--brand-navy-900)' }}>
+                        Invite friends
+                      </button>
+                    </div>
+                  }
                 />
               ) : (
-                <div className="space-y-3">
-                  {filteredDiscover.map(p => (
-                    <NetworkProfileCard key={p.id} profile={p} currentUserId={currentUser?.id}
-                      isFollowing={isFollowing(p.user_id)} onFollowChange={refreshAll} />
-                  ))}
-                </div>
+                <>
+                  <p className="text-xs mb-3" style={{ color: 'var(--text-muted)' }}>
+                    {filteredDiscover.length} student{filteredDiscover.length !== 1 ? 's' : ''} found
+                    {filterUniversity ? ` at ${filterUniversity}` : ''}
+                  </p>
+                  <div className="space-y-3">
+                    {filteredDiscover.map(p => (
+                      <NetworkProfileCard key={p.id} profile={p} currentUserId={currentUser?.id}
+                        isFollowing={isFollowing(p.user_id)} onFollowChange={refreshAll} />
+                    ))}
+                  </div>
+                </>
               )}
             </>
           )}

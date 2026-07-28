@@ -45,13 +45,19 @@ export default function NetworkProfileSetup({ currentUser, profile, onSaved }) {
         profile_image_url: profile.profile_image_url || '',
       });
     } else if (currentUser) {
-      setForm(f => ({
-        ...f,
-        display_name: currentUser.full_name || '',
-        university_name: currentUser.college || '',
-        major: currentUser.major || '',
-        academic_year: currentUser.school_year || '',
-      }));
+      // Pre-fill from auth user, then also pull from StudentProfile for richer defaults
+      setForm(f => ({ ...f, display_name: currentUser.full_name || '' }));
+      base44.entities.StudentProfile.filter({ user_id: currentUser.id }, '-created_date', 1).then(profiles => {
+        const sp = profiles?.[0];
+        if (sp) {
+          setForm(f => ({
+            ...f,
+            university_name: f.university_name || sp.college || '',
+            major: f.major || sp.major || '',
+            academic_year: f.academic_year || sp.school_year || '',
+          }));
+        }
+      }).catch(() => {});
     }
   }, [profile, currentUser]);
 
@@ -231,7 +237,7 @@ export default function NetworkProfileSetup({ currentUser, profile, onSaved }) {
       <label className="flex items-center justify-between cursor-pointer">
         <div>
           <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Campus discovery</p>
-          <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Let verified students at your university find you in Discover</p>
+          <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Let other students find you in Discover by name or university</p>
         </div>
         <button type="button" onClick={() => change('discoverable', !form.discoverable)}
           className="rounded-full w-9 h-5 transition-colors relative ml-4"
