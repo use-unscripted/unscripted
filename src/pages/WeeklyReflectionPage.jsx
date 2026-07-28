@@ -213,7 +213,7 @@ function ReflectionForm({ experiments, missions, initialData, onSaved, onCancel 
         ) : (
           <select value={form.experiment_id} onChange={e => handleExpChange(e.target.value)}
             className="rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-3 text-sm text-[#050816] placeholder-[#94A3B8] outline-none focus:border-[#1F3A5F]"
-            style={{ maxWidth: '520px', minWidth: '240px', width: 'min(100%, 520px)' }}>
+            style={{ maxWidth: '480px', width: 'auto', minWidth: '200px' }}>
             <option value="">Select an experiment…</option>
             {experiments.map(exp => (
               <option key={exp.id} value={exp.id}>

@@ -61,7 +61,7 @@ export default function PathSwitcher({ paths = [], selectedId, onChange, showAll
       </button>
 
       {open && (
-        <div className="anim-scale-in absolute left-0 top-full mt-1.5 z-50 w-72 rounded-[16px] border border-[#E2E8F0] bg-white shadow-xl py-1.5 overflow-hidden">
+        <div className="anim-scale-in absolute left-0 top-full mt-1.5 z-[9999] w-72 rounded-[16px] border border-[#E2E8F0] bg-white shadow-xl py-1.5 overflow-hidden">
           {showAll && (
             <button
               onClick={() => { onChange('all'); setOpen(false); }}

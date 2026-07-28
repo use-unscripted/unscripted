@@ -8,6 +8,7 @@ import EditPathModal from '@/components/paths/EditPathModal';
 import ReactivationModal from '@/components/paths/ReactivationModal';
 import { RiskBadge, ConfidenceBadge, RiskConfidenceLegend, RiskNotAssessed } from '@/components/paths/RiskConfidenceBadges';
 import OutreachPlanModal from '@/components/outreach/OutreachPlanModal';
+import { Search } from 'lucide-react';
 import {
   SORT_OPTIONS, DEFAULT_FILTERS,
   sortPaths, filterPaths,
@@ -447,6 +448,7 @@ export default function PathComparison() {
   const [assessingIds, setAssessingIds] = useState(new Set());
   const [sortBy, setSortByState] = useState(initSort);
   const [filters, setFiltersState] = useState(initFilters);
+  const [search, setSearch] = useState('');
 
   // Keep URL in sync whenever sort/filter changes
   const setSortBy = useCallback((val) => {
@@ -487,8 +489,16 @@ export default function PathComparison() {
   // Derived: sorted then filtered — recomputed whenever sort, filters, or raw paths change
   const displayedPaths = useMemo(() => {
     const sorted = sortPaths(paths, sortBy);
-    return filterPaths(sorted, filters);
-  }, [paths, sortBy, filters]);
+    const filtered = filterPaths(sorted, filters);
+    if (!search.trim()) return filtered;
+    const q = search.toLowerCase();
+    return filtered.filter(p =>
+      p.path_name?.toLowerCase().includes(q) ||
+      p.path_category?.toLowerCase().includes(q) ||
+      p.fit_reason?.toLowerCase().includes(q) ||
+      p.why_it_fits?.toLowerCase().includes(q)
+    );
+  }, [paths, sortBy, filters, search]);
 
   const hasActiveFilters = Object.values(filters).some(v => v !== 'all');
 
@@ -589,6 +599,22 @@ export default function PathComparison() {
       ) : (
         <>
           <RiskConfidenceLegend />
+
+          {/* Search bar */}
+          <div className="relative mb-4">
+            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#94A3B8]" />
+            <input
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Search paths by name, category, or description…"
+              className="w-full rounded-xl border border-[#E2E8F0] bg-white pl-9 pr-4 py-2.5 text-sm outline-none focus:border-[#1F3A5F]"
+            />
+            {search && (
+              <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#94A3B8] hover:text-[#334155]">
+                <X size={14} />
+              </button>
+            )}
+          </div>
 
           <SortFilterBar
             paths={paths}
