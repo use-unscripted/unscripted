@@ -27,7 +27,7 @@ export default function Generating() {
         setLabelIdx(i => Math.min(i + 1, LABELS.length - 1));
       }, 2500);
       await generatePathTest();
-      nav('/dashboard', { replace: true });
+      nav('/path-results', { replace: true });
     } catch (e) {
       console.error('Path generation failed:', e);
       setError(e?.message || 'Something went wrong generating your path test. Please try again.');
