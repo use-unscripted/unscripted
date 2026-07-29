@@ -50,5 +50,7 @@ export function clearDraft() {
 
 export function isDraftComplete(draft) {
   if (!draft) return false;
-  return !!(draft.name && draft.college && draft.major && draft.primary_path && draft.available_hours_per_week);
+  // Only the essentials — everything else has a sensible fallback so a
+  // partially filled intake can never dead-end the user.
+  return !!(draft.name && draft.primary_path);
 }

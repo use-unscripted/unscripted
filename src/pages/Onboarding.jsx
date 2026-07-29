@@ -27,9 +27,9 @@ const STEPS = [
     label: 'Your current direction',
     subtitle: 'Start with where you are and what you are considering.',
     fields: [
-      { name: 'name', label: 'Full name', placeholder: 'Your name' },
-      { name: 'college', label: 'College or university', placeholder: 'Where do you study?' },
-      { name: 'major', label: 'Major', placeholder: 'Your primary major' },
+      { name: 'name', label: 'Full name', placeholder: 'Your name', required: true },
+      { name: 'college', label: 'College or university', placeholder: 'Where do you study?', required: true },
+      { name: 'major', label: 'Major', placeholder: 'Your primary major', required: true },
       { name: 'graduation_year', label: 'Graduation year', placeholder: '2027' },
       { name: 'school_year', label: 'Current year in school', placeholder: 'Sophomore, Junior...' },
       { name: 'paths_considering', label: 'Paths you are currently considering', placeholder: 'Investment banking, startup, law, medicine, creative, other...', rows: 2 },
@@ -77,16 +77,17 @@ const STEPS = [
   },
 ];
 
-function Field({ field, value, onChange }) {
-  const baseClass = 'mt-2 w-full rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-3 text-sm text-[#050816] placeholder-[#94A3B8] outline-none transition focus:border-[#1F3A5F] focus:bg-white';
+function Field({ field, value, onChange, error }) {
+  const baseClass = `mt-2 w-full rounded-xl border bg-[#F8FAFC] px-4 py-3 text-sm text-[#050816] placeholder-[#94A3B8] outline-none transition focus:border-[#1F3A5F] focus:bg-white ${error ? 'border-red-400' : 'border-[#E2E8F0]'}`;
   return (
     <label className="block text-sm font-semibold text-[#334155]">
-      {field.label}
+      {field.label}{field.required && <span className="ml-1 text-red-500">*</span>}
       {field.rows ? (
         <textarea rows={field.rows} name={field.name} value={value || ''} onChange={onChange} placeholder={field.placeholder} className={baseClass} />
       ) : (
         <input type="text" name={field.name} value={value || ''} onChange={onChange} placeholder={field.placeholder} className={baseClass} />
       )}
+      {error && <span className="mt-1 block text-xs font-normal text-red-500">This field is required.</span>}
     </label>
   );
 }
@@ -296,6 +297,7 @@ export default function Onboarding() {
   const [step, setStep] = useState(0);
   const [data, setData] = useState({});
   const [hours, setHours] = useState(8);
+  const [errors, setErrors] = useState([]);
 
   // Restore draft on mount
   useEffect(() => {
@@ -338,6 +340,11 @@ export default function Onboarding() {
   };
 
   const next = () => {
+    const missing = (currentStep.fields || [])
+      .filter(f => f.required && !String(data[f.name] || '').trim())
+      .map(f => f.name);
+    if (missing.length) { setErrors(missing); return; }
+    setErrors([]);
     persist(data, step + 1, hours);
     if (!isLast) {
       setStep(step + 1);
@@ -372,7 +379,7 @@ export default function Onboarding() {
       <div className="grid gap-5 sm:grid-cols-2">
         {currentStep.fields.map(localize).map(f => (
           <div key={f.name} className={f.rows ? 'sm:col-span-2' : ''}>
-            <Field field={f} value={data[f.name]} onChange={change} />
+            <Field field={f} value={data[f.name]} onChange={change} error={errors.includes(f.name)} />
           </div>
         ))}
       </div>

@@ -43,15 +43,24 @@ export default function ClaimOnboarding() {
       }
 
       const draft = loadDraft();
+      const existingProfiles = await base44.entities.StudentProfile.list('-created_date', 5);
 
-      // ── No usable draft: send to onboarding ──
+      // ── No usable draft ──
       if (!isDraftComplete(draft)) {
+        if (existingProfiles.length > 0) {
+          // Answers were already saved on a previous attempt — finish setup
+          // instead of sending the user back through onboarding again.
+          await generatePathTest();
+          await base44.auth.updateMe({ onboarding_completed: true });
+          clearDraft();
+          nav('/dashboard', { replace: true });
+          return;
+        }
         nav('/onboarding', { replace: true });
         return;
       }
 
       // ── Check idempotency: has this session been claimed already? ──
-      const existingProfiles = await base44.entities.StudentProfile.list('-created_date', 5);
       const alreadyClaimed = existingProfiles.some(
         p => p.guest_session_id === draft.guest_session_id
       );
@@ -61,8 +70,8 @@ export default function ClaimOnboarding() {
         await base44.entities.StudentProfile.create({
           name: draft.name,
           education_stage: draft.education_stage || 'college',
-          college: draft.college,
-          major: draft.major,
+          college: draft.college || 'Not specified',
+          major: draft.major || 'Undecided',
           graduation_year: draft.graduation_year,
           school_year: draft.school_year,
           career_interests: draft.paths_considering,
