@@ -31,7 +31,7 @@ export default function Hero() {
 
           <ScrollReveal delay={160}>
             <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 font-body" style={{ color: 'var(--text-secondary)' }}>
-              Unscripted helps college students compare realistic career and life paths, complete guided real-world experiments, and learn what actually fits — before making a major commitment.
+              Unscripted helps high school and college students compare realistic career and life paths, complete guided real-world experiments, and learn what actually fits — before making a major commitment.
             </p>
           </ScrollReveal>
 

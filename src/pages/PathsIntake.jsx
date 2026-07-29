@@ -4,7 +4,17 @@ import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { LogoWordmark } from '@/components/UnscriptedLogo';
 import { saveDraft, loadDraft } from '@/lib/guest-draft';
 
-const EXAMPLE_PATHS = [
+// Paths that are especially relevant if you are still in high school
+const HIGH_SCHOOL_PATHS = [
+  'Skilled trades (electrical, HVAC, construction)',
+  'Military or service academy',
+  'Nursing / allied health',
+  'Entrepreneurship / small business',
+  'Athletics / sports industry',
+  'Education / teaching',
+];
+
+const BASE_PATHS = [
   'Investment banking / finance',
   'Management consulting',
   'Tech / software engineering',
@@ -24,6 +34,8 @@ const EXAMPLE_PATHS = [
 
 export default function PathsIntake() {
   const nav = useNavigate();
+  const [stage, setStage] = useState('college');
+  const EXAMPLE_PATHS = stage === 'high_school' ? [...BASE_PATHS, ...HIGH_SCHOOL_PATHS] : BASE_PATHS;
   const [primaryPath, setPrimaryPath] = useState('');
   const [customPrimary, setCustomPrimary] = useState('');
   const [comparisonPath, setComparisonPath] = useState('');
@@ -35,13 +47,15 @@ export default function PathsIntake() {
   // Restore draft on mount
   useEffect(() => {
     const draft = loadDraft();
+    if (draft?.education_stage) setStage(draft.education_stage);
+    const ALL_PATHS = [...BASE_PATHS, ...HIGH_SCHOOL_PATHS];
     if (draft?.primary_path) {
-      const known = EXAMPLE_PATHS.find(p => p === draft.primary_path);
+      const known = ALL_PATHS.find(p => p === draft.primary_path);
       if (known) setPrimaryPath(draft.primary_path);
       else { setPrimaryPath('other'); setCustomPrimary(draft.primary_path); }
     }
     if (draft?.comparison_path) {
-      const known = EXAMPLE_PATHS.find(p => p === draft.comparison_path);
+      const known = ALL_PATHS.find(p => p === draft.comparison_path);
       if (known) setComparisonPath(draft.comparison_path);
       else { setComparisonPath('other'); setCustomComparison(draft.comparison_path); }
     }
@@ -62,7 +76,7 @@ export default function PathsIntake() {
         <div className="mb-10 flex items-center justify-between">
           <LogoWordmark />
           <div className="flex items-center gap-4">
-            <span className="text-xs font-bold text-[#64748B]">STEP 5 OF 5</span>
+            <span className="text-xs font-bold text-[#64748B]">STEP 6 OF 6</span>
             <Link to="/login" className="text-xs font-semibold text-[#64748B] hover:text-[#050816] transition">Log in</Link>
           </div>
         </div>

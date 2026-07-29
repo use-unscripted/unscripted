@@ -60,6 +60,7 @@ export default function ClaimOnboarding() {
         // ── Save StudentProfile from draft ──
         await base44.entities.StudentProfile.create({
           name: draft.name,
+          education_stage: draft.education_stage || 'college',
           college: draft.college,
           major: draft.major,
           graduation_year: draft.graduation_year,
@@ -93,6 +94,7 @@ export default function ClaimOnboarding() {
 
         // ── Save path selections to user meta ──
         await base44.auth.updateMe({
+          education_stage: draft.education_stage || 'college',
           college: draft.college,
           major: draft.major,
           graduation_year: draft.graduation_year,

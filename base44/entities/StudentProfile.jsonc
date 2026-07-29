@@ -5,6 +5,14 @@
     "name": {
       "type": "string"
     },
+    "education_stage": {
+      "type": "string",
+      "enum": [
+        "high_school",
+        "college"
+      ],
+      "default": "college"
+    },
     "college": {
       "type": "string"
     },
