@@ -70,6 +70,22 @@ You are not describing the email. You are WRITING the email.
    [UNIVERSITY_NAME] and [YOUR_UNIVERSITY_NAME] in the same guide is a bug.
    Every token you use must appear in that artifact's "blanks" array.
 
+3a. For facts about the STUDENT, you must use exactly these tokens and no
+    variants — they are auto-filled from the profile before the student ever
+    sees the guide:
+      [YOUR_NAME]        their full name
+      [YOUR_UNIVERSITY]  their college
+      [YOUR_MAJOR]       their major
+      [YOUR_YEAR]        their school year (e.g. Senior)
+      [YOUR_GRAD_YEAR]   their graduation year
+    Everything else — the contact's name, their firm, a specific deal — stays a
+    normal blank the student fills in.
+
+3b. A non-email artifact's "body" is a SHORT instruction line telling the
+    student what to do with the payload, and the payload goes in "items". Do not
+    put the payload in the body. For search_query, "items" holds only the literal
+    strings to paste, with no numbering, quotes, or commentary of your own.
+
 4. Exactly ONE step has is_first_rep: true, and it must be step_number 1. It is
    a ≤10 minute action producing something real in one sitting, before the
    student closes the tab. Highest-leverage first move, ending with an artifact
@@ -167,6 +183,88 @@ export const GUIDE_JSON_SCHEMA = {
 // ── Validation ──────────────────────────────────────────────────────────────
 
 const TOKEN_RE = /\[[A-Z0-9_]{2,60}\]/g;
+const newTokenRe = () => /\[[A-Z0-9_]{2,60}\]/g;
+
+/**
+ * Facts onboarding already collected. The prompt tells the model to use exactly
+ * these tokens; the aliases below catch the drift it produces anyway.
+ */
+export const PROFILE_TOKENS = {
+  '[YOUR_NAME]': p => p.name,
+  '[YOUR_UNIVERSITY]': p => p.college,
+  '[YOUR_MAJOR]': p => p.major,
+  '[YOUR_YEAR]': p => p.school_year,
+  '[YOUR_GRAD_YEAR]': p => p.graduation_year,
+};
+
+const TOKEN_ALIASES = {
+  '[NAME]': '[YOUR_NAME]',
+  '[STUDENT_NAME]': '[YOUR_NAME]',
+  '[YOUR_FULL_NAME]': '[YOUR_NAME]',
+  '[FULL_NAME]': '[YOUR_NAME]',
+  '[UNIVERSITY_NAME]': '[YOUR_UNIVERSITY]',
+  '[YOUR_UNIVERSITY_NAME]': '[YOUR_UNIVERSITY]',
+  '[COLLEGE_NAME]': '[YOUR_UNIVERSITY]',
+  '[YOUR_COLLEGE]': '[YOUR_UNIVERSITY]',
+  '[SCHOOL_NAME]': '[YOUR_UNIVERSITY]',
+  '[YOUR_SCHOOL]': '[YOUR_UNIVERSITY]',
+  '[MAJOR]': '[YOUR_MAJOR]',
+  '[YOUR_MAJOR_NAME]': '[YOUR_MAJOR]',
+  '[SCHOOL_YEAR]': '[YOUR_YEAR]',
+  '[CLASS_YEAR]': '[YOUR_YEAR]',
+  '[YOUR_CLASS_YEAR]': '[YOUR_YEAR]',
+  '[GRADUATION_YEAR]': '[YOUR_GRAD_YEAR]',
+  '[YOUR_GRADUATION_YEAR]': '[YOUR_GRAD_YEAR]',
+};
+
+export const canonicalToken = token => TOKEN_ALIASES[token] || token;
+
+/**
+ * Substitutes what the student already told us at onboarding, so they only fill
+ * in what we genuinely cannot know.
+ *
+ * Runs at render time rather than generation time — a stored guide then reflects
+ * the current profile instead of whatever it said the day it was generated.
+ */
+export function fillProfileTokens(artifact, profile) {
+  if (!artifact) return artifact;
+
+  const values = {};
+  if (profile) {
+    for (const [canonical, read] of Object.entries(PROFILE_TOKENS)) {
+      const value = read(profile);
+      if (typeof value === 'string' && value.trim()) values[canonical] = value.trim();
+    }
+  }
+
+  const prefilled = new Set();
+  const substitute = text =>
+    typeof text === 'string'
+      ? text.replace(newTokenRe(), token => {
+          const value = values[canonicalToken(token)];
+          if (!value) return token;
+          prefilled.add(token);
+          return value;
+        })
+      : text;
+
+  const next = {
+    ...artifact,
+    subject: substitute(artifact.subject),
+    body: substitute(artifact.body),
+    items: (artifact.items || []).map(substitute),
+  };
+
+  const stillPresent = new Set();
+  for (const text of [next.subject, next.body, ...next.items]) {
+    if (typeof text !== 'string') continue;
+    for (const token of text.match(newTokenRe()) || []) stillPresent.add(token);
+  }
+
+  next.blanks = (artifact.blanks || []).filter(b => stillPresent.has(b.token));
+  next.prefilled = [...prefilled];
+  return next;
+}
 
 /** "[YOUR_UNIVERSITY_NAME]" -> "Your university name" */
 function humanizeToken(token) {
