@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import { X, Loader2, Wand2, AlertCircle } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
+import { buildGuidePrompt, GUIDE_JSON_SCHEMA, validateGuide } from './guideSchema';
 
 const VARIATION_OPTIONS = [
   { value: 'shorter', label: 'Shorter', description: 'Reduce scope and time commitment' },
@@ -34,29 +35,21 @@ export default function MissionGuideGenerator({ experiment, existingGuides = [],
     ? Math.max(...existingGuides.map(g => g.version_number || 0)) + 1
     : 1);
 
-  const buildPrompt = () => {
-    const base = `You are Unscripted, an AI career coach for college students.
-Generate a detailed Mission Guide for this experiment.
+  const VARIATION_INSTRUCTIONS = {
+    shorter: 'Make this guide shorter and more focused. Reduce the number of steps and time commitment.',
+    detailed: 'Make this guide more detailed. Add sub-steps, specific resources, and deeper guidance.',
+    challenging: 'Make this guide more challenging. Raise the expectations and push further.',
+    lower_time: 'Design this guide for a lower time commitment. Keep it practical for a busy student.',
+    different_style: 'Use a completely different approach or experiment style than a typical informational interview or research project.',
+    custom: customInstruction,
+  };
 
-Experiment title: "${experiment.title}"
-Objective: "${experiment.objective}"
-Path being tested: "${experiment.path_name || 'Not specified'}"
-${experiment.deliverable ? `Deliverable: "${experiment.deliverable}"` : ''}
-
-This is Version ${nextVersion}.`;
-
-    if (hasExisting && variation) {
-      const variationLabels = {
-        shorter: 'Make this guide shorter and more focused. Reduce the number of steps and time commitment.',
-        detailed: 'Make this guide more detailed. Add sub-steps, specific resources, and deeper guidance.',
-        challenging: 'Make this guide more challenging. Raise the expectations and push further.',
-        lower_time: 'Design this guide for a lower time commitment. Keep it practical for a busy student.',
-        different_style: 'Use a completely different approach or experiment style than a typical informational interview or research project.',
-        custom: customInstruction,
-      };
-      return `${base}\n\nVariation instruction: ${variationLabels[variation] || variation}`;
-    }
-    return base;
+  const buildPrompt = (repairNote = '') => {
+    const variationInstruction = hasExisting && variation
+      ? (VARIATION_INSTRUCTIONS[variation] || variation)
+      : '';
+    const prompt = buildGuidePrompt(experiment, { variationInstruction, version: nextVersion });
+    return repairNote ? `${prompt}\n\n${repairNote}` : prompt;
   };
 
   const handleGenerate = async () => {
@@ -65,43 +58,39 @@ This is Version ${nextVersion}.`;
     setGenerating(true);
     setError('');
 
-    const promptContext = buildPrompt();
+    let promptContext = buildPrompt();
 
     try {
-      const result = await base44.integrations.Core.InvokeLLM({
-        prompt: promptContext,
-        response_json_schema: {
-          type: 'object',
-          properties: {
-            guide_title: { type: 'string' },
-            objective: { type: 'string' },
-            estimated_time: { type: 'string' },
-            deliverable: { type: 'string' },
-            proof_requirement: { type: 'string' },
-            steps: {
-              type: 'array',
-              items: {
-                type: 'object',
-                properties: {
-                  step_number: { type: 'number' },
-                  title: { type: 'string' },
-                  description: { type: 'string' },
-                  estimated_time: { type: 'string' },
-                },
-              },
-            },
-            reflection_questions: { type: 'array', items: { type: 'string' } },
-          },
-        },
-      });
+      // The model reliably drifts on artifact completeness, so validate and give
+      // it one guided retry before surfacing a failure to the student.
+      let validation = null;
 
-      // Validate
-      if (!result.steps || !Array.isArray(result.steps) || result.steps.length === 0) {
-        throw new Error('Generated guide has no steps. Please try again.');
+      for (let attempt = 0; attempt < 2; attempt++) {
+        const result = await base44.integrations.Core.InvokeLLM({
+          prompt: promptContext,
+          response_json_schema: GUIDE_JSON_SCHEMA,
+        });
+
+        validation = validateGuide(result);
+        if (import.meta.env?.DEV && validation.warnings.length) {
+          console.warn('[MissionGuide] repaired:', validation.warnings);
+        }
+        if (validation.ok) break;
+
+        if (attempt === 0) {
+          promptContext = buildPrompt(
+            `Your previous attempt was rejected for these reasons:\n${validation.errors
+              .map(e => `- ${e}`)
+              .join('\n')}\nFix every one of them. Write the artifacts out in full.`
+          );
+        }
       }
-      if (!result.objective) throw new Error('Generated guide is missing an objective.');
 
-      setPendingGuide({ ...result, promptContext, version_number: nextVersion });
+      if (!validation.ok) {
+        throw new Error(validation.errors[0] || 'Generation failed. Please try again.');
+      }
+
+      setPendingGuide({ ...validation.guide, promptContext, version_number: nextVersion });
     } catch (err) {
       setError(err.message || 'Generation failed. Please try again.');
     } finally {
@@ -168,6 +157,17 @@ This is Version ${nextVersion}.`;
               <span>{pendingGuide.steps?.length} steps</span>
               {pendingGuide.estimated_time && <span>· {pendingGuide.estimated_time}</span>}
             </div>
+            {pendingGuide.steps?.[0] && (
+              <div className="mt-3 rounded-lg border border-[#E2E8F0] bg-white p-3">
+                <p className="text-[10px] font-bold uppercase tracking-wide" style={{ color: 'var(--brand-gold, #D6B66A)' }}>
+                  Start here · {pendingGuide.steps[0].estimated_minutes} min
+                </p>
+                <p className="text-sm font-semibold text-[#050816] mt-0.5">{pendingGuide.steps[0].title}</p>
+                {pendingGuide.steps[0].artifact?.kind !== 'none' && (
+                  <p className="text-xs text-[#64748B] mt-1">Comes pre-written — you fill in the blanks.</p>
+                )}
+              </div>
+            )}
           </div>
 
           <p className="text-sm font-semibold text-[#334155] mb-3">
