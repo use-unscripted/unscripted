@@ -88,7 +88,11 @@ You are not describing the email. You are WRITING the email.
 
 9. estimated_minutes is a NUMBER of minutes. Not a string, not a range.
 
-10. Voice: a competent 20-year-old writing to a stranger. Warm, direct, no
+10. Format email and message bodies as a real email, using \\n\\n between the
+    greeting, each paragraph, and the sign-off. One unbroken block of text is a
+    failure — it has to be pasteable into Gmail as-is.
+
+11. Voice: a competent 20-year-old writing to a stranger. Warm, direct, no
     filler, no "I hope this email finds you well", no corporate throat-clearing.
     Short sentences. Sendable as-is once blanks are filled.
 
