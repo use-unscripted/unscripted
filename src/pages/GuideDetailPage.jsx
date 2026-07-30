@@ -22,6 +22,7 @@ export default function GuideDetailPage() {
   const guideId = params.get('id');
 
   const [guide, setGuide] = useState(null);
+  const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [settingActive, setSettingActive] = useState(false);
@@ -32,6 +33,16 @@ export default function GuideDetailPage() {
       .then(g => { setGuide(g); setLoading(false); })
       .catch(() => { setError('Guide not found.'); setLoading(false); });
   }, [guideId]);
+
+  // Anything onboarding already asked for is filled into the artifacts, so the
+  // student only completes what we genuinely don't know. Failing to load it just
+  // means the tokens stay visible — never blocks the guide.
+  useEffect(() => {
+    base44.auth.me()
+      .then(user => base44.entities.StudentProfile.filter({ user_id: user.id }, '-created_date', 1))
+      .then(rows => setProfile(rows?.[0] || null))
+      .catch(() => setProfile(null));
+  }, []);
 
   const handleSetActive = async () => {
     if (!guide || settingActive) return;
@@ -145,7 +156,7 @@ export default function GuideDetailPage() {
                     {s.description && <p className="text-sm text-[#64748B] mt-0.5 leading-relaxed">{s.description}</p>}
                     {time && <p className="text-xs text-[#94A3B8] mt-1 flex items-center gap-1"><Clock size={10} /> {time}</p>}
 
-                    <StepArtifact artifact={s.artifact} />
+                    <StepArtifact artifact={s.artifact} profile={profile} />
 
                     {(s.done_when || s.proof_capture) && (
                       <dl className="mt-2 space-y-1 text-xs">
