@@ -2,17 +2,7 @@ import { Link } from 'react-router-dom';
 import { ArrowRight, CheckCircle2 } from 'lucide-react';
 import ScrollReveal, { StaggerGroup } from '@/components/ScrollReveal';
 import { useParallax } from '@/hooks/useScrollReveal';
-
-
-const paths = [
-  'A traditional professional career',
-  'Joining a startup',
-  'Building a company',
-  'Building a personal brand',
-  'Freelancing or offering a service',
-  'Graduate school',
-  'A mission-driven path',
-];
+import PathExplorer from '@/components/landing/PathExplorer';
 
 const missionSteps = [
   'Identify 10 relevant professionals',
@@ -47,13 +37,14 @@ export default function LandingSections() {
             <p className="mt-3 max-w-2xl" style={{ color: 'var(--text-secondary)' }}>
               Unscripted is not a separate product for each path. It helps you compare any of these options, run structured experiments, and build evidence before committing.
             </p>
+            <p className="mt-5 text-sm font-semibold" style={{ color: 'var(--brand-navy-700)' }}>
+              Select a path to see the first missions and the proof you'd walk away with.
+            </p>
           </ScrollReveal>
 
-          <StaggerGroup base={80} step={60} className="mt-8 flex flex-wrap gap-3">
-            {paths.map(p => (
-              <div key={p} className="rounded-full bg-white px-4 py-2 text-sm font-semibold" style={{ border: '1px solid var(--border-light)', color: 'var(--text-secondary)' }}>{p}</div>
-            ))}
-          </StaggerGroup>
+          <ScrollReveal delay={90} className="mt-8">
+            <PathExplorer />
+          </ScrollReveal>
         </div>
       </section>
 
