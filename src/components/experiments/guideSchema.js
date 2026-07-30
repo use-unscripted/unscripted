@@ -23,7 +23,13 @@ export const ARTIFACT_KINDS = [
 const KINDS_NEEDING_BODY = ['email', 'message'];
 const KINDS_NEEDING_ITEMS = ['question_list', 'outline', 'checklist', 'search_query'];
 
-export const PROOF_INBOX = 'proof@useunscripted.com';
+/**
+ * Proof is submitted by uploading a file on the Proof of Work page — that is the
+ * only capture mechanism that exists today. Do not invent an inbox, address, or
+ * forwarding flow here; a guide that names an address we don't run tells students
+ * to send evidence into a black hole.
+ */
+const PROOF_DESTINATION = 'the Proof of Work page';
 
 // ── Prompt ──────────────────────────────────────────────────────────────────
 
@@ -80,11 +86,15 @@ You are not describing the email. You are WRITING the email.
 7. "done_when" is an objectively checkable fact — "the email is in your sent
    folder", "a calendar invite exists". Never a feeling like "you understand X".
 
-8. "proof_capture" states how evidence is captured AS A BYPRODUCT of doing the
-   step — BCC ${PROOF_INBOX} on the send, forward the calendar invite, paste the
-   reply. Never a separate chore. The top-level "proof_requirement" follows the
-   same rule: evidence that already exists because the steps were done. "Take a
-   screenshot at the end" is a failure.
+8. "proof_capture" names the specific file or screenshot that ALREADY EXISTS as
+   a result of doing the step — the sent email, the calendar invite, the notes
+   doc — and says to add it on ${PROOF_DESTINATION}. Name the actual artifact,
+   not a chore: "a screenshot of the sent email" is good, "document your work"
+   is a failure. The top-level "proof_requirement" follows the same rule.
+
+   Never instruct the student to email, forward, BCC, or send anything to an
+   Unscripted address. No such inbox exists. Uploading on ${PROOF_DESTINATION}
+   is the only way proof is submitted.
 
 9. estimated_minutes is a NUMBER of minutes. Not a string, not a range.
 
@@ -302,8 +312,15 @@ export function validateGuide(raw) {
     ? plural(Math.round((total / 60) * 10) / 10, 'hour')
     : plural(total, 'minute');
 
-  if (/screenshot|upload/i.test(guide.proof_requirement || '')) {
-    warnings.push('proof_requirement asks for retrospective upload/screenshot rather than byproduct capture.');
+  // Guard against the failure this file previously caused: telling students to
+  // send evidence to an Unscripted address that does not exist.
+  const EMAIL_RE = /[\w.+-]+@[\w-]+\.[\w.]{2,}/;
+  for (const text of [guide.proof_requirement, ...guide.steps.map(s => s.proof_capture)]) {
+    const hit = typeof text === 'string' ? text.match(EMAIL_RE) : null;
+    if (hit) {
+      errors.push(`Proof instructions name the address ${hit[0]}. Proof is uploaded on ${PROOF_DESTINATION}; there is no Unscripted inbox to send to.`);
+      break;
+    }
   }
 
   return { ok: errors.length === 0, guide, errors, warnings };
