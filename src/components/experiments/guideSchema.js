@@ -293,9 +293,10 @@ export function validateGuide(raw) {
 
   // Keep the entity's existing string field truthful rather than model-authored.
   const total = guide.steps.reduce((sum, s) => sum + (s.estimated_minutes || 0), 0);
+  const plural = (n, unit) => `${n} ${n === 1 ? unit : `${unit}s`}`;
   guide.estimated_time = total >= 60
-    ? `${Math.round((total / 60) * 10) / 10} hours`
-    : `${total} minutes`;
+    ? plural(Math.round((total / 60) * 10) / 10, 'hour')
+    : plural(total, 'minute');
 
   if (/screenshot|upload/i.test(guide.proof_requirement || '')) {
     warnings.push('proof_requirement asks for retrospective upload/screenshot rather than byproduct capture.');
