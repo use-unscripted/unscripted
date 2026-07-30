@@ -412,9 +412,13 @@ export function validateGuide(raw) {
     guide.steps.forEach((s, i) => { s.is_first_rep = i === 0; });
   }
 
+  // Two tiers on purpose: the prompt asks for ≤10, and rejecting every 11–15
+  // minute first rep would burn a retry on output that is still usable.
   const firstRep = guide.steps[0];
   if (firstRep.estimated_minutes > 15) {
     errors.push(`First rep is ${firstRep.estimated_minutes} minutes — it must be a ≤10 minute action a student can finish before closing the tab.`);
+  } else if (firstRep.estimated_minutes > 10) {
+    warnings.push(`First rep is ${firstRep.estimated_minutes} minutes, over the 10-minute target.`);
   }
 
   // Keep the entity's existing string field truthful rather than model-authored.
