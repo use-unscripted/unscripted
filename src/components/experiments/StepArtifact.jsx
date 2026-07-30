@@ -130,7 +130,9 @@ export default function StepArtifact({ artifact: raw, profile }) {
               {items.map((item, i) => (
                 <p
                   key={i}
-                  className="overflow-x-auto whitespace-pre rounded-lg px-3 py-2 text-xs leading-relaxed"
+                  // Wrap rather than scroll — a clipped query hides the part the
+                  // student needs to check before pasting.
+                  className="whitespace-pre-wrap break-words rounded-lg px-3 py-2 text-xs leading-relaxed"
                   style={{ fontFamily: MONO, background: '#F8FAFC', border: '1px solid #EEF2F6', color: '#334155' }}
                 >
                   <WithBlanks text={item} />
