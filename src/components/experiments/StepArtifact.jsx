@@ -154,27 +154,25 @@ export default function StepArtifact({ artifact: raw, profile }) {
 
       {(blanks.length > 0 || prefilled.length > 0) && (
         <div className="border-t border-[#E2E8F0] bg-[#FCFBF7] px-3 py-2.5">
+          <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wide text-[#64748B]">
+            {blanks.length > 0 ? `You fill in (${blanks.length})` : 'Ready as-is'}
+            {prefilled.length > 0 && (
+              <span className="font-medium normal-case tracking-normal text-[#94A3B8]">
+                {' · '}{prefilled.length} already filled from your profile
+              </span>
+            )}
+          </p>
           {blanks.length > 0 && (
-            <>
-              <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wide text-[#64748B]">
-                You fill in ({blanks.length})
-              </p>
-              <ul className="space-y-1">
-                {blanks.map((blank, i) => (
-                  <li key={i} className="text-xs text-[#64748B]">
-                    <code className="font-semibold" style={{ fontFamily: MONO, color: '#7A5B12' }}>
-                      {blank.token}
-                    </code>
-                    {blank.hint ? ` — ${blank.hint}` : ''}
-                  </li>
-                ))}
-              </ul>
-            </>
-          )}
-          {prefilled.length > 0 && (
-            <p className={`text-[11px] text-[#94A3B8] ${blanks.length > 0 ? 'mt-2' : ''}`}>
-              {prefilled.length} filled in from your profile
-            </p>
+            <ul className="space-y-1">
+              {blanks.map((blank, i) => (
+                <li key={i} className="text-xs text-[#64748B]">
+                  <code className="font-semibold" style={{ fontFamily: MONO, color: '#7A5B12' }}>
+                    {blank.token}
+                  </code>
+                  {blank.hint ? ` — ${blank.hint}` : ''}
+                </li>
+              ))}
+            </ul>
           )}
         </div>
       )}
