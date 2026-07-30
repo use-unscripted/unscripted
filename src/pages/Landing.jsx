@@ -1,14 +1,31 @@
+/* ──────────────────────────────────────────────────────────────────────────
+   Landing (after).
+
+   Structurally identical to the current page — same sections, same copy,
+   same order. Everything that changed is motion.
+
+   MotionConfig reducedMotion="user" is the safety net: any framer-motion
+   transform in the tree is automatically neutered for users who've asked
+   their OS for reduced motion, while opacity fades still run. The custom
+   primitives in motion.jsx check useReducedMotion() individually on top of
+   that.
+   ────────────────────────────────────────────────────────────────────────── */
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { MotionConfig, useScroll, useSpring } from 'framer-motion';
 import { base44 } from '@/api/base44Client';
 import LandingNav from '@/components/landing/LandingNav';
 import Hero from '@/components/landing/Hero';
 import LandingSections from '@/components/landing/LandingSections';
+import { ScrollProgress } from '@/components/motion';
 import { CompassIcon } from '@/components/UnscriptedLogo';
 
 export default function Landing() {
   const nav = useNavigate();
   const [authChecked, setAuthChecked] = useState(false);
+
+  const { scrollYProgress } = useScroll();
+  const progress = useSpring(scrollYProgress, { stiffness: 140, damping: 30, restDelta: 0.001 });
 
   useEffect(() => {
     base44.auth.isAuthenticated().then(async (authed) => {
@@ -38,16 +55,19 @@ export default function Landing() {
   }
 
   return (
-    <div className="min-h-screen" style={{ background: '#FAFAF9' }}>
-      <LandingNav />
-      <Hero />
-      <LandingSections />
-      <footer className="border-t border-[#E2E8F0] px-6 py-8">
-        <div className="mx-auto flex max-w-7xl items-center justify-center gap-2 text-sm text-[#64748B]">
-          <CompassIcon size={14} />
-          © 2026 Unscripted. Write your unscripted path.
-        </div>
-      </footer>
-    </div>
+    <MotionConfig reducedMotion="user">
+      <div className="min-h-screen" style={{ background: '#FAFAF9' }}>
+        <ScrollProgress scaleX={progress} />
+        <LandingNav />
+        <Hero />
+        <LandingSections />
+        <footer className="border-t border-[#E2E8F0] px-6 py-8">
+          <div className="mx-auto flex max-w-7xl items-center justify-center gap-2 text-sm text-[#64748B]">
+            <CompassIcon size={14} />
+            © 2026 Unscripted. Write your unscripted path.
+          </div>
+        </footer>
+      </div>
+    </MotionConfig>
   );
 }
