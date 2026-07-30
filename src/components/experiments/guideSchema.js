@@ -81,6 +81,13 @@ You are not describing the email. You are WRITING the email.
     Everything else — the contact's name, their firm, a specific deal — stays a
     normal blank the student fills in.
 
+3c. Only email and message artifacts have a "subject". Never set one on a
+    question_list, outline, checklist, or search_query.
+
+3d. The instruction line must not restate the step's "description" — the student
+    already read it one line above. Say only what they do with the payload, or
+    leave it empty.
+
 3b. A non-email artifact's "body" is a SHORT instruction line telling the
     student what to do with the payload, and the payload goes in "items". Do not
     put the payload in the body. For search_query, "items" holds only the literal
@@ -345,6 +352,13 @@ export function validateGuide(raw) {
     }
     artifact.items = Array.isArray(artifact.items) ? artifact.items.filter(Boolean) : [];
     artifact.blanks = Array.isArray(artifact.blanks) ? artifact.blanks : [];
+
+    // Only emails have a subject. Left on a list, it renders nowhere but its
+    // tokens still count as blanks — the student is told to fill in something
+    // they cannot see.
+    if (!KINDS_NEEDING_BODY.includes(artifact.kind) && artifact.subject) {
+      delete artifact.subject;
+    }
 
     if (artifact.kind !== 'none') {
       const hasBody = typeof artifact.body === 'string' && artifact.body.trim().length > 0;
