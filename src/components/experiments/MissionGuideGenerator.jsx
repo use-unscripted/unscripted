@@ -159,7 +159,7 @@ export default function MissionGuideGenerator({ experiment, existingGuides = [],
             </div>
             {pendingGuide.steps?.[0] && (
               <div className="mt-3 rounded-lg border border-[#E2E8F0] bg-white p-3">
-                <p className="text-[10px] font-bold uppercase tracking-wide" style={{ color: 'var(--brand-gold, #D6B66A)' }}>
+                <p className="text-[10px] font-bold uppercase tracking-wide" style={{ color: 'var(--brand-gold-500, #D6B66A)' }}>
                   Start here · {pendingGuide.steps[0].estimated_minutes} min
                 </p>
                 <p className="text-sm font-semibold text-[#050816] mt-0.5">{pendingGuide.steps[0].title}</p>
