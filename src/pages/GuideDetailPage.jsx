@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
+import StepArtifact from '@/components/experiments/StepArtifact';
 import { ArrowLeft, Clock, CheckCircle2, Star, Loader2 } from 'lucide-react';
 
 const STATUS_CFG = {
@@ -123,20 +124,49 @@ export default function GuideDetailPage() {
       {guide.steps?.length > 0 && (
         <section className="mb-6">
           <p className="text-xs font-bold uppercase tracking-wide text-[#64748B] mb-3">Steps</p>
-          <ol className="space-y-4">
-            {guide.steps.map((s, i) => (
-              <li key={i} className="flex gap-4">
-                <span
-                  className="shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold text-white mt-0.5"
-                  style={{ background: 'var(--brand-navy-900)' }}
-                >{i + 1}</span>
-                <div className="flex-1">
-                  {s.title && <p className="font-semibold text-[#050816] text-sm">{s.title}</p>}
-                  {s.description && <p className="text-sm text-[#64748B] mt-0.5 leading-relaxed">{s.description}</p>}
-                  {s.estimated_time && <p className="text-xs text-[#94A3B8] mt-1 flex items-center gap-1"><Clock size={10} /> {s.estimated_time}</p>}
-                </div>
-              </li>
-            ))}
+          <ol className="space-y-5">
+            {guide.steps.map((s, i) => {
+              // Older guides carry estimated_time as free text; newer ones a number.
+              const time = s.estimated_minutes ? `${s.estimated_minutes} min` : s.estimated_time;
+              const isFirstRep = s.is_first_rep ?? i === 0;
+              return (
+                <li key={i} className="flex gap-4">
+                  <span
+                    className="shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold text-white mt-0.5"
+                    style={{ background: 'var(--brand-navy-900)' }}
+                  >{i + 1}</span>
+                  <div className="flex-1 min-w-0">
+                    {isFirstRep && (
+                      <p className="text-[10px] font-bold uppercase tracking-wide mb-0.5" style={{ color: '#7A5B12' }}>
+                        Start here
+                      </p>
+                    )}
+                    {s.title && <p className="font-semibold text-[#050816] text-sm">{s.title}</p>}
+                    {s.description && <p className="text-sm text-[#64748B] mt-0.5 leading-relaxed">{s.description}</p>}
+                    {time && <p className="text-xs text-[#94A3B8] mt-1 flex items-center gap-1"><Clock size={10} /> {time}</p>}
+
+                    <StepArtifact artifact={s.artifact} />
+
+                    {(s.done_when || s.proof_capture) && (
+                      <dl className="mt-2 space-y-1 text-xs">
+                        {s.done_when && (
+                          <div className="flex gap-1.5">
+                            <dt className="shrink-0 font-bold text-[#64748B]">Done when</dt>
+                            <dd className="text-[#64748B]">{s.done_when}</dd>
+                          </div>
+                        )}
+                        {s.proof_capture && (
+                          <div className="flex gap-1.5">
+                            <dt className="shrink-0 font-bold text-[#64748B]">Proof</dt>
+                            <dd className="text-[#64748B]">{s.proof_capture}</dd>
+                          </div>
+                        )}
+                      </dl>
+                    )}
+                  </div>
+                </li>
+              );
+            })}
           </ol>
         </section>
       )}
