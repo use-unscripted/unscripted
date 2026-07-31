@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { LegalPage, Section, P, Bullets, Callout, Mail } from '@/components/legal/LegalPage';
-import { EFFECTIVE_DATE, MIN_AGE, FOUNDERS, SUBPROCESSORS } from '@/lib/legal';
+import { EFFECTIVE_DATE, MIN_AGE, TEAM, SUBPROCESSORS } from '@/lib/legal';
 
 export default function Privacy() {
   return (
@@ -19,10 +19,10 @@ export default function Privacy() {
     >
       <Section title="Who we are">
         <P>
-          Unscripted is an independent product operated by its founders — {FOUNDERS.join(', ')}.
-          It is not yet a registered company. When that changes, this page will name the entity
-          and its address. We are telling you that rather than printing a company name that
-          does not exist.
+          Unscripted is an independent product, built and operated by {TEAM}. It is not yet a
+          registered company. When that changes, this page will name the entity and its
+          address. We are telling you that rather than printing a company name that does not
+          exist.
         </P>
         <P>
           This policy covers useunscripted.base44.app and anything you do inside the app.
@@ -169,8 +169,8 @@ export default function Privacy() {
 
       <Section title="Security">
         <P>
-          Traffic is encrypted in transit, passwords are stored hashed, and access to the
-          database is limited to the founders. No product can promise perfect security, and we
+          Traffic is encrypted in transit, passwords are stored hashed, and database access is
+          limited to the people who need it to run the product. No product can promise perfect security, and we
           are not going to pretend otherwise. If you find a vulnerability, email <Mail /> and we
           will take it seriously and will not come after you for reporting it.
         </P>

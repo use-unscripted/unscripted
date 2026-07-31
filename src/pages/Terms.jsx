@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { LegalPage, Section, P, Bullets, Callout, Mail } from '@/components/legal/LegalPage';
-import { EFFECTIVE_DATE, MIN_AGE, FOUNDERS, GOVERNING_STATE } from '@/lib/legal';
+import { EFFECTIVE_DATE, MIN_AGE, TEAM, GOVERNING_STATE } from '@/lib/legal';
 
 export default function Terms() {
   return (
@@ -20,8 +20,8 @@ export default function Terms() {
       <Section title="Agreeing to these terms">
         <P>
           By using Unscripted you agree to these terms. If you do not agree with them, please
-          do not use it. Unscripted is operated by its founders — {FOUNDERS.join(', ')} — and
-          is not yet a registered company; "we" and "us" below mean them.
+          do not use it. Unscripted is operated by {TEAM} and is not yet a registered company;
+          "we" and "us" below mean that team.
         </P>
       </Section>
 

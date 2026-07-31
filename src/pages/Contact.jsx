@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Mail as MailIcon } from 'lucide-react';
 import { LegalPage, Section, P, Bullets } from '@/components/legal/LegalPage';
-import { CONTACT_EMAIL, FOUNDERS } from '@/lib/legal';
+import { CONTACT_EMAIL, TEAM } from '@/lib/legal';
 
 export default function Contact() {
   return (
@@ -9,7 +9,7 @@ export default function Contact() {
       title="Contact"
       summary={
         <>
-          One address, read by the people who build Unscripted. We are three founders, not a
+          One address, read by the people who build Unscripted. We are a small team, not a
           support department, so expect a real reply rather than a fast one.
         </>
       }
@@ -52,9 +52,9 @@ export default function Contact() {
 
       <Section title="Who you are writing to">
         <P>
-          Unscripted is an independent product operated by its founders — {FOUNDERS.join(', ')}.
-          There is no registered company behind it yet and therefore no office address to print
-          here. When that changes, this page will say so.
+          Unscripted is an independent product, built and operated by {TEAM}. There is no
+          registered company behind it yet and therefore no office address to print here. When
+          that changes, this page will say so.
         </P>
       </Section>
 
@@ -77,8 +77,7 @@ export default function Contact() {
         <P>
           Unscripted is not a crisis service. If you are struggling with your mental health,
           please contact your campus counseling center or a local crisis line — in the US, call
-          or text 988. We are three people building a career tool, and we are not equipped to
-          help with that.
+          or text 988. We build a career tool, and we are not equipped to help with that.
         </P>
       </Section>
     </LegalPage>

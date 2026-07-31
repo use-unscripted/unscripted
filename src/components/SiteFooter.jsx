@@ -47,9 +47,9 @@ export default function SiteFooter() {
         </p>
 
         <p className="max-w-2xl text-center text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-          {PRODUCT} is an independent product operated by its founders. It is not affiliated
-          with, endorsed by, or sponsored by any university, and it does not provide career,
-          academic, financial, legal or medical advice.
+          {PRODUCT} is an independent product. It is not affiliated with, endorsed by, or
+          sponsored by any university, and it does not provide career, academic, financial,
+          legal or medical advice.
         </p>
       </div>
     </footer>

@@ -12,11 +12,19 @@
 
 export const PRODUCT = 'Unscripted';
 
-/** Registered entity, once there is one. Null means "operated by its founders". */
+/** Registered entity, once there is one. Null means "operated by the team behind it". */
 export const ENTITY = null;
 
 /** Who the policies name as responsible for the service. */
 export const OPERATOR = ENTITY || 'Unscripted';
+
+/**
+ * How the pages refer to the people behind the product.
+ *
+ * No individual names, deliberately. The team is bigger than any list we'd
+ * keep current, and a stale name on a policy page is worse than none.
+ */
+export const TEAM = 'the small team that builds it';
 
 export const CONTACT_EMAIL = 'useunscripted@gmail.com';
 
@@ -28,8 +36,6 @@ export const MIN_AGE = 13;
 
 /** Where disputes are handled. Revisit when the entity is formed. */
 export const GOVERNING_STATE = 'Connecticut';
-
-export const FOUNDERS = ['Drew Fitzgerald', 'Jacob Gomez', 'Drew Lynch'];
 
 /** Third parties that touch student data, listed on the privacy page. */
 export const SUBPROCESSORS = [

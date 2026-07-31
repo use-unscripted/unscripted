@@ -1,6 +1,5 @@
 import { Link } from 'react-router-dom';
 import { LegalPage, Section, P, Callout, Mail } from '@/components/legal/LegalPage';
-import { FOUNDERS } from '@/lib/legal';
 
 const LOOP = [
   ['Discover', 'Answer questions about where you are, what you feel pressure to do, and what you are privately curious about.'],
@@ -76,9 +75,9 @@ export default function About() {
 
       <Section title="Who is building it">
         <P>
-          Unscripted is built by {FOUNDERS.slice(0, -1).join(', ')} and {FOUNDERS.slice(-1)}.
-          It is an independent product, operated by the three of us, and it is not affiliated
-          with or endorsed by any university.
+          A small team — product, engineering and design — working on this directly with
+          students rather than guessing at what they need. Unscripted is independent, and it is
+          not affiliated with or endorsed by any university.
         </P>
         <P>
           We are early. Parts of Unscripted are unfinished, and some of it will be wrong for
