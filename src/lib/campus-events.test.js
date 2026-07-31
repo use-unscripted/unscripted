@@ -420,3 +420,42 @@ describe('eventSearchUrl', () => {
     expect(eventSearchUrl(null)).toBe('');
   });
 });
+
+// Regression: the shape InvokeLLM returns depends on which model answered.
+// Pinning a Claude model nests the payload under `response`; reading the bare
+// shape then silently yields nothing, which is indistinguishable from "your
+// campus has no events". Verified against the live app on 2026-07-31.
+describe('recommendCampusEvents — model-dependent response shape', () => {
+  const events = [calendarEvent({ id: '1' })];
+
+  it('reads the nested shape a Claude model returns', async () => {
+    base44.integrations.Core.InvokeLLM.mockResolvedValue({
+      response: { recommendations: [{ event_id: '1', fit_reason: 'yes' }] },
+    });
+    const picks = await recommendCampusEvents(events, {});
+    expect(picks).toHaveLength(1);
+    expect(picks[0].guidance.fit_reason).toBe('yes');
+  });
+
+  it('still reads the bare shape the default and Gemini return', async () => {
+    base44.integrations.Core.InvokeLLM.mockResolvedValue({
+      recommendations: [{ event_id: '1', fit_reason: 'yes' }],
+    });
+    expect(await recommendCampusEvents(events, {})).toHaveLength(1);
+  });
+
+  // Unwrapping must not swallow a legitimately-empty answer into a retry or a
+  // crash — "nothing fits" is a correct outcome we rely on.
+  it('treats a nested empty list as a real empty list', async () => {
+    base44.integrations.Core.InvokeLLM.mockResolvedValue({ response: { recommendations: [] } });
+    expect(await recommendCampusEvents(events, {})).toEqual([]);
+  });
+
+  it('does not mistake a non-object response field for the payload', async () => {
+    base44.integrations.Core.InvokeLLM.mockResolvedValue({
+      recommendations: [{ event_id: '1', fit_reason: 'yes' }],
+      response: 'some string',
+    });
+    expect(await recommendCampusEvents(events, {})).toHaveLength(1);
+  });
+});

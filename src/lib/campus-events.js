@@ -54,6 +54,28 @@ const RECOMMENDATION_SCHEMA = {
   },
 };
 
+/**
+ * InvokeLLM's return shape depends on which model answered.
+ *
+ * Verified against the live app on 2026-07-31 with an identical prompt and
+ * schema: no `model` set returns the schema object bare, `gemini_3_flash`
+ * returns it bare, and `claude_sonnet_4_6` nests it under `response`. Reading
+ * the wrong one yields undefined rather than an error, so the failure is
+ * silent — this function returned zero recommendations every single time and
+ * looked exactly like "your campus has no matching events".
+ *
+ * This is not specific to campus events. The other ten InvokeLLM call sites in
+ * this app all read the bare shape and all currently omit `model`; pinning a
+ * Claude model on any of them breaks it the same quiet way. See
+ * docs/ai-generation.md.
+ */
+function unwrapLLM(result) {
+  if (!result || typeof result !== 'object') return null;
+  // Only unwrap a nesting the model added — never a real field named "response".
+  const inner = result.response;
+  return inner && typeof inner === 'object' && !Array.isArray(inner) ? inner : result;
+}
+
 function buildPrompt(events, profile, pathName) {
   return `You are Unscripted, a career-experimentation coach for college students.
 
@@ -143,7 +165,8 @@ export async function recommendCampusEvents(events, profile, { pathName = '' } =
   // Anything other than a list is as much a bad response as a hallucinated id.
   // The picker awaits this inside an effect with no catch, so throwing here
   // leaves the student on a spinner that never resolves.
-  const recommendations = Array.isArray(result?.recommendations) ? result.recommendations : [];
+  const payload = unwrapLLM(result);
+  const recommendations = Array.isArray(payload?.recommendations) ? payload.recommendations : [];
 
   for (const rec of recommendations) {
     const id = String(rec?.event_id || '');
