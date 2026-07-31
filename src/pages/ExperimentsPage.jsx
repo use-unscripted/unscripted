@@ -23,6 +23,9 @@ const STATUS_STYLES = {
   paused:      { bg: '#FFFBEB', text: '#B45309', label: 'Paused' },
 };
 
+// The 'active' filter chip means "not yet finished", not "not paused" (see allActive).
+const NON_TERMINAL_STATUSES = ['draft', 'planned', 'in_progress'];
+
 const EXPERIMENT_TYPES = [
   'Interview a professional', 'Complete a virtual simulation', 'Build a small project',
   'Publish content (article, post, or video)', 'Attend a relevant event',
@@ -762,7 +765,9 @@ export default function ExperimentsPage() {
 
   const activeFiltered = filter === 'all'
     ? pathFiltered(allActive)
-    : pathFiltered(allActive.filter(e => e.status === filter));
+    : filter === 'active'
+      ? pathFiltered(allActive.filter(e => NON_TERMINAL_STATUSES.includes(e.status)))
+      : pathFiltered(allActive.filter(e => e.status === filter));
 
   const pausedFiltered = pathFiltered(allPaused);
 
