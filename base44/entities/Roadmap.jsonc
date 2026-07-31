@@ -44,6 +44,9 @@
         "type": "string"
       }
     },
+    "feasibility_assessment": {
+      "type": "string"
+    },
     "weekly_tasks": {
       "type": "array",
       "items": {

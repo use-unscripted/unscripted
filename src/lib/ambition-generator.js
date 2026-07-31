@@ -107,8 +107,14 @@ Goals: ${JSON.stringify(goals)}`;
     }
   });
 
-  const profile = await base44.entities.AmbitionProfile.create(result.profile);
-  const roadmap = await base44.entities.Roadmap.create({ ...result.roadmap, profile_id: profile.id });
+  await base44.entities.AmbitionProfile.create(result.profile);
+  // profile_id references the StudentProfile this roadmap was generated from — NOT the
+  // AmbitionProfile created on the line above, which is what it used to be set to.
+  const studentProfileId = profiles[0]?.id;
+  const roadmap = await base44.entities.Roadmap.create({
+    ...result.roadmap,
+    ...(studentProfileId ? { profile_id: studentProfileId } : {}),
+  });
   await base44.entities.Task.bulkCreate(
     (result.roadmap.weekly_tasks || []).map(task => ({ ...task, roadmap_id: roadmap.id, completed: false }))
   );

@@ -201,6 +201,9 @@ Be honest about fit AND misfit. Do not claim any path is objectively correct. Fi
 
     const roadmap = await base44.entities.Roadmap.create({
       title: `30-Day Path Test: ${primaryPath}`,
+      // profile_id references the StudentProfile this roadmap was generated from.
+      // Omit it rather than writing null when the student has no profile yet.
+      ...(profile.id ? { profile_id: profile.id } : {}),
       thirty_day_plan: (result.experiments || []).map((e, i) => ({
         week: `Week ${Math.floor(i * 10 / 7) + 1}`,
         focus: e.title,
