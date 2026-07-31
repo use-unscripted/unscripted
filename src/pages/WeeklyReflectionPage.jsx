@@ -303,7 +303,8 @@ function ReflectionFlow({ experiments, missions, proofs, outreach, initialData, 
       };
     }
 
-    const labels = new Set(activityFor(activityData, startExpId, weekStart).map(i => i.label));
+    const activityLabels = activityFor(activityData, startExpId, weekStart).map(i => i.label);
+    const labels = new Set(activityLabels);
     const completed = toStringArray(initialData?.completed_items);
     const avoided = toStringArray(initialData?.avoided_items);
 
@@ -314,7 +315,11 @@ function ReflectionFlow({ experiments, missions, proofs, outreach, initialData, 
       expId: startExpId,
       missionId: initialData?.mission_id || '',
       weekChoice: WEEK_OPTIONS.find(o => o.text === cannedText)?.value || '',
-      picks: completed.filter(v => labels.has(v)),
+      // A new reflection starts with everything the student logged already
+      // ticked, so the question is "untick anything that isn't part of this"
+      // rather than "re-enter your own week". An edit restores exactly what was
+      // saved instead.
+      picks: isEdit ? completed.filter(v => labels.has(v)) : activityLabels,
       otherOpen: freeLines.length > 0,
       freeText: freeLines.join('\n'),
       // Free prose a student typed into the old "What did you avoid or not
@@ -430,11 +435,28 @@ function ReflectionFlow({ experiments, missions, proofs, outreach, initialData, 
 
   const canSave = !!expId && hasContent && !saving;
 
+  // Has the student changed anything from what this opened with? Logged
+  // activity arrives pre-ticked, so `hasContent` is true before they touch
+  // anything and cannot be the test for "there is unsaved work here".
+  const touched = expId !== seed.expId
+    || missionId !== seed.missionId
+    || weekChoice !== seed.weekChoice
+    || otherOpen !== seed.otherOpen
+    || freeText !== seed.freeText
+    || avoidedProse !== seed.avoidedProse
+    || energySources !== seed.energySources
+    || energyDrains !== seed.energyDrains
+    || lessons !== seed.lessons
+    || nextChanges !== seed.nextChanges
+    || picks.length !== seed.picks.length
+    || picks.some(p => !seed.picks.includes(p));
+
   // ── Draft ────────────────────────────────────────────────────────────────────
   // Only a new reflection is drafted. An edit already has a server row, and a
   // draft that could shadow it is exactly the overwrite this is meant to avoid.
+  // Merely opening the page is not "you started a reflection".
   useEffect(() => {
-    if (isEdit || !hasContent) return;
+    if (isEdit || !touched || !hasContent) return;
     const t = setTimeout(() => {
       writeDraft({
         week_start: weekStart,
@@ -447,7 +469,7 @@ function ReflectionFlow({ experiments, missions, proofs, outreach, initialData, 
       onDraftWritten?.();
     }, 600);
     return () => clearTimeout(t);
-  }, [isEdit, hasContent, weekStart, expId, missionId, weekChoice, picks, otherOpen,
+  }, [isEdit, touched, hasContent, weekStart, expId, missionId, weekChoice, picks, otherOpen,
     freeText, avoidedProse, energySources, energyDrains, lessons, nextChanges, onDraftWritten]);
 
   // ── Handlers ─────────────────────────────────────────────────────────────────
@@ -457,7 +479,8 @@ function ReflectionFlow({ experiments, missions, proofs, outreach, initialData, 
       // A mission has to belong to the experiment it is filed under, so
       // changing the experiment drops a mission that no longer applies.
       setMissionId('');
-      setPicks([]);
+      // And the logged activity is a different experiment's activity now.
+      setPicks(isEdit ? [] : activityFor(activityData, id, weekStart).map(i => i.label));
     }
     setError('');
     clearTimeout(advanceRef.current);
@@ -649,9 +672,11 @@ function ReflectionFlow({ experiments, missions, proofs, outreach, initialData, 
 
   // The whole point of the rewrite. Without this, four mandatory screens would
   // cost a student more taps than the old one-page form did.
+  // basis-full drops this onto its own line below Back/Continue on a phone,
+  // where three buttons side by side wraps the label onto two lines.
   const doneForNow = (primary) => (
     <button onClick={save} disabled={!canSave}
-      className={`flex items-center justify-center gap-2 rounded-[10px] py-3 text-sm font-semibold disabled:opacity-40 ${primary ? 'flex-1 text-white' : 'px-4 border'}`}
+      className={`flex items-center justify-center gap-2 rounded-[10px] py-3 text-sm font-semibold disabled:opacity-40 ${primary ? 'flex-1 text-white' : 'basis-full px-4 border sm:basis-auto'}`}
       style={primary
         ? { background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }
         : { borderColor: '#E2E8F0', color: 'var(--text-primary)', background: '#FFFFFF' }}>
@@ -703,7 +728,10 @@ function ReflectionFlow({ experiments, missions, proofs, outreach, initialData, 
         </div>
         {otherOpen && (
           <div className="anim-slide-up mt-2">
-            <textarea rows={3} value={freeText} onChange={e => setFreeText(e.target.value)} autoFocus
+            {/* Focused only when the student just opened it. A box that was
+                already open when the step mounted must not steal focus before
+                the question has been read. */}
+            <textarea rows={3} value={freeText} onChange={e => setFreeText(e.target.value)} autoFocus={!seed.otherOpen}
               placeholder="One per line." className={`${inputCls} resize-none`} />
           </div>
         )}
@@ -716,16 +744,22 @@ function ReflectionFlow({ experiments, missions, proofs, outreach, initialData, 
               selected={weekChoice === opt.value} onSelect={() => chooseWeek(opt.value)} />
           ))}
         </div>
-        {chosen?.opensFreeText && (
+        {/* `otherOpen` is what carries a saved reflection whose completed_items
+            match none of the four options: without it the student's own words
+            were held in state, saved back, and never shown. */}
+        {(chosen?.opensFreeText || otherOpen) && (
           <div className="anim-slide-up mt-2">
-            <textarea rows={3} value={freeText} onChange={e => setFreeText(e.target.value)} autoFocus
+            {!chosen && (
+              <p className="mb-1.5 text-xs font-semibold" style={{ color: 'var(--text-secondary)' }}>What you wrote down</p>
+            )}
+            <textarea rows={3} value={freeText} onChange={e => setFreeText(e.target.value)} autoFocus={!seed.otherOpen}
               placeholder="What did you actually do? One per line." className={`${inputCls} resize-none`} />
           </div>
         )}
       </>
     );
     footer = (
-      <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         {index > 0 && backButton}
         {continueButton(true)}
         {doneForNow(false)}
@@ -761,7 +795,7 @@ function ReflectionFlow({ experiments, missions, proofs, outreach, initialData, 
       </div>
     );
     footer = (
-      <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         {backButton}
         {continueButton(true)}
         {doneForNow(false)}
