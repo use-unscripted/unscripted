@@ -46,7 +46,10 @@ const composeWhatToLearn = (s) =>
 /* One question per screen. `kind` drives the control:
    multi  — tap any number of suggested answers, plus a free-text box
    choice — tap exactly one (auto-advances)
-   text   — type your own, with taps that fill it in for you            */
+   text   — type your own, with taps that fill it in for you
+
+   Keep every list to three or four. More than that and people stall
+   reading options instead of answering.                                */
 const STEPS = [
   {
     key: 'what_to_learn',
@@ -57,13 +60,9 @@ const STEPS = [
       { value: 'What the day-to-day actually looks like', label: 'What the day-to-day actually looks like' },
       { value: 'How people broke into this field', label: 'How people broke into this field' },
       { value: 'Whether I would genuinely enjoy this work', label: 'Whether I’d genuinely enjoy the work' },
-      { value: 'How competitive recruiting is and what it takes', label: 'How competitive recruiting really is' },
-      { value: 'What the pay and progression are actually like', label: 'What the pay and progression are like' },
-      { value: 'Which skills matter most early on', label: 'Which skills matter most early on' },
-      { value: 'What they would do differently starting over', label: 'What they’d do differently starting over' },
     ],
     customLabel: 'Something else you want to know',
-    placeholder: 'e.g. Is it worth doing a masters first?',
+    placeholder: 'e.g. How competitive is recruiting?',
   },
   {
     key: 'conversation_type',
@@ -71,10 +70,8 @@ const STEPS = [
     question: 'What kind of conversation are you after?',
     options: [
       { value: 'informational_interview', label: 'Informational interview', desc: 'A short chat to learn how the job really works' },
-      { value: 'networking', label: 'General networking', desc: 'Build a relationship, no specific ask' },
       { value: 'mentor', label: 'A mentor', desc: 'Someone who checks in with you over time' },
       { value: 'shadowing', label: 'Job shadow', desc: 'Sit alongside someone for a day' },
-      { value: 'event', label: 'Industry event', desc: 'Meet several people at once, in person' },
     ],
   },
   {
@@ -87,8 +84,6 @@ const STEPS = [
       { value: 'entry', label: 'People 0–3 years in', desc: 'Closest to what you’d be doing next year' },
       { value: 'mid', label: 'People 3–8 years in', desc: 'Far enough along to see the whole path' },
       { value: 'senior', label: 'Senior — 8+ years in' },
-      { value: 'executive', label: 'Executives and partners' },
-      { value: 'mixed', label: 'A mix of levels' },
     ],
   },
   {
@@ -110,7 +105,6 @@ const STEPS = [
       { value: 'linkedin', label: 'LinkedIn' },
       { value: 'email', label: 'Email' },
       { value: 'in_person', label: 'In person, at events' },
-      { value: 'phone', label: 'Phone or text' },
       { value: 'any', label: 'Open to any of it' },
     ],
   },
@@ -121,7 +115,6 @@ const STEPS = [
     options: [
       { value: '15', label: '15 minutes', desc: 'Easiest ask to say yes to' },
       { value: '30', label: '30 minutes', desc: 'The standard informational interview' },
-      { value: '60', label: 'A full hour' },
       { value: 'async', label: 'Email only, no calls' },
     ],
   },
@@ -146,10 +139,6 @@ const STEPS = [
       { value: 'Healthcare', label: 'Healthcare' },
       { value: 'FinTech', label: 'FinTech' },
       { value: 'Early-stage startups', label: 'Early-stage startups' },
-      { value: 'Consumer tech', label: 'Consumer tech' },
-      { value: 'Media and entertainment', label: 'Media & entertainment' },
-      { value: 'Nonprofit and social impact', label: 'Nonprofit / social impact' },
-      { value: 'Government and policy', label: 'Government & policy' },
     ],
     customLabel: 'Or type your own',
     placeholder: 'e.g. Climate tech, sports analytics',
@@ -161,11 +150,9 @@ const STEPS = [
     question: 'What size company appeals to you?',
     options: [
       { value: 'any', label: 'No preference' },
-      { value: 'startup', label: 'Startup', desc: '1–50 people' },
-      { value: 'small', label: 'Small', desc: '50–200 people' },
+      { value: 'startup', label: 'Startup', desc: 'Under 50 people' },
       { value: 'mid', label: 'Mid-size', desc: '200–1,000 people' },
       { value: 'large', label: 'Large', desc: '1,000+ people' },
-      { value: 'bank', label: 'Bulge-bracket or Big 4' },
     ],
   },
   {
@@ -177,10 +164,7 @@ const STEPS = [
     options: [
       { value: 'Anywhere', label: 'Anywhere' },
       { value: 'Remote OK', label: 'Remote is fine' },
-      { value: 'New York', label: 'New York' },
-      { value: 'Boston', label: 'Boston' },
       { value: 'Near campus', label: 'Near campus' },
-      { value: 'My home state', label: 'My home state' },
     ],
     customLabel: 'Or type your own',
     placeholder: 'e.g. Chicago, the Bay Area',
@@ -473,7 +457,7 @@ function SurveyStep({ pathName, survey, setSurvey, index, setIndex, onGenerate, 
           <p className="mt-1.5 text-sm" style={{ color: 'var(--text-secondary)' }}>{step.hint}</p>
         )}
 
-        <div className="mt-5 min-h-[248px]">
+        <div className="mt-5 min-h-[220px]">
           {step.kind === 'choice' && (
             <div className="space-y-2">
               {step.options.map((o, i) => (
