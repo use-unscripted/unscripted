@@ -213,8 +213,12 @@ async function probeJson(url: string): Promise<unknown> {
     headers: { Accept: 'application/json' },
     signal: AbortSignal.timeout(PROBE_TIMEOUT_MS),
   });
-  if (!res.ok) return null;
-  if (!(res.headers.get('content-type') || '').includes('json')) return null;
+  // An unread body holds the connection open; these probes lose far more often
+  // than they win, so the losers have to be closed explicitly.
+  if (!res.ok || !(res.headers.get('content-type') || '').includes('json')) {
+    await res.body?.cancel().catch(() => {});
+    return null;
+  }
   return await res.json();
 }
 
@@ -230,15 +234,21 @@ async function firstValidUrl(
   candidates: string[],
   isValid: (payload: unknown) => boolean,
 ): Promise<string | null> {
-  const results = await Promise.all(candidates.map(async (url) => {
+  // Every request starts now, but they are read back in preference order, so
+  // the first candidate answering in 40ms returns in 40ms instead of waiting
+  // out a 6s timeout on a sibling subdomain that does not exist. Losing
+  // probes are already caught, so nothing is left unhandled.
+  const attempts = candidates.map(async (url) => {
     try {
       return isValid(await probeJson(url));
     } catch (_) {
       return false; // Unreachable, timed out, or not JSON.
     }
-  }));
-  const winner = results.findIndex(Boolean);
-  return winner === -1 ? null : candidates[winner];
+  });
+  for (let i = 0; i < attempts.length; i++) {
+    if (await attempts[i]) return candidates[i];
+  }
+  return null;
 }
 
 /**
@@ -426,8 +436,14 @@ async function fetchLiveWhale(feedUrl: string, days: number) {
   if (!res.ok) throw new Error(`Calendar feed returned ${res.status}`);
   const body = await res.json();
   if (!looksLikeLiveWhale(body)) throw new Error('Calendar feed returned an unexpected shape');
+  // /days/N/ does not cap the window on any install measured — UConn asked for
+  // 7 days and returned events 9 days out, Trinity asked for 45 and returned
+  // events 53 days out. It behaves like a paging hint, not a filter, so the
+  // window is enforced here the same way it is for Trumba and Campus Labs.
   // deno-lint-ignore no-explicit-any
-  return liveWhaleRows(body).filter((e: any) => e && !e.is_canceled);
+  return liveWhaleRows(body).filter((e: any) =>
+    e && !e.is_canceled && withinWindow(e.date_iso, days)
+  );
 }
 
 // deno-lint-ignore no-explicit-any
@@ -476,9 +492,9 @@ const TRUMBA_MAX_SLUGS = 3;
 /** Pages a school is most likely to embed its Trumba calendar on, in preference order. */
 function trumbaPageCandidates(domain: string): string[] {
   return [
-    `https://www.${domain}/calendar`,
-    `https://${domain}/events`,
-    `https://events.${domain}`,
+    `https://www.${domain}/calendar`,  // finds UNH
+    `https://www.${domain}/events`,
+    `https://events.${domain}`,        // finds Tufts; its /calendar and /events both 404
     `https://calendar.${domain}`,
   ];
 }
@@ -554,7 +570,15 @@ async function probeTrumba(domain: string): Promise<string | null> {
     }
   }
 
-  for (const slug of slugs.slice(0, TRUMBA_MAX_SLUGS)) {
+  // The domain label goes last, behind anything the page actually named. It is
+  // still a guess, so it only gets to answer when discovery found nothing —
+  // and like every other candidate it has to validate against a real feed
+  // before it is returned.
+  const candidates = slugs.slice(0, TRUMBA_MAX_SLUGS);
+  const label = domainLabel(domain);
+  if (label && !candidates.includes(label)) candidates.push(label);
+
+  for (const slug of candidates) {
     const hit = await firstValidUrl(TRUMBA_HOSTS.map(host => `${host}/${slug}.json`), looksLikeTrumba);
     if (hit) return hit;
   }
