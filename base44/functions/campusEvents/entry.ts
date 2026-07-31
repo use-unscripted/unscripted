@@ -502,21 +502,36 @@ function trumbaPageCandidates(domain: string): string[] {
 const TRUMBA_SLUG_PATTERNS = [
   /webName["']?\s*:\s*["']([A-Za-z0-9._-]+)["']/g,
   /25livepub\.collegenet\.com\/calendars\/([A-Za-z0-9._-]+)/g,
+  // Some schools embed no script at all, only a subscribe link — Emory's page
+  // names its calendar exactly once, as trumba.com/eventactions/emory-events.
+  /trumba\.com\/(?:calendars|eventactions)\/([A-Za-z0-9._-]+)/g,
 ];
 
 /**
  * Read the front of a page and stop. A university homepage can be megabytes of
  * inlined markup, and the Trumba embed is a script tag near the top.
  */
-async function fetchHtmlHead(url: string, maxChars: number): Promise<string> {
+async function fetchPage(
+  url: string,
+  maxChars: number,
+): Promise<{ finalHost: string; html: string }> {
   const res = await fetch(url, {
     headers: { Accept: 'text/html,application/xhtml+xml,*/*', 'User-Agent': BROWSER_UA },
     redirect: 'follow',
     signal: AbortSignal.timeout(PROBE_TIMEOUT_MS),
   });
+
+  // Where the request actually ended up, which is often not where it was sent.
+  let finalHost = '';
+  try {
+    finalHost = stripWww(new URL(res.url).hostname.toLowerCase());
+  } catch (_) {
+    finalHost = '';
+  }
+
   if (!res.ok || !res.body) {
     await res.body?.cancel().catch(() => {});
-    return '';
+    return { finalHost, html: '' };
   }
   const reader = res.body.getReader();
   const decoder = new TextDecoder('utf-8');
@@ -530,7 +545,11 @@ async function fetchHtmlHead(url: string, maxChars: number): Promise<string> {
   } finally {
     await reader.cancel().catch(() => {});
   }
-  return html.slice(0, maxChars);
+  return { finalHost, html: html.slice(0, maxChars) };
+}
+
+async function fetchHtmlHead(url: string, maxChars: number): Promise<string> {
+  return (await fetchPage(url, maxChars)).html;
 }
 
 function trumbaSlugsFrom(html: string): string[] {
@@ -727,9 +746,126 @@ export function adapterFor(platform: string): Adapter | null {
   return ADAPTERS.find(a => a.name === platform) || null;
 }
 
-/** First platform that answers with a feed we can actually read, or null. */
+// ── Finding where the calendar actually lives ───────────────────────────────
+
+/** How much of a page to read while looking for the calendar's address. */
+const DISCOVERY_SCAN_BYTES = 300_000;
+const MAX_DISCOVERED_HOSTS = 4;
+const MAX_DISCOVERED_DOMAINS = 2;
+
+/** A hostname label that reads like a calendar: "events", "campuscalendar". */
+const CALENDAR_LABEL_RE = /(^|[.-])(calendars?|events?|campuscalendar)([.-]|$)/;
+
+/** Pages that link to, or redirect to, wherever a school keeps its calendar. */
+function discoveryPages(domain: string): string[] {
+  return [
+    `https://www.${domain}/`,
+    `https://www.${domain}/events`,
+    `https://www.${domain}/calendar`,
+    `https://events.${domain}`,
+    `https://calendar.${domain}`,
+  ];
+}
+
+/** "campuscalendar.ucsb.edu" and "ucsb.edu" are the same institution. */
+function sameSite(host: string, domain: string): boolean {
+  return host === domain || host.endsWith(`.${domain}`);
+}
+
+/**
+ * Ask the school where its calendar is, instead of guessing three subdomains.
+ *
+ * Guessing loses two whole classes of school. UC Santa Barbara's Localist
+ * calendar is at campuscalendar.ucsb.edu — a name no fixed list contains.
+ * Syracuse redirects syr.edu to syracuse.edu, and the calendar hangs off the
+ * domain we never tried. Both schools state the answer publicly; we just never
+ * read it.
+ *
+ * Two sources, both of which are the school talking about itself:
+ *
+ *   a redirect  — the school published it, so where it lands is the school's
+ *   a same-site  — a calendar-looking host inside the school's own registrable
+ *   link          domain, named on one of the school's own pages
+ *
+ * Arbitrary links are deliberately not followed. These hosts get fetched
+ * server-side, so anything outside the school's own domain has to arrive via
+ * the school's own redirect, never via an href a page happens to contain.
+ */
+async function discoverCalendarLocations(
+  domain: string,
+): Promise<{ hosts: string[]; domains: string[] }> {
+  const alreadyTried = new Set([domain, ...SUBDOMAIN_CANDIDATES.map(s => `${s}.${domain}`)]);
+  const hosts = new Set<string>();
+  const domains = new Set<string>();
+
+  const pages = await Promise.all(discoveryPages(domain).map(async (url) => {
+    try {
+      return await fetchPage(url, DISCOVERY_SCAN_BYTES);
+    } catch (_) {
+      return null; // No such host, 403, timeout — just means no answer here.
+    }
+  }));
+
+  for (const page of pages) {
+    if (!page) continue;
+
+    const landed = page.finalHost;
+    if (landed && isProbeableDomain(landed) && !alreadyTried.has(landed)) {
+      // Inside the school's own domain it is a host to probe outright; outside
+      // it, the school has effectively renamed itself, so it becomes a fresh
+      // domain and gets the full subdomain treatment.
+      if (sameSite(landed, domain)) hosts.add(landed);
+      else domains.add(landed);
+    }
+
+    for (const match of page.html.matchAll(/https?:\/\/([a-z0-9.-]+\.[a-z]{2,})/gi)) {
+      const host = stripWww(match[1].toLowerCase());
+      if (alreadyTried.has(host) || hosts.has(host)) continue;
+      if (!isProbeableDomain(host) || !sameSite(host, domain)) continue;
+      const label = host.slice(0, Math.max(0, host.length - domain.length - 1));
+      if (label && CALENDAR_LABEL_RE.test(label)) hosts.add(host);
+    }
+  }
+
+  return {
+    hosts: [...hosts].slice(0, MAX_DISCOVERED_HOSTS),
+    domains: [...domains].slice(0, MAX_DISCOVERED_DOMAINS),
+  };
+}
+
+/**
+ * Localist and LiveWhale both sit at a fixed path on a host, so once we know
+ * the host outright there is nothing left to guess. Trumba and Campus Labs key
+ * off a slug rather than a host and are handled by their own probes.
+ */
+async function probeKnownHost(
+  host: string,
+): Promise<{ platform: string; feedUrl: string } | null> {
+  const localist = await firstValidUrl(
+    [`https://${host}/api/2/events?days=1&pp=1`],
+    looksLikeLocalist,
+  );
+  if (localist) return { platform: 'localist', feedUrl: localist.split('?')[0] };
+
+  const liveWhale = await firstValidUrl(
+    [`https://${host}/live/json/events`],
+    looksLikeLiveWhale,
+  );
+  if (liveWhale) return { platform: 'livewhale', feedUrl: liveWhale };
+
+  return null;
+}
+
+/**
+ * First platform that answers with a feed we can actually read, or null.
+ *
+ * `discover` exists to bound the work: discovery can hand back another domain,
+ * and that domain is re-probed with discovery off, so a chain of redirects
+ * costs one extra hop rather than an open-ended walk.
+ */
 export async function probeCalendar(
   domain: string,
+  { discover = true }: { discover?: boolean } = {},
 ): Promise<{ platform: string; feedUrl: string } | null> {
   for (const adapter of ADAPTERS) {
     let feedUrl: string | null = null;
@@ -740,6 +876,32 @@ export async function probeCalendar(
     }
     if (feedUrl) return { platform: adapter.name, feedUrl };
   }
+
+  // Only now, having failed the cheap guesses, is it worth reading pages. A
+  // school whose calendar sits where we expect never pays for this.
+  if (!discover) return null;
+
+  let found: { hosts: string[]; domains: string[] };
+  try {
+    found = await discoverCalendarLocations(domain);
+  } catch (_) {
+    return null;
+  }
+
+  for (const host of found.hosts) {
+    try {
+      const hit = await probeKnownHost(host);
+      if (hit) return hit;
+    } catch (_) { /* Next host. */ }
+  }
+
+  for (const alias of found.domains) {
+    try {
+      const hit = await probeCalendar(alias, { discover: false });
+      if (hit) return hit;
+    } catch (_) { /* Next domain. */ }
+  }
+
   return null;
 }
 
@@ -838,10 +1000,17 @@ async function resolveFeed(base44: any, college: string) {
     .filter(isProbeableDomain);
   const candidates = [...new Set([...known, ...(await guessDomains(base44, college))])];
 
+  // Cheap pass over every candidate first. Reading pages to discover a hidden
+  // calendar host is worth it once, but not once per guessed domain — a school
+  // that runs no calendar at all would otherwise pay for it three times over
+  // while a student sits watching a spinner.
   let feed: { platform: string; feedUrl: string } | null = null;
   for (const domain of candidates) {
-    feed = await probeCalendar(domain);
+    feed = await probeCalendar(domain, { discover: false });
     if (feed) break;
+  }
+  if (!feed && candidates.length) {
+    feed = await probeCalendar(candidates[0]);
   }
 
   const patch = {
