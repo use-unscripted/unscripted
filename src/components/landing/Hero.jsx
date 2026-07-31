@@ -288,7 +288,7 @@ export default function Hero() {
                 </a>
               </Magnetic>
             </div>
-            <p className="mt-4 text-sm" style={{ color: 'var(--text-muted)' }}>
+            <p className="mt-4 text-sm" style={{ color: 'var(--text-secondary)' }}>
               Already have an account?{' '}
               <Link to="/login" className="font-semibold underline" style={{ color: 'var(--brand-navy-700)' }}>
                 Log in

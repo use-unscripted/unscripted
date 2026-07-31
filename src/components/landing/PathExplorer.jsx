@@ -123,7 +123,8 @@ function PathCard({ path }) {
           <Icon size={20} />
         </span>
         <div className="min-w-0">
-          <p className="text-[11px] font-bold uppercase tracking-[.14em]" style={{ color: 'var(--brand-gold-600)' }}>
+          {/* gold-700, not gold-600: gold on white is 2.2:1 as text. */}
+          <p className="text-[11px] font-bold uppercase tracking-[.14em]" style={{ color: 'var(--brand-gold-700)' }}>
             What you'd actually be testing
           </p>
           <h3 className="font-heading mt-1.5 text-2xl font-bold leading-snug" style={{ color: 'var(--text-primary)' }}>

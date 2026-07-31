@@ -48,7 +48,7 @@ const PATHS = [
 ];
 
 const TONE = {
-  best: { chipBg: 'rgba(214,182,106,0.18)', chipFg: '#8A6D1F', bar: '#D6B66A', border: 'rgba(214,182,106,0.55)' },
+  best: { chipBg: 'rgba(214,182,106,0.18)', chipFg: 'var(--brand-gold-700)', bar: '#D6B66A', border: 'rgba(214,182,106,0.55)' },
   alt: { chipBg: 'rgba(39,76,119,0.10)', chipFg: '#274C77', bar: '#274C77', border: 'var(--border-light)' },
   contrarian: { chipBg: 'rgba(30,41,59,0.07)', chipFg: '#526274', bar: '#94A3B8', border: 'var(--border-light)' },
 };
@@ -58,7 +58,9 @@ function ReadinessBar({ score, tone, delay }) {
   return (
     <div className="mt-4">
       <div className="mb-1.5 flex items-baseline justify-between">
-        <span className="text-[10px] font-bold uppercase tracking-[.14em]" style={{ color: 'var(--text-muted)' }}>
+        {/* --text-secondary, not --text-muted: muted is 4.02:1 on white and
+           fails the 4.5:1 minimum. At 10px it fails by eye too. */}
+        <span className="text-[10px] font-bold uppercase tracking-[.14em]" style={{ color: 'var(--text-secondary)' }}>
           Readiness
         </span>
         {/* tabular-nums matters twice here: the scores sit in a comparison
@@ -69,7 +71,7 @@ function ReadinessBar({ score, tone, delay }) {
           style={{ color: 'var(--text-primary)', fontVariantNumeric: 'tabular-nums' }}
         >
           <CountUp to={score} duration={0.85} />
-          <span style={{ color: 'var(--text-muted)', fontWeight: 600 }}>/100</span>
+          <span style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>/100</span>
         </span>
       </div>
       <div className="h-1.5 w-full overflow-hidden rounded-full" style={{ background: 'var(--background-tertiary)' }}>
@@ -152,7 +154,7 @@ export default function PathPreview() {
     <div className="relative mx-auto mt-16 max-w-5xl">
       <motion.p
         className="mb-4 text-center text-[10px] font-bold uppercase tracking-[.18em]"
-        style={{ color: 'var(--text-muted)' }}
+        style={{ color: 'var(--text-secondary)' }}
         initial={{ opacity: 0 }}
         whileInView={{ opacity: 1 }}
         viewport={{ once: true }}

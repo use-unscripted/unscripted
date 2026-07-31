@@ -40,6 +40,11 @@
     --brand-navy-700: #274C77;
     --brand-gold-500: #D6B66A;
     --brand-gold-600: #CDAA54;
+    /* Gold that is legible AS TEXT on a light background. gold-500/600 are
+       surface colors — on white they measure 2.0:1 and 2.2:1, well under the
+       4.5:1 text minimum. Use this one for any gold wording; keep 500/600 for
+       fills, rules and icons. */
+    --brand-gold-700: #8A6D1F;
     --brand-charcoal: #1E293B;
     --brand-charcoal-dark: #222222;
     --brand-white: #FFFFFF;

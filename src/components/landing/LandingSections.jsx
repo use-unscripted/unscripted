@@ -252,7 +252,8 @@ export default function LandingSections() {
               <h3 className="font-heading mb-1 text-lg font-bold text-white">
                 Interview Someone Working in Your Target Role
               </h3>
-              <p className="mb-6 text-xs text-slate-400">
+              {/* slate-300 on the navy card; slate-400 was 4.48:1 */}
+              <p className="mb-6 text-xs text-slate-300">
                 Estimated time: 4–6 hours · Deliverable: Written summary + path update
               </p>
               <MissionChecklist />

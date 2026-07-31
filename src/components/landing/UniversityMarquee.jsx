@@ -98,7 +98,7 @@ export default function UniversityMarquee() {
     >
       <p
         className="mb-3 text-center text-[10px] font-bold uppercase tracking-[.18em]"
-        style={{ color: 'var(--text-muted)' }}
+        style={{ color: 'var(--text-secondary)' }}
       >
         Students from <CountUp to={55} style={{ fontVariantNumeric: 'tabular-nums' }} />+ universities
       </p>
