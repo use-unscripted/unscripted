@@ -12,11 +12,18 @@
  * producing fake events.
  *
  * Four calendar platforms are supported, probed in this order: Localist
- * (Concept3D), LiveWhale, Trumba, and Campus Labs Engage. A sweep of 24
+ * (Concept3D), LiveWhale, Campus Labs Engage, and Trumba. A sweep of 24
  * Northeast schools found no single platform covers even half of them —
  * Localist alone reaches ~40%. Each adapter owns its own probe, fetch, and
  * normalize, and they all converge on one event shape so nothing downstream
  * has to know which platform a school runs.
+ *
+ * Nothing about a school is assumed from its domain. Subdomain conventions are
+ * inconsistent (Villanova's LiveWhale is on calendar., not events.), a host
+ * that answers can still be the wrong thing (events.villanova.edu is a plain
+ * web page), and Trumba slugs are not derivable at all. So every probe parses
+ * the JSON and checks its shape; a 200, a redirect, and a reachable host prove
+ * nothing on their own.
  *
  * A school on none of the four returns zero events. That is the correct
  * outcome, not a gap to paper over with scraping.
@@ -31,6 +38,11 @@ const MAX_DAYS = 120;
 const FEED_PAGE_SIZE = 100; // Localist's per-page ceiling
 const PROBE_TIMEOUT_MS = 6000;
 const FEED_TIMEOUT_MS = 9000;
+
+/** Villanova and Tufts answer a bare Deno UA with 403; they serve a browser fine. */
+const BROWSER_UA =
+  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 ' +
+  '(KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36';
 
 /** Re-probe a school that previously came back with no feed, but not often. */
 const NEGATIVE_RECHECK_DAYS = 30;
@@ -370,10 +382,31 @@ const localistAdapter: Adapter = {
  */
 const LIVEWHALE_FIELDS = 'location,summary,description,event_types,tags,group_title,registration';
 
+/**
+ * Two response shapes, both real. Newer installs wrap events in {meta, data};
+ * Trinity and Seton Hall answer the bare /live/json/events with a naked array
+ * and only switch to the envelope once path segments are appended. Requiring
+ * the envelope at probe time made both look like schools with no calendar.
+ *
+ * The array form is still checked field by field — `date_iso` is what
+ * separates it from Trumba's bare array, which carries `startDateTime`.
+ */
 export function looksLikeLiveWhale(payload: unknown): boolean {
+  if (Array.isArray(payload)) {
+    const first = payload[0];
+    return Boolean(first && typeof first === 'object' && first.title && first.date_iso);
+  }
   if (!payload || typeof payload !== 'object') return false;
   const body = payload as Record<string, unknown>;
   return Array.isArray(body.data) && typeof body.meta === 'object' && body.meta !== null;
+}
+
+// deno-lint-ignore no-explicit-any
+function liveWhaleRows(body: unknown): any[] {
+  if (Array.isArray(body)) return body;
+  // deno-lint-ignore no-explicit-any
+  const data = (body as any)?.data;
+  return Array.isArray(data) ? data : [];
 }
 
 async function probeLiveWhale(domain: string): Promise<string | null> {
@@ -394,7 +427,7 @@ async function fetchLiveWhale(feedUrl: string, days: number) {
   const body = await res.json();
   if (!looksLikeLiveWhale(body)) throw new Error('Calendar feed returned an unexpected shape');
   // deno-lint-ignore no-explicit-any
-  return (body.data || []).filter((e: any) => e && !e.is_canceled);
+  return liveWhaleRows(body).filter((e: any) => e && !e.is_canceled);
 }
 
 // deno-lint-ignore no-explicit-any
@@ -436,16 +469,96 @@ export function looksLikeTrumba(payload: unknown): boolean {
   return Boolean(first && typeof first === 'object' && first.title && first.startDateTime);
 }
 
+/** How much of a calendar page to scan; the embed snippet is near the top. */
+const TRUMBA_HTML_SCAN_BYTES = 500_000;
+const TRUMBA_MAX_SLUGS = 3;
+
+/** Pages a school is most likely to embed its Trumba calendar on, in preference order. */
+function trumbaPageCandidates(domain: string): string[] {
+  return [
+    `https://www.${domain}/calendar`,
+    `https://${domain}/events`,
+    `https://events.${domain}`,
+    `https://calendar.${domain}`,
+  ];
+}
+
+const TRUMBA_SLUG_PATTERNS = [
+  /webName["']?\s*:\s*["']([A-Za-z0-9._-]+)["']/g,
+  /25livepub\.collegenet\.com\/calendars\/([A-Za-z0-9._-]+)/g,
+];
+
 /**
- * Trumba slugs are publisher-chosen and not derivable from the domain
- * (Providence publishes as "pc-ext_open_pub"). The domain label is one cheap
- * guess; anything past that would be brute-forcing someone else's calendar
- * namespace, so a school whose slug we do not already have simply misses.
+ * Read the front of a page and stop. A university homepage can be megabytes of
+ * inlined markup, and the Trumba embed is a script tag near the top.
+ */
+async function fetchHtmlHead(url: string, maxChars: number): Promise<string> {
+  const res = await fetch(url, {
+    headers: { Accept: 'text/html,application/xhtml+xml,*/*', 'User-Agent': BROWSER_UA },
+    redirect: 'follow',
+    signal: AbortSignal.timeout(PROBE_TIMEOUT_MS),
+  });
+  if (!res.ok || !res.body) {
+    await res.body?.cancel().catch(() => {});
+    return '';
+  }
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder('utf-8');
+  let html = '';
+  try {
+    while (html.length < maxChars) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      html += decoder.decode(value, { stream: true });
+    }
+  } finally {
+    await reader.cancel().catch(() => {});
+  }
+  return html.slice(0, maxChars);
+}
+
+function trumbaSlugsFrom(html: string): string[] {
+  const slugs: string[] = [];
+  for (const pattern of TRUMBA_SLUG_PATTERNS) {
+    for (const match of html.matchAll(pattern)) {
+      const slug = match[1].replace(/\.json$/i, '');
+      if (slug && !slugs.includes(slug)) slugs.push(slug);
+    }
+  }
+  return slugs;
+}
+
+/**
+ * Trumba slugs are publisher-chosen and genuinely not derivable: Tufts is
+ * "tufts", but Providence is "pc-ext_open_pub" and UNH is
+ * "university-of-new-hampshire-events". The slug therefore has to be read out
+ * of the page that embeds the calendar.
+ *
+ * A school whose page does not name a slug simply does not resolve. Guessing
+ * variants would be brute-forcing someone else's calendar namespace, and a
+ * wrong slug means sending a student to another school's events.
  */
 async function probeTrumba(domain: string): Promise<string | null> {
-  const slug = domainLabel(domain);
-  if (!slug) return null;
-  return await firstValidUrl(TRUMBA_HOSTS.map(host => `${host}/${slug}.json`), looksLikeTrumba);
+  const pages = await Promise.all(trumbaPageCandidates(domain).map(async (url) => {
+    try {
+      return await fetchHtmlHead(url, TRUMBA_HTML_SCAN_BYTES);
+    } catch (_) {
+      return ''; // 403, timeout, no such host — just means no slug from here.
+    }
+  }));
+
+  const slugs: string[] = [];
+  for (const html of pages) {
+    for (const slug of trumbaSlugsFrom(html)) {
+      if (!slugs.includes(slug)) slugs.push(slug);
+    }
+  }
+
+  for (const slug of slugs.slice(0, TRUMBA_MAX_SLUGS)) {
+    const hit = await firstValidUrl(TRUMBA_HOSTS.map(host => `${host}/${slug}.json`), looksLikeTrumba);
+    if (hit) return hit;
+  }
+  return null;
 }
 
 async function fetchTrumba(feedUrl: string, days: number) {
@@ -579,12 +692,12 @@ const campusLabsAdapter: Adapter = {
 // ── Adapter registry ────────────────────────────────────────────────────────
 
 /**
- * Order is preference, not popularity. The institutional calendars come first
- * because they carry room numbers, audience, and ICS links; Campus Labs is
- * last because a school that has one usually has one of the others too, and
- * the official calendar is the better answer when both exist.
+ * Order is preference first, cost second. The three JSON probes come first
+ * because each is a single cheap request. Trumba is last because it is the
+ * only probe that has to fetch and scan HTML to find a slug, so it should run
+ * only once the others have missed.
  */
-const ADAPTERS: Adapter[] = [localistAdapter, liveWhaleAdapter, trumbaAdapter, campusLabsAdapter];
+const ADAPTERS: Adapter[] = [localistAdapter, liveWhaleAdapter, campusLabsAdapter, trumbaAdapter];
 
 export function adapterFor(platform: string): Adapter | null {
   return ADAPTERS.find(a => a.name === platform) || null;
