@@ -27,6 +27,12 @@ import ClaimOnboarding from '@/pages/ClaimOnboarding';
 import PathsIntake from '@/pages/PathsIntake';
 import PathResults from '@/pages/PathResults';
 
+// Public company + policy pages
+import About from '@/pages/About';
+import Contact from '@/pages/Contact';
+import Privacy from '@/pages/Privacy';
+import Terms from '@/pages/Terms';
+
 // App shell pages
 import AppShell from '@/components/AppShell';
 import Dashboard from '@/pages/Dashboard';
@@ -70,6 +76,11 @@ const AuthenticatedApp = () => {
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/post-auth" element={<PostAuth />} />
+      {/* Public company + policy pages — reachable signed out, and from the footer */}
+      <Route path="/about" element={<About />} />
+      <Route path="/contact" element={<Contact />} />
+      <Route path="/privacy" element={<Privacy />} />
+      <Route path="/terms" element={<Terms />} />
       {/* Public onboarding — no account required */}
       <Route path="/onboarding" element={<Onboarding />} />
       <Route path="/paths-intake" element={<PathsIntake />} />

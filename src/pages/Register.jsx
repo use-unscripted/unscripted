@@ -217,6 +217,16 @@ export default function Register() {
         >
           {loading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Creating account...</> : "Create account"}
         </Button>
+
+        {/* Consent notice — covers the Google button above as well as this one.
+            Must stay visible on both paths into an account. */}
+        <p className="pt-1 text-center text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+          By creating an account you agree to our{" "}
+          <Link to="/terms" className="font-semibold underline underline-offset-2">Terms</Link>{" "}
+          and{" "}
+          <Link to="/privacy" className="font-semibold underline underline-offset-2">Privacy Policy</Link>.
+          You must be at least 13, and if you are under 18 you need a parent or guardian&rsquo;s permission.
+        </p>
       </form>
     </AuthLayout>
   );
