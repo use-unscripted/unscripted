@@ -12,7 +12,6 @@ import AddProofModal, { ProofSuccessToast } from '@/components/experiments/AddPr
 import PathSwitcher from '@/components/PathSwitcher';
 import SoftDeleteConfirm, { softDeletePayload } from '@/components/SoftDeleteConfirm';
 import ExperimentActionsMenu from '@/components/experiments/ExperimentActionsMenu';
-import PauseExperimentModal from '@/components/experiments/PauseExperimentModal';
 import ResumeExperimentModal from '@/components/experiments/ResumeExperimentModal';
 
 const STATUS_STYLES = {
