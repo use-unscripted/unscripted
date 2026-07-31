@@ -96,55 +96,68 @@ function PathCard({ path, index }) {
      rather than a result appearing. */
   const delay = 0.84 + index * 0.07;
 
+  /* Entrance and hover live on two separate elements on purpose. On one
+     element they share a `y`, and a gesture that ends falls back to the
+     entrance transition — stagger delay included. That made a card hang at
+     its hover height for the full delay (0.84–0.98s) after the cursor left,
+     so the middle card — the one you cross every time you move between the
+     other two — was almost always still lifted when you got to it and never
+     appeared to move at all. Outer element owns the arrival, inner owns the
+     hover, and neither can borrow the other's timing. */
   return (
     <motion.div
-      className="relative flex h-full flex-col rounded-[18px] bg-white p-5 text-left"
-      style={{
-        border: `1px solid ${tone.border}`,
-        boxShadow: isBest
-          ? '0 18px 44px rgba(31,58,95,0.13), 0 2px 8px rgba(31,58,95,0.05)'
-          : '0 10px 30px rgba(31,58,95,0.07)',
-      }}
+      className="h-full"
       initial={{ opacity: 0, y: 42, rotateX: 11 }}
       whileInView={{ opacity: 1, y: 0, rotateX: 0 }}
       viewport={{ once: true, amount: 0.25 }}
       transition={{ duration: 0.7, ease: EASE, delay }}
-      whileHover={{ y: -5, transition: { duration: 0.35, ease: EASE } }}
     >
-      {/* Slow ambient glow, best-fit card only — one quiet point of life */}
-      {isBest && (
-        <motion.span
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 rounded-[18px]"
-          style={{ boxShadow: '0 0 0 1px rgba(214,182,106,0.55)' }}
-          animate={{ opacity: [0.35, 1, 0.35] }}
-          transition={{ duration: 4.4, repeat: Infinity, ease: 'easeInOut' }}
-        />
-      )}
-
-      <span
-        className="mb-3 w-fit rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-[.12em]"
-        style={{ background: tone.chipBg, color: tone.chipFg }}
+      <motion.div
+        className="relative flex h-full flex-col rounded-[18px] bg-white p-5 text-left"
+        style={{
+          border: `1px solid ${tone.border}`,
+          boxShadow: isBest
+            ? '0 18px 44px rgba(31,58,95,0.13), 0 2px 8px rgba(31,58,95,0.05)'
+            : '0 10px 30px rgba(31,58,95,0.07)',
+        }}
+        whileHover={{ y: -5 }}
+        transition={{ duration: 0.35, ease: EASE }}
       >
-        {path.label}
-      </span>
+        {/* Slow ambient glow, best-fit card only — one quiet point of life */}
+        {isBest && (
+          <motion.span
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 rounded-[18px]"
+            style={{ boxShadow: '0 0 0 1px rgba(214,182,106,0.55)' }}
+            animate={{ opacity: [0.35, 1, 0.35] }}
+            transition={{ duration: 4.4, repeat: Infinity, ease: 'easeInOut' }}
+          />
+        )}
 
-      {/* Fixed two-line box. Without it a one-line path name pulls its
-         readiness bar up out of line with its neighbours — and a comparison
-         view whose rows don't align stops reading as a comparison. */}
-      <h3
-        className="font-heading text-[15px] font-bold leading-6 md:min-h-[3rem]"
-        style={{ color: 'var(--text-primary)' }}
-      >
-        {path.path_name}
-      </h3>
+        <span
+          className="mb-3 w-fit rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-[.12em]"
+          style={{ background: tone.chipBg, color: tone.chipFg }}
+        >
+          {path.label}
+        </span>
 
-      <ReadinessBar score={path.readiness_score} tone={tone} delay={delay + 0.16} />
+        {/* Fixed two-line box. Without it a one-line path name pulls its
+           readiness bar up out of line with its neighbours — and a comparison
+           view whose rows don't align stops reading as a comparison. */}
+        <h3
+          className="font-heading text-[15px] font-bold leading-6 md:min-h-[3rem]"
+          style={{ color: 'var(--text-primary)' }}
+        >
+          {path.path_name}
+        </h3>
 
-      <p className="mt-4 text-[13px] leading-5" style={{ color: 'var(--text-secondary)' }}>
-        <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>Tradeoff · </span>
-        {path.main_tradeoffs}
-      </p>
+        <ReadinessBar score={path.readiness_score} tone={tone} delay={delay + 0.16} />
+
+        <p className="mt-4 text-[13px] leading-5" style={{ color: 'var(--text-secondary)' }}>
+          <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>Tradeoff · </span>
+          {path.main_tradeoffs}
+        </p>
+      </motion.div>
     </motion.div>
   );
 }
