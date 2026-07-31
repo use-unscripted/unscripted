@@ -1,7 +1,7 @@
 /**
  * OutreachPlanModal
  * A multi-step flow:
- *  1. Survey — what the user wants to learn, preferences
+ *  1. Survey — a guided, one-question-at-a-time wizard (tap an answer or write your own)
  *  2. Generate — AI produces outreach experiments, archetypes, and public contact suggestions
  *  3. Results — user can save contacts, create missions, or dismiss suggestions
  *
@@ -11,15 +11,20 @@
  *   onClose     — () => void
  *   onContactSaved — (contact) => void  (called after saving any contact)
  */
-import { useState, useRef } from 'react';
-import { X, Loader2, Users, Beaker, User, ExternalLink, CheckCircle, ChevronRight, AlertTriangle, BookOpen, Save, Target } from 'lucide-react';
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { X, Loader2, Users, Beaker, User, ExternalLink, CheckCircle, ChevronRight, ChevronLeft, AlertTriangle, BookOpen, Save, Target, Check, Pencil, Sparkles } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 
 const inputCls = 'w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-2.5 text-sm outline-none focus:border-[#1F3A5F]';
-const selCls = inputCls;
+
+// The survey panel drops its own bottom padding so this bar can stick to the
+// panel's edge — the primary action stays reachable however long the list is.
+const footerCls =
+  'sticky bottom-0 z-10 -mx-6 mt-6 rounded-b-[24px] border-t border-[#EEF2F6] bg-white px-6 pb-6 pt-4 sm:-mx-8 sm:px-8';
 
 // ── Step 1: Survey ─────────────────────────────────────────────────────────────
 const DEFAULT_SURVEY = {
+  what_to_learn_tags: [],
   what_to_learn: '',
   conversation_type: 'informational_interview',
   industries: '',
@@ -33,128 +38,527 @@ const DEFAULT_SURVEY = {
   suggestion_type: 'archetypes',
 };
 
-function SurveyStep({ pathName, survey, setSurvey, onNext, onClose }) {
-  const ch = (e) => setSurvey(s => ({ ...s, [e.target.name]: e.target.value }));
-  const canNext = survey.what_to_learn.trim().length > 0;
+// What actually gets sent to the model for the open-ended question: the chips they
+// tapped plus anything they typed themselves.
+const composeWhatToLearn = (s) =>
+  [...(s.what_to_learn_tags || []), (s.what_to_learn || '').trim()].filter(Boolean).join('; ');
 
+/* One question per screen. `kind` drives the control:
+   multi  — tap any number of suggested answers, plus a free-text box
+   choice — tap exactly one (auto-advances)
+   text   — type your own, with taps that fill it in for you            */
+const STEPS = [
+  {
+    key: 'what_to_learn',
+    kind: 'multi',
+    question: 'What do you want to get out of these conversations?',
+    hint: 'Tap anything that fits — or write your own below.',
+    options: [
+      { value: 'What the day-to-day actually looks like', label: 'What the day-to-day actually looks like' },
+      { value: 'How people broke into this field', label: 'How people broke into this field' },
+      { value: 'Whether I would genuinely enjoy this work', label: 'Whether I’d genuinely enjoy the work' },
+      { value: 'How competitive recruiting is and what it takes', label: 'How competitive recruiting really is' },
+      { value: 'What the pay and progression are actually like', label: 'What the pay and progression are like' },
+      { value: 'Which skills matter most early on', label: 'Which skills matter most early on' },
+      { value: 'What they would do differently starting over', label: 'What they’d do differently starting over' },
+    ],
+    customLabel: 'Something else you want to know',
+    placeholder: 'e.g. Is it worth doing a masters first?',
+  },
+  {
+    key: 'conversation_type',
+    kind: 'choice',
+    question: 'What kind of conversation are you after?',
+    options: [
+      { value: 'informational_interview', label: 'Informational interview', desc: 'A short chat to learn how the job really works' },
+      { value: 'networking', label: 'General networking', desc: 'Build a relationship, no specific ask' },
+      { value: 'mentor', label: 'A mentor', desc: 'Someone who checks in with you over time' },
+      { value: 'shadowing', label: 'Job shadow', desc: 'Sit alongside someone for a day' },
+      { value: 'event', label: 'Industry event', desc: 'Meet several people at once, in person' },
+    ],
+  },
+  {
+    key: 'seniority',
+    kind: 'choice',
+    question: 'Who do you most want to hear from?',
+    hint: 'People closer to your level usually reply more often.',
+    options: [
+      { value: 'any', label: 'Anyone in the field' },
+      { value: 'entry', label: 'People 0–3 years in', desc: 'Closest to what you’d be doing next year' },
+      { value: 'mid', label: 'People 3–8 years in', desc: 'Far enough along to see the whole path' },
+      { value: 'senior', label: 'Senior — 8+ years in' },
+      { value: 'executive', label: 'Executives and partners' },
+      { value: 'mixed', label: 'A mix of levels' },
+    ],
+  },
+  {
+    key: 'networking_comfort',
+    kind: 'choice',
+    question: 'How do you feel about messaging someone you don’t know?',
+    hint: 'This sets how much hand-holding your plan gives you. There’s no wrong answer.',
+    options: [
+      { value: 'low', label: 'Honestly, it makes me nervous', desc: 'You’ll get word-for-word scripts and small first steps' },
+      { value: 'moderate', label: 'Fine with it, some guidance helps', desc: 'Templates you can adjust' },
+      { value: 'high', label: 'Comfortable — I’ll cold message anyone', desc: 'Lighter structure, higher volume' },
+    ],
+  },
+  {
+    key: 'preferred_channel',
+    kind: 'choice',
+    question: 'Where do you want to reach people?',
+    options: [
+      { value: 'linkedin', label: 'LinkedIn' },
+      { value: 'email', label: 'Email' },
+      { value: 'in_person', label: 'In person, at events' },
+      { value: 'phone', label: 'Phone or text' },
+      { value: 'any', label: 'Open to any of it' },
+    ],
+  },
+  {
+    key: 'time_available',
+    kind: 'choice',
+    question: 'How much time can you give each conversation?',
+    options: [
+      { value: '15', label: '15 minutes', desc: 'Easiest ask to say yes to' },
+      { value: '30', label: '30 minutes', desc: 'The standard informational interview' },
+      { value: '60', label: 'A full hour' },
+      { value: 'async', label: 'Email only, no calls' },
+    ],
+  },
+  {
+    key: 'alumni_preference',
+    kind: 'choice',
+    question: 'Do you want to focus on alumni from your school?',
+    hint: 'Alumni reply far more often than strangers do.',
+    options: [
+      { value: 'no_preference', label: 'No preference' },
+      { value: 'prefer_alumni', label: 'Lean toward alumni' },
+      { value: 'alumni_only', label: 'Alumni only' },
+    ],
+  },
+  {
+    key: 'industries',
+    kind: 'text',
+    optional: true,
+    question: 'Any particular industry or niche?',
+    hint: 'Optional — skip it and we’ll cover the field broadly.',
+    options: [
+      { value: 'Healthcare', label: 'Healthcare' },
+      { value: 'FinTech', label: 'FinTech' },
+      { value: 'Early-stage startups', label: 'Early-stage startups' },
+      { value: 'Consumer tech', label: 'Consumer tech' },
+      { value: 'Media and entertainment', label: 'Media & entertainment' },
+      { value: 'Nonprofit and social impact', label: 'Nonprofit / social impact' },
+      { value: 'Government and policy', label: 'Government & policy' },
+    ],
+    customLabel: 'Or type your own',
+    placeholder: 'e.g. Climate tech, sports analytics',
+  },
+  {
+    key: 'company_size',
+    kind: 'choice',
+    optional: true,
+    question: 'What size company appeals to you?',
+    options: [
+      { value: 'any', label: 'No preference' },
+      { value: 'startup', label: 'Startup', desc: '1–50 people' },
+      { value: 'small', label: 'Small', desc: '50–200 people' },
+      { value: 'mid', label: 'Mid-size', desc: '200–1,000 people' },
+      { value: 'large', label: 'Large', desc: '1,000+ people' },
+      { value: 'bank', label: 'Bulge-bracket or Big 4' },
+    ],
+  },
+  {
+    key: 'geography',
+    kind: 'text',
+    optional: true,
+    question: 'Anywhere in particular?',
+    hint: 'Optional.',
+    options: [
+      { value: 'Anywhere', label: 'Anywhere' },
+      { value: 'Remote OK', label: 'Remote is fine' },
+      { value: 'New York', label: 'New York' },
+      { value: 'Boston', label: 'Boston' },
+      { value: 'Near campus', label: 'Near campus' },
+      { value: 'My home state', label: 'My home state' },
+    ],
+    customLabel: 'Or type your own',
+    placeholder: 'e.g. Chicago, the Bay Area',
+  },
+];
+
+// ── Shared bits for the guided survey ──────────────────────────────────────────
+function ProgressBar({ value }) {
   return (
-    <div className="space-y-5">
-      <div>
-        <p className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: 'var(--brand-navy-700)' }}>Path</p>
-        <p className="text-base font-heading font-bold text-[#050816]">{pathName}</p>
-      </div>
-
-      <div>
-        <label className="block text-xs font-semibold text-[#334155] mb-1">
-          What do you want to learn from these conversations? <span className="text-red-500">*</span>
-        </label>
-        <textarea name="what_to_learn" rows={3} value={survey.what_to_learn} onChange={ch}
-          placeholder="e.g. What does the day-to-day look like at an entry level? How competitive is recruiting?"
-          className={inputCls} />
-      </div>
-
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div>
-          <label className="block text-xs font-semibold text-[#334155] mb-1">Type of conversation</label>
-          <select name="conversation_type" value={survey.conversation_type} onChange={ch} className={selCls}>
-            <option value="informational_interview">Informational interview</option>
-            <option value="networking">General networking</option>
-            <option value="mentor">Mentorship relationship</option>
-            <option value="shadowing">Job shadow</option>
-            <option value="event">Industry event</option>
-          </select>
-        </div>
-        <div>
-          <label className="block text-xs font-semibold text-[#334155] mb-1">Preferred seniority</label>
-          <select name="seniority" value={survey.seniority} onChange={ch} className={selCls}>
-            <option value="any">Any level</option>
-            <option value="entry">Entry level (0–3 yrs)</option>
-            <option value="mid">Mid-level (3–8 yrs)</option>
-            <option value="senior">Senior (8+ yrs)</option>
-            <option value="executive">Executive / Partner</option>
-            <option value="mixed">Mix of levels</option>
-          </select>
-        </div>
-        <div>
-          <label className="block text-xs font-semibold text-[#334155] mb-1">Industry or subsector focus</label>
-          <input name="industries" value={survey.industries} onChange={ch}
-            placeholder="e.g. Healthcare, FinTech, Early-stage startups" className={inputCls} />
-        </div>
-        <div>
-          <label className="block text-xs font-semibold text-[#334155] mb-1">Preferred company size</label>
-          <select name="company_size" value={survey.company_size} onChange={ch} className={selCls}>
-            <option value="any">Any size</option>
-            <option value="startup">Startup (1–50)</option>
-            <option value="small">Small (50–200)</option>
-            <option value="mid">Mid-size (200–1000)</option>
-            <option value="large">Large (1000+)</option>
-            <option value="bank">Bulge-bracket / Big4</option>
-          </select>
-        </div>
-        <div>
-          <label className="block text-xs font-semibold text-[#334155] mb-1">Geography preference</label>
-          <input name="geography" value={survey.geography} onChange={ch}
-            placeholder="e.g. New York, Remote OK, Any" className={inputCls} />
-        </div>
-        <div>
-          <label className="block text-xs font-semibold text-[#334155] mb-1">Alumni preference</label>
-          <select name="alumni_preference" value={survey.alumni_preference} onChange={ch} className={selCls}>
-            <option value="no_preference">No preference</option>
-            <option value="prefer_alumni">Prefer alumni</option>
-            <option value="alumni_only">Alumni only</option>
-          </select>
-        </div>
-        <div>
-          <label className="block text-xs font-semibold text-[#334155] mb-1">Time available per outreach</label>
-          <select name="time_available" value={survey.time_available} onChange={ch} className={selCls}>
-            <option value="15">15-minute call</option>
-            <option value="30">30-minute call</option>
-            <option value="60">1-hour conversation</option>
-            <option value="async">Async / email only</option>
-          </select>
-        </div>
-        <div>
-          <label className="block text-xs font-semibold text-[#334155] mb-1">Networking comfort level</label>
-          <select name="networking_comfort" value={survey.networking_comfort} onChange={ch} className={selCls}>
-            <option value="low">Low — needs a lot of structure</option>
-            <option value="moderate">Moderate — some guidance helpful</option>
-            <option value="high">High — comfortable cold outreach</option>
-          </select>
-        </div>
-        <div>
-          <label className="block text-xs font-semibold text-[#334155] mb-1">Preferred outreach channel</label>
-          <select name="preferred_channel" value={survey.preferred_channel} onChange={ch} className={selCls}>
-            <option value="linkedin">LinkedIn</option>
-            <option value="email">Email</option>
-            <option value="in_person">In-person / events</option>
-            <option value="phone">Phone / text</option>
-            <option value="any">Any / open to all</option>
-          </select>
-        </div>
-        <div>
-          <label className="block text-xs font-semibold text-[#334155] mb-1">Suggestions to generate</label>
-          <select name="suggestion_type" value={survey.suggestion_type} onChange={ch} className={selCls}>
-            <option value="archetypes">Role archetypes only</option>
-            <option value="both">Archetypes + public profile examples</option>
-          </select>
-        </div>
-      </div>
-
-      <div className="flex gap-3 pt-2">
-        <button onClick={onClose}
-          className="flex-1 rounded-[10px] border border-[#E2E8F0] py-3 text-sm font-semibold text-[#334155] hover:bg-[#F8FAFC]">
-          Cancel
-        </button>
-        <button onClick={onNext} disabled={!canNext}
-          className="flex-1 flex items-center justify-center gap-2 rounded-[10px] py-3 text-sm font-semibold text-white disabled:opacity-50"
-          style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}>
-          Generate Plan <ChevronRight size={15} />
-        </button>
-      </div>
+    <div className="h-[3px] w-full overflow-hidden rounded-full" style={{ background: '#EEF2F6' }}>
+      <div
+        className="h-full rounded-full"
+        style={{
+          width: `${Math.round(value * 100)}%`,
+          background: 'linear-gradient(90deg, var(--brand-navy-700), var(--brand-navy-900))',
+          transition: 'width var(--dur-slow) var(--ease-out)',
+        }}
+      />
     </div>
   );
 }
 
+function OptionRow({ option, selected, index, onSelect }) {
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      aria-pressed={selected}
+      className="opt-row group flex w-full items-center gap-3 rounded-2xl border px-4 py-3.5 text-left"
+      style={{
+        animationDelay: `${40 + index * 45}ms`,
+        borderColor: selected ? 'var(--brand-navy-900)' : '#E2E8F0',
+        background: selected ? '#F3F7FC' : '#FFFFFF',
+        boxShadow: selected ? '0 6px 18px rgba(31,58,95,0.12)' : 'none',
+      }}
+    >
+      <span
+        className="opt-dot flex h-5 w-5 shrink-0 items-center justify-center rounded-full border"
+        style={{
+          borderColor: selected ? 'var(--brand-navy-900)' : '#CBD5E1',
+          background: selected ? 'var(--brand-navy-900)' : 'transparent',
+        }}
+      >
+        {selected && <Check size={12} strokeWidth={3} className="anim-scale-in text-white" />}
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{option.label}</span>
+        {option.desc && <span className="mt-0.5 block text-xs" style={{ color: 'var(--text-secondary)' }}>{option.desc}</span>}
+      </span>
+      <span className="opt-key hidden shrink-0 rounded-md border px-1.5 py-0.5 text-[10px] font-semibold sm:block"
+        style={{ borderColor: '#E2E8F0', color: '#64748B' }}>
+        {index + 1}
+      </span>
+    </button>
+  );
+}
+
+function OptionChip({ option, selected, index, onSelect }) {
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      aria-pressed={selected}
+      className="opt-chip rounded-full border px-3.5 py-2 text-left text-[13px] font-medium"
+      style={{
+        animationDelay: `${40 + index * 40}ms`,
+        borderColor: selected ? 'var(--brand-navy-900)' : '#E2E8F0',
+        background: selected ? 'var(--brand-navy-900)' : '#FFFFFF',
+        color: selected ? '#FFFFFF' : 'var(--text-primary)',
+        boxShadow: selected ? '0 6px 16px rgba(31,58,95,0.18)' : 'none',
+      }}
+    >
+      {/* the check slot is always present so selecting a chip never reflows the row */}
+      <span className="flex items-center gap-1.5">
+        <Check size={12} strokeWidth={3} style={{ opacity: selected ? 1 : 0, transition: 'opacity var(--dur-fast) var(--ease-out)' }} />
+        {option.label}
+      </span>
+    </button>
+  );
+}
+
+// ── The guided survey ──────────────────────────────────────────────────────────
+function SurveyStep({ pathName, survey, setSurvey, index, setIndex, onGenerate, onClose, error }) {
+  const [dir, setDir] = useState('fwd');           // index: 0..STEPS.length (last = review)
+  const advanceRef = useRef(null);
+  const rootRef = useRef(null);
+  const reviewing = index === STEPS.length;
+  const step = STEPS[index];
+
+  useEffect(() => () => clearTimeout(advanceRef.current), []);
+
+  // A new question should always start at the top, even on a short screen.
+  useEffect(() => {
+    rootRef.current?.closest('[data-modal-scroll]')?.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [index]);
+
+  const go = useCallback((next, direction) => {
+    clearTimeout(advanceRef.current);
+    setDir(direction);
+    setIndex(next);
+  }, [setIndex]);
+
+  const next = useCallback(() => go(Math.min(index + 1, STEPS.length), 'fwd'), [go, index]);
+  const back = useCallback(() => go(Math.max(index - 1, 0), 'back'), [go, index]);
+
+  const set = (key, value) => setSurvey(s => ({ ...s, [key]: value }));
+
+  const toggleTag = (value) => setSurvey(s => {
+    const tags = s.what_to_learn_tags || [];
+    return { ...s, what_to_learn_tags: tags.includes(value) ? tags.filter(t => t !== value) : [...tags, value] };
+  });
+
+  // Tapping a suggestion on a free-text question toggles it in the comma list,
+  // so it behaves like a preset without locking out typing.
+  const toggleTextSuggestion = (key, value) => setSurvey(s => {
+    const parts = (s[key] || '').split(',').map(p => p.trim()).filter(Boolean);
+    const has = parts.some(p => p.toLowerCase() === value.toLowerCase());
+    const nextParts = has ? parts.filter(p => p.toLowerCase() !== value.toLowerCase()) : [...parts, value];
+    return { ...s, [key]: nextParts.join(', ') };
+  });
+
+  const textHasSuggestion = (key, value) =>
+    (survey[key] || '').split(',').map(p => p.trim().toLowerCase()).includes(value.toLowerCase());
+
+  const chooseOne = (key, value) => {
+    set(key, value);
+    clearTimeout(advanceRef.current);
+    advanceRef.current = setTimeout(() => { setDir('fwd'); setIndex(i => Math.min(i + 1, STEPS.length)); }, 230);
+  };
+
+  const answered = !reviewing && step.kind === 'multi'
+    ? composeWhatToLearn(survey).length > 0
+    : true;
+
+  // Keyboard: number keys pick an option, Enter continues, Esc closes.
+  useEffect(() => {
+    const onKey = (e) => {
+      const typing = ['INPUT', 'TEXTAREA'].includes(e.target?.tagName);
+      if (e.key === 'Escape') { onClose(); return; }
+      if (e.key === 'Enter' && !e.shiftKey) {
+        if (typing && e.target.tagName === 'TEXTAREA') return;
+        if (reviewing) return;
+        if (answered) { e.preventDefault(); next(); }
+        return;
+      }
+      if (typing || reviewing || !step) return;
+      const n = Number(e.key);
+      if (!Number.isInteger(n) || n < 1 || n > (step.options?.length || 0)) return;
+      const option = step.options[n - 1];
+      if (step.kind === 'choice') chooseOne(step.key, option.value);
+      else if (step.kind === 'multi') toggleTag(option.value);
+      else toggleTextSuggestion(step.key, option.value);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  });
+
+  const stepStyles = (
+    <style>{`
+      @keyframes stepInFwd  { from { opacity: 0; transform: translateX(26px); } to { opacity: 1; transform: none; } }
+      @keyframes stepInBack { from { opacity: 0; transform: translateX(-26px); } to { opacity: 1; transform: none; } }
+      @keyframes optIn      { from { opacity: 0; transform: translateY(8px); }  to { opacity: 1; transform: none; } }
+      .step-pane-fwd  { animation: stepInFwd  var(--dur-base) var(--ease-out) both; }
+      .step-pane-back { animation: stepInBack var(--dur-base) var(--ease-out) both; }
+      .opt-row, .opt-chip {
+        animation: optIn var(--dur-base) var(--ease-out) both;
+        transition: border-color var(--dur-fast) var(--ease-out),
+                    background   var(--dur-fast) var(--ease-out),
+                    box-shadow   var(--dur-base) var(--ease-out),
+                    transform    var(--dur-base) var(--ease-spring);
+      }
+      .opt-row:hover  { transform: translateX(3px); border-color: var(--brand-navy-700) !important; }
+      .opt-chip:hover { transform: translateY(-2px); border-color: var(--brand-navy-700) !important; }
+      .opt-row:active, .opt-chip:active { transform: scale(0.985); transition-duration: 80ms; }
+      .opt-row:hover .opt-key { color: var(--brand-navy-700); border-color: var(--brand-navy-700); }
+      .opt-dot { transition: background var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out); }
+    `}</style>
+  );
+
+  const header = (
+    <div className="mb-6">
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <span className="truncate rounded-full px-2.5 py-1 text-[11px] font-bold"
+          style={{ background: '#EEF2F6', color: 'var(--brand-navy-900)' }}>
+          {pathName}
+        </span>
+        <div className="flex items-center gap-3">
+          <span className="whitespace-nowrap text-[11px] font-semibold" style={{ color: 'var(--text-secondary)' }}>
+            {reviewing ? 'Review' : `${index + 1} of ${STEPS.length}`}
+          </span>
+          <button onClick={onClose} aria-label="Close" className="rounded-lg p-0.5" style={{ color: '#64748B' }}>
+            <X size={18} />
+          </button>
+        </div>
+      </div>
+      <ProgressBar value={(index + 1) / (STEPS.length + 1)} />
+    </div>
+  );
+
+  if (reviewing) {
+    return (
+      <div ref={rootRef}>
+        {stepStyles}
+        {header}
+        <div key="review" className="step-pane-fwd">
+          <h2 className="font-heading text-[26px] font-bold leading-tight" style={{ color: '#050816' }}>
+            That’s everything.
+          </h2>
+          <p className="mt-1.5 text-sm" style={{ color: 'var(--text-secondary)' }}>
+            Tap any answer to change it.
+          </p>
+
+          <div className="mt-5 space-y-1.5">
+            {STEPS.map((s, i) => {
+              const value = s.kind === 'multi'
+                ? composeWhatToLearn(survey)
+                : s.kind === 'text'
+                  ? (survey[s.key] || '').trim()
+                  : s.options.find(o => o.value === survey[s.key])?.label;
+              return (
+                <button key={s.key} type="button" onClick={() => go(i, 'back')}
+                  className="opt-row flex w-full items-start gap-3 rounded-xl border px-3.5 py-2.5 text-left"
+                  style={{ animationDelay: `${i * 30}ms`, borderColor: '#E2E8F0', background: '#FFFFFF' }}>
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-[11px] font-semibold uppercase tracking-wide" style={{ color: 'var(--text-secondary)' }}>
+                      {s.question}
+                    </span>
+                    <span className="mt-0.5 block text-sm font-semibold" style={{ color: value ? 'var(--text-primary)' : 'var(--text-secondary)' }}>
+                      {value || 'No preference'}
+                    </span>
+                  </span>
+                  <Pencil size={13} className="mt-1 shrink-0" style={{ color: '#CBD5E1' }} />
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="mt-5 rounded-2xl border p-4" style={{ borderColor: '#E2E8F0', background: '#FAFBFC' }}>
+            <p className="text-xs font-semibold" style={{ color: 'var(--text-primary)' }}>Also suggest real people to contact?</p>
+            <p className="mt-0.5 text-xs" style={{ color: 'var(--text-secondary)' }}>
+              Public figures in this field. You’ll still need to verify each one.
+            </p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {[
+                { value: 'archetypes', label: 'Just role types' },
+                { value: 'both', label: 'Role types + real people' },
+              ].map((o, i) => (
+                <OptionChip key={o.value} option={o} index={i}
+                  selected={survey.suggestion_type === o.value}
+                  onSelect={() => set('suggestion_type', o.value)} />
+              ))}
+            </div>
+          </div>
+
+          {error && (
+            <div className="mt-4 flex items-center gap-2 rounded-xl bg-red-50 p-3 text-sm text-red-700" role="alert">
+              <AlertTriangle size={14} />{error}
+            </div>
+          )}
+
+          <div className={footerCls}>
+            <div className="flex items-center gap-3">
+              <button onClick={back}
+                className="flex items-center gap-1 rounded-[10px] border px-4 py-3 text-sm font-semibold"
+                style={{ borderColor: '#E2E8F0', color: 'var(--text-primary)' }}>
+                <ChevronLeft size={15} /> Back
+              </button>
+              <button onClick={onGenerate}
+                className="flex flex-1 items-center justify-center gap-2 rounded-[10px] py-3 text-sm font-semibold text-white"
+                style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}>
+                <Sparkles size={15} /> Build my outreach plan
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div ref={rootRef}>
+      {stepStyles}
+      {header}
+
+      <div key={index} className={dir === 'fwd' ? 'step-pane-fwd' : 'step-pane-back'}>
+        <h2 className="font-heading text-[26px] font-bold leading-tight" style={{ color: '#050816' }}>
+          {step.question}
+        </h2>
+        {step.hint && (
+          <p className="mt-1.5 text-sm" style={{ color: 'var(--text-secondary)' }}>{step.hint}</p>
+        )}
+
+        <div className="mt-5 min-h-[248px]">
+          {step.kind === 'choice' && (
+            <div className="space-y-2">
+              {step.options.map((o, i) => (
+                <OptionRow key={o.value} option={o} index={i}
+                  selected={survey[step.key] === o.value}
+                  onSelect={() => chooseOne(step.key, o.value)} />
+              ))}
+            </div>
+          )}
+
+          {step.kind === 'multi' && (
+            <>
+              <div className="flex flex-wrap gap-2">
+                {step.options.map((o, i) => (
+                  <OptionChip key={o.value} option={o} index={i}
+                    selected={(survey.what_to_learn_tags || []).includes(o.value)}
+                    onSelect={() => toggleTag(o.value)} />
+                ))}
+              </div>
+              <label className="mt-4 block">
+                <span className="mb-1.5 block text-xs font-semibold" style={{ color: 'var(--text-secondary)' }}>
+                  {step.customLabel}
+                </span>
+                <textarea rows={2} value={survey[step.key]} placeholder={step.placeholder}
+                  onChange={(e) => set(step.key, e.target.value)} className={inputCls} />
+              </label>
+            </>
+          )}
+
+          {step.kind === 'text' && (
+            <>
+              <div className="flex flex-wrap gap-2">
+                {step.options.map((o, i) => (
+                  <OptionChip key={o.value} option={o} index={i}
+                    selected={textHasSuggestion(step.key, o.value)}
+                    onSelect={() => toggleTextSuggestion(step.key, o.value)} />
+                ))}
+              </div>
+              <label className="mt-4 block">
+                <span className="mb-1.5 block text-xs font-semibold" style={{ color: 'var(--text-secondary)' }}>
+                  {step.customLabel}
+                </span>
+                <input value={survey[step.key]} placeholder={step.placeholder}
+                  onChange={(e) => set(step.key, e.target.value)} className={inputCls} />
+              </label>
+            </>
+          )}
+        </div>
+      </div>
+
+      <div className={footerCls}>
+        <div className="flex items-center gap-3">
+          {index > 0 ? (
+            <button onClick={back}
+              className="flex items-center gap-1 rounded-[10px] border px-4 py-3 text-sm font-semibold"
+              style={{ borderColor: '#E2E8F0', color: 'var(--text-primary)' }}>
+              <ChevronLeft size={15} /> Back
+            </button>
+          ) : (
+            <button onClick={onClose}
+              className="rounded-[10px] border px-4 py-3 text-sm font-semibold"
+              style={{ borderColor: '#E2E8F0', color: 'var(--text-primary)' }}>
+              Cancel
+            </button>
+          )}
+
+          <button onClick={next} disabled={!answered}
+            className="flex flex-1 items-center justify-center gap-2 rounded-[10px] py-3 text-sm font-semibold text-white disabled:opacity-40"
+            style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}>
+            {step.optional && !((survey[step.key] || '').toString().trim()) ? 'Skip' : 'Continue'}
+            <ChevronRight size={15} />
+          </button>
+        </div>
+
+        {index > 0 && (
+          <button onClick={() => go(STEPS.length, 'fwd')}
+            className="mt-2.5 block w-full text-center text-xs font-semibold"
+            style={{ color: 'var(--text-secondary)' }}>
+            Skip the rest and build my plan
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
 // ── Contact archetype card ─────────────────────────────────────────────────────
 function ArchetypeCard({ archetype }) {
   return (
@@ -540,6 +944,7 @@ function ResultsStep({ plan, pathName, experimentId, experiments, onContactSaved
 export default function OutreachPlanModal({ path, experiment, onClose, onContactSaved }) {
   const [step, setStep] = useState('survey'); // survey | generating | results
   const [survey, setSurvey] = useState(DEFAULT_SURVEY);
+  const [surveyIndex, setSurveyIndex] = useState(0);
   const [plan, setPlan] = useState(null);
   const [error, setError] = useState('');
   const [experiments, setExperiments] = useState([]);
@@ -565,7 +970,7 @@ export default function OutreachPlanModal({ path, experiment, onClose, onContact
         prompt: `You are an expert career coach helping a college student build a targeted outreach plan for the career path: "${path.path_name}".
 
 Student's context:
-- What they want to learn: ${survey.what_to_learn}
+- What they want to learn: ${composeWhatToLearn(survey)}
 - Conversation type: ${survey.conversation_type}
 - Industry/subsector focus: ${survey.industries || 'any'}
 - Company size preference: ${survey.company_size}
@@ -654,50 +1059,50 @@ Return only valid JSON. Do not add commentary outside the JSON.`,
       setPlan(result);
       setStep('results');
     } catch (e) {
-      setError('Failed to generate plan. Please try again.');
+      setError('That didn’t go through. Try building the plan again.');
       setStep('survey');
     } finally {
       generatingRef.current = false;
     }
   };
 
-  const title = {
-    survey: 'Build Outreach Plan',
-    generating: 'Building Your Outreach Plan…',
-    results: 'Your Outreach Plan',
-  }[step];
+  const isSurvey = step === 'survey';
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(5,8,22,0.55)' }}>
-      <div className="w-full max-w-2xl max-h-[94vh] overflow-y-auto rounded-[24px] bg-white p-6 sm:p-8">
-        <div className="flex items-center justify-between mb-1">
-          <h2 className="font-heading text-xl font-bold text-[#050816]">{title}</h2>
-          {step !== 'generating' && (
-            <button onClick={onClose} aria-label="Close"><X size={20} className="text-[#64748B]" /></button>
-          )}
-        </div>
-
-        {step !== 'generating' && (
-          <p className="text-sm text-[#64748B] mb-5">
-            {step === 'survey'
-              ? `Personalize your outreach plan for ${path.path_name}.`
-              : `Tailored outreach strategy for ${path.path_name}.`}
-          </p>
+    <div className="anim-overlay fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(5,8,22,0.55)' }}>
+      <div
+        data-modal-scroll
+        className={`anim-modal w-full max-h-[94vh] overflow-y-auto rounded-[24px] bg-white ${
+          isSurvey ? 'max-w-xl px-6 pb-0 pt-6 sm:px-8 sm:pt-8' : 'max-w-2xl p-6 sm:p-8'
+        }`}
+        style={{ boxShadow: '0 30px 80px rgba(5,8,22,0.28)' }}
+      >
+        {!isSurvey && (
+          <>
+            <div className="mb-1 flex items-center justify-between">
+              <h2 className="font-heading text-xl font-bold text-[#050816]">
+                {step === 'generating' ? 'Building your outreach plan…' : 'Your Outreach Plan'}
+              </h2>
+              {step !== 'generating' && (
+                <button onClick={onClose} aria-label="Close"><X size={20} className="text-[#64748B]" /></button>
+              )}
+            </div>
+            {step !== 'generating' && (
+              <p className="mb-5 text-sm text-[#526274]">Tailored outreach strategy for {path.path_name}.</p>
+            )}
+          </>
         )}
 
-        {error && (
-          <div className="mb-4 rounded-xl p-3 bg-red-50 text-red-700 text-sm flex items-center gap-2" role="alert">
-            <AlertTriangle size={14} />{error}
-          </div>
-        )}
-
-        {step === 'survey' && (
+        {isSurvey && (
           <SurveyStep
             pathName={path.path_name}
             survey={survey}
             setSurvey={setSurvey}
-            onNext={generate}
+            index={surveyIndex}
+            setIndex={setSurveyIndex}
+            onGenerate={generate}
             onClose={onClose}
+            error={error}
           />
         )}
 
