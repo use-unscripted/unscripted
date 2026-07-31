@@ -105,12 +105,12 @@ Deno.serve(async (req) => {
       let item = null;
       let type = null;
       try {
-        const tasks = await base44.entities.CalendarTasks.filter({ id: eventId });
+        const tasks = await base44.entities.CalendarTasks.filter({ id: eventId, user_id: user.id });
         if (tasks.length > 0) { item = tasks[0]; type = 'task'; }
       } catch(_) {}
       if (!item) {
         try {
-          const missions = await base44.entities.Missions.filter({ id: eventId });
+          const missions = await base44.entities.Missions.filter({ id: eventId, user_id: user.id });
           if (missions.length > 0) { item = missions[0]; type = 'mission'; }
         } catch(_) {}
       }
