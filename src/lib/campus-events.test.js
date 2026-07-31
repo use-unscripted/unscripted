@@ -1,0 +1,369 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+vi.mock('@/api/base44Client', () => ({
+  base44: {
+    functions: { invoke: vi.fn() },
+    integrations: { Core: { InvokeLLM: vi.fn() } },
+  },
+}));
+
+import { base44 } from '@/api/base44Client';
+import {
+  daysUntil,
+  fetchCampusEvents,
+  formatEventPlace,
+  formatEventWhen,
+  recommendCampusEvents,
+} from './campus-events';
+
+/** Shaped like normalizeEvent() in the campusEvents backend function. */
+function calendarEvent(overrides = {}) {
+  return {
+    id: '1',
+    title: 'Finance Career Panel',
+    description: 'Alumni analysts on the first two years at a desk.',
+    url: 'https://events.fairfield.edu/event/finance-panel',
+    ics_url: 'https://events.fairfield.edu/event/finance-panel.ics',
+    start: '2026-10-14T17:00:00-04:00',
+    end: '2026-10-14T18:30:00-04:00',
+    all_day: false,
+    location: 'Dolan School of Business',
+    room: '220',
+    address: '1073 North Benson Road',
+    is_free: true,
+    ticket_url: '',
+    has_register: true,
+    departments: ['Dolan School of Business'],
+    topics: ['Finance'],
+    types: ['Panel'],
+    audience: ['Students'],
+    keywords: ['finance'],
+    ...overrides,
+  };
+}
+
+const PROFILE = { college: 'Fairfield University', major: 'Finance', school_year: 'Junior' };
+
+afterEach(() => {
+  vi.resetAllMocks();
+});
+
+describe('recommendCampusEvents', () => {
+  it('returns the full calendar record with guidance attached', async () => {
+    const event = calendarEvent();
+    base44.integrations.Core.InvokeLLM.mockResolvedValue({
+      recommendations: [
+        {
+          event_id: '1',
+          fit_reason: 'Three of the panelists do the job you are testing.',
+          what_to_do: ['Arrive early', 'Ask the organiser who to meet'],
+          questions_to_ask: ['What does your week actually look like?'],
+          proof_to_capture: 'a photo of the panel',
+        },
+      ],
+    });
+
+    const picks = await recommendCampusEvents([event], PROFILE);
+
+    expect(picks).toEqual([
+      {
+        ...event,
+        guidance: {
+          fit_reason: 'Three of the panelists do the job you are testing.',
+          what_to_do: ['Arrive early', 'Ask the organiser who to meet'],
+          questions_to_ask: ['What does your week actually look like?'],
+          proof_to_capture: 'a photo of the panel',
+        },
+      },
+    ]);
+  });
+
+  // The whole safety model: the feed decides what exists and when. A model that
+  // restates the time wrongly must not be able to overwrite the calendar record.
+  it('ignores calendar fields the model tries to restate', async () => {
+    const event = calendarEvent();
+    base44.integrations.Core.InvokeLLM.mockResolvedValue({
+      recommendations: [
+        {
+          event_id: '1',
+          title: 'Finance Mixer',
+          start: '2026-10-13T19:00:00-04:00',
+          location: 'The Levee',
+          room: '101',
+          url: 'https://example.com/not-real',
+          has_register: false,
+          fit_reason: 'Good fit.',
+        },
+      ],
+    });
+
+    const [pick] = await recommendCampusEvents([event], PROFILE);
+
+    expect(pick.title).toBe('Finance Career Panel');
+    expect(pick.start).toBe('2026-10-14T17:00:00-04:00');
+    expect(pick.location).toBe('Dolan School of Business');
+    expect(pick.room).toBe('220');
+    expect(pick.url).toBe('https://events.fairfield.edu/event/finance-panel');
+    expect(pick.has_register).toBe(true);
+  });
+
+  it('drops an event_id that was never sent to the model', async () => {
+    base44.integrations.Core.InvokeLLM.mockResolvedValue({
+      recommendations: [
+        { event_id: '1', fit_reason: 'Real.' },
+        { event_id: '999', fit_reason: 'Invented out of thin air.' },
+        { event_id: '', fit_reason: 'No id at all.' },
+        { fit_reason: 'No id key at all.' },
+        null,
+      ],
+    });
+
+    const picks = await recommendCampusEvents([calendarEvent()], PROFILE);
+
+    expect(picks.map(p => p.id)).toEqual(['1']);
+  });
+
+  it('collapses a duplicated event_id to one pick', async () => {
+    base44.integrations.Core.InvokeLLM.mockResolvedValue({
+      recommendations: [
+        { event_id: '1', fit_reason: 'First.' },
+        { event_id: '1', fit_reason: 'Same event again.' },
+      ],
+    });
+
+    const picks = await recommendCampusEvents([calendarEvent()], PROFILE);
+
+    expect(picks).toHaveLength(1);
+    expect(picks[0].guidance.fit_reason).toBe('First.');
+  });
+
+  it('matches ids across types, so a numeric id still joins', async () => {
+    base44.integrations.Core.InvokeLLM.mockResolvedValue({
+      recommendations: [{ event_id: 7, fit_reason: 'Real.' }],
+    });
+
+    const picks = await recommendCampusEvents([calendarEvent({ id: 7 })], PROFILE);
+
+    expect(picks).toHaveLength(1);
+  });
+
+  it('returns at most three', async () => {
+    const events = ['1', '2', '3', '4', '5'].map(id => calendarEvent({ id }));
+    base44.integrations.Core.InvokeLLM.mockResolvedValue({
+      recommendations: events.map(e => ({ event_id: e.id, fit_reason: 'Fits.' })),
+    });
+
+    const picks = await recommendCampusEvents(events, PROFILE);
+
+    expect(picks.map(p => p.id)).toEqual(['1', '2', '3']);
+  });
+
+  it('defaults missing guidance sub-fields instead of leaving them undefined', async () => {
+    base44.integrations.Core.InvokeLLM.mockResolvedValue({
+      recommendations: [{ event_id: '1' }],
+    });
+
+    const [pick] = await recommendCampusEvents([calendarEvent()], PROFILE);
+
+    expect(pick.guidance).toEqual({
+      fit_reason: '',
+      what_to_do: [],
+      questions_to_ask: [],
+      proof_to_capture: '',
+    });
+  });
+
+  it('drops empty strings out of the guidance lists', async () => {
+    base44.integrations.Core.InvokeLLM.mockResolvedValue({
+      recommendations: [{ event_id: '1', what_to_do: ['Arrive early', '', null], questions_to_ask: [''] }],
+    });
+
+    const [pick] = await recommendCampusEvents([calendarEvent()], PROFILE);
+
+    expect(pick.guidance.what_to_do).toEqual(['Arrive early']);
+    expect(pick.guidance.questions_to_ask).toEqual([]);
+  });
+
+  // The picker awaits this inside an effect with no catch: anything thrown here
+  // leaves the student staring at a spinner that never resolves.
+  it('recommends nothing when the model call fails', async () => {
+    base44.integrations.Core.InvokeLLM.mockRejectedValue(new Error('rate limited'));
+
+    await expect(recommendCampusEvents([calendarEvent()], PROFILE)).resolves.toEqual([]);
+  });
+
+  it('recommends nothing rather than throwing on a malformed response', async () => {
+    const malformed = [
+      null,
+      undefined,
+      {},
+      { recommendations: null },
+      { recommendations: 'the finance panel' },
+      { recommendations: { event_id: '1' } },
+    ];
+
+    for (const response of malformed) {
+      base44.integrations.Core.InvokeLLM.mockResolvedValue(response);
+      await expect(recommendCampusEvents([calendarEvent()], PROFILE)).resolves.toEqual([]);
+    }
+  });
+
+  it('does not call the model when there is nothing to rank', async () => {
+    for (const input of [[], null, undefined, 'not a list', {}]) {
+      await expect(recommendCampusEvents(input, PROFILE)).resolves.toEqual([]);
+    }
+    expect(base44.integrations.Core.InvokeLLM).not.toHaveBeenCalled();
+  });
+
+  it('survives a profile that onboarding never filled in', async () => {
+    base44.integrations.Core.InvokeLLM.mockResolvedValue({ recommendations: [] });
+
+    await expect(recommendCampusEvents([calendarEvent()], null)).resolves.toEqual([]);
+    expect(base44.integrations.Core.InvokeLLM).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('fetchCampusEvents', () => {
+  it('asks the backend for the window it was given', async () => {
+    base44.functions.invoke.mockResolvedValue({ events: [], college: 'Fairfield University' });
+
+    await fetchCampusEvents({ days: 30, limit: 5 });
+
+    expect(base44.functions.invoke).toHaveBeenCalledWith('campusEvents', { days: 30, limit: 5 });
+  });
+
+  it('defaults the window when called with nothing', async () => {
+    base44.functions.invoke.mockResolvedValue({ events: [] });
+
+    await fetchCampusEvents();
+
+    expect(base44.functions.invoke).toHaveBeenCalledWith('campusEvents', { days: 45, limit: 20 });
+  });
+
+  it('returns a raw response as-is', async () => {
+    const feed = { status: 'ok', events: [calendarEvent()], college: 'Fairfield University' };
+    base44.functions.invoke.mockResolvedValue(feed);
+
+    await expect(fetchCampusEvents()).resolves.toEqual(feed);
+  });
+
+  it('unwraps a response nested under .data', async () => {
+    const feed = { status: 'ok', events: [calendarEvent()], college: 'Fairfield University' };
+    base44.functions.invoke.mockResolvedValue({ data: feed });
+
+    await expect(fetchCampusEvents()).resolves.toEqual(feed);
+  });
+
+  // Every caller reads feed.events.length without checking, so the empty array
+  // has to be there on every path out of this function.
+  it('returns an empty feed when the response has no events array', async () => {
+    for (const response of [null, undefined, {}, { events: null }, { events: 'none' }, 'nope']) {
+      base44.functions.invoke.mockResolvedValue(response);
+      await expect(fetchCampusEvents()).resolves.toEqual({ status: 'feed_error', events: [], college: '' });
+    }
+  });
+
+  it('returns an empty feed when the backend call throws', async () => {
+    base44.functions.invoke.mockRejectedValue(new Error('function timed out'));
+
+    await expect(fetchCampusEvents()).resolves.toEqual({
+      status: 'feed_error',
+      events: [],
+      college: '',
+      error: 'function timed out',
+    });
+  });
+});
+
+describe('formatEventWhen', () => {
+  // Built from the same Intl calls the app uses, so the assertions say which
+  // calendar day and clock time got rendered without pinning a locale.
+  const dayLabel = (y, m, d) =>
+    new Date(y, m, d).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+  const timeLabel = (y, m, d, h, min) =>
+    new Date(y, m, d, h, min).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+
+  it('shows the day and the start time for a timed event', () => {
+    expect(formatEventWhen(calendarEvent())).toBe(
+      `${dayLabel(2026, 9, 14)} · ${timeLabel(2026, 9, 14, 17, 0)}`
+    );
+  });
+
+  it('shows only the day for an all-day event', () => {
+    const when = formatEventWhen(calendarEvent({ all_day: true, start: '2026-10-14T00:00:00-04:00' }));
+    expect(when).toBe(dayLabel(2026, 9, 14));
+  });
+
+  // Localist only returns a timestamp when the event has an instance; without
+  // one the backend falls back to `first_date`, which is date-only.
+  it('reads a date-only value as that calendar day, not as UTC midnight', () => {
+    expect(formatEventWhen(calendarEvent({ all_day: true, start: '2026-10-14' }))).toBe(dayLabel(2026, 9, 14));
+  });
+
+  it('returns nothing for a missing or unparseable date', () => {
+    expect(formatEventWhen(calendarEvent({ start: '' }))).toBe('');
+    expect(formatEventWhen(calendarEvent({ start: undefined }))).toBe('');
+    expect(formatEventWhen(calendarEvent({ start: 'sometime next week' }))).toBe('');
+    expect(formatEventWhen(null)).toBe('');
+    expect(formatEventWhen(undefined)).toBe('');
+  });
+});
+
+describe('daysUntil', () => {
+  // A real clock would make these tests start failing on their own.
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2026, 9, 14, 9, 0, 0));
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  /** An ISO instant N days from the pinned "now", at 5pm local. */
+  const startInDays = n => ({ start: new Date(2026, 9, 14 + n, 17, 0, 0).toISOString() });
+
+  it('counts from calendar day to calendar day, not from the hour', () => {
+    expect(daysUntil(startInDays(0))).toBe('Today');
+    expect(daysUntil(startInDays(1))).toBe('Tomorrow');
+    expect(daysUntil(startInDays(6))).toBe('In 6 days');
+    expect(daysUntil(startInDays(7))).toBe('Next week');
+    expect(daysUntil(startInDays(13))).toBe('Next week');
+    expect(daysUntil(startInDays(14))).toBe('In 2 weeks');
+    expect(daysUntil(startInDays(21))).toBe('In 3 weeks');
+  });
+
+  it('still says Today for an event that started earlier today', () => {
+    expect(daysUntil({ start: new Date(2026, 9, 14, 8, 0, 0).toISOString() })).toBe('Today');
+  });
+
+  it('returns null once the event is in the past', () => {
+    expect(daysUntil(startInDays(-1))).toBeNull();
+    expect(daysUntil(startInDays(-30))).toBeNull();
+  });
+
+  it('reads a date-only value as that calendar day', () => {
+    expect(daysUntil({ start: '2026-10-14' })).toBe('Today');
+    expect(daysUntil({ start: '2026-10-15' })).toBe('Tomorrow');
+  });
+
+  it('returns null for a missing or unparseable date', () => {
+    expect(daysUntil({ start: '' })).toBeNull();
+    expect(daysUntil({ start: 'next Thursday' })).toBeNull();
+    expect(daysUntil({})).toBeNull();
+    expect(daysUntil(null)).toBeNull();
+  });
+});
+
+describe('formatEventPlace', () => {
+  it('joins the venue and the room', () => {
+    expect(formatEventPlace(calendarEvent())).toBe('Dolan School of Business, 220');
+  });
+
+  it('leaves out whichever part the calendar did not give', () => {
+    expect(formatEventPlace(calendarEvent({ room: '' }))).toBe('Dolan School of Business');
+    expect(formatEventPlace(calendarEvent({ location: '' }))).toBe('220');
+    expect(formatEventPlace(calendarEvent({ location: '', room: '' }))).toBe('');
+    expect(formatEventPlace(null)).toBe('');
+  });
+});

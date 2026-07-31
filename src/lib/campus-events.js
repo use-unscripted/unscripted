@@ -140,7 +140,12 @@ export async function recommendCampusEvents(events, profile, { pathName = '' } =
   const seen = new Set();
   const picks = [];
 
-  for (const rec of result?.recommendations || []) {
+  // Anything other than a list is as much a bad response as a hallucinated id.
+  // The picker awaits this inside an effect with no catch, so throwing here
+  // leaves the student on a spinner that never resolves.
+  const recommendations = Array.isArray(result?.recommendations) ? result.recommendations : [];
+
+  for (const rec of recommendations) {
     const id = String(rec?.event_id || '');
     const event = byId.get(id);
     // An id we did not send is a hallucinated event. Drop it silently.
@@ -165,11 +170,30 @@ export async function recommendCampusEvents(events, profile, { pathName = '' } =
 
 // ── Display helpers ─────────────────────────────────────────────────────────
 
+/**
+ * The calendar's start value as a local Date, or null if there isn't one.
+ *
+ * Localist only carries a timestamp when an event has an instance; without one
+ * the feed falls back to a date-only `first_date`. `new Date('2026-10-14')` is
+ * parsed as UTC midnight, which is the evening BEFORE anywhere west of
+ * Greenwich — so the student is shown the wrong day for the one date they did
+ * not choose themselves.
+ */
+function parseEventStart(value) {
+  if (typeof value !== 'string' || !value.trim()) return null;
+
+  const dateOnly = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  const date = dateOnly
+    ? new Date(Number(dateOnly[1]), Number(dateOnly[2]) - 1, Number(dateOnly[3]))
+    : new Date(value);
+
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
 /** "Thu, Oct 14 · 5:00 PM" — or just the date for an all-day event. */
 export function formatEventWhen(event) {
-  if (!event?.start) return '';
-  const date = new Date(event.start);
-  if (Number.isNaN(date.getTime())) return '';
+  const date = parseEventStart(event?.start);
+  if (!date) return '';
 
   const day = date.toLocaleDateString(undefined, {
     weekday: 'short',
@@ -184,9 +208,8 @@ export function formatEventWhen(event) {
 
 /** "in 3 days" — the thing a self-set deadline can never give a student. */
 export function daysUntil(event) {
-  if (!event?.start) return null;
-  const start = new Date(event.start);
-  if (Number.isNaN(start.getTime())) return null;
+  const start = parseEventStart(event?.start);
+  if (!start) return null;
 
   const startOfDay = d => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
   const diff = Math.round((startOfDay(start) - startOfDay(new Date())) / 86400000);

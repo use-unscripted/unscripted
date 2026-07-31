@@ -372,7 +372,14 @@ function collectTokens(artifact) {
  * and "Monday morning energy" are legitimate and must not trip this.
  */
 const CLOCK_RE = /\b\d{1,2}(:\d{2})?\s*(a\.?m\.?|p\.?m\.?)\b/i;
-const MONTH_DAY_RE = /\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?\s+\d{1,2}\b/i;
+
+/**
+ * Month names are spelled out rather than matched as a prefix plus any letters.
+ * "Dec" followed by more letters is usually not a month: "Decide 3 people to
+ * talk to" and "Separate 2 lists" are ordinary step prose, and flagging them
+ * spends the one retry and hands the student no guide at all.
+ */
+const MONTH_DAY_RE = /\b(jan(uary)?|feb(ruary)?|mar(ch)?|apr(il)?|may|jun(e)?|jul(y)?|aug(ust)?|sept?(ember)?|oct(ober)?|nov(ember)?|dec(ember)?)\.?\s+\d{1,2}\b/i;
 
 function findHardcodedTiming(guide) {
   const offenders = [];
