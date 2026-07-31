@@ -320,11 +320,28 @@ export function validateGuide(raw) {
     return { ok: false, guide: null, errors: [...errors, 'Guide has no steps.'], warnings };
   }
 
+  // The model's known drift is returning steps as bare prose instead of objects.
+  // Spreading a string produces a character map that satisfies every check below
+  // and ships a guide of empty steps, so reject it before the repair pass.
+  const unstructured = guide.steps.filter(s => !s || typeof s !== 'object' || Array.isArray(s)).length;
+  if (unstructured) {
+    return {
+      ok: false,
+      guide: null,
+      errors: [...errors, `${unstructured} of ${guide.steps.length} steps came back as plain text instead of structured steps.`],
+      warnings,
+    };
+  }
+
   guide.steps = guide.steps.map((rawStep, index) => {
     const step = { ...rawStep };
     const label = `Step ${index + 1}`;
 
     step.step_number = index + 1;
+
+    if (typeof step.title !== 'string' || !step.title.trim()) {
+      errors.push(`${label}: has no title — it renders as an empty row the student cannot act on.`);
+    }
 
     const minutes = coerceMinutes(step.estimated_minutes ?? step.estimated_time);
     if (minutes === null) {
@@ -351,7 +368,12 @@ export function validateGuide(raw) {
       artifact.kind = 'none';
     }
     artifact.items = Array.isArray(artifact.items) ? artifact.items.filter(Boolean) : [];
-    artifact.blanks = Array.isArray(artifact.blanks) ? artifact.blanks : [];
+    // Normalise tokens once. A blank declared as " [NAME] " used to be counted as
+    // declared but then dropped as unused, leaving a live token in the email with
+    // no field to fill it in.
+    artifact.blanks = (Array.isArray(artifact.blanks) ? artifact.blanks : [])
+      .filter(b => b && typeof b.token === 'string' && b.token.trim())
+      .map(b => ({ ...b, token: b.token.trim() }));
 
     // Only emails have a subject. Left on a list, it renders nowhere but its
     // tokens still count as blanks — the student is told to fill in something
@@ -374,9 +396,7 @@ export function validateGuide(raw) {
       // Every token used must be declared. This is the defect that ships an
       // unfilled [TOKEN] inside a real outbound email.
       const used = collectTokens(artifact);
-      const declared = new Set(
-        artifact.blanks.map(b => (b && typeof b.token === 'string' ? b.token.trim() : '')).filter(Boolean)
-      );
+      const declared = new Set(artifact.blanks.map(b => b.token));
 
       for (const token of used) {
         if (!declared.has(token)) {

@@ -132,7 +132,11 @@ export default function MissionGuideGenerator({ experiment, existingGuides = [],
 
       onGenerated(saved, makeActive);
     } catch (err) {
+      // Put the decision screen back. Without this the student lands on the
+      // generate form with the finished guide stranded in state, and the only
+      // Retry button there costs another model call for a different guide.
       setError('Failed to save guide. Please try again.');
+      setActiveDecision(null);
       setSaving(false);
     }
   };
