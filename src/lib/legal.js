@@ -24,7 +24,7 @@ export const OPERATOR = ENTITY || 'Unscripted';
  * No individual names, deliberately. The team is bigger than any list we'd
  * keep current, and a stale name on a policy page is worse than none.
  */
-export const TEAM = 'the small team that builds it';
+export const TEAM = 'a small team';
 
 export const CONTACT_EMAIL = 'useunscripted@gmail.com';
 
