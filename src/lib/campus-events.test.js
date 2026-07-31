@@ -13,6 +13,8 @@ import {
   fetchCampusEvents,
   formatEventPlace,
   formatEventWhen,
+  eventSearchUrl,
+  eventSourceHost,
   recommendCampusEvents,
 } from './campus-events';
 
@@ -365,5 +367,56 @@ describe('formatEventPlace', () => {
     expect(formatEventPlace(calendarEvent({ location: '' }))).toBe('220');
     expect(formatEventPlace(calendarEvent({ location: '', room: '' }))).toBe('');
     expect(formatEventPlace(null)).toBe('');
+  });
+});
+
+describe('eventSourceHost', () => {
+  it('names the school, not the calendar subdomain', () => {
+    expect(eventSourceHost({ url: 'https://events.fairfield.edu/event/x' })).toBe('fairfield.edu');
+    expect(eventSourceHost({ url: 'https://calendar.qu.edu/event/1' })).toBe('qu.edu');
+    expect(eventSourceHost({ url: 'https://www.trumba.com/calendars/tufts' })).toBe('trumba.com');
+  });
+
+  it('is empty rather than wrong when there is no usable url', () => {
+    expect(eventSourceHost({ url: 'not a url' })).toBe('');
+    expect(eventSourceHost({})).toBe('');
+    expect(eventSourceHost(null)).toBe('');
+  });
+});
+
+describe('eventSearchUrl', () => {
+  it('scopes the search to the school so a generic title finds the right campus', () => {
+    const url = eventSearchUrl(calendarEvent({ title: 'Career Fair' }));
+    const q = decodeURIComponent(new URL(url).searchParams.get('q'));
+    expect(q).toBe('"Career Fair" fairfield.edu');
+  });
+
+  it('quotes the title so the words are not scattered across results', () => {
+    const q = new URL(eventSearchUrl(calendarEvent())).searchParams.get('q');
+    expect(q.startsWith('"')).toBe(true);
+  });
+
+  // The whole point of this link is to survive our data being stale or wrong,
+  // so it must not depend on the event carrying a working url.
+  it('falls back to the college name when the event has no url', () => {
+    const url = eventSearchUrl(calendarEvent({ url: '' }), 'Fairfield University');
+    const q = decodeURIComponent(new URL(url).searchParams.get('q'));
+    expect(q).toContain('Fairfield University');
+  });
+
+  it('still searches when it knows neither the host nor the college', () => {
+    const url = eventSearchUrl(calendarEvent({ url: '' }), '');
+    expect(decodeURIComponent(new URL(url).searchParams.get('q'))).toBe('"Finance Career Panel"');
+  });
+
+  it('escapes titles that would otherwise break the query', () => {
+    const url = eventSearchUrl(calendarEvent({ title: 'R&D 101: "AI" & you?' }));
+    expect(() => new URL(url)).not.toThrow();
+    expect(decodeURIComponent(new URL(url).searchParams.get('q'))).toContain('R&D 101: "AI" & you?');
+  });
+
+  it('gives nothing rather than a useless search when there is no title', () => {
+    expect(eventSearchUrl(calendarEvent({ title: '' }))).toBe('');
+    expect(eventSearchUrl(null)).toBe('');
   });
 });

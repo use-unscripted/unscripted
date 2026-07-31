@@ -99,7 +99,7 @@ export default function CampusEventPicker({ profile, pathName, selected, onSelec
                   background: isSelected ? 'var(--background-tertiary, #EEF2F6)' : 'transparent',
                 }}
               >
-                <CampusEventCard event={event} compact />
+                <CampusEventCard event={event} college={college} compact />
                 {event.guidance?.fit_reason && (
                   <p className="px-1 pb-0.5 pt-2 text-xs leading-relaxed text-[#334155]">
                     {event.guidance.fit_reason}

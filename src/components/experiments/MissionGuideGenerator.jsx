@@ -192,7 +192,7 @@ export default function MissionGuideGenerator({ experiment, existingGuides = [],
                 )}
                 {pendingGuide.steps[0].campus_event && (
                   <div className="mt-2">
-                    <CampusEventCard event={pendingGuide.steps[0].campus_event} compact />
+                    <CampusEventCard event={pendingGuide.steps[0].campus_event} college={profile?.college} compact />
                   </div>
                 )}
               </div>

@@ -225,3 +225,38 @@ export function daysUntil(event) {
 export function formatEventPlace(event) {
   return [event?.location, event?.room].filter(Boolean).join(', ');
 }
+
+/**
+ * The school's own calendar host, for naming where an event came from.
+ *
+ * "events.fairfield.edu" reads as an address; "fairfield.edu" reads as the
+ * school. Students should recognise the source at a glance to judge it.
+ */
+export function eventSourceHost(event) {
+  try {
+    const host = new URL(event?.url).hostname.replace(/^www\./, '');
+    return host.replace(/^(events|calendar|calendars)\./, '');
+  } catch {
+    return '';
+  }
+}
+
+/**
+ * A web search that finds this exact event on the school's own site.
+ *
+ * Every event we show is real, but a listing can be edited or cancelled after
+ * we read it, and a permalink can rot. This is the escape hatch that does not
+ * depend on our data still being current: the student searches the title and
+ * sees whatever the school says today.
+ *
+ * Quoted title plus the school's domain, because event titles are generic
+ * ("Career Fair") and would otherwise return someone else's campus.
+ */
+export function eventSearchUrl(event, college) {
+  const title = (event?.title || '').trim();
+  if (!title) return '';
+
+  const source = eventSourceHost(event) || (college || '').trim();
+  const query = source ? `"${title}" ${source}` : `"${title}"`;
+  return `https://www.google.com/search?q=${encodeURIComponent(query)}`;
+}

@@ -1,5 +1,11 @@
-import { Calendar, MapPin, ExternalLink, CalendarPlus, Ticket } from 'lucide-react';
-import { formatEventWhen, formatEventPlace, daysUntil } from '@/lib/campus-events';
+import { Calendar, MapPin, ExternalLink, CalendarPlus, Ticket, ShieldCheck, Search } from 'lucide-react';
+import {
+  formatEventWhen,
+  formatEventPlace,
+  daysUntil,
+  eventSearchUrl,
+  eventSourceHost,
+} from '@/lib/campus-events';
 
 /**
  * The authoritative record of a real campus event.
@@ -8,12 +14,14 @@ import { formatEventWhen, formatEventPlace, daysUntil } from '@/lib/campus-event
  * from generated text. That is why the link out is always shown: the student
  * can check us against the source in one click, and should be able to.
  */
-export default function CampusEventCard({ event, compact = false }) {
+export default function CampusEventCard({ event, college = '', compact = false }) {
   if (!event) return null;
 
   const when = formatEventWhen(event);
   const place = formatEventPlace(event);
   const countdown = daysUntil(event);
+  const sourceHost = eventSourceHost(event);
+  const searchUrl = eventSearchUrl(event, college);
 
   return (
     <div
@@ -64,29 +72,66 @@ export default function CampusEventCard({ event, compact = false }) {
           </p>
         )}
 
-        <div className="mt-2.5 flex flex-wrap gap-2">
+        {event.ics_url && (
+          <div className="mt-2.5">
+            <a
+              href={event.ics_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-semibold text-[#334155] transition hover:bg-[#F8FAFC]"
+              style={{ borderColor: '#E2E8F0' }}
+            >
+              <CalendarPlus size={12} aria-hidden="true" />
+              Add to calendar
+            </a>
+          </div>
+        )}
+      </div>
+
+      {/*
+        Confirm-before-you-go.
+
+        We read this event off the school's calendar at some point in the past.
+        Times move, rooms change, things get cancelled, and we would not know.
+        Sending a student across campus on our copy of the truth without telling
+        them to check the school's is the one way this feature can waste their
+        afternoon — so the check is a permanent part of the card, not an error
+        state, and it always offers a route that survives a dead permalink.
+      */}
+      <div className="border-t px-3 py-2.5" style={{ borderColor: '#E2E8F0', background: '#FCFBF7' }}>
+        <p className="flex items-start gap-1.5 text-xs font-semibold text-[#334155]">
+          <ShieldCheck size={13} className="mt-px shrink-0" style={{ color: '#7A5B12' }} aria-hidden="true" />
+          Confirm the date and place before you go
+        </p>
+        <p className="mt-1 text-xs leading-relaxed text-[#64748B]">
+          {sourceHost
+            ? <>We took this from {sourceHost}. Check the school&apos;s listing for the final time and room.</>
+            : <>Check the school&apos;s own listing for the final time and room.</>}
+        </p>
+
+        <div className="mt-2 flex flex-wrap gap-2">
           {event.url && (
             <a
               href={event.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-semibold transition hover:bg-[#F8FAFC]"
-              style={{ borderColor: '#E2E8F0', color: 'var(--brand-navy-700)' }}
+              className="flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-semibold transition hover:bg-white"
+              style={{ borderColor: 'rgba(31,58,95,0.3)', color: 'var(--brand-navy-700)' }}
             >
               <ExternalLink size={12} aria-hidden="true" />
-              {event.has_register ? 'Register' : 'View listing'}
+              {event.has_register ? 'Register on the school site' : 'Open the school listing'}
             </a>
           )}
-          {event.ics_url && (
+          {searchUrl && (
             <a
-              href={event.ics_url}
+              href={searchUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-semibold text-[#334155] transition hover:bg-[#F8FAFC]"
+              className="flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-semibold text-[#334155] transition hover:bg-white"
               style={{ borderColor: '#E2E8F0' }}
             >
-              <CalendarPlus size={12} aria-hidden="true" />
-              Add to calendar
+              <Search size={12} aria-hidden="true" />
+              {event.url ? 'Search for it' : 'Search for this event'}
             </a>
           )}
         </div>

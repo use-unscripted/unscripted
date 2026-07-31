@@ -159,7 +159,7 @@ export default function GuideDetailPage() {
 
                     {s.campus_event && (
                       <div className="mt-3">
-                        <CampusEventCard event={s.campus_event} />
+                        <CampusEventCard event={s.campus_event} college={profile?.college} />
                       </div>
                     )}
 
