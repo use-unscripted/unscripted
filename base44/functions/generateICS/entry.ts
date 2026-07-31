@@ -10,6 +10,13 @@ function escapeICS(str) {
     .replace(/\r/g, '');
 }
 
+// Timezone identifiers only contain letters, digits, '/', '_', '+', '-'.
+// Anything else (notably CR/LF) would allow injecting extra iCalendar lines.
+function sanitizeTimezone(tz) {
+  const cleaned = String(tz || '').replace(/[^A-Za-z0-9/_+-]/g, '');
+  return cleaned || 'America/New_York';
+}
+
 function toICSDate(dateStr, timeStr, allDay) {
   if (!dateStr) return null;
   if (allDay || !timeStr) {
@@ -89,7 +96,7 @@ Deno.serve(async (req) => {
       'CALSCALE:GREGORIAN',
       'METHOD:PUBLISH',
       `X-WR-CALNAME:Unscripted`,
-      `X-WR-TIMEZONE:${timezone || 'America/New_York'}`,
+      `X-WR-TIMEZONE:${sanitizeTimezone(timezone)}`,
     ];
 
     if (mode === 'single' && eventId) {

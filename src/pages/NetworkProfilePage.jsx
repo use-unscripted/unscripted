@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { UserCircle, UserPlus, UserMinus, FileText, Target, Flag, ShieldOff, ArrowLeft, Lock } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { canViewRecord } from '@/lib/network-utils';
+import { safeExternalUrl } from '@/lib/safe-url';
 
 const PROOF_CATEGORY_LABELS = {
   report: 'Report', model: 'Model', case_study: 'Case Study', article: 'Article',
@@ -329,8 +330,8 @@ export default function NetworkProfilePage() {
                     ))}
                   </div>
                 )}
-                {proof.external_url && (
-                  <a href={proof.external_url} target="_blank" rel="noopener noreferrer"
+                {safeExternalUrl(proof.external_url) && (
+                  <a href={safeExternalUrl(proof.external_url)} target="_blank" rel="noopener noreferrer"
                     className="mt-2 inline-flex items-center gap-1 text-xs font-semibold" style={{ color: 'var(--brand-navy-700)' }}>
                     View Link ↗
                   </a>

@@ -5,6 +5,20 @@ const ENTITY_NAMES = ['Experiments', 'Missions', 'OutreachContacts', 'WeeklyRefl
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
+
+    // Destructive maintenance endpoint: only app admins (or the internal
+    // scheduled/service caller) may run it.
+    let caller = null;
+    try {
+      caller = await base44.auth.me();
+    } catch (_) {
+      caller = null;
+    }
+    const isService = !!caller?.is_service;
+    const isAdmin = caller?.role === 'admin';
+    if (!caller) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!isAdmin && !isService) return Response.json({ error: 'Forbidden' }, { status: 403 });
+
     const now = new Date().toISOString();
 
     let totalDeleted = 0;
