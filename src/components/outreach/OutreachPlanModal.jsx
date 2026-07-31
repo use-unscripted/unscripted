@@ -187,7 +187,7 @@ function ProgressBar({ value }) {
   );
 }
 
-function OptionRow({ option, selected, index, onSelect }) {
+function OptionRow({ option, selected, index, onSelect, multi }) {
   return (
     <button
       type="button"
@@ -201,8 +201,9 @@ function OptionRow({ option, selected, index, onSelect }) {
         boxShadow: selected ? '0 6px 18px rgba(31,58,95,0.12)' : 'none',
       }}
     >
+      {/* square indicator when several answers are allowed, round when it's one of N */}
       <span
-        className="opt-dot flex h-5 w-5 shrink-0 items-center justify-center rounded-full border"
+        className={`opt-dot flex h-5 w-5 shrink-0 items-center justify-center border ${multi ? 'rounded-[7px]' : 'rounded-full'}`}
         style={{
           borderColor: selected ? 'var(--brand-navy-900)' : '#CBD5E1',
           background: selected ? 'var(--brand-navy-900)' : 'transparent',
@@ -217,30 +218,6 @@ function OptionRow({ option, selected, index, onSelect }) {
       <span className="opt-key hidden shrink-0 rounded-md border px-1.5 py-0.5 text-[10px] font-semibold sm:block"
         style={{ borderColor: '#E2E8F0', color: '#64748B' }}>
         {index + 1}
-      </span>
-    </button>
-  );
-}
-
-function OptionChip({ option, selected, index, onSelect }) {
-  return (
-    <button
-      type="button"
-      onClick={onSelect}
-      aria-pressed={selected}
-      className="opt-chip rounded-full border px-3.5 py-2 text-left text-[13px] font-medium"
-      style={{
-        animationDelay: `${40 + index * 40}ms`,
-        borderColor: selected ? 'var(--brand-navy-900)' : '#E2E8F0',
-        background: selected ? 'var(--brand-navy-900)' : '#FFFFFF',
-        color: selected ? '#FFFFFF' : 'var(--text-primary)',
-        boxShadow: selected ? '0 6px 16px rgba(31,58,95,0.18)' : 'none',
-      }}
-    >
-      {/* the check slot is always present so selecting a chip never reflows the row */}
-      <span className="flex items-center gap-1.5">
-        <Check size={12} strokeWidth={3} style={{ opacity: selected ? 1 : 0, transition: 'opacity var(--dur-fast) var(--ease-out)' }} />
-        {option.label}
       </span>
     </button>
   );
@@ -329,7 +306,7 @@ function SurveyStep({ pathName, survey, setSurvey, index, setIndex, onGenerate, 
       @keyframes optIn      { from { opacity: 0; transform: translateY(8px); }  to { opacity: 1; transform: none; } }
       .step-pane-fwd  { animation: stepInFwd  var(--dur-base) var(--ease-out) both; }
       .step-pane-back { animation: stepInBack var(--dur-base) var(--ease-out) both; }
-      .opt-row, .opt-chip {
+      .opt-row {
         animation: optIn var(--dur-base) var(--ease-out) both;
         transition: border-color var(--dur-fast) var(--ease-out),
                     background   var(--dur-fast) var(--ease-out),
@@ -337,8 +314,7 @@ function SurveyStep({ pathName, survey, setSurvey, index, setIndex, onGenerate, 
                     transform    var(--dur-base) var(--ease-spring);
       }
       .opt-row:hover  { transform: translateX(3px); border-color: var(--brand-navy-700) !important; }
-      .opt-chip:hover { transform: translateY(-2px); border-color: var(--brand-navy-700) !important; }
-      .opt-row:active, .opt-chip:active { transform: scale(0.985); transition-duration: 80ms; }
+      .opt-row:active { transform: scale(0.985); transition-duration: 80ms; }
       .opt-row:hover .opt-key { color: var(--brand-navy-700); border-color: var(--brand-navy-700); }
       .opt-dot { transition: background var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out); }
     `}</style>
@@ -407,12 +383,12 @@ function SurveyStep({ pathName, survey, setSurvey, index, setIndex, onGenerate, 
             <p className="mt-0.5 text-xs" style={{ color: 'var(--text-secondary)' }}>
               Public figures in this field. You’ll still need to verify each one.
             </p>
-            <div className="mt-3 flex flex-wrap gap-2">
+            <div className="mt-3 space-y-2">
               {[
                 { value: 'archetypes', label: 'Just role types' },
                 { value: 'both', label: 'Role types + real people' },
               ].map((o, i) => (
-                <OptionChip key={o.value} option={o} index={i}
+                <OptionRow key={o.value} option={o} index={i}
                   selected={survey.suggestion_type === o.value}
                   onSelect={() => set('suggestion_type', o.value)} />
               ))}
@@ -470,9 +446,9 @@ function SurveyStep({ pathName, survey, setSurvey, index, setIndex, onGenerate, 
 
           {step.kind === 'multi' && (
             <>
-              <div className="flex flex-wrap gap-2">
+              <div className="space-y-2">
                 {step.options.map((o, i) => (
-                  <OptionChip key={o.value} option={o} index={i}
+                  <OptionRow key={o.value} option={o} index={i} multi
                     selected={(survey.what_to_learn_tags || []).includes(o.value)}
                     onSelect={() => toggleTag(o.value)} />
                 ))}
@@ -489,9 +465,9 @@ function SurveyStep({ pathName, survey, setSurvey, index, setIndex, onGenerate, 
 
           {step.kind === 'text' && (
             <>
-              <div className="flex flex-wrap gap-2">
+              <div className="space-y-2">
                 {step.options.map((o, i) => (
-                  <OptionChip key={o.value} option={o} index={i}
+                  <OptionRow key={o.value} option={o} index={i} multi
                     selected={textHasSuggestion(step.key, o.value)}
                     onSelect={() => toggleTextSuggestion(step.key, o.value)} />
                 ))}
