@@ -286,7 +286,6 @@ export default function OutreachTracker() {
       )}
 
       <PageHeader
-        eyebrow="Outreach tracker"
         title="Networking done intentionally."
         description="Track every professional conversation. Follow up on time. Build real relationships."
         action={

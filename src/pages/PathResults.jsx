@@ -188,7 +188,6 @@ export default function PathResults() {
         </div>
 
         <div className="mb-3">
-          <p className="text-xs font-bold uppercase tracking-[.14em]" style={{ color: 'var(--brand-navy-900)' }}>Your path recommendations</p>
           <h1 className="font-heading mt-2 text-3xl font-bold tracking-tight text-[#050816]">Three paths worth testing.</h1>
           <p className="mt-3 text-sm text-[#64748B] max-w-xl">
             These are working hypotheses, not conclusions. None of them is objectively correct. Your job is to test the primary one and use what you learn to update your assessment.

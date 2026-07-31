@@ -90,7 +90,6 @@ export default function PathsIntake() {
         </div>
 
         <section className="rounded-[24px] border border-[#E2E8F0] bg-white p-7 shadow-sm sm:p-10">
-          <p className="text-xs font-bold uppercase tracking-[.14em]" style={{ color: 'var(--brand-navy-700)' }}>Path selection</p>
           <h1 className="font-heading mb-2 mt-3 text-2xl font-bold tracking-tight text-[#050816]">Which paths should we build your 30-day test around?</h1>
           <p className="mb-8 text-sm text-[#64748B]">
             We will generate three path recommendations, then build a 30-day experiment plan for the one you select. You are not committing — you are choosing what to test first.

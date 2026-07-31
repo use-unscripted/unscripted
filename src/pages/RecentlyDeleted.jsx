@@ -291,7 +291,6 @@ export default function RecentlyDeleted() {
       )}
 
       <PageHeader
-        eyebrow="Settings"
         title="Recently Deleted"
         description="Items deleted in the last 30 days. Restore them or delete them permanently."
       />

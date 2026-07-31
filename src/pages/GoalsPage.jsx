@@ -38,7 +38,6 @@ export default function GoalsPage() {
   return (
     <main className="mx-auto max-w-5xl px-5 py-10 sm:px-8">
       <PageHeader
-        eyebrow="Goals"
         title="What you're building toward."
         description="Annual, monthly, and weekly goals — with honest feasibility assessments so your plan stays realistic."
       />

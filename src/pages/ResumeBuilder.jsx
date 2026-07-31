@@ -420,7 +420,6 @@ export default function ResumeBuilder() {
       {deleteTarget && <DeleteConfirm name={deleteTarget.resume_name} onConfirm={deleteResume} onCancel={() => setDeleteTarget(null)} />}
 
       <PageHeader
-        eyebrow="Resume Builder"
         title="Resume Builder"
         description="Build, version, and export resumes tailored to your path."
         action={

@@ -839,7 +839,6 @@ export default function ExperimentsPage() {
         />
       )}
       <PageHeader
-        eyebrow="Experiments"
         title="Test paths. Learn from results."
         description="Every experiment is a controlled test. You are not committing to a path — you are gathering evidence."
         action={

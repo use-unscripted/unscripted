@@ -465,7 +465,6 @@ export default function WeeklyReflectionPage() {
       )}
 
       <PageHeader
-        eyebrow="Weekly reflection"
         title="Learn from what you actually did."
         description="A weekly reflection helps you adjust direction based on real experience, not guesswork."
         action={

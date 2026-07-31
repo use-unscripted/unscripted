@@ -42,7 +42,6 @@ export default function ResourceHub() {
   return (
     <main className="mx-auto max-w-6xl px-5 py-10 sm:px-8">
       <PageHeader
-        eyebrow="Resource hub"
         title="The right tool for each path."
         description="Unscripted recommends specialized resources — not to replace them, but to help you choose the right one at the right time."
       />

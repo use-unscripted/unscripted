@@ -11,7 +11,6 @@ export default function SavedRoadmaps() {
   return (
     <main className="mx-auto max-w-5xl px-5 py-10 sm:px-8">
       <PageHeader
-        eyebrow="Roadmap history"
         title="Your paths, saved."
         description="Revisit earlier strategies and see how your direction evolves as you create evidence."
       />

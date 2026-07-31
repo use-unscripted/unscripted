@@ -275,7 +275,6 @@ export default function WeeklyCalendar() {
       )}
 
       <PageHeader
-        eyebrow="Weekly plan"
         title="Make the week count."
         description="Plan around your fixed commitments. Protect your available hours for mission work."
         action={

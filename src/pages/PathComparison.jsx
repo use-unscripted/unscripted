@@ -572,7 +572,6 @@ export default function PathComparison() {
       )}
 
       <PageHeader
-        eyebrow="Paths"
         title="Your career paths."
         description="Explore multiple paths simultaneously. Test, pause, resume, and compare — none is permanent until you decide it is."
         action={

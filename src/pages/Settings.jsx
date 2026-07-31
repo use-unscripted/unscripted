@@ -65,7 +65,6 @@ export default function Settings() {
   return (
     <main className="mx-auto max-w-3xl px-5 py-10 sm:px-8">
       <PageHeader
-        eyebrow="Profile and settings"
         title="Keep your context current."
         description="Your direction can change. Update the facts that shape future roadmaps."
       />
@@ -92,8 +91,7 @@ export default function Settings() {
       </section>
 
       <div className="mb-3 mt-10">
-        <p className="text-xs font-bold uppercase tracking-[.14em] mb-1" style={{ color: 'var(--brand-navy-700)' }}>Personal context</p>
-        <h2 className="font-heading text-xl font-bold text-[#050816] mb-1">Personal Context</h2>
+        <h2 className="font-heading text-xl font-bold text-[#050816] mb-1">Personal context</h2>
         <p className="text-sm text-[#334155] mb-5">Add context, ambitions, constraints, or priorities that personalize your path recommendations. Changes influence future recommendations but do not rewrite past ones.</p>
       </div>
       <section className="mb-10 rounded-[24px] border border-[#E2E8F0] bg-white p-7 shadow-sm space-y-5">
@@ -151,15 +149,13 @@ export default function Settings() {
       </section>
 
       <div className="mb-3">
-        <p className="text-xs font-bold uppercase tracking-[.14em] mb-1" style={{ color: 'var(--brand-navy-700)' }}>Calendar</p>
-        <h2 className="font-heading text-xl font-bold text-[#050816] mb-1">Export to Calendar</h2>
+        <h2 className="font-heading text-xl font-bold text-[#050816] mb-1">Export to calendar</h2>
         <p className="text-sm text-[#334155]">Download .ics files to add your Unscripted schedule to Google Calendar, Apple Calendar, Outlook, or any standard calendar app.</p>
       </div>
-      <ICSExportPanel />
+      <ICSExportPanel showHeading={false} />
 
       <div className="mt-10">
-        <p className="text-xs font-bold uppercase tracking-[.14em] mb-1" style={{ color: 'var(--brand-navy-700)' }}>Data</p>
-        <h2 className="font-heading text-xl font-bold text-[#050816] mb-1">Recently Deleted</h2>
+        <h2 className="font-heading text-xl font-bold text-[#050816] mb-1">Recently deleted</h2>
         <p className="text-sm text-[#334155] mb-4">Mission Guides, contacts, reflections, and proof of work you've deleted are kept for 30 days before permanent removal.</p>
         <Link to="/recently-deleted"
           className="inline-flex items-center gap-2 rounded-[10px] border border-[#E2E8F0] px-5 py-3 text-sm font-semibold text-[#334155] hover:bg-[#F8FAFC] transition">

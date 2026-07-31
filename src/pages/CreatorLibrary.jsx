@@ -127,9 +127,11 @@ export default function CreatorLibrary() {
 
   return (
     <main className="mx-auto max-w-6xl px-5 py-10 sm:px-8">
+      {/* The title was word-for-word the same as the Blueprint Library's.
+          With the page-name eyebrow above it the two headings were at least
+          distinguishable; without it they were the same page twice. */}
       <PageHeader
-        eyebrow="People and journeys"
-        title="Study the path. Build your own."
+        title="People who took the path first."
         description="Curated profiles of founders, creators, and professionals — with honest stories, not highlight reels. All profiles use public information and are reviewed for accuracy."
       />
 

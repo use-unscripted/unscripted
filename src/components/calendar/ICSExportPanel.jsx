@@ -5,7 +5,11 @@ import { base44 } from '@/api/base44Client';
 
 const inputCls = 'w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-3 py-2.5 text-sm outline-none focus:border-[#1F3A5F]';
 
-export default function ICSExportPanel() {
+/* showHeading: the Week page drops this panel in with nothing above it, so it
+   has to name itself there. Settings already gives it a section heading, and
+   rendering both put "Export to calendar" on screen twice, eight pixels
+   apart. */
+export default function ICSExportPanel({ showHeading = true }) {
   const [weekStart, setWeekStart] = useState(() => {
     const d = new Date();
     const day = d.getDay();
@@ -139,13 +143,17 @@ export default function ICSExportPanel() {
 
   return (
     <div className="rounded-[20px] border border-[#E2E8F0] bg-white p-6">
-      <div className="flex items-center gap-2 mb-1">
-        <Calendar size={16} style={{ color: 'var(--brand-navy-900)' }} />
-        <h3 className="font-heading font-bold text-[#050816]">Export to Calendar</h3>
-      </div>
-      <p className="text-xs text-[#64748B] mb-5">
-        Download .ics files compatible with Google Calendar, Apple Calendar, Outlook, and any standard calendar app.
-      </p>
+      {showHeading && (
+        <>
+          <div className="flex items-center gap-2 mb-1">
+            <Calendar size={16} style={{ color: 'var(--brand-navy-900)' }} />
+            <h3 className="font-heading font-bold text-[#050816]">Export to calendar</h3>
+          </div>
+          <p className="text-xs text-[#64748B] mb-5">
+            Download .ics files compatible with Google Calendar, Apple Calendar, Outlook, and any standard calendar app.
+          </p>
+        </>
+      )}
 
       {error && (
         <div className="mb-4 rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-xs text-red-700">{error}</div>

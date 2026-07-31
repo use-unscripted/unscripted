@@ -375,7 +375,6 @@ export default function ProofOfWorkPage() {
       )}
 
       <PageHeader
-        eyebrow="Proof of work"
         title="Proof of Work"
         description="Review the work you have completed while testing your paths."
         action={

@@ -55,7 +55,6 @@ export default function BlueprintLibrary() {
   return (
     <main className="mx-auto max-w-6xl px-5 py-10 sm:px-8">
       <PageHeader
-        eyebrow="Blueprint Library"
         title="Study the path. Build your own."
         description="Real strategies extracted from high-agency students, creators, and founders. Pick a path, understand the playbook, and take the first step."
       />
