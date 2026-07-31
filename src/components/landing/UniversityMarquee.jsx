@@ -252,7 +252,7 @@ export default function UniversityMarquee() {
       onMouseLeave={() => { hovered.current = false; }}
     >
       <p
-        className="mb-4 text-center text-[10px] font-bold uppercase tracking-[.18em]"
+        className="mb-4 text-center text-[13px]"
         style={{ color: 'var(--text-secondary)' }}
       >
         Students from <CountUp to={55} style={{ fontVariantNumeric: 'tabular-nums' }} />+ universities

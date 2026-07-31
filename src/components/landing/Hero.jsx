@@ -21,11 +21,19 @@ import HeroBackdrop from '@/components/landing/HeroBackdrop';
 import PathPreview from '@/components/landing/PathPreview';
 import { Reveal, WordReveal, UnderlineDraw, Magnetic, Tilt, EASE } from '@/components/motion';
 
+/* Numbering earns its place here: the rail below fills in order and the four
+   steps are a real sequence, so 01–04 is carrying information rather than
+   decorating. Don't copy the treatment to a section that's just a list.
+
+   Copy rule for this block: name the thing the student physically does. The
+   earlier draft ran on abstractions — "structured real-world missions",
+   "fit signals", "lifestyle implications" — which is how the page ended up
+   reading as machine-written. */
 const steps = [
-  { n: '01', title: 'Compare realistic paths', body: 'See honest tradeoffs, lifestyle implications, and fit signals for 3 paths matched to your profile.' },
-  { n: '02', title: 'Run guided experiments', body: 'Complete structured real-world missions — interviews, simulations, and proof-of-work outputs.' },
-  { n: '03', title: 'Execute around your schedule', body: 'Your experiments are scheduled around your actual classes, work, and commitments.' },
-  { n: '04', title: 'Reflect and adjust', body: 'Weekly reflections update your path assessment based on what you actually experienced.' },
+  { n: '01', title: 'Compare three paths', body: "Three careers that match your answers, each with what it costs you and what it gets you." },
+  { n: '02', title: 'Run the missions', body: 'Email someone who does the job. Get them on a call. Come back with notes.' },
+  { n: '03', title: 'Fit it around class', body: 'Missions get scheduled around your classes, your job and your shifts.' },
+  { n: '04', title: 'Decide on evidence', body: "Each week you write down what happened, and your ranking moves on that instead of a quiz." },
 ];
 
 /* Each step owns a quarter of the rail's scroll range. */
@@ -82,9 +90,9 @@ function StepCard({ step, index, progress }) {
   const opacity = useTransform(progress, [a - 0.06, b], [0.78, 1]);
 
   return (
-    <Tilt className="h-full rounded-[18px]">
+    <Tilt className="h-full rounded-[var(--r-surface)]">
       <motion.div
-        className="h-full rounded-[18px] bg-white p-6"
+        className="h-full rounded-[var(--r-surface)] bg-white p-6"
         style={{ borderWidth: 1, borderStyle: 'solid', borderColor, y: lift, opacity }}
       >
         <motion.span className="font-heading text-3xl font-bold block" style={{ color: numberColor }}>
@@ -134,6 +142,18 @@ function ProcessRail() {
       className="mx-auto max-w-7xl px-6 pt-16 pb-24"
       style={{ scrollMarginTop: 88 }}
     >
+      {/* This section is the target of the nav's "How it works" link and it
+         had no heading at all — which is why the audit read the four step
+         cards as h3s hanging directly off the hero h1. Same words as the nav
+         link on purpose: a destination should be called what the thing that
+         sent you here called it. */}
+      <h2
+        className="font-heading mb-8 text-3xl font-bold"
+        style={{ color: 'var(--text-primary)' }}
+      >
+        How it works
+      </h2>
+
       {/* Horizontal rail — wide screens */}
       <div className="relative mb-9 hidden lg:block">
         <div className="h-px w-full" style={{ background: 'var(--border-light)' }} />
@@ -216,33 +236,14 @@ export default function Hero() {
         <HeroBackdrop />
 
         <div className="relative mx-auto max-w-3xl text-center" style={{ zIndex: 1 }}>
-          <Reveal delay={0} y={14}>
-            <div
-              className="mb-6 inline-flex w-fit items-center gap-2 rounded-full px-3.5 py-1.5 text-xs font-bold uppercase tracking-[.12em]"
-              style={{
-                background: 'var(--background-tertiary)',
-                border: '1px solid var(--border-light)',
-                color: 'var(--brand-navy-700)',
-              }}
-            >
-              <motion.span
-                aria-hidden="true"
-                style={{
-                  width: 6,
-                  height: 6,
-                  borderRadius: 999,
-                  background: 'var(--brand-gold-500)',
-                  display: 'block',
-                }}
-                animate={{ opacity: [1, 0.35, 1], scale: [1, 0.85, 1] }}
-                transition={{ duration: 2.6, repeat: Infinity, ease: 'easeInOut' }}
-              />
-              Write your own path
-            </div>
-          </Reveal>
-
+          {/* The pill that used to sit here — tiny letterspaced caps, gold dot
+             pulsing on a 2.6s loop, reading "Write your own path" — said
+             nothing the headline doesn't say two lines later, and that exact
+             component is the single most recognisable tell of a generated
+             landing page. Removed rather than restyled. The headline is the
+             first thing on the page now. */}
           <h1
-            className="font-heading text-[3rem] font-extrabold leading-[1.04] tracking-[-0.02em] sm:text-[4rem]"
+            className="font-heading text-[3rem] font-bold leading-[1.04] tracking-[-0.02em] sm:text-[4rem]"
             style={{ color: 'var(--text-primary)' }}
           >
             <WordReveal text="Don't guess your next path." delay={0.05} />{' '}
@@ -254,7 +255,7 @@ export default function Hero() {
 
           <Reveal delay={620} y={16}>
             <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 font-body" style={{ color: 'var(--text-secondary)' }}>
-              Unscripted helps high school and college students compare realistic career and life paths, complete guided real-world experiments, and learn what actually fits — before making a major commitment.
+              Pick a career you're weighing up. You get 30 days of real assignments — who to email, what to say, what to bring back. By the end you'll know whether it fits, because you'll have tried it.
             </p>
           </Reveal>
 
@@ -263,10 +264,10 @@ export default function Hero() {
               <Magnetic>
                 <Link
                   to="/onboarding"
-                  className="group flex items-center gap-2 rounded-[10px] px-7 py-3.5 text-sm font-semibold text-white"
+                  className="group flex items-center gap-2 rounded-[var(--r-control)] px-7 py-3.5 text-sm font-semibold text-white"
                   style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}
                 >
-                  Start My 30-Day Path Test
+                  Start your 30-day test
                   <motion.span
                     className="inline-flex"
                     initial={false}
@@ -281,10 +282,10 @@ export default function Hero() {
               <Magnetic strength={0.2} max={6}>
                 <a
                   href="#how-it-works"
-                  className="block rounded-[10px] px-7 py-3.5 text-sm font-semibold"
+                  className="block rounded-[var(--r-control)] px-7 py-3.5 text-sm font-semibold"
                   style={{ background: 'white', border: '1px solid var(--border-light)', color: 'var(--text-primary)' }}
                 >
-                  See How It Works
+                  See how it works
                 </a>
               </Magnetic>
             </div>

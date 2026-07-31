@@ -112,22 +112,21 @@ function PathCard({ path }) {
   const Icon = path.icon;
   return (
     <div
-      className="rounded-[22px] bg-white p-6 sm:p-8"
+      className="rounded-[var(--r-surface)] bg-white p-6 sm:p-8"
       style={{ border: '1px solid var(--border-light)', boxShadow: '0 18px 44px rgba(16,24,40,0.07)' }}
     >
       <div className="flex items-start gap-4">
         <span
-          className="hidden h-11 w-11 shrink-0 place-items-center rounded-[12px] sm:grid"
+          className="hidden h-11 w-11 shrink-0 place-items-center rounded-[var(--r-control)] sm:grid"
           style={{ background: 'var(--brand-navy-900)', color: 'var(--brand-gold-500)' }}
         >
           <Icon size={20} />
         </span>
         <div className="min-w-0">
-          {/* gold-700, not gold-600: gold on white is 2.2:1 as text. */}
-          <p className="text-[11px] font-bold uppercase tracking-[.14em]" style={{ color: 'var(--brand-gold-700)' }}>
-            What you'd actually be testing
-          </p>
-          <h3 className="font-heading mt-1.5 text-2xl font-bold leading-snug" style={{ color: 'var(--text-primary)' }}>
+          {/* The uppercase "What you'd actually be testing" eyebrow that sat
+             above this heading is gone — it restated the heading and it was
+             the fourth instance of the same device on one page. */}
+          <h3 className="font-heading text-2xl font-bold leading-snug" style={{ color: 'var(--text-primary)' }}>
             {path.label}
           </h3>
         </div>
@@ -137,7 +136,7 @@ function PathCard({ path }) {
 
       <div className="my-6 h-px w-full" style={{ background: 'var(--border-light)' }} />
 
-      <p className="text-[11px] font-bold uppercase tracking-[.14em]" style={{ color: 'var(--brand-navy-700)' }}>
+      <p className="font-heading text-sm font-bold" style={{ color: 'var(--brand-navy-700)' }}>
         Your first missions
       </p>
       <ol className="mt-3.5 space-y-2.5">
@@ -156,7 +155,7 @@ function PathCard({ path }) {
 
       <div className="mt-6 grid gap-3 sm:grid-cols-2">
         <div
-          className="rounded-[12px] p-3.5"
+          className="rounded-[var(--r-control)] p-3.5"
           style={{ background: 'rgba(22,163,74,0.06)', border: '1px solid rgba(22,163,74,0.20)' }}
         >
           <div className="flex items-center gap-1.5">
@@ -168,7 +167,7 @@ function PathCard({ path }) {
           <p className="mt-1.5 text-sm leading-6" style={{ color: 'var(--text-secondary)' }}>{path.green}</p>
         </div>
         <div
-          className="rounded-[12px] p-3.5"
+          className="rounded-[var(--r-control)] p-3.5"
           style={{ background: 'rgba(220,38,38,0.05)', border: '1px solid rgba(220,38,38,0.18)' }}
         >
           <div className="flex items-center gap-1.5">
@@ -182,12 +181,12 @@ function PathCard({ path }) {
       </div>
 
       <div
-        className="mt-5 flex items-start gap-2.5 rounded-[12px] px-4 py-3.5"
+        className="mt-5 flex items-start gap-2.5 rounded-[var(--r-control)] px-4 py-3.5"
         style={{ background: 'rgba(214,182,106,0.12)', border: '1px solid rgba(214,182,106,0.35)' }}
       >
         <FlaskConical size={15} className="mt-1 shrink-0" style={{ color: 'var(--brand-gold-600)' }} />
         <p className="text-sm leading-6" style={{ color: 'var(--text-primary)' }}>
-          <span className="font-semibold">Proof after 30 days — </span>{path.evidence}
+          <span className="font-semibold">Proof after 30 days · </span>{path.evidence}
         </p>
       </div>
     </div>
@@ -200,7 +199,7 @@ const PathButton = forwardRef(function PathButton({ path, active, rotateChevron 
     <button
       ref={ref}
       type="button"
-      className="group relative flex w-full items-center gap-3 rounded-[14px] px-4 py-3.5 text-left transition-all duration-200 hover:-translate-y-px"
+      className="group relative flex w-full items-center gap-3 rounded-[var(--r-control)] px-4 py-3.5 text-left transition-all duration-200 hover:-translate-y-px"
       style={{
         background: active ? 'var(--brand-navy-900)' : '#FFFFFF',
         border: `1px solid ${active ? 'var(--brand-navy-900)' : 'var(--border-light)'}`,
@@ -209,7 +208,7 @@ const PathButton = forwardRef(function PathButton({ path, active, rotateChevron 
       {...rest}
     >
       <span
-        className="grid h-8 w-8 shrink-0 place-items-center rounded-[9px] transition-colors duration-200"
+        className="grid h-8 w-8 shrink-0 place-items-center rounded-[var(--r-control)] transition-colors duration-200"
         style={{
           background: active ? 'rgba(214,182,106,0.18)' : 'var(--background-tertiary)',
           color: active ? 'var(--brand-gold-500)' : 'var(--brand-navy-700)',
@@ -291,7 +290,7 @@ export default function PathExplorer() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: reduce ? 0 : -6 }}
             transition={{ duration: 0.24, ease: EASE }}
-            className="rounded-[22px] focus-visible:outline-none"
+            className="rounded-[var(--r-surface)] focus-visible:outline-none"
           >
             <PathCard path={active} />
           </motion.div>

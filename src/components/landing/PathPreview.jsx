@@ -14,9 +14,14 @@
 
    The three paths below are illustrative sample output and are labelled as
    such on the page. They are not claims about real students.
+
+   ⚠️ This component is deliberately static — no entrance, no hover lift, no
+   count-up, no ambient glow. It is standing in for a screenshot of the real
+   product, and product screenshots don't animate. The page already carries
+   motion in the headline, the process rail and the Mission Guide checklist;
+   adding a fourth animated moment here made the set read as decorated rather
+   than designed. Don't re-add motion to these cards.
    ────────────────────────────────────────────────────────────────────────── */
-import { motion, useReducedMotion } from 'framer-motion';
-import { CountUp, EASE } from '@/components/motion';
 
 /* These are three paths for ONE student, not three unrelated jobs — that's
    how the generator works, and it's what makes the tradeoffs comparable.
@@ -53,133 +58,97 @@ const TONE = {
   contrarian: { chipBg: 'rgba(30,41,59,0.07)', chipFg: '#526274', bar: '#94A3B8', border: 'var(--border-light)' },
 };
 
-function ReadinessBar({ score, tone, delay }) {
-  const reduce = useReducedMotion();
+function ReadinessBar({ score, tone }) {
   return (
     <div className="mt-4">
       <div className="mb-1.5 flex items-baseline justify-between">
         {/* --text-secondary, not --text-muted: muted is 4.02:1 on white and
-           fails the 4.5:1 minimum. At 10px it fails by eye too. */}
+           fails the 4.5:1 minimum. At 10px it fails by eye too.
+
+           This label stays uppercase where the page's section eyebrows did
+           not. Inside a product surface a small caps label is UI convention
+           and reads as a field name; above a section heading it reads as
+           template furniture. Different job, different call. */}
         <span className="text-[10px] font-bold uppercase tracking-[.14em]" style={{ color: 'var(--text-secondary)' }}>
           Readiness
         </span>
-        {/* tabular-nums matters twice here: the scores sit in a comparison
-           column across three cards, and CountUp animates through every
-           digit on the way up — proportional figures make them jitter. */}
+        {/* tabular-nums: the scores sit in a comparison column across three
+           cards, and proportional figures make that column ragged. */}
         <span
           className="font-heading text-sm font-bold"
           style={{ color: 'var(--text-primary)', fontVariantNumeric: 'tabular-nums' }}
         >
-          <CountUp to={score} duration={0.85} />
+          {score}
           <span style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>/100</span>
         </span>
       </div>
       <div className="h-1.5 w-full overflow-hidden rounded-full" style={{ background: 'var(--background-tertiary)' }}>
-        <motion.div
+        <div
           className="h-full rounded-full"
-          style={{ background: tone.bar, transformOrigin: 'left center' }}
-          initial={{ scaleX: 0 }}
-          whileInView={{ scaleX: score / 100 }}
-          viewport={{ once: true, amount: 0.4 }}
-          transition={{ duration: reduce ? 0 : 0.8, ease: EASE, delay: reduce ? 0 : delay }}
+          style={{ background: tone.bar, width: `${score}%` }}
         />
       </div>
     </div>
   );
 }
 
-function PathCard({ path, index }) {
+function PathCard({ path }) {
   const tone = TONE[path.tier];
   const isBest = path.tier === 'best';
-  /* Tight stagger. These three are meant to be read together as one set —
-     a long gap between them makes it feel like three separate arrivals
-     rather than a result appearing. */
-  const delay = 0.84 + index * 0.07;
 
-  /* Entrance and hover live on two separate elements on purpose. On one
-     element they share a `y`, and a gesture that ends falls back to the
-     entrance transition — stagger delay included. That made a card hang at
-     its hover height for the full delay (0.84–0.98s) after the cursor left,
-     so the middle card — the one you cross every time you move between the
-     other two — was almost always still lifted when you got to it and never
-     appeared to move at all. Outer element owns the arrival, inner owns the
-     hover, and neither can borrow the other's timing. */
   return (
-    <motion.div
-      className="h-full"
-      initial={{ opacity: 0, y: 42, rotateX: 11 }}
-      whileInView={{ opacity: 1, y: 0, rotateX: 0 }}
-      viewport={{ once: true, amount: 0.25 }}
-      transition={{ duration: 0.7, ease: EASE, delay }}
+    <div
+      className="relative flex h-full flex-col rounded-[var(--r-surface)] bg-white p-5 text-left"
+      style={{
+        border: `1px solid ${tone.border}`,
+        boxShadow: isBest
+          ? '0 18px 44px rgba(31,58,95,0.13), 0 2px 8px rgba(31,58,95,0.05)'
+          : '0 10px 30px rgba(31,58,95,0.07)',
+      }}
     >
-      <motion.div
-        className="relative flex h-full flex-col rounded-[18px] bg-white p-5 text-left"
-        style={{
-          border: `1px solid ${tone.border}`,
-          boxShadow: isBest
-            ? '0 18px 44px rgba(31,58,95,0.13), 0 2px 8px rgba(31,58,95,0.05)'
-            : '0 10px 30px rgba(31,58,95,0.07)',
-        }}
-        whileHover={{ y: -5 }}
-        transition={{ duration: 0.35, ease: EASE }}
+      <span
+        className="mb-3 w-fit rounded-full px-2.5 py-1 text-[11px] font-semibold"
+        style={{ background: tone.chipBg, color: tone.chipFg }}
       >
-        {/* Slow ambient glow, best-fit card only — one quiet point of life */}
-        {isBest && (
-          <motion.span
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-0 rounded-[18px]"
-            style={{ boxShadow: '0 0 0 1px rgba(214,182,106,0.55)' }}
-            animate={{ opacity: [0.35, 1, 0.35] }}
-            transition={{ duration: 4.4, repeat: Infinity, ease: 'easeInOut' }}
-          />
-        )}
+        {path.label}
+      </span>
 
-        <span
-          className="mb-3 w-fit rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-[.12em]"
-          style={{ background: tone.chipBg, color: tone.chipFg }}
-        >
-          {path.label}
-        </span>
+      {/* Not a heading. These are sample rows inside a product surface, not
+         sections of the document, and as an h3 directly under the hero h1
+         they were the page's "h1 → h3 skips a level" audit failure. A p with
+         the same type carries the same weight visually and doesn't claim a
+         place in the outline.
 
-        {/* Fixed two-line box. Without it a one-line path name pulls its
-           readiness bar up out of line with its neighbours — and a comparison
-           view whose rows don't align stops reading as a comparison. */}
-        <h3
-          className="font-heading text-[15px] font-bold leading-6 md:min-h-[3rem]"
-          style={{ color: 'var(--text-primary)' }}
-        >
-          {path.path_name}
-        </h3>
+         Fixed two-line box: without it a one-line path name pulls its
+         readiness bar up out of line with its neighbours, and a comparison
+         view whose rows don't align stops reading as a comparison. */}
+      <p
+        className="font-heading text-[15px] font-bold leading-6 md:min-h-[3rem]"
+        style={{ color: 'var(--text-primary)' }}
+      >
+        {path.path_name}
+      </p>
 
-        <ReadinessBar score={path.readiness_score} tone={tone} delay={delay + 0.16} />
+      <ReadinessBar score={path.readiness_score} tone={tone} />
 
-        <p className="mt-4 text-[13px] leading-5" style={{ color: 'var(--text-secondary)' }}>
-          <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>Tradeoff · </span>
-          {path.main_tradeoffs}
-        </p>
-      </motion.div>
-    </motion.div>
+      <p className="mt-4 text-[13px] leading-5" style={{ color: 'var(--text-secondary)' }}>
+        <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>Tradeoff · </span>
+        {path.main_tradeoffs}
+      </p>
+    </div>
   );
 }
 
 export default function PathPreview() {
   return (
     <div className="relative mx-auto mt-16 max-w-5xl">
-      <motion.p
-        className="mb-4 text-center text-[10px] font-bold uppercase tracking-[.18em]"
-        style={{ color: 'var(--text-secondary)' }}
-        initial={{ opacity: 0 }}
-        whileInView={{ opacity: 1 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.5, ease: EASE, delay: 0.72 }}
-      >
-        Sample output · three paths
-      </motion.p>
+      <p className="mb-4 text-center text-[13px]" style={{ color: 'var(--text-secondary)' }}>
+        Sample output. This is what three paths look like.
+      </p>
 
-      {/* Shared perspective so the three cards settle as one plane */}
-      <div className="grid gap-4 md:grid-cols-3" style={{ perspective: 1400 }}>
-        {PATHS.map((p, i) => (
-          <PathCard key={p.path_name} path={p} index={i} />
+      <div className="grid gap-4 md:grid-cols-3">
+        {PATHS.map((p) => (
+          <PathCard key={p.path_name} path={p} />
         ))}
       </div>
     </div>

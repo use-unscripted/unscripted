@@ -31,9 +31,25 @@
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
     --radius: 0.5rem;
+    /* Josefin Sans is a display face — geometric, very small x-height. It was
+       set on all three roles, so every paragraph, form label and button on the
+       site rendered in it and Inter never fired at all (it sat behind Josefin
+       as a fallback). Body copy now gets Inter; Josefin stays for headings and
+       display, which is what it was drawn for.
+
+       Josefin ships 300–700 here. Do not use font-extrabold/black with
+       --font-heading: the browser synthesises the weight and the type goes
+       mushy. 700 is the ceiling. */
     --font-heading: 'Josefin Sans', 'Inter', Arial, ui-sans-serif, system-ui, sans-serif;
-    --font-body: 'Josefin Sans', 'Inter', Arial, ui-sans-serif, system-ui, sans-serif;
+    --font-body: 'Inter', ui-sans-serif, system-ui, Arial, sans-serif;
     --font-display: 'Josefin Sans', 'Inter', Arial, ui-sans-serif, system-ui, sans-serif;
+
+    /* Corner radius — two values, deliberately. The landing page had ten
+       different arbitrary radii (8, 9, 10, 12, 14, 16, 18, 20, 22, 24px).
+       No single one of those is wrong; having all ten is what reads as
+       unconsidered. Controls get one value, surfaces get the other. */
+    --r-control: 8px;   /* buttons, inputs, chips that aren't full pills */
+    --r-surface: 16px;  /* cards, panels, large blocks */
 
     /* Brand color tokens */
     --brand-navy-900: #1F3A5F;

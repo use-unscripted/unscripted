@@ -129,18 +129,19 @@ export default function LandingSections() {
         style={{ background: 'var(--background-secondary)', borderTop: '1px solid var(--border-light)' }}
       >
         <div className="mx-auto max-w-7xl">
+          {/* Every section on this page used to open with the same device: a
+             tiny bold letterspaced uppercase label, then the heading. Four of
+             them in a row stops being an accent and becomes the template.
+             The headings carry their own sections now. */}
           <Reveal delay={0}>
-            <p className="text-xs font-bold uppercase tracking-[.14em]" style={{ color: 'var(--brand-navy-700)' }}>
-              What are you trying to test?
-            </p>
-            <h2 className="font-heading mt-3 text-3xl font-bold" style={{ color: 'var(--text-primary)' }}>
-              These are paths the system can help you test.
+            <h2 className="font-heading text-3xl font-bold" style={{ color: 'var(--text-primary)' }}>
+              Pick something you're actually weighing up.
             </h2>
             <p className="mt-3 max-w-2xl" style={{ color: 'var(--text-secondary)' }}>
-              Unscripted is not a separate product for each path. It helps you compare any of these options, run structured experiments, and build evidence before committing.
+              The process is the same whichever one you choose: compare the options, run the missions, come back with proof.
             </p>
             <p className="mt-5 text-sm font-semibold" style={{ color: 'var(--brand-navy-700)' }}>
-              Select a path to see the first missions and the proof you'd walk away with.
+              Choose one to see its first missions and what you'd walk away with.
             </p>
           </Reveal>
 
@@ -165,39 +166,31 @@ export default function LandingSections() {
 
         <div className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-2">
           <div>
-            <Reveal delay={0} y={16}>
-              <p className="mb-5 text-xs font-bold uppercase tracking-[.14em]" style={{ color: 'var(--brand-gold-500)' }}>
-                The problem
-              </p>
-            </Reveal>
             {/* Plain reveal, not a word mask. The mask treatment is reserved
                for the two bookends — hero and closing CTA. Used on every
                heading it stops being an accent and becomes a tic. */}
             <Reveal delay={60} y={20}>
-              <h2 className="font-heading mt-3 text-4xl font-bold leading-tight tracking-tight text-white lg:text-5xl">
-                College teaches you subjects. Not how to test whether a path actually fits you.
+              <h2 className="font-heading text-4xl font-bold leading-tight tracking-tight text-white lg:text-5xl">
+                College teaches you subjects. It never teaches you how to test a career before you pick one.
               </h2>
             </Reveal>
             <Reveal delay={420} y={16}>
               <p className="mt-6 leading-7 text-slate-300">
-                Most students choose a direction based on prestige, family expectations, or incomplete information. They may spend years pursuing a path before discovering it doesn't match their actual values, working style, or life goals.
+                Most people choose on prestige, or on what a parent said, or on a guess made at eighteen. The bill for guessing wrong is four years and a lot of money, and it arrives long after the decision.
               </p>
             </Reveal>
           </div>
 
           <Reveal delay={160} y={30}>
             <div
-              className="rounded-[20px] p-8"
+              className="rounded-[var(--r-surface)] p-8"
               style={{ background: 'var(--brand-navy-700)', border: '1px solid rgba(214,182,106,0.25)' }}
             >
-              <p className="mb-4 text-xs font-bold uppercase tracking-[.14em]" style={{ color: 'var(--brand-gold-500)' }}>
-                The Unscripted method
-              </p>
               <h3 className="font-heading mb-4 text-2xl font-bold text-white">
                 Compare. Test. Execute. Reflect. Adjust.
               </h3>
               <p className="leading-7 text-slate-300">
-                Unscripted helps you compare realistic paths with honest tradeoffs, run controlled real-world experiments, build weekly execution plans around your actual schedule, and use reflection to make better decisions.
+                You compare three paths, run real missions against the one you pick, work them around the schedule you already have, and move your ranking as the evidence comes in.
               </p>
             </div>
           </Reveal>
@@ -208,29 +201,24 @@ export default function LandingSections() {
       <section className="mx-auto max-w-7xl px-6 py-28">
         <div className="grid items-center gap-12 lg:grid-cols-2">
           <div>
-            <Reveal delay={0} y={18}>
-              <p className="text-xs font-bold uppercase tracking-[.14em]" style={{ color: 'var(--brand-navy-700)' }}>
-                Mission Guide preview
-              </p>
-            </Reveal>
             <Reveal delay={60} y={20}>
-              <h2 className="font-heading mt-3 text-4xl font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>
-                Every experiment comes with exact instructions.
+              <h2 className="font-heading text-4xl font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>
+                Every mission comes with the actual words.
               </h2>
             </Reveal>
             <Reveal delay={340} y={16}>
               <p className="mt-5 leading-7" style={{ color: 'var(--text-secondary)' }}>
-                Mission Guides are Unscripted's core differentiator. Each one explains exactly how to execute the assignment — not just what to do, but how to do it, what to say, common mistakes, and how to capture what you learned.
+                Not a list of things to go do. The email you send, the questions to ask once they're on the call, the mistakes most people make the first time, and what to write down afterwards.
               </p>
             </Reveal>
             <Reveal delay={440} y={16}>
               <Magnetic>
                 <Link
                   to="/register"
-                  className="mt-8 inline-flex items-center gap-2 rounded-[10px] px-6 py-3.5 text-sm font-semibold text-white"
+                  className="mt-8 inline-flex items-center gap-2 rounded-[var(--r-control)] px-6 py-3.5 text-sm font-semibold text-white"
                   style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}
                 >
-                  See the Full Mission Guide <ArrowRight size={17} aria-hidden="true" />
+                  See a full mission guide <ArrowRight size={17} aria-hidden="true" />
                 </Link>
               </Magnetic>
             </Reveal>
@@ -238,23 +226,23 @@ export default function LandingSections() {
 
           <Reveal delay={120} y={22} amount={0.1}>
             <div
-              className="rounded-[24px] p-7"
+              className="rounded-[var(--r-surface)] p-7"
               style={{ background: 'var(--brand-navy-900)', border: '1px solid rgba(214,182,106,0.30)' }}
             >
               <div className="mb-2 flex items-center gap-2">
                 <span
-                  className="rounded-full px-3 py-1 text-xs font-bold"
+                  className="rounded-full px-3 py-1 text-xs font-semibold"
                   style={{ background: 'rgba(214,182,106,0.20)', color: 'var(--brand-gold-500)' }}
                 >
                   Mission Guide
                 </span>
               </div>
               <h3 className="font-heading mb-1 text-lg font-bold text-white">
-                Interview Someone Working in Your Target Role
+                Interview someone doing the job you're considering
               </h3>
               {/* slate-300 on the navy card; slate-400 was 4.48:1 */}
               <p className="mb-6 text-xs text-slate-300">
-                Estimated time: 4–6 hours · Deliverable: Written summary + path update
+                4–6 hours. You end up with a written summary and an updated ranking.
               </p>
               <MissionChecklist />
             </div>
@@ -267,7 +255,7 @@ export default function LandingSections() {
         <ParallaxCTA>
           <Reveal delay={0} y={20} amount={0.1}>
             <div
-              className="relative overflow-hidden rounded-[24px] px-8 py-20 text-center text-white"
+              className="relative overflow-hidden rounded-[var(--r-surface)] px-8 py-20 text-center text-white"
               style={{ background: 'linear-gradient(135deg, var(--brand-navy-900) 0%, var(--brand-navy-700) 100%)' }}
             >
               {/* Slow gold sheen crossing the panel */}
@@ -295,10 +283,10 @@ export default function LandingSections() {
                 <Magnetic>
                   <Link
                     to="/onboarding"
-                    className="mt-10 inline-flex items-center gap-2 rounded-[10px] bg-white px-7 py-4 text-sm font-semibold"
+                    className="mt-10 inline-flex items-center gap-2 rounded-[var(--r-control)] bg-white px-7 py-4 text-sm font-semibold"
                     style={{ color: 'var(--brand-navy-900)', boxShadow: '0 4px 16px rgba(31,58,95,0.18)' }}
                   >
-                    Start My 30-Day Path Test <ArrowRight size={17} aria-hidden="true" />
+                    Start your 30-day test <ArrowRight size={17} aria-hidden="true" />
                   </Link>
                 </Magnetic>
               </Reveal>

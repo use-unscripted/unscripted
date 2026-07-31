@@ -86,17 +86,17 @@ export default function LandingNav() {
         </motion.div>
 
         <div className="hidden items-center gap-7 sm:flex">
-          <NavLink href="#how-it-works">How It Works</NavLink>
+          <NavLink href="#how-it-works">How it works</NavLink>
           <NavLink to="/login">Log in</NavLink>
         </div>
 
         <Magnetic>
           <Link
             to="/onboarding"
-            className="block rounded-[10px] px-4 py-2.5 text-sm font-semibold text-white"
+            className="block rounded-[var(--r-control)] px-4 py-2.5 text-sm font-semibold text-white"
             style={{ background: 'var(--brand-navy-900)', boxShadow: '0 6px 20px rgba(31,58,95,0.25)' }}
           >
-            Start My 30-Day Path Test
+            Start your 30-day test
           </Link>
         </Magnetic>
       </motion.div>
