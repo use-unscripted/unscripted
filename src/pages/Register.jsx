@@ -22,8 +22,11 @@ import { validatePassword, isPasswordValid } from "@/lib/password-validation";
 const INTENTS = {
   "mission-guide": {
     title: "See a full Mission Guide",
+    // Guides are per-experiment and generated on request. Only the setup flow
+    // generates one for you; an experiment created anywhere else starts with no
+    // guide at all. Promise the route to a guide, not its automatic arrival.
     subtitle:
-      "Mission Guides are written for the experiment you choose, so they live inside your account. Create one and your first guide comes with your first experiment.",
+      "Mission Guides are written for the experiment you choose, so they live inside your account. Create one, pick an experiment, and generate its guide.",
     backTo: "/",
     backLabel: "Back to Unscripted",
   },
@@ -39,7 +42,11 @@ const DEFAULT_INTENT = {
 
 export default function Register() {
   const [searchParams] = useSearchParams();
-  const intent = INTENTS[searchParams.get("intent")] ?? DEFAULT_INTENT;
+  // Own-property lookup only: ?intent=toString (or constructor, __proto__, ...)
+  // otherwise resolves up the prototype chain to something truthy, which slips
+  // past the ?? fallback and renders the screen with no heading and no way back.
+  const intentKey = searchParams.get("intent");
+  const intent = Object.hasOwn(INTENTS, intentKey ?? "") ? INTENTS[intentKey] : DEFAULT_INTENT;
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");

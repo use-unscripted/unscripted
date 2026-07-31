@@ -62,6 +62,8 @@ export default function ResetPassword() {
         icon={AlertTriangle}
         title="Invalid reset link"
         subtitle="This password reset link is missing or invalid"
+        backTo="/"
+        backLabel="Back to Unscripted"
         footer={
           <Link to="/forgot-password" className="text-primary font-medium hover:underline">
             Request a new link
@@ -97,7 +99,13 @@ export default function ResetPassword() {
   }
 
   return (
-    <AuthLayout icon={Lock} title="New password" subtitle="Enter your new password below">
+    <AuthLayout
+      icon={Lock}
+      title="New password"
+      subtitle="Enter your new password below"
+      backTo="/"
+      backLabel="Back to Unscripted"
+    >
       {error && (
         <div className="mb-4 p-3 rounded-lg bg-destructive/10 text-destructive text-sm" role="alert">
           {error}
