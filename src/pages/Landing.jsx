@@ -18,6 +18,7 @@ import LandingNav from '@/components/landing/LandingNav';
 import Hero from '@/components/landing/Hero';
 import LandingSections from '@/components/landing/LandingSections';
 import { ScrollProgress } from '@/components/motion';
+import SiteFooter from '@/components/SiteFooter';
 import { CompassIcon } from '@/components/UnscriptedLogo';
 
 export default function Landing() {
@@ -61,12 +62,7 @@ export default function Landing() {
         <LandingNav />
         <Hero />
         <LandingSections />
-        <footer className="border-t border-[#E2E8F0] px-6 py-8">
-          <div className="mx-auto flex max-w-7xl items-center justify-center gap-2 text-sm text-[#64748B]">
-            <CompassIcon size={14} />
-            © 2026 Unscripted. Write your unscripted path.
-          </div>
-        </footer>
+        <SiteFooter />
       </div>
     </MotionConfig>
   );

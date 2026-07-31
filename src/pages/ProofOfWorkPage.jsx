@@ -120,8 +120,10 @@ function ProofCard({ entry, missionsMap, experimentsMap, onDelete, onNavigateToP
 
   const vid = isVideoFile(safeEntry.file_name, safeEntry.mime_type);
 
+  // min-w-0: grid items default to min-width:auto, so a long filename or URL
+  // stretches the card past its track and scrolls the whole page sideways.
   return (
-    <div className="rounded-[20px] border border-[#E2E8F0] bg-white p-5">
+    <div className="min-w-0 rounded-[20px] border border-[#E2E8F0] bg-white p-5">
       {showPreview && <FilePreviewModal entry={safeEntry} onClose={() => setShowPreview(false)} />}
 
       {/* Header */}
@@ -182,8 +184,9 @@ function ProofCard({ entry, missionsMap, experimentsMap, onDelete, onNavigateToP
       {/* External URL */}
       {safeEntry.external_url && (
         <a href={safeEntry.external_url} target="_blank" rel="noopener noreferrer"
-          className="mb-3 flex items-center gap-1.5 text-xs hover:underline" style={{ color: 'var(--brand-navy-700)' }}>
-          <ExternalLink size={11} /> {safeEntry.external_url}
+          className="mb-3 flex items-start gap-1.5 text-xs hover:underline" style={{ color: 'var(--brand-navy-700)' }}>
+          <ExternalLink size={11} className="mt-0.5 shrink-0" />
+          <span className="min-w-0 break-all">{safeEntry.external_url}</span>
         </a>
       )}
 
