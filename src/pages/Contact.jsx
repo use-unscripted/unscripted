@@ -1,17 +1,16 @@
-import { Link } from 'react-router-dom';
 import { Mail as MailIcon } from 'lucide-react';
-import { LegalPage, Section, P, Bullets } from '@/components/legal/LegalPage';
+import { LegalPage, Section, P, Bullets, Ref } from '@/components/legal/LegalPage';
 import { CONTACT_EMAIL, TEAM } from '@/lib/legal';
 
 export default function Contact() {
   return (
     <LegalPage
       title="Contact"
-      summary={
-        <>
-          One address, read by the people who build Unscripted. We are a small team, not a
-          support department, so expect a real reply rather than a fast one.
-        </>
+      lede={
+        <P>
+          One address, read by the people who build Unscripted. We are a small team rather than a
+          support department, so replies are considered rather than immediate.
+        </P>
       }
     >
       <div
@@ -32,19 +31,18 @@ export default function Contact() {
           {CONTACT_EMAIL}
         </a>
         <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-          Usually a few days. If it has been longer than a week, send it again — it did not
-          reach us.
+          Usually a few days. If a week passes with no reply, send it again — it did not reach us.
         </p>
       </div>
 
       <Section title="What to write about">
         <Bullets
           items={[
-            <><strong>Something is broken.</strong> Tell us what you were doing and what happened. A screenshot helps more than anything else you could send.</>,
-            <><strong>Delete my data.</strong> Email from the address on your account and say so. We delete the account and everything in it, and confirm when it is done.</>,
-            <><strong>Parents and guardians.</strong> Ask us what we hold about your child, or ask us to delete it. Either one, no argument.</>,
-            <><strong>Universities and career services.</strong> If you want to talk about a pilot on your campus, this is the address.</>,
-            <><strong>Security.</strong> Found a vulnerability? Send it here. We will take it seriously and we will not come after you for reporting it.</>,
+            <><strong>Something is broken.</strong> Say what you were doing and what happened instead. A screenshot is worth more than a description.</>,
+            <><strong>Deleting your data.</strong> Write from the address on your account and ask. We delete the account and its contents and confirm when it is done.</>,
+            <><strong>Parents and guardians.</strong> Ask what we hold about your child, or ask us to delete it. Either request is honored.</>,
+            <><strong>Universities and career services.</strong> Pilots, licensing, and questions from a general counsel all come here.</>,
+            <><strong>Security.</strong> Report a vulnerability and we will act on it. We do not pursue people who report in good faith.</>,
             <><strong>Press and partnerships.</strong> Same address.</>,
           ]}
         />
@@ -53,31 +51,30 @@ export default function Contact() {
       <Section title="Who you are writing to">
         <P>
           Unscripted is an independent product, built and operated by {TEAM}. There is no
-          registered company behind it yet and therefore no office address to print here. When
-          that changes, this page will say so.
+          registered company behind it yet, and therefore no office address to publish. That will
+          change, and this page will change with it.
         </P>
       </Section>
 
-      <Section title="Before you email about a generated path">
+      <Section title="Before you write about a generated path">
         <P>
-          If a path or a mission guide reads like it was written for somebody else, that is
-          worth telling us — but it is often fixable from your side first. The paths are
-          generated from your onboarding answers, so a vague answer produces a vague path.
-          Editing your profile and regenerating usually gets you further than we can from here.
+          If a path or a mission guide reads as though it were written for somebody else, tell us.
+          It is also often fixable from your side first: paths are generated from your onboarding
+          answers, and a general answer produces a general path. Editing your profile and
+          regenerating usually gets further than we can from here.
         </P>
         <P>
-          What Unscripted can and cannot promise is set out in the{' '}
-          <Link to="/terms" className="font-semibold underline underline-offset-4" style={{ color: 'var(--brand-navy-700)' }}>Terms</Link>, and what
-          happens to your answers is in the{' '}
-          <Link to="/privacy" className="font-semibold underline underline-offset-4" style={{ color: 'var(--brand-navy-700)' }}>Privacy Policy</Link>.
+          What Unscripted can and cannot promise is set out in the <Ref to="/terms">Terms of
+          Service</Ref>, and what happens to your answers is set out in the{' '}
+          <Ref to="/privacy">Privacy Policy</Ref>.
         </P>
       </Section>
 
-      <Section title="Not the right place">
+      <Section title="What this address is not">
         <P>
           Unscripted is not a crisis service. If you are struggling with your mental health,
-          please contact your campus counseling center or a local crisis line — in the US, call
-          or text 988. We build a career tool, and we are not equipped to help with that.
+          contact your campus counseling center or a crisis line. In the United States you can
+          call or text 988. We build a career tool and are not equipped to help with that.
         </P>
       </Section>
     </LegalPage>

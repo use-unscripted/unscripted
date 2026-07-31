@@ -1,45 +1,36 @@
-import { Link } from 'react-router-dom';
-import { LegalPage, Section, P, Callout, Mail } from '@/components/legal/LegalPage';
+import { LegalPage, Section, P, Mail, Ref } from '@/components/legal/LegalPage';
 
 const LOOP = [
-  ['Discover', 'Answer questions about where you are, what you feel pressure to do, and what you are privately curious about.'],
-  ['Compare', 'Get three paths — the best fit, a strong alternative, and a contrarian one you would not have picked yourself.'],
-  ['Test', 'Choose one and turn it into a 30-day experiment with a real, finite scope.'],
-  ['Execute', 'Follow mission guides that tell you exactly what to send, who to ask, and how to book the conversation.'],
-  ['Document', 'Save what you actually produced — the reply, the call notes, the thing you built.'],
-  ['Reflect', 'Write down what the week taught you about the path and about yourself.'],
-  ['Adjust', 'Keep going, change the experiment, or rule the path out. Ruling one out is a win.'],
+  ['Discover', 'You answer questions about where you are, what you are expected to do, and what you would look at if nobody were watching.'],
+  ['Compare', 'You get three paths: the closest fit, a strong alternative, and one you would not have picked yourself.'],
+  ['Test', 'You choose one path and it becomes a 30-day experiment with a fixed scope.'],
+  ['Execute', 'Mission guides tell you what to send, who to send it to, and how to prepare for the conversation that follows.'],
+  ['Document', 'You save what the month produced: the replies, the call notes, the work itself.'],
+  ['Reflect', 'You write down what the week showed you about the path and about how you worked in it.'],
+  ['Adjust', 'You continue, change the experiment, or rule the path out. Ruling one out counts.'],
 ];
 
 export default function About() {
   return (
     <LegalPage
       title="About Unscripted"
-      summary={
+      lede={
         <>
-          Students pick a career from a course catalog, a few conversations, and a guess — then
-          find out whether it fits after they have already committed years to it. Unscripted
-          exists so you can test a path for 30 days before you commit to it.
+          <P>
+            Unscripted helps students test a career path for 30 days before committing to it.
+          </P>
+          <P>
+            Most people choose a direction from a course catalog, a handful of conversations and
+            a guess, then find out whether it fits after the tuition is spent. The information
+            that would settle the question — what the work is actually like, and whether you want
+            to do it every day — arrives years late. Unscripted exists to move that forward.
+          </P>
         </>
       }
     >
-      <Section title="The problem we are working on">
+      <Section title="How it works">
         <P>
-          Choosing what to do with your life is the largest decision most people make with the
-          least evidence. You are asked to commit at 18 or 20, based on a major description, a
-          parent's opinion, and whatever a professional whose job you have never watched
-          happens to say at a career fair.
-        </P>
-        <P>
-          Then the standard advice is "network" and "get experience", which is not advice — it
-          is a description of an outcome. Nobody tells you what to actually send, or who to send
-          it to, or what counts as having learned something.
-        </P>
-      </Section>
-
-      <Section title="How Unscripted works">
-        <P>
-          The whole product is one loop, and you can run it as many times as you need to.
+          The product is one loop. You can run it as many times as it takes.
         </P>
         <div className="space-y-3">
           {LOOP.map(([step, detail], i) => (
@@ -59,51 +50,50 @@ export default function About() {
         </div>
       </Section>
 
-      <Section title="The part that matters">
-        <Callout>
-          Mission Guides are the difference. Not "reach out to alumni" — the actual email, the
-          person to send it to, what to say when they reply, and what to save afterwards as
-          proof you did it.
-        </Callout>
+      <Section title="Mission guides">
         <P>
-          A month of guided, documented work in a field tells you more about whether you want
-          it than four years of reading about it. It also leaves you with something to show —
-          real conversations, real output — which is worth more in an application than a line
-          about being passionate.
+          Career advice usually stops at “network” and “get experience.” Those are outcomes, not
+          instructions, and the students who already know how to produce them are the ones who
+          did not need the advice.
+        </P>
+        <P>
+          A mission guide is the instruction. It contains the message to send, who to send it to,
+          what to ask when someone agrees to talk, and what to keep afterward as evidence. Thirty
+          days of that leaves you with two things: a real answer about the path, and a record of
+          work you can show someone.
         </P>
       </Section>
 
-      <Section title="Who is building it">
+      <Section title="Where the product stands">
         <P>
-          A small team — product, engineering and design — working on this directly with
-          students rather than guessing at what they need. Unscripted is independent, and it is
-          not affiliated with or endorsed by any university.
+          Unscripted is early. Parts of it are unfinished, generation sometimes produces a path
+          that misses, and features change without much ceremony. We would rather say that here
+          than have you find it out on your own.
         </P>
         <P>
-          We are early. Parts of Unscripted are unfinished, and some of it will be wrong for
-          you. We would genuinely rather hear that than not — if something breaks or a
-          generated path reads like nonsense, tell us and we will fix it.
-        </P>
-      </Section>
-
-      <Section title="For universities and career-services teams">
-        <P>
-          We are building Unscripted to work alongside career services, not around it — the
-          goal is students who show up to your office having already tested something and
-          having evidence to talk about. Individual student answers stay private to the
-          student; institutions would see aggregate participation, not personal reflections.
-          The <Link to="/privacy" className="font-semibold underline underline-offset-4" style={{ color: 'var(--brand-navy-700)' }}>Privacy Policy</Link> spells
-          that out.
-        </P>
-        <P>
-          If you run a career center and want to talk about a pilot, email <Mail />.
+          It is built by a small team working on it directly with students. It is independent, and
+          it is not affiliated with or endorsed by any university.
         </P>
       </Section>
 
-      <Section title="Get in touch">
+      <Section title="For universities and career services">
         <P>
-          Students, parents, faculty, press — one address, and a person reads it: <Mail />.
-          More on the <Link to="/contact" className="font-semibold underline underline-offset-4" style={{ color: 'var(--brand-navy-700)' }}>contact page</Link>.
+          Unscripted is built to work alongside a career center rather than around it. The
+          intended result is students arriving at your office having already tested something,
+          with evidence to discuss.
+        </P>
+        <P>
+          Student responses stay private to the student. An institution licensing Unscripted
+          receives aggregated participation data, not the substance of anyone’s answers; the{' '}
+          <Ref to="/privacy">Privacy Policy</Ref> sets out that commitment in full. To discuss a
+          pilot, write to <Mail />.
+        </P>
+      </Section>
+
+      <Section title="Contact">
+        <P>
+          Students, parents, faculty and press all reach us at the same address: <Mail />. More
+          detail on the <Ref to="/contact">contact page</Ref>.
         </P>
       </Section>
     </LegalPage>
