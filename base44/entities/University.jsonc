@@ -33,16 +33,25 @@
       }
     },
     "events_platform": {
+      // Which calendar platform won the probe. "none" means all four were
+      // tried and none answered — the school is re-probed only after a month.
       "type": "string",
       "enum": [
         "unknown",
         "localist",
+        "livewhale",
+        "trumba",
+        "campuslabs",
         "none"
       ],
       "default": "unknown"
     },
     "events_feed_url": {
-      // Full Localist API base, e.g. "https://events.fairfield.edu/api/2/events".
+      // Base URL for the platform above, enough to re-fetch without probing:
+      //   localist    https://events.fairfield.edu/api/2/events
+      //   livewhale   https://events.uconn.edu/live/json/events
+      //   trumba      https://www.trumba.com/calendars/tufts.json
+      //   campuslabs  https://nyu.campuslabs.com/engage/api/discovery/event/search
       // Empty when events_platform is "none".
       "type": "string"
     },
