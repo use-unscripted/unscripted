@@ -39,7 +39,9 @@ export function OptionRow({ option, selected, index, onSelect, multi }) {
       aria-pressed={selected}
       className="opt-row group flex w-full items-center gap-3 rounded-2xl border px-4 py-3.5 text-left"
       style={{
-        animationDelay: `${40 + index * 45}ms`,
+        // Capped: an uncapped stagger leaves the tail of a long list invisible
+        // for seconds.
+        animationDelay: `${40 + Math.min(index, 8) * 45}ms`,
         borderColor: selected ? 'var(--brand-navy-900)' : '#E2E8F0',
         background: selected ? '#F3F7FC' : '#FFFFFF',
         boxShadow: selected ? '0 6px 18px rgba(31,58,95,0.12)' : 'none',
