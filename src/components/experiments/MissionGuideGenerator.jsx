@@ -1,7 +1,9 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { X, Loader2, Wand2, AlertCircle } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
-import { buildGuidePrompt, GUIDE_JSON_SCHEMA, validateGuide } from './guideSchema';
+import { buildGuidePrompt, GUIDE_JSON_SCHEMA, validateGuide, attachCampusEvent } from './guideSchema';
+import CampusEventPicker from './CampusEventPicker';
+import CampusEventCard from './CampusEventCard';
 
 const VARIATION_OPTIONS = [
   { value: 'shorter', label: 'Shorter', description: 'Reduce scope and time commitment' },
@@ -29,7 +31,25 @@ export default function MissionGuideGenerator({ experiment, existingGuides = [],
   const [pendingGuide, setPendingGuide] = useState(null); // guide waiting for active decision
   const [activeDecision, setActiveDecision] = useState(null); // 'make_active' | 'keep_current' | 'compare'
   const [saving, setSaving] = useState(false);
+  const [profile, setProfile] = useState(null);
+  const [campusEvent, setCampusEvent] = useState(null);
   const generatingRef = useRef(false);
+
+  // The picker needs the profile to judge which events are worth a walk across
+  // campus. A missing profile just means no events are offered.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const user = await base44.auth.me();
+        const rows = await base44.entities.StudentProfile.filter({ user_id: user.id }, '-created_date', 1);
+        if (!cancelled) setProfile(rows?.[0] || null);
+      } catch {
+        if (!cancelled) setProfile(null);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
   const nextVersion = (existingGuides.length > 0
     ? Math.max(...existingGuides.map(g => g.version_number || 0)) + 1
@@ -48,7 +68,7 @@ export default function MissionGuideGenerator({ experiment, existingGuides = [],
     const variationInstruction = hasExisting && variation
       ? (VARIATION_INSTRUCTIONS[variation] || variation)
       : '';
-    const prompt = buildGuidePrompt(experiment, { variationInstruction, version: nextVersion });
+    const prompt = buildGuidePrompt(experiment, { variationInstruction, version: nextVersion, campusEvent });
     return repairNote ? `${prompt}\n\n${repairNote}` : prompt;
   };
 
@@ -71,7 +91,7 @@ export default function MissionGuideGenerator({ experiment, existingGuides = [],
           response_json_schema: GUIDE_JSON_SCHEMA,
         });
 
-        validation = validateGuide(result);
+        validation = validateGuide(result, { campusEvent });
         if (import.meta.env?.DEV && validation.warnings.length) {
           console.warn('[MissionGuide] repaired:', validation.warnings);
         }
@@ -90,7 +110,11 @@ export default function MissionGuideGenerator({ experiment, existingGuides = [],
         throw new Error(validation.errors[0] || 'Generation failed. Please try again.');
       }
 
-      setPendingGuide({ ...validation.guide, promptContext, version_number: nextVersion });
+      // The calendar record is pinned on after validation, never generated —
+      // when and where come from the school's feed, not from the model.
+      const guide = campusEvent ? attachCampusEvent(validation.guide, campusEvent) : validation.guide;
+
+      setPendingGuide({ ...guide, promptContext, version_number: nextVersion });
     } catch (err) {
       setError(err.message || 'Generation failed. Please try again.');
     } finally {
@@ -142,7 +166,7 @@ export default function MissionGuideGenerator({ experiment, existingGuides = [],
     const hasActive = existingGuides.some(g => g.is_active);
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(5,8,22,0.5)' }}>
-        <div className="w-full max-w-lg rounded-[24px] bg-white p-6 sm:p-8">
+        <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-[24px] bg-white p-6 sm:p-8">
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-heading text-xl font-bold text-[#050816]">Guide generated</h2>
             <button onClick={onClose}><X size={20} className="text-[#64748B]" /></button>
@@ -165,6 +189,11 @@ export default function MissionGuideGenerator({ experiment, existingGuides = [],
                 <p className="text-sm font-semibold text-[#050816] mt-0.5">{pendingGuide.steps[0].title}</p>
                 {pendingGuide.steps[0].artifact?.kind !== 'none' && (
                   <p className="text-xs text-[#64748B] mt-1">Comes pre-written — you fill in the blanks.</p>
+                )}
+                {pendingGuide.steps[0].campus_event && (
+                  <div className="mt-2">
+                    <CampusEventCard event={pendingGuide.steps[0].campus_event} compact />
+                  </div>
                 )}
               </div>
             )}
@@ -215,7 +244,7 @@ export default function MissionGuideGenerator({ experiment, existingGuides = [],
   // ── Step 1 & 2: Generate UI ───────────────────────────────────────────────
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(5,8,22,0.5)' }}>
-      <div className="w-full max-w-lg rounded-[24px] bg-white p-6 sm:p-8">
+      <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-[24px] bg-white p-6 sm:p-8">
         <div className="flex items-center justify-between mb-1">
           <h2 className="font-heading text-xl font-bold text-[#050816]">
             {hasExisting ? 'Generate Another Mission Guide' : 'Generate Mission Guide'}
@@ -234,6 +263,15 @@ export default function MissionGuideGenerator({ experiment, existingGuides = [],
           <p className="text-sm font-semibold text-[#050816]">{experiment.title}</p>
           {experiment.path_name && <p className="text-xs" style={{ color: 'var(--brand-navy-700)' }}>{experiment.path_name}</p>}
         </div>
+
+        {/* Real campus events — gives the first step a date the student didn't set */}
+        <CampusEventPicker
+          profile={profile}
+          pathName={experiment.path_name}
+          selected={campusEvent}
+          onSelect={setCampusEvent}
+          disabled={generating}
+        />
 
         {/* Variation picker — only for subsequent guides */}
         {hasExisting && (

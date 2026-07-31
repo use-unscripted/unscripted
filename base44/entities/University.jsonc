@@ -20,6 +20,35 @@
     "active": {
       "type": "boolean",
       "default": true
+    },
+    // ── Campus events feed ──
+    // Resolved once by the campusEvents function and cached here, so a school is
+    // probed a single time ever rather than on every student's page load.
+    "match_keys": {
+      // Normalized spellings of this school seen in StudentProfile.college free
+      // text ("fairfield", "fairfield university", "fairfield u").
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "events_platform": {
+      "type": "string",
+      "enum": [
+        "unknown",
+        "localist",
+        "none"
+      ],
+      "default": "unknown"
+    },
+    "events_feed_url": {
+      // Full Localist API base, e.g. "https://events.fairfield.edu/api/2/events".
+      // Empty when events_platform is "none".
+      "type": "string"
+    },
+    "events_resolved_at": {
+      "type": "string",
+      "format": "date-time"
     }
   },
   "required": [

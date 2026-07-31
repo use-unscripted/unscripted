@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import StepArtifact from '@/components/experiments/StepArtifact';
+import CampusEventCard from '@/components/experiments/CampusEventCard';
 import { ArrowLeft, Clock, CheckCircle2, Star, Loader2 } from 'lucide-react';
 
 const STATUS_CFG = {
@@ -155,6 +156,12 @@ export default function GuideDetailPage() {
                     {s.title && <p className="font-semibold text-[#050816] text-sm">{s.title}</p>}
                     {s.description && <p className="text-sm text-[#64748B] mt-0.5 leading-relaxed">{s.description}</p>}
                     {time && <p className="text-xs text-[#94A3B8] mt-1 flex items-center gap-1"><Clock size={10} /> {time}</p>}
+
+                    {s.campus_event && (
+                      <div className="mt-3">
+                        <CampusEventCard event={s.campus_event} />
+                      </div>
+                    )}
 
                     <StepArtifact artifact={s.artifact} profile={profile} />
 
