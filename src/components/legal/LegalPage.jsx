@@ -15,8 +15,9 @@
      the only blocks set in caps — if the whole document shouted, none of it
      would be conspicuous.
 
-   Type colour is --text-secondary throughout, never --text-muted (#718096),
-   which is 4.02:1 on white and fails the text minimum.
+   Type colour is --text-secondary throughout. --text-muted is a legible
+   4.5:1+ token now, but it stays out of these pages on purpose: a legal
+   instrument should not have two weights of body copy.
    ────────────────────────────────────────────────────────────────────────── */
 import { Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
