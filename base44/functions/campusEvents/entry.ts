@@ -514,7 +514,7 @@ const TRUMBA_SLUG_PATTERNS = [
 async function fetchPage(
   url: string,
   maxChars: number,
-): Promise<{ finalHost: string; html: string }> {
+): Promise<{ finalHost: string; finalUrl: string; html: string }> {
   const res = await fetch(url, {
     headers: { Accept: 'text/html,application/xhtml+xml,*/*', 'User-Agent': BROWSER_UA },
     redirect: 'follow',
@@ -522,16 +522,17 @@ async function fetchPage(
   });
 
   // Where the request actually ended up, which is often not where it was sent.
+  const finalUrl = res.url || url;
   let finalHost = '';
   try {
-    finalHost = stripWww(new URL(res.url).hostname.toLowerCase());
+    finalHost = stripWww(new URL(finalUrl).hostname.toLowerCase());
   } catch (_) {
     finalHost = '';
   }
 
   if (!res.ok || !res.body) {
     await res.body?.cancel().catch(() => {});
-    return { finalHost, html: '' };
+    return { finalHost, finalUrl, html: '' };
   }
   const reader = res.body.getReader();
   const decoder = new TextDecoder('utf-8');
@@ -545,7 +546,7 @@ async function fetchPage(
   } finally {
     await reader.cancel().catch(() => {});
   }
-  return { finalHost, html: html.slice(0, maxChars) };
+  return { finalHost, finalUrl, html: html.slice(0, maxChars) };
 }
 
 async function fetchHtmlHead(url: string, maxChars: number): Promise<string> {
@@ -732,15 +733,381 @@ const campusLabsAdapter: Adapter = {
   normalize: normalizeCampusLabs,
 };
 
+// ── Adapter: iCalendar (.ics) ───────────────────────────────────────────────
+
+/**
+ * Plain iCalendar. Not a vendor but a standard, which is exactly why it earns
+ * its place: Duke, Boston University, Iowa State, Western and Babson run five
+ * different calendar systems and every one of them publishes an .ics.
+ *
+ * It is last in preference for a reason. iCal carries a title, a time and a
+ * place and almost nothing else — no topics, no audience, no event types — so
+ * ranking a student's interests against it is weaker than against any of the
+ * JSON platforms. A school that has both should be read through the richer one.
+ */
+
+const ICS_FEED_TIMEOUT_MS = 12_000; // These are whole-calendar dumps, not pages.
+const ICS_MAX_BYTES = 4_000_000;
+const ICS_MAX_EVENTS = 400;
+
+/**
+ * Longer than the JSON probes get. Those ask for one event; an .ics probe has
+ * to pull the entire calendar before it can tell whether the file is one at
+ * all. Iowa State's is 197KB of 266 events, and the six seconds a JSON probe
+ * runs on lost it outright.
+ */
+const ICS_PROBE_TIMEOUT_MS = 12_000;
+
+/** Cheap guesses, tried before anything gets read. */
+const ICS_PATHS = ['/events.ics', '/calendar.ics', '/webcal', '/ical', '/events/feed/ical'];
+
+/**
+ * Off-site hosts allowed to serve a school's calendar.
+ *
+ * Normally a discovered URL has to sit inside the school's own domain. Google
+ * Calendar is the documented exception: plenty of smaller schools embed one
+ * rather than run calendar software, and its public .ics is a fixed, readable
+ * shape.
+ */
+const ICS_VENDOR_HOSTS = ['calendar.google.com'];
+
+/**
+ * RFC 5545 line folding: a line starting with a space or tab continues the one
+ * before it. Unfolding first means a wrapped SUMMARY is one value, not two.
+ */
+function unfoldIcs(text: string): string[] {
+  const raw = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n');
+  const lines: string[] = [];
+  for (const line of raw) {
+    if ((line.startsWith(' ') || line.startsWith('\t')) && lines.length) {
+      lines[lines.length - 1] += line.slice(1);
+    } else {
+      lines.push(line);
+    }
+  }
+  return lines;
+}
+
+/** iCal escapes commas, semicolons and newlines inside text values. */
+function unescapeIcsText(value: string): string {
+  return value
+    .replace(/\\n/gi, '\n')
+    .replace(/\\,/g, ',')
+    .replace(/\\;/g, ';')
+    .replace(/\\\\/g, '\\');
+}
+
+interface IcsEvent {
+  uid: string;
+  summary: string;
+  description: string;
+  location: string;
+  url: string;
+  categories: string[];
+  start: string;
+  end: string;
+  allDay: boolean;
+}
+
+/**
+ * One DTSTART/DTEND value, as a string the client can render.
+ *
+ * Three forms, three deliberate treatments:
+ *
+ *   20260803T103000Z    UTC. Converted to a real offset-bearing timestamp.
+ *   20260803T103000     Wall-clock, with or without a TZID. Emitted as-is,
+ *                       with no offset, exactly as the Trumba adapter already
+ *                       does — a student standing on that campus reads the
+ *                       clock on the wall, and inventing an offset from a TZID
+ *                       we may not hold tz data for is how a listing moves by
+ *                       an hour.
+ *   20260803            All-day. Emitted date-only and flagged, because
+ *                       stamping midnight on it lands the student a day early
+ *                       west of Greenwich.
+ */
+function icsDate(value: string): { value: string; allDay: boolean } | null {
+  const text = (value || '').trim();
+
+  const utc = text.match(/^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})Z$/);
+  if (utc) {
+    const [, y, mo, d, h, mi, s] = utc;
+    const at = Date.UTC(+y, +mo - 1, +d, +h, +mi, +s);
+    return Number.isFinite(at) ? { value: new Date(at).toISOString(), allDay: false } : null;
+  }
+
+  const local = text.match(/^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})$/);
+  if (local) {
+    const [, y, mo, d, h, mi, s] = local;
+    return { value: `${y}-${mo}-${d}T${h}:${mi}:${s}`, allDay: false };
+  }
+
+  const dateOnly = text.match(/^(\d{4})(\d{2})(\d{2})$/);
+  if (dateOnly) {
+    const [, y, mo, d] = dateOnly;
+    return { value: `${y}-${mo}-${d}`, allDay: true };
+  }
+
+  return null;
+}
+
+/**
+ * Every VEVENT in a calendar, minus the ones we cannot date honestly.
+ *
+ * Events carrying an RRULE are dropped outright. A weekly meeting whose master
+ * record is dated 2007 is still running today, but working out which Tuesday it
+ * next falls on means implementing recurrence — UNTIL, COUNT, BYDAY, EXDATE and
+ * the daylight-saving edges — and every bug in that sends a student to a room
+ * on the wrong day. Duke's feed carries exactly these: live weekly entries
+ * whose DTSTART reads 2007. Showing nothing is the honest failure here.
+ */
+export function parseIcsEvents(text: string): IcsEvent[] {
+  const events: IcsEvent[] = [];
+  let current: Record<string, string> | null = null;
+  let recurring = false;
+
+  for (const line of unfoldIcs(text)) {
+    if (line === 'BEGIN:VEVENT') {
+      current = {};
+      recurring = false;
+      continue;
+    }
+    if (line === 'END:VEVENT') {
+      if (current && !recurring) {
+        const start = icsDate(current.DTSTART || '');
+        if (start) {
+          const end = icsDate(current.DTEND || '');
+          events.push({
+            uid: current.UID || '',
+            summary: unescapeIcsText(current.SUMMARY || ''),
+            description: unescapeIcsText(current.DESCRIPTION || ''),
+            location: unescapeIcsText(current.LOCATION || ''),
+            url: current.URL || '',
+            categories: (current.CATEGORIES || '')
+              .split(',')
+              .map(c => unescapeIcsText(c).trim())
+              .filter(Boolean),
+            start: start.value,
+            end: end?.value || '',
+            allDay: start.allDay,
+          });
+        }
+      }
+      current = null;
+      if (events.length >= ICS_MAX_EVENTS) break;
+      continue;
+    }
+    if (!current) continue;
+
+    const colon = line.indexOf(':');
+    if (colon < 1) continue;
+    // "DTSTART;TZID=America/New_York" -> name DTSTART, params discarded.
+    const name = line.slice(0, colon).split(';')[0].toUpperCase();
+    const value = line.slice(colon + 1);
+
+    if (name === 'RRULE') recurring = true;
+    else if (!(name in current)) current[name] = value;
+  }
+
+  return events;
+}
+
+/** A calendar is only useful to us if it still has something ahead of today. */
+export function looksLikeIcal(text: unknown): boolean {
+  if (typeof text !== 'string' || !text.includes('BEGIN:VCALENDAR')) return false;
+  const events = parseIcsEvents(text);
+  if (!events.length) return false;
+  const cutoff = Date.now() - 86400000;
+  return events.some((e) => {
+    const at = new Date(e.start).getTime();
+    return Number.isFinite(at) && at >= cutoff;
+  });
+}
+
+async function fetchIcsText(url: string, timeoutMs: number): Promise<string> {
+  const res = await fetch(url, {
+    headers: { Accept: 'text/calendar,text/plain,*/*', 'User-Agent': BROWSER_UA },
+    redirect: 'follow',
+    signal: AbortSignal.timeout(timeoutMs),
+  });
+  if (!res.ok || !res.body) {
+    await res.body?.cancel().catch(() => {});
+    return '';
+  }
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder('utf-8');
+  let text = '';
+  try {
+    while (text.length < ICS_MAX_BYTES) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      text += decoder.decode(value, { stream: true });
+    }
+  } finally {
+    await reader.cancel().catch(() => {});
+  }
+  return text;
+}
+
+/** webcal:// is http's calendar-shaped twin; nothing else about it differs. */
+export function normalizeIcsUrl(url: string): string {
+  return url.trim().replace(/^webcal:\/\//i, 'https://');
+}
+
+/**
+ * A Google Calendar embed names the same calendar its .ics does.
+ *
+ * Schools too small to run calendar software very often just drop a Google
+ * Calendar iframe on the page. The embed's `src` is the calendar id, and the
+ * public .ics for that id is a fixed rewrite of it — no guessing involved, and
+ * it fails closed if the calendar was never shared publicly.
+ */
+export function googleCalendarIcsFrom(embedUrl: string): string {
+  try {
+    const url = new URL(embedUrl);
+    if (stripWww(url.hostname.toLowerCase()) !== 'calendar.google.com') return '';
+    if (!url.pathname.includes('/embed')) return '';
+    const src = url.searchParams.get('src');
+    if (!src) return '';
+    return `https://calendar.google.com/calendar/ical/${encodeURIComponent(src)}/public/basic.ics`;
+  } catch (_) {
+    return '';
+  }
+}
+
+/** Is this .ics URL one the school itself is entitled to point us at? */
+export function isAllowedIcsUrl(url: string, domain: string): boolean {
+  let parsed: URL;
+  try {
+    parsed = new URL(normalizeIcsUrl(url));
+  } catch (_) {
+    return false;
+  }
+  if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') return false;
+  const host = stripWww(parsed.hostname.toLowerCase());
+  if (ICS_VENDOR_HOSTS.includes(host)) return true;
+  return isProbeableDomain(host) && sameSite(host, domain);
+}
+
+/**
+ * Every calendar subscription link a page points at, in the order it names them.
+ *
+ * The file extension is not a reliable tell. Boston University's whole
+ * university calendar is served from /phpbin/calendar/ical.php, and matching
+ * only on ".ics" walks straight past it — so a path segment of "ical" counts
+ * too, as does the rel=alternate link tag that exists precisely to advertise
+ * this.
+ */
+export function icsLinksFrom(html: string, domain: string, baseUrl = ''): string[] {
+  const found: string[] = [];
+  const patterns = [
+    /(?:href|src)\s*=\s*["']([^"']+?\.ics(?:\?[^"']*)?)["']/gi,
+    /(webcal:\/\/[^\s"'<>]+)/gi,
+    /<link[^>]+type\s*=\s*["']text\/calendar["'][^>]*?href\s*=\s*["']([^"']+)["']/gi,
+    /<link[^>]+href\s*=\s*["']([^"']+)["'][^>]*?type\s*=\s*["']text\/calendar["']/gi,
+    /(?:href|src)\s*=\s*["']([^"']*\/ical(?:\.php|\.aspx|\.cgi)?(?:\?[^"']*)?)["']/gi,
+    /["'](https?:\/\/calendar\.google\.com\/calendar\/ical\/[^\s"'<>]+)["']/gi,
+  ];
+  for (const pattern of patterns) {
+    for (const match of html.matchAll(pattern)) {
+      // Subscribe links are routinely relative ("/phpbin/calendar/ical.php"),
+      // so they are resolved against the page that named them before the
+      // same-site check — which is what makes that check mean anything.
+      let url = normalizeIcsUrl(decodeEntities(match[1]));
+      if (baseUrl && !/^https?:\/\//i.test(url)) {
+        try {
+          url = new URL(url, baseUrl).toString();
+        } catch (_) {
+          continue;
+        }
+      }
+      if (!isAllowedIcsUrl(url, domain) || found.includes(url)) continue;
+      found.push(url);
+      if (found.length >= 8) return found;
+    }
+  }
+
+  for (const match of html.matchAll(/["'](https?:\/\/calendar\.google\.com\/calendar\/embed\?[^"'<>]+)["']/gi)) {
+    const ics = googleCalendarIcsFrom(decodeEntities(match[1]));
+    if (ics && !found.includes(ics)) {
+      found.push(ics);
+      if (found.length >= 8) return found;
+    }
+  }
+
+  return found;
+}
+
+/** First candidate that parses as a calendar with something still ahead. */
+async function firstValidIcs(candidates: string[]): Promise<string | null> {
+  const attempts = candidates.map(async (url) => {
+    try {
+      return looksLikeIcal(await fetchIcsText(url, ICS_PROBE_TIMEOUT_MS));
+    } catch (_) {
+      return false;
+    }
+  });
+  for (let i = 0; i < attempts.length; i++) {
+    if (await attempts[i]) return candidates[i];
+  }
+  return null;
+}
+
+/** Guessable .ics locations only. Discovered ones come via probeCalendar. */
+async function probeIcalGuesses(domain: string): Promise<string | null> {
+  const candidates: string[] = [];
+  for (const sub of SUBDOMAIN_CANDIDATES) {
+    for (const path of ICS_PATHS) candidates.push(`https://${sub}.${domain}${path}`);
+  }
+  return await firstValidIcs(candidates);
+}
+
+async function fetchIcal(feedUrl: string, days: number) {
+  const text = await fetchIcsText(feedUrl, ICS_FEED_TIMEOUT_MS);
+  if (!text.includes('BEGIN:VCALENDAR')) {
+    throw new Error('Calendar feed returned an unexpected shape');
+  }
+  return parseIcsEvents(text).filter(e => withinWindow(e.start, days));
+}
+
+// deno-lint-ignore no-explicit-any
+function normalizeIcal(event: any): NormalizedEvent {
+  return {
+    ...emptyEvent(),
+    id: String(event.uid || `${event.start}-${event.summary}`),
+    title: plainText(event.summary),
+    description: plainText(event.description).slice(0, 600),
+    url: cleanUrl(event.url),
+    start: event.start || '',
+    end: event.end || '',
+    all_day: Boolean(event.allDay),
+    location: plainText(event.location),
+    keywords: cleanList(event.categories),
+  };
+}
+
+const icalAdapter: Adapter = {
+  name: 'ical',
+  probe: probeIcalGuesses,
+  fetch: fetchIcal,
+  normalize: normalizeIcal,
+};
+
 // ── Adapter registry ────────────────────────────────────────────────────────
 
 /**
  * Order is preference first, cost second. The three JSON probes come first
- * because each is a single cheap request. Trumba is last because it is the
- * only probe that has to fetch and scan HTML to find a slug, so it should run
- * only once the others have missed.
+ * because each is a single cheap request. Trumba is next because it is the
+ * only probe that has to fetch and scan HTML to find a slug. iCal is last on
+ * both counts: its guesses are the widest, and its events are the thinnest to
+ * rank against.
  */
-const ADAPTERS: Adapter[] = [localistAdapter, liveWhaleAdapter, campusLabsAdapter, trumbaAdapter];
+const ADAPTERS: Adapter[] = [
+  localistAdapter,
+  liveWhaleAdapter,
+  campusLabsAdapter,
+  trumbaAdapter,
+  icalAdapter,
+];
 
 export function adapterFor(platform: string): Adapter | null {
   return ADAPTERS.find(a => a.name === platform) || null;
@@ -752,6 +1119,7 @@ export function adapterFor(platform: string): Adapter | null {
 const DISCOVERY_SCAN_BYTES = 300_000;
 const MAX_DISCOVERED_HOSTS = 4;
 const MAX_DISCOVERED_DOMAINS = 2;
+const MAX_DISCOVERED_ICS = 6;
 
 /** A hostname label that reads like a calendar: "events", "campuscalendar". */
 const CALENDAR_LABEL_RE = /(^|[.-])(calendars?|events?|campuscalendar)([.-]|$)/;
@@ -793,10 +1161,11 @@ function sameSite(host: string, domain: string): boolean {
  */
 async function discoverCalendarLocations(
   domain: string,
-): Promise<{ hosts: string[]; domains: string[] }> {
+): Promise<{ hosts: string[]; domains: string[]; icsUrls: string[] }> {
   const alreadyTried = new Set([domain, ...SUBDOMAIN_CANDIDATES.map(s => `${s}.${domain}`)]);
   const hosts = new Set<string>();
   const domains = new Set<string>();
+  const icsUrls = new Set<string>();
 
   const pages = await Promise.all(discoveryPages(domain).map(async (url) => {
     try {
@@ -825,11 +1194,18 @@ async function discoverCalendarLocations(
       const label = host.slice(0, Math.max(0, host.length - domain.length - 1));
       if (label && CALENDAR_LABEL_RE.test(label)) hosts.add(host);
     }
+
+    // The same pages carry the "Subscribe" links, and those are how the
+    // un-guessable feeds are reachable at all: Boston University's lives at
+    // /phpbin/calendar/ical.php and Babson's under a per-group ical path. No
+    // list of guessed paths was ever going to contain either.
+    for (const url of icsLinksFrom(page.html, domain, page.finalUrl)) icsUrls.add(url);
   }
 
   return {
     hosts: [...hosts].slice(0, MAX_DISCOVERED_HOSTS),
     domains: [...domains].slice(0, MAX_DISCOVERED_DOMAINS),
+    icsUrls: [...icsUrls].slice(0, MAX_DISCOVERED_ICS),
   };
 }
 
@@ -881,7 +1257,7 @@ export async function probeCalendar(
   // school whose calendar sits where we expect never pays for this.
   if (!discover) return null;
 
-  let found: { hosts: string[]; domains: string[] };
+  let found: { hosts: string[]; domains: string[]; icsUrls: string[] };
   try {
     found = await discoverCalendarLocations(domain);
   } catch (_) {
@@ -893,6 +1269,13 @@ export async function probeCalendar(
       const hit = await probeKnownHost(host);
       if (hit) return hit;
     } catch (_) { /* Next host. */ }
+  }
+
+  if (found.icsUrls.length) {
+    try {
+      const ics = await firstValidIcs(found.icsUrls);
+      if (ics) return { platform: 'ical', feedUrl: ics };
+    } catch (_) { /* Fall through to the alias domains. */ }
   }
 
   for (const alias of found.domains) {
