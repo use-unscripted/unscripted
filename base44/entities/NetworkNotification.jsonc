@@ -40,5 +40,19 @@
   "required": [
     "recipient_user_id",
     "type"
-  ]
+  ],
+  "rls": {
+    "create": {
+      "created_by_id": "{{user.id}}"
+    },
+    "read": {
+      "data.recipient_user_id": "{{user.id}}"
+    },
+    "update": {
+      "data.recipient_user_id": "{{user.id}}"
+    },
+    "delete": {
+      "data.recipient_user_id": "{{user.id}}"
+    }
+  }
 }
