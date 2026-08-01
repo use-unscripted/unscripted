@@ -1,4 +1,5 @@
 import { base44 } from '@/api/base44Client';
+import { loadOwnedPaths, authoritativeSet, loadOnboardingSubmission } from '@/lib/path-set';
 
 const str = { type: 'string' };
 const strArr = { type: 'array', items: { type: 'string' } };
@@ -84,8 +85,24 @@ function normalizeExperiment(exp) {
   };
 }
 
-export async function generatePathTest() {
+/**
+ * Generates the student's path set.
+ *
+ * Idempotent by default: if this student already owns a complete three-path set
+ * it is returned untouched, so a refresh, a re-entered /claim-onboarding, or a
+ * double-click cannot append a second set. Pass { force: true } only from an
+ * explicit, user-confirmed retry — that writes a NEW set alongside the old one
+ * and never overwrites it.
+ */
+export async function generatePathTest({ force = false } = {}) {
   const user = await base44.auth.me();
+
+  if (!force) {
+    const { paths: ownedPaths } = await loadOwnedPaths();
+    const existing = authoritativeSet(ownedPaths);
+    if (existing && existing.paths.length === 3) return existing.paths;
+  }
+
   const [profiles, schedules] = await Promise.all([
     base44.entities.StudentProfile.list('-created_date', 1),
     base44.entities.Schedule.list('-created_date', 1),
@@ -177,10 +194,24 @@ Be honest about fit AND misfit. Do not claim any path is objectively correct. Fi
   let savedAmbitionId = null;
 
   try {
+    // Stamp every row with the identifiers that let it be found again later:
+    // the owner, the onboarding submission it came from, and the generation
+    // event itself. Without these a returning student's set is unidentifiable.
+    const submission = await loadOnboardingSubmission();
+    const pathSetId = `ps_${user.id}_${Date.now()}`;
+    const generatedAt = new Date().toISOString();
+    const incoming = (result.path_recommendations || []).slice(0, 3);
+    const setStatus = incoming.length === 3 ? 'complete' : 'incomplete';
+
     const savedRecs = await base44.entities.PathRecommendations.bulkCreate(
-      (result.path_recommendations || []).slice(0, 3).map(r => ({
+      incoming.map(r => ({
         ...r,
         status: 'exploring',
+        user_id: user.id,
+        onboarding_submission_id: submission?.id || profile.id || '',
+        path_set_id: pathSetId,
+        generated_at: generatedAt,
+        generation_status: setStatus,
       }))
     );
     savedRecs.forEach(r => savedRecIds.push(r.id));
@@ -192,6 +223,7 @@ Be honest about fit AND misfit. Do not claim any path is objectively correct. Fi
     const savedExps = await base44.entities.Experiments.bulkCreate(
       (result.experiments || []).slice(0, 3).map(e => ({
         ...normalizeExperiment(e),
+        user_id: user.id,
         path_name: primaryPath,
         status: 'planned',
         deadline: deadlineStr,

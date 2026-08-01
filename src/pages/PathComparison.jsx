@@ -6,6 +6,8 @@ import PageHeader from '@/components/PageHeader';
 import CreatePathModal from '@/components/paths/CreatePathModal';
 import EditPathModal from '@/components/paths/EditPathModal';
 import ReactivationModal from '@/components/paths/ReactivationModal';
+import PathRecoveryPanel from '@/components/paths/PathRecoveryPanel';
+import { loadOwnedPaths, authoritativeSet, loadOnboardingSubmission } from '@/lib/path-set';
 import { RiskBadge, ConfidenceBadge, RiskConfidenceLegend, RiskNotAssessed } from '@/components/paths/RiskConfidenceBadges';
 import OutreachPlanModal from '@/components/outreach/OutreachPlanModal';
 import { Search } from 'lucide-react';
@@ -439,6 +441,9 @@ export default function PathComparison() {
   const [contacts, setContacts] = useState([]);
   const [reflections, setReflections] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadFailed, setLoadFailed] = useState(false);
+  const [submission, setSubmission] = useState(null);
+  const [activeSet, setActiveSet] = useState(null);
   const [expandedId, setExpandedId] = useState(null);
   const [showCreate, setShowCreate] = useState(false);
   const [editTarget, setEditTarget] = useState(null);
@@ -467,15 +472,30 @@ export default function PathComparison() {
   }, [sortBy, filters]);
 
   const load = async () => {
-    const [ps, exps, mis, prf, cts, refs] = await Promise.all([
-      base44.entities.PathRecommendations.list('-created_date', 100).catch(() => []),
+    // Paths come from the owner-scoped loader: it resolves auth first, keeps only
+    // this student's records, and identifies the generated set they came from.
+    // A read failure is surfaced, never mistaken for "no paths".
+    let owned = null;
+    try {
+      owned = await loadOwnedPaths();
+      setLoadFailed(false);
+    } catch (e) {
+      console.error('Failed to load paths:', e);
+      setLoadFailed(true);
+    }
+
+    const [sub, exps, mis, prf, cts, refs] = await Promise.all([
+      loadOnboardingSubmission(),
       base44.entities.Experiments.list('-created_date', 200).catch(() => []),
       base44.entities.Missions.list('-created_date', 200).catch(() => []),
       base44.entities.ProofOfWork.list('-created_date', 200).catch(() => []),
       base44.entities.OutreachContacts.list('-created_date', 200).catch(() => []),
       base44.entities.WeeklyReflections.list('-created_date', 200).catch(() => []),
     ]);
-    setPaths(Array.isArray(ps) ? ps : []);
+    const ownedPaths = owned?.paths || [];
+    setPaths(ownedPaths);
+    setActiveSet(authoritativeSet(ownedPaths));
+    setSubmission(sub);
     setExperiments(Array.isArray(exps) ? exps : []);
     setMissions(Array.isArray(mis) ? mis : []);
     setProof(Array.isArray(prf) ? prf : []);
@@ -585,6 +605,10 @@ export default function PathComparison() {
 
       {loading ? (
         <div className="py-20 text-center text-[#64748B]">Loading your paths…</div>
+      ) : loadFailed || (paths.length === 0 && submission) ? (
+        // Onboarding was completed but no paths came back — recoverable, never blank,
+        // and never silently regenerated.
+        <PathRecoveryPanel variant="missing" onRestored={load} />
       ) : paths.length === 0 ? (
         <div className="rounded-[24px] border border-dashed border-[#E2E8F0] p-16 text-center">
           <h3 className="font-heading text-xl font-bold text-[#050816]">No paths yet.</h3>
@@ -597,6 +621,12 @@ export default function PathComparison() {
         </div>
       ) : (
         <>
+          {activeSet && activeSet.paths.length < 3 && (
+            <div className="mb-6">
+              <PathRecoveryPanel variant="incomplete" existingCount={activeSet.paths.length} onRestored={load} />
+            </div>
+          )}
+
           <RiskConfidenceLegend />
 
           {/* Search bar */}
