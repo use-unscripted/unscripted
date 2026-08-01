@@ -56,7 +56,9 @@ const roadmapProps = {
   },
   wellness_plan: stringArray,
   feasibility_assessment: { type: 'string' },
-  goal_conflicts: stringArray,
+  // goal_conflicts was generated here but is in no schema and no page — it was dropped on
+  // write and read by nothing. Conflicts belong in the feasibility_assessment prose the
+  // prompt already asks for, so stop generating a second, invisible copy of them.
   goals_to_defer: stringArray,
   weekly_tasks: {
     type: 'array',

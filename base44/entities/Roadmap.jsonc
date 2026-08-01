@@ -47,6 +47,12 @@
     "feasibility_assessment": {
       "type": "string"
     },
+    "goals_to_defer": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
     "weekly_tasks": {
       "type": "array",
       "items": {
