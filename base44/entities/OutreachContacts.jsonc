@@ -21,6 +21,9 @@
     "path_id": {
       "type": "string"
     },
+    "dedupe_key": {
+      "type": "string"
+    },
     "name": {
       "type": "string"
     },
@@ -28,6 +31,9 @@
       "type": "string"
     },
     "role": {
+      "type": "string"
+    },
+    "archetype": {
       "type": "string"
     },
     "email": {
@@ -38,6 +44,22 @@
     },
     "profile_url": {
       "type": "string"
+    },
+    "profile_verified": {
+      "type": "boolean",
+      "default": false
+    },
+    "search_url": {
+      "type": "string"
+    },
+    "suggested_message": {
+      "type": "string"
+    },
+    "questions_to_ask": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
     },
     "website_url": {
       "type": "string"

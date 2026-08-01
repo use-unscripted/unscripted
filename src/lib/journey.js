@@ -83,7 +83,7 @@ export function resolveJourney({ paths = [], experiments = [], proof = [], refle
     test: nextExperiment
       ? {
           label: 'Complete My Next Mission',
-          to: `/experiments?experimentId=${nextExperiment.id}`,
+          to: `/experiment?experimentId=${nextExperiment.id}`,
           sub: nextExperiment.title,
         }
       : {
@@ -93,8 +93,8 @@ export function resolveJourney({ paths = [], experiments = [], proof = [], refle
         },
     prove: {
       label: 'Submit Evidence',
-      to: '/evidence?tab=proof',
-      sub: 'Turn what you finished into proof you can show someone.',
+      to: '/experiment',
+      sub: 'Turn what you finished into proof you can show someone — inside the experiment it belongs to.',
     },
     reflect: {
       label: 'Reflect on My Experiment',

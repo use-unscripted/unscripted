@@ -30,6 +30,34 @@
     "description": {
       "type": "string"
     },
+    "required_action": {
+      "type": "string"
+    },
+    "steps": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "outreach_required": {
+      "type": "boolean",
+      "default": false
+    },
+    "outreach_archetype": {
+      "type": "string"
+    },
+    "outreach_purpose": {
+      "type": "string"
+    },
+    "suggested_message": {
+      "type": "string"
+    },
+    "questions_to_ask": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
     "status": {
       "type": "string",
       "enum": [
@@ -40,6 +68,10 @@
       ],
       "default": "planned"
     },
+    "completed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
     "deadline": {
       "type": "string",
       "format": "date"
@@ -48,6 +80,9 @@
       "type": "number"
     },
     "proof_required": {
+      "type": "string"
+    },
+    "notes": {
       "type": "string"
     },
     "deletion_status": {
