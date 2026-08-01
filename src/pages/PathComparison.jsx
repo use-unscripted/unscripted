@@ -8,6 +8,7 @@ import EditPathModal from '@/components/paths/EditPathModal';
 import ReactivationModal from '@/components/paths/ReactivationModal';
 import PathRecoveryPanel from '@/components/paths/PathRecoveryPanel';
 import { loadOwnedPaths, authoritativeSet, loadOnboardingSubmission } from '@/lib/path-set';
+import { selectPathForCycle } from '@/lib/career-cycle';
 import { RiskBadge, ConfidenceBadge, RiskConfidenceLegend, RiskNotAssessed } from '@/components/paths/RiskConfidenceBadges';
 import OutreachPlanModal from '@/components/outreach/OutreachPlanModal';
 import { Search } from 'lucide-react';
@@ -533,6 +534,9 @@ export default function PathComparison() {
         const primaries = paths.filter(p => p.is_primary_focus && p.id !== path.id);
         await Promise.all(primaries.map(p => base44.entities.PathRecommendations.update(p.id, { is_primary_focus: false })));
         await base44.entities.PathRecommendations.update(path.id, { is_primary_focus: true });
+        // The cycle records which path is being tested, so everything created
+        // afterwards is filed against it.
+        await selectPathForCycle(path);
       },
       pause:    () => base44.entities.PathRecommendations.update(path.id, { status: 'paused',    paused_at: today,    is_primary_focus: false }),
       complete: () => base44.entities.PathRecommendations.update(path.id, { status: 'completed', completed_at: today, is_primary_focus: false }),

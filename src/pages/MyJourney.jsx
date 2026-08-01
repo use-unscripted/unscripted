@@ -7,6 +7,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { resolveJourney } from '@/lib/journey';
+import CycleStageSync from '@/components/journey/CycleStageSync';
 import { loadOwnedPaths } from '@/lib/path-set';
 import JourneyStages from '@/components/journey/JourneyStages';
 import PrimaryActionCard from '@/components/journey/PrimaryActionCard';
@@ -60,6 +61,8 @@ export default function MyJourney() {
             : 'One direction at a time. Pick what you test first, and this page tells you what comes next.'}
         </p>
       </header>
+
+      <CycleStageSync stage={stage} />
 
       <div className="space-y-5">
         <JourneyStages stage={stage} />

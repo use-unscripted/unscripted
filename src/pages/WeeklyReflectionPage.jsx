@@ -35,6 +35,7 @@ import PageHeader from '@/components/PageHeader';
 import { useNavigate } from 'react-router-dom';
 import PathSwitcher from '@/components/PathSwitcher';
 import { ProgressBar, OptionRow, GuidedStyles } from '@/components/guided/GuidedPieces';
+import { linksForExperiment } from '@/lib/career-cycle';
 
 // ── Dates ──────────────────────────────────────────────────────────────────────
 // Every week key is a local calendar date formatted by hand. The old code built
