@@ -1139,6 +1139,104 @@ const icalAdapter: Adapter = {
   normalize: normalizeIcal,
 };
 
+// ── Adapter: The Events Calendar (WordPress) ────────────────────────────────
+
+/**
+ * "The Events Calendar" is a WordPress plugin rather than a campus product,
+ * which is exactly why it turns up: a school with no calendar budget installs
+ * the same plugin a bakery would. It ships a REST route that returns proper
+ * structured events, so it is read through that and not through the page.
+ *
+ * Worth having over the plugin's .ics export because the JSON carries venue,
+ * categories and tags, and those are what the ranking pass actually matches a
+ * student's interests against.
+ */
+
+const TRIBE_PATH = '/wp-json/tribe/events/v1/events';
+
+/** Events with a real start_date, not merely a 200 from some other plugin. */
+export function looksLikeTribe(payload: unknown): boolean {
+  if (!payload || typeof payload !== 'object') return false;
+  const events = (payload as Record<string, unknown>).events;
+  if (!Array.isArray(events) || !events.length) return false;
+  const first = events[0];
+  return Boolean(
+    first && typeof first === 'object' &&
+    typeof first.title === 'string' &&
+    typeof first.start_date === 'string' && first.start_date.length >= 10,
+  );
+}
+
+async function probeTribe(domain: string): Promise<string | null> {
+  // www first: a WordPress site that answers on the apex usually redirects
+  // there anyway, and Tiffin only answers on www.
+  const hosts = [`www.${domain}`, domain, ...SUBDOMAIN_CANDIDATES.map(s => `${s}.${domain}`)];
+  const hit = await firstValidUrl(
+    hosts.map(h => `https://${h}${TRIBE_PATH}?per_page=1`),
+    looksLikeTribe,
+  );
+  return hit ? hit.split('?')[0] : null;
+}
+
+async function fetchTribe(feedUrl: string, days: number) {
+  const start = new Date();
+  const end = new Date(Date.now() + days * 86400000);
+  const url = `${feedUrl}?per_page=50&start_date=${start.toISOString().slice(0, 10)}` +
+    `&end_date=${end.toISOString().slice(0, 10)}`;
+  const res = await fetch(url, {
+    headers: { Accept: 'application/json' },
+    signal: AbortSignal.timeout(FEED_TIMEOUT_MS),
+  });
+  if (!res.ok) throw new Error(`Calendar feed returned ${res.status}`);
+  const body = await res.json();
+  if (!looksLikeTribe(body)) throw new Error('Calendar feed returned an unexpected shape');
+  // deno-lint-ignore no-explicit-any
+  return (body.events as any[]).filter(e => e && withinWindow(tribeDate(e.start_date), days));
+}
+
+/**
+ * "2026-08-03 14:00:00" -> "2026-08-03T14:00:00".
+ *
+ * The plugin reports the site's local wall-clock with no zone, and that is
+ * kept rather than resolved, the same as Trumba and iCal. A student on that
+ * campus reads the clock on the wall.
+ */
+function tribeDate(value: unknown): string {
+  const text = String(value || '').trim();
+  if (!text) return '';
+  return text.replace(' ', 'T');
+}
+
+// deno-lint-ignore no-explicit-any
+function normalizeTribe(event: any): NormalizedEvent {
+  const venue = event.venue && typeof event.venue === 'object' ? event.venue : {};
+  return {
+    ...emptyEvent(),
+    id: String(event.id ?? event.global_id ?? ''),
+    title: plainText(event.title),
+    description: plainText(event.description || event.excerpt).slice(0, 600),
+    url: cleanUrl(event.url),
+    start: tribeDate(event.start_date),
+    end: tribeDate(event.end_date),
+    all_day: Boolean(event.all_day),
+    location: plainText(venue.venue),
+    address: plainText(venue.address),
+    is_free: event.cost === '' || Boolean(event.is_free),
+    ticket_url: cleanUrl(event.website),
+    // deno-lint-ignore no-explicit-any
+    types: cleanList((event.categories || []).map((c: any) => c?.name)),
+    // deno-lint-ignore no-explicit-any
+    keywords: cleanList((event.tags || []).map((t: any) => t?.name)),
+  };
+}
+
+const tribeAdapter: Adapter = {
+  name: 'wptribe',
+  probe: probeTribe,
+  fetch: fetchTribe,
+  normalize: normalizeTribe,
+};
+
 // ── Adapter registry ────────────────────────────────────────────────────────
 
 /**
@@ -1152,6 +1250,7 @@ const ADAPTERS: Adapter[] = [
   localistAdapter,
   liveWhaleAdapter,
   campusLabsAdapter,
+  tribeAdapter,
   trumbaAdapter,
   icalAdapter,
 ];
