@@ -27,6 +27,8 @@ export default function Settings() {
   const [showRegenPrompt, setShowRegenPrompt] = useState(false);
   const [regenerating, setRegenerating] = useState(false);
   const [regenDone, setRegenDone] = useState(false);
+  const [regenError, setRegenError] = useState('');
+  const [newSetId, setNewSetId] = useState('');
 
   useEffect(() => {
     base44.auth.me().then(setUser);
@@ -54,9 +56,19 @@ export default function Settings() {
 
   const handleRegenerate = async () => {
     setRegenerating(true);
+    setRegenError('');
     try {
-      await generatePathTest();
+      // force: true is what makes this button do anything at all. Without it
+      // generatePathTest() short-circuits on the student's existing complete
+      // set and returns those same three rows — so the panel claimed new paths
+      // had been generated and "View new paths" showed the old ones.
+      const paths = await generatePathTest({ force: true });
       setRegenDone(true);
+      setNewSetId(paths?.[0]?.path_set_id || '');
+    } catch (err) {
+      // Stage only — never the student's own words.
+      console.error('[settings] path regeneration failed', err?.message || err);
+      setRegenError("We couldn't generate new paths just now. Your saved context is safe — try again in a moment.");
     } finally {
       setRegenerating(false);
     }
@@ -126,11 +138,12 @@ export default function Settings() {
                 <RefreshCw size={14} className={regenerating ? 'animate-spin' : ''} />
                 {regenerating ? 'Generating new paths…' : 'Yes, refresh my paths'}
               </button>
-              <button onClick={() => setShowRegenPrompt(false)}
+              <button onClick={() => setShowRegenPrompt(false)} disabled={regenerating}
                 className="rounded-[10px] border border-[#E2E8F0] px-5 py-2.5 text-sm font-semibold text-[#334155] hover:bg-white transition">
                 No, keep existing paths
               </button>
             </div>
+            {regenError && <p className="mt-3 text-xs font-semibold text-red-600" role="alert">{regenError}</p>}
           </div>
         )}
 
@@ -140,7 +153,9 @@ export default function Settings() {
             <div>
               <p className="text-sm font-bold text-green-800">New paths generated!</p>
               <p className="text-xs text-green-700 mt-0.5">Your updated preferences have been applied and new recommendations have been added to your paths.</p>
-              <Link to="/paths" className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-green-800 underline">
+              {/* Newest first, so the set that was just generated is at the top
+                  of the page rather than below the older recommendations. */}
+              <Link to="/paths?sort=newest" className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-green-800 underline">
                 View new paths <ArrowRight size={12} />
               </Link>
             </div>
