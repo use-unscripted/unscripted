@@ -748,7 +748,17 @@ const campusLabsAdapter: Adapter = {
 
 const ICS_FEED_TIMEOUT_MS = 12_000; // These are whole-calendar dumps, not pages.
 const ICS_MAX_BYTES = 4_000_000;
-const ICS_MAX_EVENTS = 400;
+
+/**
+ * A runaway guard, not a page size.
+ *
+ * VEVENTs come in the order the calendar felt like writing them, which is not
+ * date order — Syracuse publishes 1,506 and Duke's opens on entries from 2007.
+ * A cap low enough to bite would therefore throw away the future and keep the
+ * past, and the feed would read as empty rather than large. The real bound is
+ * ICS_MAX_BYTES; this only stops a pathological file from spinning.
+ */
+const ICS_MAX_EVENTS = 20_000;
 
 /**
  * Longer than the JSON probes get. Those ask for one event; an .ics probe has
