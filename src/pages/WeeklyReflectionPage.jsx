@@ -483,7 +483,13 @@ function ReflectionFlow({ experiments, missions, proofs, outreach, initialData, 
   // Has the student changed anything from what this opened with? Logged
   // activity arrives pre-ticked, so `hasContent` is true before they touch
   // anything and cannot on its own mean "there is something worth saving".
-  const touched = expId !== seed.expId
+  //
+  // A resumed draft is the exception: it IS the seed, so nothing would ever
+  // read as changed, and the student who just pressed "Pick it up" could not
+  // save the work they came back for. Picking it up is the deliberate act.
+  const resumedDraft = !isEdit && !!draft;
+  const touched = resumedDraft
+    || expId !== seed.expId
     || missionId !== seed.missionId
     || weekChoice !== seed.weekChoice
     || otherOpen !== seed.otherOpen
