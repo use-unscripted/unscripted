@@ -6,7 +6,7 @@ import { TEMPLATES, DEFAULT_SECTIONS, BLANK_CONTACT, CLASSIC_FINANCE_SECTIONS, D
 import ResumeEditor from '@/components/resume/ResumeEditor';
 import ResumePreview from '@/components/resume/ResumePreview';
 import ResumeExport from '@/components/resume/ResumeExport';
-import ResumeSuggestions from '@/components/resume/ResumeSuggestions';
+import ImportApprovedEvidence from '@/components/resume/ImportApprovedEvidence';
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 function buildDefaultContent(templateId) {
@@ -401,12 +401,34 @@ export default function ResumeBuilder() {
     setDeleteTarget(null);
   };
 
+  // Both handlers update from the latest draft: an import adds an entry AND its
+  // skills back to back, and reading a captured draft would drop the first change.
   const handleAddSuggestion = (sectionId, entry) => {
-    if (!draft) return;
-    const content = { ...draft.content };
-    const existing = Array.isArray(content[sectionId]) ? content[sectionId] : [];
-    content[sectionId] = [...existing, entry];
-    setDraft({ ...draft, content });
+    setDraft(d => {
+      if (!d) return d;
+      const content = { ...d.content };
+      const existing = Array.isArray(content[sectionId]) ? content[sectionId] : [];
+      content[sectionId] = [...existing, entry];
+      return { ...d, content };
+    });
+    isDirty.current = true;
+  };
+
+  // Approved skills go into the Technical Skills group as the student wrote them —
+  // appended, never replacing anything already on the resume, and never invented.
+  const handleAddSkills = (skills) => {
+    if (!skills?.length) return;
+    setDraft(d => {
+      if (!d) return d;
+      const content = { ...d.content };
+      const groups = (content.skills_grouped || DEFAULT_SKILL_GROUPS.map(g => ({ ...g }))).map(g => ({ ...g }));
+      const target = groups.find(g => g.id === 'tech') || groups[0];
+      if (!target) return d;
+      const existing = target.items ? target.items.split(',').map(s => s.trim()).filter(Boolean) : [];
+      target.items = [...existing, ...skills.filter(s => !existing.includes(s))].join(', ');
+      content.skills_grouped = groups;
+      return { ...d, content };
+    });
     isDirty.current = true;
   };
 
@@ -421,7 +443,7 @@ export default function ResumeBuilder() {
 
       <PageHeader
         title="Resume Builder"
-        description="Build, version, and export resumes tailored to your path."
+        description="An output of evidence you completed and approved. Import approved work, then edit, version, and export."
         action={
           <button onClick={() => setShowTemplates(true)}
             className="flex items-center gap-2 rounded-[10px] px-5 py-2.5 text-sm font-semibold text-white shrink-0"
@@ -539,7 +561,7 @@ export default function ResumeBuilder() {
             {view === 'edit' ? (
               <div className="flex gap-5">
                 <div className="flex-1 min-w-0">
-                  <ResumeSuggestions resume={draft} onAddEntry={handleAddSuggestion} />
+                  <ImportApprovedEvidence resume={draft} onAddEntry={handleAddSuggestion} onAddSkills={handleAddSkills} />
                   <ResumeEditor
                     resume={draft}
                     onChange={(updated) => { setDraft(updated); isDirty.current = true; }}

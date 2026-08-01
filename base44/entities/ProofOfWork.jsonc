@@ -118,6 +118,47 @@
       "type": "string",
       "format": "date"
     },
+    "resume_status": {
+      "type": "string",
+      "enum": [
+        "not_reviewed",
+        "approved",
+        "excluded"
+      ],
+      "default": "not_reviewed"
+    },
+    "approved_title": {
+      "type": "string"
+    },
+    "approved_deliverable": {
+      "type": "string"
+    },
+    "approved_bullet": {
+      "type": "string"
+    },
+    "approved_skills": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "approved_tools": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "approved_link": {
+      "type": "string"
+    },
+    "resume_reviewed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "resume_imported_at": {
+      "type": "string",
+      "format": "date-time"
+    },
     "deletion_status": {
       "type": "string",
       "enum": [

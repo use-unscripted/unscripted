@@ -1,0 +1,105 @@
+import { useState, useEffect } from 'react';
+import { base44 } from '@/api/base44Client';
+import { ShieldCheck, Plus, ExternalLink } from 'lucide-react';
+import { newEntry } from './resumeTemplates';
+
+/**
+ * Step 5 of the resume workflow: import evidence the student has already
+ * approved. Only approved records appear, and only their approved wording is
+ * used — this component never generates or rewrites anything.
+ */
+export default function ImportApprovedEvidence({ resume, onAddEntry, onAddSkills }) {
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [section, setSection] = useState('activities');
+  const [imported, setImported] = useState(new Set());
+
+  // Re-read whenever another resume is opened, so evidence approved since this
+  // panel first loaded is offered instead of a stale list.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setLoading(true);
+      const rows = await base44.entities.ProofOfWork.filter({ resume_status: 'approved' }, '-resume_reviewed_at', 50).catch(() => []);
+      if (cancelled) return;
+      setItems(rows.filter((r) => r.deletion_status !== 'deleted'));
+      setImported(new Set());
+      setLoading(false);
+    })();
+    return () => { cancelled = true; };
+  }, [resume?.id]);
+
+  const sections = (resume?.content?.sections || []).filter((s) => s.type === 'list');
+
+  const importItem = (p) => {
+    const bullets = [p.approved_bullet, p.approved_deliverable && `Deliverable: ${p.approved_deliverable}`,
+      p.approved_tools?.length ? `Tools: ${p.approved_tools.join(', ')}` : ''].filter(Boolean);
+    onAddEntry(section, {
+      ...newEntry(),
+      title: p.approved_title || p.title,
+      org: p.path_tested || '',
+      linkLabel: p.approved_link ? 'Project link' : '',
+      linkUrl: p.approved_link || '',
+      bullets: bullets.length ? bullets : [''],
+    });
+    if (p.approved_skills?.length) onAddSkills(p.approved_skills);
+    base44.entities.ProofOfWork.update(p.id, { resume_imported_at: new Date().toISOString() }).catch(() => {});
+    setImported((s) => new Set([...s, p.id]));
+  };
+
+  if (loading) return null;
+
+  return (
+    <div className="mb-5 rounded-[16px] border border-[#E2E8F0] bg-white p-4">
+      <div className="mb-1 flex items-center gap-2">
+        <ShieldCheck size={15} style={{ color: 'var(--brand-navy-700)' }} />
+        <p className="text-sm font-bold text-[#050816]">Import approved evidence</p>
+      </div>
+      <p className="mb-3 text-xs text-[#64748B]">
+        Your resume is built from evidence you approved in the Evidence Library. Only your approved wording is imported —
+        employers, job titles, metrics, results and dates are never generated for you.
+      </p>
+
+      {items.length === 0 ? (
+        <p className="text-xs text-[#94A3B8]">
+          Nothing approved yet. Open Evidence → Library, review a piece of evidence, and approve what is accurate.
+        </p>
+      ) : (
+        <>
+          <label className="mb-3 flex items-center gap-2 text-xs font-semibold text-[#334155]">
+            Import into
+            <select value={section} onChange={(e) => setSection(e.target.value)}
+              className="rounded-xl border border-[#E2E8F0] px-3 py-2 text-xs outline-none focus:border-[#1F3A5F]">
+              {sections.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}
+            </select>
+          </label>
+
+          <div className="space-y-2">
+            {items.map((p) => (
+              <div key={p.id} className="flex items-start gap-3 rounded-xl border border-[#E2E8F0] p-3">
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-bold text-[#050816]">{p.approved_title || p.title}</p>
+                  {p.approved_bullet && <p className="mt-0.5 text-[11px] leading-4 text-[#334155]">{p.approved_bullet}</p>}
+                  <p className="mt-0.5 text-[10px] text-[#94A3B8]">
+                    {[p.path_tested, p.approved_skills?.join(', ')].filter(Boolean).join(' · ')}
+                  </p>
+                  {p.approved_link && (
+                    <a href={p.approved_link} target="_blank" rel="noopener noreferrer"
+                      className="mt-1 inline-flex items-center gap-1 text-[10px] font-semibold" style={{ color: 'var(--brand-navy-700)' }}>
+                      <ExternalLink size={9} /> Project link
+                    </a>
+                  )}
+                </div>
+                <button onClick={() => importItem(p)} disabled={imported.has(p.id)}
+                  className="shrink-0 rounded-lg px-3 py-1.5 text-[10px] font-bold text-white disabled:opacity-50"
+                  style={{ background: 'var(--brand-navy-900)' }}>
+                  {imported.has(p.id) ? 'Imported' : <span className="flex items-center gap-1"><Plus size={10} /> Import</span>}
+                </button>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
