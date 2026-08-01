@@ -35,7 +35,8 @@ import Terms from '@/pages/Terms';
 
 // App shell pages
 import AppShell from '@/components/AppShell';
-import Dashboard from '@/pages/Dashboard';
+import MyJourney from '@/pages/MyJourney';
+import Evidence from '@/pages/Evidence';
 import ExperimentSetup from '@/pages/ExperimentSetup';
 import Roadmap from '@/pages/Roadmap';
 import WeeklyCalendar from '@/pages/WeeklyCalendar';
@@ -53,7 +54,6 @@ import GoalsPage from '@/pages/GoalsPage';
 import ResumeBuilder from '@/pages/ResumeBuilder';
 import RecentlyDeleted from '@/pages/RecentlyDeleted';
 import GuideDetailPage from '@/pages/GuideDetailPage';
-import InviteAccept from '@/pages/InviteAccept';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError } = useAuth();
@@ -93,7 +93,11 @@ const AuthenticatedApp = () => {
         <Route path="/path-results" element={<PathResults />} />
         <Route path="/experiments/new" element={<ExperimentSetup />} />
         <Route element={<AppShell />}>
-          <Route path="/dashboard" element={<Dashboard />} />
+          {/* My Journey — the default authenticated destination */}
+          <Route path="/journey" element={<MyJourney />} />
+          <Route path="/evidence" element={<Evidence />} />
+          {/* Legacy routes kept for old links/bookmarks — they now land inside My Journey */}
+          <Route path="/dashboard" element={<Navigate to="/journey" replace />} />
           <Route path="/roadmap" element={<Roadmap />} />
           <Route path="/calendar" element={<WeeklyCalendar />} />
           <Route path="/saved" element={<SavedRoadmaps />} />
@@ -101,10 +105,10 @@ const AuthenticatedApp = () => {
           <Route path="/blueprints" element={<BlueprintLibrary />} />
           <Route path="/paths" element={<PathComparison />} />
           <Route path="/experiments" element={<ExperimentsPage />} />
-          <Route path="/outreach" element={<OutreachTracker />} />
-          <Route path="/OutreachTracker" element={<Navigate to="/outreach" replace />} />
-          <Route path="/proof" element={<ProofOfWorkPage />} />
-          <Route path="/reflection" element={<WeeklyReflectionPage />} />
+          <Route path="/outreach" element={<Navigate to="/evidence?tab=outreach" replace />} />
+          <Route path="/OutreachTracker" element={<Navigate to="/evidence?tab=outreach" replace />} />
+          <Route path="/proof" element={<Navigate to="/evidence?tab=proof" replace />} />
+          <Route path="/reflection" element={<Navigate to="/evidence?tab=reflect" replace />} />
           <Route path="/resources" element={<ResourceHub />} />
           <Route path="/creators" element={<CreatorLibrary />} />
           <Route path="/goals-tracker" element={<GoalsPage />} />
@@ -113,8 +117,6 @@ const AuthenticatedApp = () => {
           <Route path="/guide" element={<GuideDetailPage />} />
 
         </Route>
-        <Route path="/invite/:token" element={<InviteAccept />} />
-        <Route path="/invite" element={<InviteAccept />} />
       </Route>
       <Route path="*" element={<PageNotFound />} />
     </Routes>
