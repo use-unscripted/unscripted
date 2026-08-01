@@ -1030,6 +1030,11 @@ export function isAllowedIcsUrl(url: string, domain: string): boolean {
     return false;
   }
   if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') return false;
+  // This URL came off a remote page and is about to be fetched server-side.
+  // Same-site is not enough on its own: a school's own domain can also cover
+  // internal hosts, and an explicit port would turn calendar discovery into a
+  // way to knock on them. Calendars are served on the default port.
+  if (parsed.port) return false;
   const host = stripWww(parsed.hostname.toLowerCase());
   if (ICS_VENDOR_HOSTS.includes(host)) return true;
   return isProbeableDomain(host) && sameSite(host, domain);
