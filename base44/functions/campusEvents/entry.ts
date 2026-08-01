@@ -923,9 +923,13 @@ export function looksLikeIcal(text: unknown): boolean {
   });
 }
 
-async function fetchIcsText(url: string, timeoutMs: number): Promise<string> {
+async function fetchIcsOnce(
+  url: string,
+  timeoutMs: number,
+  headers: Record<string, string>,
+): Promise<string> {
   const res = await fetch(url, {
-    headers: { Accept: 'text/calendar,text/plain,*/*', 'User-Agent': BROWSER_UA },
+    headers,
     redirect: 'follow',
     signal: AbortSignal.timeout(timeoutMs),
   });
@@ -946,6 +950,39 @@ async function fetchIcsText(url: string, timeoutMs: number): Promise<string> {
     await reader.cancel().catch(() => {});
   }
   return text;
+}
+
+/**
+ * Fetch a calendar, trying both client identities before believing a refusal.
+ *
+ * Schools disagree about who is allowed to read a public feed, and they
+ * disagree in both directions. Villanova and Tufts answer a plain Deno request
+ * with 403 and serve a browser fine. Iowa State does the exact opposite: its
+ * WAF returns a 200 carrying a 247-byte "Request Rejected" page to the browser
+ * user-agent, and hands over all 266 events to a default one — which is the
+ * more honest exchange anyway, since an .ics is published for calendar clients
+ * and not for browsers.
+ *
+ * So neither identity can be the only one tried. A response that is not a
+ * calendar is retried under the other, and only then treated as a miss. Both
+ * requests are ordinary public GETs for a feed the school publishes to be
+ * subscribed to.
+ */
+async function fetchIcsText(url: string, timeoutMs: number): Promise<string> {
+  const attempts: Record<string, string>[] = [
+    { Accept: 'text/calendar,text/plain,*/*' },
+    { Accept: 'text/calendar,text/plain,*/*', 'User-Agent': BROWSER_UA },
+  ];
+  for (const headers of attempts) {
+    let text = '';
+    try {
+      text = await fetchIcsOnce(url, timeoutMs, headers);
+    } catch (_) {
+      continue; // Unreachable or timed out under this identity; try the other.
+    }
+    if (text.includes('BEGIN:VCALENDAR')) return text;
+  }
+  return '';
 }
 
 /** webcal:// is http's calendar-shaped twin; nothing else about it differs. */
