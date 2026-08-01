@@ -18,6 +18,9 @@ import JourneySnapshot from '@/components/journey/JourneySnapshot';
 import PathComparisonWorkspace from '@/components/journey/PathComparisonWorkspace';
 import PathSelectedConfirm from '@/components/journey/PathSelectedConfirm';
 import JourneyEmptyState from '@/components/journey/JourneyEmptyState';
+import ContinuationGate from '@/components/journey/ContinuationGate';
+import { loadPilotAccess, CycleLimitError } from '@/lib/pilot-access';
+import { trackPilotEvent } from '@/lib/pilot-metrics';
 
 function effortLabel(experiment, missions) {
   if (!experiment) return null;
@@ -37,7 +40,8 @@ export default function MyJourney() {
   const [confirmed, setConfirmed] = useState(null);
 
   const load = useCallback(async () => {
-    const [owned, profile, cycle, exps, missions, prf, refs] = await Promise.all([
+    const [access, owned, profile, cycle, exps, missions, prf, refs] = await Promise.all([
+      loadPilotAccess().catch(() => null),
       loadOwnedPaths().catch(() => ({ paths: [] })),
       loadOnboardingSubmission().catch(() => null),
       getActiveCycle().catch(() => null),
@@ -47,6 +51,7 @@ export default function MyJourney() {
       base44.entities.WeeklyReflections.list('-created_date', 50).catch(() => []),
     ]);
     setData({
+      access,
       paths: owned?.paths || [],
       profile,
       cycle,
@@ -67,6 +72,11 @@ export default function MyJourney() {
       setConfirmed({ pathName: path.path_name, experiment: result.experiment });
       await load();
     } catch (err) {
+      if (err instanceof CycleLimitError) {
+        // Independent beta, one cycle used: show the continuation step instead.
+        await load();
+        return;
+      }
       // Stage only — never the student's answers.
       console.error('[journey] path selection failed at stage: begin_experiment', err?.message);
       setSelectError(path.id);
@@ -104,7 +114,26 @@ export default function MyJourney() {
 
   // 1 — onboarding not completed
   if (!data.profile && data.paths.length === 0) {
+    trackPilotEvent('onboarding_started', { dedupe_key: data.access?.user?.id || 'anon' });
     return shell(<JourneyEmptyState variant="onboarding" />, 'Four steps: answer a few questions, compare three paths, choose one, run one experiment.');
+  }
+  trackPilotEvent('onboarding_completed', { dedupe_key: data.access?.user?.id || 'anon' });
+
+  // Independent beta includes one full cycle. Once it is used, choosing another
+  // path is replaced by the continuation-interest step — no credits, no prices,
+  // no payment.
+  if (!currentPath && !confirmed && data.access && !data.access.canStartNewCycle) {
+    trackPilotEvent('second_cycle_attempted', {
+      value: data.access.cyclesCompleted + 1,
+      dedupe_key: `${data.access.user?.id}:${data.access.cyclesCompleted + 1}`,
+    });
+    return shell(
+      <>
+        <JourneyStages stage={stage} />
+        <ContinuationGate />
+      </>,
+      'Your first cycle is complete. Everything you produced stays in your Evidence Library.'
+    );
   }
 
   // 2 — paths not generated

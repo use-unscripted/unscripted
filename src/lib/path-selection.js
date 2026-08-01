@@ -18,6 +18,8 @@
  */
 import { base44 } from '@/api/base44Client';
 import { onceInFlight, selectPathForCycle, attachExperimentToCycle } from '@/lib/career-cycle';
+import { assertCanStartCycle } from '@/lib/pilot-access';
+import { trackPilotEvent } from '@/lib/pilot-metrics';
 
 const OPEN_STATUSES = ['draft', 'planned', 'in_progress'];
 
@@ -52,6 +54,10 @@ export function selectPathAndBeginExperiment(path, allPaths = []) {
   if (!path?.id) throw new Error('No path to select.');
 
   return onceInFlight(`select-path:${path.id}`, async () => {
+    // Access first: an independent beta student who has used their one cycle
+    // gets the continuation step, and nothing is created for them here.
+    await assertCanStartCycle();
+
     const user_id = await currentUserId();
 
     // 1 — cycle records the choice first, so every later write can reference it.
@@ -98,6 +104,11 @@ export function selectPathAndBeginExperiment(path, allPaths = []) {
 
     // 5 — cycle moves to experiment_active.
     const updatedCycle = await attachExperimentToCycle(experiment);
+
+    await trackPilotEvent('path_selected', { cycle_id: cycle.id, path_id: path.id, dedupe_key: `${cycle.id}:${path.id}` });
+    await trackPilotEvent('experiment_started', {
+      cycle_id: cycle.id, path_id: path.id, experiment_id: experiment.id, dedupe_key: experiment.id,
+    });
 
     return { path, experiment, cycle: updatedCycle };
   });

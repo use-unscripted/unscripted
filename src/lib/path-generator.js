@@ -1,5 +1,6 @@
 import { base44 } from '@/api/base44Client';
 import { loadOwnedPaths, authoritativeSet, loadOnboardingSubmission } from '@/lib/path-set';
+import { trackPilotEvent } from '@/lib/pilot-metrics';
 
 const str = { type: 'string' };
 const strArr = { type: 'array', items: { type: 'string' } };
@@ -250,6 +251,8 @@ Be honest about fit AND misfit. Do not claim any path is objectively correct. Fi
       strengths: [],
     });
     savedAmbitionId = ambition.id;
+
+    await trackPilotEvent('paths_generated', { value: savedRecs.length, dedupe_key: pathSetId });
 
     return savedRecs;
   } catch (saveError) {

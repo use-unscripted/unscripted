@@ -53,6 +53,7 @@ import GoalsPage from '@/pages/GoalsPage';
 import ResumeBuilder from '@/pages/ResumeBuilder';
 import RecentlyDeleted from '@/pages/RecentlyDeleted';
 import GuideDetailPage from '@/pages/GuideDetailPage';
+import PilotDashboard from '@/pages/PilotDashboard';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError } = useAuth();
@@ -116,6 +117,8 @@ const AuthenticatedApp = () => {
           <Route path="/resume" element={<ResumeBuilder />} />
           <Route path="/recently-deleted" element={<RecentlyDeleted />} />
           <Route path="/guide" element={<GuideDetailPage />} />
+          {/* Admin-only aggregate pilot reporting; the page itself re-checks the role. */}
+          <Route path="/pilot" element={<PilotDashboard />} />
 
         </Route>
       </Route>

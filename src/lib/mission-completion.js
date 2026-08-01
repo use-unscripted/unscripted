@@ -17,6 +17,7 @@
  */
 import { base44 } from '@/api/base44Client';
 import { onceInFlight, linksForExperiment } from '@/lib/career-cycle';
+import { trackPilotEvent } from '@/lib/pilot-metrics';
 
 export const EVIDENCE_TYPES = [
   { key: 'file', label: 'File', category: 'other' },
@@ -107,6 +108,16 @@ export function completeMissionWithProof({ mission, experiment, path, evidence }
         await base44.entities.Experiments.update(experiment.id, { status: 'in_progress' });
       }
     }
+
+    // Measurement — ids only, once per mission and once per proof.
+    await trackPilotEvent('proof_submitted', {
+      cycle_id: links.cycle_id, path_id: links.path_id, experiment_id: experiment?.id,
+      mission_id: mission.id, dedupe_key: proof.id,
+    });
+    await trackPilotEvent('mission_completed', {
+      cycle_id: links.cycle_id, path_id: links.path_id, experiment_id: experiment?.id,
+      mission_id: mission.id, dedupe_key: mission.id,
+    });
 
     return { proof, mission: updatedMission, experimentCompleted, reused };
   });

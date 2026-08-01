@@ -1,0 +1,73 @@
+{
+  "name": "ContinuationInterest",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string"
+    },
+    "access_source": {
+      "type": "string",
+      "enum": [
+        "independent_beta",
+        "institution_sponsored",
+        "internal_admin"
+      ]
+    },
+    "institution_id": {
+      "type": "string"
+    },
+    "cohort_id": {
+      "type": "string"
+    },
+    "wants_continued_access": {
+      "type": "boolean"
+    },
+    "preferred_access": {
+      "type": "string",
+      "enum": [
+        "monthly",
+        "annual",
+        "institution_sponsored",
+        "undecided"
+      ]
+    },
+    "cycles_completed": {
+      "type": "number"
+    },
+    "note": {
+      "type": "string"
+    },
+    "recorded_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "wants_continued_access"
+  ],
+  "rls": {
+    "create": {
+      "created_by_id": "{{user.id}}"
+    },
+    "read": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "created_by_id": "{{user.id}}"
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

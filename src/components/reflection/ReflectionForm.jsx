@@ -6,6 +6,7 @@
 import { useEffect, useState } from 'react';
 import { AlertCircle, Loader2, Save } from 'lucide-react';
 import { loadDraft, saveDraft } from '@/lib/experiment-conclusion';
+import { trackPilotEvent } from '@/lib/pilot-metrics';
 
 const EMPTY = {
   lessons: '', surprises: '', enjoyed: '', disliked: '', assumptions: '',
@@ -50,6 +51,13 @@ export default function ReflectionForm({ ctx, onSaved, onSubmit }) {
 
   const set = (key, value) => { setAnswers(a => ({ ...a, [key]: value })); setError(''); };
 
+  // Opening the conclusion form is the start of the reflection stage.
+  useEffect(() => {
+    trackPilotEvent('reflection_started', {
+      experiment_id: experimentId, cycle_id: ctx.experiment.cycle_id, dedupe_key: experimentId,
+    });
+  }, [experimentId, ctx.experiment.cycle_id]);
+
   // Draft only for a first-time conclusion; an edit already has a stored row.
   useEffect(() => {
     if (ctx.existing) return;
@@ -72,6 +80,14 @@ export default function ReflectionForm({ ctx, onSaved, onSubmit }) {
     setError('');
     try {
       const saved = await onSubmit(answers);
+      // Numbers and ids only — none of the nine answers leaves the student's own
+      // records.
+      await trackPilotEvent('reflection_completed', {
+        experiment_id: experimentId,
+        cycle_id: ctx.experiment.cycle_id,
+        value: typeof answers.clarity === 'number' ? answers.clarity : undefined,
+        dedupe_key: experimentId,
+      });
       onSaved(saved);
     } catch (err) {
       console.error('[reflection] save failed:', err?.message || err);

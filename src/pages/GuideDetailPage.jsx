@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import StepArtifact from '@/components/experiments/StepArtifact';
+import { trackPilotEvent } from '@/lib/pilot-metrics';
 import { ArrowLeft, Clock, CheckCircle2, Star, Loader2 } from 'lucide-react';
 
 const STATUS_CFG = {
@@ -30,7 +31,13 @@ export default function GuideDetailPage() {
   useEffect(() => {
     if (!guideId) { setError('No guide ID provided.'); setLoading(false); return; }
     base44.entities.MissionGuides.get(guideId)
-      .then(g => { setGuide(g); setLoading(false); })
+      .then(g => {
+        setGuide(g);
+        setLoading(false);
+        trackPilotEvent('mission_guide_opened', {
+          experiment_id: g.experiment_id, mission_id: g.mission_id, path_id: g.path_id, dedupe_key: g.id,
+        });
+      })
       .catch(() => { setError('Guide not found.'); setLoading(false); });
   }, [guideId]);
 

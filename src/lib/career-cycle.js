@@ -17,6 +17,8 @@
  * still render, and are never rewritten by this module.
  */
 import { base44 } from '@/api/base44Client';
+import { trackPilotEvent } from '@/lib/pilot-metrics';
+import { loadPilotAccess } from '@/lib/pilot-access';
 
 export const CYCLE_STAGES = [
   'onboarding',
@@ -219,6 +221,29 @@ export async function completeCycle({ final_decision, post_cycle_clarity_score, 
       post_cycle_clarity_score,
       decision_note,
     });
+    // Measurement: the decision and the completed cycle, as numbers only. The
+    // baseline travels in `stage` and the post-cycle score in `value`, so the
+    // pilot report can average clarity change without reading any reflection.
+    await trackPilotEvent('final_decision_submitted', {
+      cycle_id: cycle.id,
+      path_id: cycle.selected_path_id,
+      experiment_id: cycle.experiment_id,
+      stage: final_decision,
+    });
+    await trackPilotEvent('cycle_completed', {
+      cycle_id: cycle.id,
+      path_id: cycle.selected_path_id,
+      experiment_id: cycle.experiment_id,
+      value: typeof post_cycle_clarity_score === 'number' ? post_cycle_clarity_score : undefined,
+      stage: typeof cycle.baseline_clarity_score === 'number' ? String(cycle.baseline_clarity_score) : undefined,
+    });
+
+    // Independent beta includes one full cycle. When that is used up we close
+    // this cycle and stop — My Journey then shows the continuation step instead
+    // of silently opening a cycle the student cannot run.
+    const access = await loadPilotAccess().catch(() => ({ canStartNewCycle: true }));
+    if (!access.canStartNewCycle) return { closed: cycle, next: null, cycleLimitReached: true };
+
     const user_id = await currentUserId();
     const next = await base44.entities.CareerCycle.create({
       user_id,

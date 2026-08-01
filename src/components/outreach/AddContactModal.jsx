@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { X, Loader2, CheckCircle } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { linksForExperiment } from '@/lib/career-cycle';
+import { trackPilotEvent } from '@/lib/pilot-metrics';
 
 const inputCls = 'w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-2.5 text-sm outline-none focus:border-[#1F3A5F]';
 
@@ -184,6 +185,16 @@ export default function AddContactModal({ contact, onClose, onSaved }) {
         saved = { ...contact, ...payload };
       } else {
         saved = await base44.entities.OutreachContacts.create(payload);
+      }
+
+      // Measurement: whether outreach was attempted, and whether it turned into
+      // a real conversation. Ids and status only — never the notes.
+      const links = { cycle_id: payload.cycle_id, path_id: payload.path_id, experiment_id: selectedExpId, mission_id: selectedMissionId || undefined };
+      if (!['not_sent', 'planning'].includes(payload.response_status)) {
+        await trackPilotEvent('outreach_attempted', { ...links, dedupe_key: saved.id });
+      }
+      if (['responded', 'completed'].includes(payload.response_status)) {
+        await trackPilotEvent('professional_conversation_completed', { ...links, dedupe_key: saved.id });
       }
 
       const missionTitle = selectedMissionId ? missions.find(m => m.id === selectedMissionId)?.title : null;

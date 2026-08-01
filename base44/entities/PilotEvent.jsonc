@@ -1,0 +1,106 @@
+{
+  "name": "PilotEvent",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string"
+    },
+    "event_name": {
+      "type": "string",
+      "enum": [
+        "signup_completed",
+        "onboarding_started",
+        "onboarding_completed",
+        "paths_generated",
+        "all_paths_viewed",
+        "path_selected",
+        "experiment_started",
+        "mission_guide_opened",
+        "mission_completed",
+        "outreach_attempted",
+        "professional_conversation_completed",
+        "proof_submitted",
+        "reflection_started",
+        "reflection_completed",
+        "final_decision_submitted",
+        "cycle_completed",
+        "second_cycle_attempted",
+        "continuation_interest_recorded",
+        "seven_day_return",
+        "thirty_day_return"
+      ]
+    },
+    "access_source": {
+      "type": "string",
+      "enum": [
+        "independent_beta",
+        "institution_sponsored",
+        "internal_admin"
+      ]
+    },
+    "institution_id": {
+      "type": "string"
+    },
+    "cohort_id": {
+      "type": "string"
+    },
+    "cycle_id": {
+      "type": "string"
+    },
+    "path_id": {
+      "type": "string"
+    },
+    "experiment_id": {
+      "type": "string"
+    },
+    "mission_id": {
+      "type": "string"
+    },
+    "cycle_index": {
+      "type": "number"
+    },
+    "stage": {
+      "type": "string"
+    },
+    "value": {
+      "type": "number"
+    },
+    "dedupe_key": {
+      "type": "string"
+    },
+    "occurred_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "event_name"
+  ],
+  "rls": {
+    "create": {
+      "created_by_id": "{{user.id}}"
+    },
+    "read": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

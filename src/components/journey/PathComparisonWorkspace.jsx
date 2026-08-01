@@ -3,9 +3,10 @@
  * Desktop reads as three columns; mobile stacks the same cards with a category
  * chooser so a student never has to open a separate page to compare.
  */
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
 import { COMPARISON_FIELDS, RISK_LABEL } from './pathComparisonFields';
+import { trackPilotEvent } from '@/lib/pilot-metrics';
 
 function Cell({ label, value }) {
   return (
@@ -57,6 +58,20 @@ export default function PathComparisonWorkspace({ paths, onSelect, busyId, error
   const [mobileIdx, setMobileIdx] = useState(0);
   const busy = !!busyId;
 
+  // all_paths_viewed: on desktop all three cards are on screen at once; on a
+  // phone it means the student actually opened each one.
+  const [seen, setSeen] = useState(() => new Set([0]));
+  useEffect(() => {
+    if (three.length < 3) return;
+    const wide = typeof window !== 'undefined' && window.matchMedia('(min-width: 640px)').matches;
+    if (!wide && seen.size < 3) return;
+    trackPilotEvent('all_paths_viewed', {
+      path_id: three[0]?.id,
+      value: three.length,
+      dedupe_key: three.map(p => p.id).sort().join('|'),
+    });
+  }, [three, seen]);
+
   return (
     <section className="rounded-[20px] p-5 sm:p-6" style={{ background: 'var(--background-secondary)', border: '1px solid var(--border-light)' }}>
       <h2 className="font-heading text-xl font-bold" style={{ color: 'var(--text-primary)' }}>
@@ -88,7 +103,7 @@ export default function PathComparisonWorkspace({ paths, onSelect, busyId, error
           <button
             key={p.id}
             type="button"
-            onClick={() => setMobileIdx(i)}
+            onClick={() => { setMobileIdx(i); setSeen(prev => new Set(prev).add(i)); }}
             className="flex-1 truncate rounded-[10px] px-2 py-2 text-xs font-bold"
             style={i === mobileIdx
               ? { background: 'var(--brand-navy-900)', color: '#fff' }

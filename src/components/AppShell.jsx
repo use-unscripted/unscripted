@@ -1,6 +1,9 @@
+import { useEffect, useState } from 'react';
 import { Outlet, NavLink } from 'react-router-dom';
-import { Compass, FolderOpen, FileText, Settings, LogOut } from 'lucide-react';
+import { Compass, FolderOpen, FileText, Settings, LogOut, BarChart3 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
+import PilotTracker from '@/components/PilotTracker';
+import { loadPilotAccess } from '@/lib/pilot-access';
 
 function CompassSVG() {
   return (
@@ -26,8 +29,13 @@ const NAV = [
 ];
 
 export default function AppShell() {
+  // Pilot reporting is an admin destination, so the link only exists for admins.
+  const [isAdmin, setIsAdmin] = useState(false);
+  useEffect(() => { loadPilotAccess().then(a => setIsAdmin(!!a.isAdmin)).catch(() => setIsAdmin(false)); }, []);
+
   return (
     <div className="min-h-screen font-body" style={{ background: 'var(--background-secondary)' }}>
+      <PilotTracker />
       {/* Sidebar */}
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-60 flex-col lg:flex py-5 px-4" style={{ background: 'var(--brand-navy-900)' }}>
         <NavLink to="/journey" className="block -mx-5 px-5 py-3 mb-8 text-sm">
@@ -52,6 +60,19 @@ export default function AppShell() {
               {label}
             </NavLink>
           ))}
+          {isAdmin && (
+            <NavLink to="/pilot"
+              className={({ isActive }) =>
+                `nav-link mb-1 flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold ${isActive ? 'text-white' : 'text-slate-300 hover:text-white'}`
+              }
+              style={({ isActive }) => isActive
+                ? { background: 'var(--brand-navy-700)', borderLeft: '3px solid var(--brand-gold-500)', paddingLeft: '13px' }
+                : { borderLeft: '3px solid transparent' }
+              }>
+              <BarChart3 size={17} />
+              Pilot report
+            </NavLink>
+          )}
         </nav>
 
         <p className="rounded-xl p-3 text-xs leading-5 text-slate-400 mt-4" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
