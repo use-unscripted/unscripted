@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { X, Loader2, CheckCircle } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
+import { linksForExperiment } from '@/lib/career-cycle';
 
 const inputCls = 'w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-2.5 text-sm outline-none focus:border-[#1F3A5F]';
 

@@ -630,6 +630,9 @@ function ReflectionFlow({ experiments, missions, proofs, outreach, initialData, 
     try {
       const user = await base44.auth.me();
       const payload = buildPayload(user.id);
+      // Cycle / path relationships, resolved from the experiment this reflection
+      // is filed under. Never overwrites an answer the student typed.
+      Object.assign(payload, await linksForExperiment(selectedExp, missions.find(m => m.id === missionId)));
       console.log('[WeeklyReflectionPage] Save: week_start=' + payload.week_start + ' experiment_id=' + (payload.experiment_id || 'none'));
 
       let saved;

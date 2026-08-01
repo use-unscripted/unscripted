@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import { X, Loader2 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
+import { linksForExperiment } from '@/lib/career-cycle';
 
 const STATUS_OPTIONS = [
   { value: 'planned', label: 'Planned' },
@@ -35,7 +36,9 @@ export default function AddMissionModal({ experiment, onClose, onSaved }) {
     setSaving(true);
     try {
       const user = await base44.auth.me();
+      const links = await linksForExperiment(experiment);
       const mission = await base44.entities.Missions.create({
+        ...links,
         user_id: user.id,
         experiment_id: experiment.id,
         path_name: experiment.path_name || '',

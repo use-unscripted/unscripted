@@ -17,6 +17,7 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import { X, Loader2, Upload, FileText, Film, CheckCircle, AlertCircle, RefreshCw, Trash2, ChevronRight, ChevronLeft, ChevronDown, Save } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { ProgressBar, OptionRow, GuidedStyles } from '@/components/guided/GuidedPieces';
+import { linksForExperiment } from '@/lib/career-cycle';
 
 const inputCls = 'w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-3 text-sm outline-none focus:border-[#1F3A5F]';
 const bigInputCls = 'w-full rounded-2xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-4 text-base outline-none focus:border-[#1F3A5F]';
