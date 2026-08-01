@@ -5,6 +5,28 @@
     "user_id": {
       "type": "string"
     },
+    "onboarding_submission_id": {
+      "type": "string"
+    },
+    "path_set_id": {
+      "type": "string"
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "generation_status": {
+      "type": "string",
+      "enum": [
+        "complete",
+        "incomplete",
+        "needs_review",
+        "manual"
+      ]
+    },
+    "is_sample": {
+      "type": "boolean"
+    },
     "path_id": {
       "type": "string"
     },
@@ -30,6 +52,9 @@
         "medium",
         "high"
       ]
+    },
+    "confidence_explanation": {
+      "type": "string"
     },
     "current_gaps": {
       "type": "array",
@@ -64,6 +89,12 @@
       "type": "string"
     },
     "why_it_may_not_fit": {
+      "type": "string"
+    },
+    "main_tradeoffs": {
+      "type": "string"
+    },
+    "goals_supported": {
       "type": "string"
     },
     "risk_level": {
@@ -143,7 +174,9 @@
     "create": {
       "created_by_id": "{{user.id}}"
     },
-    "read": null,
+    "read": {
+      "created_by_id": "{{user.id}}"
+    },
     "update": {
       "created_by_id": "{{user.id}}"
     },
