@@ -1,7 +1,7 @@
 /**
  * ClaimOnboarding — protected page.
  * Reads the guest draft from localStorage, saves it to the DB, generates
- * tailored paths, then navigates to /dashboard.
+ * tailored paths, then navigates to /journey.
  * Idempotent: checks for existing onboarding data before creating new records.
  */
 import { useEffect, useState, useCallback } from 'react';
@@ -38,7 +38,7 @@ export default function ClaimOnboarding() {
 
       // ── Already done: skip straight to dashboard ──
       if (user?.onboarding_completed) {
-        nav('/dashboard', { replace: true });
+        nav('/journey', { replace: true });
         return;
       }
 
@@ -53,7 +53,7 @@ export default function ClaimOnboarding() {
           await generatePathTest();
           await base44.auth.updateMe({ onboarding_completed: true });
           clearDraft();
-          nav('/dashboard', { replace: true });
+          nav('/journey', { replace: true });
           return;
         }
         nav('/onboarding', { replace: true });
@@ -122,7 +122,7 @@ export default function ClaimOnboarding() {
       // ── Clear draft only after everything succeeds ──
       clearDraft();
 
-      nav('/dashboard', { replace: true });
+      nav('/journey', { replace: true });
     } catch (e) {
       console.error('ClaimOnboarding failed:', e);
       const msg = e?.message || 'Something went wrong. Please try again.';

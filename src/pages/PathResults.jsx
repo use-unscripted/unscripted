@@ -220,7 +220,7 @@ export default function PathResults() {
           <p className="text-sm text-slate-300 mb-5">
             Pick a path above to start its 30-day test. You can compare all three from your dashboard first.
           </p>
-          <Link to="/dashboard"
+          <Link to="/journey"
             className="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-300 transition hover:text-white">
             Open My Dashboard <ArrowRight size={15} />
           </Link>

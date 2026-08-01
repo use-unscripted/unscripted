@@ -24,7 +24,7 @@ export default function OnboardingReview() {
       if (authed) {
         const user = await base44.auth.me().catch(() => null);
         if (user?.onboarding_completed) {
-          nav('/dashboard', { replace: true });
+          nav('/journey', { replace: true });
         } else {
           // Authenticated but not finished — go claim
           nav('/claim-onboarding', { replace: true });

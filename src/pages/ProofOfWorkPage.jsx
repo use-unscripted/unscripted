@@ -13,7 +13,6 @@ class CardErrorBoundary extends Component {
   }
 }
 import { Plus, ExternalLink, Search, Play, FileText, Film, Image, FileSpreadsheet, Music, File, ChevronDown, Eye, EyeOff, Trash2, X } from 'lucide-react';
-import VisibilitySelector from '@/components/network/VisibilitySelector';
 import SoftDeleteConfirm, { softDeletePayload } from '@/components/SoftDeleteConfirm';
 import PageHeader from '@/components/PageHeader';
 import { ProofSuccessToast } from '@/components/experiments/AddProofModal';
@@ -94,7 +93,7 @@ function FilePreviewModal({ entry, onClose }) {
 }
 
 // ── Proof Card ─────────────────────────────────────────────────────────────────
-function ProofCard({ entry, missionsMap, experimentsMap, onDelete, onNavigateToProof, onVisibilityChange }) {
+function ProofCard({ entry, missionsMap, experimentsMap, onDelete, onNavigateToProof }) {
   const safeEntry = {
     title: entry.title || entry.proof_title || 'Untitled proof',
     category: entry.category || 'other',
@@ -136,10 +135,6 @@ function ProofCard({ entry, missionsMap, experimentsMap, onDelete, onNavigateToP
             {safeEntry.visibility === 'public'
               ? <span className="rounded-full px-2.5 py-0.5 text-xs font-bold flex items-center gap-1" style={{ background: '#F0FDF4', color: '#15803D' }}><Eye size={10} />Public</span>
               : <span className="rounded-full px-2.5 py-0.5 text-xs font-bold flex items-center gap-1" style={{ background: '#F8FAFC', color: '#64748B' }}><EyeOff size={10} />Private</span>}
-            <VisibilitySelector
-              value={entry.network_visibility || 'private'}
-              onChange={v => onVisibilityChange(entry.id, v)}
-            />
           </div>
           <h3 className="font-heading font-bold text-[#050816] leading-snug">{safeEntry.title}</h3>
           {safeEntry.description && <p className="mt-1 text-sm text-[#334155] line-clamp-2">{safeEntry.description}</p>}
@@ -432,9 +427,9 @@ export default function ProofOfWorkPage() {
               style={{ background: 'var(--brand-navy-900)' }}>
               Retry
             </button>
-            <button onClick={() => navigate('/dashboard')}
+            <button onClick={() => navigate('/journey')}
               className="inline-flex items-center gap-2 rounded-[10px] border border-[#E2E8F0] px-5 py-2.5 text-sm font-semibold text-[#334155] hover:bg-[#F8FAFC]">
-              Return to Dashboard
+              Return to My Journey
             </button>
           </div>
         </div>
@@ -468,13 +463,6 @@ export default function ProofOfWorkPage() {
                  experimentsMap={experimentsMap}
                  onDelete={setDeleteTarget}
                  onNavigateToProof={(path) => navigate(`/${path}`)}
-                 onVisibilityChange={async (id, visibility) => {
-                   await base44.entities.ProofOfWork.update(id, {
-                     network_visibility: visibility,
-                     network_shared_at: visibility !== 'private' ? new Date().toISOString() : null,
-                   });
-                   setEntries(prev => prev.map(x => x.id === id ? { ...x, network_visibility: visibility } : x));
-                 }}
                 />
               </CardErrorBoundary>
             ))}

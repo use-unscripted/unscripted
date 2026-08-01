@@ -34,7 +34,7 @@ export default function Landing() {
       try {
         const user = await base44.auth.me();
         if (user?.onboarding_completed) {
-          nav('/dashboard', { replace: true });
+          nav('/journey', { replace: true });
         } else {
           nav('/claim-onboarding', { replace: true });
         }

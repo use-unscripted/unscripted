@@ -377,7 +377,7 @@ export default function OutreachTracker() {
           <p className="mt-2 text-sm text-[#64748B]">There was a problem fetching your records. Please try again.</p>
           <div className="mt-6 flex justify-center gap-3">
             <button onClick={load} className="inline-flex items-center gap-2 rounded-[10px] px-5 py-2.5 text-sm font-semibold text-white" style={{ background: 'var(--brand-navy-900)' }}>Retry</button>
-            <button onClick={() => navigate('/dashboard')} className="inline-flex items-center gap-2 rounded-[10px] border border-[#E2E8F0] px-5 py-2.5 text-sm font-semibold text-[#334155] hover:bg-[#F8FAFC]">Return to Dashboard</button>
+            <button onClick={() => navigate('/journey')} className="inline-flex items-center gap-2 rounded-[10px] border border-[#E2E8F0] px-5 py-2.5 text-sm font-semibold text-[#334155] hover:bg-[#F8FAFC]">Return to Dashboard</button>
           </div>
         </div>
       ) : contacts.length === 0 ? (
