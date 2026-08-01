@@ -1,9 +1,13 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { ArrowLeft, ArrowRight, CheckCircle, Loader2, AlertCircle } from 'lucide-react';
 import { LogoWordmark } from '@/components/UnscriptedLogo';
 import AddToCalendarModal from '@/components/calendar/AddToCalendarModal';
+import {
+  ensureActiveCycle, assertNoActiveExperiment, attachExperimentToCycle,
+  ActiveExperimentError, cycleLinks,
+} from '@/lib/career-cycle';
 
 // Generate 3 path-specific experiment options based on path name
 function getExperimentOptions(pathName) {
@@ -339,6 +343,9 @@ export default function ExperimentSetup() {
   const [genError, setGenError] = useState(null);
   const [duplicate, setDuplicate] = useState(null);
   const [forceNew, setForceNew] = useState(false);
+  // Guards a repeated submit (double-click, Enter twice) from creating two
+  // experiments before the first create resolves.
+  const submitting = useRef(false);
 
   useEffect(() => {
     loadRec();
@@ -397,6 +404,29 @@ export default function ExperimentSetup() {
   };
 
   const proceedToGenerate = async (experimentData) => {
+    if (submitting.current) return;
+    submitting.current = true;
+    try {
+      await runGenerate(experimentData);
+    } finally {
+      submitting.current = false;
+    }
+  };
+
+  const runGenerate = async (experimentData) => {
+    // The cycle is the authority on whether a second experiment may start.
+    let cycle;
+    try {
+      cycle = await ensureActiveCycle({ selected_path_id: rec.id, selected_path_name: rec.path_name });
+      if (!forceNew) await assertNoActiveExperiment(cycle);
+    } catch (e) {
+      if (e instanceof ActiveExperimentError) {
+        setDuplicate(e.experiment);
+        return;
+      }
+      cycle = cycle || null;
+    }
+
     if (!forceNew) {
       // Duplicate check
       try {
@@ -416,12 +446,17 @@ export default function ExperimentSetup() {
     // Create draft
     let saved;
     try {
+      const links = await cycleLinks({ path: { id: rec.id } });
       saved = await base44.entities.Experiments.create({
+        ...links,
         ...experimentData,
+        path_id: rec.id || links.path_id,
+        experiment_id: undefined,
         status: 'draft',
         mission_guide_status: 'not_generated',
       });
       setExperiment(saved);
+      await attachExperimentToCycle(saved);
     } catch (e) {
       setGenError('Experiment draft could not be saved. Please try again.');
       setStep('generating');

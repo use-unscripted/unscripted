@@ -172,6 +172,9 @@ export default function AddContactModal({ contact, onClose, onSaved }) {
         last_contacted_date: data.last_contacted_date || undefined,
         followup_date: data.followup_date || undefined,
         notes: data.notes,
+        // Cycle / path / experiment / mission relationships, resolved from the
+        // experiment this contact belongs to.
+        ...(await linksForExperiment(exp, missions.find(m => m.id === selectedMissionId))),
       };
 
       let saved;

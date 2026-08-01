@@ -375,6 +375,9 @@ export default function AddProofFlow({ onClose, onSaved, preselectedMission, pre
         file_name: (wantFile && file?.name) || undefined,
         file_size: (wantFile && file?.size) || undefined,
         mime_type: (wantFile && file?.type) || undefined,
+        // Cycle / path relationships resolved from the experiment itself, so
+        // proof can never be filed under the wrong cycle.
+        ...(await linksForExperiment(exp, missions.find(m => m.id === selectedMissionId))),
       });
 
       const chosenMission = selectedMissionId
