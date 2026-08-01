@@ -102,17 +102,24 @@ export default function MissionGuideGenerator({ experiment, existingGuides = [],
   const handleSave = async (makeActive) => {
     if (saving || !pendingGuide) return;
     setSaving(true);
+    setError('');
     try {
       const user = await base44.auth.me();
 
-      // Deactivate existing active guide if making this one active
-      if (makeActive) {
-        const activeGuides = existingGuides.filter(g => g.is_active);
-        await Promise.all(activeGuides.map(g =>
-          base44.entities.MissionGuides.update(g.id, { is_active: false, status: 'inactive' })
-        ));
-      }
-
+      // Create BEFORE deactivating anything.
+      //
+      // These are two independent writes with no transaction across them, so the
+      // ordering is decided by which half-finished state a student can survive.
+      // Deactivating first and then failing the create left them with ZERO
+      // active guides: the guide they were using was already dead in the
+      // database, nothing had replaced it, and the screen still offered "keep my
+      // current active guide" — which saved a draft and stranded them with
+      // nothing. Silent, and only visible after a reload.
+      //
+      // Rolling the deactivation back on failure was the other option and is
+      // worse: the compensating write is only as reliable as the write that just
+      // failed, and whatever broke the create (offline, auth, API down) breaks
+      // the rollback too. Create-first needs no compensation to be correct.
       const saved = await base44.entities.MissionGuides.create({
         user_id: user.id,
         experiment_id: experiment.id,
