@@ -1158,8 +1158,15 @@ const MAX_DISCOVERED_HOSTS = 4;
 const MAX_DISCOVERED_DOMAINS = 2;
 const MAX_DISCOVERED_ICS = 6;
 
-/** A hostname label that reads like a calendar: "events", "campuscalendar". */
-const CALENDAR_LABEL_RE = /(^|[.-])(calendars?|events?|campuscalendar)([.-]|$)/;
+/**
+ * A hostname label that reads like a calendar: "events", "campuscalendar".
+ *
+ * "engage" and "involvement" are in here because that is what schools call the
+ * student-life portal, and at a lot of them it is the only place events are
+ * published at all — Babson's whole club calendar is on engage.babson.edu.
+ */
+const CALENDAR_LABEL_RE =
+  /(^|[.-])(calendars?|events?|campuscalendar|engage|involvement|orgs|studentlife)([.-]|$)/;
 
 /** Pages that link to, or redirect to, wherever a school keeps its calendar. */
 function discoveryPages(domain: string): string[] {
@@ -1247,9 +1254,12 @@ async function discoverCalendarLocations(
 }
 
 /**
- * Localist and LiveWhale both sit at a fixed path on a host, so once we know
- * the host outright there is nothing left to guess. Trumba and Campus Labs key
- * off a slug rather than a host and are handled by their own probes.
+ * Everything that lives at a fixed path once the host is known.
+ *
+ * Localist, LiveWhale and plain .ics are all "this host, that path" — no slug
+ * to discover — so a host we have just learned about can be checked for all
+ * three outright. Trumba and Campus Labs key off a slug instead and stay with
+ * their own probes.
  */
 async function probeKnownHost(
   host: string,
@@ -1265,6 +1275,9 @@ async function probeKnownHost(
     looksLikeLiveWhale,
   );
   if (liveWhale) return { platform: 'livewhale', feedUrl: liveWhale };
+
+  const ics = await firstValidIcs(ICS_PATHS.map(path => `https://${host}${path}`));
+  if (ics) return { platform: 'ical', feedUrl: ics };
 
   return null;
 }
