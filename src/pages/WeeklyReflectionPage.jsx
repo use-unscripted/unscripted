@@ -171,10 +171,27 @@ const STEMS = [
   'What I got wrong was',
 ];
 
+// ── Path fit ───────────────────────────────────────────────────────────────────
+// The whole loop ends in "Adjust", and the pitch is that we can tell a student
+// whether a path fits. A reflection that collects no path signal cannot feed
+// either. One tap, one string, into `path_feedback` — which already exists on
+// the entity, so this needs no schema change.
+//
+// As with WEEK_OPTIONS, `text` is both what gets stored and how a saved row is
+// read back into a selection; changing the wording orphans existing answers.
+const PATH_FIT_OPTIONS = [
+  { value: 'more', text: 'Fits better than I expected', label: 'More than I expected', desc: 'This week made the path look stronger.' },
+  { value: 'same', text: 'About what I expected', label: 'About the same', desc: 'Nothing moved much either way.' },
+  { value: 'less', text: 'Fits less than I expected', label: 'Less than I expected', desc: 'Worth saying out loud early.' },
+];
+const PATH_FIT_TEXTS = new Set(PATH_FIT_OPTIONS.map(o => o.text));
+
 // Fields the guided flow no longer asks about. A student who answered them in
 // the old eight-textarea form must not lose that answer by opening the row in
 // this one, so they are read off the record and written straight back.
-const CARRIED_FIELDS = ['avoidance_reasons', 'surprises', 'path_feedback', 'skill_gaps_noticed'];
+// `path_feedback` is deliberately NOT here — the fit step owns it now, and it
+// preserves old prose itself rather than carrying it blind.
+const CARRIED_FIELDS = ['avoidance_reasons', 'surprises', 'skill_gaps_noticed'];
 
 // ── Local draft ────────────────────────────────────────────────────────────────
 // Precedence is explicit and one-directional: a saved row always wins. A draft
@@ -237,7 +254,7 @@ function activityFor({ missions, proofs, outreach }, expId, weekKey) {
 }
 
 // ── Success Toast ──────────────────────────────────────────────────────────────
-function SuccessToast({ experiment, mission, onView, onOpenExp, onDismiss }) {
+function SuccessToast({ experiment, mission, onOpenExp, onDismiss }) {
   return (
     <div role="alert" className="fixed bottom-24 right-4 z-[100] max-w-sm w-[calc(100%-2rem)] sm:bottom-6 sm:right-6 sm:w-full rounded-[20px] bg-white border border-green-100 shadow-2xl p-5 flex flex-col gap-3"
       style={{ boxShadow: '0 20px 60px rgba(0,0,0,0.15)' }}>
@@ -254,16 +271,13 @@ function SuccessToast({ experiment, mission, onView, onOpenExp, onDismiss }) {
           <X size={16} />
         </button>
       </div>
-      <div className="flex gap-2">
-        <button onClick={onView} className="flex-1 rounded-[8px] py-2 text-xs font-semibold text-white" style={{ background: 'var(--brand-navy-900)' }}>
-          View Reflection
+      {/* No "View Reflection" button: saving already switches to History with
+          the row on screen, so it did nothing at all when pressed. */}
+      {experiment && (
+        <button onClick={onOpenExp} className="w-full rounded-[8px] border border-[#E2E8F0] py-2 text-xs font-semibold text-[#334155] hover:bg-[#F8FAFC]">
+          Open Experiment
         </button>
-        {experiment && (
-          <button onClick={onOpenExp} className="flex-1 rounded-[8px] border border-[#E2E8F0] py-2 text-xs font-semibold text-[#334155] hover:bg-[#F8FAFC]">
-            Open Experiment
-          </button>
-        )}
-      </div>
+      )}
     </div>
   );
 }
@@ -287,29 +301,46 @@ function ReflectionFlow({ experiments, missions, proofs, outreach, initialData, 
     const startExpId = initialData?.experiment_id || draft?.experiment_id
       || (experiments.length === 1 ? experiments[0].id : '');
 
+    const activityLabels = activityFor(activityData, startExpId, weekStart).map(i => i.label);
+    const labels = new Set(activityLabels);
+
     if (draft && !isEdit) {
+      // A draft's ticked items are labels, and the activity list they came from
+      // is recomputed live — editing a mission moves it out of the week and its
+      // label stops matching. Orphans go into the free-text box rather than
+      // vanishing, the same routing an edited record gets below.
+      const draftPicks = Array.isArray(draft.picks) ? draft.picks : [];
+      const orphans = draftPicks.filter(v => !labels.has(v));
+      const draftFree = [draft.freeText || '', ...orphans].filter(Boolean).join('\n');
       return {
         expId: startExpId,
         missionId: draft.mission_id || '',
         weekChoice: draft.weekChoice || '',
-        picks: Array.isArray(draft.picks) ? draft.picks : [],
-        otherOpen: !!draft.otherOpen,
-        freeText: draft.freeText || '',
+        picks: draftPicks.filter(v => labels.has(v)),
+        otherOpen: !!draft.otherOpen || orphans.length > 0,
+        freeText: draftFree,
         avoidedProse: draft.avoidedProse || '',
         energySources: draft.energySources || '',
         energyDrains: draft.energyDrains || '',
+        pathFit: draft.pathFit || '',
+        pathFitProse: draft.pathFitProse || '',
         lessons: draft.lessons || '',
         nextChanges: draft.nextChanges || '',
+        summary: draft.summary || '',
+        adjustments: toStringArray(draft.adjustments),
       };
     }
 
-    const activityLabels = activityFor(activityData, startExpId, weekStart).map(i => i.label);
-    const labels = new Set(activityLabels);
     const completed = toStringArray(initialData?.completed_items);
     const avoided = toStringArray(initialData?.avoided_items);
 
     const cannedText = completed.find(v => COMPLETED_TEXTS.has(v)) || avoided.find(v => AVOIDED_TEXTS.has(v)) || '';
     const freeLines = completed.filter(v => !labels.has(v) && !ALL_OPTION_TEXTS.has(v));
+
+    // path_feedback is one string. A line matching an option restores the
+    // selection; anything else is prose from the old form and stays editable
+    // rather than being replaced by a canned label.
+    const fitLines = splitLines(initialData?.path_feedback);
 
     return {
       expId: startExpId,
@@ -329,8 +360,12 @@ function ReflectionFlow({ experiments, missions, proofs, outreach, initialData, 
       avoidedProse: avoided.filter(v => !ALL_OPTION_TEXTS.has(v)).join('\n'),
       energySources: initialData?.energy_sources || '',
       energyDrains: initialData?.energy_drains || '',
+      pathFit: PATH_FIT_OPTIONS.find(o => fitLines.includes(o.text))?.value || '',
+      pathFitProse: fitLines.filter(v => !PATH_FIT_TEXTS.has(v)).join('\n'),
       lessons: initialData?.lessons || '',
       nextChanges: initialData?.next_changes || '',
+      summary: initialData?.generated_summary || '',
+      adjustments: toStringArray(initialData?.path_adjustments),
     };
   });
 
@@ -343,11 +378,13 @@ function ReflectionFlow({ experiments, missions, proofs, outreach, initialData, 
   const [avoidedProse, setAvoidedProse] = useState(seed.avoidedProse);
   const [energySources, setEnergySources] = useState(seed.energySources);
   const [energyDrains, setEnergyDrains] = useState(seed.energyDrains);
+  const [pathFit, setPathFit] = useState(seed.pathFit);
+  const [pathFitProse, setPathFitProse] = useState(seed.pathFitProse);
   const [lessons, setLessons] = useState(seed.lessons);
   const [nextChanges, setNextChanges] = useState(seed.nextChanges);
 
-  const [summary, setSummary] = useState(initialData?.generated_summary || '');
-  const [adjustments, setAdjustments] = useState(() => toStringArray(initialData?.path_adjustments));
+  const [summary, setSummary] = useState(seed.summary);
+  const [adjustments, setAdjustments] = useState(seed.adjustments);
 
   const [saving, setSaving] = useState(false);
   const [generating, setGenerating] = useState(false);
@@ -365,8 +402,8 @@ function ReflectionFlow({ experiments, missions, proofs, outreach, initialData, 
   // exactly one experiment it is answered already and asking would be a screen
   // that costs an interaction and returns nothing.
   const steps = experiments.length > 1
-    ? ['experiment', 'week', 'energy', 'learn']
-    : ['week', 'energy', 'learn'];
+    ? ['experiment', 'week', 'energy', 'fit', 'learn']
+    : ['week', 'energy', 'fit', 'learn'];
   const lastIndex = steps.length - 1;
   const [index, setIndex] = useState(0);
   const [dir, setDir] = useState('fwd');
@@ -408,8 +445,16 @@ function ReflectionFlow({ experiments, missions, proofs, outreach, initialData, 
 
   // ── What the student has actually said ───────────────────────────────────────
   const chosen = WEEK_OPTIONS.find(o => o.value === weekChoice) || null;
+  const fitChoice = PATH_FIT_OPTIONS.find(o => o.value === pathFit) || null;
+
+  // ONE definition of "the free-text box is open", read by the step that
+  // renders it and by the payload that saves it. They must never disagree:
+  // text behind a box the student has closed is text they can no longer see,
+  // and saving it files words under a week they just said they didn't get to.
+  const freeTextOpen = activityMode ? otherOpen : (!!chosen?.opensFreeText || otherOpen);
+
   const pickedLabels = activityMode ? picks : [];
-  const freeLines = splitLines(freeText);
+  const freeLines = freeTextOpen ? splitLines(freeText) : [];
 
   const completedItems = dedupe([
     ...pickedLabels,
@@ -420,6 +465,7 @@ function ReflectionFlow({ experiments, missions, proofs, outreach, initialData, 
     ...(chosen?.bucket === 'avoided' ? [chosen.text] : []),
     ...splitLines(avoidedProse),
   ]);
+  const pathFeedback = [fitChoice?.text, ...splitLines(pathFitProse)].filter(Boolean).join('\n');
 
   // One definition of "there is something here", used by every Done-for-now
   // button and by the save itself, so nothing is ever enabled and then
@@ -429,15 +475,14 @@ function ReflectionFlow({ experiments, missions, proofs, outreach, initialData, 
     || avoidedItems.length
     || energySources.trim()
     || energyDrains.trim()
+    || pathFeedback
     || lessons.trim()
     || nextChanges.trim()
   );
 
-  const canSave = !!expId && hasContent && !saving;
-
   // Has the student changed anything from what this opened with? Logged
   // activity arrives pre-ticked, so `hasContent` is true before they touch
-  // anything and cannot be the test for "there is unsaved work here".
+  // anything and cannot on its own mean "there is something worth saving".
   const touched = expId !== seed.expId
     || missionId !== seed.missionId
     || weekChoice !== seed.weekChoice
@@ -446,10 +491,19 @@ function ReflectionFlow({ experiments, missions, proofs, outreach, initialData, 
     || avoidedProse !== seed.avoidedProse
     || energySources !== seed.energySources
     || energyDrains !== seed.energyDrains
+    || pathFit !== seed.pathFit
+    || pathFitProse !== seed.pathFitProse
     || lessons !== seed.lessons
     || nextChanges !== seed.nextChanges
+    || summary !== seed.summary
     || picks.length !== seed.picks.length
     || picks.some(p => !seed.picks.includes(p));
+
+  // `touched` gates the save, not just the draft. Without it a pre-ticked
+  // activity read-out could be saved with zero taps, filing a row that only
+  // echoes rows already in the database — and "WeeklyReflections finally has
+  // rows" is precisely the number that must not be an echo.
+  const canSave = !!expId && hasContent && touched && !saving;
 
   // ── Draft ────────────────────────────────────────────────────────────────────
   // Only a new reflection is drafted. An edit already has a server row, and a
@@ -463,14 +517,18 @@ function ReflectionFlow({ experiments, missions, proofs, outreach, initialData, 
         experiment_id: expId,
         mission_id: missionId,
         weekChoice, picks, otherOpen, freeText, avoidedProse,
-        energySources, energyDrains, lessons, nextChanges,
+        energySources, energyDrains, pathFit, pathFitProse, lessons, nextChanges,
+        // A generated summary costs a model call. Leaving it out meant
+        // generating insights and then closing the tab threw them away.
+        summary, adjustments,
         saved_at: new Date().toISOString(),
       });
       onDraftWritten?.();
     }, 600);
     return () => clearTimeout(t);
   }, [isEdit, touched, hasContent, weekStart, expId, missionId, weekChoice, picks, otherOpen,
-    freeText, avoidedProse, energySources, energyDrains, lessons, nextChanges, onDraftWritten]);
+    freeText, avoidedProse, energySources, energyDrains, pathFit, pathFitProse, lessons,
+    nextChanges, summary, adjustments, onDraftWritten]);
 
   // ── Handlers ─────────────────────────────────────────────────────────────────
   const chooseExperiment = (id) => {
@@ -494,6 +552,11 @@ function ReflectionFlow({ experiments, missions, proofs, outreach, initialData, 
 
   const togglePick = (label) => {
     setPicks(prev => (prev.includes(label) ? prev.filter(v => v !== label) : [...prev, label]));
+    setError('');
+  };
+
+  const choosePathFit = (value) => {
+    setPathFit(prev => (prev === value ? '' : value));
     setError('');
   };
 
@@ -522,6 +585,7 @@ function ReflectionFlow({ experiments, missions, proofs, outreach, initialData, 
       avoided_items: avoidedItems,
       energy_sources: energySources.trim() || undefined,
       energy_drains: energyDrains.trim() || undefined,
+      path_feedback: pathFeedback || undefined,
       lessons: lessons.trim() || undefined,
       next_changes: nextChanges.trim() || undefined,
       generated_summary: summary.trim() || undefined,
@@ -540,6 +604,9 @@ function ReflectionFlow({ experiments, missions, proofs, outreach, initialData, 
     if (submittingRef.current) return;
     if (!expId) { setError('Pick the experiment this is about first.'); return; }
     if (!hasContent) { setError('Answer one thing — any one — and this will save.'); return; }
+    // The same rule the button enforces, so nothing is ever enabled and then
+    // rejected, or rejected and then saved.
+    if (!touched) { setError('Nothing has changed yet. Tap or type one thing and this will save.'); return; }
 
     // A mission must belong to the experiment it is filed under.
     if (missionId) {
@@ -599,6 +666,9 @@ function ReflectionFlow({ experiments, missions, proofs, outreach, initialData, 
           `Avoided or unfinished: ${avoidedItems.join('; ') || 'nothing recorded'}`,
           `Gave energy: ${energySources.trim() || 'not recorded'}`,
           `Drained energy: ${energyDrains.trim() || 'not recorded'}`,
+          // The student's own read on path fit, so the model reports it back
+          // rather than inferring it from what they happened to write.
+          `How the path fits, in their words: ${pathFeedback || 'not recorded'}`,
           `What they learned: ${lessons.trim() || 'not recorded'}`,
           `What they want to change: ${nextChanges.trim() || 'not recorded'}`,
         ].join('\n'),
@@ -623,15 +693,27 @@ function ReflectionFlow({ experiments, missions, proofs, outreach, initialData, 
   };
 
   // ── Keyboard ─────────────────────────────────────────────────────────────────
-  // SELECT is in the typing guard because this page has selects a number key
-  // would otherwise be stolen from — AddProofFlow's INPUT/TEXTAREA list is not
-  // enough here.
+  // Two different guards, because the two shortcuts are stolen from different
+  // things:
+  //
+  //   Enter is the default activation of a focused button or link. Calling
+  //   preventDefault() on it cancels the click — a keyboard user pressing Enter
+  //   on "Back" would move FORWARD, and Enter on "Done for now" would not save.
+  //   So Enter is left alone on anything that activates on Enter, and on the
+  //   controls that own it (textarea inserts a newline, select opens).
+  //
+  //   Number keys are stolen only by text entry. They stay live while a button
+  //   has focus, so tapping an option with the mouse and then pressing 2 still
+  //   works.
   useEffect(() => {
     const onKey = (e) => {
       if (e.isComposing || e.keyCode === 229) return;
-      const typing = ['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target?.tagName);
+      const tag = e.target?.tagName;
+      const typing = ['INPUT', 'TEXTAREA', 'SELECT'].includes(tag);
+      const activatable = tag === 'BUTTON' || tag === 'A' || e.target?.isContentEditable;
+
       if (e.key === 'Enter' && !e.shiftKey) {
-        if (typing && e.target.tagName === 'TEXTAREA') return;
+        if (activatable || tag === 'TEXTAREA' || tag === 'SELECT') return;
         if (index < lastIndex && (stepKey !== 'experiment' || expId)) { e.preventDefault(); next(); }
         return;
       }
@@ -647,6 +729,8 @@ function ReflectionFlow({ experiments, missions, proofs, outreach, initialData, 
         } else if (n <= WEEK_OPTIONS.length) {
           chooseWeek(WEEK_OPTIONS[n - 1].value);
         }
+      } else if (stepKey === 'fit') {
+        if (n <= PATH_FIT_OPTIONS.length) choosePathFit(PATH_FIT_OPTIONS[n - 1].value);
       }
     };
     window.addEventListener('keydown', onKey);
@@ -726,7 +810,7 @@ function ReflectionFlow({ experiments, missions, proofs, outreach, initialData, 
             onSelect={() => setOtherOpen(o => !o)}
           />
         </div>
-        {otherOpen && (
+        {freeTextOpen && (
           <div className="anim-slide-up mt-2">
             {/* Focused only when the student just opened it. A box that was
                 already open when the step mounted must not steal focus before
@@ -744,10 +828,10 @@ function ReflectionFlow({ experiments, missions, proofs, outreach, initialData, 
               selected={weekChoice === opt.value} onSelect={() => chooseWeek(opt.value)} />
           ))}
         </div>
-        {/* `otherOpen` is what carries a saved reflection whose completed_items
+        {/* freeTextOpen also carries a saved reflection whose completed_items
             match none of the four options: without it the student's own words
             were held in state, saved back, and never shown. */}
-        {(chosen?.opensFreeText || otherOpen) && (
+        {freeTextOpen && (
           <div className="anim-slide-up mt-2">
             {!chosen && (
               <p className="mb-1.5 text-xs font-semibold" style={{ color: 'var(--text-secondary)' }}>What you wrote down</p>
@@ -793,6 +877,43 @@ function ReflectionFlow({ experiments, missions, proofs, outreach, initialData, 
           </label>
         )}
       </div>
+    );
+    footer = (
+      <div className="flex flex-wrap items-center gap-3">
+        {backButton}
+        {continueButton(true)}
+        {doneForNow(false)}
+      </div>
+    );
+  } else if (stepKey === 'fit') {
+    // The only question that feeds "Adjust". Asked as a comparison against
+    // their own expectation rather than a verdict on the path, so a bad week
+    // and a bad fit stay distinguishable.
+    question = 'Does this path still feel like a fit?';
+    hint = selectedExp?.path_name
+      ? `Comparing ${selectedExp.path_name} against what you expected before this week.`
+      : 'Compared with what you expected before this week.';
+    body = (
+      <>
+        <div className="space-y-2">
+          {PATH_FIT_OPTIONS.map((opt, i) => (
+            <OptionRow key={opt.value} index={i} option={opt}
+              selected={pathFit === opt.value} onSelect={() => choosePathFit(opt.value)} />
+          ))}
+        </div>
+        {/* Prose from the old "Did the path match your expectations?" textarea.
+            Shown only when the record has some, so it stays editable instead of
+            being overwritten by a canned label. */}
+        {seed.pathFitProse && (
+          <label className="mt-4 block">
+            <span className="mb-1.5 block text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
+              What you said before <span className="font-normal" style={{ color: 'var(--text-secondary)' }}>· kept as you wrote it</span>
+            </span>
+            <textarea rows={2} value={pathFitProse} onChange={e => setPathFitProse(e.target.value)}
+              className={`${inputCls} resize-none`} />
+          </label>
+        )}
+      </>
     );
     footer = (
       <div className="flex flex-wrap items-center gap-3">
@@ -880,9 +1001,13 @@ function ReflectionFlow({ experiments, missions, proofs, outreach, initialData, 
     );
   }
 
+  // A disabled Save must never be silent about why, and each condition that can
+  // switch canSave off has a line here.
   const blockedReason = canSave || saving || stepKey === 'experiment' ? null
     : !expId ? 'Go back and pick an experiment.'
-      : 'Answer any one thing above — that is enough to save.';
+      : !hasContent ? 'Answer any one thing above — that is enough to save.'
+        : isEdit ? 'Nothing changed yet. Edit one answer and this will save.'
+          : 'Confirm or change one thing above and this will save.';
 
   return (
     <div ref={cardRef} className="rounded-[24px] border bg-white px-5 py-6 sm:px-8 sm:py-7" style={{ borderColor: 'var(--border-light)' }}>
@@ -976,12 +1101,20 @@ export default function WeeklyReflectionPage() {
       setProofs(Array.isArray(proof) ? proof.filter(p => isActive(p) && ownExpIds.has(p.experiment_id)) : []);
       setOutreach(Array.isArray(contacts) ? contacts.filter(isActive) : []);
 
+      // The form is the landing view, so whether it opens as a new reflection
+      // or as this week's existing one has to be decided HERE, before the
+      // student sees anything. Leaving it null until they press a button meant
+      // a returning student landed on a blank form and got a second row for the
+      // same week.
+      const thisWeekRow = liveReflections.find(r => sameWeek(r.week_start, getMonday(new Date()))) || null;
+      if (thisWeekRow) setEditingReflection(thisWeekRow);
+
       // Server wins. A local draft is only ever offered for a week that has no
       // saved row, and never applied until the student asks for it.
       const d = loadDraft();
       if (d?.week_start) {
         if (liveReflections.some(r => sameWeek(r.week_start, d.week_start))) clearDraft();
-        else setDraftOffer(d);
+        else if (!thisWeekRow || !sameWeek(d.week_start, thisWeekRow.week_start)) setDraftOffer(d);
       }
     } finally {
       setLoading(false);
@@ -1065,6 +1198,8 @@ export default function WeeklyReflectionPage() {
     const user = await base44.auth.me();
     await base44.entities.WeeklyReflections.update(deleteTarget.id, softDeletePayload(user.id));
     setReflections(prev => prev.filter(r => r.id !== deleteTarget.id));
+    // Editing the row that was just deleted would save it straight back.
+    setEditingReflection(prev => (prev?.id === deleteTarget.id ? null : prev));
     setDeleteTarget(null);
   };
 
@@ -1086,7 +1221,6 @@ export default function WeeklyReflectionPage() {
         <SuccessToast
           experiment={successToast.experiment}
           mission={successToast.mission}
-          onView={() => { setSuccessToast(null); setView('history'); }}
           onOpenExp={() => { setSuccessToast(null); navigate('/experiments'); }}
           onDismiss={() => setSuccessToast(null)}
         />
@@ -1143,9 +1277,14 @@ export default function WeeklyReflectionPage() {
               </div>
             )}
 
-            {currentWeekRow && !editingReflection && (
+            {/* Only shown in the state where it is true: the flow is actually
+                bound to this week's saved row and will update it. The earlier
+                version of this line rendered when editingReflection was null —
+                exactly when the next save would create a SECOND row — and
+                disappeared once it became accurate. */}
+            {currentWeekRow && editingReflection?.id === currentWeekRow.id && (
               <p className="mb-4 text-sm text-[#64748B]">
-                You already have a reflection for this week. Opening it adds to that one rather than starting a second.
+                Picking up this week&apos;s reflection. Saving updates it rather than adding a second.
               </p>
             )}
 
