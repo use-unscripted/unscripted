@@ -1,32 +1,58 @@
 /**
- * My Journey — the one centralized student screen.
- * Answers, in order: what am I testing, what stage am I in, what do I do next,
- * what evidence exists, and what decision is coming.
+ * My Journey — one screen for the first half of the workflow:
+ * Onboarding → Compare Three Paths → Choose One Path → Begin One Experiment,
+ * and then the running state of that cycle.
  */
 import { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { resolveJourney } from '@/lib/journey';
+import { loadOwnedPaths, authoritativeSet, loadOnboardingSubmission } from '@/lib/path-set';
+import { getActiveCycle } from '@/lib/career-cycle';
+import { selectPathAndBeginExperiment } from '@/lib/path-selection';
 import CycleStageSync from '@/components/journey/CycleStageSync';
-import { loadOwnedPaths } from '@/lib/path-set';
 import JourneyStages from '@/components/journey/JourneyStages';
-import PrimaryActionCard from '@/components/journey/PrimaryActionCard';
+import JourneyStatusHeader from '@/components/journey/JourneyStatusHeader';
+import ContinueCard from '@/components/journey/ContinueCard';
 import JourneySnapshot from '@/components/journey/JourneySnapshot';
 import DecisionPanel from '@/components/journey/DecisionPanel';
+import PathComparisonWorkspace from '@/components/journey/PathComparisonWorkspace';
+import PathSelectedConfirm from '@/components/journey/PathSelectedConfirm';
+import JourneyEmptyState from '@/components/journey/JourneyEmptyState';
+
+function effortLabel(experiment, missions) {
+  if (!experiment) return null;
+  const open = missions.filter(
+    m => m.experiment_id === experiment.id && m.deletion_status !== 'deleted' && !['completed', 'skipped'].includes(m.status)
+  ).length;
+  const parts = [];
+  if (open) parts.push(`${open} mission${open === 1 ? '' : 's'} left`);
+  if (experiment.estimated_hours) parts.push(`~${experiment.estimated_hours}h`);
+  return parts.length ? parts.join(' · ') : null;
+}
 
 export default function MyJourney() {
   const [data, setData] = useState(null);
+  const [busyId, setBusyId] = useState(null);
+  const [selectError, setSelectError] = useState(null);
+  const [confirmed, setConfirmed] = useState(null);
 
   const load = useCallback(async () => {
-    const [owned, exps, prf, refs] = await Promise.all([
+    const [owned, profile, cycle, exps, missions, prf, refs] = await Promise.all([
       loadOwnedPaths().catch(() => ({ paths: [] })),
+      loadOnboardingSubmission().catch(() => null),
+      getActiveCycle().catch(() => null),
       base44.entities.Experiments.list('-created_date', 100).catch(() => []),
+      base44.entities.Missions.list('-created_date', 200).catch(() => []),
       base44.entities.ProofOfWork.list('-created_date', 100).catch(() => []),
       base44.entities.WeeklyReflections.list('-created_date', 50).catch(() => []),
     ]);
     setData({
       paths: owned?.paths || [],
+      profile,
+      cycle,
       experiments: Array.isArray(exps) ? exps : [],
+      missions: Array.isArray(missions) ? missions : [],
       proof: Array.isArray(prf) ? prf : [],
       reflections: Array.isArray(refs) ? refs : [],
     });
@@ -34,59 +60,121 @@ export default function MyJourney() {
 
   useEffect(() => { load(); }, [load]);
 
+  const handleSelect = useCallback(async (path) => {
+    setSelectError(null);
+    setBusyId(path.id);
+    try {
+      const result = await selectPathAndBeginExperiment(path, data?.paths || []);
+      setConfirmed({ pathName: path.path_name, experiment: result.experiment });
+      await load();
+    } catch (err) {
+      // Stage only — never the student's answers.
+      console.error('[journey] path selection failed at stage: begin_experiment', err?.message);
+      setSelectError(path.id);
+    } finally {
+      setBusyId(null);
+    }
+  }, [data, load]);
+
   if (!data) {
     return (
-      <main className="mx-auto max-w-3xl px-5 py-10 sm:px-8">
+      <main className="mx-auto max-w-4xl px-5 py-10 sm:px-8">
         <div className="skeleton h-24 w-full" />
         <div className="skeleton mt-4 h-48 w-full" />
       </main>
     );
   }
 
-  const { stage, currentPath, counts, action, livePaths } = resolveJourney(data);
-
-  const scrollToDecision = () => {
+  const { stage, currentPath, nextExperiment, counts, action, livePaths } = resolveJourney(data);
+  const set = authoritativeSet(data.paths);
+  const comparisonPaths = set?.paths || livePaths;
+  const scrollToDecision = () =>
     document.getElementById('decision')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  };
 
-  return (
-    <main className="mx-auto max-w-3xl px-5 py-8 sm:px-8 sm:py-10">
+  const shell = (children, sub) => (
+    <main className="mx-auto max-w-4xl px-5 py-8 sm:px-8 sm:py-10">
       <header className="mb-6">
         <h1 className="font-heading text-3xl font-bold tracking-tight sm:text-4xl" style={{ color: 'var(--text-primary)' }}>
           My Journey
         </h1>
-        <p className="mt-2 text-sm leading-6" style={{ color: 'var(--text-secondary)' }}>
-          {currentPath
-            ? <>You're currently testing <strong style={{ color: 'var(--text-primary)' }}>{currentPath.path_name}</strong>.</>
-            : 'One direction at a time. Pick what you test first, and this page tells you what comes next.'}
-        </p>
+        <p className="mt-2 text-sm leading-6" style={{ color: 'var(--text-secondary)' }}>{sub}</p>
       </header>
+      <div className="space-y-5">{children}</div>
+    </main>
+  );
 
+  // 1 — onboarding not completed
+  if (!data.profile && data.paths.length === 0) {
+    return shell(<JourneyEmptyState variant="onboarding" />, 'Four steps: answer a few questions, compare three paths, choose one, run one experiment.');
+  }
+
+  // 2 — paths not generated
+  if (data.paths.length === 0) {
+    return shell(<JourneyEmptyState variant="paths" />, 'Your answers are saved. Next: your three paths.');
+  }
+
+  // 3 — no path selected yet → the comparison workspace, right here
+  if (!currentPath && !confirmed) {
+    return shell(
+      <>
+        <JourneyStages stage={stage} />
+        <PathComparisonWorkspace
+          paths={comparisonPaths}
+          onSelect={handleSelect}
+          busyId={busyId}
+          error={selectError}
+          onRetry={() => setSelectError(null)}
+        />
+      </>,
+      'Compare your three paths below, then choose the one you will test first.'
+    );
+  }
+
+  const experimentDone = nextExperiment == null && counts.experimentsDone > 0;
+  const effort = effortLabel(nextExperiment, data.missions);
+
+  return shell(
+    <>
       <CycleStageSync stage={stage} />
 
-      <div className="space-y-5">
-        <JourneyStages stage={stage} />
-
-        <PrimaryActionCard
-          action={action}
-          pathName={currentPath?.path_name}
-          onAnchorClick={scrollToDecision}
+      {confirmed && (
+        <PathSelectedConfirm
+          pathName={confirmed.pathName}
+          experiment={confirmed.experiment}
+          onDismiss={() => setConfirmed(null)}
         />
+      )}
 
-        <JourneySnapshot counts={counts} />
+      <JourneyStatusHeader
+        stage={stage}
+        path={currentPath}
+        experiment={nextExperiment}
+        action={action}
+        effort={effort}
+      />
 
-        {stage === 'decide' && (
-          <DecisionPanel path={currentPath} otherPaths={livePaths} onDecided={load} />
-        )}
+      <ContinueCard action={action} pathName={currentPath?.path_name} onAnchorClick={scrollToDecision} />
 
-        <p className="pt-2 text-center text-xs" style={{ color: 'var(--text-muted)' }}>
-          Working on something else? <Link to="/paths" className="font-semibold" style={{ color: 'var(--brand-navy-700)' }}>Compare all paths</Link>
-          {' · '}
-          <Link to="/experiments" className="font-semibold" style={{ color: 'var(--brand-navy-700)' }}>All missions</Link>
-          {' · '}
-          <Link to="/calendar" className="font-semibold" style={{ color: 'var(--brand-navy-700)' }}>Your week</Link>
-        </p>
-      </div>
-    </main>
+      <JourneyStages stage={stage} />
+
+      {!nextExperiment && !experimentDone && <JourneyEmptyState variant="experiment" ctaTo={action.to} />}
+      {experimentDone && counts.proof === 0 && <JourneyEmptyState variant="experiment_done" />}
+      {data.cycle?.legacy_review && <JourneyEmptyState variant="legacy" />}
+
+      <JourneySnapshot counts={counts} />
+
+      {stage === 'decide' && <DecisionPanel path={currentPath} otherPaths={livePaths} onDecided={load} />}
+
+      <p className="pt-2 text-center text-xs" style={{ color: 'var(--text-muted)' }}>
+        Working on something else? <Link to="/paths" className="font-semibold" style={{ color: 'var(--brand-navy-700)' }}>Compare all paths</Link>
+        {' · '}
+        <Link to="/experiments" className="font-semibold" style={{ color: 'var(--brand-navy-700)' }}>All missions</Link>
+        {' · '}
+        <Link to="/calendar" className="font-semibold" style={{ color: 'var(--brand-navy-700)' }}>Your week</Link>
+      </p>
+    </>,
+    currentPath
+      ? `You're currently testing ${currentPath.path_name}.`
+      : 'One direction at a time. This page tells you what comes next.'
   );
 }

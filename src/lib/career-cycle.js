@@ -195,8 +195,9 @@ export async function syncCycleStage(journeyStage) {
   if (!target) return null;
   const cycle = await getActiveCycle();
   if (!cycle || cycle.current_stage === target) return cycle;
-  // Never walk a cycle backwards past its decision point.
-  if (cycle.current_stage === 'decision_required' && target !== 'decision_required') return cycle;
+  // Forward only. A stale render (or a page that mounts mid-transition) must
+  // never pull a cycle back to an earlier stage than the one it reached.
+  if (CYCLE_STAGES.indexOf(target) <= CYCLE_STAGES.indexOf(cycle.current_stage)) return cycle;
   return base44.entities.CareerCycle.update(cycle.id, { current_stage: target });
 }
 
