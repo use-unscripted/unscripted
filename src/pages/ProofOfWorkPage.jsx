@@ -18,6 +18,7 @@ import PageHeader from '@/components/PageHeader';
 import { ProofSuccessToast } from '@/components/experiments/AddProofModal';
 import PathSwitcher from '@/components/PathSwitcher';
 import AddProofStandaloneModal from '@/components/experiments/AddProofStandaloneModal';
+import { safeExternalUrl } from '@/lib/safe-url';
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 function fmtSize(bytes) {
@@ -103,7 +104,9 @@ function ProofCard({ entry, missionsMap, experimentsMap, onDelete, onNavigateToP
     file_name: entry.file_name || null,
     file_size: entry.file_size || null,
     mime_type: entry.mime_type || null,
-    external_url: entry.external_url || null,
+    // Student-entered URL — only http(s) survives, so a javascript: value can
+    // never reach the href below.
+    external_url: safeExternalUrl(entry.external_url),
     skills_demonstrated: Array.isArray(entry.skills_demonstrated) ? entry.skills_demonstrated : [],
     mission_id: entry.mission_id || null,
     experiment_id: entry.experiment_id || null,

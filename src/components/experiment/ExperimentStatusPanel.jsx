@@ -5,6 +5,7 @@
  */
 import { Link } from 'react-router-dom';
 import { FileText, RotateCcw, Compass, ExternalLink } from 'lucide-react';
+import { safeExternalUrl } from '@/lib/safe-url';
 
 function Row({ Icon, label, value, to, cta }) {
   return (
@@ -61,17 +62,21 @@ export default function ExperimentStatusPanel({ proofs, reflections, cycle }) {
 
       {proofs.length > 0 && (
         <ul className="mt-3 space-y-1.5 border-t pt-3" style={{ borderColor: 'var(--border-light)' }}>
-          {proofs.slice(0, 6).map(p => (
+          {proofs.slice(0, 6).map(p => {
+            // Student-entered URL — only http(s) is allowed in an href.
+            const href = safeExternalUrl(p.external_url) || safeExternalUrl(p.file_url);
+            return (
             <li key={p.id} className="flex items-center justify-between gap-2 text-xs">
               <span className="truncate font-semibold" style={{ color: 'var(--text-primary)' }}>{p.title}</span>
-              {(p.external_url || p.file_url) && (
-                <a href={p.external_url || p.file_url} target="_blank" rel="noopener noreferrer"
+              {href && (
+                <a href={href} target="_blank" rel="noopener noreferrer"
                   className="shrink-0 font-bold" style={{ color: 'var(--brand-navy-700)' }}>
                   Open <ExternalLink size={10} className="inline" />
                 </a>
               )}
             </li>
-          ))}
+            );
+          })}
         </ul>
       )}
     </section>

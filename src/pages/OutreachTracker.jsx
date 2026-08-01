@@ -7,6 +7,7 @@ import PageHeader from '@/components/PageHeader';
 import AddContactModal, { ContactSuccessToast } from '@/components/outreach/AddContactModal';
 import PathSwitcher from '@/components/PathSwitcher';
 import SoftDeleteConfirm, { softDeletePayload } from '@/components/SoftDeleteConfirm';
+import { safeExternalUrl } from '@/lib/safe-url';
 
 const ALL_STATUS_OPTIONS = [
   { value: 'not_sent', label: 'Not contacted', bg: '#F1F5F9', text: '#334155' },
@@ -39,6 +40,10 @@ function ContactCard({ c, experimentsMap, missionsMap, onEdit, onStatusChange, o
   const mission = c.mission_id ? missionsMap[c.mission_id] : null;
   const s = ALL_STATUS_OPTIONS.find(x => x.value === c.response_status) || ALL_STATUS_OPTIONS[0];
   const isOverdue = c.followup_date && new Date(c.followup_date) < new Date() && !['completed','responded'].includes(c.response_status);
+  // Contact URLs are typed by the student. Bare domains still get https://,
+  // but anything that isn't http(s) after that is dropped rather than linked.
+  const profileHref = safeExternalUrl(c.profile_url) || safeExternalUrl('https://' + (c.profile_url || ''));
+  const websiteHref = safeExternalUrl(c.website_url) || safeExternalUrl('https://' + (c.website_url || ''));
 
   return (
     <div className="rounded-[20px] border border-[#E2E8F0] bg-white p-5">
@@ -109,14 +114,14 @@ function ContactCard({ c, experimentsMap, missionsMap, onEdit, onStatusChange, o
             <Phone size={12} />{c.phone}
           </a>
         )}
-        {c.profile_url && (
-          <a href={c.profile_url.startsWith('http') ? c.profile_url : 'https://' + c.profile_url} target="_blank" rel="noopener noreferrer"
+        {profileHref && (
+          <a href={profileHref} target="_blank" rel="noopener noreferrer"
             className="flex items-center gap-1 text-xs text-[#64748B] hover:text-[#274C77] transition">
             <ExternalLink size={12} />LinkedIn
           </a>
         )}
-        {c.website_url && (
-          <a href={c.website_url} target="_blank" rel="noopener noreferrer"
+        {websiteHref && (
+          <a href={websiteHref} target="_blank" rel="noopener noreferrer"
             className="flex items-center gap-1 text-xs text-[#64748B] hover:text-[#274C77] transition">
             <ExternalLink size={12} />Website
           </a>
