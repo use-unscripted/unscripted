@@ -1237,6 +1237,175 @@ const tribeAdapter: Adapter = {
   normalize: normalizeTribe,
 };
 
+// ── Adapter: Drupal JSON:API ────────────────────────────────────────────────
+
+/**
+ * Drupal runs a very large share of .edu sites, and its JSON:API module hands
+ * back the school's own Event content type as typed data. Cooper Union and
+ * Arizona State both publish this way and neither runs a calendar vendor at
+ * all, so without this they read as having no calendar.
+ *
+ * Nothing here is guessed from prose. The resource type is read out of the
+ * site's own /jsonapi index rather than assembled from a pattern, because the
+ * type name is the school's choice — Cooper's is "node--event", Arizona
+ * State's is "node--asu_event". The start time is then taken only from a field
+ * the site itself typed as a date, and a node without one is dropped rather
+ * than dated from something nearby.
+ */
+
+const DRUPAL_INDEX = '/jsonapi';
+const DRUPAL_MAX_TYPES = 3;
+
+/**
+ * Field names Drupal sites actually use for when an event happens.
+ *
+ * Order is priority: an explicit start beats a range, which beats a bare date.
+ * A field outside this list is never read as a time, however date-like its
+ * contents look — that is the line between reading a typed field and guessing.
+ */
+const DRUPAL_DATE_FIELDS = [
+  'field_event_date',
+  'field_date_range',
+  'field_start_date',
+  'field_event_start',
+  'field_when',
+  'field_date',
+  'field_dates',
+];
+
+/**
+ * An ISO-8601 instant, which is the only thing accepted as an event's start.
+ *
+ * Drupal presents the same field three ways depending on how the site set it
+ * up: a bare string, a `{value}` object, or — for anything multi-value or a
+ * date range — an array of those. Cooper Union's is
+ * `[{value, end_value}]`, so unwrapping one layer short reads every event as
+ * undated.
+ */
+function drupalDate(value: unknown): string {
+  const first = Array.isArray(value) ? value[0] : value;
+  const raw = first && typeof first === 'object'
+    ? (first as Record<string, unknown>).value
+    : first;
+  const text = String(raw || '').trim();
+  return /^\d{4}-\d{2}-\d{2}([T ]\d{2}:\d{2}(:\d{2})?)?/.test(text) ? text.replace(' ', 'T') : '';
+}
+
+// deno-lint-ignore no-explicit-any
+function drupalStart(attributes: any): string {
+  if (!attributes || typeof attributes !== 'object') return '';
+  for (const field of DRUPAL_DATE_FIELDS) {
+    const found = drupalDate(attributes[field]);
+    if (found) return found;
+  }
+  return '';
+}
+
+/** A JSON:API collection of nodes, at least one of which is a dated event. */
+export function looksLikeDrupalEvents(payload: unknown): boolean {
+  if (!payload || typeof payload !== 'object') return false;
+  const data = (payload as Record<string, unknown>).data;
+  if (!Array.isArray(data) || !data.length) return false;
+  // deno-lint-ignore no-explicit-any
+  return data.some((node: any) =>
+    node?.attributes && typeof node.attributes.title === 'string' && drupalStart(node.attributes)
+  );
+}
+
+/**
+ * Event collections the site advertises, straight out of its own index.
+ *
+ * Only types whose name contains "event" are considered, and only three of
+ * them, so this cannot wander into the rest of a school's content model.
+ */
+async function drupalEventEndpoints(host: string): Promise<string[]> {
+  let payload: unknown;
+  try {
+    payload = await probeJson(`https://${host}${DRUPAL_INDEX}`);
+  } catch (_) {
+    return [];
+  }
+  const links = (payload as Record<string, any>)?.links;
+  if (!links || typeof links !== 'object') return [];
+
+  const found: string[] = [];
+  for (const [name, link] of Object.entries(links)) {
+    if (!/^node--.*event/i.test(name)) continue;
+    const href = typeof link === 'string' ? link : (link as Record<string, unknown>)?.href;
+    const url = cleanUrl(href);
+    // The index is the school's own document, but it is still a remote one, so
+    // the URL it names has to sit on the host we asked.
+    if (!url) continue;
+    try {
+      if (stripWww(new URL(url).hostname.toLowerCase()) !== stripWww(host)) continue;
+    } catch (_) {
+      continue;
+    }
+    found.push(url);
+    if (found.length >= DRUPAL_MAX_TYPES) break;
+  }
+  return found;
+}
+
+async function probeDrupal(domain: string): Promise<string | null> {
+  const hosts = [`www.${domain}`, domain, ...SUBDOMAIN_CANDIDATES.map(s => `${s}.${domain}`)];
+  for (const host of hosts) {
+    const endpoints = await drupalEventEndpoints(host);
+    if (!endpoints.length) continue;
+    const hit = await firstValidUrl(
+      endpoints.map(e => `${e}?page[limit]=5`),
+      looksLikeDrupalEvents,
+    );
+    if (hit) return hit.split('?')[0];
+  }
+  return null;
+}
+
+async function fetchDrupal(feedUrl: string, days: number) {
+  const res = await fetch(`${feedUrl}?page[limit]=50&sort=-created`, {
+    headers: { Accept: 'application/vnd.api+json,application/json' },
+    signal: AbortSignal.timeout(FEED_TIMEOUT_MS),
+  });
+  if (!res.ok) throw new Error(`Calendar feed returned ${res.status}`);
+  const body = await res.json();
+  if (!looksLikeDrupalEvents(body)) throw new Error('Calendar feed returned an unexpected shape');
+  // deno-lint-ignore no-explicit-any
+  return (body.data as any[]).filter((node) => {
+    const start = drupalStart(node?.attributes);
+    return start && withinWindow(start, days);
+  });
+}
+
+// deno-lint-ignore no-explicit-any
+function normalizeDrupal(event: any, feedUrl: string): NormalizedEvent {
+  const attributes = event?.attributes || {};
+  let url = '';
+  try {
+    const alias = attributes.path?.alias;
+    if (alias) url = new URL(alias, new URL(feedUrl).origin).toString();
+  } catch (_) {
+    url = '';
+  }
+  return {
+    ...emptyEvent(),
+    id: String(event?.id || ''),
+    title: plainText(attributes.title),
+    description: plainText(
+      attributes.body?.summary || attributes.body?.processed || attributes.body?.value,
+    ).slice(0, 600),
+    url,
+    start: drupalStart(attributes),
+    location: plainText(attributes.field_location || attributes.field_place),
+  };
+}
+
+const drupalAdapter: Adapter = {
+  name: 'drupal',
+  probe: probeDrupal,
+  fetch: fetchDrupal,
+  normalize: normalizeDrupal,
+};
+
 // ── Adapter registry ────────────────────────────────────────────────────────
 
 /**
@@ -1252,6 +1421,7 @@ const ADAPTERS: Adapter[] = [
   campusLabsAdapter,
   tribeAdapter,
   trumbaAdapter,
+  drupalAdapter,
   icalAdapter,
 ];
 
@@ -1268,14 +1438,20 @@ const MAX_DISCOVERED_DOMAINS = 2;
 const MAX_DISCOVERED_ICS = 6;
 
 /**
- * A hostname label that reads like a calendar: "events", "campuscalendar".
+ * A hostname label that reads like a calendar.
  *
- * "engage" and "involvement" are in here because that is what schools call the
+ * Matched as a substring rather than a whole word, because schools run the
+ * name together: Arizona State's is asuevents.asu.edu, which no boundary-aware
+ * pattern accepts. The looseness costs little — a discovered host is only ever
+ * inside the school's own domain, and it still has to answer with a real feed
+ * before anything is returned.
+ *
+ * "engage" and "involvement" are here because that is what schools call the
  * student-life portal, and at a lot of them it is the only place events are
  * published at all — Babson's whole club calendar is on engage.babson.edu.
  */
 const CALENDAR_LABEL_RE =
-  /(^|[.-])(calendars?|events?|campuscalendar|engage|involvement|orgs|studentlife)([.-]|$)/;
+  /(calendar|event|engage|involvement|orgs|studentlife)/;
 
 /** Pages that link to, or redirect to, wherever a school keeps its calendar. */
 function discoveryPages(domain: string): string[] {
@@ -1387,6 +1563,18 @@ async function probeKnownHost(
 
   const ics = await firstValidIcs(ICS_PATHS.map(path => `https://${host}${path}`));
   if (ics) return { platform: 'ical', feedUrl: ics };
+
+  // Drupal last: it costs an index request before it can say no, and the three
+  // above answer in one. Arizona State needs it — its events live on
+  // asuevents.asu.edu, which only turns up through discovery.
+  const endpoints = await drupalEventEndpoints(host);
+  if (endpoints.length) {
+    const hit = await firstValidUrl(
+      endpoints.map(e => `${e}?page[limit]=5`),
+      looksLikeDrupalEvents,
+    );
+    if (hit) return { platform: 'drupal', feedUrl: hit.split('?')[0] };
+  }
 
   return null;
 }
