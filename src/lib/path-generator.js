@@ -1,4 +1,5 @@
 import { base44 } from '@/api/base44Client';
+import { unwrapLLM } from '@/lib/llm';
 
 const str = { type: 'string' };
 const strArr = { type: 'array', items: { type: 'string' } };
@@ -150,8 +151,11 @@ Then generate exactly 3 experiments for the PRIMARY path: "${primaryPath}". Ever
 
 Be honest about fit AND misfit. Do not claim any path is objectively correct. Fit the experiments to ${availableHours} available hours per week over 30 days. Each experiment should take no more than 8–12 hours total.`;
 
-  const result = await base44.integrations.Core.InvokeLLM({
+  // The core Discover step — the 3 paths and first 3 experiments a student sees.
+  // Highest-quality tier the app can afford to wait on; see src/lib/llm.js.
+  const result = unwrapLLM(await base44.integrations.Core.InvokeLLM({
     prompt,
+    model: 'gemini_3_1_pro',
     response_json_schema: {
       type: 'object',
       properties: {
@@ -168,7 +172,7 @@ Be honest about fit AND misfit. Do not claim any path is objectively correct. Fi
         archetype: str,
       }
     }
-  });
+  }));
 
   // Save all records; track IDs so we can roll back on failure
   const savedRecIds = [];

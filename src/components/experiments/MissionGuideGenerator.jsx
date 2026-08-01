@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import { X, Loader2, Wand2, AlertCircle } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
+import { unwrapLLM } from '@/lib/llm';
 import { buildGuidePrompt, GUIDE_JSON_SCHEMA, validateGuide } from './guideSchema';
 
 const VARIATION_OPTIONS = [
@@ -66,10 +67,13 @@ export default function MissionGuideGenerator({ experiment, existingGuides = [],
       let validation = null;
 
       for (let attempt = 0; attempt < 2; attempt++) {
-        const result = await base44.integrations.Core.InvokeLLM({
+        // Mission Guides carry the outreach email a student sends to a real
+        // professional. Highest-quality tier; see src/lib/llm.js.
+        const result = unwrapLLM(await base44.integrations.Core.InvokeLLM({
           prompt: promptContext,
+          model: 'gemini_3_1_pro',
           response_json_schema: GUIDE_JSON_SCHEMA,
-        });
+        }));
 
         validation = validateGuide(result);
         if (import.meta.env?.DEV && validation.warnings.length) {
