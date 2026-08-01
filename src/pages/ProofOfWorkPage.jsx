@@ -395,14 +395,14 @@ export default function ProofOfWorkPage() {
         </div>
         {paths.length > 1 && (
           <select value={filterPath} onChange={e => setFilterPath(e.target.value)}
-            className="rounded-xl border border-[#E2E8F0] bg-white px-3 py-2.5 text-sm outline-none focus:border-[#1F3A5F]">
+            className="w-full max-w-full truncate rounded-xl border border-[#E2E8F0] bg-white px-3 py-2.5 text-sm outline-none focus:border-[#1F3A5F] sm:w-[220px]">
             <option value="all">All paths</option>
             {paths.filter(p => p !== 'all').map(p => <option key={p} value={p}>{p}</option>)}
           </select>
         )}
         {experiments.length > 0 && (
           <select value={filterExp} onChange={e => setFilterExp(e.target.value)}
-            className="rounded-xl border border-[#E2E8F0] bg-white px-3 py-2.5 text-sm outline-none focus:border-[#1F3A5F]">
+            className="w-full max-w-full truncate rounded-xl border border-[#E2E8F0] bg-white px-3 py-2.5 text-sm outline-none focus:border-[#1F3A5F] sm:w-[220px]">
             <option value="all">All experiments</option>
             {experiments.map(ex => <option key={ex.id} value={ex.id}>{ex.title}</option>)}
           </select>
