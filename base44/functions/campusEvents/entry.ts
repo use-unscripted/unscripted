@@ -1057,6 +1057,10 @@ export function icsLinksFrom(html: string, domain: string, baseUrl = ''): string
     /<link[^>]+type\s*=\s*["']text\/calendar["'][^>]*?href\s*=\s*["']([^"']+)["']/gi,
     /<link[^>]+href\s*=\s*["']([^"']+)["'][^>]*?type\s*=\s*["']text\/calendar["']/gi,
     /(?:href|src)\s*=\s*["']([^"']*\/ical(?:\.php|\.aspx|\.cgi)?(?:\?[^"']*)?)["']/gi,
+    // A bare absolute .ics anywhere in the markup. Portals hand the URL to a
+    // script rather than putting it in an href — Babson's subscribe link never
+    // appears as one — and the same-site check below is what keeps this safe.
+    /(https?:\/\/[^\s"'<>]+?\.ics)\b/gi,
     /["'](https?:\/\/calendar\.google\.com\/calendar\/ical\/[^\s"'<>]+)["']/gi,
   ];
   for (const pattern of patterns) {
@@ -1458,6 +1462,14 @@ const MAX_DISCOVERED_ICS = 6;
 const CALENDAR_LABEL_RE =
   /(calendar|event|engage|involvement|orgs|studentlife)/;
 
+/**
+ * Hosts a school may run a calendar on without ever linking to it.
+ *
+ * Kept to the names the portal products actually use, since each one costs a
+ * request on every school that has no calendar at all.
+ */
+const PORTAL_SUBDOMAINS = ['engage', 'involvement'];
+
 /** Pages that link to, or redirect to, wherever a school keeps its calendar. */
 function discoveryPages(domain: string): string[] {
   return [
@@ -1500,6 +1512,15 @@ async function discoverCalendarLocations(
   const hosts = new Set<string>();
   const domains = new Set<string>();
   const icsUrls = new Set<string>();
+
+  // The student-life portal is worth trying blind, because the main site often
+  // does not link to it at all. Babson's whole club calendar is published at
+  // engage.babson.edu and nothing on babson.edu mentions that host, so no
+  // amount of reading the school's pages will ever reach it.
+  for (const label of PORTAL_SUBDOMAINS) {
+    const host = `${label}.${domain}`;
+    if (!alreadyTried.has(host) && isProbeableDomain(host)) hosts.add(host);
+  }
 
   const pages = await Promise.all(discoveryPages(domain).map(async (url) => {
     try {
@@ -1553,6 +1574,7 @@ async function discoverCalendarLocations(
  */
 async function probeKnownHost(
   host: string,
+  domain: string,
 ): Promise<{ platform: string; feedUrl: string } | null> {
   const localist = await firstValidUrl(
     [`https://${host}/api/2/events?days=1&pp=1`],
@@ -1569,7 +1591,7 @@ async function probeKnownHost(
   const ics = await firstValidIcs(ICS_PATHS.map(path => `https://${host}${path}`));
   if (ics) return { platform: 'ical', feedUrl: ics };
 
-  // Drupal last: it costs an index request before it can say no, and the three
+  // Drupal next: it costs an index request before it can say no, and the three
   // above answer in one. Arizona State needs it — its events live on
   // asuevents.asu.edu, which only turns up through discovery.
   const endpoints = await drupalEventEndpoints(host);
@@ -1579,6 +1601,24 @@ async function probeKnownHost(
       looksLikeDrupalEvents,
     );
     if (hit) return { platform: 'drupal', feedUrl: hit.split('?')[0] };
+  }
+
+  // Last, read the portal's own events page the way we read the school's.
+  // Student-life portals publish a real calendar at a path nobody could guess —
+  // CampusGroups serves Gettysburg's from /ical/gettysburg/ical_gettysburg.ics
+  // — but every one of them links it from the page, which is the whole point of
+  // a subscribe button.
+  for (const page of [`https://${host}/events`, `https://${host}/`]) {
+    let found: string[] = [];
+    try {
+      const html = await fetchPage(page, DISCOVERY_SCAN_BYTES);
+      found = icsLinksFrom(html.html, domain, html.finalUrl);
+    } catch (_) {
+      continue;
+    }
+    if (!found.length) continue;
+    const ics = await firstValidIcs(found);
+    if (ics) return { platform: 'ical', feedUrl: ics };
   }
 
   return null;
@@ -1618,7 +1658,7 @@ export async function probeCalendar(
 
   for (const host of found.hosts) {
     try {
-      const hit = await probeKnownHost(host);
+      const hit = await probeKnownHost(host, domain);
       if (hit) return hit;
     } catch (_) { /* Next host. */ }
   }
