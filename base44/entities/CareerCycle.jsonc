@@ -1,0 +1,102 @@
+{
+  "name": "CareerCycle",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string"
+    },
+    "selected_path_id": {
+      "type": "string"
+    },
+    "selected_path_name": {
+      "type": "string"
+    },
+    "experiment_id": {
+      "type": "string"
+    },
+    "current_stage": {
+      "type": "string",
+      "enum": [
+        "onboarding",
+        "path_comparison",
+        "path_selected",
+        "experiment_active",
+        "evidence_required",
+        "reflection_ready",
+        "decision_required",
+        "completed"
+      ],
+      "default": "onboarding"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "completed",
+        "ended_early",
+        "abandoned"
+      ],
+      "default": "active"
+    },
+    "started_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "completed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "baseline_clarity_score": {
+      "type": "number"
+    },
+    "post_cycle_clarity_score": {
+      "type": "number"
+    },
+    "final_decision": {
+      "type": "string",
+      "enum": [
+        "continue",
+        "adjust",
+        "stop_and_explore"
+      ]
+    },
+    "decision_note": {
+      "type": "string"
+    },
+    "next_cycle_source_id": {
+      "type": "string"
+    },
+    "institution_id": {
+      "type": "string"
+    },
+    "cohort_id": {
+      "type": "string"
+    },
+    "claim_key": {
+      "type": "string"
+    },
+    "legacy_review": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "required": [
+    "user_id",
+    "current_stage",
+    "status"
+  ],
+  "rls": {
+    "create": {
+      "created_by_id": "{{user.id}}"
+    },
+    "read": {
+      "created_by_id": "{{user.id}}"
+    },
+    "update": {
+      "created_by_id": "{{user.id}}"
+    },
+    "delete": {
+      "created_by_id": "{{user.id}}"
+    }
+  }
+}

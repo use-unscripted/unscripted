@@ -5,10 +5,20 @@
     "user_id": {
       "type": "string"
     },
+    "cycle_id": {
+      "type": "string"
+    },
+    "legacy_review": {
+      "type": "boolean",
+      "default": false
+    },
     "experiment_id": {
       "type": "string"
     },
     "mission_id": {
+      "type": "string"
+    },
+    "path_id": {
       "type": "string"
     },
     "path_name": {

@@ -5,6 +5,13 @@
     "user_id": {
       "type": "string"
     },
+    "cycle_id": {
+      "type": "string"
+    },
+    "legacy_review": {
+      "type": "boolean",
+      "default": false
+    },
     "path_name": {
       "type": "string"
     },
