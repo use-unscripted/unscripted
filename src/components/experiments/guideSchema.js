@@ -189,8 +189,52 @@ export const GUIDE_JSON_SCHEMA = {
 
 // ── Validation ──────────────────────────────────────────────────────────────
 
-const TOKEN_RE = /\[[A-Z0-9_]{2,60}\]/g;
-const newTokenRe = () => /\[[A-Z0-9_]{2,60}\]/g;
+/**
+ * A fill-in blank: a short bracketed label the student replaces before sending.
+ *
+ * Deliberately wider than the original [A-Z0-9_]. A model emitting
+ * [Contact Name] or [CONTÁCT_NAME] was invisible here, so the blank it declared
+ * was dropped as unused and the live placeholder shipped inside a cold email
+ * with no field to fill it — the same harm as an untrimmed token, through a
+ * different door.
+ *
+ * Still narrow enough to leave ordinary bracketed prose alone:
+ *   - opens on a letter or digit, closes on a letter, digit or underscore, so
+ *     "[See the note below.]" does not match
+ *   - between them only word characters, spaces and - ' . / — no , ; : ! ?, so
+ *     bracketed asides and sentences do not match
+ *   - never immediately followed by "(", so markdown links stay links
+ *   - 2–60 characters, and see isPlaceholder for the rest
+ */
+const newTokenRe = () => /\[[\p{L}\p{N}][\p{L}\p{N}_'’./ -]{0,58}[\p{L}\p{N}_]\](?!\()/gu;
+
+/** Longest a real placeholder gets. Past this it is prose, not a label. */
+const MAX_TOKEN_WORDS = 6;
+
+/**
+ * Second half of the placeholder test, kept out of the regex because it reads
+ * better here. A blank is a short label — [Contact Name], [FIRM]. A bracketed
+ * sentence in guide text is prose, and promoting one to a blank puts a dead
+ * input field in front of the student.
+ *
+ * Requiring a letter also drops bare citation markers like [12].
+ */
+function isPlaceholder(token) {
+  const inner = token.slice(1, -1).trim();
+  if (!inner || !/\p{L}/u.test(inner)) return false;
+  return inner.split(/\s+/).length <= MAX_TOKEN_WORDS;
+}
+
+/**
+ * Every fill-in blank in a string. Single source of truth — collectTokens, the
+ * profile substitution and the blank-survival check must all agree on what
+ * counts as a token, or a blank gets declared in one place and dropped in
+ * another.
+ */
+function findTokens(text) {
+  if (typeof text !== 'string') return [];
+  return (text.match(newTokenRe()) || []).filter(isPlaceholder);
+}
 
 /**
  * Facts onboarding already collected. The prompt tells the model to use exactly
@@ -248,6 +292,7 @@ export function fillProfileTokens(artifact, profile) {
   const substitute = text =>
     typeof text === 'string'
       ? text.replace(newTokenRe(), token => {
+          if (!isPlaceholder(token)) return token;
           const value = values[canonicalToken(token)];
           if (!value) return token;
           prefilled.add(token);
@@ -264,8 +309,7 @@ export function fillProfileTokens(artifact, profile) {
 
   const stillPresent = new Set();
   for (const text of [next.subject, next.body, ...next.items]) {
-    if (typeof text !== 'string') continue;
-    for (const token of text.match(newTokenRe()) || []) stillPresent.add(token);
+    for (const token of findTokens(text)) stillPresent.add(token);
   }
 
   next.blanks = (artifact.blanks || []).filter(b => stillPresent.has(b.token));
@@ -281,6 +325,19 @@ function humanizeToken(token) {
   return text.charAt(0).toUpperCase() + text.slice(1);
 }
 
+/**
+ * What a step actually came back as, for the rejection message. Calling a null
+ * step "plain text" sends the model chasing a formatting problem it does not
+ * have — a dropped step and a stringified one need different corrections.
+ */
+function describeStep(step) {
+  if (step === null) return 'null';
+  if (step === undefined) return 'missing entries';
+  if (Array.isArray(step)) return 'a list';
+  if (typeof step === 'string') return 'plain text';
+  return `a ${typeof step}`;
+}
+
 /** Accepts 15, "15", "15 minutes", "about 20 min". Returns null if unparseable. */
 function coerceMinutes(value) {
   if (typeof value === 'number' && Number.isFinite(value)) return Math.round(value);
@@ -293,8 +350,7 @@ function collectTokens(artifact) {
   const sources = [artifact.subject, artifact.body, ...(artifact.items || [])];
   const found = new Set();
   for (const source of sources) {
-    if (typeof source !== 'string') continue;
-    for (const token of source.match(TOKEN_RE) || []) found.add(token);
+    for (const token of findTokens(source)) found.add(token);
   }
   return found;
 }
@@ -323,12 +379,16 @@ export function validateGuide(raw) {
   // The model's known drift is returning steps as bare prose instead of objects.
   // Spreading a string produces a character map that satisfies every check below
   // and ships a guide of empty steps, so reject it before the repair pass.
-  const unstructured = guide.steps.filter(s => !s || typeof s !== 'object' || Array.isArray(s)).length;
-  if (unstructured) {
+  const malformed = guide.steps.filter(s => !s || typeof s !== 'object' || Array.isArray(s));
+  if (malformed.length) {
+    const shapes = [...new Set(malformed.map(describeStep))];
     return {
       ok: false,
       guide: null,
-      errors: [...errors, `${unstructured} of ${guide.steps.length} steps came back as plain text instead of structured steps.`],
+      errors: [
+        ...errors,
+        `${malformed.length} of ${guide.steps.length} steps came back as ${shapes.join(' / ')} instead of structured step objects. Every step must be an object with a title, a description and an artifact.`,
+      ],
       warnings,
     };
   }
@@ -339,8 +399,12 @@ export function validateGuide(raw) {
 
     step.step_number = index + 1;
 
+    // Errors are worded to survive having their "Step N:" prefix stripped — the
+    // model never sees its own previous output, so the index means nothing to it
+    // and only the shape-level instruction is actionable. The index stays on for
+    // the console, where it points at a step someone can actually go look at.
     if (typeof step.title !== 'string' || !step.title.trim()) {
-      errors.push(`${label}: has no title — it renders as an empty row the student cannot act on.`);
+      errors.push(`${label}: every step needs a title — an untitled step renders as an empty row the student cannot act on.`);
     }
 
     const minutes = coerceMinutes(step.estimated_minutes ?? step.estimated_time);
@@ -387,10 +451,10 @@ export function validateGuide(raw) {
       const hasItems = artifact.items.length > 0;
 
       if (KINDS_NEEDING_BODY.includes(artifact.kind) && !hasBody) {
-        errors.push(`${label}: artifact kind "${artifact.kind}" has no body — the guide describes the message instead of writing it.`);
+        errors.push(`${label}: every "${artifact.kind}" artifact needs a full body — write the message itself, not a description of it.`);
       }
       if (KINDS_NEEDING_ITEMS.includes(artifact.kind) && !hasItems) {
-        errors.push(`${label}: artifact kind "${artifact.kind}" has no items — nothing was actually written out.`);
+        errors.push(`${label}: every "${artifact.kind}" artifact needs its items written out — the payload was missing.`);
       }
 
       // Every token used must be declared. This is the defect that ships an
@@ -460,4 +524,21 @@ export function validateGuide(raw) {
   }
 
   return { ok: errors.length === 0, guide, errors, warnings };
+}
+
+/**
+ * The subset of validator errors worth sending back to the model on a retry.
+ *
+ * The model is not shown its own previous output, so a "Step 2:" prefix points
+ * at something it cannot find — those indexes are noise that dilutes the
+ * instruction next to them. Strip them and dedupe, leaving only the shape-level
+ * corrections. The full indexed errors still go to the console, where the index
+ * points at a step a person can go and look at.
+ */
+export function toModelCorrections(errors) {
+  return [...new Set(
+    (errors || [])
+      .map(e => (typeof e === 'string' ? e.replace(/^Step\s+\d+:\s*/, '').trim() : ''))
+      .filter(Boolean)
+  )];
 }
