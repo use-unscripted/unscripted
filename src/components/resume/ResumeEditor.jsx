@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { ChevronDown, ChevronUp, Eye, EyeOff, Trash2, Plus, Sparkles, X, Undo2, AlertTriangle } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
+import { unwrapLLM } from '@/lib/llm';
 import {
   newEntry, newEducationCF, newCert, newAward, newResearch,
   MONTH_OPTIONS, CF_SKILL_GROUP_LABELS, CF_SKILL_GROUP_IDS,
@@ -30,7 +31,13 @@ function BulletAIPopover({ bullet, onApply, onClose }) {
       claims: `Review this resume bullet for unsupported or vague claims. List any claims that lack specifics, then suggest how to strengthen them. Original: "${bullet}"`,
     };
     try {
-      const res = await base44.integrations.Core.InvokeLLM({ prompt: prompts[actionId] });
+      // Rewrites a single resume bullet. The only call with no
+      // response_json_schema, so this one comes back as a plain string.
+      // Cheap tier; see src/lib/llm.js.
+      const res = unwrapLLM(await base44.integrations.Core.InvokeLLM({
+        prompt: prompts[actionId],
+        model: 'gemini_3_flash',
+      }));
       setResult(typeof res === 'string' ? res.trim() : JSON.stringify(res));
     } finally {
       setLoading(false);

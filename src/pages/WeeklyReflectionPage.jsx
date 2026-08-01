@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { base44 } from '@/api/base44Client';
+import { unwrapLLM } from '@/lib/llm';
 import { ArrowRight, CheckCircle, Plus, Search, X, ExternalLink, Trash2 } from 'lucide-react';
 import SoftDeleteConfirm, { softDeletePayload } from '@/components/SoftDeleteConfirm';
 import PageHeader from '@/components/PageHeader';
@@ -170,7 +171,10 @@ function ReflectionForm({ experiments, missions, initialData, onSaved, onCancel 
     if (!form.experiment_id || !hasContent) return;
     setGenerating(true);
     try {
-      const result = await base44.integrations.Core.InvokeLLM({
+      // Summarises a reflection the student just wrote, back to them. Short,
+      // stays in the app. Cheap tier; see src/lib/llm.js.
+      const result = unwrapLLM(await base44.integrations.Core.InvokeLLM({
+        model: 'gemini_3_flash',
         prompt: `You are Unscripted. Based on this student's weekly reflection, generate: 1) A direct weekly learning summary, 2) Path-fit adjustments (which paths feel stronger/weaker and why), 3) Workload adjustments, 4) Specific recommendations for next week. Be honest but constructive. Never shame. Reflection: ${JSON.stringify(form)}`,
         response_json_schema: {
           type: 'object',
@@ -179,7 +183,7 @@ function ReflectionForm({ experiments, missions, initialData, onSaved, onCancel 
             path_adjustments: { type: 'array', items: { type: 'string' } },
           }
         }
-      });
+      }));
       setForm(f => ({ ...f, generated_summary: result.summary, path_adjustments: result.path_adjustments }));
     } finally {
       setGenerating(false);
