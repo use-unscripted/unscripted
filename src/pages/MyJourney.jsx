@@ -15,7 +15,6 @@ import JourneyStages from '@/components/journey/JourneyStages';
 import JourneyStatusHeader from '@/components/journey/JourneyStatusHeader';
 import ContinueCard from '@/components/journey/ContinueCard';
 import JourneySnapshot from '@/components/journey/JourneySnapshot';
-import DecisionPanel from '@/components/journey/DecisionPanel';
 import PathComparisonWorkspace from '@/components/journey/PathComparisonWorkspace';
 import PathSelectedConfirm from '@/components/journey/PathSelectedConfirm';
 import JourneyEmptyState from '@/components/journey/JourneyEmptyState';
@@ -162,8 +161,6 @@ export default function MyJourney() {
       {data.cycle?.legacy_review && <JourneyEmptyState variant="legacy" />}
 
       <JourneySnapshot counts={counts} />
-
-      {stage === 'decide' && <DecisionPanel path={currentPath} otherPaths={livePaths} onDecided={load} />}
 
       <p className="pt-2 text-center text-xs" style={{ color: 'var(--text-muted)' }}>
         Working on something else? <Link to="/paths" className="font-semibold" style={{ color: 'var(--brand-navy-700)' }}>Compare all paths</Link>

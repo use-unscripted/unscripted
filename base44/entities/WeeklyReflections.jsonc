@@ -28,6 +28,45 @@
       "type": "string",
       "format": "date"
     },
+    "is_experiment_conclusion": {
+      "type": "boolean",
+      "default": false
+    },
+    "conclusion_key": {
+      "type": "string"
+    },
+    "ended_early_reason": {
+      "type": "string"
+    },
+    "assumptions_changed": {
+      "type": "string"
+    },
+    "supporting_evidence": {
+      "type": "string"
+    },
+    "interest_direction": {
+      "type": "string",
+      "enum": [
+        "more",
+        "same",
+        "less"
+      ]
+    },
+    "clarity_score": {
+      "type": "number"
+    },
+    "baseline_clarity_score": {
+      "type": "number"
+    },
+    "missions_completed_count": {
+      "type": "number"
+    },
+    "proof_count": {
+      "type": "number"
+    },
+    "outreach_count": {
+      "type": "number"
+    },
     "completed_items": {
       "type": "array",
       "items": {

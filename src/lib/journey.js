@@ -98,12 +98,12 @@ export function resolveJourney({ paths = [], experiments = [], proof = [], refle
     },
     reflect: {
       label: 'Reflect on My Experiment',
-      to: '/evidence?tab=reflect',
-      sub: 'Five minutes. What gave you energy, what drained it, what surprised you.',
+      to: '/reflect',
+      sub: 'Conclude the experiment: what you learned, what surprised you, what comes next.',
     },
     decide: {
       label: 'Decide What Comes Next',
-      anchor: 'decision',
+      to: '/reflect',
       sub: 'Commit to this direction, or take what you learned into a new test.',
     },
   };

@@ -46,6 +46,7 @@ import BlueprintLibrary from '@/pages/BlueprintLibrary';
 import PathComparison from '@/pages/PathComparison';
 import ExperimentsPage from '@/pages/ExperimentsPage';
 import ActiveExperiment from '@/pages/ActiveExperiment';
+import ExperimentReflection from '@/pages/ExperimentReflection';
 import ResourceHub from '@/pages/ResourceHub';
 import CreatorLibrary from '@/pages/CreatorLibrary';
 import GoalsPage from '@/pages/GoalsPage';
@@ -103,6 +104,7 @@ const AuthenticatedApp = () => {
           <Route path="/blueprints" element={<BlueprintLibrary />} />
           <Route path="/paths" element={<PathComparison />} />
           <Route path="/experiment" element={<ActiveExperiment />} />
+          <Route path="/reflect" element={<ExperimentReflection />} />
           <Route path="/experiments" element={<ExperimentsPage />} />
           <Route path="/outreach" element={<Navigate to="/evidence?tab=outreach" replace />} />
           <Route path="/OutreachTracker" element={<Navigate to="/evidence?tab=outreach" replace />} />
