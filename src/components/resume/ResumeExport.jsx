@@ -1,5 +1,16 @@
 import { useState } from 'react';
 import { Download, FileText, File } from 'lucide-react';
+import { safeExternalUrl } from '@/lib/safe-url';
+
+// One escaper for both exports. Quotes matter as much as angle brackets here:
+// these strings are concatenated into attributes as well as text, so a value
+// containing a double quote could otherwise close the attribute and add its own.
+const esc = s => String(s ?? '')
+  .replace(/&/g, '&amp;')
+  .replace(/</g, '&lt;')
+  .replace(/>/g, '&gt;')
+  .replace(/"/g, '&quot;')
+  .replace(/'/g, '&#39;');
 
 const MONTHS_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
@@ -26,8 +37,6 @@ function buildCFHtml(resume) {
     : allSections;
   const visible = ordered.filter(s => s.visible !== false);
 
-  const esc = s => (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-
   let body = '';
 
   for (const section of visible) {
@@ -42,8 +51,10 @@ function buildCFHtml(resume) {
           const sep = i < parts.length - 1 ? '<span class="sep">|</span>' : '';
           if (p.includes('@')) return `<a href="mailto:${esc(p)}">${esc(p)}</a>${sep}`;
           if (p.startsWith('http') || p.includes('linkedin') || p.includes('www')) {
-            const href = p.startsWith('http') ? p : `https://${p}`;
-            return `<a href="${esc(href)}">${esc(p)}</a>${sep}`;
+            // Only an http(s) URL becomes a link; anything else prints as text.
+            const href = safeExternalUrl(p) || safeExternalUrl(`https://${p}`);
+            if (href) return `<a href="${esc(href)}">${esc(p)}</a>${sep}`;
+            return `${esc(p)}${sep}`;
           }
           return `${esc(p)}${sep}`;
         }).join('');
@@ -338,7 +349,7 @@ async function exportStandardPdf(resume) {
 
   win.document.write(`<!DOCTYPE html><html><head>
 <meta charset="utf-8">
-<title>${resume.resume_name || 'Resume'}</title>
+<title>${esc(resume.resume_name || 'Resume')}</title>
 <style>
   @media print { @page { margin: 0; size: letter; } body { margin: 0; } }
   body { font-family: Arial, Helvetica, sans-serif; margin: 0; background: #fff; }
@@ -361,8 +372,6 @@ async function exportDOCX(resume) {
     ? [...sectionOrder.map(id => sections.find(s => s.id === id)).filter(Boolean), ...sections.filter(s => !sectionOrder.includes(s.id))]
     : sections;
   const visible = ordered.filter(s => s.visible !== false);
-
-  const esc = s => (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
   const fontFamily = isClassicFinance
     ? "'EB Garamond', Garamond, 'Times New Roman', Georgia, serif"
