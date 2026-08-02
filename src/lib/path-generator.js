@@ -125,27 +125,17 @@ ${profile.responsibilities_constraints ? `- Responsibilities/constraints: ${prof
 ${profile.things_to_avoid ? `- Things to avoid: ${profile.things_to_avoid}` : ''}
 ${profile.priorities_for_recommendations ? `- Priorities for recommendations: ${profile.priorities_for_recommendations}` : ''}` : '';
 
-  const stage = profile.education_stage || user.education_stage || 'college';
-  const isHighSchool = stage === 'high_school';
+  const stageGuidance = `This student is an undergraduate (typically first-year or sophomore). Experiments may assume campus resources, alumni networks, coursework, clubs, and internship-adjacent access.`;
 
-  const stageGuidance = isHighSchool
-    ? `This student is in HIGH SCHOOL. Adapt accordingly:
-- Assume no college coursework, professional network, or work experience.
-- Experiments must be safe, legal for a minor, low-cost or free, and doable without a car or a workplace — e.g. interviewing adults with a parent/teacher aware, shadowing, school clubs, online research, small self-directed builds, volunteering.
-- Never require internships, corporate access, professional certifications, or paid tools.
-- Frame paths in terms of what to explore before choosing a college, major, or trade — not career commitments.`
-    : `This student is in COLLEGE. Experiments may assume campus resources, alumni networks, coursework, clubs, and internship-adjacent access.`;
-
-  const prompt = `You are Unscripted, a path-experimentation platform for high school and college students. Your only job is to help this student test whether their chosen paths actually fit them.
+  const prompt = `You are Unscripted, a path-experimentation platform for undergraduate students. Your only job is to help this student test whether their chosen paths actually fit them.
 
 ${stageGuidance}
 
 Student profile:
 - Name: ${profile.name || user.full_name || 'Student'}
-- Education stage: ${isHighSchool ? 'High school student' : 'College student'}
-- ${isHighSchool ? 'High school' : 'College'}: ${profile.college || user.college || 'Unknown'}
-- ${isHighSchool ? 'Subjects of interest' : 'Major'}: ${profile.major || user.major || 'Unknown'}
-- ${isHighSchool ? 'Grade' : 'Year'}: ${profile.school_year || user.school_year || 'Unknown'}
+- College: ${profile.college || user.college || 'Unknown'}
+- Major: ${profile.major || user.major || 'Unknown'}
+- Year: ${profile.school_year || user.school_year || 'Unknown'}
 - Primary path to test: ${primaryPath}
 - Comparison path: ${comparisonPath || 'none specified'}
 - Future vision (5–10 years): ${profile.desired_lifestyle || 'Not specified'}${profile.vision_timeframe ? ` (timeframe: ${profile.vision_timeframe.replace('_', ' ')})` : ''}${Array.isArray(profile.vision_themes) && profile.vision_themes.length ? ` [themes: ${profile.vision_themes.join(', ')}]` : ''}

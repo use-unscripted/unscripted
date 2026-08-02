@@ -3,26 +3,8 @@ import { useNavigate, Link } from 'react-router-dom';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { LogoWordmark } from '@/components/UnscriptedLogo';
 import { saveDraft, loadDraft } from '@/lib/guest-draft';
-import EducationStageStep from '@/components/onboarding/EducationStageStep';
-
-// Field labels that differ between high school and college students
-const STAGE_FIELDS = {
-  high_school: {
-    college: { label: 'High school', placeholder: 'Where do you go to school?' },
-    major: { label: 'Subjects you are most drawn to', placeholder: 'e.g. biology, economics, art, computer science' },
-    graduation_year: { label: 'High school graduation year', placeholder: '2028' },
-    school_year: { label: 'Current grade', placeholder: 'Freshman, Sophomore, Junior, Senior' },
-    class_schedule: { label: 'School schedule', placeholder: 'e.g. school 8–3, practice 4–6' },
-  },
-  college: {},
-};
 
 const STEPS = [
-  {
-    label: 'Where are you right now?',
-    subtitle: 'This shapes the paths we recommend and the experiments we build for you.',
-    type: 'stage',
-  },
   {
     label: 'Your current direction',
     subtitle: 'Start with where you are and what you are considering.',
@@ -269,11 +251,11 @@ function PersonalNotesStep({ data, onChange }) {
   );
 }
 
-function CapacityStep({ step, data, onChange, hours, setHours, localize = f => f }) {
+function CapacityStep({ step, data, onChange, hours, setHours }) {
   return (
     <div className="space-y-5">
       <div className="grid gap-5 sm:grid-cols-2">
-        {step.fields.map(localize).map(f => (
+        {step.fields.map(f => (
           <div key={f.name} className="sm:col-span-1">
             <Field field={f} value={data[f.name]} onChange={onChange} />
           </div>
@@ -355,29 +337,13 @@ export default function Onboarding() {
 
   const pct = Math.round(((step + 1) / (STEPS.length + 1)) * 100); // +1 for paths step
 
-  // Apply stage-specific labels/placeholders to a field
-  const localize = (f) => ({ ...f, ...((STAGE_FIELDS[data.education_stage] || {})[f.name] || {}) });
-
   const renderStep = () => {
-    if (currentStep.type === 'stage') {
-      return (
-        <EducationStageStep
-          value={data.education_stage}
-          onSelect={stage => {
-            const next = { ...data, education_stage: stage };
-            setData(next);
-            persist(next, step + 1, hours);
-            setStep(step + 1);
-          }}
-        />
-      );
-    }
     if (currentStep.type === 'sliders') return <PrioritiesStep step={currentStep} data={data} onChange={change} onCheck={check} />;
     if (currentStep.type === 'personal_notes') return <PersonalNotesStep data={data} onChange={change} />;
-    if (currentStep.hoursField) return <CapacityStep step={currentStep} data={data} onChange={change} hours={hours} setHours={h => { setHours(h); persist(data, step, h); }} localize={localize} />;
+    if (currentStep.hoursField) return <CapacityStep step={currentStep} data={data} onChange={change} hours={hours} setHours={h => { setHours(h); persist(data, step, h); }} />;
     return (
       <div className="grid gap-5 sm:grid-cols-2">
-        {currentStep.fields.map(localize).map(f => (
+        {currentStep.fields.map(f => (
           <div key={f.name} className={f.rows ? 'sm:col-span-2' : ''}>
             <Field field={f} value={data[f.name]} onChange={change} error={errors.includes(f.name)} />
           </div>
@@ -414,7 +380,7 @@ export default function Onboarding() {
               className="flex items-center gap-2 px-3 py-2 text-sm font-semibold text-[#64748B] hover:text-[#050816] transition">
               <ArrowLeft size={16} /> Back
             </button>
-            <button onClick={next} disabled={currentStep.type === 'stage' && !data.education_stage}
+            <button onClick={next}
               className="flex items-center gap-2 rounded-[10px] px-6 py-3 text-sm font-semibold text-white transition hover:-translate-y-px disabled:opacity-50"
               style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}>
               {isLast ? 'Choose My Paths' : 'Continue'} <ArrowRight size={16} />
