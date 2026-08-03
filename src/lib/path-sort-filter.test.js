@@ -42,9 +42,16 @@ describe('readinessScore', () => {
   });
 
   it('ranks the unscored sentinel below every value the 0–10 scale allows', () => {
-    for (let score = 0; score <= 10; score += 1) {
-      expect(UNSCORED_READINESS).toBeLessThan(score);
+    for (let score = 0; score <= 20; score += 1) {
+      expect(UNSCORED_READINESS).toBeLessThan(score / 2);
     }
+  });
+
+  // Live scores are not integers: production rows include fractional
+  // half-scores and run as low as 0.6.
+  it('passes fractional scores through untouched', () => {
+    expect(readinessScore(path({ readiness_score: 7.5 }))).toBe(7.5);
+    expect(readinessScore(path({ readiness_score: 0.6 }))).toBe(0.6);
   });
 });
 
@@ -95,6 +102,16 @@ describe('sortPaths — best_fit', () => {
       path({ id: 'lowest-real', readiness_score: 5 }),
     ];
     expect(names(paths)).toEqual(['lowest-real', 'null-score']);
+  });
+
+  it('orders fractional scores correctly and keeps the lowest real score above unscored', () => {
+    const paths = [
+      path({ id: 'unscored', readiness_score: undefined }),
+      path({ id: 'lowest-live', readiness_score: 0.6 }),
+      path({ id: 'half', readiness_score: 7.5 }),
+      path({ id: 'seven', readiness_score: 7 }),
+    ];
+    expect(names(paths)).toEqual(['half', 'seven', 'lowest-live', 'unscored']);
   });
 
   it('ranks a path genuinely scored zero above one that was never scored', () => {

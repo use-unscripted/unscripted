@@ -30,8 +30,10 @@
    personal brand.
 
    readiness_score is 0–10, the scale the generator actually writes and
-   PathResults actually renders — every live path row sits between 5 and 9.
-   These sample scores stay inside that range. Don't restate them out of 100:
+   PathResults actually renders. Across the 261 live rows it runs 0.6 to 9,
+   includes fractional half-scores, and a minority fall below 5 — so don't
+   assume a 5-to-9 integer band. These sample scores are ordinary values from
+   that range. Don't restate them out of 100:
    the product has never produced a score like that, and a marketing preview
    showing a number the app can't generate is a claim we can't back. */
 const PATHS = [

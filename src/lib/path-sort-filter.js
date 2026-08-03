@@ -26,8 +26,9 @@ export function riskScore(p) { return RISK_SCORE[norm(p.risk_level)] ?? 3; }
 /**
  * Ordering key for readiness. NOT a display value.
  *
- * readiness_score is 0–10 (PathResults renders it as n/10; live rows sit
- * between 5 and 9). This used to default to 50, a leftover from an assumed
+ * readiness_score is 0–10 (PathResults renders it as n/10). Live rows run
+ * 0.6 to 9 and include fractional values, so this is a continuous score, not
+ * an integer band. It used to default to 50, a leftover from an assumed
  * 0–100 scale, which put every unscored path above every scored one — the
  * exact opposite of the intended "readiness desc" ordering.
  *
