@@ -801,6 +801,240 @@ const campusLabsAdapter: Adapter = {
   normalize: normalizeCampusLabs,
 };
 
+// ── Adapter: CampusGroups ───────────────────────────────────────────────────
+
+/**
+ * CampusGroups, the platform the paste screen names by example.
+ *
+ * It is Anthology's *other* student-life product and it is not Campus Labs
+ * Engage, despite the adjacent branding. Engage answers a REST discovery API;
+ * CampusGroups answers `/mobile_ws/v17/mobile_events_list` and nothing else,
+ * and its own web page is a JavaScript shell with no feed link in the markup.
+ * Discovery used to send `*.campusgroups.com` at Engage's endpoint, get
+ * nothing, fall through to reading the shell, and give up — so the one vendor
+ * the copy tells students to paste was the one we could not read.
+ *
+ * ## The payload is positional, and that is the whole risk
+ *
+ * Each row carries a `fields` header naming what `p0`…`pN` mean:
+ *
+ *   { fields: "date_separator,eventId,eventName,eventDates,…",
+ *     p0: "false", p1: "376101", p2: "How to Stop Living in Fundraising Mode" }
+ *
+ * So `p1` is only the id because this row's header says so. Reading positions
+ * directly would work today and silently return somebody else's field the
+ * first time Anthology inserts a column — the endpoint is already on v17. The
+ * header is mapped every time, per row, and a row whose header omits a field
+ * simply does not have it.
+ */
+
+/** The one endpoint, and the only query it answers usefully. */
+const CAMPUS_GROUPS_PATH = '/mobile_ws/v17/mobile_events_list';
+const CAMPUS_GROUPS_QUERY = `?range=0&limit=${FEED_PAGE_SIZE}&filter4=upcoming`;
+
+/**
+ * A location that says to sign in is not a location.
+ *
+ * CampusGroups renders the string a signed-out reader gets into the same field
+ * a real room name goes in, so it arrives looking like data. Rendering it walks
+ * a student to "Private Location (sign in to display)".
+ */
+const CAMPUS_GROUPS_HIDDEN_LOCATION = /\b(sign in|register|log in)\b.*\bdisplay\b/i;
+
+/** One row's named fields, or null when the row is a date separator. */
+// deno-lint-ignore no-explicit-any
+function campusGroupsRow(row: any): Record<string, string> | null {
+  if (!row || typeof row !== 'object') return null;
+  const names = String(row.fields || '').split(',');
+  const out: Record<string, string> = {};
+  names.forEach((name, i) => {
+    const value = row[`p${i}`];
+    if (name && typeof value === 'string') out[name] = value;
+  });
+  return out.eventId ? out : null;
+}
+
+// deno-lint-ignore no-explicit-any
+function campusGroupsRows(payload: any): Record<string, string>[] {
+  if (!Array.isArray(payload)) return [];
+  return payload.map(campusGroupsRow).filter(Boolean) as Record<string, string>[];
+}
+
+/**
+ * Non-empty on purpose, for the reason spelled out on Campus Labs above, and
+ * this platform makes the trap concrete: `fairfield.campusgroups.com` answers
+ * 200 with zero events. Accepting that would win the probe and permanently
+ * shadow Fairfield's working Localist feed, which is the one calendar in this
+ * codebase we know serves real events every day.
+ */
+export function looksLikeCampusGroups(payload: unknown): boolean {
+  return campusGroupsRows(payload).length > 0;
+}
+
+/**
+ * Their accessibility label is the only reliable date in the payload.
+ *
+ * `eventDates` is display HTML — "Wed, Aug 5, 2026" over "4 PM – 6 PM", with no
+ * year on the end of a range and no offset anywhere. The aria label spells the
+ * whole thing out including the zone:
+ *
+ *   "…. Wednesday, 05 August 2026 At 4:00 PM, EDT (GMT-4)."
+ *
+ * Read from the end, because an event is perfectly entitled to have a date in
+ * its own title. Returns '' rather than a guess — a wrong date walks a student
+ * to an empty room, which is the failure this whole file is written to avoid.
+ */
+const CAMPUS_GROUPS_WHEN =
+  /(\d{1,2})\s+([A-Za-z]+)\s+(\d{4})(?:\s+At\s+(\d{1,2}):(\d{2})\s*(AM|PM))?(?:\s*,\s*[A-Z]{2,5}\s*\(GMT([+-]\d{1,2})(?::?(\d{2}))?\))?/gi;
+
+const MONTHS = [
+  'january', 'february', 'march', 'april', 'may', 'june',
+  'july', 'august', 'september', 'october', 'november', 'december',
+];
+
+function campusGroupsWhen(aria: string): { start: string; allDay: boolean } {
+  const matches = [...String(aria || '').matchAll(CAMPUS_GROUPS_WHEN)];
+  const m = matches[matches.length - 1];
+  if (!m) return { start: '', allDay: false };
+
+  const [, day, monthName, year, hour, minute, meridiem, tzHour, tzMinute] = m;
+  const month = MONTHS.indexOf(String(monthName).toLowerCase());
+  if (month < 0) return { start: '', allDay: false };
+
+  // No time in the label means the event carries a date and nothing else.
+  if (!hour) {
+    return { start: `${year}-${pad2(month + 1)}-${pad2(Number(day))}T00:00:00Z`, allDay: true };
+  }
+
+  let h = Number(hour) % 12;
+  if (String(meridiem).toUpperCase() === 'PM') h += 12;
+
+  // Without an offset the instant is unknowable, so it is left as a local
+  // wall-clock time rather than being silently declared UTC — five hours wrong
+  // is worse than unzoned.
+  const offset = tzHour
+    ? `${Number(tzHour) < 0 ? '-' : '+'}${pad2(Math.abs(Number(tzHour)))}:${pad2(Number(tzMinute || 0))}`
+    : '';
+
+  return {
+    start: `${year}-${pad2(month + 1)}-${pad2(Number(day))}T${pad2(h)}:${pad2(Number(minute))}:00${offset}`,
+    allDay: false,
+  };
+}
+
+function pad2(n: number): string {
+  return String(n).padStart(2, '0');
+}
+
+function campusGroupsOrigin(feedUrl: string): string {
+  try {
+    return new URL(feedUrl).origin;
+  } catch (_) {
+    return '';
+  }
+}
+
+/**
+ * The shared JSON probe cannot be used here, and that is the whole reason this
+ * platform stayed invisible.
+ *
+ * CampusGroups serves this endpoint as `content-type: text/html` while the body
+ * is JSON. `probeJson` requires the header to say json and discards everything
+ * else unread, so every portal in the vendor's estate looked like a web page to
+ * discovery no matter which URL was tried. Parsing the body is the only honest
+ * test of what it is.
+ *
+ * `guard` is threaded because callers on the student-submitted path re-check
+ * every redirect hop; dropping it there silently reopens the SSRF this file was
+ * patched for.
+ */
+async function probeCampusGroupsAt(host: string, guard: HopGuard = null): Promise<string | null> {
+  const base = `https://${host}${CAMPUS_GROUPS_PATH}`;
+  let res: Response;
+  try {
+    res = await guardedFetch(base + CAMPUS_GROUPS_QUERY, {
+      headers: { Accept: 'application/json' },
+      signal: AbortSignal.timeout(PROBE_TIMEOUT_MS),
+    }, guard);
+  } catch (_) {
+    return null;
+  }
+  if (!res.ok) {
+    await res.body?.cancel().catch(() => {});
+    return null;
+  }
+  try {
+    return looksLikeCampusGroups(JSON.parse(await res.text())) ? base : null;
+  } catch (_) {
+    return null; // Really was a web page.
+  }
+}
+
+async function probeCampusGroups(domain: string): Promise<string | null> {
+  const slug = domainLabel(domain);
+  if (!slug) return null;
+  return await probeCampusGroupsAt(`${slug}.campusgroups.com`);
+}
+
+/**
+ * Raw rows out, exactly as every other adapter's fetch does. The header
+ * mapping belongs in normalize, so that what a test hands normalize is the
+ * shape the vendor actually sends rather than something fetch already tidied.
+ */
+async function fetchCampusGroups(feedUrl: string, days: number) {
+  const res = await fetch(feedUrl + CAMPUS_GROUPS_QUERY, {
+    headers: { Accept: 'application/json' },
+    signal: AbortSignal.timeout(FEED_TIMEOUT_MS),
+  });
+  if (!res.ok) throw new Error(`Calendar feed returned ${res.status}`);
+  const payload = await res.json();
+  if (!looksLikeCampusGroups(payload)) {
+    throw new Error('Calendar feed returned an unexpected shape');
+  }
+  // deno-lint-ignore no-explicit-any
+  return (payload as any[]).filter(row => {
+    const fields = campusGroupsRow(row);
+    if (!fields) return false;
+    const { start } = campusGroupsWhen(fields.ariaEventDetails);
+    return Boolean(start) && withinWindow(start, days);
+  });
+}
+
+// deno-lint-ignore no-explicit-any
+function normalizeCampusGroups(raw: any, feedUrl: string): NormalizedEvent {
+  const event = campusGroupsRow(raw) || {};
+  const origin = campusGroupsOrigin(feedUrl);
+  const { start, allDay } = campusGroupsWhen(event.ariaEventDetails);
+  const location = plainText(event.eventLocation);
+  const price = String(event.eventPriceRange || '').trim();
+
+  return {
+    ...emptyEvent(),
+    id: String(event.eventId ?? ''),
+    title: plainText(event.eventName),
+    // The list endpoint carries no description. Left empty rather than filled
+    // from the category or the club name, both of which read as a blurb and
+    // are not one.
+    url: origin && event.eventUrl ? origin + event.eventUrl : '',
+    start,
+    all_day: allDay,
+    location: CAMPUS_GROUPS_HIDDEN_LOCATION.test(location) ? '' : location,
+    // "FREE" is the only price this field states outright; a range like
+    // "$5 - $20" is a real cost, and empty means nobody filled it in.
+    is_free: /^free$/i.test(price) ? true : price ? false : null,
+    has_register: /register|rsvp|tickets?/i.test(String(event.eventButtonLabel || '')),
+    types: cleanList([event.eventCategory]),
+    departments: event.clubName ? [plainText(event.clubName)] : [],
+  };
+}
+
+const campusGroupsAdapter: Adapter = {
+  name: 'campusgroups',
+  probe: probeCampusGroups,
+  fetch: fetchCampusGroups,
+  normalize: normalizeCampusGroups,
+};
+
 // ── Adapter: iCalendar (.ics) ───────────────────────────────────────────────
 
 /**
@@ -1991,6 +2225,9 @@ const ADAPTERS: Adapter[] = [
   localistAdapter,
   liveWhaleAdapter,
   campusLabsAdapter,
+  // Beside Campus Labs, and after it: same one-request cost, and a school
+  // running both should get its campus-wide calendar rather than its clubs.
+  campusGroupsAdapter,
   tribeAdapter,
   trumbaAdapter,
   drupalAdapter,
@@ -2150,6 +2387,14 @@ async function probeKnownHost(
     looksLikeLiveWhale,
   );
   if (liveWhale) return { platform: 'livewhale', feedUrl: liveWhale };
+
+  // Asked of any host, not just `*.campusgroups.com`, because schools routinely
+  // put their portal on their own domain and brand the vendor away — Columbia's
+  // is lionhub.columbia.edu, WPI's mywpi.wpi.edu, South Florida's
+  // bullsconnect.usf.edu. Matching on the vendor's hostname would miss every
+  // one of those, and they are the ones our own students attend.
+  const campusGroups = await probeCampusGroupsAt(host);
+  if (campusGroups) return { platform: 'campusgroups', feedUrl: campusGroups };
 
   const ics = await firstValidIcs(ICS_PATHS.map(path => `https://${host}${path}`));
   if (ics) return { platform: 'ical', feedUrl: ics };
@@ -2354,6 +2599,7 @@ function platformOfJson(payload: unknown, url: string): { platform: string; feed
   if (looksLikeLocalist(payload)) return { platform: 'localist', feedUrl: bare };
   if (looksLikeLiveWhale(payload)) return { platform: 'livewhale', feedUrl: bare };
   if (looksLikeCampusLabs(payload)) return { platform: 'campuslabs', feedUrl: bare };
+  if (looksLikeCampusGroups(payload)) return { platform: 'campusgroups', feedUrl: bare };
   if (looksLikeTrumba(payload)) return { platform: 'trumba', feedUrl: url };
   if (looksLikeTribe(payload)) return { platform: 'wptribe', feedUrl: bare };
   if (looksLikeDrupalEvents(payload)) return { platform: 'drupal', feedUrl: bare };
@@ -2376,13 +2622,24 @@ export async function resolveSubmittedUrl(
   url: string,
   host: string,
   domain: string,
+  allowedDomains: string[] = [],
 ): Promise<{ platform: string; feedUrl: string } | null> {
   // Every request on this path — including every redirect hop — has to pass
   // the same gate the pasted URL did. Without this, checkSubmittedUrl is a
   // check on one URL rather than on where we actually end up, and any open
   // redirect on the school's own site reaches whatever it likes.
+  //
+  // The school's own domains are carried in alongside whatever the pasted URL
+  // resolved to, because a vendor address routinely redirects straight back to
+  // the school: jmu.campusgroups.com sends you to beinvolved.jmu.edu, and
+  // gettysburg.campusgroups.com to engage.gettysburg.edu. Judging that hop
+  // against the vendor host alone refuses the student's own university, which
+  // is the most trustworthy place the chain could have gone. This widens
+  // nothing — every host named here is one checkSubmittedUrl would have
+  // accepted had the student pasted it directly.
+  const hopDomains = [domain, ...allowedDomains].filter(Boolean);
   const guard: HopGuard = (candidate: string) => {
-    const check = checkSubmittedUrl(candidate, [domain]);
+    const check = checkSubmittedUrl(candidate, hopDomains);
     return check.ok;
   };
 
@@ -2403,15 +2660,29 @@ export async function resolveSubmittedUrl(
   // 2. A Campus Labs / CampusGroups portal address names its own slug, and the
   //    discovery endpoint behind it is a fixed rewrite. This is the case the
   //    vendor allowlist exists for, so it is worth trying before reading HTML.
+  //
+  //    The two vendors are separate products and take separate endpoints, and
+  //    conflating them is what made the paste box fail on the one platform its
+  //    own copy names by example: a `*.campusgroups.com` address was sent to
+  //    Engage's REST API, which does not answer for it, and then fell through
+  //    to reading a JavaScript shell that names no feed.
   if (onVendorHost(host)) {
     const slug = host.split('.')[0];
-    if (slug && (host.endsWith('campuslabs.com') || host.endsWith('campusgroups.com'))) {
+    if (slug && host.endsWith('campuslabs.com')) {
       const base = `https://${slug}.campuslabs.com/engage/api/discovery/event/search`;
       const hit = await firstValidUrl(
         [`${base}?endsAfter=${encodeURIComponent(new Date().toISOString())}&take=1`],
         looksLikeCampusLabs,
       );
       if (hit) return { platform: 'campuslabs', feedUrl: base };
+    }
+    if (slug && host.endsWith('campusgroups.com')) {
+      // Keyed off the host the student actually pasted, not off their school's
+      // domain, because the slug is routinely nothing like it — Columbia's
+      // engineering portal is `columbiaengineering`, and a school can run
+      // several.
+      const hit = await probeCampusGroupsAt(host, guard);
+      if (hit) return { platform: 'campusgroups', feedUrl: hit };
     }
   }
 
@@ -2776,7 +3047,7 @@ async function handleSubmission(base44: any, user: any, body: any): Promise<Resp
   let failure = '';
 
   try {
-    feed = await resolveSubmittedUrl(check.url, check.host, check.domain);
+    feed = await resolveSubmittedUrl(check.url, check.host, check.domain, allowed);
   } catch (err) {
     failure = err instanceof Error ? err.message : 'Could not read that address';
   }
