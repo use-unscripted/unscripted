@@ -139,6 +139,8 @@ Student profile:
 - Year: ${profile.school_year || user.school_year || 'Unknown'}
 - Primary path to test: ${primaryPath}
 - Comparison path: ${comparisonPath || 'none specified'}
+- Path they feel most pressure to pursue: ${profile.pressured_paths || 'Not specified'}
+- Path they are privately curious about: ${profile.secret_paths || 'Not specified'}
 - Future vision (5–10 years): ${profile.desired_lifestyle || 'Not specified'}${profile.vision_timeframe ? ` (timeframe: ${profile.vision_timeframe.replace('_', ' ')})` : ''}${Array.isArray(profile.vision_themes) && profile.vision_themes.length ? ` [themes: ${profile.vision_themes.join(', ')}]` : ''}
 - Biggest blocker: ${profile.biggest_blocker || 'Not specified'}
 - Fixed commitments: ${profile.commitments || 'Not specified'}
@@ -151,6 +153,11 @@ TASK: Generate exactly 3 path recommendations:
 1. Best apparent fit (based on their profile)
 2. Strong alternative (different but viable)
 3. Contrarian option (challenges their default assumptions)
+
+The pressured path and the privately curious path are the two answers that make
+the contrarian recommendation worth reading. Where a student named both, the
+contrarian option should engage with the gap between them rather than ignore it.
+Where they named neither, treat this as a normal contrarian pick.
 
 Then generate exactly 3 experiments for the PRIMARY path: "${primaryPath}". Every experiment must respect the education stage guidance above. Each experiment must be one of:
 - Talk to people doing the work (informational interviews)
