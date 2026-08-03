@@ -96,6 +96,25 @@ export function GuidedStyles() {
       .opt-row:active { transform: scale(0.985); transition-duration: 80ms; }
       .opt-row:hover .opt-key { color: var(--brand-navy-700); border-color: var(--brand-navy-700); }
       .opt-dot { transition: background var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out); }
+
+      /* Every guided flow moves a whole pane sideways on each step. That is
+         exactly the motion a student who asked their system to reduce it does
+         not want, so it collapses to a short fade and the rows stop sliding
+         under the pointer. Nothing ends up hidden: the panes still animate,
+         they just do not travel. */
+      @media (prefers-reduced-motion: reduce) {
+        .step-pane-fwd, .step-pane-back {
+          animation: optIn var(--dur-fast) var(--ease-out) both;
+          animation-name: none;
+          opacity: 1;
+        }
+        .opt-row {
+          animation: none;
+          transition: border-color var(--dur-fast) var(--ease-out),
+                      background   var(--dur-fast) var(--ease-out);
+        }
+        .opt-row:hover, .opt-row:active { transform: none; }
+      }
     `}</style>
   );
 }

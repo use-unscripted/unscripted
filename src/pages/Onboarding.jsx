@@ -28,7 +28,7 @@ import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, Pencil } from 'lucide-react';
 import { LogoWordmark } from '@/components/UnscriptedLogo';
 import { ProgressBar, OptionRow, GuidedStyles, footerCls } from '@/components/guided/GuidedPieces';
-import { saveDraft, loadDraft } from '@/lib/guest-draft';
+import { saveDraft, loadDraft, clearDraft } from '@/lib/guest-draft';
 import { trackFunnel, trackFunnelOnce } from '@/lib/funnel';
 
 /**
@@ -154,7 +154,7 @@ const STEPS = [
     kind: 'paths',
     required: true,
     question: 'Which path do you want to test first?',
-    hint: 'You are not committing to it — you are choosing what to put to the test.',
+    hint: 'You can change this later. Trying a path is not the same as choosing it.',
     examples: [
       'Investment banking',
       'Product design',
@@ -167,8 +167,8 @@ const STEPS = [
   {
     key: 'comparison_path',
     kind: 'paths',
-    question: 'Want to weigh it against something?',
-    hint: 'We will include this as one of your three recommended paths, so you can compare them directly.',
+    question: 'Anything you want to weigh it against?',
+    hint: 'We will put both in your three recommendations, so you can compare them side by side.',
     examples: [
       'Management consulting',
       'Grad school',
@@ -179,8 +179,8 @@ const STEPS = [
   {
     key: 'pressured_path',
     kind: 'paths',
-    question: 'Which path do you feel the most pressure to pursue?',
-    hint: 'From family, peers, or the people around you. Naming it lets us tell it apart from what you actually want.',
+    question: 'Which path do you feel pushed toward?',
+    hint: 'By family, by friends, by whoever is around you. Naming it keeps it separate from what you actually want.',
     examples: [
       'Law school',
       'The one my parents want',
@@ -191,8 +191,8 @@ const STEPS = [
   {
     key: 'curious_path',
     kind: 'paths',
-    question: 'Which path are you privately curious about?',
-    hint: 'The one you would explore if nobody was watching. This is what your contrarian recommendation is built from.',
+    question: 'Which one are you quietly curious about?',
+    hint: 'The one you would try if nobody found out. This answer changes what we suggest.',
     examples: [
       'Writing',
       'Running a restaurant',
@@ -207,9 +207,9 @@ const STEPS = [
     question: 'How many hours a week can you really give this?',
     hint: 'Be conservative. A focused 6 hours beats an imaginary 20.',
     options: [
-      { value: 4, label: '2–4 hours', desc: 'A couple of evenings' },
-      { value: 8, label: '5–8 hours', desc: 'Where most students land' },
-      { value: 12, label: '9–12 hours', desc: 'A serious block of your week' },
+      { value: 4, label: '2-4 hours', desc: 'A couple of evenings' },
+      { value: 8, label: '5-8 hours', desc: 'Where most students land' },
+      { value: 12, label: '9-12 hours', desc: 'A serious block of your week' },
       { value: 16, label: '13+ hours', desc: 'You have real room' },
     ],
   },
@@ -228,8 +228,8 @@ const STEPS = [
   {
     key: 'biggest_blocker',
     kind: 'text',
-    question: 'What is actually keeping you stuck?',
-    hint: 'The honest answer is more useful than the impressive one.',
+    question: 'What is keeping you stuck?',
+    hint: 'Nobody else sees this. Pick the one that is actually true.',
     options: asOptions([
       'I have no idea what I would be good at',
       'I know what I want but not how to start',
@@ -244,7 +244,7 @@ const STEPS = [
     key: 'priorities',
     kind: 'sliders',
     question: 'What matters most to you?',
-    hint: '1 is not important, 5 is essential. These shape which paths we recommend.',
+    hint: '1 means you do not care. 5 means you will not give it up.',
   },
   {
     key: 'willingness',
@@ -256,22 +256,32 @@ const STEPS = [
     key: 'vision',
     kind: 'vision',
     question: 'Where do you want to end up?',
-    hint: 'Five to ten years out. Tap what resonates — your answer can change.',
+    hint: 'Five or ten years out. Tap whatever fits, and change your mind later.',
   },
   {
     key: 'about',
     kind: 'about',
     required: true,
-    question: 'Last thing — who are you?',
-    hint: 'Your guides and outreach emails get written in your name, so we need this part.',
+    question: 'Last one. Who are you?',
+    hint: 'Your guides and outreach emails go out in your name, so we need these three.',
   },
 ];
 
 const REVIEW = STEPS.length;
 
+// Which stretch of the intake each question belongs to. Four questions about
+// paths, two about the week, four about what the student wants, one about them.
+const SECTIONS = [
+  { until: 4,  label: 'Your paths' },
+  { until: 6,  label: 'Your week' },
+  { until: 10, label: 'What matters to you' },
+  { until: 11, label: 'About you' },
+];
+const sectionFor = (i) => (SECTIONS.find(sn => i < sn.until) || SECTIONS[SECTIONS.length - 1]).label;
+
 const inputCls =
   'w-full rounded-[10px] border px-3 py-2.5 text-sm outline-none transition focus:border-[color:var(--brand-navy-900)]';
-const inputStyle = { borderColor: 'var(--ink-200)', background: 'var(--background-secondary)' };
+const inputStyle = { borderColor: 'var(--border-light)', background: 'var(--background-secondary)' };
 
 // A pill for the chip grids: paths, vision themes, school year, graduation year.
 function Chip({ label, selected, onClick }) {
@@ -280,12 +290,12 @@ function Chip({ label, selected, onClick }) {
       type="button"
       onClick={onClick}
       aria-pressed={selected}
-      className="opt-row rounded-full border px-3.5 py-2 text-xs font-semibold"
+      className="opt-row inline-flex min-h-[44px] items-center rounded-full border px-4 text-[13px] font-bold"
       style={{
         animationDelay: '0ms',
         borderColor: selected ? 'var(--brand-navy-900)' : 'var(--ink-200)',
         background: selected ? 'var(--brand-navy-900)' : 'var(--brand-white)',
-        color: selected ? '#fff' : 'var(--ink-700)',
+        color: selected ? '#fff' : 'var(--text-primary)',
       }}
     >
       {label}
@@ -320,9 +330,9 @@ function PathField({ step, value, onChange }) {
         // student who is mid-sentence.
         placeholder={animating ? `${typed}▌` : step.examples[0]}
         className="w-full rounded-[14px] border px-4 py-4 text-lg outline-none transition focus:border-[color:var(--brand-navy-900)]"
-        style={{ borderColor: 'var(--ink-200)', background: 'var(--background-secondary)' }}
+        style={{ borderColor: 'var(--border-light)', background: 'var(--background-secondary)' }}
       />
-      <span className="mt-2 block text-xs" style={{ color: 'var(--ink-400)' }}>
+      <span className="mt-2 block text-xs" style={{ color: 'var(--text-muted)' }}>
         Anything you can name. It does not have to be a job title.
       </span>
     </label>
@@ -340,7 +350,7 @@ function summarise(step, data) {
     }
     case 'vision': {
       const themes = Array.isArray(data.vision_themes) ? data.vision_themes : [];
-      return [themes.join(', '), (data.desired_lifestyle || '').trim()].filter(Boolean).join(' — ');
+      return [themes.join(', '), (data.desired_lifestyle || '').trim()].filter(Boolean).join(' · ');
     }
     case 'about':
       return [data.name, data.college, data.major, data.school_year, data.graduation_year]
@@ -363,6 +373,7 @@ export default function Onboarding() {
   // they can see and change it.
   const [data, setData] = useState({ available_hours_per_week: 8 });
   const [error, setError] = useState('');
+  const [resumed, setResumed] = useState(false);
   const advanceRef = useRef(null);
   const topRef = useRef(null);
   const headingRef = useRef(null);
@@ -377,6 +388,9 @@ export default function Onboarding() {
     if (draft) {
       const { draft_version, guest_session_id, started_at, updated_at, completed, current_step, intake_version, ...fields } = draft;
       setData({ available_hours_per_week: 8, ...fields });
+      // Only say "still here" when there is something to see. A draft holding
+      // nothing but the hours default would make the notice a lie.
+      setResumed(Object.values(fields).some(v => (Array.isArray(v) ? v.length : String(v ?? '').trim())));
       // Only trust a saved position from this version of the flow: an older
       // draft's step number points at a question that no longer exists.
       if (intake_version === 2 && current_step != null) setIndex(Math.min(current_step, REVIEW));
@@ -391,6 +405,15 @@ export default function Onboarding() {
   }, []);
 
   useEffect(() => () => clearTimeout(advanceRef.current), []);
+
+  const startOver = () => {
+    clearDraft();
+    setData({ available_hours_per_week: 8 });
+    setResumed(false);
+    setError('');
+    setIndex(0);
+    setDir('back');
+  };
 
   // Every question starts at the top of the page, however far you had scrolled,
   // and takes focus — otherwise focus stays on whatever sat at that spot on the
@@ -448,9 +471,9 @@ export default function Onboarding() {
   const blockedReason = () => {
     if (!step?.required) return '';
     if (step.kind === 'about') {
-      return missingOnAbout().length ? 'Add your name, college and major — these three we do need.' : '';
+      return missingOnAbout().length ? 'We need your name, college and major before we can build this.' : '';
     }
-    return String(data[step.key] || '').trim() ? '' : 'Pick a path to test, or describe your own below.';
+    return String(data[step.key] || '').trim() ? '' : 'Name a path to test, or type your own.';
   };
 
   const next = () => {
@@ -516,10 +539,10 @@ export default function Onboarding() {
         <div className="mb-8 flex items-center justify-between">
           <LogoWordmark />
           <div className="flex items-center gap-4">
-            <span className="text-xs font-bold text-[color:var(--ink-500)]">
+            <span className="text-xs font-bold text-[color:var(--text-secondary)]">
               {reviewing ? 'REVIEW' : `${index + 1} OF ${STEPS.length}`}
             </span>
-            <Link to="/login" className="text-xs font-semibold text-[color:var(--ink-500)] hover:text-[color:var(--surface-dark-900)] transition">
+            <Link to="/login" className="text-xs font-semibold text-[color:var(--text-secondary)] hover:text-[color:var(--text-primary)] transition">
               Log in
             </Link>
           </div>
@@ -529,17 +552,37 @@ export default function Onboarding() {
           <ProgressBar value={(index + 1) / (REVIEW + 1)} />
         </div>
 
-        <section className="rounded-[24px] border border-[color:var(--ink-200)] bg-white p-6 pb-0 shadow-sm sm:p-8 sm:pb-0">
+        {/* Answers survive a closed tab, which is the point, but a returning
+            student used to meet their own old answer with no explanation and no
+            way to clear it. Say it, and give them the out. */}
+        {resumed && (
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-[12px] px-4 py-3"
+            style={{ background: 'var(--background-secondary)', border: '1px solid var(--border-light)' }}>
+            <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+              Your answers from last time are still here.
+            </p>
+            <button onClick={startOver}
+              className="ui-press rounded-[10px] border px-3 py-1.5 text-xs font-bold"
+              style={{ borderColor: 'var(--border-light)', color: 'var(--text-primary)', background: 'white' }}>
+              Start over
+            </button>
+          </div>
+        )}
+
+        <section className="rounded-[20px] bg-white p-6 pb-0 sm:p-8 sm:pb-0" style={{ border: '1px solid var(--border-light)' }}>
           {children}
           {error && (
-            <p className="mt-4 rounded-xl bg-red-50 px-3 py-2.5 text-sm text-red-700" role="alert">{error}</p>
+            <p className="mt-4 rounded-[12px] px-3 py-2.5 text-sm" role="alert"
+              style={{ background: 'var(--danger-50, #FEF2F2)', color: 'var(--danger-700, #B91C1C)' }}>
+              {error}
+            </p>
           )}
           {footer}
         </section>
 
-        <p className="mt-6 text-center text-xs text-[color:var(--ink-400)]">
-          No account needed yet. Four answers are required — the rest you can skip.{' '}
-          <Link to="/login" className="underline hover:text-[color:var(--ink-700)]">Already have an account?</Link>
+        <p className="mt-6 text-center text-xs" style={{ color: 'var(--text-muted)' }}>
+          No account yet. We need four answers. Everything else you can skip.{' '}
+          <Link to="/login" className="underline hover:text-[color:var(--text-primary)]">Already have an account?</Link>
         </p>
       </div>
     </main>
@@ -548,10 +591,13 @@ export default function Onboarding() {
   if (reviewing) {
     return shell(
       <div key="review" className="step-pane-fwd">
-        <h1 ref={headingRef} tabIndex={-1} className="font-heading text-[26px] font-bold leading-tight outline-none" style={{ color: 'var(--surface-dark-900)' }}>
+        <p className="text-xs font-bold uppercase tracking-[.12em]" style={{ color: 'var(--brand-navy-700)' }}>
+          Your intake
+        </p>
+        <h1 ref={headingRef} tabIndex={-1} className="font-heading mt-2 text-2xl font-bold leading-tight outline-none sm:text-3xl" style={{ color: 'var(--text-primary)' }}>
           That is everything.
         </h1>
-        <p className="mt-1.5 text-sm" style={{ color: 'var(--text-secondary)' }}>
+        <p className="mt-2 text-sm" style={{ color: 'var(--text-secondary)' }}>
           Tap any answer to change it.
         </p>
         <div className="mt-5 space-y-1.5">
@@ -560,7 +606,7 @@ export default function Onboarding() {
             return (
               <button key={s.key} type="button" onClick={() => go(i, 'back')}
                 className="opt-row flex w-full items-start gap-3 rounded-xl border px-3.5 py-2.5 text-left"
-                style={{ animationDelay: `${i * 30}ms`, borderColor: 'var(--ink-200)', background: 'var(--brand-white)' }}>
+                style={{ animationDelay: `${i * 30}ms`, borderColor: 'var(--border-light)', background: 'var(--brand-white)' }}>
                 <span className="min-w-0 flex-1">
                   <span className="block text-[11px] font-semibold uppercase tracking-wide" style={{ color: 'var(--text-secondary)' }}>
                     {s.question}
@@ -578,13 +624,13 @@ export default function Onboarding() {
       <div className={footerCls}>
         <div className="flex items-center gap-3">
           <button onClick={() => go(STEPS.length - 1, 'back')}
-            className="flex items-center gap-1 rounded-[10px] border px-4 py-3 text-sm font-semibold"
-            style={{ borderColor: 'var(--ink-200)', color: 'var(--text-primary)' }}>
+            className="ui-press flex items-center gap-1 rounded-[10px] border px-4 text-sm font-bold"
+            style={{ borderColor: 'var(--border-light)', color: 'var(--text-primary)', minHeight: '48px' }}>
             <ChevronLeft size={15} /> Back
           </button>
           <button onClick={finish}
-            className="flex flex-1 items-center justify-center gap-2 rounded-[10px] py-3 text-sm font-semibold text-white"
-            style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}>
+            className="ui-press flex flex-1 items-center justify-center gap-2 rounded-[10px] text-sm font-bold text-white"
+            style={{ background: 'var(--brand-navy-900)', minHeight: '48px', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}>
             See my path test <ChevronRight size={15} />
           </button>
         </div>
@@ -676,7 +722,7 @@ export default function Onboarding() {
               Anything you want to say in your own words
             </span>
             <textarea rows={3} value={data.desired_lifestyle || ''}
-              placeholder="The work, the lifestyle, the money, the freedom — or what you are unsure about."
+              placeholder="The work, the money, the freedom, or whatever you are still unsure about."
               onChange={e => set('desired_lifestyle', e.target.value)} className={inputCls} style={inputStyle} />
           </label>
         </>
@@ -731,28 +777,32 @@ export default function Onboarding() {
 
   return shell(
     <div key={index} className={dir === 'fwd' ? 'step-pane-fwd' : 'step-pane-back'}>
-      <h1 ref={headingRef} tabIndex={-1} className="font-heading text-[26px] font-bold leading-tight outline-none" style={{ color: 'var(--surface-dark-900)' }}>
+      <p className="text-xs font-bold uppercase tracking-[.12em]" style={{ color: 'var(--brand-navy-700)' }}>
+        {sectionFor(index)}
+      </p>
+      <h1 ref={headingRef} tabIndex={-1} className="font-heading mt-2 text-2xl font-bold leading-tight outline-none sm:text-3xl" style={{ color: 'var(--text-primary)' }}>
         {step.question}
       </h1>
-      <p className="mt-1.5 text-sm" style={{ color: 'var(--text-secondary)' }}>
+      <p className="mt-2 text-sm" style={{ color: 'var(--text-secondary)' }}>
         {step.hint}
-        {!step.required && <span className="ml-1 font-semibold" style={{ color: 'var(--ink-400)' }}>Optional.</span>}
+        {!step.required && <span className="ml-1 font-semibold" style={{ color: 'var(--text-muted)' }}>Optional.</span>}
       </p>
-      {/* A floor, not a fixed height: it stops the footer jumping between a
-          one-box question and a five-slider one, and centring means the sparse
-          steps do not sit in a pile of dead space above it. */}
-      <div className="mt-5 flex min-h-[240px] flex-col justify-center">{renderStep()}</div>
+      {/* A small floor, not a fixed height. A taller one padded the one-box
+          questions out with a visible void between the hint and the answer,
+          which read as something failing to load. The footer moving a little
+          between a one-box step and a five-slider step is the honest result. */}
+      <div className="mt-6 min-h-[160px]">{renderStep()}</div>
     </div>,
     <div className={footerCls}>
       <div className="flex items-center gap-3">
         <button onClick={back}
-          className="flex items-center gap-1 rounded-[10px] border px-4 py-3 text-sm font-semibold"
-          style={{ borderColor: 'var(--ink-200)', color: 'var(--text-primary)' }}>
+          className="ui-press flex items-center gap-1 rounded-[10px] border px-4 text-sm font-bold"
+          style={{ borderColor: 'var(--border-light)', color: 'var(--text-primary)', minHeight: '48px' }}>
           <ChevronLeft size={15} /> Back
         </button>
         <button onClick={next}
-          className="flex flex-1 items-center justify-center gap-2 rounded-[10px] py-3 text-sm font-semibold text-white"
-          style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}>
+          className="ui-press flex flex-1 items-center justify-center gap-2 rounded-[10px] text-sm font-bold text-white"
+          style={{ background: 'var(--brand-navy-900)', minHeight: '48px', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}>
           {ctaLabel} <ChevronRight size={15} />
         </button>
       </div>
@@ -763,7 +813,7 @@ export default function Onboarding() {
         <button onClick={() => go(STEPS.length - 1, 'fwd')}
           className="mt-2.5 block w-full text-center text-xs font-semibold"
           style={{ color: 'var(--text-secondary)' }}>
-          Skip the rest — these are all optional
+          Skip the rest of the optional questions
         </button>
       )}
     </div>
