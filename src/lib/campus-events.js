@@ -81,7 +81,10 @@ function forModel(event) {
     topics: event.topics,
     types: event.types,
     departments: event.departments,
-    free: event.is_free,
+    // Omitted entirely when the calendar didn't say. Sending `free: null` would
+    // invite the model to write "free" or "paid" into a fit reason off a field
+    // that means neither.
+    ...(typeof event.is_free === 'boolean' ? { free: event.is_free } : {}),
     registration_required: event.has_register,
   };
 }

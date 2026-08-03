@@ -333,7 +333,12 @@ function emptyEvent() {
     location: '',
     room: '',
     address: '',
-    is_free: false,
+    // Three states, and the third one is the common one. Most calendar formats
+    // carry no price at all — an iCal file has nowhere to put one — so `false`
+    // here would have every event off a pasted club portal telling a student it
+    // costs money. `null` means we do not know, and nothing renders a claim
+    // from it. Only set true or false where the feed actually said so.
+    is_free: null as boolean | null,
     ticket_url: '',
     has_register: false,
     departments: [] as string[],
@@ -417,9 +422,16 @@ export function normalizeEvent(event: any): NormalizedEvent {
     location: event.location_name || event.location || '',
     room: event.room_number || '',
     address: event.address || '',
-    is_free: event.free !== false,
+    // Localist's `free` is a checkbox that defaults to off, so `free: false` is
+    // nobody having ticked it far more often than it is a price. Ticking it on
+    // is the only thing here that means anything.
+    is_free: event.free === true ? true : null,
     ticket_url: event.ticket_url || '',
-    has_register: Boolean(event.has_register),
+    // A Localist "ticket" link is a sign-up page, not a till. On Fairfield's
+    // live feed 21 of 25 events carry one and they are Zoom webinar
+    // registrations and GiveCampus RSVPs — free things you have to sign up
+    // for. So it proves registration and says nothing about money.
+    has_register: Boolean(event.has_register || event.ticket_url),
     // deno-lint-ignore no-explicit-any
     departments: (event.departments || []).map((d: any) => d?.name).filter(Boolean),
     topics: filterNames(event, 'event_topics'),
@@ -1705,7 +1717,12 @@ function normalizeTribe(event: any): NormalizedEvent {
     all_day: Boolean(event.all_day),
     location: plainText(venue.venue),
     address: plainText(venue.address),
-    is_free: event.cost === '' || Boolean(event.is_free),
+    // The Events Calendar writes an empty cost string for a free event and a
+    // price for a paid one. Absent means the field was never filled in.
+    is_free: event.cost === '' ? true
+      : event.cost ? false
+      : typeof event.is_free === 'boolean' ? event.is_free
+      : null,
     ticket_url: cleanUrl(event.website),
     // deno-lint-ignore no-explicit-any
     types: cleanList((event.categories || []).map((c: any) => c?.name)),
