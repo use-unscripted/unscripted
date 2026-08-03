@@ -68,7 +68,7 @@ export default function Settings() {
     } catch (err) {
       // Stage only — never the student's own words.
       console.error('[settings] path regeneration failed', err?.message || err);
-      setRegenError("We couldn't generate new paths just now. Your saved context is safe — try again in a moment.");
+      setRegenError("We couldn't generate new paths just now. Your saved context is safe. Try again in a moment.");
     } finally {
       setRegenerating(false);
     }
@@ -92,7 +92,7 @@ export default function Settings() {
           className="rounded-[10px] px-5 py-3 font-semibold text-white transition hover:-translate-y-px sm:col-span-2"
           style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}
         >
-          {saved ? 'Saved ✓' : 'Save changes'}
+          {saved ? 'Saved' : 'Save changes'}
         </button>
         <button
           onClick={() => base44.auth.logout('/')}
@@ -119,18 +119,18 @@ export default function Settings() {
           </label>
         ))}
         <p className="rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] px-4 py-3 text-xs text-[color:var(--ink-500)]">
-          🔒 Your notes are private to your account and are used only to personalize your Unscripted experience.
+          Your notes are private to your account and are used only to personalize your Unscripted experience.
         </p>
         <button onClick={saveNotes} disabled={!profile}
           className="w-full rounded-[10px] px-5 py-3 font-semibold text-white transition hover:-translate-y-px disabled:opacity-60"
           style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}>
-          {notesSaved ? 'Saved ✓' : 'Save personal context'}
+          {notesSaved ? 'Saved' : 'Save personal context'}
         </button>
 
         {showRegenPrompt && !regenDone && (
           <div className="rounded-[16px] border border-[color:var(--brand-navy-700)] bg-[color:var(--ink-100)] p-5">
             <p className="text-sm font-bold text-[color:var(--brand-navy-900)] mb-1">Want to refresh your recommended paths?</p>
-            <p className="text-xs text-[color:var(--ink-700)] mb-4">Your personal context has been updated. Unscripted can generate new path recommendations tailored to your updated preferences — for example, if you now want to focus only on law-related roles.</p>
+            <p className="text-xs text-[color:var(--ink-700)] mb-4">Your personal context has been updated. Unscripted can generate new path recommendations tailored to your updated preferences. For example, if you now want to focus only on law-related roles.</p>
             <div className="flex flex-wrap gap-2">
               <button onClick={handleRegenerate} disabled={regenerating}
                 className="flex items-center gap-2 rounded-[10px] px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-60 transition"

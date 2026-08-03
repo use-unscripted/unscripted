@@ -1,5 +1,5 @@
 import { base44 } from '@/api/base44Client';
-import { unwrapLLM } from '@/lib/llm';
+import { unwrapLLM, PLAIN_PROSE_RULES } from '@/lib/llm';
 
 const stringArray = { type: 'array', items: { type: 'string' } };
 
@@ -87,17 +87,18 @@ export async function generateAmbitionPlan() {
   const prompt = `You are Unscripted, a life-design and execution platform for ambitious college students. Your job is to help students determine which paths are worth exploring and build a realistic execution plan.
 
 IMPORTANT PRINCIPLES:
-- The student is the final decision-maker. You recommend and explain — you do not prescribe.
+- The student is the final decision-maker. You recommend and explain. You do not prescribe.
 - Be honest about tradeoffs. Include both traditional and non-traditional paths where appropriate.
 - A traditional career may be the right recommendation if it genuinely fits the student.
 - Do not replace one script with another. Reveal options, clarify tradeoffs, recommend experiments.
 - Fit the weekly plan to exactly ${availableHours} available hours. Do not over-assign.
-- Generate a BRUTALLY HONEST feasibility assessment of their goals — name conflicts, unrealistic timelines, vague goals, and what should be deferred.
+- Generate a BRUTALLY HONEST feasibility assessment of their goals: name conflicts, unrealistic timelines, vague goals, and what should be deferred.
 - Give 6-10 specific weekly tasks at specific available times that fit around their schedule.
 
 Student profile: ${JSON.stringify(profiles[0])}
 Schedule: ${JSON.stringify(schedules[0])}
-Goals: ${JSON.stringify(goals)}`;
+Goals: ${JSON.stringify(goals)}
+${PLAIN_PROSE_RULES}`;
 
   // Summarises answers the student already gave into a profile and roadmap.
   // Stays in the app; nobody outside reads it. Cheap tier; see src/lib/llm.js.

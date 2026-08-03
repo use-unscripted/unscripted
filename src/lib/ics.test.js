@@ -71,7 +71,7 @@ describe('the bug: a non-empty export must produce a calendar, not throw', () =>
   });
 });
 
-describe('buildICS — RFC 5545 structure', () => {
+describe('buildICS: RFC 5545 structure', () => {
   const ics = buildICS([calendarTaskEvent(task())], { calendarName: 'Unscripted', timezone: 'America/New_York' });
 
   it('produces the exact calendar for a single timed task', () => {
@@ -145,7 +145,7 @@ describe('buildICS — RFC 5545 structure', () => {
   });
 });
 
-describe('all-day events — the exclusive DTEND', () => {
+describe('all-day events: the exclusive DTEND', () => {
   // Regression: the panel computed the end date with `new Date('2026-08-07')`
   // (parsed as UTC midnight) and then read it back with local getters. In
   // America/New_York that is Aug 6 at 20:00, so +1 day landed back on Aug 7 and

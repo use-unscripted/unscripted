@@ -156,7 +156,7 @@ export async function saveConclusion(ctx, answers) {
     supporting_evidence: answers.evidence.trim() || undefined,
     interest_direction: answers.interest,
     path_feedback: answers.interest
-      ? `${{ more: 'More interested in this path', same: 'About as interested as before', less: 'Less interested in this path' }[answers.interest]}${answers.interestNote.trim() ? ` — ${answers.interestNote.trim()}` : ''}`
+      ? `${{ more: 'More interested in this path', same: 'About as interested as before', less: 'Less interested in this path' }[answers.interest]}${answers.interestNote.trim() ? `: ${answers.interestNote.trim()}` : ''}`
       : undefined,
     next_changes: answers.next.trim() || undefined,
     clarity_score: answers.clarity ?? undefined,

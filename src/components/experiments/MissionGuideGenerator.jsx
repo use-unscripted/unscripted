@@ -23,7 +23,7 @@ import CampusEventCard from './CampusEventCard';
 const GUIDE_STAGES = [
   'Reading your experiment and what it has to prove',
   'Working out the first move, and the one after that',
-  'Writing the email you send — in full, ready to use',
+  'Writing the email you send, in full and ready to use',
   'Setting what counts as done, and the proof to keep',
 ];
 const STAGE_MS = 9000;
@@ -264,7 +264,7 @@ export default function MissionGuideGenerator({ experiment, existingGuides = [],
       // row exists, we never saw it, and the honest thing is that the retry
       // finds it by key and adopts it rather than writing a second copy.
       console.error('[MissionGuide] save failed:', err);
-      setError("We couldn't save your guide. Nothing was lost — choose an option above to try again.");
+      setError("We couldn't save your guide. Nothing was lost. Choose an option above to try again.");
       setActiveDecision(null);
       setSaving(false);
     }
@@ -297,7 +297,7 @@ export default function MissionGuideGenerator({ experiment, existingGuides = [],
                 </p>
                 <p className="text-sm font-semibold text-[color:var(--surface-dark-900)] mt-0.5">{pendingGuide.steps[0].title}</p>
                 {pendingGuide.steps[0].artifact?.kind !== 'none' && (
-                  <p className="text-xs text-[color:var(--ink-500)] mt-1">Comes pre-written — you fill in the blanks.</p>
+                  <p className="text-xs text-[color:var(--ink-500)] mt-1">Comes pre-written. You fill in the blanks.</p>
                 )}
                 {pendingGuide.steps[0].campus_event && (
                   <div className="mt-2">
@@ -384,7 +384,7 @@ export default function MissionGuideGenerator({ experiment, existingGuides = [],
           <p className="mt-5 text-xs text-[color:var(--ink-400)]">
             {attempt > 0
               ? 'This one needs a second pass, so it will take about another forty seconds.'
-              : 'This usually takes about forty seconds. It writes the whole guide in one go — steps, the email, and what counts as proof.'}
+              : 'This usually takes about forty seconds. It writes the whole guide in one go: steps, the email, and what counts as proof.'}
           </p>
 
           {/* A way out. Forty seconds with no exit is a trap, and the previous

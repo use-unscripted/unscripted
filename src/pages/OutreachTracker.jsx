@@ -143,7 +143,7 @@ function ContactCard({ c, experimentsMap, missionsMap, onEdit, onStatusChange, o
         {c.date_contacted && <span>First contact: <span className="text-[color:var(--ink-500)] font-medium">{fmtDate(c.date_contacted)}</span></span>}
         {c.followup_date && (
           <span className={isOverdue ? 'text-[color:var(--danger-700)] font-semibold' : ''}>
-            {isOverdue ? '⚠ Follow-up overdue: ' : 'Follow-up: '}
+            {isOverdue ? 'Follow-up overdue: ' : 'Follow-up: '}
             <span className="font-medium">{fmtDate(c.followup_date)}</span>
           </span>
         )}
@@ -377,8 +377,8 @@ export default function OutreachTracker() {
           <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {[
               { label: 'Cold email', body: 'Hi [Name],\n\nI came across your work at [Company] and was impressed by [specific detail]. I\'m a [Year] at [School] studying [Major] and exploring a career in [field].\n\nWould you be open to a 20-minute call to share your perspective on [specific question]? I have availability [times].\n\nThank you for considering it.\n\n[Your Name]' },
-              { label: 'Alumni email', body: 'Hi [Name],\n\nI\'m [Your Name], a [Year] at [Shared School] studying [Major]. I found your profile through [Alumni Network/LinkedIn] and have been following your work at [Company].\n\nWould you be willing to share 20 minutes to talk about your experience in [field]? I would especially value your perspective on [specific question].\n\nThank you — and go [School Mascot]!\n\n[Your Name]' },
-              { label: 'LinkedIn message', body: 'Hi [Name] — I\'m a [Year] at [School] exploring [field]. I\'d love to hear how you got into your current role at [Company]. Would you be open to a brief 20-minute call? Happy to work around your schedule.' },
+              { label: 'Alumni email', body: 'Hi [Name],\n\nI\'m [Your Name], a [Year] at [Shared School] studying [Major]. I found your profile through [Alumni Network/LinkedIn] and have been following your work at [Company].\n\nWould you be willing to share 20 minutes to talk about your experience in [field]? I would especially value your perspective on [specific question].\n\nThank you, and go [School Mascot]!\n\n[Your Name]' },
+              { label: 'LinkedIn message', body: 'Hi [Name], I\'m a [Year] at [School] exploring [field]. I\'d love to hear how you got into your current role at [Company]. Would you be open to a brief 20-minute call? Happy to work around your schedule.' },
               { label: 'Follow-up', body: 'Hi [Name],\n\nI wanted to follow up on my previous note. I completely understand you\'re busy, and I appreciate your time. If a 20-minute call doesn\'t work, even a brief email with one piece of advice would be incredibly helpful.\n\nThank you again.\n\n[Your Name]' },
               { label: 'Thank-you note', body: 'Hi [Name],\n\nThank you for taking the time to speak with me. Your insight about [specific thing they said] was genuinely valuable and I\'ve already begun [action taken].\n\nI\'ll keep you updated on my progress. Thank you again for your generosity.\n\n[Your Name]' },
             ].map(t => (

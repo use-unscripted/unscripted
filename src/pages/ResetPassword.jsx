@@ -49,7 +49,7 @@ export default function ResetPassword() {
       setSuccess(true);
     } catch (err) {
       // Never expose tokens or internal details
-      setError("Password reset failed. Your link may have expired — please request a new one.");
+      setError("Password reset failed. Your link may have expired. Please request a new one.");
     } finally {
       setLoading(false);
       submittingRef.current = false;

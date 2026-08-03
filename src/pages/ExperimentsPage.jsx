@@ -90,9 +90,9 @@ function PathDropdown({ paths, value, onChange, error }) {
         {eligible.map(p => (
           <option key={p.id} value={p.path_name}>
             {p.path_name}
-            {p.path_category ? ` — ${p.path_category}` : ''}
-            {` — ${statusLabel(p.status)}`}
-            {p.is_primary_focus ? ' — Primary Focus' : ''}
+            {p.path_category ? ` · ${p.path_category}` : ''}
+            {` · ${statusLabel(p.status)}`}
+            {p.is_primary_focus ? ' · Primary Focus' : ''}
           </option>
         ))}
       </select>
@@ -481,7 +481,7 @@ function PausedSection({ experiments, missions, guides, onResumed, onDelete, onE
                         {expGuides.map(g => (
                           <div key={g.id} className="flex items-center gap-2 text-xs text-[color:var(--ink-700)]">
                             <Wand2 size={11} style={{ color: 'var(--brand-navy-700)' }} />
-                            <span>{g.guide_title} — v{g.version_number}</span>
+                            <span>{g.guide_title} (v{g.version_number})</span>
                             {g.is_active && <span className="rounded-full px-1.5 py-0.5 font-bold" style={{ background: 'var(--success-50)', color: 'var(--success-700)' }}>Active</span>}
                           </div>
                         ))}
@@ -842,7 +842,7 @@ export default function ExperimentsPage() {
       )}
       <PageHeader
         title="Test paths. Learn from results."
-        description="Every experiment is a controlled test. You are not committing to a path — you are gathering evidence."
+        description="Every experiment is a controlled test. You are not committing to a path. You are gathering evidence."
         action={
           <button onClick={() => setShowNew(true)}
             className="flex items-center gap-2 rounded-[10px] px-5 py-3 text-sm font-semibold text-white transition hover:-translate-y-px"

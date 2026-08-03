@@ -33,7 +33,7 @@ export default function AmbitionProfile() {
       <PageHeader
         eyebrow="Your Unscripted Profile"
         title={`You are a ${p.archetype}.`}
-        description="This is a working hypothesis — not a box. Use it to make sharper decisions and update it as you create evidence."
+        description="This is a working hypothesis, not a box. Use it to make sharper decisions and update it as you create evidence."
       />
       <div className="grid gap-5 md:grid-cols-2">
         <ProfileCard label="Identity statement" dark>

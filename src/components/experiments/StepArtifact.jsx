@@ -171,7 +171,7 @@ export default function StepArtifact({ artifact: raw, profile }) {
                   <code className="font-semibold" style={{ fontFamily: MONO, color: '#7A5B12' }}>
                     {blank.token}
                   </code>
-                  {blank.hint ? ` — ${blank.hint}` : ''}
+                  {blank.hint ? ` (${blank.hint})` : ''}
                 </li>
               ))}
             </ul>

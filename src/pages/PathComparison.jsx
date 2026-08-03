@@ -598,7 +598,7 @@ export default function PathComparison() {
 
       <PageHeader
         title="Your career paths."
-        description="Explore multiple paths simultaneously. Test, pause, resume, and compare — none is permanent until you decide it is."
+        description="Explore multiple paths at once. Test, pause, resume and compare. None is permanent until you decide it is."
         action={
           <button onClick={() => setShowCreate(true)}
             className="flex items-center gap-2 rounded-[10px] px-5 py-2.5 text-sm font-semibold text-white shrink-0"
@@ -696,7 +696,7 @@ export default function PathComparison() {
 
           <div className="mt-8 rounded-[20px] p-5 text-center text-sm text-[color:var(--ink-500)]"
             style={{ background: 'var(--background-tertiary)', border: '1px solid var(--border-light)' }}>
-            These paths are recommendations and tests — not permanent commitments. Your goal is to learn what fits you, not to pick one and stay forever.
+            These paths are recommendations and tests, not permanent commitments. Your goal is to learn what fits you, not to pick one and stay forever.
           </div>
         </>
       )}

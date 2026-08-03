@@ -686,7 +686,7 @@ describe('eventSearchUrl', () => {
 // Pinning a Claude model nests the payload under `response`; reading the bare
 // shape then silently yields nothing, which is indistinguishable from "your
 // campus has no events". Verified against the live app on 2026-07-31.
-describe('recommendCampusEvents — model-dependent response shape', () => {
+describe('recommendCampusEvents: model-dependent response shape', () => {
   const events = [calendarEvent({ id: '1' })];
 
   it('reads the nested shape a Claude model returns', async () => {

@@ -136,7 +136,7 @@ export default function ActiveExperiment() {
             </p>
             <p className="mt-1 text-sm" style={{ color: '#166534' }}>
               {justDone.experimentCompleted
-                ? 'Every mission is done — next: reflect on what this told you.'
+                ? 'Every mission is done. Next: reflect on what this told you.'
                 : nextMission
                   ? `Next: ${nextMission.title}`
                   : 'Next: reflect on what this experiment told you.'}

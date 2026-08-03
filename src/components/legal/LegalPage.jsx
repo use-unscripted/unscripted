@@ -249,7 +249,7 @@ export function Bullets({ items }) {
     <ul className="space-y-2.5 pl-1">
       {items.map((item, i) => (
         <li key={i} className="flex gap-3 text-[15px] leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-          <span aria-hidden="true" style={{ color: 'var(--brand-gold-600)' }}>—</span>
+          <span aria-hidden="true" style={{ color: 'var(--brand-gold-600)' }}>&bull;</span>
           <span>{item}</span>
         </li>
       ))}

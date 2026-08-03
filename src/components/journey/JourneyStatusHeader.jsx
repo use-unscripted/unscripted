@@ -40,7 +40,7 @@ export default function JourneyStatusHeader({ stage, path, experiment, action, e
       </div>
 
       <div className="mt-4 grid gap-4 border-t pt-4 sm:grid-cols-2" style={{ borderColor: 'var(--border-light)' }}>
-        <Row label="Next required action" value={action?.label || '—'} />
+        <Row label="Next required action" value={action?.label || 'Nothing right now'} />
         {effort && <Row label="Remaining effort" value={effort} />}
       </div>
     </section>

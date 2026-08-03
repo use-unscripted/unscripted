@@ -30,11 +30,11 @@ const STEPS = [
       { name: 'financial_priorities', label: 'Financial priorities', placeholder: 'Income target, financial independence, debt concerns...' },
     ],
     sliders: [
-      { name: 'priority_autonomy', label: 'Autonomy — control over your own work and time' },
-      { name: 'priority_stability', label: 'Stability — predictable income and security' },
-      { name: 'priority_impact', label: 'Impact — making a meaningful difference' },
-      { name: 'priority_creativity', label: 'Creativity — building and expressing original ideas' },
-      { name: 'priority_ownership', label: 'Ownership — building something of your own' },
+      { name: 'priority_autonomy', label: 'Autonomy: control over your own work and time' },
+      { name: 'priority_stability', label: 'Stability: predictable income and security' },
+      { name: 'priority_impact', label: 'Impact: making a meaningful difference' },
+      { name: 'priority_creativity', label: 'Creativity: building and expressing original ideas' },
+      { name: 'priority_ownership', label: 'Ownership: building something of your own' },
     ],
     checkboxes: [
       { name: 'willing_financial_risk', label: 'I am willing to accept financial risk for better upside' },
@@ -46,10 +46,10 @@ const STEPS = [
     label: 'Your available capacity',
     subtitle: 'Be conservative. A focused 6 hours beats an imaginary 20.',
     fields: [
-      { name: 'class_schedule', label: 'Class schedule', placeholder: 'Mon/Wed 10–12, Tue/Thu 2–4...' },
+      { name: 'class_schedule', label: 'Class schedule', placeholder: 'Mon/Wed 10-12, Tue/Thu 2-4...' },
       { name: 'fixed_commitments', label: 'Fixed weekly commitments', placeholder: 'Work, clubs, athletics, care responsibilities...' },
-      { name: 'high_energy_times', label: 'Times when you do your best work', placeholder: 'e.g. 7–10am, after the gym' },
-      { name: 'low_energy_times', label: 'Times to avoid demanding work', placeholder: 'e.g. 2–4pm, late evenings' },
+      { name: 'high_energy_times', label: 'Times when you do your best work', placeholder: 'e.g. 7-10am, after the gym' },
+      { name: 'low_energy_times', label: 'Times to avoid demanding work', placeholder: 'e.g. 2-4pm, late evenings' },
     ],
     hoursField: true,
   },
@@ -110,13 +110,13 @@ function VisionField({ data, onChange, onCheck }) {
           name="desired_lifestyle"
           value={data.desired_lifestyle || ''}
           onChange={onChange}
-          placeholder="Describe what you're working toward — or what you're uncertain about..."
+          placeholder="Describe what you're working toward, or what you're uncertain about..."
           className={baseClass}
         />
       </label>
 
       <div>
-        <p className="text-xs font-semibold text-[color:var(--ink-500)] uppercase tracking-wide mb-2">Themes that resonate <span className="font-normal normal-case">(optional — select any)</span></p>
+        <p className="text-xs font-semibold text-[color:var(--ink-500)] uppercase tracking-wide mb-2">Themes that resonate <span className="font-normal normal-case">(optional, select any)</span></p>
         <div className="flex flex-wrap gap-2">
           {VISION_THEMES.map(theme => (
             <button
@@ -210,7 +210,7 @@ function PersonalNotesStep({ data, onChange }) {
         <span className="ml-2 text-xs font-normal text-[color:var(--ink-400)]">Optional</span>
         <textarea
           rows={3} name="long_term_ambitions" value={data.long_term_ambitions || ''} onChange={onChange}
-          placeholder="What do you ultimately want to build, achieve, or become in the next 5–10 years?"
+          placeholder="What do you ultimately want to build, achieve, or become in the next 5-10 years?"
           className={baseClass}
         />
       </label>
@@ -230,7 +230,7 @@ function PersonalNotesStep({ data, onChange }) {
         <span className="ml-2 text-xs font-normal text-[color:var(--ink-400)]">Optional</span>
         <textarea
           rows={3} name="things_to_avoid" value={data.things_to_avoid || ''} onChange={onChange}
-          placeholder="Careers, lifestyles, or commitments you want to avoid — be specific about what you're ruling out and why..."
+          placeholder="Careers, lifestyles, or commitments you want to avoid. Be specific about what you're ruling out and why..."
           className={baseClass}
         />
       </label>
@@ -246,7 +246,7 @@ function PersonalNotesStep({ data, onChange }) {
       </label>
 
       <p className="rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] px-4 py-3 text-xs text-[color:var(--ink-500)]">
-        🔒 Your notes are private to your account and are used only to personalize your Unscripted experience.
+        Your notes are private to your account and are used only to personalize your Unscripted experience.
       </p>
     </div>
   );
@@ -374,7 +374,7 @@ export default function Onboarding() {
         </div>
 
         <div className="mb-2 flex justify-between text-xs text-[color:var(--ink-500)]">
-          <span>Quick intake — 5 to 8 minutes</span>
+          <span>Quick intake, 5 to 8 minutes</span>
           <span>{pct}% complete</span>
         </div>
         <div className="mb-10 h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--ink-200)' }}>

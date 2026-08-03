@@ -468,7 +468,7 @@ export default function ProofOfWorkPage() {
         </div>
       ) : (
         <>
-          <p className="text-xs text-[color:var(--ink-400)] mb-4">{filtered.length} submission{filtered.length !== 1 ? 's' : ''} — newest first</p>
+          <p className="text-xs text-[color:var(--ink-400)] mb-4">{filtered.length} submission{filtered.length !== 1 ? 's' : ''}, newest first</p>
           <div className="grid gap-4 sm:grid-cols-2">
             {filtered.map(e => (
               <CardErrorBoundary key={e.id}>

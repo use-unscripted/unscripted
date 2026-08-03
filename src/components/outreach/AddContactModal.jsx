@@ -282,7 +282,7 @@ export default function AddContactModal({ contact, onClose, onSaved }) {
                     <option value="">Select an experiment…</option>
                     {experiments.map(exp => (
                       <option key={exp.id} value={exp.id}>
-                        {exp.title}{exp.status ? ` — ${EXP_STATUS_LABELS[exp.status] || exp.status}` : ''}
+                        {exp.title}{exp.status ? ` (${EXP_STATUS_LABELS[exp.status] || exp.status})` : ''}
                       </option>
                     ))}
                   </select>
@@ -305,7 +305,7 @@ export default function AddContactModal({ contact, onClose, onSaved }) {
                 {expMissions.length === 0
                   ? <p className="text-xs text-[color:var(--ink-400)] rounded-xl border border-[color:var(--ink-200)] px-4 py-2.5">No missions are currently linked to this experiment.</p>
                   : <select value={selectedMissionId} onChange={e => setSelectedMissionId(e.target.value)} className={inputCls}>
-                      <option value="">No specific mission — overall experiment</option>
+                      <option value="">No specific mission (overall experiment)</option>
                       {expMissions.map(m => <option key={m.id} value={m.id}>{m.title}</option>)}
                     </select>
                 }

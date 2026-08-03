@@ -39,7 +39,7 @@ const STATES = {
   legacy: {
     Icon: FileWarning,
     title: 'Some older records need a home',
-    body: 'A few things you created before we introduced cycles couldn’t be matched to one automatically. Nothing was deleted — open Evidence to see them.',
+    body: 'A few things you created before we introduced cycles couldn’t be matched to one automatically. Nothing was deleted. Open Evidence to see them.',
     cta: { label: 'Review my records', to: '/evidence' },
   },
 };

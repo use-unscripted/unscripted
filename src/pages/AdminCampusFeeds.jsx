@@ -312,7 +312,7 @@ function EmptyQueue({ tab }) {
     reported: ['Nothing reported', "Students who think we found the wrong calendar for their school land here. It's the only way we'd ever know."],
     working: ['No calendars yet', 'Schools get a calendar the first time a student there loads the app.'],
     decided: ['Nothing decided yet', 'Approved and rejected links show up here.'],
-    failed: ['No failures', "Links we couldn't read land here — they're the list of which calendar platform to support next."],
+    failed: ['No failures', "Links we couldn't read land here. They're the list of which calendar platform to support next."],
   }[tab];
 
   return (
@@ -433,7 +433,7 @@ function SubmissionCard({ row, busy, onDecide }) {
               style={{ background: 'var(--danger-700)' }}
             >
               {busy ? <Loader2 size={13} className="animate-spin" aria-hidden="true" /> : <Check size={13} aria-hidden="true" />}
-              They&rsquo;re right — stop using this calendar
+              They&rsquo;re right, stop using this calendar
             </button>
             <button
               type="button"

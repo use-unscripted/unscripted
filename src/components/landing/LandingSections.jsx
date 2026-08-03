@@ -217,7 +217,7 @@ export default function LandingSections() {
             </h3>
             {/* ink-300 on the navy card; ink-400 was 4.48:1 */}
             <p className="mb-6 text-xs text-[color:var(--ink-300)]">
-              4–6 hours. You end up with a written summary and an updated ranking.
+              4-6 hours. You end up with a written summary and an updated ranking.
             </p>
             <MissionChecklist />
           </div>

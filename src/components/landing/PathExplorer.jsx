@@ -10,7 +10,7 @@ const PATHS = [
     id: 'career',
     label: 'A traditional professional career',
     icon: Briefcase,
-    tagline: "Whether the day-to-day of the role — not the title — is something you’d still want five years in.",
+    tagline: "Whether the day-to-day of the role, not the title, is something you’d still want five years in.",
     missions: [
       'Interview three people who are two to five years into the role',
       'Sit in on one real work session or shadow a full day',
@@ -38,7 +38,7 @@ const PATHS = [
     id: 'company',
     label: 'Building a company',
     icon: Building2,
-    tagline: 'Whether you can find a problem people will pay to fix — before you commit years to it.',
+    tagline: 'Whether you can find a problem people will pay to fix, before you commit years to it.',
     missions: [
       'Run ten problem interviews with one specific group of people',
       'Put up a one-page offer and drive real traffic to it',
@@ -46,7 +46,7 @@ const PATHS = [
     ],
     green: 'Strangers keep the conversation going after you stop asking questions.',
     red: 'Every yes comes from someone who already knows you.',
-    evidence: 'ten interview transcripts, a live page, and real demand data — or a documented no.',
+    evidence: 'ten interview transcripts, a live page, and real demand data. Or a documented no.',
   },
   {
     id: 'brand',
@@ -80,7 +80,7 @@ const PATHS = [
     id: 'grad',
     label: 'Graduate school',
     icon: GraduationCap,
-    tagline: 'Whether the degree is the only door to the work you want — or just the most expensive one.',
+    tagline: 'Whether the degree is the only door to the work you want, or just the most expensive one.',
     missions: [
       'Interview three people who did the program and two who skipped it',
       'Sit in on a class or work through a full syllabus',

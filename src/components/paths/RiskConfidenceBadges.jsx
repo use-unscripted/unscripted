@@ -17,10 +17,10 @@ function normalise(raw) {
 const RISK_CFG = {
   very_low: { label: 'Very Low Risk', bg: 'var(--success-50)', text: '#14532D', border: '#86EFAC', barColor: '#16A34A', score: 1 },
   low: { label: 'Low Risk', bg: '#DCFCE7', text: 'var(--success-700)', border: '#4ADE80', barColor: '#22C55E', score: 2 },
-  low_to_moderate: { label: 'Low–Moderate Risk', bg: '#ECFCCB', text: '#3F6212', border: '#A3E635', barColor: '#84CC16', score: 3 },
+  low_to_moderate: { label: 'Low-Moderate Risk', bg: '#ECFCCB', text: '#3F6212', border: '#A3E635', barColor: '#84CC16', score: 3 },
   moderate: { label: 'Moderate Risk', bg: 'var(--warning-50)', text: '#92400E', border: '#FCD34D', barColor: '#EAB308', score: 4 },
   medium: { label: 'Moderate Risk', bg: 'var(--warning-50)', text: '#92400E', border: '#FCD34D', barColor: '#EAB308', score: 4 },
-  moderate_to_high: { label: 'Moderate–High Risk', bg: '#FFF7ED', text: '#9A3412', border: '#FDBA74', barColor: '#F97316', score: 5 },
+  moderate_to_high: { label: 'Moderate-High Risk', bg: '#FFF7ED', text: '#9A3412', border: '#FDBA74', barColor: '#F97316', score: 5 },
   high: { label: 'High Risk', bg: '#FEF3C7', text: 'var(--warning-700)', border: '#F59E0B', barColor: '#EA580C', score: 6 },
   very_high: { label: 'Very High Risk', bg: 'var(--danger-50)', text: 'var(--danger-700)', border: '#FCA5A5', barColor: '#DC2626', score: 7 }
 };

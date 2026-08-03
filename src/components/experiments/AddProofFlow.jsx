@@ -402,10 +402,10 @@ export default function AddProofFlow({ onClose, onSaved, preselectedMission, pre
   // switch canSave off has a line here, ordered the way a student hits them.
   const blockedReason = saving || canSave ? null
     : fileBlocked ? `${fileError} Pick another, or uncheck “Upload a file”.`
-    : urlInvalid ? 'That link isn’t a valid URL — fix it or uncheck “Paste a link”.'
+    : urlInvalid ? 'That link isn’t a valid URL. Fix it, or uncheck “Paste a link”.'
     : !data.title.trim() ? 'Go back and give this a title.'
     : !selectedExpId ? 'Go back and pick an experiment.'
-    : !hasProof ? 'Check one of the three above and fill it in — that’s all we need.'
+    : !hasProof ? 'Check one of the three above and fill it in. That’s all we need.'
     : null;
 
   const titled = !!data.title.trim();
@@ -416,7 +416,7 @@ export default function AddProofFlow({ onClose, onSaved, preselectedMission, pre
   const noteCounter = hasNote
     ? 'That counts as proof.'
     : noteLen === 0
-      ? `A sentence or two — ${MIN_NOTE + 1} characters or more.`
+      ? `A sentence or two, ${MIN_NOTE + 1} characters or more.`
       : `${noteShort} more character${noteShort === 1 ? '' : 's'} and this counts as proof.`;
 
   // Has the student put anything into this at all? Drives whether Escape is
@@ -632,7 +632,7 @@ export default function AddProofFlow({ onClose, onSaved, preselectedMission, pre
               <label className="block">
                 <span className="mb-1 block text-xs font-semibold" style={{ color: 'var(--text-secondary)' }}>Mission</span>
                 <select value={selectedMissionId} onChange={e => setSelectedMissionId(e.target.value)} className={inputCls}>
-                  <option value="">No specific mission — overall experiment</option>
+                  <option value="">No specific mission (overall experiment)</option>
                   {expMissions.map(m => <option key={m.id} value={m.id}>{m.title}</option>)}
                 </select>
               </label>
@@ -666,8 +666,8 @@ export default function AddProofFlow({ onClose, onSaved, preselectedMission, pre
             <label className="block">
               <span className="mb-1 block text-xs font-semibold" style={{ color: 'var(--text-secondary)' }}>Visibility</span>
               <select name="visibility" value={data.visibility} onChange={ch} className={inputCls}>
-                <option value="private">Private — only visible to me</option>
-                <option value="public">Public — shareable</option>
+                <option value="private">Private (only visible to me)</option>
+                <option value="public">Public (shareable)</option>
               </select>
             </label>
           </div>

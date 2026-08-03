@@ -16,7 +16,7 @@
  */
 
 import { base44 } from '@/api/base44Client';
-import { unwrapLLM } from '@/lib/llm';
+import { unwrapLLM, PLAIN_PROSE_RULES } from '@/lib/llm';
 
 const MAX_RECOMMENDATIONS = 3;
 
@@ -156,24 +156,25 @@ ${JSON.stringify(events.map(forModel), null, 2)}
 
 1. Use ONLY the event_id values above. Never invent an event, a date, a room, or
    a speaker. If something is not in the JSON, it does not exist.
-2. Recommend AT MOST ${MAX_RECOMMENDATIONS}, and fewer — even zero — when the
+2. Recommend AT MOST ${MAX_RECOMMENDATIONS}, and fewer (even zero) when the
    rest are genuinely irrelevant. A padded list is worse than a short one; this
    student will physically walk across campus based on what you say.
 3. Never restate the event's own date, time, or location in your text. The app
    renders those from the calendar record itself.
 4. "fit_reason" is ONE sentence naming the specific thing this student gets that
    they cannot get from a Google search. Not "great networking opportunity."
-5. "what_to_do" is 3–4 concrete physical actions in order, each doable by a
+5. "what_to_do" is 3-4 concrete physical actions in order, each doable by a
    nervous 20-year-old who knows nobody in the room. Start before they arrive
    and end with how to leave with something. Say what to actually say out loud.
    "Network with attendees" is a failure. "Ask the person setting up the food
    table who organized this, then ask them who they'd introduce you to" is right.
-6. "questions_to_ask" is 2–3 questions written out verbatim, ready to say. Ones
-   that get a real answer from someone who does the work — not "what do you do?"
-7. "proof_to_capture" names the specific artifact that will exist afterward — a
+6. "questions_to_ask" is 2-3 questions written out verbatim, ready to say. Ones
+   that get a real answer from someone who does the work, not "what do you do?"
+7. "proof_to_capture" names the specific artifact that will exist afterward: a
    photo of the panel, a name and title written in their notes app, a LinkedIn
    connection confirmation. One that they can upload as evidence.
-8. Voice: direct, warm, no filler. Short sentences. No corporate language.`;
+8. Voice: direct, warm, no filler. Short sentences. No corporate language.
+${PLAIN_PROSE_RULES}`;
 }
 
 async function readCampusEvents(days, limit, seriesDates) {

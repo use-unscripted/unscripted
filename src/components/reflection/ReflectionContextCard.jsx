@@ -28,14 +28,14 @@ export default function ReflectionContextCard({ ctx }) {
       </h1>
       {endedEarly && experiment.pause_reason && (
         <p className="mt-2 text-sm" style={{ color: 'var(--text-secondary)' }}>
-          Ended early — your reason: “{experiment.pause_reason}”
+          Ended early. Your reason: “{experiment.pause_reason}”
         </p>
       )}
       <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
         <Stat Icon={Target} label="Missions" value={`${completedMissions.length}/${missions.length}`} />
         <Stat Icon={FileText} label="Evidence" value={proof.length} />
         <Stat Icon={Users} label="Conversations" value={outreach.length} />
-        <Stat Icon={Compass} label="Baseline clarity" value={baselineClarity ?? '—'} />
+        <Stat Icon={Compass} label="Baseline clarity" value={baselineClarity ?? 'Not set'} />
       </div>
     </section>
   );

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { ChevronDown, ChevronUp, Eye, EyeOff, Trash2, Plus, Sparkles, X, Undo2, AlertTriangle } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
-import { unwrapLLM } from '@/lib/llm';
+import { unwrapLLM, PLAIN_PROSE_RULES } from '@/lib/llm';
 import {
   newEntry, newEducationCF, newCert, newAward, newResearch,
   MONTH_OPTIONS, CF_SKILL_GROUP_LABELS, CF_SKILL_GROUP_IDS,
@@ -25,10 +25,10 @@ function BulletAIPopover({ bullet, onApply, onClose }) {
     setMode(actionId);
     setLoading(true);
     const prompts = {
-      improve: `Improve this resume bullet to be stronger and more impact-focused. Return ONLY the improved bullet text, nothing else. Original: "${bullet}"`,
-      concise: `Make this resume bullet more concise while keeping all key information. Return ONLY the revised bullet. Original: "${bullet}"`,
-      action: `Rewrite this resume bullet starting with a strong action verb. Return ONLY the revised bullet. Original: "${bullet}"`,
-      claims: `Review this resume bullet for unsupported or vague claims. List any claims that lack specifics, then suggest how to strengthen them. Original: "${bullet}"`,
+      improve: `Improve this resume bullet. Make it concrete and specific about what was done and what came of it. Return ONLY the improved bullet text, nothing else. Original: "${bullet}"${PLAIN_PROSE_RULES}`,
+      concise: `Make this resume bullet more concise while keeping all key information. Return ONLY the revised bullet. Original: "${bullet}"${PLAIN_PROSE_RULES}`,
+      action: `Rewrite this resume bullet starting with a strong action verb. Return ONLY the revised bullet. Original: "${bullet}"${PLAIN_PROSE_RULES}`,
+      claims: `Review this resume bullet for unsupported or vague claims. List any claims that lack specifics, then suggest how to strengthen them. Original: "${bullet}"${PLAIN_PROSE_RULES}`,
     };
     try {
       // Rewrites a single resume bullet. The only call with no
@@ -277,7 +277,7 @@ function EducationCFEditor({ entries, onChange }) {
               <label className="block text-[10px] font-semibold text-[color:var(--ink-500)] mb-1">Expected Grad Month *</label>
               <select value={e.gradMonth || ''} onChange={ev => set('gradMonth', ev.target.value)}
                 className="w-full rounded-lg border border-[color:var(--ink-200)] px-2 py-1.5 text-xs outline-none focus:border-[color:var(--brand-navy-900)] bg-white">
-                <option value="">— Month</option>
+                <option value="">Month</option>
                 {MONTH_OPTIONS.map(m => <option key={m.val} value={m.val}>{m.label}</option>)}
               </select>
             </div>
@@ -392,7 +392,7 @@ function EntryEditor({ entry, onChange, onRemove, onDuplicate, isActivity = fals
                 <label className="block text-[10px] font-semibold text-[color:var(--ink-500)] mb-1">Arrangement</label>
                 <select value={entry.arrangement || ''} onChange={e => set('arrangement', e.target.value)}
                   className="w-full rounded-lg border border-[color:var(--ink-200)] px-2.5 py-1.5 text-xs outline-none focus:border-[color:var(--brand-navy-900)] bg-white">
-                  <option value="">—</option>
+                  <option value="">Select</option>
                   <option value="On-site">On-site</option>
                   <option value="Hybrid">Hybrid</option>
                   <option value="Remote">Remote</option>
@@ -512,7 +512,7 @@ function CertificationsEditor({ entries, onChange }) {
                   <label className="block text-[10px] font-semibold text-[color:var(--ink-500)] mb-1">Month Earned</label>
                   <select value={c.month || ''} onChange={e => set('month', e.target.value)}
                     className="w-full rounded-lg border border-[color:var(--ink-200)] px-2 py-1.5 text-xs outline-none bg-white">
-                    <option value="">—</option>
+                    <option value="">Month</option>
                     {MONTH_OPTIONS.map(m => <option key={m.val} value={m.val}>{m.label}</option>)}
                   </select>
                 </div>
@@ -591,7 +591,7 @@ function AwardsEditor({ entries, educationHonors = '', onChange }) {
                   <label className="block text-[10px] font-semibold text-[color:var(--ink-500)] mb-1">Month</label>
                   <select value={a.month || ''} onChange={e => set('month', e.target.value)}
                     className="w-full rounded-lg border border-[color:var(--ink-200)] px-2 py-1.5 text-xs outline-none bg-white">
-                    <option value="">—</option>
+                    <option value="">Month</option>
                     {MONTH_OPTIONS.map(m => <option key={m.val} value={m.val}>{m.label}</option>)}
                   </select>
                 </div>
@@ -844,8 +844,8 @@ export default function ResumeEditor({ resume, onChange }) {
     <div>
       <div className="mb-3 rounded-[14px] p-3 text-xs" style={{ background: 'var(--ink-100)', border: '1px solid var(--border-light)' }}>
         {isCF
-          ? <><span className="font-bold" style={{ color: 'var(--brand-navy-900)' }}>Classic Finance template</span><span className="text-[color:var(--ink-500)]"> — Garamond, centered header, ATS-friendly one-column layout.</span></>
-          : <span className="text-[color:var(--ink-500)]">Certifications, Awards, and Research sections are optional — enable them using the eye icon.</span>
+          ? <><span className="font-bold" style={{ color: 'var(--brand-navy-900)' }}>Classic Finance template</span><span className="text-[color:var(--ink-500)]">: Garamond, centered header, ATS-friendly one-column layout.</span></>
+          : <span className="text-[color:var(--ink-500)]">Certifications, Awards, and Research sections are optional. Enable them using the eye icon.</span>
         }
       </div>
       {ordered.map((section, idx) => (

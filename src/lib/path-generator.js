@@ -1,7 +1,7 @@
 import { base44 } from '@/api/base44Client';
 import { loadOwnedPaths, authoritativeSet, loadOnboardingSubmission } from '@/lib/path-set';
 import { trackPilotEvent } from '@/lib/pilot-metrics';
-import { unwrapLLM } from '@/lib/llm';
+import { unwrapLLM, PLAIN_PROSE_RULES } from '@/lib/llm';
 
 const str = { type: 'string' };
 const strArr = { type: 'array', items: { type: 'string' } };
@@ -119,7 +119,7 @@ export async function generatePathTest({ force = false } = {}) {
   const hasPersonalNotes = profile.personal_notes || profile.long_term_ambitions || profile.responsibilities_constraints || profile.things_to_avoid || profile.priorities_for_recommendations;
   const personalNotesSection = hasPersonalNotes ? `
 
-Additional context provided by the student (treat as context, not verified fact — do not override structured answers above):
+Additional context provided by the student (treat as context, not verified fact; do not override structured answers above):
 ${profile.personal_notes ? `- Personal notes: ${profile.personal_notes}` : ''}
 ${profile.long_term_ambitions ? `- Long-term ambitions: ${profile.long_term_ambitions}` : ''}
 ${profile.responsibilities_constraints ? `- Responsibilities/constraints: ${profile.responsibilities_constraints}` : ''}
@@ -139,7 +139,7 @@ Student profile:
 - Year: ${profile.school_year || user.school_year || 'Unknown'}
 - Primary path to test: ${primaryPath}
 - Comparison path: ${comparisonPath || 'none specified'}
-- Future vision (5–10 years): ${profile.desired_lifestyle || 'Not specified'}${profile.vision_timeframe ? ` (timeframe: ${profile.vision_timeframe.replace('_', ' ')})` : ''}${Array.isArray(profile.vision_themes) && profile.vision_themes.length ? ` [themes: ${profile.vision_themes.join(', ')}]` : ''}
+- Future vision (5-10 years): ${profile.desired_lifestyle || 'Not specified'}${profile.vision_timeframe ? ` (timeframe: ${profile.vision_timeframe.replace('_', ' ')})` : ''}${Array.isArray(profile.vision_themes) && profile.vision_themes.length ? ` [themes: ${profile.vision_themes.join(', ')}]` : ''}
 - Biggest blocker: ${profile.biggest_blocker || 'Not specified'}
 - Fixed commitments: ${profile.commitments || 'Not specified'}
 - Available hours/week: ${availableHours}
@@ -157,7 +157,8 @@ Then generate exactly 3 experiments for the PRIMARY path: "${primaryPath}". Ever
 - Simulate or perform part of the work  
 - Build one tangible proof-of-work output
 
-Be honest about fit AND misfit. Do not claim any path is objectively correct. Fit the experiments to ${availableHours} available hours per week over 30 days. Each experiment should take no more than 8–12 hours total.`;
+Be honest about fit AND misfit. Do not claim any path is objectively correct. Fit the experiments to ${availableHours} available hours per week over 30 days. Each experiment should take no more than 8-12 hours total.
+${PLAIN_PROSE_RULES}`;
 
   // The core Discover step — the 3 paths and first 3 experiments a student sees.
   // Highest-quality tier the app can afford to wait on; see src/lib/llm.js.

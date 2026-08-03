@@ -56,8 +56,8 @@ export default function ImportApprovedEvidence({ resume, onAddEntry, onAddSkills
         <p className="text-sm font-bold text-[color:var(--surface-dark-900)]">Import approved evidence</p>
       </div>
       <p className="mb-3 text-xs text-[color:var(--ink-500)]">
-        Your resume is built from evidence you approved in the Evidence Library. Only your approved wording is imported —
-        employers, job titles, metrics, results and dates are never generated for you.
+        Your resume is built from evidence you approved in the Evidence Library. Only your approved wording is imported. Employers, job titles,
+        metrics, results and dates are never generated for you.
       </p>
 
       {items.length === 0 ? (

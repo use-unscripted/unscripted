@@ -49,7 +49,7 @@ export function activityFor({ missions = [], proofs = [], outreach = [] }, expId
     .filter(c => inWeek(c.last_contacted_date || c.date_contacted || c.created_date, weekKey))
     .forEach(c => items.push({
       key: `outreach:${c.id}`,
-      label: c.company ? `${c.name} — ${c.company}` : c.name,
+      label: c.company ? `${c.name} (${c.company})` : c.name,
       desc: 'Someone you reached out to',
     }));
 

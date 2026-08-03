@@ -6,7 +6,7 @@ import { Clock3, ArrowRight } from 'lucide-react';
 import { LogoWordmark } from '@/components/UnscriptedLogo';
 
 const fields = [
-  ['class_blocks', 'Class schedule', 'Mon/Wed 10–12, Tue/Thu 2–4...'],
+  ['class_blocks', 'Class schedule', 'Mon/Wed 10-12, Tue/Thu 2-4...'],
   ['work_blocks', 'Work schedule', 'Shifts or recurring work'],
   ['club_blocks', 'Club commitments', 'Meetings and events'],
   ['athletic_blocks', 'Athletic commitments', 'Practice, training, games'],
@@ -44,7 +44,7 @@ export default function ScheduleInput() {
             <Clock3 size={20} />
           </div>
           <h1 className="font-heading text-4xl font-bold tracking-tight text-[color:var(--surface-dark-900)]">Build around your real week.</h1>
-          <p className="mt-3 text-[color:var(--ink-700)]">Your roadmap should fit your life — not compete with it.</p>
+          <p className="mt-3 text-[color:var(--ink-700)]">Your roadmap should fit your life, not compete with it.</p>
         </div>
 
         <section className="grid gap-5 rounded-[24px] border border-[color:var(--ink-200)] bg-white p-7 shadow-sm sm:grid-cols-2 sm:p-10">

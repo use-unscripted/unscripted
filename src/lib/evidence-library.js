@@ -47,7 +47,7 @@ export function buildLibrary({ cycles = [], paths = [], experiments = [], missio
   const expMap = byId(exps);
   const misMap = byId(mis);
 
-  const cycleLabel = (c) => (c ? `${c.selected_path_name || 'Unassigned path'} — started ${fmtDate(c.started_at || c.created_date)}` : 'No cycle');
+  const cycleLabel = (c) => (c ? `${c.selected_path_name || 'Unassigned path'}, started ${fmtDate(c.started_at || c.created_date)}` : 'No cycle');
   const cycleMap = byId(cycles);
 
   const evidence = proof.filter(live).map((p) => {

@@ -143,7 +143,7 @@ export default function MissionOutreachPanel({ mission, experiment, path, contac
           {field('name', 'Name (leave blank to search by role)')}
           {field('role', 'Role')}
           {field('company', 'Company')}
-          {field('profile_url', 'LinkedIn profile URL — only if you have confirmed it')}
+          {field('profile_url', 'LinkedIn profile URL, only if you have confirmed it')}
           <label className="flex items-center gap-2 text-xs" style={{ color: 'var(--text-secondary)' }}>
             <input
               type="checkbox"

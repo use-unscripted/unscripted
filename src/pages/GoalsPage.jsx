@@ -40,7 +40,7 @@ export default function GoalsPage() {
     <main className="mx-auto max-w-5xl px-5 py-10 sm:px-8">
       <PageHeader
         title="What you're building toward."
-        description="Annual, monthly, and weekly goals — with honest feasibility assessments so your plan stays realistic."
+        description="Annual, monthly, and weekly goals, with honest feasibility assessments so your plan stays realistic."
       />
 
       {/* Feasibility summary */}
@@ -98,7 +98,7 @@ export default function GoalsPage() {
                     <p className="text-sm font-semibold text-[color:var(--surface-dark-900)]">{g.goal_text}</p>
                     {g.measurable_outcome && <p className="mt-1 text-xs text-[color:var(--ink-500)]">Outcome: {g.measurable_outcome}</p>}
                     {g.feasibility_note && g.feasibility_status === 'unrealistic' && (
-                      <p className="mt-2 text-xs font-semibold text-[color:var(--danger-700)]">⚠ {g.feasibility_note}</p>
+                      <p className="mt-2 flex items-start gap-1.5 text-xs font-semibold text-[color:var(--danger-700)]"><AlertTriangle size={13} className="mt-px shrink-0" aria-hidden="true" />{g.feasibility_note}</p>
                     )}
                     {g.estimated_hours && <p className="mt-1 text-xs text-[color:var(--ink-400)]">{g.estimated_hours}h/week estimated</p>}
                   </div>

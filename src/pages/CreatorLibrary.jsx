@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { base44 } from '@/api/base44Client';
-import { ExternalLink, Instagram, Youtube, Linkedin } from 'lucide-react';
+import { ExternalLink, Instagram, Youtube, Linkedin, BadgeCheck } from 'lucide-react';
 import PageHeader from '@/components/PageHeader';
 import { SkGrid } from '@/components/PageSkeleton';
 
@@ -17,7 +17,7 @@ const SAMPLE_PROFILES = [
     starting_point: 'Worked in private equity at Altamont Capital. Grew up as a D1 baseball player at Stanford.',
     milestones: ['Started writing on Twitter in 2020', 'Grew to 500K+ followers in 18 months', 'Launched paid newsletter Curiosity Chronicle', 'Launched SRB Ventures fund', 'Built a personal brand before launching business ventures'],
     skills: ['Writing', 'Audience building', 'Capital allocation', 'Community building'],
-    lessons: ['Start sharing your thinking publicly before you feel ready', 'Your unique background becomes leverage when combined with consistent output', 'Traditional paths create optionality — they are not the only path'],
+    lessons: ['Start sharing your thinking publicly before you feel ready', 'Your unique background becomes leverage when combined with consistent output', 'Traditional paths create optionality, but they are not the only path'],
     student_takeaways: 'Sahil shows that a traditional career can be a launchpad rather than a ceiling. He used finance skills as credibility and converted them into a platform. The key lesson: start writing now.',
     twitter_url: 'https://twitter.com/SahilBloom',
     website_url: 'https://sahilbloom.com',
@@ -71,7 +71,7 @@ export default function CreatorLibrary() {
               <p className="mt-1 text-[color:var(--ink-500)]">{p.role}{p.company ? ` · ${p.company}` : ''}</p>
               <div className="mt-2 flex flex-wrap gap-2">
                 {p.category?.map((c, i) => <span key={i} className="rounded-full px-2.5 py-1 text-xs font-semibold" style={{ background: 'var(--ink-100)', color: 'var(--brand-navy-900)' }}>{c}</span>)}
-                {p.verified && <span className="rounded-full px-2.5 py-1 text-xs font-bold" style={{ background: 'var(--success-50)', color: 'var(--success-700)' }}>✓ Verified profile</span>}
+                {p.verified && <span className="rounded-full px-2.5 py-1 text-xs font-bold" style={{ background: 'var(--success-50)', color: 'var(--success-700)' }}>Verified profile</span>}
               </div>
             </div>
             <div className="flex gap-3">
@@ -133,7 +133,7 @@ export default function CreatorLibrary() {
           distinguishable; without it they were the same page twice. */}
       <PageHeader
         title="People who took the path first."
-        description="Curated profiles of founders, creators, and professionals — with honest stories, not highlight reels. All profiles use public information and are reviewed for accuracy."
+        description="Curated profiles of founders, creators, and professionals, with honest stories rather than highlight reels. All profiles use public information and are reviewed for accuracy."
       />
 
       <div className="mb-8 flex flex-wrap gap-2">
@@ -165,7 +165,7 @@ export default function CreatorLibrary() {
                 {p.category?.slice(0, 2).map((c, ci) => (
                   <span key={ci} className="rounded-full px-2 py-0.5 text-xs font-semibold" style={{ background: 'var(--ink-100)', color: 'var(--brand-navy-900)' }}>{c}</span>
                 ))}
-                {p.verified && <span className="rounded-full px-2 py-0.5 text-xs text-[color:var(--success-700)]">✓</span>}
+                {p.verified && <BadgeCheck size={14} className="text-[color:var(--success-700)]" aria-label="Verified profile" />}
               </div>
               <h3 className="font-heading text-lg font-bold text-[color:var(--surface-dark-900)]">{p.name}</h3>
               <p className="text-xs text-[color:var(--ink-500)] mt-0.5">{p.role}{p.company ? ` · ${p.company}` : ''}</p>

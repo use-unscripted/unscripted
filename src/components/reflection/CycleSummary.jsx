@@ -8,10 +8,10 @@ import { ArrowRight } from 'lucide-react';
 const DECISION_COPY = {
   continue: { label: 'Continue', next: 'Run a deeper experiment on this path.', to: '/experiments/new' },
   adjust: { label: 'Adjust', next: 'Test a different version of this path.', to: '/experiments/new' },
-  stop_and_explore: { label: 'Stop and explore', next: 'Compare your paths again — this one is paused, not deleted.', to: '/paths' },
+  stop_and_explore: { label: 'Stop and explore', next: 'Compare your paths again. This one is paused, not deleted.', to: '/paths' },
 };
 
-const fmt = (v) => (v ? new Date(v).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—');
+const fmt = (v) => (v ? new Date(v).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Not set');
 
 function Line({ label, value }) {
   return (
@@ -50,15 +50,15 @@ export default function CycleSummary({ ctx, reflection, decision, closedCycle })
         <Line label="Missions completed" value={`${ctx.completedMissions.length} of ${ctx.missions.length}`} />
         <Line label="Proof created" value={ctx.proof.length} />
         <Line label="Professional conversations" value={ctx.outreach.length} />
-        <Line label="Clarity" value={`${baseline ?? '—'} → ${final ?? '—'}`} />
-        <Line label="Final decision" value={d?.label || '—'} />
+        <Line label="Clarity" value={`${baseline ?? 'Not set'} → ${final ?? 'Not set'}`} />
+        <Line label="Final decision" value={d?.label || 'Not set'} />
       </div>
 
       {d && (
         <div className="mt-4 rounded-[14px] p-4" style={{ background: 'var(--background-secondary)', border: '1px solid var(--border-light)' }}>
           <p className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>Next: {d.next}</p>
           <p className="mt-1 text-xs" style={{ color: 'var(--text-muted)' }}>
-            Your next cycle starts from what you just learned — clarity, path and records all carried over.
+            Your next cycle starts from what you just learned: clarity, path and records all carried over.
           </p>
           <div className="mt-3 flex flex-wrap gap-3">
             <Link

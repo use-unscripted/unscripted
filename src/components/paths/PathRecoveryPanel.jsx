@@ -39,7 +39,7 @@ export default function PathRecoveryPanel({ variant = 'missing', existingCount =
           <p className="mt-2 text-sm leading-6" style={{ color: '#78350F' }}>
             {incomplete
               ? `Only ${existingCount} of 3 paths were saved when your recommendations were generated. The ${existingCount} you have are shown below and will not be changed or duplicated.`
-              : 'Your onboarding answers are safe — we just could not find the path recommendations that were generated from them. Nothing has been deleted.'}
+              : 'Your onboarding answers are safe. We just could not find the path recommendations that were generated from them. Nothing has been deleted.'}
           </p>
 
           {error && <p className="mt-3 text-sm font-semibold" style={{ color: 'var(--danger-700)' }}>{error}</p>}

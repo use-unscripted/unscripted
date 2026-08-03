@@ -1,5 +1,5 @@
 import { base44 } from '@/api/base44Client';
-import { unwrapLLM } from '@/lib/llm';
+import { unwrapLLM, PLAIN_PROSE_RULES } from '@/lib/llm';
 
 /**
  * Auto-assess risk_level and confidence_level for a path using the user's profile.
@@ -41,7 +41,8 @@ Assess:
 - risk_level: How risky is this path FOR THIS STUDENT given their profile, financial tolerance, time constraints, and skill gaps? (low/medium/high)
 - confidence_level: How strongly does this student's profile align with success on this path? (low/medium/high)
 
-Be honest — not every path is medium risk/confidence.`;
+Be honest. Not every path is medium risk/confidence.
+${PLAIN_PROSE_RULES}`;
 
   // Two enum labels plus reasoning the app never reads back — a classification,
   // not a piece of writing. Cheap tier; see src/lib/llm.js.

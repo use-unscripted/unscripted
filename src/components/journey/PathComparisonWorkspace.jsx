@@ -78,7 +78,7 @@ export default function PathComparisonWorkspace({ paths, onSelect, busyId, error
         Compare your three paths
       </h2>
       <p className="mt-1 text-sm leading-6" style={{ color: 'var(--text-secondary)' }}>
-        Same questions asked of each one. None of these is a guaranteed fit — you pick the one worth
+        Same questions asked of each one. None of these is a guaranteed fit. You pick the one worth
         testing first, and the test tells you the rest.
       </p>
 
@@ -88,7 +88,7 @@ export default function PathComparisonWorkspace({ paths, onSelect, busyId, error
           <div>
             <p className="text-sm font-bold" style={{ color: '#991B1B' }}>We couldn't set that path up.</p>
             <p className="mt-1 text-sm" style={{ color: 'var(--danger-700)' }}>
-              Your answers and your choice are safe — nothing was half-created. Try again.
+              Your answers and your choice are safe. Nothing was half-created. Try again.
             </p>
             <button type="button" onClick={onRetry} className="mt-2 inline-flex items-center gap-1.5 text-sm font-bold" style={{ color: '#991B1B' }}>
               <RefreshCw size={13} /> Try again

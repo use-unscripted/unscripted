@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { generatePathTest } from '@/lib/path-generator';
 import { CompassIcon } from '@/components/UnscriptedLogo';
-import { ArrowLeft, RefreshCw } from 'lucide-react';
+import { ArrowLeft, RefreshCw, AlertTriangle } from 'lucide-react';
 
 const LABELS = [
   'Analyzing your priorities and available time...',
@@ -44,7 +44,7 @@ export default function Generating() {
       <main className="grid min-h-screen place-items-center px-6 text-center text-white" style={{ background: 'var(--surface-dark-700)' }}>
         <div className="max-w-md">
           <div className="mx-auto mb-6 flex h-14 w-14 items-center justify-center rounded-full"           style={{ background: 'rgba(31,58,95,0.25)', border: '1px solid rgba(31,58,95,0.4)' }}>
-            <span className="text-2xl">⚠</span>
+            <AlertTriangle size={24} aria-hidden="true" />
           </div>
           <h1 className="font-heading text-2xl font-bold">Generation failed</h1>
           <p className="mt-3 text-sm text-[color:var(--ink-400)] leading-6">{error}</p>
@@ -75,7 +75,7 @@ export default function Generating() {
         <div className="mx-auto mt-8 h-1.5 w-64 overflow-hidden rounded-full" style={{ background: 'rgba(255,255,255,0.08)' }}>
           <div className="h-full animate-pulse rounded-full" style={{ width: `${Math.round((labelIdx + 1) / LABELS.length * 100)}%`, background: 'var(--brand-navy-900)', transition: 'width 0.5s ease' }} />
         </div>
-        <p className="mt-6 text-xs text-[color:var(--ink-500)]">This usually takes 20–30 seconds.</p>
+        <p className="mt-6 text-xs text-[color:var(--ink-500)]">This usually takes 20-30 seconds.</p>
       </div>
     </main>
   );

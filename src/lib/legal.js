@@ -55,7 +55,7 @@ export const SUBPROCESSORS = [
   },
   {
     name: 'Google',
-    role: 'Only if you choose "Continue with Google" — Google confirms your identity and shares your name, email address and profile picture with us.',
+    role: 'Only if you choose "Continue with Google". Google confirms your identity and shares your name, email address and profile picture with us.',
   },
   {
     name: 'AI model providers (OpenAI, Google, Anthropic)',

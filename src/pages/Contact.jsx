@@ -31,7 +31,7 @@ export default function Contact() {
           {CONTACT_EMAIL}
         </a>
         <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-          Usually a few days. If a week passes with no reply, send it again — it did not reach us.
+          Usually a few days. If a week passes with no reply, send it again. It did not reach us.
         </p>
       </div>
 

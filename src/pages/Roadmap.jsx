@@ -47,7 +47,7 @@ export default function Roadmap() {
       <PageHeader
         eyebrow="Personal roadmap"
         title={r.title}
-        description="Specific actions, sequenced around what matters now — not a list of everything you could do."
+        description="Specific actions, sequenced around what matters now, not a list of everything you could do."
         action={
           <Link to="/calendar"
             className="flex items-center gap-2 rounded-[10px] px-5 py-3 text-sm font-semibold text-white transition hover:-translate-y-px"

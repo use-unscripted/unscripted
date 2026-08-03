@@ -19,7 +19,7 @@ const OPTIONS = [
     key: 'adjust',
     Icon: RefreshCw,
     label: 'Adjust',
-    sub: 'Same direction, different test — another role, environment, specialty or version of it.',
+    sub: 'Same direction, different test: another role, environment, specialty or version of it.',
   },
   {
     key: 'stop_and_explore',
@@ -67,7 +67,7 @@ export default function DecisionStep({ ctx, reflection, onDecided }) {
       onDecided(decision, result);
     } catch (err) {
       console.error('[reflection] decision failed:', err?.message || err);
-      setError("We couldn't record that decision. Your reflection is saved — try again.");
+      setError("We couldn't record that decision. Your reflection is saved. Try again.");
       setBusy(null);
     }
   };
@@ -76,8 +76,7 @@ export default function DecisionStep({ ctx, reflection, onDecided }) {
     <section id="decision" className="rounded-[20px] bg-white p-5 sm:p-6" style={{ border: '1px solid var(--border-light)' }}>
       <h2 className="font-heading text-lg font-bold" style={{ color: 'var(--text-primary)' }}>One decision closes this cycle</h2>
       <p className="mt-1 text-sm leading-6" style={{ color: 'var(--text-secondary)' }}>
-        You tested {ctx.path?.path_name || ctx.experiment.path_name || 'this path'} and wrote it up. All three answers are progress —
-        nothing you built goes away.
+        You tested {ctx.path?.path_name || ctx.experiment.path_name || 'this path'} and wrote it up. All three answers are progress. Nothing you built goes away.
       </p>
 
       {error && (

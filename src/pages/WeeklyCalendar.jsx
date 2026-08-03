@@ -378,7 +378,7 @@ export default function WeeklyCalendar() {
                               <div className="flex items-center gap-2 mt-0.5">
                                 {t.time && <span className="text-xs text-[color:var(--ink-500)]"><Clock size={10} className="inline mr-0.5" />{t.time}</span>}
                                 {t.task_type && <span className="text-xs capitalize text-[color:var(--ink-400)]">{t.task_type}</span>}
-                                {conflict && <span className="text-xs font-semibold text-[color:var(--danger-700)]">⚠ time conflict</span>}
+                                {conflict && <span className="inline-flex items-center gap-1 text-xs font-semibold text-[color:var(--danger-700)]"><AlertTriangle size={12} aria-hidden="true" />Time conflict</span>}
                               </div>
                             </div>
                             <div className="flex gap-1 shrink-0">
@@ -438,7 +438,7 @@ export default function WeeklyCalendar() {
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-semibold text-[color:var(--surface-dark-900)]">{b.title || b.block_type.replace(/_/g, ' ')}</p>
                             <p className="text-xs text-[color:var(--ink-500)]">
-                              {b.start_time && b.end_time ? `${b.start_time} – ${b.end_time}` : 'No time set'}
+                              {b.start_time && b.end_time ? `${b.start_time} to ${b.end_time}` : 'No time set'}
                               {b.energy_level && ` · ${b.energy_level} energy`}
                             </p>
                           </div>

@@ -10,6 +10,8 @@
  * as untyped objects — so this persists with no entity schema change.
  */
 
+import { PLAIN_PROSE_RULES } from '@/lib/llm';
+
 export const ARTIFACT_KINDS = [
   'email',
   'message',
@@ -65,7 +67,7 @@ function campusEventSection(event) {
 
 ${facts}
 
-The student's first rep is LOCKING IN this event — registering or putting it on
+The student's first rep is LOCKING IN this event: registering or putting it on
 their calendar. Not preparing for it, not researching it. Committing to it.
 
 Rules 4 and 5 are replaced by these for step 1:
@@ -81,7 +83,7 @@ E2. NEVER write the event's date, time, day of week, room, or building into any
 
 E3. Step 2 is what they do IN THE ROOM. Its artifact is a question_list of
     questions written out verbatim, ready to say out loud to a stranger who does
-    this work. Not "prepare thoughtful questions" — write the questions.
+    this work. Not "prepare thoughtful questions". Write the questions.
 
 E4. At least one later step converts the event into a relationship: the
     follow-up message to someone they met, written in full, with a blank only
@@ -119,7 +121,7 @@ You are not describing the email. You are WRITING the email.
    of what to write.
 
 2. Artifacts are ~90% complete. The ONLY blanks are facts you genuinely cannot
-   know — the person's name, their firm, a detail from their background. Mark
+   know: the person's name, their firm, a detail from their background. Mark
    each blank as [SQUARE_BRACKET_TOKEN] and list it in "blanks" with a short
    hint. Never leave a blank for something you could write yourself.
    "[WRITE A COMPELLING OPENING]" is a failure. Write the opening.
@@ -129,20 +131,20 @@ You are not describing the email. You are WRITING the email.
    Every token you use must appear in that artifact's "blanks" array.
 
 3a. For facts about the STUDENT, you must use exactly these tokens and no
-    variants — they are auto-filled from the profile before the student ever
+    variants. They are auto-filled from the profile before the student ever
     sees the guide:
       [YOUR_NAME]        their full name
       [YOUR_UNIVERSITY]  their college
       [YOUR_MAJOR]       their major
       [YOUR_YEAR]        their school year (e.g. Senior)
       [YOUR_GRAD_YEAR]   their graduation year
-    Everything else — the contact's name, their firm, a specific deal — stays a
+    Everything else (the contact's name, their firm, a specific deal) stays a
     normal blank the student fills in.
 
 3c. Only email and message artifacts have a "subject". Never set one on a
     question_list, outline, checklist, or search_query.
 
-3d. The instruction line must not restate the step's "description" — the student
+3d. The instruction line must not restate the step's "description". The student
     already read it one line above. Say only what they do with the payload, or
     leave it empty.
 
@@ -157,19 +159,19 @@ You are not describing the email. You are WRITING the email.
    in their hand.
 
 5. Never assume the student already has a person, company, or target. If the
-   experiment needs one, finding it is the first rep — and it carries an
+   experiment needs one, finding it is the first rep, and it carries an
    artifact too: literal copy-pasteable search strings (LinkedIn search syntax,
    alumni-directory filters), not "search for analysts".
 
 6. Order steps so the student's own writing effort comes LAST, after momentum
    exists. Front-load steps where they only have to send, click, or ask.
 
-7. "done_when" is an objectively checkable fact — "the email is in your sent
+7. "done_when" is an objectively checkable fact: "the email is in your sent
    folder", "a calendar invite exists". Never a feeling like "you understand X".
 
 8. "proof_capture" names the specific file or screenshot that ALREADY EXISTS as
-   a result of doing the step — the sent email, the calendar invite, the notes
-   doc — and says to add it on ${PROOF_DESTINATION}. Name the actual artifact,
+   a result of doing the step (the sent email, the calendar invite, the notes
+   doc) and says to add it on ${PROOF_DESTINATION}. Name the actual artifact,
    not a chore: "a screenshot of the sent email" is good, "document your work"
    is a failure. The top-level "proof_requirement" follows the same rule.
 
@@ -181,14 +183,15 @@ You are not describing the email. You are WRITING the email.
 
 10. Format email and message bodies as a real email, using \\n\\n between the
     greeting, each paragraph, and the sign-off. One unbroken block of text is a
-    failure — it has to be pasteable into Gmail as-is.
+    failure. It has to be pasteable into Gmail as-is.
 
 11. Voice: a competent 20-year-old writing to a stranger. Warm, direct, no
     filler, no "I hope this email finds you well", no corporate throat-clearing.
     Short sentences. Sendable as-is once blanks are filled.
 
 Write it as if the student will send your words verbatim to a real professional
-today — because they will.`;
+today, because they will.
+${PLAIN_PROSE_RULES}`;
 
   return variationInstruction
     ? `${base}\n\nVariation instruction: ${variationInstruction}`
@@ -503,7 +506,7 @@ export function validateGuide(raw, { campusEvent = null } = {}) {
     // and only the shape-level instruction is actionable. The index stays on for
     // the console, where it points at a step someone can actually go look at.
     if (typeof step.title !== 'string' || !step.title.trim()) {
-      errors.push(`${label}: every step needs a title — an untitled step renders as an empty row the student cannot act on.`);
+      errors.push(`${label}: every step needs a title. An untitled step renders as an empty row the student cannot act on.`);
     }
 
     const minutes = coerceMinutes(step.estimated_minutes ?? step.estimated_time);
@@ -550,10 +553,10 @@ export function validateGuide(raw, { campusEvent = null } = {}) {
       const hasItems = artifact.items.length > 0;
 
       if (KINDS_NEEDING_BODY.includes(artifact.kind) && !hasBody) {
-        errors.push(`${label}: every "${artifact.kind}" artifact needs a full body — write the message itself, not a description of it.`);
+        errors.push(`${label}: every "${artifact.kind}" artifact needs a full body. Write the message itself, not a description of it.`);
       }
       if (KINDS_NEEDING_ITEMS.includes(artifact.kind) && !hasItems) {
-        errors.push(`${label}: every "${artifact.kind}" artifact needs its items written out — the payload was missing.`);
+        errors.push(`${label}: every "${artifact.kind}" artifact needs its items written out. The payload was missing.`);
       }
 
       // Every token used must be declared. This is the defect that ships an
@@ -599,7 +602,7 @@ export function validateGuide(raw, { campusEvent = null } = {}) {
   // minute first rep would burn a retry on output that is still usable.
   const firstRep = guide.steps[0];
   if (firstRep.estimated_minutes > 15) {
-    errors.push(`First rep is ${firstRep.estimated_minutes} minutes — it must be a ≤10 minute action a student can finish before closing the tab.`);
+    errors.push(`First rep is ${firstRep.estimated_minutes} minutes. It must be a ≤10 minute action a student can finish before closing the tab.`);
   } else if (firstRep.estimated_minutes > 10) {
     warnings.push(`First rep is ${firstRep.estimated_minutes} minutes, over the 10-minute target.`);
   }
@@ -626,7 +629,7 @@ export function validateGuide(raw, { campusEvent = null } = {}) {
   // when and where, so the prose must not compete with it.
   if (campusEvent) {
     for (const offender of findHardcodedTiming(guide)) {
-      errors.push(`${offender}. Never write the date, time, or room — the app renders those from the campus calendar. Say "the event" or "before you go".`);
+      errors.push(`${offender}. Never write the date, time, or room. The app renders those from the campus calendar. Say "the event" or "before you go".`);
     }
   }
 

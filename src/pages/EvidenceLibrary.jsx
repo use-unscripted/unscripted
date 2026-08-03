@@ -95,7 +95,7 @@ export default function EvidenceLibrary() {
                 <div className="rounded-[24px] border border-dashed border-[color:var(--ink-200)] py-16 text-center">
                   <FileText size={30} className="mx-auto mb-3 text-[color:var(--ink-200)]" />
                   <p className="text-sm font-semibold text-[color:var(--surface-dark-900)]">No evidence yet.</p>
-                  <p className="mt-1 text-xs text-[color:var(--ink-500)]">Complete a mission inside your experiment and submit proof — it lands here.</p>
+                  <p className="mt-1 text-xs text-[color:var(--ink-500)]">Complete a mission inside your experiment and submit proof. It lands here.</p>
                 </div>
               ) : shown.length === 0 ? (
                 <div className="rounded-[24px] border border-dashed border-[color:var(--ink-200)] py-16 text-center">

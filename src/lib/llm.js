@@ -45,6 +45,42 @@
  */
 
 /**
+ * House style for every prompt that produces prose a student reads.
+ *
+ * Left to itself a model writes in the register everyone now recognises as
+ * machine-written: em dashes in every other sentence, "it's not just X, it's Y",
+ * three-item lists whether or not there are three things, and a closing line
+ * about the exciting road ahead. On this product that register is expensive
+ * twice over. Students paste these words into cold emails to real
+ * professionals, and an obviously-generated email is a dead lead. And the guide
+ * is our stated differentiator, so it cannot read like the free output of the
+ * chatbot the student already has.
+ *
+ * Append this to any prompt whose output reaches a person. Skip it on prompts
+ * that only return structured data with no sentences in it.
+ */
+export const PLAIN_PROSE_RULES = `
+
+## How to write
+
+Write like a competent person, not like an AI assistant.
+
+- Never use an em dash (—) or an en dash (–). Use a period, a comma, a colon, or
+  brackets instead. A hyphen between numbers in a range is fine.
+- Straight quotes and apostrophes only. No curly ones. No emoji.
+- Start with the point. No scene-setting windup, no "In today's world", no
+  restating the question before answering it.
+- Do not use: delve, navigate (figurative), leverage (verb), robust, vibrant,
+  crucial, pivotal, seamless, testament, tapestry, landscape (figurative),
+  underscore, showcase, foster, elevate, unlock, empower, journey (figurative).
+- Do not write "not just X, but Y", "not only X but also Y", or any variation.
+- Do not pad a list to three items to sound complete. Say however many there are.
+- Do not end on encouragement, a summary, or a line about what comes next. Stop
+  at the last concrete thing you have to say.
+- Prefer "is" and "has" to "serves as", "stands as", "represents" and "boasts".
+- Vary sentence length. Do not stack short dramatic fragments.`;
+
+/**
  * Return the payload the caller's schema described, whether or not the model
  * wrapped it in `{ response: ... }`.
  *

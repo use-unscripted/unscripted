@@ -228,13 +228,13 @@ export default function CampusEventPicker({ profile, pathName, selected, onSelec
     <div className="mb-5">
       <p className="flex items-center gap-1.5 text-sm font-semibold text-[color:var(--ink-700)]">
         <Sparkles size={14} style={{ color: 'var(--brand-gold-500, var(--brand-gold-500))' }} aria-hidden="true" />
-        {unranked ? 'Nothing matched — but these are real' : 'Anchor this to something real'}
+        {unranked ? 'Nothing matched, but these are real' : 'Anchor this to something real'}
       </p>
       <p className="mb-3 mt-0.5 text-xs text-[color:var(--ink-500)]">
         {unranked
           ? <>Nothing on {college || 'your campus'}&apos;s calendar lines up with this experiment.
               These are happening anyway, and a date you didn&apos;t set still beats one you did.</>
-          : <>Happening at {college}. Pick one and it becomes your first step — with a date you
+          : <>Happening at {college}. Pick one and it becomes your first step, with a date you
               didn&apos;t have to invent.</>}
       </p>
 
@@ -304,7 +304,7 @@ export default function CampusEventPicker({ profile, pathName, selected, onSelec
           color: !selected ? 'var(--brand-navy-700)' : 'var(--ink-500)',
         }}
       >
-        Skip — build the guide without an event
+        Skip and build the guide without an event
       </button>
 
       <WrongCalendarButton college={college} />
@@ -398,7 +398,7 @@ function NoCollegeState({ profile, disabled, onSaved }) {
   return (
     <EmptyPanel icon={School} title="Which school do you go to?">
       <p className="mt-1 text-xs leading-relaxed text-[color:var(--ink-500)]">
-        Tell us and we&apos;ll pull real events off your campus calendar — so the first step of
+        Tell us and we&apos;ll pull real events off your campus calendar, so the first step of
         your guide has a date somebody else already set.
       </p>
 
@@ -504,7 +504,7 @@ function NoFeedState({ college, disabled, onResolved }) {
   return (
     <EmptyPanel icon={CalendarSearch} title={`No calendar we can read for ${college || 'your school'}`}>
       <p className="mt-1 text-xs leading-relaxed text-[color:var(--ink-500)]">
-        Your school&apos;s main events page usually isn&apos;t one we can read — but your{' '}
+        Your school&apos;s main events page usually isn&apos;t one we can read, but your{' '}
         <strong className="font-semibold text-[color:var(--ink-700)]">club portal</strong> normally is. It&apos;s
         where clubs post their own events, and it&apos;s where the career ones actually live.
       </p>
@@ -544,7 +544,7 @@ function NoFeedState({ college, disabled, onResolved }) {
         </p>
       ) : (
         <p id="campus-feed-hint" className="mt-2 text-xs text-[color:var(--ink-400)]">
-          Engage, CampusGroups, Presence, BeInvolved — whatever yours calls &ldquo;get
+          Engage, CampusGroups, Presence, BeInvolved: whatever yours calls &ldquo;get
           involved.&rdquo; Log in there and copy the address.
         </p>
       )}
@@ -596,7 +596,7 @@ function WrongCalendarButton({ college }) {
   if (state === 'sent') {
     return (
       <p className="mt-3 text-xs text-[color:var(--ink-500)]">
-        Thanks — we&apos;ll look at {college || 'your school'}&apos;s calendar.
+        Thanks. We&apos;ll look at {college || 'your school'}&apos;s calendar.
       </p>
     );
   }
@@ -669,7 +669,7 @@ function EmptyCalendarState({ college }) {
     <EmptyPanel icon={CalendarSearch} title="Nothing on your campus calendar right now">
       <p className="mt-1 text-xs leading-relaxed text-[color:var(--ink-500)]">
         We can read {college || 'your school'}&apos;s calendar and it has nothing posted for the
-        next six weeks. That usually means a break — worth checking again in a week.
+        next six weeks. That usually means a break. Worth checking again in a week.
       </p>
       <SearchYourSchoolLink college={college} label="Check the school's page yourself" />
       {/* The state where a wrong calendar is most obvious: their campus is busy

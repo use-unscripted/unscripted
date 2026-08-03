@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
-import { unwrapLLM } from '@/lib/llm';
+import { unwrapLLM, PLAIN_PROSE_RULES } from '@/lib/llm';
 import { ArrowLeft, ArrowRight, CheckCircle, Loader2, AlertCircle } from 'lucide-react';
 import { LogoWordmark } from '@/components/UnscriptedLogo';
 import { Sk, SkCards } from '@/components/PageSkeleton';
@@ -19,7 +19,7 @@ function getExperimentOptions(pathName) {
     return [
       { type: 'Interview a professional', title: 'Interview an investment banking analyst', objective: 'Understand daily work, recruiting, and lifestyle from someone currently in the role', deliverable: 'Written notes on 10+ questions answered about deal process, hours, and career trajectory', estimated_hours: 4 },
       { type: 'Complete a virtual simulation', title: 'Complete a virtual IB deal simulation', objective: 'Experience the analytical work of investment banking in a low-stakes environment', deliverable: 'Completed simulation certificate or summary of key takeaways', estimated_hours: 8 },
-      { type: 'Build a portfolio sample', title: 'Build a basic company valuation or deal case study', objective: 'Demonstrate analytical capability and understand what IB work actually involves', deliverable: 'A simple DCF model or M&A case study memo (2–4 pages)', estimated_hours: 10 },
+      { type: 'Build a portfolio sample', title: 'Build a basic company valuation or deal case study', objective: 'Demonstrate analytical capability and understand what IB work actually involves', deliverable: 'A simple DCF model or M&A case study memo (2-4 pages)', estimated_hours: 10 },
     ];
   }
 
@@ -27,7 +27,7 @@ function getExperimentOptions(pathName) {
     return [
       { type: 'Interview a professional', title: 'Interview a startup operator or early-stage founder', objective: 'Understand what operating inside an early-stage company actually looks like day to day', deliverable: 'Notes on role, challenges, what they wish they knew, and advice for breaking in', estimated_hours: 3 },
       { type: 'Complete a virtual simulation', title: 'Complete a startup operating problem case study', objective: 'Test your ability to think through real operational problems under constraints', deliverable: 'Written analysis of a startup operations case (growth, process, or team problem)', estimated_hours: 6 },
-      { type: 'Build a portfolio sample', title: 'Build a short market or growth analysis project', objective: 'Produce tangible proof that you can do the analytical and strategic work of an operator', deliverable: 'A 1–2 page market sizing or growth strategy memo for a startup of your choosing', estimated_hours: 8 },
+      { type: 'Build a portfolio sample', title: 'Build a short market or growth analysis project', objective: 'Produce tangible proof that you can do the analytical and strategic work of an operator', deliverable: 'A 1-2 page market sizing or growth strategy memo for a startup of your choosing', estimated_hours: 8 },
     ];
   }
 
@@ -67,7 +67,7 @@ function getExperimentOptions(pathName) {
     return [
       { type: 'Interview a professional', title: 'Interview a law student, attorney, or legal professional', objective: 'Understand the reality of law school, legal work, and career options beyond being a litigator', deliverable: 'Notes on day-to-day work, lifestyle, debt, recruiting, and their honest advice', estimated_hours: 3 },
       { type: 'Complete a virtual simulation', title: 'Complete a legal writing or moot court simulation', objective: 'Test your interest in legal reasoning and written argument', deliverable: 'A completed brief, memo, or simulation participation certificate', estimated_hours: 6 },
-      { type: 'Build a portfolio sample', title: 'Write a legal analysis memo on a real case or policy question', objective: 'Produce tangible proof of your ability to research and argue a legal position', deliverable: 'A 2–3 page structured legal memo', estimated_hours: 7 },
+      { type: 'Build a portfolio sample', title: 'Write a legal analysis memo on a real case or policy question', objective: 'Produce tangible proof of your ability to research and argue a legal position', deliverable: 'A 2-3 page structured legal memo', estimated_hours: 7 },
     ];
   }
 
@@ -482,10 +482,10 @@ EXPERIMENT: ${experimentData.title}
 OBJECTIVE: ${experimentData.objective}
 DELIVERABLE: ${experimentData.deliverable}
 
-The guide must be specific to "${experimentData.path_name}" — not generic networking advice. Include:
+The guide must be specific to "${experimentData.path_name}", not generic networking advice. Include:
 1. Mission objective (1 sentence)
 2. Why this experiment helps test ${experimentData.path_name} specifically
-3. Exact step-by-step instructions (8–12 steps, each actionable)
+3. Exact step-by-step instructions (8-12 steps, each actionable)
 4. Where to find the right people or resources for ${experimentData.path_name}
 5. A specific outreach email template if applicable (tailored to ${experimentData.path_name})
 6. Specific questions to ask or things to look for
@@ -496,7 +496,8 @@ The guide must be specific to "${experimentData.path_name}" — not generic netw
 11. Common mistakes specific to ${experimentData.path_name}
 12. What to do next after completing this experiment
 
-Be specific. If the experiment involves outreach, include field-specific details. If it involves building something, specify exactly what to build.`,
+Be specific. If the experiment involves outreach, include field-specific details. If it involves building something, specify exactly what to build.
+${PLAIN_PROSE_RULES}`,
         response_json_schema: {
           type: 'object',
           properties: {
@@ -532,7 +533,7 @@ Be specific. If the experiment involves outreach, include field-specific details
       setMissionGuide(guide);
       setStep('success');
     } catch (e) {
-      setGenError('Mission Guide generation failed. Your experiment draft was saved — you can retry from the Missions page.');
+      setGenError('Mission Guide generation failed. Your experiment draft was saved. You can retry from the Missions page.');
       await base44.entities.Experiments.update(saved.id, { status: 'planned', mission_guide_status: 'not_generated' });
     }
   };

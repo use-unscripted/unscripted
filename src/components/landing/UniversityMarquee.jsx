@@ -380,7 +380,7 @@ export default function UniversityMarquee() {
 
       <style>{`
         /* The separator dots used to pulse on a 4.2s infinite loop. The strip
-           they sit in is already scrolling — a second, slower loop inside a
+           they sit in is already scrolling. A second, slower loop inside a
            moving element is motion nobody can read. */
         /* The separator between wordmarks is pure decoration, and it is
            deliberately built so that it reads that way to a machine too.
@@ -392,7 +392,7 @@ export default function UniversityMarquee() {
            It used to be a "·" glyph in gold-500, which measures 1.95:1 on
            white and so scored as a text-contrast failure. Darkening it cannot
            fix that: at the 0.28 trough of the pulse, even PURE BLACK only
-           reaches 1.99:1 — the pulse would have to bottom out at 0.417 opacity
+           reaches 1.99:1. The pulse would have to bottom out at 0.417 opacity
            before any color could clear 3:1, and that is the wall's motion,
            which is not this file's to renegotiate for a scanner's benefit.
 
@@ -400,7 +400,7 @@ export default function UniversityMarquee() {
            always was visually, and marked aria-hidden so a screen reader stops
            announcing a middle dot after all 57 schools. Pure decoration is
            exempt from both 1.4.3 and 1.4.11. If you ever give it meaning, it
-           stops being exempt — give it contrast instead. */
+           stops being exempt. Give it contrast instead. */
         .um-sep {
           display: inline-block;
           width: 3px;
@@ -416,10 +416,10 @@ export default function UniversityMarquee() {
           font-size: calc(var(--um-size) * var(--um-scale, 1));
           transition: color 220ms ease;
         }
-        /* Only in the one-ink version — tinted names already carry their own
+        /* Only in the one-ink version. Tinted names already carry their own
            identity, and forcing them all navy on hover would erase it. */
         .um-wall.um-mono .um-mark:hover { color: var(--brand-navy-900); }
-        /* A phone shows four or five of these at most — shrink the set so it's
+        /* A phone shows four or five of these at most, so shrink the set until it's
            four or five whole names rather than two clipped ones. */
         @media (max-width: 640px) {
           .um-mark { --um-scale: 0.82; }

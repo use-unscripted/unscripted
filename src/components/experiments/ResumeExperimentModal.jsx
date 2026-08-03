@@ -3,7 +3,7 @@ import { X, Play, CheckCircle2, Clock, Calendar } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 
 function fmtDate(d) {
-  if (!d) return '—';
+  if (!d) return 'Not set';
   return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 

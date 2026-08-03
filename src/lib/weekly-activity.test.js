@@ -26,7 +26,7 @@ const mission = (over = {}) => ({
 
 const labels = (data, week) => activityFor(data, EXP, week).map(i => i.label);
 
-describe('activityFor — which week a completed mission belongs to', () => {
+describe('activityFor: which week a completed mission belongs to', () => {
   // Defect 1. updated_date is bumped by ANY later edit, so it is not a record of
   // when anything was completed.
   it('does not let a later edit move a mission into the edit\'s week', () => {
@@ -96,7 +96,7 @@ describe('activityFor — which week a completed mission belongs to', () => {
   });
 });
 
-describe('activityFor — proof and outreach', () => {
+describe('activityFor: proof and outreach', () => {
   it('files a Sunday-evening proof under the week that is ending', () => {
     const p = { id: 'p1', title: 'Call notes', experiment_id: EXP, created_date: SUNDAY_NIGHT };
     expect(labels({ proofs: [p] }, WEEK)).toEqual(['Call notes']);
@@ -112,7 +112,7 @@ describe('activityFor — proof and outreach', () => {
 
   it('files a Sunday-evening contact under the week that is ending', () => {
     const c = { id: 'c1', name: 'Ada', company: 'Acme', experiment_id: EXP, last_contacted_date: SUNDAY_NIGHT };
-    expect(labels({ outreach: [c] }, WEEK)).toEqual(['Ada — Acme']);
+    expect(labels({ outreach: [c] }, WEEK)).toEqual(['Ada (Acme)']);
     expect(labels({ outreach: [c] }, NEXT_WEEK)).toEqual([]);
   });
 
@@ -122,7 +122,7 @@ describe('activityFor — proof and outreach', () => {
   });
 });
 
-describe('activityFor — nothing to show', () => {
+describe('activityFor: nothing to show', () => {
   it('returns nothing without an experiment or a week', () => {
     expect(activityFor({ missions: [mission()] }, '', WEEK)).toEqual([]);
     expect(activityFor({ missions: [mission()] }, EXP, '')).toEqual([]);

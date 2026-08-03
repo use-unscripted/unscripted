@@ -49,7 +49,7 @@ export default function CompleteMissionModal({ mission, experiment, path, onClos
       onCompleted(result);
     } catch (err) {
       console.error('[mission] completion failed at stage: save_proof', err?.message);
-      setError('We couldn’t save that. Nothing was half-saved — press Save again.');
+      setError('We couldn’t save that. Nothing was half-saved. Press Save again.');
       setSaving(false);
     }
   };

@@ -210,13 +210,13 @@ export default function GoalIntake() {
                 <label className="block">
                   <span className="text-sm font-semibold text-[color:var(--ink-700)]">High-energy times</span>
                   <input type="text" value={highEnergyTimes} onChange={e => setHighEnergyTimes(e.target.value)}
-                    placeholder="e.g. 7–10am, after gym"
+                    placeholder="e.g. 7-10am, after gym"
                     className="mt-2 w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-sm outline-none focus:border-[color:var(--brand-navy-900)]" />
                 </label>
                 <label className="block">
                   <span className="text-sm font-semibold text-[color:var(--ink-700)]">Low-energy times</span>
                   <input type="text" value={lowEnergyTimes} onChange={e => setLowEnergyTimes(e.target.value)}
-                    placeholder="e.g. 2–4pm after lunch"
+                    placeholder="e.g. 2-4pm after lunch"
                     className="mt-2 w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-sm outline-none focus:border-[color:var(--brand-navy-900)]" />
                 </label>
               </div>

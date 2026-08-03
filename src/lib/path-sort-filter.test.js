@@ -26,7 +26,7 @@ function path(overrides = {}) {
 const names = (paths) => sortPaths(paths, 'best_fit').map((p) => p.id);
 
 describe('readinessScore', () => {
-  it('returns the stored score on the real 0–10 scale', () => {
+  it('returns the stored score on the real 0-10 scale', () => {
     expect(readinessScore(path({ readiness_score: 9 }))).toBe(9);
     expect(readinessScore(path({ readiness_score: 5 }))).toBe(5);
   });
@@ -41,7 +41,7 @@ describe('readinessScore', () => {
     expect(readinessScore({})).toBe(UNSCORED_READINESS);
   });
 
-  it('ranks the unscored sentinel below every value the 0–10 scale allows', () => {
+  it('ranks the unscored sentinel below every value the 0-10 scale allows', () => {
     for (let score = 0; score <= 20; score += 1) {
       expect(UNSCORED_READINESS).toBeLessThan(score / 2);
     }
@@ -55,7 +55,7 @@ describe('readinessScore', () => {
   });
 });
 
-describe('sortPaths — best_fit', () => {
+describe('sortPaths: best_fit', () => {
   it('orders by confidence descending before anything else', () => {
     const paths = [
       path({ id: 'low', confidence_level: 'low' }),

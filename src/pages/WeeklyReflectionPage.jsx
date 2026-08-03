@@ -26,7 +26,7 @@
  */
 import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import { base44 } from '@/api/base44Client';
-import { unwrapLLM } from '@/lib/llm';
+import { unwrapLLM, PLAIN_PROSE_RULES } from '@/lib/llm';
 import {
   ArrowRight, CheckCircle, Plus, Search, X, ExternalLink, Trash2,
   ChevronLeft, ChevronRight, Loader2, AlertCircle, Save, Sparkles,
@@ -82,7 +82,7 @@ const bigInputCls = 'w-full rounded-2xl border border-[color:var(--ink-200)] bg-
 const WEEK_OPTIONS = [
   {
     value: 'unlogged', bucket: 'completed', text: 'Did work this week but did not log it',
-    label: "I did things — I just didn't log them", desc: 'Common. It still counts.',
+    label: "I did things, I just didn't log them", desc: 'Common. It still counts.',
   },
   {
     value: 'stuck', bucket: 'avoided', text: 'Started something and got stuck',
@@ -545,7 +545,7 @@ function ReflectionFlow({ experiments, missions, proofs, outreach, initialData, 
   const save = async () => {
     if (submittingRef.current) return;
     if (!expId) { setError('Pick the experiment this is about first.'); return; }
-    if (!hasContent) { setError('Answer one thing — any one — and this will save.'); return; }
+    if (!hasContent) { setError('Answer any one thing and this will save.'); return; }
     // The same rule the button enforces, so nothing is ever enabled and then
     // rejected, or rejected and then saved.
     if (!touched) { setError('Nothing has changed yet. Tap or type one thing and this will save.'); return; }
@@ -583,7 +583,7 @@ function ReflectionFlow({ experiments, missions, proofs, outreach, initialData, 
       onSaved(saved);
     } catch (err) {
       console.error('[WeeklyReflectionPage] Save failed:', err?.message || err);
-      setError("We couldn't save this. Your answers are still here — try again.");
+      setError("We couldn't save this. Your answers are still here. Try again.");
       setSaving(false);
       submittingRef.current = false;
     }
@@ -605,7 +605,7 @@ function ReflectionFlow({ experiments, missions, proofs, outreach, initialData, 
         prompt: [
           'You are Unscripted. A college student is testing a career path with a real-world experiment.',
           'Using only their answers below, write: 1) a direct summary of what this week actually taught them,',
-          '2) path-fit adjustments — what looks like a better or worse fit and why, 3) one change to their workload,',
+          '2) path-fit adjustments: what looks like a better or worse fit and why, 3) one change to their workload,',
           '4) a specific suggestion for next week. Be honest and concrete. Never shame them for a slow week.',
           '',
           `Path: ${selectedExp?.path_name || 'not recorded'}`,
@@ -620,6 +620,7 @@ function ReflectionFlow({ experiments, missions, proofs, outreach, initialData, 
           `How the path fits, in their words: ${pathFeedback || 'not recorded'}`,
           `What they learned: ${lessons.trim() || 'not recorded'}`,
           `What they want to change: ${nextChanges.trim() || 'not recorded'}`,
+          PLAIN_PROSE_RULES,
         ].join('\n'),
         response_json_schema: {
           type: 'object',
@@ -635,7 +636,7 @@ function ReflectionFlow({ experiments, missions, proofs, outreach, initialData, 
       // Without this the promise rejected unhandled, the spinner stopped, and
       // nothing on screen said why.
       console.error('[WeeklyReflectionPage] Generate failed:', err?.message || err);
-      setGenError("Couldn't generate insights just now. Your answers are safe — save them and try again later.");
+      setGenError("Couldn't generate insights just now. Your answers are safe. Save them and try again later.");
     } finally {
       setGenerating(false);
     }
@@ -904,7 +905,7 @@ function ReflectionFlow({ experiments, missions, proofs, outreach, initialData, 
               Mission this relates to <span className="font-normal">· optional</span>
             </span>
             <select value={missionId} onChange={e => setMissionId(e.target.value)} className={inputCls}>
-              <option value="">No specific mission — the whole experiment</option>
+              <option value="">No specific mission (the whole experiment)</option>
               {expMissions.map(m => <option key={m.id} value={m.id}>{m.title}</option>)}
             </select>
           </label>
@@ -954,7 +955,7 @@ function ReflectionFlow({ experiments, missions, proofs, outreach, initialData, 
   // switch canSave off has a line here.
   const blockedReason = canSave || saving || stepKey === 'experiment' ? null
     : !expId ? 'Go back and pick an experiment.'
-      : !hasContent ? 'Answer any one thing above — that is enough to save.'
+      : !hasContent ? 'Answer any one thing above. That is enough to save.'
         : isEdit ? 'Nothing changed yet. Edit one answer and this will save.'
           : 'Confirm or change one thing above and this will save.';
 
@@ -1312,7 +1313,7 @@ export default function WeeklyReflectionPage() {
 
                         {linkedExp ? (
                           <p className="mt-0.5 text-xs font-semibold" style={{ color: 'var(--brand-navy-700)' }}>
-                            {linkedExp.title}{linkedExp.path_name ? ` — ${linkedExp.path_name}` : ''}
+                            {linkedExp.title}{linkedExp.path_name ? ` (${linkedExp.path_name})` : ''}
                           </p>
                         ) : (
                           <p className="mt-0.5 text-xs text-[color:var(--ink-400)]">Experiment not linked.</p>

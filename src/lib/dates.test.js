@@ -11,7 +11,7 @@ describe('the test timezone', () => {
   });
 });
 
-describe('entityDate — Base44 timestamps', () => {
+describe('entityDate: Base44 timestamps', () => {
   // Base44's list()/get() return "2026-08-01T04:23:19.626000" (no Z) while
   // create() returns "2026-08-01T04:23:19.626Z" for the same row. Both are UTC.
   it('reads a Z-less timestamp as UTC, not local', () => {

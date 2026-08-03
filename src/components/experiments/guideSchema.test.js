@@ -40,7 +40,7 @@ function guideWith(field, value) {
 
 const timingErrors = result => result.errors.filter(e => e.includes('writes the event timing'));
 
-describe('validateGuide — campus event timing guard', () => {
+describe('validateGuide: campus event timing guard', () => {
   const HARDCODED = ['5:00 PM', '5pm', '5 p.m.', 'Oct 14', 'October 14'];
 
   for (const timing of HARDCODED) {
@@ -83,7 +83,7 @@ describe('validateGuide — campus event timing guard', () => {
         guideWith('artifact', {
           kind: 'email',
           subject: `Following up on the ${timing} panel`,
-          body: 'Thanks for the conversation — I would love to keep it going.',
+          body: 'Thanks for the conversation. I would love to keep it going.',
         }),
         { campusEvent: CAMPUS_EVENT }
       );
@@ -146,7 +146,7 @@ describe('validateGuide — campus event timing guard', () => {
     // produces constantly.
     'Decide 3 people to talk to.',
     'Separate 2 lists: people you know and people you do not.',
-    'Maybe 2 of them reply — that is enough.',
+    'Maybe 2 of them reply, that is enough.',
     'Novel 6 is on the shelf behind the panel.',
   ];
 
@@ -176,7 +176,7 @@ describe('validateGuide — campus event timing guard', () => {
   });
 });
 
-describe('validateGuide — shape', () => {
+describe('validateGuide: shape', () => {
   it('rejects a non-object', () => {
     for (const raw of [null, undefined, 'a guide', 42]) {
       const result = validateGuide(raw);
@@ -219,7 +219,7 @@ describe('validateGuide — shape', () => {
   });
 });
 
-describe('validateGuide — minute coercion', () => {
+describe('validateGuide: minute coercion', () => {
   const minutesOf = step => validateGuide(validGuide({ steps: [step] })).guide.steps[0].estimated_minutes;
 
   it('accepts a number', () => {
@@ -265,7 +265,7 @@ describe('validateGuide — minute coercion', () => {
   });
 });
 
-describe('validateGuide — first rep', () => {
+describe('validateGuide: first rep', () => {
   it('assigns the first rep to step 1 when the model marked none', () => {
     const result = validateGuide(
       validGuide({ steps: [validStep({ is_first_rep: false }), validStep({ is_first_rep: false })] })
@@ -290,7 +290,7 @@ describe('validateGuide — first rep', () => {
 
   // Two tiers on purpose: 11–15 is still usable, so rejecting it would spend a
   // retry on output the student could have acted on.
-  it('warns but passes when the first rep is 11–15 minutes', () => {
+  it('warns but passes when the first rep is 11-15 minutes', () => {
     const result = validateGuide(validGuide({ steps: [validStep({ estimated_minutes: 12 })] }));
     expect(result.ok).toBe(true);
     expect(result.warnings).toContain('First rep is 12 minutes, over the 10-minute target.');
@@ -303,7 +303,7 @@ describe('validateGuide — first rep', () => {
   });
 });
 
-describe('validateGuide — artifacts', () => {
+describe('validateGuide: artifacts', () => {
   const withArtifact = artifact => validateGuide(guideWith('artifact', artifact));
 
   it('rejects an email that describes the message instead of writing it', () => {
@@ -402,7 +402,7 @@ describe('validateGuide — artifacts', () => {
   });
 });
 
-describe('validateGuide — proof destination guard', () => {
+describe('validateGuide: proof destination guard', () => {
   // The app has no inbox. A guide naming one sends a student's only evidence
   // into a black hole.
   it('rejects an email address in the top-level proof requirement', () => {

@@ -14,7 +14,7 @@ const STATUS_CFG = {
 };
 
 function fmtDate(d) {
-  if (!d) return '—';
+  if (!d) return 'Not set';
   return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 

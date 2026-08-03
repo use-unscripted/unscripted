@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
 import { X, Loader2, ArrowRight, ChevronRight } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
-import { unwrapLLM } from '@/lib/llm';
+import { unwrapLLM, PLAIN_PROSE_RULES } from '@/lib/llm';
 
 const inputCls = 'w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-sm text-[color:var(--surface-dark-900)] placeholder-[color:var(--ink-400)] outline-none focus:border-[color:var(--brand-navy-900)]';
 
@@ -48,7 +48,8 @@ export default function CreatePathModal({ existingRecommendations = [], onClose,
 - Relevant skills/experience: ${survey.relevant_skills}
 - Concerns: ${survey.concerns}
 
-Generate a structured path profile for them to save and test. Be realistic and honest.`,
+Generate a structured path profile for them to save and test. Be realistic and honest.
+${PLAIN_PROSE_RULES}`,
         response_json_schema: {
           type: 'object',
           properties: {
@@ -217,7 +218,7 @@ Generate a structured path profile for them to save and test. Be realistic and h
               { name: 'what_draws_you', label: 'What draws you to this path?', placeholder: 'What specifically interests, excites, or fascinates you about it?' },
               { name: 'day_to_day_hope', label: 'What day-to-day reality do you hope for?', placeholder: 'Work environment, tasks, pace, autonomy, team size...' },
               { name: 'relevant_skills', label: 'What relevant skills or experience do you have?', placeholder: 'Coursework, projects, internships, side work...' },
-              { name: 'concerns', label: 'What concerns you about this path?', placeholder: 'Honestly — what worries you or makes you hesitant?' },
+              { name: 'concerns', label: 'What concerns you about this path?', placeholder: 'Honestly, what worries you or makes you hesitant?' },
             ].map(q => (
               <div key={q.name}>
                 <label className="block text-sm font-semibold text-[color:var(--ink-700)] mb-1.5">{q.label}</label>

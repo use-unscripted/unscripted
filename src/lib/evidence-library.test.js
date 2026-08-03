@@ -12,7 +12,7 @@ const item = (date) => ({
 
 const ids = (items, over) => filterEvidence(items, { ...DEFAULT_FILTERS, ...over }).map(i => i.id);
 
-describe('filterEvidence — date range', () => {
+describe('filterEvidence: date range', () => {
   it('keeps work logged in the evening of the last day in the range', () => {
     // 21:00 Friday 31 July in New York = 2026-08-01T01:00:00Z.
     const evening = item('2026-08-01T01:00:00.000000');

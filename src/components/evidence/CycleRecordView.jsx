@@ -59,7 +59,7 @@ export default function CycleRecordView({ record, onBack, onReview }) {
           {outreach.map((c) => (
             <div key={c.id} className="text-sm text-[color:var(--ink-700)]">
               <span className="font-semibold text-[color:var(--surface-dark-900)]">{c.name}</span>
-              {c.role || c.company ? <span className="text-[color:var(--ink-500)]"> — {[c.role, c.company].filter(Boolean).join(', ')}</span> : null}
+              {c.role || c.company ? <span className="text-[color:var(--ink-500)]"> · {[c.role, c.company].filter(Boolean).join(', ')}</span> : null}
               <span className="ml-2 text-xs text-[color:var(--ink-400)]">{(c.response_status || '').replace(/_/g, ' ')}</span>
             </div>
           ))}

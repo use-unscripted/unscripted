@@ -7,7 +7,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CompassIcon } from '@/components/UnscriptedLogo';
-import { ArrowLeft, RefreshCw } from 'lucide-react';
+import { ArrowLeft, RefreshCw, AlertTriangle } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { loadDraft, clearDraft, isDraftComplete } from '@/lib/guest-draft';
 import { generatePathTest } from '@/lib/path-generator';
@@ -155,7 +155,7 @@ export default function ClaimOnboarding() {
         <div className="max-w-md">
           <div className="mx-auto mb-6 flex h-14 w-14 items-center justify-center rounded-full"
             style={{ background: 'rgba(31,58,95,0.25)', border: '1px solid rgba(31,58,95,0.4)' }}>
-            <span className="text-2xl">⚠</span>
+            <AlertTriangle size={24} aria-hidden="true" />
           </div>
           <h1 className="font-heading text-2xl font-bold">
             {errorType === 'generate' ? 'Generation failed' : 'Setup failed'}
@@ -191,7 +191,7 @@ export default function ClaimOnboarding() {
           <div className="h-full animate-pulse rounded-full"
             style={{ width: `${Math.round((phaseIdx + 1) / PHASES.length * 100)}%`, background: 'var(--brand-navy-900)', transition: 'width 0.5s ease' }} />
         </div>
-        <p className="mt-6 text-xs text-[color:var(--ink-500)]">This usually takes 20–30 seconds.</p>
+        <p className="mt-6 text-xs text-[color:var(--ink-500)]">This usually takes 20-30 seconds.</p>
       </div>
     </main>
   );

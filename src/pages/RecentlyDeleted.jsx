@@ -26,7 +26,7 @@ function daysRemaining(purgeAt) {
 }
 
 function fmtDate(d) {
-  if (!d) return '—';
+  if (!d) return 'Not set';
   return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
@@ -163,7 +163,7 @@ function DeletedItemCard({ item, tab, experimentsMap, missionsMap, onRestore, on
             {exp ? (
               <p className="text-[10px] text-[color:var(--ink-500)]">Experiment: <span className="font-semibold">{exp.title}</span></p>
             ) : item.experiment_id ? (
-              <p className="text-[10px] text-[color:var(--ink-400)] italic">Experiment no longer exists — can restore as unlinked</p>
+              <p className="text-[10px] text-[color:var(--ink-400)] italic">Experiment no longer exists, can restore as unlinked</p>
             ) : null}
             {exp?.path_name && <p className="text-[10px] text-[color:var(--ink-400)]">Path: {exp.path_name}</p>}
             {mission && <p className="text-[10px] text-[color:var(--ink-400)]">Mission: {mission.title}</p>}

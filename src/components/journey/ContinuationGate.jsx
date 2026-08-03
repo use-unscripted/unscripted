@@ -40,7 +40,7 @@ export default function ContinuationGate() {
       setSaved(row);
     } catch (err) {
       console.error('[pilot] continuation interest failed:', err?.message || err);
-      setError("We couldn't record that. Nothing was lost — try again.");
+      setError("We couldn't record that. Nothing was lost. Try again.");
     } finally {
       setBusy(false);
     }
@@ -51,7 +51,7 @@ export default function ContinuationGate() {
       <section className="rounded-[20px] bg-white p-6 text-center sm:p-8" style={{ border: '1px solid var(--border-light)' }}>
         <CheckCircle2 size={22} className="mx-auto" style={{ color: 'var(--success-700)' }} />
         <h2 className="font-heading mt-3 text-xl font-bold" style={{ color: 'var(--text-primary)' }}>
-          Thanks — that&apos;s recorded.
+          Thanks, that&apos;s recorded.
         </h2>
         <p className="mx-auto mt-2 max-w-md text-sm leading-6" style={{ color: 'var(--text-secondary)' }}>
           {saved.wants_continued_access
@@ -72,7 +72,7 @@ export default function ContinuationGate() {
         {CONTINUATION_MESSAGE}
       </h2>
       <p className="mt-2 text-sm leading-6" style={{ color: 'var(--text-secondary)' }}>
-        Your first cycle is complete and everything you produced stays yours. Continued access is not open yet — tell us
+        Your first cycle is complete and everything you produced stays yours. Continued access is not open yet. Tell us
         whether you want it and which option fits, and nothing is charged.
       </p>
 

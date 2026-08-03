@@ -55,7 +55,7 @@ export default function ResumeApprovalModal({ item, onClose, onSaved }) {
         <div className="my-4 flex gap-2 rounded-xl p-3" style={{ background: 'var(--background-tertiary)' }}>
           <ShieldCheck size={15} className="mt-0.5 shrink-0" style={{ color: 'var(--brand-navy-700)' }} />
           <p className="text-xs leading-5 text-[color:var(--ink-700)]">
-            These details come only from what you submitted. Nothing is invented — no employers, job titles, metrics,
+            These details come only from what you submitted. Nothing is invented: no employers, job titles, metrics,
             results, certifications or dates are added for you. Edit anything that is not accurate, then approve.
           </p>
         </div>
@@ -72,7 +72,7 @@ export default function ResumeApprovalModal({ item, onClose, onSaved }) {
           <label className="block">
             <span className="mb-1 block text-xs font-bold text-[color:var(--ink-700)]">Accomplishment bullet</span>
             <textarea value={form.approved_bullet} onChange={set('approved_bullet')} rows={3}
-              placeholder="One line in your own words — only what you did." className={field} />
+              placeholder="One line in your own words, only what you did." className={field} />
           </label>
           <label className="block">
             <span className="mb-1 block text-xs font-bold text-[color:var(--ink-700)]">Skills demonstrated</span>
@@ -100,7 +100,7 @@ export default function ResumeApprovalModal({ item, onClose, onSaved }) {
             Keep off my resume
           </button>
         </div>
-        <p className="mt-3 text-center text-[11px] text-[color:var(--ink-400)]">Approving does not add anything to a resume — you choose when to import it.</p>
+        <p className="mt-3 text-center text-[11px] text-[color:var(--ink-400)]">Approving does not add anything to a resume. You choose when to import it.</p>
       </div>
     </div>
   );

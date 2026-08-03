@@ -14,7 +14,7 @@ const EMPTY = {
 };
 
 const QUESTIONS = [
-  { key: 'lessons', label: 'What did you learn about the work?', required: true, rows: 4, hint: 'The work itself — not how the experiment went.', placeholder: 'Be specific about what the day-to-day actually involves.' },
+  { key: 'lessons', label: 'What did you learn about the work?', required: true, rows: 4, hint: 'The work itself, not how the experiment went.', placeholder: 'Be specific about what the day-to-day actually involves.' },
   { key: 'surprises', label: 'What surprised you?', rows: 3, placeholder: 'Anything that did not match what you expected going in.' },
   { key: 'enjoyed', label: 'Which activities did you enjoy?', rows: 3, placeholder: 'The parts you would happily do again.' },
   { key: 'disliked', label: 'Which activities did you dislike?', rows: 3, placeholder: 'The parts you avoided or dreaded.' },
@@ -66,7 +66,7 @@ export default function ReflectionForm({ ctx, onSaved, onSubmit }) {
   }, [answers, experimentId, ctx.existing]);
 
   const blocked = !answers.lessons.trim()
-    ? 'Answer the first question — what you learned about the work.'
+    ? 'Answer the first question: what you learned about the work.'
     : !answers.interest
       ? 'Say whether you are more or less interested in this path.'
       : answers.clarity == null
@@ -92,7 +92,7 @@ export default function ReflectionForm({ ctx, onSaved, onSubmit }) {
     } catch (err) {
       console.error('[reflection] save failed:', err?.message || err);
       // State is untouched, so every answer is still on screen.
-      setError("We couldn't save this. Your answers are still here — try again.");
+      setError("We couldn't save this. Your answers are still here. Try again.");
       setSaving(false);
     }
   };
@@ -104,7 +104,7 @@ export default function ReflectionForm({ ctx, onSaved, onSubmit }) {
       </h2>
       <p className="mt-1 text-sm" style={{ color: 'var(--text-secondary)' }}>
         {ctx.existing
-          ? 'Editing updates the reflection you already saved — it never adds a second one.'
+          ? 'Editing updates the reflection you already saved. It never adds a second one.'
           : 'Nine questions. The first, your interest and your clarity score are required; the rest help you decide.'}
       </p>
 

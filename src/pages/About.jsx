@@ -21,9 +21,9 @@ export default function About() {
           </P>
           <P>
             Most people choose a direction from a course catalog, a handful of conversations and
-            a guess, then find out whether it fits after the tuition is spent. The information
-            that would settle the question — what the work is actually like, and whether you want
-            to do it every day — arrives years late. Unscripted exists to move that forward.
+            a guess, then find out whether it fits after the tuition is spent. What would settle the
+            question is knowing what the work is actually like, and whether you want to do it
+            every day. That arrives years late. Unscripted exists to move it forward.
           </P>
         </>
       }

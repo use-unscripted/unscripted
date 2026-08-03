@@ -279,7 +279,7 @@ export default function Hero() {
 
           <Reveal delay={620} y={16}>
             <p className="mt-6 max-w-[52ch] text-lg leading-8 font-body" style={{ color: 'var(--text-secondary)' }}>
-              Pick a career you’re weighing up. You get 30 days of real assignments — who to email, what to say, what to bring back. By the end you’ll know whether it fits, because you’ll have tried it.
+              Pick a career you’re weighing up. You get 30 days of real assignments: who to email, what to say, what to bring back. By the end you’ll know whether it fits, because you’ll have tried it.
             </p>
           </Reveal>
 

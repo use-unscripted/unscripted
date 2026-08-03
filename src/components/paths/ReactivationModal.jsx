@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
 import { X, Loader2, ArrowRight } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
-import { unwrapLLM } from '@/lib/llm';
+import { unwrapLLM, PLAIN_PROSE_RULES } from '@/lib/llm';
 
 const inputCls = 'w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-sm text-[color:var(--surface-dark-900)] placeholder-[color:var(--ink-400)] outline-none focus:border-[color:var(--brand-navy-900)] resize-none';
 
@@ -11,8 +11,8 @@ const SURVEY_QUESTIONS = [
   { name: 'weekly_hours_changed', label: 'Has your available weekly time changed?', placeholder: 'How many hours per week can you realistically commit?' },
   { name: 'new_skills', label: 'Have you developed any new skills?', placeholder: 'Technical skills, soft skills, tools, frameworks...' },
   { name: 'relevant_experience', label: 'Have you completed relevant classes, projects, internships, or conversations?', placeholder: 'Describe what is most relevant to this path.' },
-  { name: 'what_interests_now', label: 'What now interests you most about this path?', placeholder: 'Be specific — what draws you back?' },
-  { name: 'concerns_about_restarting', label: 'What concerns you about restarting it?', placeholder: 'Honest concerns — time, skill gaps, competition...' },
+  { name: 'what_interests_now', label: 'What now interests you most about this path?', placeholder: 'Be specific. What draws you back?' },
+  { name: 'concerns_about_restarting', label: 'What concerns you about restarting it?', placeholder: 'Honest concerns: time, skill gaps, competition...' },
 ];
 
 export default function ReactivationModal({ path, onClose, onReactivated }) {
@@ -63,7 +63,8 @@ Generate:
 2. An updated 30-day reactivation plan (4-6 specific action items tailored to their answers)
 3. What to continue vs revise vs retire from their previous work
 
-Be concrete, practical, and encouraging without being vague.`,
+Be concrete and practical. Do not be vague, and do not pad it with encouragement.
+${PLAIN_PROSE_RULES}`,
         response_json_schema: {
           type: 'object',
           properties: {
@@ -220,13 +221,13 @@ Be concrete, practical, and encouraging without being vague.`,
                   onClick={() => setMakePrimary(true)}
                   className="flex-1 rounded-xl border p-3 text-sm font-semibold transition"
                   style={makePrimary ? { borderColor: 'var(--brand-navy-900)', background: 'var(--ink-100)', color: 'var(--brand-navy-900)' } : { borderColor: 'var(--ink-200)', background: 'white', color: 'var(--ink-700)' }}>
-                  Yes — make it Primary Focus
+                  Yes, make it Primary Focus
                 </button>
                 <button
                   onClick={() => setMakePrimary(false)}
                   className="flex-1 rounded-xl border p-3 text-sm font-semibold transition"
                   style={!makePrimary ? { borderColor: 'var(--brand-navy-900)', background: 'var(--ink-100)', color: 'var(--brand-navy-900)' } : { borderColor: 'var(--ink-200)', background: 'white', color: 'var(--ink-700)' }}>
-                  No — keep current primary
+                  No, keep current primary
                 </button>
               </div>
             </div>

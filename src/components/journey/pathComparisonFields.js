@@ -22,7 +22,7 @@ export const COMPARISON_FIELDS = [
     get: p => {
       const level = p.confidence_level ? `${p.confidence_level[0].toUpperCase()}${p.confidence_level.slice(1)}` : '';
       const why = p.confidence_explanation || '';
-      return [level, why].filter(Boolean).join(' — ');
+      return [level, why].filter(Boolean).join(': ');
     },
   },
 ];

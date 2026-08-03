@@ -177,7 +177,7 @@ export default function Privacy() {
           is used, and the period for which each is retained, are as follows.
         </Sub>
         <DataTable
-          caption="Table 1 — Categories of Personal Information collected in the preceding twelve (12) months."
+          caption="Table 1. Categories of Personal Information collected in the preceding twelve (12) months."
           columns={['Category', 'Examples', 'Purpose of collection', 'Retention']}
           rows={CATEGORY_TABLE}
         />

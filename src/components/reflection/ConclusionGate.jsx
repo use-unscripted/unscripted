@@ -19,7 +19,7 @@ export default function ConclusionGate({ availability, experiment, onEndEarly })
     try {
       await onEndEarly(reason.trim());
     } catch {
-      setError("We couldn't end the experiment just now. Your reason is still here — try again.");
+      setError("We couldn't end the experiment just now. Your reason is still here. Try again.");
       setBusy(false);
     }
   };
@@ -65,7 +65,7 @@ export default function ConclusionGate({ availability, experiment, onEndEarly })
             value={reason}
             onChange={e => setReason(e.target.value)}
             autoFocus
-            placeholder="e.g. two weeks of outreach with no replies — I've learned what I needed to."
+            placeholder="e.g. two weeks of outreach with no replies. I've learned what I needed to."
             className="mt-2 w-full rounded-[10px] border bg-white px-3 py-2.5 text-sm outline-none"
             style={{ borderColor: 'var(--border-light)' }}
           />

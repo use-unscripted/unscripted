@@ -1,19 +1,20 @@
 import { useState } from 'react';
 import { base44 } from '@/api/base44Client';
-import { unwrapLLM } from '@/lib/llm';
+import { unwrapLLM, PLAIN_PROSE_RULES } from '@/lib/llm';
+import { Hammer, Rocket, Dumbbell, Bot, Zap, Newspaper, TrendingUp, Target } from 'lucide-react';
 import PageHeader from '@/components/PageHeader';
 import BlueprintCard from '@/components/blueprints/BlueprintCard';
 import BlueprintDetail from '@/components/blueprints/BlueprintDetail';
 
 const BLUEPRINTS = [
-  { id: 'builder-creator', label: 'Builder-Creator Path', icon: '🔨', summary: 'Document your learning, build an audience, and turn online trust into career or startup opportunities.' },
-  { id: 'student-founder', label: 'Student Founder Path', icon: '🚀', summary: 'Validate and launch a startup while still in school using your network and academic access.' },
-  { id: 'fitness-discipline', label: 'Fitness & Discipline Creator', icon: '💪', summary: 'Turn physical discipline into a personal brand, coaching business, or content career.' },
-  { id: 'ai-tool-builder', label: 'AI Tool Builder Path', icon: '🤖', summary: 'Build and ship AI-powered tools and products to create proof of work and real revenue.' },
-  { id: 'brand-to-startup', label: 'Personal Brand to Startup', icon: '⚡', summary: 'Grow an audience first, then launch a product or service your followers already want.' },
-  { id: 'newsletter-media', label: 'Newsletter / Media Builder', icon: '📰', summary: 'Build a niche media property—newsletter, podcast, or YouTube—that becomes a platform and business.' },
-  { id: 'finance-business', label: 'Finance & Business Creator', icon: '📈', summary: 'Use finance and business knowledge to build credibility, a brand, and career leverage online.' },
-  { id: 'high-agency-student', label: 'High-Agency Student Path', icon: '🎯', summary: 'Maximize every year of college by stacking experiences, skills, and proof of work deliberately.' },
+  { id: 'builder-creator', label: 'Builder-Creator Path', Icon: Hammer, summary: 'Document your learning, build an audience, and turn online trust into career or startup opportunities.' },
+  { id: 'student-founder', label: 'Student Founder Path', Icon: Rocket, summary: 'Validate and launch a startup while still in school using your network and academic access.' },
+  { id: 'fitness-discipline', label: 'Fitness & Discipline Creator', Icon: Dumbbell, summary: 'Turn physical discipline into a personal brand, coaching business, or content career.' },
+  { id: 'ai-tool-builder', label: 'AI Tool Builder Path', Icon: Bot, summary: 'Build and ship AI-powered tools and products to create proof of work and real revenue.' },
+  { id: 'brand-to-startup', label: 'Personal Brand to Startup', Icon: Zap, summary: 'Grow an audience first, then launch a product or service your followers already want.' },
+  { id: 'newsletter-media', label: 'Newsletter / Media Builder', Icon: Newspaper, summary: 'Build a niche media property (newsletter, podcast, or YouTube) that becomes a platform and business.' },
+  { id: 'finance-business', label: 'Finance & Business Creator', Icon: TrendingUp, summary: 'Use finance and business knowledge to build credibility, a brand, and career leverage online.' },
+  { id: 'high-agency-student', label: 'High-Agency Student Path', Icon: Target, summary: 'Maximize every year of college by stacking experiences, skills, and proof of work deliberately.' },
 ];
 
 export default function BlueprintLibrary() {
@@ -29,7 +30,8 @@ export default function BlueprintLibrary() {
     // in and nothing is personalised. Cheap tier; see src/lib/llm.js.
     const result = unwrapLLM(await base44.integrations.Core.InvokeLLM({
       model: 'gemini_3_flash',
-      prompt: `You are Unscripted, a life-design and execution platform for ambitious college students. Generate a detailed, actionable playbook for the "${bp.label}" path. Be specific and practical—no generic advice. Focus on what a college student can actually do today. Include honest tradeoffs.`,
+      prompt: `You are Unscripted, a life-design and execution platform for ambitious college students. Generate a detailed, actionable playbook for the "${bp.label}" path. Be specific and practical. No generic advice. Focus on what a college student can actually do today. Include honest tradeoffs.
+${PLAIN_PROSE_RULES}`,
       response_json_schema: {
         type: 'object',
         properties: {

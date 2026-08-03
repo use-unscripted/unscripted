@@ -50,7 +50,7 @@ export default function BlueprintDetail({ bp, detail, loading, onBack }) {
         <ArrowLeft size={16} /> All blueprints
       </button>
       <div className="mb-8 flex items-center gap-4">
-        <span className="text-5xl">{bp.icon}</span>
+        <bp.Icon size={44} strokeWidth={1.5} aria-hidden="true" className="text-[color:var(--info-600)]" />
         <div>
           <p className="text-xs font-bold uppercase tracking-[.14em] text-[color:var(--info-600)]">Creator / Founder Blueprint</p>
           <h1 className="font-heading text-3xl font-bold text-[color:var(--surface-dark-800)]">{bp.label}</h1>

@@ -30,7 +30,7 @@ function DateRange({ start, end, current }) {
   const s = fmtNumeric(start);
   const e = current ? 'Present' : fmtNumeric(end);
   if (!s && !e) return null;
-  return <>{s}{s && e ? ' \u2013 ' : ''}{e}</>;
+  return <>{s}{s && e ? ' - ' : ''}{e}</>;
 }
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -192,7 +192,7 @@ function CFEntry({ entry, isActivity = false }) {
   const bullets = (entry.bullets || []).filter(b => b && b.trim());
   const startDate = entry.startDate ? fmtNumeric(entry.startDate) : '';
   const endDate = entry.current ? 'Present' : (entry.endDate ? fmtNumeric(entry.endDate) : '');
-  const dateStr = [startDate, endDate].filter(Boolean).join(' \u2013 ');
+  const dateStr = [startDate, endDate].filter(Boolean).join(' - ');
 
   const locParts = [entry.location, entry.arrangement ? `(${entry.arrangement})` : ''].filter(Boolean);
   const locStr = locParts.join(' ');
@@ -305,7 +305,7 @@ function CFResearch({ entries }) {
       {visible.map((r, i) => {
         const startStr = fmtMonthYear(r.startMonth, r.startYear);
         const endStr = r.current ? 'Present' : fmtMonthYear(r.endMonth, r.endYear);
-        const dateStr = [startStr, endStr].filter(Boolean).join(' \u2013 ');
+        const dateStr = [startStr, endStr].filter(Boolean).join(' - ');
         const bullets = (r.bullets || []).filter(b => b && b.trim());
         return (
           <div key={r.id || i} style={{ marginBottom: '6pt' }}>
@@ -507,7 +507,7 @@ function ListSection({ section, entries, accentColor }) {
                 {entry.org && <span className="text-xs font-semibold text-gray-700">{entry.org}</span>}
               </div>
               <span className="text-xs text-gray-600 whitespace-nowrap">
-                {fmt(entry.startDate)}{(entry.startDate || entry.current || entry.endDate) ? ' – ' : ''}{entry.current ? 'Present' : fmt(entry.endDate)}
+                {fmt(entry.startDate)}{(entry.startDate || entry.current || entry.endDate) ? ' - ' : ''}{entry.current ? 'Present' : fmt(entry.endDate)}
               </span>
             </div>
             {entry.location && <p className="text-[10px] text-gray-500 italic">{entry.location}</p>}
@@ -617,7 +617,7 @@ function ResearchSection({ section, entries, accentColor }) {
       {visible.map((r, i) => {
         const startStr = r.startMonth && r.startYear ? `${MONTHS_SHORT[parseInt(r.startMonth,10)-1]} ${r.startYear}` : r.startYear || '';
         const endStr = r.current ? 'Present' : (r.endMonth && r.endYear ? `${MONTHS_SHORT[parseInt(r.endMonth,10)-1]} ${r.endYear}` : r.endYear || '');
-        const dateStr = [startStr, endStr].filter(Boolean).join(' – ');
+        const dateStr = [startStr, endStr].filter(Boolean).join(' - ');
         return (
           <div key={i} className="mb-2 text-xs">
             <div className="flex justify-between items-baseline gap-2">

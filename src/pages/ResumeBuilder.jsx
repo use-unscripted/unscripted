@@ -118,7 +118,7 @@ function VersionHistory({ versions, currentResume, onRestore, onClose }) {
                 <div>
                   <p className="text-xs font-semibold text-[color:var(--surface-dark-900)]">
                     Version {v.version_number}
-                    {v.version_note && <span className="ml-2 text-[color:var(--ink-500)] font-normal">— {v.version_note}</span>}
+                    {v.version_note && <span className="ml-2 text-[color:var(--ink-500)] font-normal">({v.version_note})</span>}
                   </p>
                   <p className="text-[10px] text-[color:var(--ink-400)]">{fmtDate(v.created_date)}</p>
                 </div>

@@ -152,10 +152,10 @@ export default function PilotDashboard() {
                         <td className="py-2 pr-3" style={{ color: 'var(--text-primary)' }}>{row.label}</td>
                         <td className="py-2 text-right" style={{ color: 'var(--text-primary)' }}>{row.count}</td>
                         <td className="py-2 text-right" style={{ color: 'var(--text-secondary)' }}>
-                          {i === 0 ? '—' : `${row.dropOffFromPrevious}%`}
+                          {i === 0 ? 'n/a' : `${row.dropOffFromPrevious}%`}
                         </td>
                         <td className="py-2 text-right" style={{ color: 'var(--text-secondary)' }}>
-                          {t?.days == null ? '—' : t.days}
+                          {t?.days == null ? 'No data' : t.days}
                         </td>
                       </tr>
                     );

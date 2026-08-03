@@ -15,7 +15,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { X, Loader2, Users, Beaker, User, ExternalLink, CheckCircle, ChevronRight, ChevronLeft, AlertTriangle, BookOpen, Save, Target, Pencil, Sparkles } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { ProgressBar, OptionRow, GuidedStyles, footerCls } from '@/components/guided/GuidedPieces';
-import { unwrapLLM } from '@/lib/llm';
+import { unwrapLLM, PLAIN_PROSE_RULES } from '@/lib/llm';
 
 const inputCls = 'w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-2.5 text-sm outline-none focus:border-[color:var(--brand-navy-900)]';
 
@@ -52,7 +52,7 @@ const STEPS = [
     key: 'what_to_learn',
     kind: 'multi',
     question: 'What do you want to get out of these conversations?',
-    hint: 'Tap anything that fits — or write your own below.',
+    hint: 'Tap anything that fits, or write your own below.',
     options: [
       { value: 'What the day-to-day actually looks like', label: 'What the day-to-day actually looks like' },
       { value: 'How people broke into this field', label: 'How people broke into this field' },
@@ -78,9 +78,9 @@ const STEPS = [
     hint: 'People closer to your level usually reply more often.',
     options: [
       { value: 'any', label: 'Anyone in the field' },
-      { value: 'entry', label: 'People 0–3 years in', desc: 'Closest to what you’d be doing next year' },
-      { value: 'mid', label: 'People 3–8 years in', desc: 'Far enough along to see the whole path' },
-      { value: 'senior', label: 'Senior — 8+ years in' },
+      { value: 'entry', label: 'People 0-3 years in', desc: 'Closest to what you’d be doing next year' },
+      { value: 'mid', label: 'People 3-8 years in', desc: 'Far enough along to see the whole path' },
+      { value: 'senior', label: 'Senior (8+ years in)' },
     ],
   },
   {
@@ -91,7 +91,7 @@ const STEPS = [
     options: [
       { value: 'low', label: 'Honestly, it makes me nervous', desc: 'You’ll get word-for-word scripts and small first steps' },
       { value: 'moderate', label: 'Fine with it, some guidance helps', desc: 'Templates you can adjust' },
-      { value: 'high', label: 'Comfortable — I’ll cold message anyone', desc: 'Lighter structure, higher volume' },
+      { value: 'high', label: 'Comfortable, I’ll cold message anyone', desc: 'Lighter structure, higher volume' },
     ],
   },
   {
@@ -131,7 +131,7 @@ const STEPS = [
     kind: 'text',
     optional: true,
     question: 'Any particular industry or niche?',
-    hint: 'Optional — skip it and we’ll cover the field broadly.',
+    hint: 'Optional. Skip it and we’ll cover the field broadly.',
     options: [
       { value: 'Healthcare', label: 'Healthcare' },
       { value: 'FinTech', label: 'FinTech' },
@@ -148,7 +148,7 @@ const STEPS = [
     options: [
       { value: 'any', label: 'No preference' },
       { value: 'startup', label: 'Startup', desc: 'Under 50 people' },
-      { value: 'mid', label: 'Mid-size', desc: '200–1,000 people' },
+      { value: 'mid', label: 'Mid-size', desc: '200-1,000 people' },
       { value: 'large', label: 'Large', desc: '1,000+ people' },
     ],
   },
@@ -498,7 +498,7 @@ function MessageTemplate({ template }) {
       <div className="flex items-center justify-between mb-2">
         <p className="text-xs font-bold uppercase tracking-wide text-[color:var(--ink-500)]">{template.label}</p>
         <button onClick={copy} className="text-xs font-semibold transition" style={{ color: 'var(--brand-navy-900)' }}>
-          {copied ? '✓ Copied' : 'Copy'}
+          {copied ? 'Copied' : 'Copy'}
         </button>
       </div>
       <pre className="text-xs text-[color:var(--ink-700)] whitespace-pre-wrap font-body leading-5 max-h-40 overflow-y-auto">{template.body}</pre>
@@ -871,18 +871,19 @@ Student's context:
 
 Generate a complete outreach plan with:
 
-1. outreach_experiments: 3–5 practical outreach experiments the student can do (NOT general career experiments — these must be outreach-specific). Examples: "Interview 3 professionals at different seniority levels", "Attend one industry event and collect 2 contacts", "Interview an alumnus in this field", "Shadow a professional for one day". Each must include: title, objective, why_it_tests_path, target_contact_type, suggested_contacts (number), timeline, deliverable, reflection_question.
+1. outreach_experiments: 3-5 practical outreach experiments the student can do (NOT general career experiments; these must be outreach-specific). Examples: "Interview 3 professionals at different seniority levels", "Attend one industry event and collect 2 contacts", "Interview an alumnus in this field", "Shadow a professional for one day". Each must include: title, objective, why_it_tests_path, target_contact_type, suggested_contacts (number), timeline, deliverable, reflection_question.
 
-2. contact_archetypes: 4–6 role archetypes most useful for this path. Each must include: title (specific job title like "Investment Banking Analyst"), why_useful (concrete 1–2 sentence explanation), where_to_find (array of 2–3 platforms or methods like ["LinkedIn", "Alumni network", "On-campus recruiting"]).
+2. contact_archetypes: 4-6 role archetypes most useful for this path. Each must include: title (specific job title like "Investment Banking Analyst"), why_useful (concrete 1-2 sentence explanation), where_to_find (array of 2-3 platforms or methods like ["LinkedIn", "Alumni network", "On-campus recruiting"]).
 
 3. contact_suggestions: ${wantPublicProfiles
-  ? `3–5 well-known professionals relevant to "${path.path_name}". CRITICAL RULES: (a) Only include people you are highly confident about based on their public professional reputation (b) Do NOT include any LinkedIn URLs or profile links — these will be generated safely as search queries by the app (c) Include the specific organization they are known to work at (d) Do NOT invent email addresses or phone numbers (e) If you are not highly confident about the person's current role, use an archetype instead (f) Set is_archetype: false. Each must have: name, role, organization, why_relevant, context.`
-  : `3–5 useful contact ARCHETYPES formatted as contact suggestions (not real people). Each must have: archetype_title, why_relevant, context. Set is_archetype: true. Do NOT include real people's names.`
+  ? `3-5 well-known professionals relevant to "${path.path_name}". CRITICAL RULES: (a) Only include people you are highly confident about based on their public professional reputation (b) Do NOT include any LinkedIn URLs or profile links; these will be generated safely as search queries by the app (c) Include the specific organization they are known to work at (d) Do NOT invent email addresses or phone numbers (e) If you are not highly confident about the person's current role, use an archetype instead (f) Set is_archetype: false. Each must have: name, role, organization, why_relevant, context.`
+  : `3-5 useful contact ARCHETYPES formatted as contact suggestions (not real people). Each must have: archetype_title, why_relevant, context. Set is_archetype: true. Do NOT include real people's names.`
 }
 
 4. message_templates: 3 outreach message templates tailored to "${path.path_name}" and the preferred channel (${survey.preferred_channel}). Match the student's networking comfort level (${survey.networking_comfort}). Each must include: label (e.g. "Cold LinkedIn message"), body (complete editable template using [Name], [Your Name], [School] placeholders).
 
-Return only valid JSON. Do not add commentary outside the JSON.`,
+Return only valid JSON. Do not add commentary outside the JSON.
+${PLAIN_PROSE_RULES}`,
         response_json_schema: {
           type: 'object',
           properties: {

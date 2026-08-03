@@ -87,7 +87,7 @@ export default function PathsIntake() {
         <section className="rounded-[24px] border border-[color:var(--ink-200)] bg-white p-7 shadow-sm sm:p-10">
           <h1 className="font-heading mb-2 mt-3 text-2xl font-bold tracking-tight text-[color:var(--surface-dark-900)]">Which paths should we build your 30-day test around?</h1>
           <p className="mb-8 text-sm text-[color:var(--ink-500)]">
-            We will generate three path recommendations, then build a 30-day experiment plan for the one you select. You are not committing — you are choosing what to test first.
+            We will generate three path recommendations, then build a 30-day experiment plan for the one you select. You are not committing. You are choosing what to test first.
           </p>
 
           <div className="space-y-6">
@@ -99,7 +99,7 @@ export default function PathsIntake() {
                 value={primaryPath} onChange={e => setPrimaryPath(e.target.value)}>
                 <option value="">Select a path</option>
                 {EXAMPLE_PATHS.map(p => <option key={p} value={p}>{p}</option>)}
-                <option value="other">Other — I'll describe it below</option>
+                <option value="other">Other (I'll describe it below)</option>
               </select>
               {primaryPath === 'other' && (
                 <input
@@ -120,7 +120,7 @@ export default function PathsIntake() {
                 value={comparisonPath} onChange={e => setComparisonPath(e.target.value)}>
                 <option value="">No comparison path (skip)</option>
                 {EXAMPLE_PATHS.filter(p => p !== (primaryPath === 'other' ? customPrimary : primaryPath)).map(p => <option key={p} value={p}>{p}</option>)}
-                <option value="other">Other — I'll describe it below</option>
+                <option value="other">Other (I'll describe it below)</option>
               </select>
               {comparisonPath === 'other' && (
                 <input

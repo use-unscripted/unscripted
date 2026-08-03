@@ -134,7 +134,7 @@ function buildCFHtml(resume) {
       for (const e of entries) {
         const startD = e.startDate ? fmtNum(e.startDate) : '';
         const endD = e.current ? 'Present' : (e.endDate ? fmtNum(e.endDate) : '');
-        const dateStr = [startD, endD].filter(Boolean).join(' \u2013 ');
+        const dateStr = [startD, endD].filter(Boolean).join(' - ');
         const loc = [e.location, e.arrangement].filter(Boolean).join(' ');
         body += `<div class="cf-entry-block">`;
         body += `<div class="cf-row">`;
@@ -202,7 +202,7 @@ function buildCFHtml(resume) {
       for (const r of entries) {
         const startStr = r.startMonth && r.startYear ? `${MONTHS_SHORT[parseInt(r.startMonth,10)-1]} ${r.startYear}` : (r.startYear || '');
         const endStr = r.current ? 'Present' : (r.endMonth && r.endYear ? `${MONTHS_SHORT[parseInt(r.endMonth,10)-1]} ${r.endYear}` : (r.endYear || ''));
-        const dateStr = [startStr, endStr].filter(Boolean).join(' \u2013 ');
+        const dateStr = [startStr, endStr].filter(Boolean).join(' - ');
         body += `<div class="cf-entry-block">`;
         body += `<div class="cf-row"><div class="cf-left"><b>${esc(r.title)}</b>`;
         if (r.institution) body += `&nbsp;|&nbsp;${esc(r.institution)}`;
@@ -403,7 +403,7 @@ async function exportDOCX(resume) {
         body += `<div class="entry-header"><div><b>${esc(e.institution)}</b>${loc ? ` | ${esc(loc)}` : ''}</div>`;
         if (e.gpa && e.showGpa !== false) body += `<div><b>Cumulative GPA:</b> ${esc(e.gpa)}${e.gpaScale ? '/' + esc(e.gpaScale) : ''}</div>`;
         body += `</div>`;
-        if (degLine) body += `<div class="entry-italic">${esc(degLine)}${gradDate ? ` &mdash; Expected Graduation: ${esc(gradDate)}` : ''}</div>`;
+        if (degLine) body += `<div class="entry-italic">${esc(degLine)}${gradDate ? `, Expected Graduation: ${esc(gradDate)}` : ''}</div>`;
         if (e.minor || e.concentration) {
           const mc = [e.minor ? `Minor: ${e.minor}` : '', e.concentration ? `Concentration: ${e.concentration}` : ''].filter(Boolean).join(' | ');
           body += `<div>${esc(mc)}</div>`;
@@ -437,7 +437,7 @@ async function exportDOCX(resume) {
         for (const r of entries) {
           const startStr = r.startMonth && r.startYear ? `${MONTHS_SHORT[parseInt(r.startMonth,10)-1]} ${r.startYear}` : (r.startYear || '');
           const endStr = r.current ? 'Present' : (r.endMonth && r.endYear ? `${MONTHS_SHORT[parseInt(r.endMonth,10)-1]} ${r.endYear}` : (r.endYear || ''));
-          const dateStr = [startStr, endStr].filter(Boolean).join(' – ');
+          const dateStr = [startStr, endStr].filter(Boolean).join(' - ');
           body += `<div class="entry-header"><div><b>${esc(r.title)}</b>${r.institution ? ` | ${esc(r.institution)}` : ''}${r.location ? ` | ${esc(r.location)}` : ''}</div><span class="entry-dates">${esc(dateStr)}</span></div>`;
           if (r.role) body += `<div class="entry-italic">${esc(r.role)}${r.advisor ? ` | Advisor: ${esc(r.advisor)}` : ''}</div>`;
           const bullets = (r.bullets || []).filter(b => b && b.trim());
@@ -455,7 +455,7 @@ async function exportDOCX(resume) {
       for (const e of entries) {
         const startD = e.startDate ? fmtM(e.startDate) : '';
         const endD = e.current ? 'Present' : fmtM(e.endDate);
-        const dates = [startD, endD].filter(Boolean).join(' – ');
+        const dates = [startD, endD].filter(Boolean).join(' - ');
         body += `<div class="entry-header"><div><b>${esc(e.org || e.title)}</b>${e.location ? ` | ${esc(e.location)}` : ''}</div><span class="entry-dates">${esc(dates)}</span></div>`;
         if (e.title && e.org) body += `<div class="entry-italic">${esc(e.title)}${e.sectorGroup ? `, ${esc(e.sectorGroup)}` : ''}</div>`;
         const bullets = (e.bullets || []).filter(b => b && b.trim());

@@ -94,7 +94,7 @@ export function resolveJourney({ paths = [], experiments = [], proof = [], refle
     prove: {
       label: 'Submit Evidence',
       to: '/experiment',
-      sub: 'Turn what you finished into proof you can show someone — inside the experiment it belongs to.',
+      sub: 'Turn what you finished into proof you can show someone, inside the experiment it belongs to.',
     },
     reflect: {
       label: 'Reflect on My Experiment',
