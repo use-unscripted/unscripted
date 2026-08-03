@@ -29,7 +29,12 @@ export default function Generating() {
       await generatePathTest();
       nav('/path-results', { replace: true });
     } catch (e) {
-      console.error('Path generation failed:', e);
+      // The generator has already logged the stage it failed at. Logging the
+      // error object again here would put the raw server message — and with it
+      // whatever of the student's profile the model was working from — into the
+      // console a second time.
+      if (e?.stage) console.error(`Path generation failed at stage=${e.stage}`);
+      else console.error('Path generation failed.');
       setError(e?.message || 'Something went wrong generating your path test. Please try again.');
     } finally {
       clearInterval(intervalId);

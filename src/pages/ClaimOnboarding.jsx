@@ -134,13 +134,17 @@ export default function ClaimOnboarding() {
 
       nav('/journey', { replace: true });
     } catch (e) {
-      console.error('ClaimOnboarding failed:', e);
       const msg = e?.message || 'Something went wrong. Please try again.';
-      // Distinguish import vs generation failures
+      // Distinguish import vs generation failures — this picks the recovery UI.
       const stage = phaseIdx >= 2 ? 'generate' : 'import';
       setErrorType(stage);
-      // No message text — it can contain server detail. Only the stage.
-      trackFunnel('claim_failed', { stage });
+      // A generation failure now says which step of the pipeline broke; an
+      // import failure has no finer grain to report. Codes and stage names are
+      // fixed strings — no message text, which can carry server detail.
+      const detail = e?.stage || null;
+      const codes = Array.isArray(e?.codes) && e.codes.length ? e.codes.join(',') : null;
+      console.error(`ClaimOnboarding failed at stage=${detail || stage}${codes ? ` codes=${codes}` : ''}`);
+      trackFunnel('claim_failed', { stage, ...(detail ? { detail } : {}), ...(codes ? { codes } : {}) });
       setError(msg);
     } finally {
       clearInterval(intervalId);
