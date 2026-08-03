@@ -179,6 +179,20 @@ const STEMS = [
 // either. One tap, one string, into `path_feedback` — which already exists on
 // the entity, so this needs no schema change.
 //
+// THIS IS A SIGNAL, NOT A DECISION, and that split is deliberate. Continue /
+// adjust / stop is asked in exactly one place: the end-of-experiment conclusion
+// (`/reflect` → DecisionStep), which is the only surface that acts on the answer
+// — it pauses or promotes the path, closes the CareerCycle and opens the next
+// one. Asking it weekly would let one slow week read as quitting a path, and
+// would produce an answer nothing carries out. If a fourth version of this
+// question shows up, delete it rather than adding a storage location.
+//
+// The three values are the `interest_direction` enum (more / same / less) the
+// conclusion form already writes, so a weekly signal and a final answer are in
+// the same units and a trend across a cycle is one query instead of prose
+// matching. Both are written: the typed field for reading, the sentence in
+// `path_feedback` for the student and for the summary prompt.
+//
 // As with WEEK_OPTIONS, `text` is both what gets stored and how a saved row is
 // read back into a selection; changing the wording orphans existing answers.
 const PATH_FIT_OPTIONS = [
@@ -362,7 +376,11 @@ function ReflectionFlow({ experiments, missions, proofs, outreach, initialData, 
       avoidedProse: avoided.filter(v => !ALL_OPTION_TEXTS.has(v)).join('\n'),
       energySources: initialData?.energy_sources || '',
       energyDrains: initialData?.energy_drains || '',
-      pathFit: PATH_FIT_OPTIONS.find(o => fitLines.includes(o.text))?.value || '',
+      // The typed field wins when it is there; the prose match is the fallback
+      // for rows written before this step wrote `interest_direction`.
+      pathFit: PATH_FIT_OPTIONS.find(o => o.value === initialData?.interest_direction)?.value
+        || PATH_FIT_OPTIONS.find(o => fitLines.includes(o.text))?.value
+        || '',
       pathFitProse: fitLines.filter(v => !PATH_FIT_TEXTS.has(v)).join('\n'),
       lessons: initialData?.lessons || '',
       nextChanges: initialData?.next_changes || '',
@@ -593,7 +611,15 @@ function ReflectionFlow({ experiments, missions, proofs, outreach, initialData, 
       avoided_items: avoidedItems,
       energy_sources: energySources.trim() || undefined,
       energy_drains: energyDrains.trim() || undefined,
-      path_feedback: pathFeedback || undefined,
+      // An edit clears these explicitly instead of omitting them. An omitted key
+      // is a partial update, so a student who taps their answer off and saves
+      // would keep the old one in the database — a stale path signal is worse
+      // than none. Both empty values are accepted by the entity (verified
+      // against the dev data environment).
+      path_feedback: pathFeedback || (isEdit ? '' : undefined),
+      // Same tap, typed. Read by anything comparing weekly signal against the
+      // conclusion's own answer; the sentence above stays for the student.
+      interest_direction: pathFit || (isEdit ? '' : undefined),
       lessons: lessons.trim() || undefined,
       next_changes: nextChanges.trim() || undefined,
       generated_summary: summary.trim() || undefined,
