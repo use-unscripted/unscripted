@@ -3,6 +3,7 @@ import { X, Loader2, ArrowRight } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { unwrapLLM, PLAIN_PROSE_RULES } from '@/lib/llm';
 import { toText, toTextList } from '@/lib/ai-validation';
+import { reportAiFailure } from '@/lib/ai-failures';
 
 const inputCls = 'w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-sm text-[color:var(--surface-dark-900)] placeholder-[color:var(--ink-400)] outline-none focus:border-[color:var(--brand-navy-900)] resize-none';
 
@@ -88,7 +89,7 @@ ${PLAIN_PROSE_RULES}`,
       const retireItems = toTextList(result.retire_items);
 
       if (!summary && !plan.length) {
-        console.error('[reactivation] rejected: empty plan');
+        reportAiFailure('reactivation', { stage: 'validate', codes: ['plan_empty'], model: 'gemini_3_flash', path_id: path.id });
         setError('The plan came back empty. You can still reactivate manually.');
         setStep('primary');
         return;
@@ -108,7 +109,7 @@ ${PLAIN_PROSE_RULES}`,
       setGeneratedPlan(planText);
       setStep('primary');
     } catch (err) {
-      console.error(`[reactivation] plan generation failed (${err?.name || 'error'})`);
+      reportAiFailure('reactivation', { stage: 'invoke_llm', codes: ['unexpected_error'], model: 'gemini_3_flash', path_id: path.id });
       setError('Failed to generate plan. You can still reactivate manually.');
       setStep('primary');
     } finally {

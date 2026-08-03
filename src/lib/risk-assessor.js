@@ -1,6 +1,7 @@
 import { base44 } from '@/api/base44Client';
 import { unwrapLLM, PLAIN_PROSE_RULES } from '@/lib/llm';
 import { toEnum, LEVELS } from '@/lib/ai-validation';
+import { generateValidated } from '@/lib/ai-generate';
 
 /** Thrown when the model's answer is not one of the two levels we asked for. */
 export class RiskAssessmentError extends Error {
@@ -31,7 +32,7 @@ export async function autoAssessPathRisk(path) {
   const schedule = schedules[0] || {};
   const availableHours = profile.available_hours_per_week || schedule.available_hours_per_week || 8;
 
-  const prompt = `You are a career path advisor for college students. Based on this student's profile and the path details, assign a risk level and confidence level.
+  const buildPrompt = (correction = '') => `You are a career path advisor for college students. Based on this student's profile and the path details, assign a risk level and confidence level.
 
 Student profile:
 - Major: ${profile.major || 'Unknown'}
@@ -57,38 +58,55 @@ Assess:
 - risk_level: How risky is this path FOR THIS STUDENT given their profile, financial tolerance, time constraints, and skill gaps? (low/medium/high)
 - confidence_level: How strongly does this student's profile align with success on this path? (low/medium/high)
 
-Be honest. Not every path is medium risk/confidence.
-${PLAIN_PROSE_RULES}`;
+Both values must be exactly one of: low, medium, high. Nothing else.
+${PLAIN_PROSE_RULES}${correction}`;
 
-  // Two enum labels plus reasoning the app never reads back — a classification,
+  // Two enum labels plus reasoning the app never reads back: a classification,
   // not a piece of writing. Cheap tier; see src/lib/llm.js.
-  const result = unwrapLLM(await base44.integrations.Core.InvokeLLM({
-    prompt,
+  const { ok, data } = await generateValidated({
+    feature: 'risk_assessment',
     model: 'gemini_3_flash',
-    response_json_schema: {
-      type: 'object',
-      properties: {
-        risk_level: { type: 'string', enum: ['low', 'medium', 'high'] },
-        confidence_level: { type: 'string', enum: ['low', 'medium', 'high'] },
-        risk_reasoning: { type: 'string' },
-        confidence_reasoning: { type: 'string' },
+    context: { path_id: path.id },
+    call: (correction) => unwrapLLM(base44.integrations.Core.InvokeLLM({
+      prompt: buildPrompt(correction),
+      model: 'gemini_3_flash',
+      response_json_schema: {
+        type: 'object',
+        properties: {
+          risk_level: { type: 'string', enum: ['low', 'medium', 'high'] },
+          confidence_level: { type: 'string', enum: ['low', 'medium', 'high'] },
+          risk_reasoning: { type: 'string' },
+          confidence_reasoning: { type: 'string' },
+        }
       }
-    }
-  }));
+    })),
+    validate: (raw) => {
+      const risk = toEnum(raw?.risk_level, LEVELS);
+      const confidence = toEnum(raw?.confidence_level, LEVELS);
+      if (risk && confidence) return { ok: true, data: { risk, confidence }, errors: [], codes: [] };
 
-  const risk = toEnum(result.risk_level, LEVELS);
-  const confidence = toEnum(result.confidence_level, LEVELS);
+      // Which field, never the value. The value is generated from the
+      // student's own profile answers.
+      const errors = [];
+      const codes = [];
+      if (!risk) {
+        errors.push('"risk_level" must be exactly one of: low, medium, high.');
+        codes.push('risk_level_not_enum');
+      }
+      if (!confidence) {
+        errors.push('"confidence_level" must be exactly one of: low, medium, high.');
+        codes.push('confidence_level_not_enum');
+      }
+      return { ok: false, data: null, errors, codes };
+    },
+  });
 
-  if (!risk || !confidence) {
-    // Which field, never the value. The value is generated from the student's
-    // own profile answers.
-    const missing = [!risk && 'risk_level', !confidence && 'confidence_level'].filter(Boolean).join(',');
-    console.error(`[risk-assessor] rejected: unusable ${missing}`);
+  if (!ok) {
     throw new RiskAssessmentError('The assessment came back in a form we could not use. Nothing was changed.');
   }
 
   return base44.entities.PathRecommendations.update(path.id, {
-    risk_level: risk,
-    confidence_level: confidence,
+    risk_level: data.risk,
+    confidence_level: data.confidence,
   });
 }

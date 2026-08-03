@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { unwrapLLM, PLAIN_PROSE_RULES } from '@/lib/llm';
 import { toText, toTextList, isPlainObject } from '@/lib/ai-validation';
+import { generateValidated } from '@/lib/ai-generate';
+import { reportAiFailure } from '@/lib/ai-failures';
 import { Hammer, Rocket, Dumbbell, Bot, Zap, Newspaper, TrendingUp, Target } from 'lucide-react';
 import PageHeader from '@/components/PageHeader';
 import BlueprintCard from '@/components/blueprints/BlueprintCard';
@@ -62,10 +64,27 @@ export default function BlueprintLibrary() {
     try {
     // Generic reference content for six fixed blueprints — no student data goes
     // in and nothing is personalised. Cheap tier; see src/lib/llm.js.
-      const result = unwrapLLM(await base44.integrations.Core.InvokeLLM({
+      const { ok, data } = await generateValidated({
+        feature: 'blueprint',
+        model: 'gemini_3_flash',
+        validate: (raw) => {
+          const repaired = repairBlueprint(raw);
+          if (repaired?.what_this_path_means || repaired?.weekly_actions.length) {
+            return { ok: true, data: repaired, errors: [], codes: [] };
+          }
+          return {
+            ok: false,
+            data: null,
+            errors: ['You returned no usable playbook. Every field in the schema must be filled in, and the list fields must be arrays of plain strings.'],
+            codes: ['blueprint_empty'],
+          };
+        },
+        call: (correction) => unwrapLLM(base44.integrations.Core.InvokeLLM({
       model: 'gemini_3_flash',
       prompt: `You are Unscripted, a life-design and execution platform for ambitious college students. Generate a detailed, actionable playbook for the "${bp.label}" path. Be specific and practical. No generic advice. Focus on what a college student can actually do today. Include honest tradeoffs.
-${PLAIN_PROSE_RULES}`,
+
+Every list field must be an array of plain strings. An item returned as an object is a failure.
+${PLAIN_PROSE_RULES}${correction}`,
       response_json_schema: {
         type: 'object',
         properties: {
@@ -81,19 +100,16 @@ ${PLAIN_PROSE_RULES}`,
           thirty_day_plan: { type: 'array', items: { type: 'object', properties: { week: { type: 'string' }, focus: { type: 'string' }, actions: { type: 'array', items: { type: 'string' } } } } },
         }
       }
-    }));
+    })),
+      });
 
-      const repaired = repairBlueprint(result);
-      if (!repaired) {
-        console.error('[blueprints] rejected: no playbook object');
-        setError('That playbook came back empty. Try opening it again.');
-      } else {
-        setDetail(repaired);
-      }
+      if (ok) setDetail(data);
+      else setError('That playbook came back empty both times we asked. Try again in a moment.');
     } catch (e) {
       // Before this, a thrown call skipped setLoading(false) entirely and left
-      // the student watching a skeleton that never resolved.
-      console.error(`[blueprints] generation failed (${e?.name || 'error'})`);
+      // the student watching a skeleton that never resolved. The retry loop
+      // already recorded the model call itself failing.
+      reportAiFailure('blueprint', { stage: 'render', codes: ['unexpected_error'], model: 'gemini_3_flash' });
       setError('We could not build that playbook just now. Try again in a moment.');
     } finally {
       setLoading(false);

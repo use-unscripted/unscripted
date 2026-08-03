@@ -3,6 +3,7 @@ import { ChevronDown, ChevronUp, Eye, EyeOff, Trash2, Plus, Sparkles, X, Undo2, 
 import { base44 } from '@/api/base44Client';
 import { unwrapLLM, PLAIN_PROSE_RULES } from '@/lib/llm';
 import { toText } from '@/lib/ai-validation';
+import { reportAiFailure } from '@/lib/ai-failures';
 import {
   newEntry, newEducationCF, newCert, newAward, newResearch,
   MONTH_OPTIONS, CF_SKILL_GROUP_LABELS, CF_SKILL_GROUP_IDS,
@@ -46,14 +47,15 @@ function BulletAIPopover({ bullet, onApply, onClose }) {
       // resume and an employer reading it.
       const text = toText(res);
       if (!text) {
+        reportAiFailure('resume_bullet', { stage: 'validate', codes: ['empty_response'], model: 'gemini_3_flash' });
         setError('That came back empty. Try again.');
         setResult('');
       } else {
         setResult(text);
       }
     } catch (e) {
-      // The prompt carries the student's own bullet, so log the shape only.
-      console.error(`[resume] bullet rewrite failed (${e?.name || 'error'})`);
+      // The prompt carries the student's own bullet, so slugs only.
+      reportAiFailure('resume_bullet', { stage: 'invoke_llm', codes: ['unexpected_error'], model: 'gemini_3_flash' });
       setError('We could not rewrite that just now. Try again in a moment.');
       setResult('');
     } finally {

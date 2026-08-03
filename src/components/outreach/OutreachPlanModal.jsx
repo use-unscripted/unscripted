@@ -17,6 +17,8 @@ import { base44 } from '@/api/base44Client';
 import { ProgressBar, OptionRow, GuidedStyles, footerCls } from '@/components/guided/GuidedPieces';
 import { unwrapLLM, PLAIN_PROSE_RULES } from '@/lib/llm';
 import { toText, toTextList, isPlainObject } from '@/lib/ai-validation';
+import { generateValidated } from '@/lib/ai-generate';
+import { reportAiFailure } from '@/lib/ai-failures';
 
 const inputCls = 'w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-2.5 text-sm outline-none focus:border-[color:var(--brand-navy-900)]';
 
@@ -812,6 +814,35 @@ function repairOutreachPlan(raw) {
   };
 }
 
+/**
+ * The retry loop's view of the repair. A section the model skipped is worth one
+ * more ask with the gap named, because a plan missing its message templates is
+ * missing the part students actually use.
+ */
+function validateOutreachPlan(raw) {
+  const plan = repairOutreachPlan(raw);
+  if (!plan) {
+    return { ok: false, data: null, errors: ['You returned no plan object.'], codes: ['plan_not_object'] };
+  }
+
+  const sections = [
+    ['outreach_experiments', plan.outreach_experiments, '3 to 5 outreach experiments'],
+    ['contact_archetypes', plan.contact_archetypes, '4 to 6 contact archetypes'],
+    ['contact_suggestions', plan.contact_suggestions, '3 to 5 contact suggestions'],
+    ['message_templates', plan.message_templates, '3 message templates'],
+  ];
+  const empty = sections.filter(([, items]) => items.length === 0);
+
+  if (!empty.length) return { ok: true, data: plan, errors: [], codes: [] };
+
+  return {
+    ok: false,
+    data: plan,
+    errors: empty.map(([key, , wanted]) => `"${key}" came back empty. It must contain ${wanted}, each an object with every field in the schema filled in.`),
+    codes: empty.map(([key]) => `${key}_empty`),
+  };
+}
+
 // ── Results Step ───────────────────────────────────────────────────────────────
 function ResultsStep({ plan, pathName, experimentId, experiments, onContactSaved, onClose }) {
   const [dismissed, setDismissed] = useState(new Set());
@@ -938,7 +969,12 @@ export default function OutreachPlanModal({ path, experiment, onClose, onContact
       // Produces message templates the student sends to real professionals and
       // names real people — the site least tolerant of a weaker model. Highest
       // quality tier; see src/lib/llm.js.
-      const result = unwrapLLM(await base44.integrations.Core.InvokeLLM({
+      const { ok, data } = await generateValidated({
+        feature: 'outreach_plan',
+        model: 'gemini_3_1_pro',
+        context: { path_id: path.id, experiment_id: experiment?.id },
+        validate: validateOutreachPlan,
+        call: (correction) => unwrapLLM(base44.integrations.Core.InvokeLLM({
         model: 'gemini_3_1_pro',
         prompt: `You are an expert career coach helping a college student build a targeted outreach plan for the career path: "${path.path_name}".
 
@@ -967,8 +1003,8 @@ Generate a complete outreach plan with:
 
 4. message_templates: 3 outreach message templates tailored to "${path.path_name}" and the preferred channel (${survey.preferred_channel}). Match the student's networking comfort level (${survey.networking_comfort}). Each must include: label (e.g. "Cold LinkedIn message"), body (complete editable template using [Name], [Your Name], [School] placeholders).
 
-Return only valid JSON. Do not add commentary outside the JSON.
-${PLAIN_PROSE_RULES}`,
+Return only valid JSON. Do not add commentary outside the JSON. All four sections are required and none may be empty.
+${PLAIN_PROSE_RULES}${correction}`,
         response_json_schema: {
           type: 'object',
           properties: {
@@ -1028,26 +1064,26 @@ ${PLAIN_PROSE_RULES}`,
             },
           }
         }
-      }));
+      })),
+      });
 
-      const repaired = repairOutreachPlan(result);
-      const total = repaired
-        ? repaired.outreach_experiments.length + repaired.contact_archetypes.length
-          + repaired.contact_suggestions.length + repaired.message_templates.length
-        : 0;
-
-      if (!total) {
-        console.error('[outreach] rejected: empty plan');
-        setError('That plan came back empty. Try building it again.');
+      if (!ok) {
+        setError('That plan came back empty both times we asked. Try building it again.');
         setStep('survey');
         return;
       }
 
-      setPlan(repaired);
+      setPlan(data);
       setStep('results');
     } catch (e) {
-      // The prompt carries the student's own survey answers, so log shape only.
-      console.error(`[outreach] plan generation failed (${e?.name || 'error'})`);
+      // The prompt carries the student's own survey answers, so slugs only.
+      // The retry loop already recorded the model call itself failing.
+      reportAiFailure('outreach_plan', {
+        stage: 'render',
+        codes: ['unexpected_error'],
+        model: 'gemini_3_1_pro',
+        path_id: path.id,
+      });
       setError('That didn’t go through. Try building the plan again.');
       setStep('survey');
     } finally {

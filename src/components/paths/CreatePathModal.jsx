@@ -3,6 +3,7 @@ import { X, Loader2, ArrowRight, ChevronRight } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { unwrapLLM, PLAIN_PROSE_RULES } from '@/lib/llm';
 import { toText, toEnum, LEVELS } from '@/lib/ai-validation';
+import { reportAiFailure } from '@/lib/ai-failures';
 
 const inputCls = 'w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-sm text-[color:var(--surface-dark-900)] placeholder-[color:var(--ink-400)] outline-none focus:border-[color:var(--brand-navy-900)]';
 
@@ -71,6 +72,13 @@ ${PLAIN_PROSE_RULES}`,
       // risk_level is the exception: it feeds a <select> and then an enum field
       // on the entity, so an off-list value renders as nothing selected and
       // then fails the save with no explanation.
+      const riskLevel = toEnum(result.risk_level, LEVELS, 'medium');
+      if (!toEnum(result.risk_level, LEVELS)) {
+        // Defaulted rather than failed, since the student edits it on the next
+        // screen. Still recorded: it is the model ignoring an enum.
+        reportAiFailure('create_path', { stage: 'validate', codes: ['risk_level_not_enum'], recovered: true, model: 'gemini_3_flash' });
+      }
+
       setForm(f => ({
         ...f,
         path_name: toText(result.path_name),
@@ -78,12 +86,12 @@ ${PLAIN_PROSE_RULES}`,
         description: toText(result.description),
         why_it_fits: toText(result.why_it_fits),
         why_it_may_not_fit: toText(result.why_it_may_not_fit),
-        risk_level: toEnum(result.risk_level, LEVELS, 'medium'),
+        risk_level: riskLevel,
         lifestyle_implications: toText(result.lifestyle_implications),
       }));
       setStep(2);
     } catch (err) {
-      console.error(`[create-path] survey generation failed (${err?.name || 'error'})`);
+      reportAiFailure('create_path', { stage: 'invoke_llm', codes: ['unexpected_error'], model: 'gemini_3_flash' });
       setError('Generation failed. Fill in the details manually below.');
       setStep(2);
     } finally {
@@ -124,7 +132,7 @@ ${PLAIN_PROSE_RULES}`,
       }
       onCreated(saved);
     } catch (err) {
-      console.error(`[create-path] save failed (${err?.name || 'error'})`);
+      reportAiFailure('create_path', { stage: 'save_path', codes: ['unexpected_error'] });
       setError('Failed to save path. Please try again.');
       setSaving(false);
       submittingRef.current = false;

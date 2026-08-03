@@ -58,6 +58,7 @@ import RecentlyDeleted from '@/pages/RecentlyDeleted';
 import GuideDetailPage from '@/pages/GuideDetailPage';
 import PilotDashboard from '@/pages/PilotDashboard';
 import AdminCampusFeeds from '@/pages/AdminCampusFeeds';
+import AdminAiFailures from '@/pages/AdminAiFailures';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError } = useAuth();
@@ -135,6 +136,8 @@ const AuthenticatedApp = () => {
           <Route path="/pilot" element={<PilotDashboard />} />
           {/* Team-only. The page checks the role, and so does the function behind it. */}
           <Route path="/admin/campus-feeds" element={<AdminCampusFeeds />} />
+          {/* Team-only. The page checks the role, and so does the entity's RLS. */}
+          <Route path="/admin/ai-failures" element={<AdminAiFailures />} />
 
         </Route>
       </Route>

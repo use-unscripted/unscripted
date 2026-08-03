@@ -3,6 +3,8 @@ import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { unwrapLLM, PLAIN_PROSE_RULES } from '@/lib/llm';
 import { toText, toTextList } from '@/lib/ai-validation';
+import { generateValidated } from '@/lib/ai-generate';
+import { reportAiFailure } from '@/lib/ai-failures';
 import { ArrowLeft, ArrowRight, CheckCircle, Loader2, AlertCircle } from 'lucide-react';
 import { LogoWordmark } from '@/components/UnscriptedLogo';
 import { Sk, SkCards } from '@/components/PageSkeleton';
@@ -45,6 +47,21 @@ function repairMissionGuide(raw) {
     // A guide with no steps is not a guide. Everything else can be thin without
     // making the mission impossible to start.
     usable: steps.length > 0,
+  };
+}
+
+/**
+ * The retry loop's view of the same repair: a guide with no steps is rejected
+ * with a reason the model can act on, rather than becoming a dead experiment.
+ */
+function validateMissionGuide(raw) {
+  const { guide, usable } = repairMissionGuide(raw);
+  if (usable) return { ok: true, data: guide, errors: [], codes: [] };
+  return {
+    ok: false,
+    data: null,
+    errors: ['You returned no usable mission steps. "mission_steps" must be an array of 8 to 12 plain strings, each one an action the student can actually do.'],
+    codes: ['guide_no_steps'],
   };
 }
 
@@ -509,7 +526,12 @@ export default function ExperimentSetup() {
       // Generates the Mission Guide, including the outreach email template a
       // student sends to a real professional. Highest-quality tier; see
       // src/lib/llm.js.
-      const rawGuide = unwrapLLM(await base44.integrations.Core.InvokeLLM({
+      const guideResult = await generateValidated({
+        feature: 'mission_guide_prefilled',
+        model: 'gemini_3_1_pro',
+        context: { path_id: rec.id, experiment_id: saved.id },
+        validate: validateMissionGuide,
+        call: (correction) => unwrapLLM(base44.integrations.Core.InvokeLLM({
         model: 'gemini_3_1_pro',
         prompt: `You are Unscripted, a path-testing platform for ambitious college students.
 
@@ -535,7 +557,9 @@ The guide must be specific to "${experimentData.path_name}", not generic network
 12. What to do next after completing this experiment
 
 Be specific. If the experiment involves outreach, include field-specific details. If it involves building something, specify exactly what to build.
-${PLAIN_PROSE_RULES}`,
+
+"mission_steps" must be an array of plain strings. A step returned as an object is a failure.
+${PLAIN_PROSE_RULES}${correction}`,
         response_json_schema: {
           type: 'object',
           properties: {
@@ -551,20 +575,22 @@ ${PLAIN_PROSE_RULES}`,
             next_step: { type: 'string' },
           }
         }
-      }));
-
-      const { guide, usable } = repairMissionGuide(rawGuide);
+        })),
+      });
 
       // An experiment stamped "generated" is one the app stops offering to
       // generate. Stamping an empty answer is how a student ends up with a
       // mission the product says is ready and that has nothing in it, so a
-      // guide with no steps is treated as a failure and left retryable.
-      if (!usable) {
-        console.error('[mission-guide] rejected: no usable steps');
-        setGenError('The Mission Guide came back empty. Your experiment draft was saved. You can retry from the Missions page.');
-        await base44.entities.Experiments.update(saved.id, { status: 'planned', mission_guide_status: 'not_generated' });
+      // guide with no usable steps stays retryable instead. The model has
+      // already been asked a second time with the reason in hand by this point.
+      if (!guideResult.ok) {
+        setGenError('The Mission Guide came back empty both times we asked. Your experiment draft was saved. You can retry from the Missions page.');
+        await base44.entities.Experiments.update(saved.id, { status: 'planned', mission_guide_status: 'not_generated' })
+          .catch(() => {});
         return;
       }
+
+      const guide = guideResult.data;
 
       await base44.entities.Experiments.update(saved.id, {
         status: 'planned',
@@ -584,12 +610,18 @@ ${PLAIN_PROSE_RULES}`,
       setMissionGuide(guide);
       setStep('success');
     } catch (e) {
-      // Shape only. The prompt carries the student's own path and objective, so
-      // a raw error can echo them back into the console.
-      console.error(`[mission-guide] generation failed (${e?.name || 'error'})`);
+      // Slugs only. The prompt carries the student's own path and objective, so
+      // a raw error can echo them back into the console and the log.
+      reportAiFailure('mission_guide_prefilled', {
+        stage: 'save_experiment',
+        codes: ['unexpected_error'],
+        model: 'gemini_3_1_pro',
+        path_id: rec.id,
+        experiment_id: saved.id,
+      });
       setGenError('Mission Guide generation failed. Your experiment draft was saved. You can retry from the Missions page.');
       await base44.entities.Experiments.update(saved.id, { status: 'planned', mission_guide_status: 'not_generated' })
-        .catch(() => console.error('[mission-guide] could not reset the draft status'));
+        .catch(() => {});
     }
   };
 

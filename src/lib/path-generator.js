@@ -3,6 +3,7 @@ import { loadOwnedPaths, authoritativeSet, loadOnboardingSubmission } from '@/li
 import { trackPilotEvent } from '@/lib/pilot-metrics';
 import { unwrapLLM, PLAIN_PROSE_RULES } from '@/lib/llm';
 import { validatePathSet, pathRecSchema, experimentSchema, str } from '@/lib/path-validation';
+import { logAiFailure } from '@/lib/ai-failures';
 
 /**
  * The stage a generation reached before it failed.
@@ -44,8 +45,10 @@ export class PathGenerationError extends Error {
  * here. A generated path name is built from the student's own answers about
  * their life; it is not console material.
  */
-function logStage(stage, codes = []) {
+function logStage(stage, codes = [], extra = {}) {
   console.error(`[path-gen] failed at stage=${stage}${codes.length ? ` codes=${codes.join(',')}` : ''}`);
+  // Fire and forget. Recording a failure must never add a second failure.
+  logAiFailure('path_generation', { stage, codes, model: 'gemini_3_1_pro', ...extra });
 }
 
 /** How many times the model is asked, including the guided retry. */
@@ -215,7 +218,7 @@ ${PLAIN_PROSE_RULES}`;
     // quote generated text, which is derived from what the student told us
     // about their life.
     const codes = validation.codes.slice(0, MAX_REPORTED_PROBLEMS);
-    logStage(STAGES.VALIDATE, codes);
+    logStage(STAGES.VALIDATE, codes, { attempts: MAX_ATTEMPTS, recovered: false });
     throw new PathGenerationError(
       'Your results came back incomplete. Your answers are saved, please try again.',
       STAGES.VALIDATE,
