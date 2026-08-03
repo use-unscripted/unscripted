@@ -83,9 +83,12 @@ function RailNode({ index, progress }) {
    boxes the copy lengths differ naturally, the numbers can carry real display
    weight, and the row reads as a sequence rather than a set of tiles.
 
-   The staggered top offset (steps 2 and 4 sit lower) is what stops the row
-   scanning as a flat grid. It's dropped below lg, where the cards stack. */
-const STEP_OFFSET = ['lg:mt-0', 'lg:mt-7', 'lg:mt-0', 'lg:mt-7'];
+   Steps 2 and 4 used to sit lower, on the argument that the offset stopped
+   the row scanning as a flat grid. Drew called it 2026-08-03: the stagger
+   read as misalignment, not rhythm. Tops are level now — the row is kept off
+   feature-grid shape by being unboxed and by the rail beneath it, which is
+   what was doing that work anyway. */
+const STEP_OFFSET = ['', '', '', ''];
 
 function StepCard({ step, index, progress }) {
   const [a, b] = bandFor(index);
