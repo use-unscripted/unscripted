@@ -6,6 +6,34 @@ This is a Base44 app repository. Treat it as user-owned application code, keep c
 
 Start with `README.md` for local setup, environment variables, and publish workflow.
 
+## Writing text students read
+
+Every word a student can see goes through the `humanizer` skill before it lands: headings,
+body copy, button labels, form hints, placeholders, empty states, error messages, dropdown
+options, and the AI prompts. Prompts count because the register a prompt is written in is
+the register the model answers in, and that output goes into cold emails students send to
+real professionals.
+
+**No em dashes and no en dashes anywhere in text.** Use a period, comma, colon, or brackets.
+A hyphen between numbers in a range is fine. Code comments are exempt; nothing rendered is.
+
+Grepping `src/` for them is useless, because it returns hundreds of hits that are almost all
+comments. Check the built bundle, where comments are already stripped:
+
+```bash
+npx vite build >/dev/null 2>&1 && grep -o '[—–]' dist/assets/*.js | wc -l
+```
+
+**2 is correct.** Both live inside `PLAIN_PROSE_RULES` in `src/lib/llm.js`, which is the rule
+that bans them. Anything above 2 is text someone added.
+
+`PLAIN_PROSE_RULES` is the house style for generated prose and is already appended to every
+prompt that writes something a person reads. **A new prompt must append it too.** That is the
+step most likely to be missed.
+
+Curly apostrophes and quotes are deliberate and stay. They are correct typography and read as
+nothing on a rendered page, so do not "fix" them to straight quotes.
+
 ## Base44 References
 
 - CLI overview: https://docs.base44.com/developers/references/cli/get-started/overview.md
