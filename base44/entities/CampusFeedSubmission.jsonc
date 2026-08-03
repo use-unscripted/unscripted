@@ -1,0 +1,103 @@
+{
+  // A student telling us where their school's events calendar actually is.
+  //
+  // Roughly a quarter of our students attend a school our probes cannot
+  // resolve, and for most of them the calendar exists — it just lives
+  // somewhere no guess reaches. This is the queue of addresses students have
+  // pointed us at, and it is a REVIEW queue on purpose.
+  //
+  // A resolved submission is used immediately for the student who sent it.
+  // It becomes the feed for everyone else at that school only when a human
+  // sets review_status to "approved", because that write has school-wide blast
+  // radius: a link to the library's calendar, or athletics, or one
+  // department's, would quietly become what every student there is shown and
+  // nothing downstream could tell the difference.
+  //
+  // Failed rows are kept deliberately. They are the only record of what
+  // students tried that we could not read, which is the list that says which
+  // calendar platform is worth writing an adapter for next.
+  "name": "CampusFeedSubmission",
+  "type": "object",
+  "properties": {
+    "college": {
+      // The free text on the student's profile, matched the same way the
+      // events function matches it — normalized, not exact.
+      "type": "string"
+    },
+    "university_id": {
+      // Empty when no University row existed for this college yet.
+      "type": "string"
+    },
+    "submitted_by": {
+      "type": "string"
+    },
+    "submitted_url": {
+      // Already gated before it was stored: the school's own registrable
+      // domain or a known calendar vendor, no port, no IP.
+      "type": "string"
+    },
+    "resolution": {
+      // Whether we could read a real calendar with something upcoming in it.
+      "type": "string",
+      "enum": [
+        "resolved",
+        "failed"
+      ],
+      "default": "failed"
+    },
+    "review_status": {
+      // "approved" is what promotes this feed to every student at the school.
+      "type": "string",
+      "enum": [
+        "pending",
+        "approved",
+        "rejected"
+      ],
+      "default": "pending"
+    },
+    "resolved_platform": {
+      "type": "string"
+    },
+    "resolved_feed_url": {
+      "type": "string"
+    },
+    "event_count": {
+      "type": "number",
+      "default": 0
+    },
+    "sample_titles": {
+      // The first few real event titles, so a reviewer can tell a university
+      // calendar from a rec-centre one without opening the feed.
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "failure_reason": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "college",
+    "submitted_url"
+  ],
+  // Admin on all four, which here means "nobody but the backend function".
+  //
+  // Students never touch this entity directly: they submit through
+  // campusEvents, the review page reads through campusEvents, and both use
+  // asServiceRole. Per the SDK, asServiceRole does NOT bypass RLS — it acts
+  // with role "admin" — so admin-scoped rules are what let the function work
+  // at all, and anything less would be a wider door for no gain.
+  //
+  // What this shuts: a student reading the whole queue (every other student's
+  // school and submitted URL), and — the one that matters — a student
+  // updating their own row's review_status to "approved" and promoting their
+  // own link. CampusInvite is world-updatable today, so the defaults here are
+  // not safe by assumption.
+  "rls": {
+    "create": { "user_condition": { "role": "admin" } },
+    "read": { "user_condition": { "role": "admin" } },
+    "update": { "user_condition": { "role": "admin" } },
+    "delete": { "user_condition": { "role": "admin" } }
+  }
+}

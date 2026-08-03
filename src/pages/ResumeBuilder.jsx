@@ -296,7 +296,9 @@ export default function ResumeBuilder() {
     const user = await base44.auth.me();
     const content = buildDefaultContent(template.id);
     // Pre-fill name from user profile
-    const profiles = await base44.entities.StudentProfile.filter({ user_id: user.id }, '-created_date', 1).catch(() => []);
+    // created_by_id, not user_id: StudentProfile has no user_id field, so the
+    // old filter matched nothing and every student looked profile-less.
+    const profiles = await base44.entities.StudentProfile.filter({ created_by_id: user.id }, '-created_date', 1).catch(() => []);
     if (profiles[0]?.name) content.contact.name = profiles[0].name;
 
     const r = await base44.entities.Resume.create({

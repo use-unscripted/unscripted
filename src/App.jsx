@@ -54,6 +54,7 @@ import ResumeBuilder from '@/pages/ResumeBuilder';
 import RecentlyDeleted from '@/pages/RecentlyDeleted';
 import GuideDetailPage from '@/pages/GuideDetailPage';
 import PilotDashboard from '@/pages/PilotDashboard';
+import AdminCampusFeeds from '@/pages/AdminCampusFeeds';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError } = useAuth();
@@ -119,6 +120,8 @@ const AuthenticatedApp = () => {
           <Route path="/guide" element={<GuideDetailPage />} />
           {/* Admin-only aggregate pilot reporting; the page itself re-checks the role. */}
           <Route path="/pilot" element={<PilotDashboard />} />
+          {/* Team-only. The page checks the role, and so does the function behind it. */}
+          <Route path="/admin/campus-feeds" element={<AdminCampusFeeds />} />
 
         </Route>
       </Route>

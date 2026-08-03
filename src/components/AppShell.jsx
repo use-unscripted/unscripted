@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Outlet, NavLink } from 'react-router-dom';
-import { Compass, FolderOpen, FileText, Settings, LogOut, BarChart3 } from 'lucide-react';
+import { Compass, FolderOpen, FileText, Settings, LogOut, BarChart3, Inbox } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
+import { listFeedSubmissions } from '@/lib/campus-events';
 import PilotTracker from '@/components/PilotTracker';
 import { loadPilotAccess } from '@/lib/pilot-access';
 
@@ -32,6 +33,26 @@ export default function AppShell() {
   // Pilot reporting is an admin destination, so the link only exists for admins.
   const [isAdmin, setIsAdmin] = useState(false);
   useEffect(() => { loadPilotAccess().then(a => setIsAdmin(!!a.isAdmin)).catch(() => setIsAdmin(false)); }, []);
+
+  // Calendar links students have sent us that nobody has looked at yet.
+  //
+  // The count is the point. A student can paste a working link, get their own
+  // events, and have the row sit unreviewed forever — their school never gets
+  // switched on and nobody finds out. A queue nobody remembers to open is the
+  // same as no queue, so the number goes where the team already looks. Silent
+  // for everyone else, and silent when there is nothing waiting.
+  const [pendingFeeds, setPendingFeeds] = useState(0);
+  useEffect(() => {
+    if (!isAdmin) return;
+    let cancelled = false;
+    listFeedSubmissions()
+      .then(rows => {
+        if (cancelled) return;
+        setPendingFeeds(rows.filter(r => r.resolution === 'resolved' && r.review_status === 'pending').length);
+      })
+      .catch(() => {}); // A nav badge is never worth an error on someone's screen.
+    return () => { cancelled = true; };
+  }, [isAdmin]);
 
   return (
     <div className="min-h-screen font-body" style={{ background: 'var(--background-secondary)' }}>
@@ -71,6 +92,19 @@ export default function AppShell() {
               }>
               <BarChart3 size={17} />
               Pilot report
+            </NavLink>
+          )}
+          {isAdmin && pendingFeeds > 0 && (
+            <NavLink to="/admin/campus-feeds"
+              className={({ isActive }) =>
+                `nav-link mb-1 flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold ${isActive ? 'text-white' : 'text-slate-300 hover:text-white'}`
+              }
+              style={({ isActive }) => isActive
+                ? { background: 'var(--brand-navy-700)', borderLeft: '3px solid var(--brand-gold-500)', paddingLeft: '13px' }
+                : { borderLeft: '3px solid transparent' }
+              }>
+              <Inbox size={17} />
+              Campus feeds · {pendingFeeds}
             </NavLink>
           )}
         </nav>

@@ -20,6 +20,52 @@
     "active": {
       "type": "boolean",
       "default": true
+    },
+    // ── Campus events feed ──
+    // Resolved once by the campusEvents function and cached here, so a school is
+    // probed a single time ever rather than on every student's page load.
+    "match_keys": {
+      // Normalized spellings of this school seen in StudentProfile.college free
+      // text ("fairfield", "fairfield university", "fairfield u").
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "events_platform": {
+      // Which calendar platform won the probe. "none" means all four were
+      // tried and none answered — the school is re-probed only after a month.
+      "type": "string",
+      "enum": [
+        "unknown",
+        "localist",
+        "livewhale",
+        "trumba",
+        "campuslabs",
+        // ical is the most common result of a student-submitted portal link,
+        // and wptribe/drupal are adapters added after this enum was written.
+        // A value missing here is written and then silently unusable:
+        // adapterFor() returns null, the cache check fails, and the school
+        // re-probes on every page load as if it had never resolved.
+        "ical",
+        "wptribe",
+        "drupal",
+        "none"
+      ],
+      "default": "unknown"
+    },
+    "events_feed_url": {
+      // Base URL for the platform above, enough to re-fetch without probing:
+      //   localist    https://events.fairfield.edu/api/2/events
+      //   livewhale   https://events.uconn.edu/live/json/events
+      //   trumba      https://www.trumba.com/calendars/tufts.json
+      //   campuslabs  https://nyu.campuslabs.com/engage/api/discovery/event/search
+      // Empty when events_platform is "none".
+      "type": "string"
+    },
+    "events_resolved_at": {
+      "type": "string",
+      "format": "date-time"
     }
   },
   "required": [
