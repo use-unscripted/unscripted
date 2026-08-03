@@ -120,7 +120,10 @@ function PathCard({ path }) {
       className="rounded-[var(--r-surface)] bg-white p-6 sm:p-8 lg:pt-3"
       style={{ border: '1px solid var(--border-light)', boxShadow: '0 18px 44px rgba(16,24,40,0.07)' }}
     >
-      <div className="flex items-start gap-4">
+      {/* items-center, not items-start: the heading reads as belonging to the
+          icon when their midlines agree, and a two-line label still balances
+          against it. */}
+      <div className="flex items-center gap-4">
         <span
           className="hidden h-11 w-11 shrink-0 place-items-center rounded-[var(--r-control)] sm:grid"
           style={{ background: 'var(--brand-navy-900)', color: 'var(--brand-gold-500)' }}
