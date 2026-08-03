@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { LogoWordmark } from '@/components/UnscriptedLogo';
 import { saveDraft, loadDraft } from '@/lib/guest-draft';
+import { trackFunnel, trackFunnelOnce } from '@/lib/funnel';
 
 const EXAMPLE_PATHS = [
   'Investment banking / finance',
@@ -46,11 +47,18 @@ export default function PathsIntake() {
       if (known) setComparisonPath(draft.comparison_path);
       else { setComparisonPath('other'); setCustomComparison(draft.comparison_path); }
     }
+    trackFunnelOnce('paths_intake_reached', 'paths_intake_reached');
   }, []);
 
   const submit = () => {
     if (!primary) return;
     saveDraft({ primary_path: primary, comparison_path: comparison, current_step: 3 });
+    // Only the fixed dropdown choices are reported. A student who picked
+    // "other" typed their own text, so send the bucket, never the text.
+    trackFunnel('paths_selected', {
+      primary_path: primaryPath === 'other' ? 'other' : primary,
+      has_comparison: !!comparison,
+    });
     nav('/onboarding-review');
   };
 

@@ -11,6 +11,7 @@ import { ArrowLeft, RefreshCw } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { loadDraft, clearDraft, isDraftComplete } from '@/lib/guest-draft';
 import { generatePathTest } from '@/lib/path-generator';
+import { trackFunnel, trackFunnelOnce } from '@/lib/funnel';
 
 const PHASES = [
   'Saving your onboarding answers...',
@@ -34,6 +35,11 @@ export default function ClaimOnboarding() {
     try {
       intervalId = setInterval(() => setPhaseIdx(i => Math.min(i + 1, PHASES.length - 1)), 3500);
 
+      // Signed in and back to collect what they filled in as a guest. This is
+      // the far side of the wall for every sign-up method, including Google,
+      // where the provider redirect means no register event ever fires.
+      trackFunnelOnce('claim_started', 'claim_started');
+
       const user = await base44.auth.me();
 
       // ── Already done: skip straight to dashboard ──
@@ -51,6 +57,7 @@ export default function ClaimOnboarding() {
           // Answers were already saved on a previous attempt — finish setup
           // instead of sending the user back through onboarding again.
           await generatePathTest();
+          trackFunnel('paths_generated', { from: 'saved_profile' });
           await base44.auth.updateMe({ onboarding_completed: true });
           clearDraft();
           nav('/journey', { replace: true });
@@ -115,6 +122,9 @@ export default function ClaimOnboarding() {
 
       // ── Generate paths (idempotent — generator checks for existing recs) ──
       await generatePathTest();
+      // The end of the funnel, and the only point where the wall's stated
+      // cost — a real model call — is actually paid.
+      trackFunnel('paths_generated', { from: 'guest_draft' });
 
       // ── Mark onboarding complete ──
       await base44.auth.updateMe({ onboarding_completed: true });
@@ -127,11 +137,10 @@ export default function ClaimOnboarding() {
       console.error('ClaimOnboarding failed:', e);
       const msg = e?.message || 'Something went wrong. Please try again.';
       // Distinguish import vs generation failures
-      if (phaseIdx >= 2) {
-        setErrorType('generate');
-      } else {
-        setErrorType('import');
-      }
+      const stage = phaseIdx >= 2 ? 'generate' : 'import';
+      setErrorType(stage);
+      // No message text — it can contain server detail. Only the stage.
+      trackFunnel('claim_failed', { stage });
       setError(msg);
     } finally {
       clearInterval(intervalId);
