@@ -9,7 +9,7 @@
    Grounded in the real data model, not invented:
      LABELS            src/pages/PathResults.jsx:7
      path_name         PathRecommendations
-     readiness_score   rendered by ReadinessBar in PathResults
+     readiness_score   0–10, rendered as n/10 by ReadinessBar in PathResults
      main_tradeoffs    PathRecommendations
 
    The three paths below are illustrative sample output and are labelled as
@@ -27,27 +27,33 @@
    how the generator works, and it's what makes the tradeoffs comparable.
    Deliberately not all tech: the audience is Northeast campuses, and the
    page's own list already spans grad school, mission-driven work and
-   personal brand. */
+   personal brand.
+
+   readiness_score is 0–10, the scale the generator actually writes and
+   PathResults actually renders — every live path row sits between 5 and 9.
+   These sample scores stay inside that range. Don't restate them out of 100:
+   the product has never produced a score like that, and a marketing preview
+   showing a number the app can't generate is a claim we can't back. */
 const PATHS = [
   {
     label: 'Best apparent fit',
     tier: 'best',
     path_name: 'Brand marketing at a mid-size consumer company',
-    readiness_score: 74,
+    readiness_score: 7,
     main_tradeoffs: 'Real training and a clear ladder. You are three layers from any decision that matters.',
   },
   {
     label: 'Strong alternative',
     tier: 'alt',
     path_name: 'Communications for a regional hospital system',
-    readiness_score: 69,
+    readiness_score: 6,
     main_tradeoffs: 'Less prestige with your peers, far more ownership in year one.',
   },
   {
     label: 'Contrarian option',
     tier: 'contrarian',
     path_name: 'Freelance content for two startups before you graduate',
-    readiness_score: 43,
+    readiness_score: 5,
     main_tradeoffs: 'No title and no safety net. You would know inside 90 days whether you can sell.',
   },
 ];
@@ -58,7 +64,12 @@ const TONE = {
   contrarian: { chipBg: 'rgba(30,41,59,0.07)', chipFg: 'var(--ink-500)', bar: 'var(--ink-400)', border: 'var(--border-light)' },
 };
 
+/* Mirrors PathResults' ReadinessBar: score is 0–10, printed n/10, and the
+   fill is score × 10 percent. Same arithmetic, same format — the preview has
+   to read as a screenshot of the real thing. */
 function ReadinessBar({ score, tone }) {
+  const pct = Math.min(100, Math.max(0, (score || 0) * 10));
+
   return (
     <div className="mt-4">
       <div className="mb-1.5 flex items-baseline justify-between">
@@ -79,13 +90,13 @@ function ReadinessBar({ score, tone }) {
           style={{ color: 'var(--text-primary)', fontVariantNumeric: 'tabular-nums' }}
         >
           {score}
-          <span style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>/100</span>
+          <span style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>/10</span>
         </span>
       </div>
       <div className="h-1.5 w-full overflow-hidden rounded-full" style={{ background: 'var(--background-tertiary)' }}>
         <div
           className="h-full rounded-full"
-          style={{ background: tone.bar, width: `${score}%` }}
+          style={{ background: tone.bar, width: `${pct}%` }}
         />
       </div>
     </div>

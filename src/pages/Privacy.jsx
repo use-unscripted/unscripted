@@ -1,5 +1,5 @@
 import { LegalPage, Clause, Sub, P, Enum, Defs, DataTable, Mail, Ref } from '@/components/legal/LegalPage';
-import { EFFECTIVE_DATE, MIN_AGE, TEAM } from '@/lib/legal';
+import { EFFECTIVE_DATE, PRIVACY_LAST_UPDATED, MIN_AGE, TEAM } from '@/lib/legal';
 
 const CONTENTS = [
   { id: 'scope', title: 'Scope of This Policy' },
@@ -59,7 +59,7 @@ export default function Privacy() {
     <LegalPage
       title="Privacy Policy"
       effective={EFFECTIVE_DATE}
-      updated={EFFECTIVE_DATE}
+      updated={PRIVACY_LAST_UPDATED}
       contents={CONTENTS}
       lede={
         <>
@@ -139,10 +139,13 @@ export default function Privacy() {
           strictly necessary authentication cookie and your browser’s local storage as described
           in Section 9.
         </Sub>
-        <Sub n="3.3" title="No third-party analytics">
-          We do not operate third-party analytics, advertising, or session-recording technologies
-          on the Services, and we do not permit third parties to collect Personal Information
-          through the Services for their own purposes.
+        <Sub n="3.3" title="Analytics">
+          The Platform Provider collects first-party analytics on our behalf as part of the
+          infrastructure on which the Services run, comprising page views, session activity and
+          named product usage events recording the steps you complete within the Services. We do
+          not operate third-party analytics, advertising, or session-recording technologies on the
+          Services, and we do not permit third parties to collect Personal Information through the
+          Services for their own purposes.
         </Sub>
         <Sub n="3.4" title="Information concerning other individuals">
           If you record the details of another individual in the outreach features, you are
@@ -300,7 +303,9 @@ export default function Privacy() {
           disabled while you remain signed in.
         </Sub>
         <Sub n="9.2" title="Local storage">
-          Where you begin onboarding without an account, your responses are stored in your
+          Your browser’s local storage holds a session identifier set by the Platform Provider,
+          which distinguishes one visit from another for the analytics described in Section 3.3.
+          Where you begin onboarding without an account, your responses are also stored in your
           browser’s local storage so that they are not lost if you leave the page. That record
           remains on your device until you create an account, clear your browsing data, or the
           stored version is superseded.
