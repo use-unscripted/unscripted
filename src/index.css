@@ -315,6 +315,33 @@
   transition: transform 80ms var(--ease-out);
 }
 
+/* ── My Journey: the one instruction, and the cycle spine ────────────────── */
+/* Gold on navy is the only place gold carries text weight — a single primary
+   button, never body copy. Navy-900 on gold-500 measures 5.9:1. */
+.journey-now-cta {
+  min-height: 52px;
+  color: var(--brand-navy-900);
+  background: var(--brand-gold-500);
+  transition: background var(--dur-fast) var(--ease-out);
+}
+.journey-now-cta:hover {
+  background: var(--brand-gold-600);
+}
+/* The page-wide focus ring is navy, which is invisible against this panel. */
+.journey-now-cta:focus-visible {
+  outline: 2px solid #FFFFFF;
+  outline-offset: 3px;
+}
+
+.journey-stage-row {
+  transition: background var(--dur-fast) var(--ease-out);
+}
+/* Tertiary, not secondary — the page surface is already --background-secondary,
+   so a hover set to that reads as no hover at all. */
+.journey-stage-row:hover {
+  background: var(--background-tertiary);
+}
+
 /* ── Sidebar nav link ────────────────────────────────────────────────────── */
 .nav-link {
   transition:
