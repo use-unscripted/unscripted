@@ -80,5 +80,24 @@
   "required": [
     "college",
     "submitted_url"
-  ]
+  ],
+  // Admin on all four, which here means "nobody but the backend function".
+  //
+  // Students never touch this entity directly: they submit through
+  // campusEvents, the review page reads through campusEvents, and both use
+  // asServiceRole. Per the SDK, asServiceRole does NOT bypass RLS — it acts
+  // with role "admin" — so admin-scoped rules are what let the function work
+  // at all, and anything less would be a wider door for no gain.
+  //
+  // What this shuts: a student reading the whole queue (every other student's
+  // school and submitted URL), and — the one that matters — a student
+  // updating their own row's review_status to "approved" and promoting their
+  // own link. CampusInvite is world-updatable today, so the defaults here are
+  // not safe by assumption.
+  "rls": {
+    "create": { "user_condition": { "role": "admin" } },
+    "read": { "user_condition": { "role": "admin" } },
+    "update": { "user_condition": { "role": "admin" } },
+    "delete": { "user_condition": { "role": "admin" } }
+  }
 }
