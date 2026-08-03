@@ -151,7 +151,7 @@ export function RecommendedEvent({ event, college, timeOnly = false }) {
 
         {host && (
           <p className="mt-2 text-[11px]" style={{ color: 'var(--text-muted)' }}>
-            From {host} — check the time and room before you go.
+            From {host}. Check the time and room before you go.
           </p>
         )}
       </div>

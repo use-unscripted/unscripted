@@ -108,7 +108,7 @@ export function NoCollegeState({ profile, disabled, onSaved, className }) {
   return (
     <EmptyPanel icon={School} title="Which school do you go to?" className={className}>
       <p className="mt-1 text-xs leading-relaxed text-[#64748B]">
-        Tell us and we&apos;ll pull real events off your campus calendar — so the first step of
+        Tell us and we&apos;ll pull real events off your campus calendar, so the first step of
         your guide has a date somebody else already set.
       </p>
 
@@ -214,7 +214,7 @@ export function NoFeedState({ college, disabled, onResolved, className }) {
   return (
     <EmptyPanel icon={CalendarSearch} title={`No calendar we can read for ${college || 'your school'}`} className={className}>
       <p className="mt-1 text-xs leading-relaxed text-[#64748B]">
-        Your school&apos;s main events page usually isn&apos;t one we can read — but your{' '}
+        Your school&apos;s main events page usually isn&apos;t one we can read, but your{' '}
         <strong className="font-semibold text-[#334155]">club portal</strong> normally is. It&apos;s
         where clubs post their own events, and it&apos;s where the career ones actually live.
       </p>
@@ -254,7 +254,7 @@ export function NoFeedState({ college, disabled, onResolved, className }) {
         </p>
       ) : (
         <p id="campus-feed-hint" className="mt-2 text-xs text-[#94A3B8]">
-          Engage, CampusGroups, Presence, BeInvolved — whatever yours calls &ldquo;get
+          Engage, CampusGroups, Presence, BeInvolved: whatever yours calls &ldquo;get
           involved.&rdquo; Log in there and copy the address.
         </p>
       )}
@@ -287,7 +287,7 @@ export function EmptyCalendarState({ college, className }) {
     <EmptyPanel icon={CalendarSearch} title="Nothing on your campus calendar right now" className={className}>
       <p className="mt-1 text-xs leading-relaxed text-[#64748B]">
         We can read {college || 'your school'}&apos;s calendar and it has nothing posted for the
-        next six weeks. That usually means a break — worth checking again in a week.
+        next six weeks. That usually means a break. Worth checking again in a week.
       </p>
       <SearchYourSchoolLink college={college} label="Check the school's page yourself" />
     </EmptyPanel>
