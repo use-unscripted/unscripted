@@ -1,65 +1,167 @@
-import { Check } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Check, ChevronRight } from 'lucide-react';
 import { STAGES, STAGE_INDEX } from '@/lib/journey';
 
 /**
- * Persistent six-stage progress indicator.
- * Mobile: horizontal row of compact dots + the active stage named beneath — no sideways scroll.
- * Desktop: full labelled track.
+ * The cycle spine — the record of one journey, not a progress bar.
+ *
+ * Each of the six stages carries what the student actually produced there, so
+ * the same element answers "where am I" and "what have I built". A stage that
+ * is still empty says so, which is the honest and useful reading: it shows
+ * exactly where the cycle stopped. The gold rail runs only as far as the work
+ * does, so there is no percentage to inflate.
  */
-export default function JourneyStages({ stage }) {
+
+const NOT_YET = 'Nothing yet';
+
+function plural(n, one, many) {
+  return `${n} ${n === 1 ? one : many}`;
+}
+
+/**
+ * What each stage has to show for itself. Derived only from records the student
+ * already has — nothing new is stored.
+ */
+export function buildStageDetail({ counts, currentPath, nextExperiment, experimentsDone }) {
+  return {
+    explore: {
+      value: counts.paths ? plural(counts.paths, 'path compared', 'paths compared') : NOT_YET,
+      to: counts.paths ? '/paths' : null,
+    },
+    choose: {
+      value: currentPath?.path_name || 'No direction chosen yet',
+      to: '/paths',
+    },
+    test: {
+      value: nextExperiment?.title
+        || (experimentsDone ? plural(experimentsDone, 'experiment finished', 'experiments finished') : 'Not started'),
+      to: counts.experiments ? '/experiments' : null,
+    },
+    prove: {
+      value: counts.proof ? plural(counts.proof, 'piece of evidence', 'pieces of evidence') : NOT_YET,
+      to: counts.proof ? '/evidence' : null,
+    },
+    reflect: {
+      value: counts.reflections ? plural(counts.reflections, 'reflection', 'reflections') : NOT_YET,
+      to: counts.reflections ? '/reflect' : null,
+    },
+    decide: {
+      value: counts.reflections && experimentsDone ? 'Ready to decide' : NOT_YET,
+      to: counts.reflections && experimentsDone ? '/reflect' : null,
+    },
+  };
+}
+
+function Node({ state }) {
+  if (state === 'done') {
+    return (
+      <span
+        className="grid h-[22px] w-[22px] place-items-center rounded-full"
+        style={{ background: 'var(--brand-gold-500)', color: 'var(--brand-navy-900)' }}
+      >
+        <Check size={12} strokeWidth={3.5} aria-hidden="true" />
+      </span>
+    );
+  }
+  if (state === 'current') {
+    return (
+      <span
+        className="grid h-[22px] w-[22px] place-items-center rounded-full"
+        style={{ background: 'var(--brand-navy-900)', boxShadow: '0 0 0 4px rgba(214,182,106,0.45)' }}
+      >
+        <span className="h-[7px] w-[7px] rounded-full" style={{ background: 'var(--brand-gold-500)' }} />
+      </span>
+    );
+  }
+  return (
+    <span
+      className="block h-[22px] w-[22px] rounded-full"
+      style={{ background: 'var(--background-primary)', boxShadow: 'inset 0 0 0 2px var(--border-light)' }}
+    />
+  );
+}
+
+export default function JourneyStages({ stage, detail }) {
   const activeIdx = STAGE_INDEX[stage] ?? 0;
-  const active = STAGES[activeIdx];
 
   return (
-    <section
-      aria-label="Your journey progress"
-      className="rounded-[16px] bg-white p-4 sm:p-5"
-      style={{ border: '1px solid var(--border-light)' }}
-    >
-      <div className="flex items-center gap-1.5 sm:gap-2">
+    <section aria-label="Your journey so far">
+      <h2
+        className="font-heading text-xs font-bold uppercase tracking-[.16em]"
+        style={{ color: 'var(--text-muted)' }}
+      >
+        Your cycle
+      </h2>
+
+      {/* Same measure as the instruction panel above, so the two elements read
+          as one column rather than a panel with a wide list under it. */}
+      <ol className="mt-4 max-w-2xl">
         {STAGES.map((s, i) => {
-          const done = i < activeIdx;
-          const isActive = i === activeIdx;
-          return (
-            <div key={s.key} className="flex min-w-0 flex-1 flex-col items-center gap-1.5">
-              <div className="flex w-full items-center gap-1">
-                <div
-                  aria-current={isActive ? 'step' : undefined}
-                  className="grid h-7 w-7 shrink-0 place-items-center rounded-full text-[11px] font-bold"
-                  style={
-                    isActive
-                      ? { background: 'var(--brand-navy-900)', color: '#fff', boxShadow: '0 0 0 4px rgba(31,58,95,0.14)' }
-                      : done
-                      ? { background: 'var(--brand-gold-500)', color: 'var(--brand-navy-900)' }
-                      : { background: 'var(--background-tertiary)', color: 'var(--text-muted)' }
-                  }
-                >
-                  {done ? <Check size={13} strokeWidth={3} /> : i + 1}
-                </div>
-                {i < STAGES.length - 1 && (
-                  <div
-                    className="h-[3px] flex-1 rounded-full"
-                    style={{ background: done ? 'var(--brand-gold-500)' : 'var(--background-tertiary)' }}
-                  />
-                )}
-              </div>
-              <span
-                className="hidden w-full truncate text-center text-[11px] font-bold uppercase tracking-[.08em] sm:block"
-                style={{ color: isActive ? 'var(--brand-navy-900)' : 'var(--text-muted)' }}
+          const state = i < activeIdx ? 'done' : i === activeIdx ? 'current' : 'todo';
+          const d = detail?.[s.key];
+          // A stage that hasn't happened yet shows the question it will answer;
+          // one that has shows what it produced.
+          const line = state === 'todo' ? s.question : d?.value || s.question;
+          const to = state === 'todo' ? null : d?.to;
+
+          const body = (
+            <div className="flex min-w-0 flex-1 flex-col gap-0.5 sm:flex-row sm:items-baseline sm:gap-5">
+              <p
+                className="font-heading shrink-0 text-sm font-bold sm:w-[104px]"
+                style={{ color: state === 'todo' ? 'var(--text-muted)' : 'var(--text-primary)' }}
               >
                 {s.label}
-              </span>
+              </p>
+              <p
+                className="min-w-0 flex-1 text-sm leading-6"
+                style={{
+                  color: state === 'current' ? 'var(--brand-navy-700)' : 'var(--text-secondary)',
+                  fontWeight: state === 'current' ? 600 : 400,
+                  overflowWrap: 'anywhere',
+                }}
+              >
+                {line}
+              </p>
+              {to && (
+                <ChevronRight
+                  size={16}
+                  className="hidden shrink-0 self-center sm:block"
+                  style={{ color: 'var(--text-muted)' }}
+                  aria-hidden="true"
+                />
+              )}
             </div>
           );
-        })}
-      </div>
 
-      <div className="mt-3 border-t pt-3 text-center sm:text-left" style={{ borderColor: 'var(--border-light)' }}>
-        <p className="text-xs font-bold uppercase tracking-[.12em]" style={{ color: 'var(--brand-navy-700)' }}>
-          Stage {activeIdx + 1} of {STAGES.length} · {active.label}
-        </p>
-        <p className="mt-1 text-sm" style={{ color: 'var(--text-secondary)' }}>{active.question}</p>
-      </div>
+          return (
+            <li key={s.key} className="relative flex gap-4">
+              {/* Rail: gold as far as the work goes, hairline after. */}
+              {i < STAGES.length - 1 && (
+                <span
+                  aria-hidden="true"
+                  className="absolute bottom-0 left-[10px] top-[28px] w-[2px]"
+                  style={{ background: i < activeIdx ? 'var(--brand-gold-500)' : 'var(--border-light)' }}
+                />
+              )}
+
+              <span
+                className="relative z-[1] shrink-0 pt-[9px]"
+                aria-current={state === 'current' ? 'step' : undefined}
+              >
+                <Node state={state} />
+              </span>
+
+              {to ? (
+                <Link to={to} className="journey-stage-row -mx-2 flex min-w-0 flex-1 rounded-[10px] px-2 py-3">
+                  {body}
+                </Link>
+              ) : (
+                <div className="-mx-2 flex min-w-0 flex-1 px-2 py-3">{body}</div>
+              )}
+            </li>
+          );
+        })}
+      </ol>
     </section>
   );
 }
