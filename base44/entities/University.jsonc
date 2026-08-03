@@ -53,6 +53,7 @@
         "campusgroups",
         "moderncampus",
         "presence",
+        "ems",
         "none"
       ],
       "default": "unknown"

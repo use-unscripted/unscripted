@@ -1279,6 +1279,494 @@ const presenceAdapter: Adapter = {
   normalize: normalizePresence,
 };
 
+// ── Adapter: EMS Master Calendar (Dean Evans) ───────────────────────────────
+
+/**
+ * EMS Master Calendar — the public face of the room-booking system a lot of
+ * mid-size universities already run. Sacred Heart and James Madison are the two
+ * our own students attend, and both read as "no calendar" until this existed.
+ *
+ * It is the only platform in this file that publishes no feed. The page builds
+ * its list from an ASP.NET PageMethod, so reading it means doing what the page
+ * does:
+ *
+ *   1. one request to MasterCalendar.aspx purely for its ASP.NET_SessionId
+ *   2. POST MasterCalendar.aspx/GetMoreData with a month and a page number
+ *   3. unwrap {"d": "<json string>"} and parse that string as JSON again
+ *
+ * Step 1 is not optional and skipping it does not look like an error. Without
+ * the cookie the POST answers 200 with `{"PageCount":0,"listData":[]}` — a
+ * well-formed empty month, which reads as a school with nothing on rather than
+ * as us using the endpoint wrong. Everything below is written against that
+ * failure: a miss has to be a real miss.
+ *
+ * Most installs also expose RSS, and it is deliberately not used. James
+ * Madison's is its *academic* calendar — 93 deadlines carrying no times, no
+ * places and no categories — while the calendar a student actually wants holds
+ * ~350 events a month and exists only behind the PageMethod. Sacred Heart's RSS
+ * is the fuller source of the two there, but picking per school on a guess is
+ * worse than reading the calendar the school itself shows the public, which is
+ * what this does. Measured on Sacred Heart's September: 199 events through the
+ * PageMethod against 211 in the RSS, so the gap only exists out of term.
+ */
+
+/**
+ * Requests one fetch may spend on POSTs, across every month it walks.
+ *
+ * Sacred Heart's September is 7 pages and James Madison's is 8, so a 45-day
+ * window over two months could otherwise cost 15 round trips with a student
+ * watching a spinner. Pages come back in date order, so a budget spent from the
+ * front keeps the soonest events and drops the furthest-out ones, which is the
+ * right thing to lose.
+ */
+const EMS_PAGE_BUDGET = 6;
+
+/** A 120-day window touches five months; four is the honest working ceiling. */
+const EMS_MAX_MONTHS = 4;
+
+/**
+ * displayView is the index of the selected button in the page's own view bar:
+ * 0 day, 1 week, 2 month. Month is the widest range the endpoint offers — 3 and
+ * above answer for a single day in January and mean nothing.
+ */
+const EMS_MONTH_VIEW = '2';
+
+/** "8/20/2026 7:00:00 PM", and a 24-hour install would drop the meridiem. */
+const EMS_WHEN = /^(\d{1,2})\/(\d{1,2})\/(\d{4})\s+(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(AM|PM)?$/i;
+
+/**
+ * Not optional, and its absence is the second thing here that fails quietly.
+ *
+ * EMS picks the culture it formats dates in off this header. A request without
+ * one gets 200 and 1.8KB of "Master Calendar Error" instead of the calendar,
+ * and — because the error page is served by a different handler — no session
+ * cookie either, so the POST behind it then answers its well-formed empty
+ * month. Both live installs need it; curl happens to get away without it,
+ * which is exactly how this stayed hidden through a shell-based dig.
+ */
+const EMS_HEADERS = {
+  'Accept-Language': 'en-US,en;q=0.9',
+  'User-Agent': BROWSER_UA,
+};
+
+/** The path is fixed relative to whichever folder the calendar is installed in. */
+function emsMethodUrl(feedUrl: string): string {
+  return `${feedUrl.split('?')[0]}/GetMoreData`;
+}
+
+function emsDetailUrl(feedUrl: string, id: unknown): string {
+  const idText = String(id ?? '').trim();
+  if (!idText || !/^\d+$/.test(idText)) return '';
+  return feedUrl.split('?')[0].replace(
+    /MasterCalendar\.aspx$/i,
+    `EventDetails.aspx?EventDetailId=${idText}`,
+  );
+}
+
+/**
+ * The session cookie, which is the entire difference between a real month and
+ * a convincing empty one.
+ *
+ * HEAD first because the page it is asking is 85–170KB of markup we have no use
+ * for, and IIS hands out the cookie on a HEAD just as readily. A server that
+ * refuses HEAD gets a GET whose body is dropped unread.
+ */
+async function emsSession(pageUrl: string, guard: HopGuard = null): Promise<string> {
+  for (const method of ['HEAD', 'GET']) {
+    let res: Response;
+    try {
+      res = await guardedFetch(pageUrl, {
+        method,
+        headers: { Accept: 'text/html,application/xhtml+xml,*/*', ...EMS_HEADERS },
+        signal: AbortSignal.timeout(PROBE_TIMEOUT_MS),
+      }, guard);
+    } catch (_) {
+      continue;
+    }
+    const cookie = emsCookie(res);
+    const refusedHead = res.status === 405 || res.status === 501;
+    await res.body?.cancel().catch(() => {});
+    if (cookie) return cookie;
+    // A HEAD that was answered and simply carried no session cookie is an
+    // answer: this is not the calendar. Only a server refusing the method
+    // earns the second, expensive request — every host discovery hands us
+    // pays for this probe, and most of them are not EMS at all.
+    if (!refusedHead) return '';
+  }
+  return '';
+}
+
+/**
+ * Set-Cookie is the one header that legitimately repeats, and this response
+ * carries two of them. `getSetCookie()` keeps them apart where it exists;
+ * `get()` folds them into one comma-joined line, so the pattern has to match
+ * mid-string either way.
+ */
+function emsCookie(res: Response): string {
+  const headers = res.headers as unknown as { getSetCookie?: () => string[] };
+  const lines = typeof headers.getSetCookie === 'function'
+    ? headers.getSetCookie()
+    : [res.headers.get('set-cookie') || ''];
+  for (const line of lines) {
+    const found = /(ASP\.NET_SessionId=[^;,\s]+)/i.exec(line || '');
+    if (found) return found[1];
+  }
+  return '';
+}
+
+/** The first of each month the window touches, capped. */
+function emsMonths(days: number): string[] {
+  const now = new Date();
+  const end = new Date(now.getTime() + days * 86400000);
+  const span = (end.getUTCFullYear() - now.getUTCFullYear()) * 12 +
+    (end.getUTCMonth() - now.getUTCMonth()) + 1;
+  const count = Math.min(Math.max(span, 1), EMS_MAX_MONTHS);
+
+  const months: string[] = [];
+  for (let i = 0; i < count; i++) {
+    const first = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + i, 1));
+    months.push(`${first.getUTCFullYear()}-${pad2(first.getUTCMonth() + 1)}-01`);
+  }
+  return months;
+}
+
+/**
+ * One page of one month.
+ *
+ * The date goes out ISO rather than in the page's own M/D/YYYY, because the
+ * page formats it to the browser's locale and every request here asks for the
+ * first of a month — exactly the value a d/m/y install would read as a
+ * different month. .NET parses ISO the same way under any culture, and both
+ * live installs accept it.
+ */
+async function emsPage(
+  feedUrl: string,
+  cookie: string,
+  startDate: string,
+  pageIndex: number,
+  guard: HopGuard = null,
+  // deno-lint-ignore no-explicit-any
+): Promise<{ pageCount: number; rows: any[] } | null> {
+  const res = await guardedFetch(emsMethodUrl(feedUrl), {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json; charset=utf-8',
+      Accept: 'application/json',
+      Cookie: cookie,
+      'X-Requested-With': 'XMLHttpRequest',
+      ...EMS_HEADERS,
+    },
+    body: JSON.stringify({
+      pageIndex: String(pageIndex),
+      startDate,
+      displayView: EMS_MONTH_VIEW,
+      eventTypeIds: '',
+      locationIds: '',
+      sublocationIds: '',
+      departmentIds: '',
+      keyword: '',
+    }),
+    signal: AbortSignal.timeout(FEED_TIMEOUT_MS),
+  }, guard);
+
+  if (!res.ok) {
+    await res.body?.cancel().catch(() => {});
+    return null;
+  }
+
+  // Two parses, not one: the PageMethod envelope holds the payload as a string.
+  // deno-lint-ignore no-explicit-any
+  let inner: any;
+  try {
+    const envelope = await res.json();
+    inner = JSON.parse(String(envelope?.d ?? ''));
+  } catch (_) {
+    return null;
+  }
+
+  const rows = Array.isArray(inner?.listData) ? inner.listData : null;
+  if (!rows) return null;
+  const pageCount = Number(inner?.params?.[0]?.PageCount);
+  return { pageCount: Number.isFinite(pageCount) ? pageCount : 0, rows };
+}
+
+/** Wall-clock components as an instant, so durations can be added to them. */
+function emsMoment(value: unknown): number | null {
+  const found = EMS_WHEN.exec(String(value || '').trim());
+  if (!found) return null;
+  const [, month, day, year, hour, minute, second, meridiem] = found;
+
+  let hours = Number(hour);
+  if (meridiem) {
+    if (hours < 1 || hours > 12) return null;
+    if (/pm/i.test(meridiem)) hours = hours === 12 ? 12 : hours + 12;
+    else if (hours === 12) hours = 0;
+  }
+  if (hours > 23) return null;
+
+  const at = Date.UTC(
+    Number(year), Number(month) - 1, Number(day),
+    hours, Number(minute), Number(second || 0),
+  );
+  if (!Number.isFinite(at)) return null;
+
+  // Date.UTC rolls a bad field over instead of refusing it, so "13/40/2026"
+  // becomes a real day in February. A date that does not read back as the one
+  // that was written is not a date we can show anybody.
+  const back = new Date(at);
+  if (back.getUTCMonth() !== Number(month) - 1 || back.getUTCDate() !== Number(day)) return null;
+  return at;
+}
+
+/**
+ * Back to a wall-clock string with no offset on it, which is the same treatment
+ * iCal, Trumba and Modern Campus get. EMS states the calendar's own UTC offset
+ * on every row and it is deliberately unused: a student standing on that campus
+ * reads the clock on the wall, and applying an offset is the one thing `icsDate`
+ * is written not to do.
+ */
+function emsStamp(at: number, dateOnly: boolean): string {
+  const iso = new Date(at).toISOString();
+  return dateOnly ? iso.slice(0, 10) : iso.slice(0, 19);
+}
+
+/**
+ * EMS is a room-booking system before it is a calendar, so one event booked
+ * into four rooms arrives as four rows — James Madison's home fixtures come
+ * with their locker rooms attached.
+ *
+ * They collapse on title and start. Where the rows disagree about the place,
+ * the place is dropped rather than picked: the first row of that soccer group
+ * is a locker room, and naming it walks a student into the wrong building,
+ * which this file holds to be worse than saying nothing.
+ */
+// deno-lint-ignore no-explicit-any
+function emsDedupe(rows: any[]): any[] {
+  // deno-lint-ignore no-explicit-any
+  const groups = new Map<string, any[]>();
+  for (const row of rows) {
+    const key = `${plainText(row?.Title).toLowerCase()}|${row?.EventDateTime?.EventDateTime || ''}`;
+    const group = groups.get(key);
+    if (group) group.push(row);
+    else groups.set(key, [row]);
+  }
+
+  return [...groups.values()].map((group) => {
+    if (group.length === 1) return group[0];
+    // The fullest description wins the group; a bare room booking carries none.
+    const best = group.reduce((a, b) =>
+      String(b?.Description || '').length > String(a?.Description || '').length ? b : a
+    );
+    const places = new Set(group.map(r => plainText(r?.Location?.Name)).filter(Boolean));
+    return places.size > 1 ? { ...best, Location: null } : best;
+  });
+}
+
+async function fetchEms(feedUrl: string, days: number) {
+  const cookie = await emsSession(feedUrl);
+  if (!cookie) throw new Error('Calendar feed would not start a session');
+
+  const earliest = Date.now() - 3600000; // Same floor the request-time filters use.
+  const latest = Date.now() + days * 86400000;
+  // deno-lint-ignore no-explicit-any
+  const rows: any[] = [];
+  let budget = EMS_PAGE_BUDGET;
+
+  for (const month of emsMonths(days)) {
+    if (budget <= 0) {
+      console.warn('[campusEvents] EMS page budget spent before the window ended', {
+        feedUrl,
+        days,
+        stoppedBefore: month,
+      });
+      break;
+    }
+
+    const first = await emsPage(feedUrl, cookie, month, 1);
+    budget--;
+    if (!first) continue;
+    rows.push(...first.rows);
+
+    // PageCount is per install, not per vendor — Sacred Heart pages by 30 and
+    // James Madison by 50 — so the count it reports is the only safe bound.
+    const wanted = Math.max(0, first.pageCount - 1);
+    const affordable = Math.min(wanted, budget);
+    if (affordable > 0) {
+      const rest = await Promise.all(
+        Array.from({ length: affordable }, (_, i) =>
+          emsPage(feedUrl, cookie, month, i + 2).catch(() => null)),
+      );
+      budget -= affordable;
+      for (const page of rest) if (page) rows.push(...page.rows);
+    }
+    if (wanted > affordable) {
+      console.warn('[campusEvents] EMS month truncated', {
+        feedUrl,
+        month,
+        readPages: affordable + 1,
+        totalPages: first.pageCount,
+      });
+    }
+  }
+
+  // A month view always starts at the 1st, so the current month arrives with
+  // everything already past still in it.
+  return emsDedupe(rows.filter((row) => {
+    if (row?.Cancel) return false;
+    const at = emsMoment(row?.EventDateTime?.EventDateTime);
+    return at !== null && at >= earliest && at <= latest;
+  }));
+}
+
+// deno-lint-ignore no-explicit-any
+function normalizeEms(event: any, feedUrl: string): NormalizedEvent {
+  const when = event?.EventDateTime || {};
+  const at = emsMoment(when.EventDateTime);
+  const allDay = Boolean(event?.isAllDay);
+  // Their own field, their own typo.
+  const minutes = Number(when.EventDuaration);
+
+  // No end when they say there is none, and none invented for an all-day event
+  // that lasts a day — a same-date end tells a student nothing.
+  let end = '';
+  if (at !== null && !event?.NoEndTime && Number.isFinite(minutes) && minutes > 0) {
+    if (!allDay) end = emsStamp(at + minutes * 60000, false);
+    else if (minutes > 1440) end = emsStamp(at + (minutes - 1) * 60000, true);
+  }
+
+  return {
+    ...emptyEvent(),
+    id: String(event?.Id ?? ''),
+    title: plainText(event?.Title),
+    description: plainText(event?.Description).slice(0, 600),
+    url: emsDetailUrl(feedUrl, event?.Id),
+    start: at === null ? '' : emsStamp(at, allDay),
+    end,
+    all_day: allDay,
+    // Building and room arrive concatenated into one name with no separator —
+    // "Edgerton Center for the Performing Arts Edgerton Atrium" — so splitting
+    // them would be a guess. The whole string is the location and room stays
+    // empty.
+    location: plainText(event?.Location?.Name),
+    address: plainText(event?.Location?.Address),
+    types: cleanList([event?.EventTypeName]),
+    keywords: typeof event?.EventKeyWords === 'string'
+      ? cleanList(event.EventKeyWords.split(','))
+      : cleanList(event?.EventKeyWords),
+  };
+}
+
+/**
+ * Every address an EMS install was actually found at.
+ *
+ * Not guessed: the 1,583 schools the national sweep resolved to nothing were
+ * re-probed for all of these on 2026-08-03, and ten of them answered. The
+ * hosted tenancy is <label>.emscloudservice.com/calendar and the label was the
+ * domain's own on all six that use it — Sacred Heart, Cleveland State, Ohlone,
+ * Georgia Highlands, Wisconsin-Green Bay, LeTourneau. The self-hosted four sit
+ * on ems., calendar. or events. under /MasterCalendar — James Madison,
+ * Shippensburg, Nassau Community, Southern Illinois.
+ */
+function emsCandidates(domain: string): string[] {
+  const label = domainLabel(domain);
+  const candidates = ['ems', 'calendar', 'events']
+    .map(sub => `https://${sub}.${domain}/MasterCalendar/MasterCalendar.aspx`);
+  if (label) {
+    candidates.unshift(`https://${label}.emscloudservice.com/calendar/MasterCalendar.aspx`);
+  }
+  return candidates;
+}
+
+/**
+ * Does a real month come back from this address?
+ *
+ * Non-empty, for the reason every probe here insists on it, and checked across
+ * the window rather than the current month alone: a school probed in July would
+ * otherwise fail on an empty summer and be written off for thirty days.
+ */
+async function probeEmsAt(feedUrl: string, guard: HopGuard = null): Promise<string | null> {
+  let cookie = '';
+  try {
+    cookie = await emsSession(feedUrl, guard);
+  } catch (_) {
+    return null;
+  }
+  if (!cookie) return null;
+
+  for (const month of emsMonths(DEFAULT_DAYS)) {
+    let page: { pageCount: number; rows: unknown[] } | null = null;
+    try {
+      page = await emsPage(feedUrl, cookie, month, 1, guard);
+    } catch (_) {
+      return null;
+    }
+    // deno-lint-ignore no-explicit-any
+    if (page?.rows.some((row: any) => row?.Title && emsMoment(row?.EventDateTime?.EventDateTime))) {
+      return feedUrl;
+    }
+  }
+  return null;
+}
+
+/**
+ * All four addresses at once, answered in preference order — the same trick
+ * `firstValidUrl` plays, and for the same reason. Three of the four are hosts
+ * that will not resolve for most schools, and waiting each one out in turn puts
+ * three timeouts in front of a student watching a spinner.
+ */
+async function probeEms(domain: string): Promise<string | null> {
+  const attempts = emsCandidates(domain).map(candidate =>
+    probeEmsAt(candidate).catch(() => null)
+  );
+  for (const attempt of attempts) {
+    const hit = await attempt;
+    if (hit) return hit;
+  }
+  return null;
+}
+
+/** The calendar folder is named by the install, so a discovered host tries both. */
+const EMS_PATHS = ['/MasterCalendar/MasterCalendar.aspx', '/calendar/MasterCalendar.aspx'];
+
+/** The pages an EMS install serves, any of which a student may be looking at. */
+const EMS_PAGE_NAMES = /^(.*\/)(?:MasterCalendar|EventDetails|RSSFeeds|DateBrowser|Search)\.aspx$/i;
+
+/**
+ * The MasterCalendar page behind an address a student pasted, or nothing.
+ *
+ * Deliberately narrow: it answers only for a URL that already names an EMS page
+ * or sits on the vendor's own hosting. Anything looser would spend a session
+ * request and a POST on every pasted link in the product, and EMS is the rarest
+ * platform this file reads.
+ */
+export function emsBaseFrom(url: string): string {
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch (_) {
+    return '';
+  }
+
+  const named = EMS_PAGE_NAMES.exec(parsed.pathname);
+  if (named) return `${parsed.origin}${named[1]}MasterCalendar.aspx`;
+
+  // On the vendor's hosting the folder is whatever the school was given, so the
+  // address a student copied out of the browser is the only source for it. A
+  // path segment carrying a dot is a file rather than that folder.
+  if (!stripWww(parsed.hostname.toLowerCase()).endsWith('emscloudservice.com')) return '';
+  const last = parsed.pathname.split('/').pop() || '';
+  if (last.includes('.')) return '';
+  const folder = parsed.pathname.endsWith('/') ? parsed.pathname : `${parsed.pathname}/`;
+  return `${parsed.origin}${folder}MasterCalendar.aspx`;
+}
+
+const emsAdapter: Adapter = {
+  name: 'ems',
+  probe: probeEms,
+  fetch: fetchEms,
+  normalize: normalizeEms,
+};
+
 // ── Adapter: iCalendar (.ics) ───────────────────────────────────────────────
 
 /**
@@ -2477,6 +2965,11 @@ const ADAPTERS: Adapter[] = [
   // running both should get its campus-wide calendar rather than its clubs.
   campusGroupsAdapter,
   presenceAdapter,
+  // Whole-campus, like Modern Campus, but the most expensive probe here: two
+  // fixed addresses, each costing a session request before it can be asked
+  // anything. It sits behind everything that answers in one GET and ahead of
+  // the two that have to read HTML.
+  emsAdapter,
   tribeAdapter,
   trumbaAdapter,
   drupalAdapter,
@@ -2648,6 +3141,14 @@ async function probeKnownHost(
   const ics = await firstValidIcs(ICS_PATHS.map(path => `https://${host}${path}`));
   if (ics) return { platform: 'ical', feedUrl: ics };
 
+  // EMS after the cheap guesses and before the ones that read pages. A school
+  // that runs it on a host discovery just learned about — calendar.<domain>
+  // rather than ems.<domain> — is only reachable here.
+  for (const path of EMS_PATHS) {
+    const ems = await probeEmsAt(`https://${host}${path}`);
+    if (ems) return { platform: 'ems', feedUrl: ems };
+  }
+
   // Drupal next: it costs an index request before it can say no, and the three
   // above answer in one. Arizona State needs it — its events live on
   // asuevents.asu.edu, which only turns up through discovery.
@@ -2764,6 +3265,11 @@ const CALENDAR_VENDOR_HOSTS = [
   // portal got "we could not read that" rather than "that address is somewhere
   // else" — San Diego State's is sdsu.presence.io.
   'presence.io',
+  // Accruent's hosted EMS tenancies, one subdomain per school — Sacred Heart's
+  // whole calendar is sacredheart.emscloudservice.com and nothing on
+  // sacredheart.edu serves it, so without this the students it exists for are
+  // told their own calendar belongs to someone else.
+  'emscloudservice.com',
 ];
 
 function onVendorHost(host: string): boolean {
@@ -2942,7 +3448,17 @@ export async function resolveSubmittedUrl(
     }
   }
 
-  // 3. The page that embeds the calendar. This is what most students will
+  // 3. An EMS address, which names its own application folder. Nothing later
+  //    can find this one: reading the page finds no feed because there isn't
+  //    one, and the endpoint behind it only answers a POST. The address is the
+  //    only thing that says the calendar is there.
+  const emsBase = emsBaseFrom(url);
+  if (emsBase) {
+    const ems = await probeEmsAt(emsBase, guard);
+    if (ems) return { platform: 'ems', feedUrl: ems };
+  }
+
+  // 4. The page that embeds the calendar. This is what most students will
   //    actually paste, because it is the thing their school links "Events" to.
   let page: { finalHost: string; finalUrl: string; html: string };
   try {
@@ -2967,7 +3483,7 @@ export async function resolveSubmittedUrl(
     }
   }
 
-  // 4. Whatever host the page actually landed on, checked the way discovery
+  // 5. Whatever host the page actually landed on, checked the way discovery
   //    checks a host it just learned about. A student who pastes the school's
   //    events page has told us the host even when the page itself is a shell
   //    that renders its calendar client-side and names no feed in its markup.
