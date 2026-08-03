@@ -633,7 +633,7 @@ function ReflectionFlow({ experiments, missions, proofs, outreach, initialData, 
       }));
       setSummary(typeof result?.summary === 'string' ? result.summary : '');
       setAdjustments(toStringArray(result?.path_adjustments));
-    } catch (err) {
+    } catch {
       // Without this the promise rejected unhandled, the spinner stopped, and
       // nothing on screen said why. The message is no longer printed: this
       // prompt carries the student's own reflection text, which is the most

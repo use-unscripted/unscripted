@@ -47,8 +47,13 @@ const TEXT_KEYS = ['step', 'text', 'title', 'name', 'label', 'description', 'val
  * title is a three-word label. Reading the title would quietly shorten the
  * steps on 265 existing experiments from "Write a four-sentence note to three
  * alumni, naming the specific work you saw" to "Draft outreach email".
+ *
+ * It holds every key the default order does, only reordered. A narrower list
+ * would blank a step saved under an older shape rather than shortening it.
  */
-export const STEP_TEXT_KEYS = ['step', 'description', 'title', 'text', 'name', 'label'];
+export const STEP_TEXT_KEYS = [
+  'step', 'description', 'title', 'text', 'name', 'label', 'content', 'value', 'question',
+];
 
 /**
  * Coerce anything to a trimmed display string.

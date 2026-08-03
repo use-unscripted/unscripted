@@ -158,6 +158,15 @@ describe('reading a saved mission step', () => {
     expect(toText({ title: 'T', description: 'D' })).toBe('T');
   });
 
+  // A narrower list would blank a step saved under an older shape instead of
+  // just shortening it, which is worse than the bug it was fixing.
+  it('reads every key the default order reads', () => {
+    const { toText: t } = { toText };
+    for (const key of ['step', 'description', 'title', 'text', 'name', 'label', 'content', 'value', 'question']) {
+      expect(t({ [key]: 'the text' }, STEP_TEXT_KEYS)).toBe('the text');
+    }
+  });
+
   it('only splits lines when asked', () => {
     expect(toTextList(['a\nb'])).toEqual(['a\nb']);
     expect(toTextList(['a\nb'], { splitLines: true })).toEqual(['a', 'b']);

@@ -1083,18 +1083,11 @@ ${PLAIN_PROSE_RULES}${correction}`,
         return;
       }
 
-      if (!ok) {
-        // Rendered anyway, but recorded: a section the model keeps skipping is
-        // a prompt problem, and the empty tab is the only other clue.
-        reportAiFailure('outreach_plan', {
-          stage: 'partial',
-          codes: ['plan_partial'],
-          attempts: 2,
-          recovered: true,
-          model: 'gemini_3_1_pro',
-          path_id: path.id,
-        });
-      }
+      // No row is written here. The retry loop already recorded this rejection,
+      // with the codes naming which sections were missing, and a second row
+      // would double-count one generation in the totals. It would also have to
+      // claim `recovered`, which everywhere else means "a later retry
+      // succeeded" and here would mean "we showed it anyway".
 
       setPlan(data);
       setStep('results');
