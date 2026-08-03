@@ -3,6 +3,7 @@ import { X, Loader2, Wand2, AlertCircle } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { unwrapLLM } from '@/lib/llm';
 import { buildGuidePrompt, GUIDE_JSON_SCHEMA, validateGuide, attachCampusEvent } from './guideSchema';
+import { createGuideOnce, newIdempotencyKey } from './guideIdempotency';
 import CampusEventPicker from './CampusEventPicker';
 import CampusEventCard from './CampusEventCard';
 
@@ -120,7 +121,16 @@ export default function MissionGuideGenerator({ experiment, existingGuides = [],
       // when and where come from the school's feed, not from the model.
       const guide = campusEvent ? attachCampusEvent(validation.guide, campusEvent) : validation.guide;
 
-      setPendingGuide({ ...guide, promptContext, version_number: nextVersion });
+      // The key is minted here, with the content, and not a moment later. Every
+      // retry of this save reuses it, so a create whose response was lost gets
+      // adopted instead of duplicated; generating again replaces the pending
+      // guide and mints a fresh key, so a genuinely new guide still saves.
+      setPendingGuide({
+        ...guide,
+        promptContext,
+        version_number: nextVersion,
+        idempotency_key: newIdempotencyKey(),
+      });
     } catch (err) {
       setError(err.message || 'Generation failed. Please try again.');
     } finally {
@@ -150,22 +160,36 @@ export default function MissionGuideGenerator({ experiment, existingGuides = [],
       // worse: the compensating write is only as reliable as the write that just
       // failed, and whatever broke the create (offline, auth, API down) breaks
       // the rollback too. Create-first needs no compensation to be correct.
-      const saved = await base44.entities.MissionGuides.create({
-        user_id: user.id,
-        experiment_id: experiment.id,
-        path_id: experiment.path_recommendation_id || '',
-        guide_title: pendingGuide.guide_title || `Mission Guide v${pendingGuide.version_number}`,
-        version_number: pendingGuide.version_number,
-        generation_prompt_context: pendingGuide.promptContext,
-        objective: pendingGuide.objective,
-        steps: pendingGuide.steps,
-        deliverable: pendingGuide.deliverable || '',
-        proof_requirement: pendingGuide.proof_requirement || '',
-        reflection_questions: pendingGuide.reflection_questions || [],
-        estimated_time: pendingGuide.estimated_time || '',
-        status: makeActive ? 'active' : 'draft',
-        is_active: makeActive,
-      });
+      //
+      // createGuideOnce keeps that ordering exactly as it is. The only thing it
+      // adds ahead of the create is a READ — has this pending guide's key
+      // already been written? — which cannot leave the database in any state,
+      // so nothing below needs to change to accommodate it.
+      const status = makeActive ? 'active' : 'draft';
+      const { row: saved } = await createGuideOnce(
+        base44.entities.MissionGuides,
+        pendingGuide.idempotency_key,
+        {
+          user_id: user.id,
+          experiment_id: experiment.id,
+          path_id: experiment.path_recommendation_id || '',
+          guide_title: pendingGuide.guide_title || `Mission Guide v${pendingGuide.version_number}`,
+          version_number: pendingGuide.version_number,
+          generation_prompt_context: pendingGuide.promptContext,
+          objective: pendingGuide.objective,
+          steps: pendingGuide.steps,
+          deliverable: pendingGuide.deliverable || '',
+          proof_requirement: pendingGuide.proof_requirement || '',
+          reflection_questions: pendingGuide.reflection_questions || [],
+          estimated_time: pendingGuide.estimated_time || '',
+          status,
+          is_active: makeActive,
+        },
+        // A retry is free to pick a different option than the attempt whose
+        // response was lost, so the adopted row is brought in line with the
+        // choice the student just made instead of keeping the vanished one.
+        { reconcile: { status, is_active: makeActive } },
+      );
 
       // Now that a replacement exists, retire the guides it replaces. A failure
       // here is survivable in a way the old ordering's failure was not: it
@@ -193,11 +217,16 @@ export default function MissionGuideGenerator({ experiment, existingGuides = [],
       // guidesMap cannot claim a guide was retired when the update for it failed.
       onGenerated(saved, makeActive, deactivatedIds);
     } catch (err) {
-      // Nothing was written: the create is the first write, so a throw here
-      // means the database still holds exactly what it held before, and the
-      // parent's guidesMap — which is only ever touched on success — still
-      // matches it. The decision screen's "you already have an active guide" is
-      // therefore still true, and the student can simply choose again.
+      // Nothing the student can see was written: the create is still the first
+      // write, so a throw here leaves the database holding what it held before,
+      // and the parent's guidesMap — which is only ever touched on success —
+      // still matches it. The decision screen's "you already have an active
+      // guide" is therefore still true, and the student can simply choose again.
+      //
+      // The one case where that is not literally true is the case this catch
+      // used to make expensive: the create landed and its response was lost. The
+      // row exists, we never saw it, and the honest thing is that the retry
+      // finds it by key and adopts it rather than writing a second copy.
       console.error('[MissionGuide] save failed:', err);
       setError("We couldn't save your guide. Nothing was lost — choose an option above to try again.");
       setActiveDecision(null);
