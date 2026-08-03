@@ -1013,11 +1013,13 @@ function parseRrule(value: string): Recurrence | null {
     if (!RRULE_KNOWN_PARTS.has(name)) return null;
 
     switch (name) {
-      case 'FREQ':
-        if (raw !== 'DAILY' && raw !== 'WEEKLY' && raw !== 'MONTHLY' && raw !== 'YEARLY') return null;
-        rule.freq = raw;
+      case 'FREQ': {
+        const freq = raw.toUpperCase();
+        if (freq !== 'DAILY' && freq !== 'WEEKLY' && freq !== 'MONTHLY' && freq !== 'YEARLY') return null;
+        rule.freq = freq;
         sawFreq = true;
         break;
+      }
       case 'INTERVAL': {
         const n = Number(raw);
         if (!Number.isInteger(n) || n < 1 || n > 52) return null;
@@ -1225,6 +1227,9 @@ function expandRecurrence(
   const latest = now + windowDays * 86400000;
 
   const take = (at: number): boolean => {
+    // A date arithmetic can no longer represent is the end of this series, not
+    // a thrown RangeError out of toISOString and a feed that reads as broken.
+    if (!Number.isFinite(at) || Math.abs(at) > 8.64e15) return false;
     if (at > rule.until) return false;
     if (skip.has(at)) return true;
     const rendered = new Date(icsMomentValue({ at, kind: start.kind })).getTime();
