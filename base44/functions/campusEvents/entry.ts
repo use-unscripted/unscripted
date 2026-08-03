@@ -3023,16 +3023,18 @@ const ADAPTERS: Adapter[] = [
   // per event than anything else here. Its probe costs a page read, so it sits
   // behind the two that answer in a single request.
   modernCampusAdapter,
+  // Beside Modern Campus and for the same reason, despite being the most
+  // expensive probe here: it is the whole-campus calendar, and the club portals
+  // below it are not. Measured on the two schools that run both — Sacred Heart's
+  // CampusGroups portal offers 1 event in 30 days against 715 on its EMS
+  // calendar, and James Madison's 8 against several hundred. Ordering this after
+  // them buys one cheap request and costs a student their entire calendar.
+  emsAdapter,
   campusLabsAdapter,
   // Beside Campus Labs, and after it: same one-request cost, and a school
   // running both should get its campus-wide calendar rather than its clubs.
   campusGroupsAdapter,
   presenceAdapter,
-  // Whole-campus, like Modern Campus, but the most expensive probe here: two
-  // fixed addresses, each costing a session request before it can be asked
-  // anything. It sits behind everything that answers in one GET and ahead of
-  // the two that have to read HTML.
-  emsAdapter,
   tribeAdapter,
   trumbaAdapter,
   drupalAdapter,
