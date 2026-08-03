@@ -15,7 +15,13 @@ export default defineConfig({
   },
   test: {
     environment: 'node',
-    include: ['src/**/*.test.js'],
+    // Backend functions under base44/ are Deno TypeScript and cannot be
+    // imported by Node as they stand, so their tests load them through a small
+    // harness of their own. Including them here is what lets those run at all.
+    // They are a net, not the suite — the authority on campusEvents is 50 Deno
+    // tests outside the repo; see base44/functions/campusEvents/entry.test.js
+    // for the command, and run BOTH before touching that function.
+    include: ['src/**/*.test.js', 'base44/**/*.test.js'],
     // Event dates render through toLocaleDateString, so the machine's zone is an
     // input. Pinned to the students' zone: west of UTC is where a date-only
     // calendar value can land on the wrong day, and a green run on a UTC box

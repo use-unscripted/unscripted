@@ -50,6 +50,7 @@
         "ical",
         "wptribe",
         "drupal",
+        "campusgroups",
         "none"
       ],
       "default": "unknown"
@@ -60,6 +61,7 @@
       //   livewhale   https://events.uconn.edu/live/json/events
       //   trumba      https://www.trumba.com/calendars/tufts.json
       //   campuslabs  https://nyu.campuslabs.com/engage/api/discovery/event/search
+      //   campusgroups https://usf.campusgroups.com/mobile_ws/v17/mobile_events_list
       // Empty when events_platform is "none".
       "type": "string"
     },

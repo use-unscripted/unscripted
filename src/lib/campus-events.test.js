@@ -219,6 +219,27 @@ describe('recommendCampusEvents', () => {
     }
   });
 
+  // `response_json_schema` is a request, not a guarantee. A model that answers
+  // with a string where an array was asked for used to take the whole picker
+  // down with a TypeError, thrown from inside a promise nothing was catching.
+  it('degrades a wrongly-typed model field instead of throwing', async () => {
+    base44.integrations.Core.InvokeLLM.mockResolvedValue({
+      recommendations: [{
+        event_id: '1',
+        fit_reason: 'Alumni who do the job.',
+        what_to_do: 'Get there ten minutes early.',
+        questions_to_ask: { first: 'What does your Tuesday look like?' },
+        proof_to_capture: ['a photo of the panel'],
+      }],
+    });
+
+    const [pick] = await recommendCampusEvents([calendarEvent()], PROFILE);
+
+    expect(pick.guidance.what_to_do).toEqual(['Get there ten minutes early.']);
+    expect(pick.guidance.questions_to_ask).toEqual([]);
+    expect(pick.guidance.proof_to_capture).toBe('');
+  });
+
   it('does not call the model when there is nothing to rank', async () => {
     for (const input of [[], null, undefined, 'not a list', {}]) {
       await expect(recommendCampusEvents(input, PROFILE)).resolves.toEqual([]);
@@ -463,6 +484,42 @@ describe('not asking twice', () => {
     await recommendCampusEvents(events, PROFILE);
 
     expect(base44.integrations.Core.InvokeLLM).toHaveBeenCalledTimes(1);
+  });
+
+  // The two tests above cover a failure the ranking RETURNED. This is the other
+  // case: one it THREW never reaches that check, so the rejected promise stays
+  // in the map and re-throws on every read until the TTL runs out.
+  it('does not remember a ranking that threw', async () => {
+    const events = [calendarEvent()];
+    const unreadable = {};
+    Object.defineProperty(unreadable, 'response', {
+      enumerable: true,
+      get() { throw new Error('unreadable payload'); },
+    });
+    base44.integrations.Core.InvokeLLM.mockResolvedValue(unreadable);
+
+    await expect(recommendCampusEvents(events, PROFILE)).rejects.toThrow();
+    await expect(recommendCampusEvents(events, PROFILE)).rejects.toThrow();
+
+    // A memoised rejection would re-throw without asking the model again.
+    expect(base44.integrations.Core.InvokeLLM).toHaveBeenCalledTimes(2);
+  });
+
+  // Every open of the picker reads the calendar and then ranks against it. The
+  // ranking key carries the student's profile, so editing interests writes a
+  // new entry each time while the calendar stays one. Unless a hit moves its
+  // entry to the back of the queue, the calendar is the oldest key in a 24-slot
+  // map and a run of rankings evicts the one thing all of them share.
+  it('keeps the calendar rather than evicting it behind a run of rankings', async () => {
+    base44.functions.invoke.mockResolvedValue({ status: 'ok', events: [calendarEvent()] });
+    base44.integrations.Core.InvokeLLM.mockResolvedValue({ recommendations: [] });
+
+    for (let i = 0; i < 30; i++) {
+      await fetchCampusEvents();
+      await recommendCampusEvents([calendarEvent()], { ...PROFILE, major: `Major ${i}` });
+    }
+
+    expect(base44.functions.invoke).toHaveBeenCalledTimes(1);
   });
 
   it('a retry clears the ranking too, not just the calendar', async () => {
