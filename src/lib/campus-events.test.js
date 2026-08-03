@@ -221,7 +221,7 @@ describe('recommendCampusEvents', () => {
 
   // `response_json_schema` is a request, not a guarantee. A model that answers
   // with a string where an array was asked for used to take the whole picker
-  // down with a TypeError, from inside a promise nothing was catching.
+  // down with a TypeError, thrown from inside a promise nothing was catching.
   it('degrades a wrongly-typed model field instead of throwing', async () => {
     base44.integrations.Core.InvokeLLM.mockResolvedValue({
       recommendations: [{
@@ -253,15 +253,36 @@ describe('recommendCampusEvents', () => {
     await expect(recommendCampusEvents([calendarEvent()], null)).resolves.toEqual([]);
     expect(base44.integrations.Core.InvokeLLM).toHaveBeenCalledTimes(1);
   });
+
+  // Most school calendars say nothing about money, and a model handed
+  // "free: null" will happily write "and it's free" into a fit reason. The
+  // field is left out entirely so there is nothing to read either way.
+  it('tells the model nothing about price when the calendar did not say', async () => {
+    base44.integrations.Core.InvokeLLM.mockResolvedValue({ recommendations: [] });
+
+    await recommendCampusEvents([calendarEvent({ is_free: null })], PROFILE);
+
+    const { prompt } = base44.integrations.Core.InvokeLLM.mock.calls[0][0];
+    expect(prompt).not.toContain('"free"');
+  });
+
+  it('tells the model the price when the calendar did say', async () => {
+    base44.integrations.Core.InvokeLLM.mockResolvedValue({ recommendations: [] });
+
+    await recommendCampusEvents([calendarEvent({ is_free: false })], PROFILE);
+
+    const { prompt } = base44.integrations.Core.InvokeLLM.mock.calls[0][0];
+    expect(prompt).toContain('"free": false');
+  });
 });
 
 describe('fetchCampusEvents', () => {
   it('asks the backend for the window it was given', async () => {
     base44.functions.invoke.mockResolvedValue({ events: [], college: 'Fairfield University' });
 
-    await fetchCampusEvents({ days: 30, limit: 5 });
+    await fetchCampusEvents({ days: 30, limit: 5, seriesDates: 1 });
 
-    expect(base44.functions.invoke).toHaveBeenCalledWith('campusEvents', { days: 30, limit: 5 });
+    expect(base44.functions.invoke).toHaveBeenCalledWith('campusEvents', { days: 30, limit: 5, seriesDates: 1 });
   });
 
   it('defaults the window when called with nothing', async () => {
@@ -269,7 +290,7 @@ describe('fetchCampusEvents', () => {
 
     await fetchCampusEvents();
 
-    expect(base44.functions.invoke).toHaveBeenCalledWith('campusEvents', { days: 45, limit: 20 });
+    expect(base44.functions.invoke).toHaveBeenCalledWith('campusEvents', { days: 45, limit: 20, seriesDates: 1 });
   });
 
   it('returns a raw response as-is', async () => {
@@ -336,6 +357,20 @@ describe('not asking twice', () => {
     await fetchCampusEvents({ days: 30, limit: 20 });
 
     expect(base44.functions.invoke).toHaveBeenCalledTimes(2);
+  });
+
+  // A list and a month grid want opposite answers about a weekly club, so they
+  // are different questions and must not answer each other from cache.
+  it('asks again when a caller wants every date of a repeating event', async () => {
+    base44.functions.invoke.mockResolvedValue({ status: 'ok', events: [] });
+
+    await fetchCampusEvents({ days: 45, limit: 20 });
+    await fetchCampusEvents({ days: 45, limit: 20, seriesDates: 12 });
+
+    expect(base44.functions.invoke).toHaveBeenCalledTimes(2);
+    expect(base44.functions.invoke).toHaveBeenLastCalledWith('campusEvents', {
+      days: 45, limit: 20, seriesDates: 12,
+    });
   });
 
   // A school's server failing to answer is the one outcome worth re-asking
@@ -411,17 +446,50 @@ describe('not asking twice', () => {
     expect(base44.integrations.Core.InvokeLLM).toHaveBeenCalledTimes(2);
   });
 
-  // A remembered failure is the worst thing this cache can hold. The picker
-  // awaits the ranking inside an effect with no catch, so a rejection leaves
-  // `loading` true forever, the component returns its spinner, and the retry
-  // button that would clear the cache never renders. Before the cache existed,
-  // closing and reopening the modal recovered; a memoised rejection turns that
-  // into a full page reload or a thirty-minute wait.
-  it('does not remember a ranking that blew up', async () => {
-    // Only the model call is wrapped in a try/catch, so anything after it that
-    // throws rejects the promise the cache is holding. What that something is
-    // does not matter — this one is a payload that refuses to be read — the
-    // point is that a failure must not be the answer for the next half hour.
+  // Before the cache, reopening the picker asked the model again, so a blip
+  // healed itself. A remembered failure would have taken that away.
+  it('does not remember a ranking the model failed to produce', async () => {
+    const events = [calendarEvent()];
+    base44.integrations.Core.InvokeLLM.mockRejectedValue(new Error('rate limited'));
+    await expect(recommendCampusEvents(events, PROFILE)).resolves.toEqual([]);
+
+    base44.integrations.Core.InvokeLLM.mockResolvedValue({
+      recommendations: [{ event_id: '1', fit_reason: 'Alumni who do the job.' }],
+    });
+    const picks = await recommendCampusEvents(events, PROFILE);
+
+    expect(picks).toHaveLength(1);
+    expect(base44.integrations.Core.InvokeLLM).toHaveBeenCalledTimes(2);
+  });
+
+  it('does not remember a response it could not read', async () => {
+    const events = [calendarEvent()];
+    base44.integrations.Core.InvokeLLM.mockResolvedValue({ recommendations: 'not a list' });
+    await expect(recommendCampusEvents(events, PROFILE)).resolves.toEqual([]);
+
+    base44.integrations.Core.InvokeLLM.mockResolvedValue({ recommendations: [] });
+    await recommendCampusEvents(events, PROFILE);
+
+    expect(base44.integrations.Core.InvokeLLM).toHaveBeenCalledTimes(2);
+  });
+
+  // The opposite case, and the one the cache exists for: a model that read the
+  // events and genuinely ranked none of them has answered, and re-asking costs
+  // money to be told the same thing.
+  it('remembers a model that ranked nothing', async () => {
+    const events = [calendarEvent()];
+    base44.integrations.Core.InvokeLLM.mockResolvedValue({ recommendations: [] });
+
+    await recommendCampusEvents(events, PROFILE);
+    await recommendCampusEvents(events, PROFILE);
+
+    expect(base44.integrations.Core.InvokeLLM).toHaveBeenCalledTimes(1);
+  });
+
+  // Dropping a ranking the model failed to produce covers a failure the ranking
+  // RETURNED. One it threw never reaches that check: the rejected promise stays
+  // in the map and re-throws on every read until the TTL runs out.
+  it('does not remember a ranking that threw', async () => {
     const events = [calendarEvent()];
     const unreadable = {};
     Object.defineProperty(unreadable, 'response', {
@@ -433,26 +501,15 @@ describe('not asking twice', () => {
     await expect(recommendCampusEvents(events, PROFILE)).rejects.toThrow();
     await expect(recommendCampusEvents(events, PROFILE)).rejects.toThrow();
 
-    // A memoised rejection would have re-thrown without asking the model again.
+    // A memoised rejection would re-throw without asking the model again.
     expect(base44.integrations.Core.InvokeLLM).toHaveBeenCalledTimes(2);
   });
 
-  it('does not remember a feed read that blew up', async () => {
-    base44.functions.invoke.mockImplementation(() => { throw new Error('boom'); });
-    await fetchCampusEvents().catch(() => {});
-
-    base44.functions.invoke.mockReset();
-    base44.functions.invoke.mockResolvedValue({ status: 'ok', events: [calendarEvent()] });
-    await expect(fetchCampusEvents()).resolves.toMatchObject({ status: 'ok' });
-  });
-
   // Every open of the picker reads the calendar and then ranks against it. The
-  // ranking key carries the student's profile, so a student editing their
-  // interests writes a new entry each time while the calendar stays one. If a
-  // hit does not move the entry to the back of the queue, the calendar is the
-  // oldest key in a 24-slot map and a run of rankings evicts the one thing all
-  // of them share — sending us back to the school's server for an answer we
-  // were already holding.
+  // ranking key carries the student's profile, so editing interests writes a
+  // new entry each time while the calendar stays one. Unless a hit moves its
+  // entry to the back of the queue, the calendar is the oldest key in a 24-slot
+  // map and a run of rankings evicts the one thing all of them share.
   it('keeps the calendar rather than evicting it behind a run of rankings', async () => {
     base44.functions.invoke.mockResolvedValue({ status: 'ok', events: [calendarEvent()] });
     base44.integrations.Core.InvokeLLM.mockResolvedValue({ recommendations: [] });
