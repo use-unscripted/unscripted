@@ -6,6 +6,7 @@ import { Trash2, RefreshCw, CheckCircle, ArrowRight } from 'lucide-react';
 import Field from '@/components/onboarding/Field';
 import ICSExportPanel from '@/components/calendar/ICSExportPanel';
 import { generatePathTest } from '@/lib/path-generator';
+import { clearCampusStore } from '@/lib/campus-store';
 
 const textareaCls = 'mt-1 w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] px-4 py-3 text-sm text-[color:var(--surface-dark-900)] placeholder-[color:var(--ink-400)] outline-none focus:border-[color:var(--brand-navy-700)] resize-none';
 
@@ -96,7 +97,7 @@ export default function Settings() {
           {saved ? 'Saved' : 'Save changes'}
         </button>
         <button
-          onClick={() => base44.auth.logout('/')}
+          onClick={() => { clearCampusStore(); base44.auth.logout('/'); }}
           className="text-sm font-semibold text-[color:var(--ink-500)] hover:text-[color:var(--surface-dark-900)] transition sm:col-span-2"
         >
           Log out

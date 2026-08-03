@@ -43,8 +43,8 @@ import { upcomingEvents, eventDayKey, dayKey } from '@/lib/calendar-grid';
  * grey apology among live content is worse than one less section.
  */
 export default function CampusEventsPanel({ delay = 0 }) {
-  const { loading, status, college, events, profile, adopt } = useCampusEvents({ days: 60, limit: 40 });
-  const { picks, loading: ranking } = useCampusPicks(events, profile);
+  const { loading, status, college, events, profile, profileReady, adopt } = useCampusEvents({ days: 60, limit: 40 });
+  const { picks, loading: ranking } = useCampusPicks(events, profile, { ready: profileReady });
 
   // Everything still to come, soonest first.
   const upcoming = useMemo(() => upcomingEvents(events, { limit: 40 }), [events]);
@@ -84,12 +84,19 @@ export default function CampusEventsPanel({ delay = 0 }) {
   // Ranking is part of loading here, not a second phase after it. Rendering a
   // flat list and then rearranging it into a recommendation a second later is
   // the flicker this section exists to avoid.
-  if (loading || ranking) {
+  //
+  // Both only count on a cold start. A student who has opened the calendar
+  // before has their events already, and a background refresh must never pull
+  // them back off the dashboard to show a spinner where a real dated event was.
+  // With events in hand, the only thing still worth waiting for is a first
+  // ranking, because that is the sentence this section exists to carry.
+  const cold = upcoming.length === 0 ? (loading || ranking) : (ranking && picks.length === 0);
+  if (cold) {
     return (
       <Section delay={delay}>
         <div className="flex items-center gap-2 text-sm" style={{ color: 'var(--text-muted)' }}>
           <Loader2 size={15} className="animate-spin" aria-hidden="true" />
-          Checking your campus calendar…
+          {loading ? 'Reading your school’s calendar. The first load takes a while.' : 'Checking your campus calendar…'}
         </div>
       </Section>
     );

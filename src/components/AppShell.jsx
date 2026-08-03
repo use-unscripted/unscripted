@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Outlet, NavLink } from 'react-router-dom';
-import { Compass, FolderOpen, FileText, Settings, LogOut, BarChart3, Inbox } from 'lucide-react';
+import { Compass, CalendarDays, FolderOpen, FileText, Settings, LogOut, BarChart3, Inbox } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { listFeedSubmissions } from '@/lib/campus-events';
+import { clearCampusStore } from '@/lib/campus-store';
 import PilotTracker from '@/components/PilotTracker';
 import { loadPilotAccess } from '@/lib/pilot-access';
 
@@ -19,11 +20,17 @@ function CompassSVG() {
 }
 
 /**
- * Four destinations, one journey. Deep screens (paths, missions, week, guides)
+ * Five destinations, one journey. Deep screens (paths, missions, week, guides)
  * are reached from inside My Journey rather than competing with it in the nav.
+ *
+ * The campus calendar is the exception, and it earns the slot: it is the only
+ * screen in the product with dates on it that the student did not choose, and
+ * it was reachable only from a link inside the dashboard, so a student who
+ * scrolled past that link had no way back to it at all.
  */
 const NAV = [
   ['/journey',  'My Journey',        'Journey',  Compass],
+  ['/campus',   'On campus',         'Campus',   CalendarDays],
   ['/evidence', 'Evidence',          'Evidence', FolderOpen],
   ['/resume',   'Resume',            'Resume',   FileText],
   ['/settings', 'Profile & Settings', 'Profile',  Settings],
@@ -112,7 +119,10 @@ export default function AppShell() {
         <p className="rounded-xl p-3 text-xs leading-5 text-[color:var(--ink-400)] mt-4" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
           Write your unscripted path.
         </p>
-        <button onClick={() => base44.auth.logout('/')}
+        {/* The stored calendar goes with the session. It is public listings
+            rather than anything private, but it names a school, and the next
+            person to sign in on this browser is not owed someone else's. */}
+        <button onClick={() => { clearCampusStore(); base44.auth.logout('/'); }}
           className="mt-3 flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium text-[color:var(--ink-400)] transition hover:bg-white/5 hover:text-white">
           <LogOut size={15} /> Log out
         </button>
