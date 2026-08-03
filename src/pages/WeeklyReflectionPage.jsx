@@ -1369,7 +1369,7 @@ export default function WeeklyReflectionPage() {
             </div>
             {experiments.length > 0 && (
               <select value={filterExp} onChange={e => setFilterExp(e.target.value)}
-                className="rounded-xl border border-[#E2E8F0] bg-white px-3 py-2.5 text-sm outline-none focus:border-[#1F3A5F]">
+                className="max-w-full rounded-xl border border-[#E2E8F0] bg-white px-3 py-2.5 text-sm outline-none focus:border-[#1F3A5F]">
                 <option value="all">All experiments</option>
                 {experiments.map(exp => <option key={exp.id} value={exp.id}>{exp.title}</option>)}
               </select>
