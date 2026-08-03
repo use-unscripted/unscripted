@@ -16,6 +16,7 @@ import {
   eventSearchUrl,
   eventSourceHost,
   recommendCampusEvents,
+  resetCampusEventCache,
   schoolEventsSearchUrl,
   submitCalendarUrl,
   SUBMISSION_REJECTIONS,
@@ -53,6 +54,9 @@ const PROFILE = { college: 'Fairfield University', major: 'Finance', school_year
 
 afterEach(() => {
   vi.resetAllMocks();
+  // The feed and the ranking are both remembered between calls, so every test
+  // has to start from a cold one or it reads the test before it.
+  resetCampusEventCache();
 });
 
 describe('recommendCampusEvents', () => {
@@ -228,15 +232,36 @@ describe('recommendCampusEvents', () => {
     await expect(recommendCampusEvents([calendarEvent()], null)).resolves.toEqual([]);
     expect(base44.integrations.Core.InvokeLLM).toHaveBeenCalledTimes(1);
   });
+
+  // Most school calendars say nothing about money, and a model handed
+  // "free: null" will happily write "and it's free" into a fit reason. The
+  // field is left out entirely so there is nothing to read either way.
+  it('tells the model nothing about price when the calendar did not say', async () => {
+    base44.integrations.Core.InvokeLLM.mockResolvedValue({ recommendations: [] });
+
+    await recommendCampusEvents([calendarEvent({ is_free: null })], PROFILE);
+
+    const { prompt } = base44.integrations.Core.InvokeLLM.mock.calls[0][0];
+    expect(prompt).not.toContain('"free"');
+  });
+
+  it('tells the model the price when the calendar did say', async () => {
+    base44.integrations.Core.InvokeLLM.mockResolvedValue({ recommendations: [] });
+
+    await recommendCampusEvents([calendarEvent({ is_free: false })], PROFILE);
+
+    const { prompt } = base44.integrations.Core.InvokeLLM.mock.calls[0][0];
+    expect(prompt).toContain('"free": false');
+  });
 });
 
 describe('fetchCampusEvents', () => {
   it('asks the backend for the window it was given', async () => {
     base44.functions.invoke.mockResolvedValue({ events: [], college: 'Fairfield University' });
 
-    await fetchCampusEvents({ days: 30, limit: 5 });
+    await fetchCampusEvents({ days: 30, limit: 5, seriesDates: 1 });
 
-    expect(base44.functions.invoke).toHaveBeenCalledWith('campusEvents', { days: 30, limit: 5 });
+    expect(base44.functions.invoke).toHaveBeenCalledWith('campusEvents', { days: 30, limit: 5, seriesDates: 1 });
   });
 
   it('defaults the window when called with nothing', async () => {
@@ -244,7 +269,7 @@ describe('fetchCampusEvents', () => {
 
     await fetchCampusEvents();
 
-    expect(base44.functions.invoke).toHaveBeenCalledWith('campusEvents', { days: 45, limit: 20 });
+    expect(base44.functions.invoke).toHaveBeenCalledWith('campusEvents', { days: 45, limit: 20, seriesDates: 1 });
   });
 
   it('returns a raw response as-is', async () => {
@@ -279,6 +304,177 @@ describe('fetchCampusEvents', () => {
       college: '',
       error: 'function timed out',
     });
+  });
+});
+
+// The picker lives in a modal a student opens, closes and opens again. Every
+// one of those mounts used to re-read the school's whole calendar and re-run a
+// paid model call to render what was already on screen.
+describe('not asking twice', () => {
+  it('reads the calendar once for repeated opens', async () => {
+    base44.functions.invoke.mockResolvedValue({ status: 'ok', events: [calendarEvent()] });
+
+    await fetchCampusEvents();
+    await fetchCampusEvents();
+    await fetchCampusEvents();
+
+    expect(base44.functions.invoke).toHaveBeenCalledTimes(1);
+  });
+
+  it('sends one request when two mounts race each other', async () => {
+    base44.functions.invoke.mockResolvedValue({ status: 'ok', events: [calendarEvent()] });
+
+    await Promise.all([fetchCampusEvents(), fetchCampusEvents()]);
+
+    expect(base44.functions.invoke).toHaveBeenCalledTimes(1);
+  });
+
+  it('asks again for a different window', async () => {
+    base44.functions.invoke.mockResolvedValue({ status: 'ok', events: [] });
+
+    await fetchCampusEvents({ days: 45, limit: 20 });
+    await fetchCampusEvents({ days: 30, limit: 20 });
+
+    expect(base44.functions.invoke).toHaveBeenCalledTimes(2);
+  });
+
+  // A list and a month grid want opposite answers about a weekly club, so they
+  // are different questions and must not answer each other from cache.
+  it('asks again when a caller wants every date of a repeating event', async () => {
+    base44.functions.invoke.mockResolvedValue({ status: 'ok', events: [] });
+
+    await fetchCampusEvents({ days: 45, limit: 20 });
+    await fetchCampusEvents({ days: 45, limit: 20, seriesDates: 12 });
+
+    expect(base44.functions.invoke).toHaveBeenCalledTimes(2);
+    expect(base44.functions.invoke).toHaveBeenLastCalledWith('campusEvents', {
+      days: 45, limit: 20, seriesDates: 12,
+    });
+  });
+
+  // A school's server failing to answer is the one outcome worth re-asking
+  // about — the student is looking at a retry button.
+  it('does not remember a failed lookup', async () => {
+    base44.functions.invoke.mockRejectedValue(new Error('down'));
+    await fetchCampusEvents();
+
+    base44.functions.invoke.mockResolvedValue({ status: 'ok', events: [calendarEvent()] });
+    await expect(fetchCampusEvents()).resolves.toMatchObject({ status: 'ok' });
+
+    expect(base44.functions.invoke).toHaveBeenCalledTimes(2);
+  });
+
+  it('goes back to the school when the student asks it to retry', async () => {
+    base44.functions.invoke.mockResolvedValue({ status: 'ok', events: [calendarEvent()] });
+
+    await fetchCampusEvents();
+    await fetchCampusEvents({ refresh: true });
+
+    expect(base44.functions.invoke).toHaveBeenCalledTimes(2);
+  });
+
+  it('forgets the calendar once a student tells us where it is', async () => {
+    base44.functions.invoke.mockResolvedValue({ status: 'ok', events: [calendarEvent()] });
+    await fetchCampusEvents();
+
+    await submitCalendarUrl('https://fairfield.campusgroups.com');
+    await fetchCampusEvents();
+
+    // The read, the submission, and a read that no longer trusts the old answer.
+    expect(base44.functions.invoke).toHaveBeenCalledTimes(3);
+  });
+
+  it('ranks the same events for the same student once', async () => {
+    const events = [calendarEvent()];
+    base44.integrations.Core.InvokeLLM.mockResolvedValue({
+      recommendations: [{ event_id: '1', fit_reason: 'Alumni who do the job.' }],
+    });
+
+    await recommendCampusEvents(events, PROFILE);
+    await recommendCampusEvents(events, PROFILE);
+
+    expect(base44.integrations.Core.InvokeLLM).toHaveBeenCalledTimes(1);
+  });
+
+  it('ranks again when the events change', async () => {
+    base44.integrations.Core.InvokeLLM.mockResolvedValue({ recommendations: [] });
+
+    await recommendCampusEvents([calendarEvent()], PROFILE);
+    await recommendCampusEvents([calendarEvent({ id: '2' })], PROFILE);
+
+    expect(base44.integrations.Core.InvokeLLM).toHaveBeenCalledTimes(2);
+  });
+
+  it('ranks again when the student changes', async () => {
+    const events = [calendarEvent()];
+    base44.integrations.Core.InvokeLLM.mockResolvedValue({ recommendations: [] });
+
+    await recommendCampusEvents(events, PROFILE);
+    await recommendCampusEvents(events, { ...PROFILE, career_interests: 'Product design' });
+
+    expect(base44.integrations.Core.InvokeLLM).toHaveBeenCalledTimes(2);
+  });
+
+  it('ranks again when the path being tested changes', async () => {
+    const events = [calendarEvent()];
+    base44.integrations.Core.InvokeLLM.mockResolvedValue({ recommendations: [] });
+
+    await recommendCampusEvents(events, PROFILE, { pathName: 'Investment Banking' });
+    await recommendCampusEvents(events, PROFILE, { pathName: 'Product Management' });
+
+    expect(base44.integrations.Core.InvokeLLM).toHaveBeenCalledTimes(2);
+  });
+
+  // Before the cache, reopening the picker asked the model again, so a blip
+  // healed itself. A remembered failure would have taken that away.
+  it('does not remember a ranking the model failed to produce', async () => {
+    const events = [calendarEvent()];
+    base44.integrations.Core.InvokeLLM.mockRejectedValue(new Error('rate limited'));
+    await expect(recommendCampusEvents(events, PROFILE)).resolves.toEqual([]);
+
+    base44.integrations.Core.InvokeLLM.mockResolvedValue({
+      recommendations: [{ event_id: '1', fit_reason: 'Alumni who do the job.' }],
+    });
+    const picks = await recommendCampusEvents(events, PROFILE);
+
+    expect(picks).toHaveLength(1);
+    expect(base44.integrations.Core.InvokeLLM).toHaveBeenCalledTimes(2);
+  });
+
+  it('does not remember a response it could not read', async () => {
+    const events = [calendarEvent()];
+    base44.integrations.Core.InvokeLLM.mockResolvedValue({ recommendations: 'not a list' });
+    await expect(recommendCampusEvents(events, PROFILE)).resolves.toEqual([]);
+
+    base44.integrations.Core.InvokeLLM.mockResolvedValue({ recommendations: [] });
+    await recommendCampusEvents(events, PROFILE);
+
+    expect(base44.integrations.Core.InvokeLLM).toHaveBeenCalledTimes(2);
+  });
+
+  // The opposite case, and the one the cache exists for: a model that read the
+  // events and genuinely ranked none of them has answered, and re-asking costs
+  // money to be told the same thing.
+  it('remembers a model that ranked nothing', async () => {
+    const events = [calendarEvent()];
+    base44.integrations.Core.InvokeLLM.mockResolvedValue({ recommendations: [] });
+
+    await recommendCampusEvents(events, PROFILE);
+    await recommendCampusEvents(events, PROFILE);
+
+    expect(base44.integrations.Core.InvokeLLM).toHaveBeenCalledTimes(1);
+  });
+
+  it('a retry clears the ranking too, not just the calendar', async () => {
+    const events = [calendarEvent()];
+    base44.functions.invoke.mockResolvedValue({ status: 'ok', events });
+    base44.integrations.Core.InvokeLLM.mockResolvedValue({ recommendations: [] });
+
+    await recommendCampusEvents(events, PROFILE);
+    await fetchCampusEvents({ refresh: true });
+    await recommendCampusEvents(events, PROFILE);
+
+    expect(base44.integrations.Core.InvokeLLM).toHaveBeenCalledTimes(2);
   });
 });
 

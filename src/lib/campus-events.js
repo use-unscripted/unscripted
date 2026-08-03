@@ -20,6 +20,56 @@ import { unwrapLLM } from '@/lib/llm';
 
 const MAX_RECOMMENDATIONS = 3;
 
+// ── Not asking twice ────────────────────────────────────────────────────────
+
+/**
+ * Both calls behind this module are expensive and neither answer moves.
+ *
+ * The feed reads a school's whole calendar over the network; the ranking is a
+ * model call we pay for. The picker sits in a modal a student opens, closes and
+ * opens again, and every one of those mounts used to run both from scratch —
+ * the same twenty events, re-fetched, re-ranked, re-billed, to render what was
+ * already on screen a moment earlier.
+ *
+ * So each is remembered for as long as its answer stays true. A campus calendar
+ * does not change in ten minutes, and a ranking of the same events for the same
+ * student does not change at all.
+ *
+ * Deliberately in memory, not storage: it should survive moving around the app
+ * and not survive a reload, because a reload is what a student does when they
+ * think something is stale.
+ */
+const FEED_TTL_MS = 10 * 60 * 1000;
+const RANKING_TTL_MS = 30 * 60 * 1000;
+const CACHE_MAX_ENTRIES = 24;
+
+const cache = new Map();
+
+function cached(key, ttl, produce) {
+  const hit = cache.get(key);
+  if (hit && Date.now() - hit.at < ttl) return hit.value;
+
+  const value = produce();
+  cache.set(key, { at: Date.now(), value });
+
+  // The oldest key is the first one Map iterates, so this is the whole eviction.
+  while (cache.size > CACHE_MAX_ENTRIES) cache.delete(cache.keys().next().value);
+
+  return value;
+}
+
+/** Forget an answer, so the next ask goes back to the source. */
+function forget(prefix) {
+  for (const key of [...cache.keys()]) {
+    if (key.startsWith(prefix)) cache.delete(key);
+  }
+}
+
+/** Tests and the retry button both need a way back to a cold start. */
+export function resetCampusEventCache() {
+  cache.clear();
+}
+
 /** Enough context to judge fit, small enough to send a dozen of. */
 function forModel(event) {
   return {
@@ -31,7 +81,10 @@ function forModel(event) {
     topics: event.topics,
     types: event.types,
     departments: event.departments,
-    free: event.is_free,
+    // Omitted entirely when the calendar didn't say. Sending `free: null` would
+    // invite the model to write "free" or "paid" into a fit reason off a field
+    // that means neither.
+    ...(typeof event.is_free === 'boolean' ? { free: event.is_free } : {}),
     registration_required: event.has_register,
   };
 }
@@ -96,16 +149,9 @@ ${JSON.stringify(events.map(forModel), null, 2)}
 8. Voice: direct, warm, no filler. Short sentences. No corporate language.`;
 }
 
-/**
- * Real events from the student's campus calendar, already keyword-matched to
- * their profile server-side.
- *
- * Never throws — an unavailable calendar is a normal, non-blocking outcome, and
- * every caller renders nothing in that case.
- */
-export async function fetchCampusEvents({ days = 45, limit = 20 } = {}) {
+async function readCampusEvents(days, limit, seriesDates) {
   try {
-    const response = await base44.functions.invoke('campusEvents', { days, limit });
+    const response = await base44.functions.invoke('campusEvents', { days, limit, seriesDates });
     const data = response?.data ?? response;
     if (!data || !Array.isArray(data.events)) {
       return { status: 'feed_error', events: [], college: '' };
@@ -114,6 +160,39 @@ export async function fetchCampusEvents({ days = 45, limit = 20 } = {}) {
   } catch (err) {
     return { status: 'feed_error', events: [], college: '', error: err?.message || '' };
   }
+}
+
+/**
+ * Real events from the student's campus calendar, already keyword-matched to
+ * their profile server-side.
+ *
+ * Never throws — an unavailable calendar is a normal, non-blocking outcome, and
+ * every caller renders nothing in that case.
+ *
+ * The answer is remembered, and the promise is what gets remembered rather than
+ * the result — two mounts racing each other share one request instead of making
+ * two. A school's server failing to answer is the one outcome not kept: the
+ * student is looking at a retry button, and it has to mean something.
+ *
+ * `refresh` is that button.
+ *
+ * `seriesDates` is how many dates a repeating event contributes. Leave it at 1
+ * for any list — a weekly club would otherwise take most of the slots to say
+ * one thing. A month grid, where that club belongs on every Tuesday square,
+ * is the caller that should raise it.
+ */
+export async function fetchCampusEvents({
+  days = 45, limit = 20, seriesDates = 1, refresh = false,
+} = {}) {
+  const key = `feed:${days}:${limit}:${seriesDates}`;
+  // Retry means start over, ranking included — an empty ranking and a model
+  // that failed look the same from here, and only one of them is worth keeping.
+  if (refresh) cache.clear();
+
+  const pending = cached(key, FEED_TTL_MS, () => readCampusEvents(days, limit, seriesDates));
+  const data = await pending;
+  if (data?.status === 'feed_error') cache.delete(key);
+  return data;
 }
 
 /**
@@ -139,6 +218,8 @@ export async function submitCalendarUrl(url, { days = 45, limit = 20 } = {}) {
     if (!data || typeof data !== 'object') {
       return { status: 'submission_failed', reason: '', events: [] };
     }
+    // The school has a calendar now. Whatever we remembered about it is history.
+    forget('feed:');
     return { events: [], ...data };
   } catch (err) {
     return { status: 'submission_failed', reason: err?.message || '', events: [] };
@@ -194,6 +275,26 @@ export const SUBMISSION_REJECTIONS = {
 export async function recommendCampusEvents(events, profile, { pathName = '' } = {}) {
   if (!Array.isArray(events) || events.length === 0) return [];
 
+  // Same student, same events, same path — the model has already answered this.
+  const key = `rank:${[
+    pathName,
+    profile?.college, profile?.major, profile?.school_year,
+    profile?.career_interests, profile?.favorite_topics, profile?.desired_skills,
+    events.map(e => e.id).join(','),
+  ].join('|')}`;
+
+  const outcome = await cached(key, RANKING_TTL_MS, () => rankCampusEvents(events, profile, pathName));
+
+  // "The model judged none of these relevant" and "the model call failed" reach
+  // the caller as the same empty list, and only the first is worth remembering
+  // for half an hour. Keeping the second would leave a student who hit a blip
+  // looking at the unranked list every time they reopened the picker, where
+  // before the cache the next open simply asked again.
+  if (outcome.failed) cache.delete(key);
+  return outcome.picks;
+}
+
+async function rankCampusEvents(events, profile, pathName) {
   let result;
   try {
     result = await base44.integrations.Core.InvokeLLM({
@@ -202,7 +303,7 @@ export async function recommendCampusEvents(events, profile, { pathName = '' } =
       response_json_schema: RECOMMENDATION_SCHEMA,
     });
   } catch {
-    return [];
+    return { picks: [], failed: true };
   }
 
   const byId = new Map(events.map(e => [String(e.id), e]));
@@ -213,7 +314,8 @@ export async function recommendCampusEvents(events, profile, { pathName = '' } =
   // The picker awaits this inside an effect with no catch, so throwing here
   // leaves the student on a spinner that never resolves.
   const payload = unwrapLLM(result);
-  const recommendations = Array.isArray(payload?.recommendations) ? payload.recommendations : [];
+  const malformed = !Array.isArray(payload?.recommendations);
+  const recommendations = malformed ? [] : payload.recommendations;
 
   for (const rec of recommendations) {
     const id = String(rec?.event_id || '');
@@ -235,7 +337,8 @@ export async function recommendCampusEvents(events, profile, { pathName = '' } =
     if (picks.length >= MAX_RECOMMENDATIONS) break;
   }
 
-  return picks;
+  // A response we could not read is a failure, not a verdict of "nothing fits".
+  return { picks, failed: malformed };
 }
 
 // ── Display helpers ─────────────────────────────────────────────────────────

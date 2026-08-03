@@ -201,8 +201,11 @@ function domainLabel(domain: string): string {
 interface Adapter {
   name: string;
   probe(domain: string): Promise<string | null>;
+  // `seriesDates` is how many dates one repeating event contributes. Only iCal
+  // carries repeat rules — every other platform's feed hands us dated instances
+  // already — so the rest of the adapters take it and have nothing to do.
   // deno-lint-ignore no-explicit-any
-  fetch(feedUrl: string, days: number): Promise<any[]>;
+  fetch(feedUrl: string, days: number, seriesDates?: number): Promise<any[]>;
   // deno-lint-ignore no-explicit-any
   normalize(raw: any, feedUrl: string): NormalizedEvent;
 }
@@ -333,7 +336,12 @@ function emptyEvent() {
     location: '',
     room: '',
     address: '',
-    is_free: false,
+    // Three states, and the third one is the common one. Most calendar formats
+    // carry no price at all — an iCal file has nowhere to put one — so `false`
+    // here would have every event off a pasted club portal telling a student it
+    // costs money. `null` means we do not know, and nothing renders a claim
+    // from it. Only set true or false where the feed actually said so.
+    is_free: null as boolean | null,
     ticket_url: '',
     has_register: false,
     departments: [] as string[],
@@ -417,9 +425,16 @@ export function normalizeEvent(event: any): NormalizedEvent {
     location: event.location_name || event.location || '',
     room: event.room_number || '',
     address: event.address || '',
-    is_free: event.free !== false,
+    // Localist's `free` is a checkbox that defaults to off, so `free: false` is
+    // nobody having ticked it far more often than it is a price. Ticking it on
+    // is the only thing here that means anything.
+    is_free: event.free === true ? true : null,
     ticket_url: event.ticket_url || '',
-    has_register: Boolean(event.has_register),
+    // A Localist "ticket" link is a sign-up page, not a till. On Fairfield's
+    // live feed 21 of 25 events carry one and they are Zoom webinar
+    // registrations and GiveCampus RSVPs — free things you have to sign up
+    // for. So it proves registration and says nothing about money.
+    has_register: Boolean(event.has_register || event.ticket_url),
     // deno-lint-ignore no-explicit-any
     departments: (event.departments || []).map((d: any) => d?.name).filter(Boolean),
     topics: filterNames(event, 'event_topics'),
@@ -806,10 +821,14 @@ const ICS_MAX_BYTES = 4_000_000;
  * A runaway guard, not a page size.
  *
  * VEVENTs come in the order the calendar felt like writing them, which is not
- * date order — Syracuse publishes 1,506 and Duke's opens on entries from 2007.
- * A cap low enough to bite would therefore throw away the future and keep the
- * past, and the feed would read as empty rather than large. The real bound is
- * ICS_MAX_BYTES; this only stops a pathological file from spinning.
+ * date order — Syracuse publishes 1,506. A cap low enough to bite would
+ * therefore throw away the future and keep the past, and the feed would read as
+ * empty rather than large. The real bound is ICS_MAX_BYTES; this only stops a
+ * pathological file from spinning.
+ *
+ * This used to also cite Duke as opening on entries from 2007. That was wrong —
+ * those dates are in its VTIMEZONE block, not its events. The ordering point
+ * stands on its own; the example did not.
  */
 const ICS_MAX_EVENTS = 20_000;
 
@@ -872,8 +891,33 @@ interface IcsEvent {
   allDay: boolean;
 }
 
+type IcsDateKind = 'utc' | 'local' | 'date';
+
 /**
- * One DTSTART/DTEND value, as a string the client can render.
+ * A moment from a calendar, kept as civil fields rather than an instant.
+ *
+ * `at` is those fields run through Date.UTC — the true instant when the value
+ * was UTC, and a bare "what the wall clock said" number when it wasn't.
+ *
+ * For `local` and `date`, stepping that number is what keeps daylight saving
+ * out of recurrence: adding seven days to a wall-clock Tuesday at 5pm lands on
+ * a Tuesday at 5pm in March and in November alike, because no offset was ever
+ * applied to lose an hour to.
+ *
+ * For `utc` the same step pins the UTC clock instead, so a series anchored in
+ * winter reads an hour late once the campus moves to summer time. That is the
+ * RFC's own reading of a UTC-stamped recurrence, it is an hour on the right
+ * day, and it is currently theoretical: across 178 live school feeds, all 133
+ * repeating events are wall-clock or date-only and not one is UTC-stamped.
+ * Correcting it needs the school's timezone, which a `Z` value does not carry.
+ */
+interface IcsMoment {
+  at: number;
+  kind: IcsDateKind;
+}
+
+/**
+ * One DTSTART/DTEND value, as a moment we can both render and step forward.
  *
  * Three forms, three deliberate treatments:
  *
@@ -888,75 +932,411 @@ interface IcsEvent {
  *                       stamping midnight on it lands the student a day early
  *                       west of Greenwich.
  */
-function icsDate(value: string): { value: string; allDay: boolean } | null {
+function icsDate(value: string): IcsMoment | null {
   const text = (value || '').trim();
 
   const utc = text.match(/^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})Z$/);
   if (utc) {
     const [, y, mo, d, h, mi, s] = utc;
     const at = Date.UTC(+y, +mo - 1, +d, +h, +mi, +s);
-    return Number.isFinite(at) ? { value: new Date(at).toISOString(), allDay: false } : null;
+    return Number.isFinite(at) ? { at, kind: 'utc' } : null;
   }
 
   const local = text.match(/^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})$/);
   if (local) {
     const [, y, mo, d, h, mi, s] = local;
-    return { value: `${y}-${mo}-${d}T${h}:${mi}:${s}`, allDay: false };
+    const at = Date.UTC(+y, +mo - 1, +d, +h, +mi, +s);
+    return Number.isFinite(at) ? { at, kind: 'local' } : null;
   }
 
   const dateOnly = text.match(/^(\d{4})(\d{2})(\d{2})$/);
   if (dateOnly) {
     const [, y, mo, d] = dateOnly;
-    return { value: `${y}-${mo}-${d}`, allDay: true };
+    const at = Date.UTC(+y, +mo - 1, +d);
+    return Number.isFinite(at) ? { at, kind: 'date' } : null;
   }
 
   return null;
 }
 
+/** The string the client renders — byte-for-byte what each form came in as. */
+function icsMomentValue(moment: IcsMoment | null): string {
+  if (!moment) return '';
+  const d = new Date(moment.at);
+  if (moment.kind === 'utc') return d.toISOString();
+
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const day = `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}`;
+  if (moment.kind === 'date') return day;
+  return `${day}T${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}:${pad(d.getUTCSeconds())}`;
+}
+
+// ── Recurrence ──────────────────────────────────────────────────────────────
+
 /**
- * Every VEVENT in a calendar, minus the ones we cannot date honestly.
+ * Repeating events are where a campus calendar keeps the things a student can
+ * actually walk into every week — club meetings, office hours, language tables.
+ * They were dropped outright until now, which cost us those entirely: a feed of
+ * nothing but weekly meetings read to us as an empty calendar.
  *
- * Events carrying an RRULE are dropped outright. A weekly meeting whose master
- * record is dated 2007 is still running today, but working out which Tuesday it
- * next falls on means implementing recurrence — UNTIL, COUNT, BYDAY, EXDATE and
- * the daylight-saving edges — and every bug in that sends a student to a room
- * on the wrong day. Duke's feed carries exactly these: live weekly entries
- * whose DTSTART reads 2007. Showing nothing is the honest failure here.
+ * **How much this is worth is measured and modest.** Across the 38 .ics feeds
+ * the national sweep resolved, 133 events carry a repeat rule and 11 of them
+ * have an upcoming date. It buys nothing at all on Localist, LiveWhale, Campus
+ * Labs, Trumba or Drupal, which expand recurrence server-side and hand us dated
+ * instances — and those are most schools, and are preferred over .ics anyway.
+ * Google-Calendar-backed feeds are the realistic source of event-level repeats.
+ *
+ * Do not repeat the claim that Duke publishes live weekly entries dated 2007.
+ * It was in this file before recurrence existed and it is wrong: Duke's feed
+ * has 40 events and zero event-level rules. The 2007 dates are `20070311` and
+ * `20071104` inside its VTIMEZONE block — the US daylight-saving change — which
+ * is what a grep for DTSTART across the whole file finds.
+ *
+ * The rule that makes this safe is that we only expand rules we can follow
+ * exactly, and drop the rest untouched. A wrong date here is not a cosmetic
+ * bug — it walks a student to a room on a day nothing is happening — so
+ * anything needing interpretation (BYSETPOS, BYWEEKNO, a rule that disagrees
+ * with its own DTSTART, a multi-day week anchored in UTC where the local
+ * weekday cannot be known) is treated the way every recurring event used to be.
  */
-export function parseIcsEvents(text: string): IcsEvent[] {
-  const events: IcsEvent[] = [];
-  let current: Record<string, string> | null = null;
-  let recurring = false;
+
+/**
+ * How many future dates one repeating series contributes — the caller's call,
+ * because the right answer is genuinely opposite on the two surfaces.
+ *
+ * A **list** wants one. The picker shows six events and ranks twenty, and both
+ * order by date once relevance ties. Measured on the real feeds that carry
+ * repeating events: emitting every date let one weekly club take five of the
+ * six shown and eighteen of the twenty ranked, the same title over and over,
+ * pushing out that many different real things.
+ *
+ * A **month grid** wants all of them. A club that meets every Tuesday belongs
+ * on every Tuesday square; showing it once on a month of dates is as wrong
+ * there as showing it six times in a list.
+ *
+ * So the default is one and the grid asks for more, rather than either surface
+ * being quietly served the other's answer.
+ */
+const RECURRENCE_DEFAULT_DATES = 1;
+const RECURRENCE_MAX_DATES = 12;
+
+/** Feeds are read for a window; a rule is only ever walked far enough to fill it. */
+const ICS_RECURRENCE_WINDOW_DAYS = 60;
+
+/** A rule that has not produced a usable date in this many tries has stopped. */
+const RECURRENCE_MAX_STEPS = 120;
+
+const WEEKDAY_CODES = ['SU', 'MO', 'TU', 'WE', 'TH', 'FR', 'SA'];
+
+/** Parts we can honour exactly. Anything else means the whole rule is dropped. */
+const RRULE_KNOWN_PARTS = new Set([
+  'FREQ', 'INTERVAL', 'COUNT', 'UNTIL', 'BYDAY', 'BYMONTHDAY', 'WKST',
+]);
+
+interface Recurrence {
+  freq: 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'YEARLY';
+  interval: number;
+  count: number;       // 0 — runs forever
+  until: number;       // civil ms, or Infinity
+  byday: string[];
+  bymonthday: number[];
+}
+
+/** How a supported rule steps forward, or null when we will not guess. */
+type RecurrenceShape = 'stride' | 'weekly-days' | 'monthly-day' | 'monthly-nth';
+
+function parseRrule(value: string): Recurrence | null {
+  const rule: Recurrence = {
+    freq: 'WEEKLY', interval: 1, count: 0, until: Infinity, byday: [], bymonthday: [],
+  };
+  let sawFreq = false;
+
+  for (const part of value.split(';')) {
+    if (!part.trim()) continue;
+    const eq = part.indexOf('=');
+    if (eq < 1) return null;
+
+    const name = part.slice(0, eq).trim().toUpperCase();
+    const raw = part.slice(eq + 1).trim();
+    if (!RRULE_KNOWN_PARTS.has(name)) return null;
+
+    switch (name) {
+      case 'FREQ': {
+        const freq = raw.toUpperCase();
+        if (freq !== 'DAILY' && freq !== 'WEEKLY' && freq !== 'MONTHLY' && freq !== 'YEARLY') return null;
+        rule.freq = freq;
+        sawFreq = true;
+        break;
+      }
+      case 'INTERVAL': {
+        const n = Number(raw);
+        if (!Number.isInteger(n) || n < 1 || n > 52) return null;
+        rule.interval = n;
+        break;
+      }
+      case 'COUNT': {
+        const n = Number(raw);
+        if (!Number.isInteger(n) || n < 1) return null;
+        rule.count = n;
+        break;
+      }
+      case 'UNTIL': {
+        // UNTIL is normally UTC while a wall-clock series is not, so this can
+        // be a few hours out at the very end of a series — never more, and
+        // only ever on the last date.
+        const bound = icsDate(raw);
+        if (!bound) return null;
+        rule.until = bound.at;
+        break;
+      }
+      case 'BYDAY':
+        rule.byday = raw.split(',').map(d => d.trim().toUpperCase()).filter(Boolean);
+        break;
+      case 'BYMONTHDAY': {
+        const days = raw.split(',').map(d => Number(d.trim()));
+        // Negative days ("the last of the month") are a rule we do not follow.
+        if (days.some(n => !Number.isInteger(n) || n < 1 || n > 31)) return null;
+        rule.bymonthday = days;
+        break;
+      }
+      case 'WKST':
+        // Only changes multi-day weeks repeating every other week, which is
+        // one of the shapes below that gets dropped anyway.
+        break;
+    }
+  }
+
+  return sawFreq ? rule : null;
+}
+
+function daysInMonth(year: number, month: number): number {
+  return new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
+}
+
+/** The day of the month the nth given weekday falls on, or 0 if there isn't one. */
+function nthWeekdayOfMonth(year: number, month: number, weekday: number, nth: number): number {
+  const total = daysInMonth(year, month);
+  if (nth > 0) {
+    const first = new Date(Date.UTC(year, month, 1)).getUTCDay();
+    const day = 1 + ((weekday - first + 7) % 7) + (nth - 1) * 7;
+    return day <= total ? day : 0;
+  }
+  const lastDow = new Date(Date.UTC(year, month, total)).getUTCDay();
+  const day = total - ((lastDow - weekday + 7) % 7) + (nth + 1) * 7;
+  return day >= 1 ? day : 0;
+}
+
+/** "1MO", "-1FR" — an ordinal weekday, or null if this isn't one. */
+function ordinalWeekday(code: string): { nth: number; weekday: number } | null {
+  const m = code.match(/^(-?\d)([A-Z]{2})$/);
+  if (!m) return null;
+  const nth = Number(m[1]);
+  const weekday = WEEKDAY_CODES.indexOf(m[2]);
+  if (weekday < 0 || nth === 0 || nth > 5 || nth < -1) return null;
+  return { nth, weekday };
+}
+
+/**
+ * Which of our stepping strategies this rule can be followed by, if any.
+ *
+ * Every branch that returns null is a rule we could produce a plausible date
+ * for and refuse to. The recurring theme: DTSTART is the anchor we trust, and a
+ * rule that contradicts it is a rule we do not understand well enough to use.
+ */
+function recurrenceShape(rule: Recurrence, start: IcsMoment): RecurrenceShape | null {
+  const startDate = new Date(start.at);
+  const hasOrdinal = rule.byday.some(d => /\d/.test(d));
+
+  switch (rule.freq) {
+    case 'DAILY':
+      return rule.byday.length || rule.bymonthday.length ? null : 'stride';
+
+    case 'WEEKLY': {
+      if (rule.bymonthday.length || hasOrdinal) return null;
+      // One weekday is the same statement DTSTART already makes, so stride from
+      // DTSTART and never read the weekday. That is what makes this correct for
+      // a UTC-stamped evening event, whose UTC weekday is the day after the one
+      // the student would call it — and why a disagreement is only worth
+      // reading as one on a wall clock, where the two are comparable.
+      if (rule.byday.length === 1 && start.kind !== 'utc'
+        && rule.byday[0] !== WEEKDAY_CODES[startDate.getUTCDay()]) return null;
+      if (rule.byday.length <= 1) return 'stride';
+      // Several weekdays in a week means matching weekdays, which we can only
+      // do against a wall clock — in UTC the local weekday is unknowable.
+      if (start.kind === 'utc' || rule.interval !== 1 || rule.count) return null;
+      return rule.byday.every(d => WEEKDAY_CODES.includes(d)) ? 'weekly-days' : null;
+    }
+
+    case 'MONTHLY': {
+      if (rule.byday.length && rule.bymonthday.length) return null;
+      if (rule.byday.length) {
+        if (rule.byday.length > 1) return null;
+        const ordinal = ordinalWeekday(rule.byday[0]);
+        if (!ordinal) return null;
+        // The rule has to describe the date DTSTART already gives, or the two
+        // disagree and we would be picking a winner.
+        if (ordinal.weekday !== startDate.getUTCDay()) return null;
+        const own = nthWeekdayOfMonth(
+          startDate.getUTCFullYear(), startDate.getUTCMonth(), ordinal.weekday, ordinal.nth,
+        );
+        return own === startDate.getUTCDate() ? 'monthly-nth' : null;
+      }
+      if (rule.bymonthday.length > 1) return null;
+      if (rule.bymonthday.length && rule.bymonthday[0] !== startDate.getUTCDate()) return null;
+      return 'monthly-day';
+    }
+
+    case 'YEARLY':
+      return rule.byday.length || rule.bymonthday.length ? null : 'stride';
+  }
+
+  return null;
+}
+
+/** The i-th date of a rule counted from DTSTART, or null where the calendar has none. */
+function occurrenceAt(
+  start: IcsMoment, rule: Recurrence, shape: RecurrenceShape, i: number,
+): number | null {
+  const d = new Date(start.at);
+  const midnight = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
+  const timeOfDay = start.at - midnight;
+
+  if (shape === 'stride') {
+    if (rule.freq === 'DAILY') return start.at + i * rule.interval * 86400000;
+    if (rule.freq === 'WEEKLY') return start.at + i * rule.interval * 7 * 86400000;
+    // YEARLY — a Feb 29 series simply has no date in most years.
+    const year = d.getUTCFullYear() + i * rule.interval;
+    if (d.getUTCDate() > daysInMonth(year, d.getUTCMonth())) return null;
+    return Date.UTC(year, d.getUTCMonth(), d.getUTCDate()) + timeOfDay;
+  }
+
+  const monthIndex = d.getUTCMonth() + i * rule.interval;
+  const year = d.getUTCFullYear() + Math.floor(monthIndex / 12);
+  const month = ((monthIndex % 12) + 12) % 12;
+
+  if (shape === 'monthly-nth') {
+    const ordinal = ordinalWeekday(rule.byday[0]);
+    if (!ordinal) return null;
+    const day = nthWeekdayOfMonth(year, month, ordinal.weekday, ordinal.nth);
+    return day ? Date.UTC(year, month, day) + timeOfDay : null;
+  }
+
+  // monthly-day — a series on the 31st skips the months without one.
+  const day = d.getUTCDate();
+  if (day > daysInMonth(year, month)) return null;
+  return Date.UTC(year, month, day) + timeOfDay;
+}
+
+/**
+ * Roughly how many steps of this rule fit before `target`, never overshooting.
+ *
+ * Duke's 2007 weekly master is a thousand occurrences from today, and walking
+ * them one at a time is the difference between a parse and a hang.
+ */
+function stepsBefore(start: IcsMoment, rule: Recurrence, shape: RecurrenceShape, target: number): number {
+  if (target <= start.at) return 0;
+  const elapsed = target - start.at;
+
+  let steps: number;
+  if (shape === 'monthly-day' || shape === 'monthly-nth') {
+    const from = new Date(start.at);
+    const to = new Date(target);
+    const months = (to.getUTCFullYear() - from.getUTCFullYear()) * 12
+      + (to.getUTCMonth() - from.getUTCMonth());
+    steps = Math.floor(months / rule.interval);
+  } else if (rule.freq === 'YEARLY') {
+    steps = Math.floor(elapsed / (365.25 * 86400000) / rule.interval);
+  } else if (rule.freq === 'WEEKLY') {
+    steps = Math.floor(elapsed / (7 * 86400000 * rule.interval));
+  } else {
+    steps = Math.floor(elapsed / (86400000 * rule.interval));
+  }
+
+  return Math.max(0, steps - 1);
+}
+
+/**
+ * The next dates a repeating event actually lands on, inside the read window.
+ *
+ * Candidates are tested as the strings they will be emitted as, through the
+ * same Date parse the request-time filter uses, so a date that survives here
+ * cannot be dropped as stale one step later.
+ */
+function expandRecurrence(
+  start: IcsMoment,
+  rule: Recurrence,
+  shape: RecurrenceShape,
+  skip: Set<number>,
+  windowDays: number,
+  now: number,
+  wanted: number,
+): IcsMoment[] {
+  const found: IcsMoment[] = [];
+  const earliest = now - 3600000;
+  const latest = now + windowDays * 86400000;
+
+  const take = (at: number): boolean => {
+    // A date arithmetic can no longer represent is the end of this series, not
+    // a thrown RangeError out of toISOString and a feed that reads as broken.
+    if (!Number.isFinite(at) || Math.abs(at) > 8.64e15) return false;
+    if (at > rule.until) return false;
+    if (skip.has(at)) return true;
+    const rendered = new Date(icsMomentValue({ at, kind: start.kind })).getTime();
+    if (!Number.isFinite(rendered) || rendered > latest) return false;
+    if (rendered >= earliest) found.push({ at, kind: start.kind });
+    return found.length < wanted;
+  };
+
+  if (shape === 'weekly-days') {
+    // Wall-clock only, every week, so whole weeks can be skipped and the
+    // remainder walked a day at a time against the weekday list.
+    const wanted = new Set(rule.byday.map(d => WEEKDAY_CODES.indexOf(d)));
+    const weeks = Math.max(0, Math.floor((earliest - start.at) / (7 * 86400000)) - 1);
+    let at = start.at + weeks * 7 * 86400000;
+    for (let step = 0; step <= windowDays + 14; step++, at += 86400000) {
+      if (!wanted.has(new Date(at).getUTCDay())) continue;
+      if (!take(at)) break;
+    }
+    return found;
+  }
+
+  const first = stepsBefore(start, rule, shape, earliest);
+  let misses = 0;
+  for (let i = first; !rule.count || i < rule.count; i++) {
+    const at = occurrenceAt(start, rule, shape, i);
+    if (at === null) {
+      if (++misses > RECURRENCE_MAX_STEPS) break;
+      continue;
+    }
+    misses = 0;
+    if (!take(at)) break;
+    if (i - first > RECURRENCE_MAX_STEPS) break;
+  }
+
+  return found;
+}
+
+// ── Reading the file ────────────────────────────────────────────────────────
+
+/** One VEVENT's properties. Repeatable ones (EXDATE) keep every line. */
+interface IcsRecord {
+  props: Record<string, string>;
+  exdates: string[];
+}
+
+function collectVevents(text: string): IcsRecord[] {
+  const records: IcsRecord[] = [];
+  let current: IcsRecord | null = null;
 
   for (const line of unfoldIcs(text)) {
     if (line === 'BEGIN:VEVENT') {
-      current = {};
-      recurring = false;
+      current = { props: {}, exdates: [] };
       continue;
     }
     if (line === 'END:VEVENT') {
-      if (current && !recurring) {
-        const start = icsDate(current.DTSTART || '');
-        if (start) {
-          const end = icsDate(current.DTEND || '');
-          events.push({
-            uid: current.UID || '',
-            summary: unescapeIcsText(current.SUMMARY || ''),
-            description: unescapeIcsText(current.DESCRIPTION || ''),
-            location: unescapeIcsText(current.LOCATION || ''),
-            url: current.URL || '',
-            categories: (current.CATEGORIES || '')
-              .split(',')
-              .map(c => unescapeIcsText(c).trim())
-              .filter(Boolean),
-            start: start.value,
-            end: end?.value || '',
-            allDay: start.allDay,
-          });
-        }
-      }
+      if (current) records.push(current);
       current = null;
-      if (events.length >= ICS_MAX_EVENTS) break;
+      if (records.length >= ICS_MAX_EVENTS) break;
       continue;
     }
     if (!current) continue;
@@ -967,8 +1347,114 @@ export function parseIcsEvents(text: string): IcsEvent[] {
     const name = line.slice(0, colon).split(';')[0].toUpperCase();
     const value = line.slice(colon + 1);
 
-    if (name === 'RRULE') recurring = true;
-    else if (!(name in current)) current[name] = value;
+    if (name === 'EXDATE') current.exdates.push(value);
+    else if (!(name in current.props)) current.props[name] = value;
+  }
+
+  return records;
+}
+
+/**
+ * Every VEVENT in a calendar, minus the ones we cannot date honestly.
+ *
+ * A repeating event contributes its next `seriesDates` real dates; a rule we
+ * cannot follow exactly still contributes nothing at all.
+ *
+ * `windowDays` bounds how far a rule is walked and nothing else — a one-off
+ * event is read the same whatever it is set to.
+ */
+export function parseIcsEvents(
+  text: string,
+  windowDays: number = ICS_RECURRENCE_WINDOW_DAYS,
+  seriesDates: number = RECURRENCE_DEFAULT_DATES,
+): IcsEvent[] {
+  const wanted = Math.min(Math.max(Math.floor(seriesDates) || 1, 1), RECURRENCE_MAX_DATES);
+  const records = collectVevents(text);
+  const now = Date.now();
+
+  // A VEVENT carrying RECURRENCE-ID is one instance of a series pulled out and
+  // rewritten — moved, renamed or cancelled. It is emitted on its own terms
+  // below, and its original slot has to come off the master, or the series
+  // re-announces the meeting at the time it was moved away from.
+  const overridden = new Map<string, IcsMoment[]>();
+  for (const record of records) {
+    const uid = record.props.UID;
+    const instance = uid ? icsDate(record.props['RECURRENCE-ID'] || '') : null;
+    if (!uid || !instance) continue;
+    if (!overridden.has(uid)) overridden.set(uid, []);
+    overridden.get(uid)!.push(instance);
+  }
+
+  const events: IcsEvent[] = [];
+
+  for (const record of records) {
+    const props = record.props;
+    const start = icsDate(props.DTSTART || '');
+    if (!start) continue;
+
+    // A cancelled event is the one thing worse than no event: the student goes.
+    // Every other adapter already drops these — Localist by `is_canceled`,
+    // LiveWhale by `canceled`, Campus Labs by requiring "Approved" — and iCal
+    // was the only one still handing them through.
+    if ((props.STATUS || '').trim().toUpperCase() === 'CANCELLED') continue;
+
+    const end = icsDate(props.DTEND || '');
+    const base = {
+      uid: props.UID || '',
+      summary: unescapeIcsText(props.SUMMARY || ''),
+      description: unescapeIcsText(props.DESCRIPTION || ''),
+      location: unescapeIcsText(props.LOCATION || ''),
+      url: props.URL || '',
+      categories: (props.CATEGORIES || '')
+        .split(',')
+        .map(c => unescapeIcsText(c).trim())
+        .filter(Boolean),
+    };
+
+    if (!props.RRULE) {
+      events.push({
+        ...base,
+        start: icsMomentValue(start),
+        end: icsMomentValue(end),
+        allDay: start.kind === 'date',
+      });
+      continue;
+    }
+
+    const rule = parseRrule(props.RRULE);
+    const shape = rule && recurrenceShape(rule, start);
+    if (!rule || !shape) continue;
+
+    // An exclusion says a date is NOT happening, so failing to apply one is the
+    // same harm as inventing a date. Both forms are compared as raw civil
+    // numbers, which only means anything when they were written the same way —
+    // so a mismatched form drops the series rather than quietly ignoring the
+    // exclusion and announcing a meeting that was cancelled or moved.
+    const exclusions: IcsMoment[] = [...(overridden.get(base.uid) || [])];
+    for (const line of record.exdates) {
+      for (const value of line.split(',')) {
+        const excluded = icsDate(value);
+        if (excluded) exclusions.push(excluded);
+      }
+    }
+    if (exclusions.some(e => e.kind !== start.kind)) continue;
+    const skip = new Set<number>(exclusions.map(e => e.at));
+
+    // Only a duration we can trust: an end read in a different form than its
+    // start is not one we can carry across occurrences.
+    const duration = end && end.kind === start.kind && end.at > start.at ? end.at - start.at : 0;
+
+    for (const occurrence of expandRecurrence(start, rule, shape, skip, windowDays, now, wanted)) {
+      events.push({
+        ...base,
+        // RFC identity for one date of a series is its UID plus that date, and
+        // the client needs them distinct — it keys and stores events by id.
+        uid: base.uid ? `${base.uid}-${icsMomentValue(occurrence)}` : '',
+        start: icsMomentValue(occurrence),
+        end: duration ? icsMomentValue({ at: occurrence.at + duration, kind: end!.kind }) : '',
+        allDay: start.kind === 'date',
+      });
+    }
   }
 
   return events;
@@ -1170,12 +1656,12 @@ async function probeIcalGuesses(domain: string): Promise<string | null> {
   return await firstValidIcs(candidates);
 }
 
-async function fetchIcal(feedUrl: string, days: number) {
+async function fetchIcal(feedUrl: string, days: number, seriesDates?: number) {
   const text = await fetchIcsText(feedUrl, ICS_FEED_TIMEOUT_MS);
   if (!text.includes('BEGIN:VCALENDAR')) {
     throw new Error('Calendar feed returned an unexpected shape');
   }
-  return parseIcsEvents(text).filter(e => withinWindow(e.start, days));
+  return parseIcsEvents(text, days, seriesDates).filter(e => withinWindow(e.start, days));
 }
 
 // deno-lint-ignore no-explicit-any
@@ -1283,7 +1769,12 @@ function normalizeTribe(event: any): NormalizedEvent {
     all_day: Boolean(event.all_day),
     location: plainText(venue.venue),
     address: plainText(venue.address),
-    is_free: event.cost === '' || Boolean(event.is_free),
+    // The Events Calendar writes an empty cost string for a free event and a
+    // price for a paid one. Absent means the field was never filled in.
+    is_free: event.cost === '' ? true
+      : event.cost ? false
+      : typeof event.is_free === 'boolean' ? event.is_free
+      : null,
     ticket_url: cleanUrl(event.website),
     // deno-lint-ignore no-explicit-any
     types: cleanList((event.categories || []).map((c: any) => c?.name)),
@@ -1946,10 +2437,11 @@ export async function fetchEvents(
   platform: string,
   feedUrl: string,
   days: number,
+  seriesDates?: number,
 ): Promise<NormalizedEvent[]> {
   const adapter = adapterFor(platform);
   if (!adapter) throw new Error(`Unsupported calendar platform "${platform}"`);
-  const raw = await adapter.fetch(feedUrl, days);
+  const raw = await adapter.fetch(feedUrl, days, seriesDates);
   // deno-lint-ignore no-explicit-any
   return raw.map((event: any) => adapter.normalize(event, feedUrl)).filter(e => e.title);
 }
@@ -2511,6 +3003,10 @@ Deno.serve(async (req) => {
     // shortlist is deliberately wide so the ranking pass, which actually reads
     // the descriptions, gets a fair spread to choose from.
     const limit = Math.min(Math.max(Number(body.limit) || 20, 1), 40);
+    // How many dates one repeating event contributes. A list wants the next one
+    // — a weekly club would otherwise take most of the slots to say one thing.
+    // A month grid wants every Tuesday it meets on. See RECURRENCE_DEFAULT_DATES.
+    const seriesDates = Number(body.seriesDates) || RECURRENCE_DEFAULT_DATES;
 
     const profile = await loadProfile(base44, user);
     const college = collegeOf(profile, user);
@@ -2525,7 +3021,7 @@ Deno.serve(async (req) => {
 
     let normalized: NormalizedEvent[];
     try {
-      normalized = await fetchEvents(feed.platform, feed.feedUrl, days);
+      normalized = await fetchEvents(feed.platform, feed.feedUrl, days, seriesDates);
     } catch (err) {
       return Response.json({
         status: 'feed_error',

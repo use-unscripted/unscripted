@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Clock, CheckCircle2, ChevronDown, ChevronUp, Star, Copy, Trash2, Eye, GitCompare, Loader2, ExternalLink, Pencil, X } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { softDeletePayload } from '@/components/SoftDeleteConfirm';
+import { createGuideOnce, newIdempotencyKey } from './guideIdempotency';
 
 const STATUS_CFG = {
   active:    { bg: 'var(--success-50)', text: 'var(--success-700)', label: 'Active' },
@@ -201,6 +202,12 @@ export default function MissionGuideHistory({ guides = [], onSetActive, onDelete
   const [compareIds, setCompareIds] = useState([]);
   const [showCompare, setShowCompare] = useState(false);
   const [actionLoading, setActionLoading] = useState(null);
+  // One idempotency key per guide the student is trying to copy, held from the
+  // first Duplicate click until a copy actually exists. Clicking Duplicate
+  // again after a failure reuses the key and adopts the copy that may already
+  // have been written; clicking it again after a success starts from nothing,
+  // so a student who genuinely wants two copies still gets two.
+  const dupKeys = useRef({});
 
   if (guides.length === 0) return null;
 
@@ -231,17 +238,25 @@ export default function MissionGuideHistory({ guides = [], onSetActive, onDelete
     try {
       const user = await base44.auth.me();
       const maxVersion = Math.max(...guides.map(g => g.version_number || 0));
-      const dup = await base44.entities.MissionGuides.create({
-        ...guide,
-        id: undefined,
-        created_date: undefined,
-        updated_date: undefined,
-        version_number: maxVersion + 1,
-        guide_title: `${guide.guide_title} (copy)`,
-        is_active: false,
-        status: 'draft',
-        user_id: user.id,
-      });
+      if (!dupKeys.current[guide.id]) dupKeys.current[guide.id] = newIdempotencyKey();
+      // The spread carries the source guide's own idempotency_key; createGuideOnce
+      // writes this copy's key over it, or every copy would adopt the original.
+      const { row: dup } = await createGuideOnce(
+        base44.entities.MissionGuides,
+        dupKeys.current[guide.id],
+        {
+          ...guide,
+          id: undefined,
+          created_date: undefined,
+          updated_date: undefined,
+          version_number: maxVersion + 1,
+          guide_title: `${guide.guide_title} (copy)`,
+          is_active: false,
+          status: 'draft',
+          user_id: user.id,
+        },
+      );
+      delete dupKeys.current[guide.id];
       onDuplicated(dup);
     } finally { setActionLoading(null); }
   };

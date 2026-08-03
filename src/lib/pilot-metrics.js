@@ -10,6 +10,7 @@
  * every call is fire-and-forget and swallows its own errors.
  */
 import { base44 } from '@/api/base44Client';
+import { entityTime } from '@/lib/dates';
 
 export const PILOT_EVENTS = [
   'signup_completed', 'onboarding_started', 'onboarding_completed', 'paths_generated',
@@ -105,7 +106,11 @@ const DAY = 86400000;
 export async function trackEngagementMarkers() {
   const me = await base44.auth.me().catch(() => null);
   if (!me?.id) return;
-  const joined = me.created_date ? new Date(me.created_date).getTime() : NaN;
+  // Compared against Date.now(), so the two sides have to be the same kind of
+  // number. Base44 returns created_date without its `Z`; `new Date()` would
+  // read that as local time and make the account look four hours younger than
+  // it is, which fires the return markers four hours late.
+  const joined = entityTime(me.created_date);
 
   await trackPilotEventOnce('signup_completed', me.id);
   if (!Number.isFinite(joined)) return;

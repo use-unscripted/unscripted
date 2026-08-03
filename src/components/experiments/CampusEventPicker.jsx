@@ -77,7 +77,9 @@ export default function CampusEventPicker({ profile, pathName, selected, onSelec
     setLoading(true);
 
     (async () => {
-      const feed = await fetchCampusEvents({ days: 45, limit: 20 });
+      // Reopening the picker reuses the calendar and the ranking it already
+      // paid for; pressing "try again" is the one thing that must not.
+      const feed = await fetchCampusEvents({ days: 45, limit: 20, refresh: reloadKey > 0 });
       if (cancelled) return;
 
       setCollege(feed.college || '');
