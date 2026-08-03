@@ -50,7 +50,7 @@ export default function EvidenceLibrary() {
       <PageHeader
         eyebrow="Evidence library"
         title="What you have actually done."
-        description="Your completed career experiments, organised by path, cycle, experiment, mission, date, type, skill, visibility and resume eligibility."
+        description="Every piece of proof from your career experiments, in one place."
       />
 
       {!raw ? (
@@ -77,7 +77,10 @@ export default function EvidenceLibrary() {
 
           {view === 'all' ? (
             <>
-              <EvidenceFilters filters={filters} setFilters={setFilters} options={options} shown={shown.length} total={evidence.length} />
+              {/* Nothing to sift through yet — the empty state says more than a filter bar can. */}
+              {evidence.length > 0 && (
+                <EvidenceFilters filters={filters} setFilters={setFilters} options={options} shown={shown.length} total={evidence.length} />
+              )}
               {evidence.length === 0 ? (
                 <div className="rounded-[24px] border border-dashed border-[color:var(--ink-200)] py-16 text-center">
                   <FileText size={30} className="mx-auto mb-3 text-[color:var(--ink-200)]" />
@@ -87,6 +90,10 @@ export default function EvidenceLibrary() {
               ) : shown.length === 0 ? (
                 <div className="rounded-[24px] border border-dashed border-[color:var(--ink-200)] py-16 text-center">
                   <p className="text-sm font-semibold text-[color:var(--surface-dark-900)]">No evidence matches these filters.</p>
+                  <button onClick={() => setFilters(DEFAULT_FILTERS)}
+                    className="mt-2 text-xs font-semibold text-[color:var(--brand-navy-700)] underline underline-offset-2">
+                    Clear all filters
+                  </button>
                 </div>
               ) : (
                 <div className="space-y-4">
