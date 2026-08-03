@@ -81,13 +81,18 @@ export default function ClaimOnboarding() {
           major: draft.major || 'Undecided',
           graduation_year: draft.graduation_year,
           school_year: draft.school_year,
-          career_interests: draft.paths_considering,
+          // The intake no longer asks "paths you are considering" separately —
+          // the path they chose to test is the answer to that question.
+          career_interests: draft.primary_path,
           pressured_paths: draft.pressured_path,
           secret_paths: draft.curious_path,
           desired_lifestyle: draft.desired_lifestyle,
+          // Collected as chips since the vision question shipped, but never
+          // written here, so the generator's [themes: …] clause was always
+          // empty. It is mapped now.
+          vision_themes: draft.vision_themes,
           biggest_blocker: draft.biggest_blocker,
           commitments: draft.fixed_commitments,
-          financial_priorities: draft.financial_priorities,
           priority_autonomy: draft.priority_autonomy,
           priority_stability: draft.priority_stability,
           priority_impact: draft.priority_impact,
@@ -95,10 +100,6 @@ export default function ClaimOnboarding() {
           priority_ownership: draft.priority_ownership,
           willing_financial_risk: draft.willing_financial_risk,
           willing_long_hours: draft.willing_long_hours,
-          willing_to_relocate: draft.willing_to_relocate,
-          class_schedule: draft.class_schedule,
-          high_energy_times: draft.high_energy_times,
-          low_energy_times: draft.low_energy_times,
           available_hours_per_week: draft.available_hours_per_week || 8,
           guest_session_id: draft.guest_session_id,
           personal_notes: draft.personal_notes || '',
