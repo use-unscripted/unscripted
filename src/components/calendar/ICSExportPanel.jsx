@@ -3,7 +3,7 @@ import { Download, Calendar, FileDown, ListTodo } from 'lucide-react';
 import { downloadICSFromForm } from '@/components/calendar/AddToCalendarModal';
 import { base44 } from '@/api/base44Client';
 
-const inputCls = 'w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-3 py-2.5 text-sm outline-none focus:border-[#1F3A5F]';
+const inputCls = 'w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-3 py-2.5 text-sm outline-none focus:border-[color:var(--brand-navy-900)]';
 
 /* showHeading: the Week page drops this panel in with nothing above it, so it
    has to name itself there. Settings already gives it a section heading, and
@@ -142,14 +142,14 @@ export default function ICSExportPanel({ showHeading = true }) {
   };
 
   return (
-    <div className="rounded-[20px] border border-[#E2E8F0] bg-white p-6">
+    <div className="rounded-[20px] border border-[color:var(--ink-200)] bg-white p-6">
       {showHeading && (
         <>
           <div className="flex items-center gap-2 mb-1">
             <Calendar size={16} style={{ color: 'var(--brand-navy-900)' }} />
-            <h3 className="font-heading font-bold text-[#050816]">Export to calendar</h3>
+            <h3 className="font-heading font-bold text-[color:var(--surface-dark-900)]">Export to calendar</h3>
           </div>
-          <p className="text-xs text-[#64748B] mb-5">
+          <p className="text-xs text-[color:var(--ink-500)] mb-5">
             Download .ics files compatible with Google Calendar, Apple Calendar, Outlook, and any standard calendar app.
           </p>
         </>
@@ -161,20 +161,20 @@ export default function ICSExportPanel({ showHeading = true }) {
 
       <div className="space-y-3">
         {/* Week export */}
-        <div className="rounded-[16px] border border-[#E2E8F0] p-4">
+        <div className="rounded-[16px] border border-[color:var(--ink-200)] p-4">
           <div className="flex items-start justify-between gap-4 flex-wrap">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: '#EEF2F6' }}>
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'var(--ink-100)' }}>
                 <FileDown size={16} style={{ color: 'var(--brand-navy-900)' }} />
               </div>
               <div>
-                <p className="text-sm font-semibold text-[#050816]">Export one week</p>
-                <p className="text-xs text-[#64748B]">All calendar tasks for the selected week</p>
+                <p className="text-sm font-semibold text-[color:var(--surface-dark-900)]">Export one week</p>
+                <p className="text-xs text-[color:var(--ink-500)]">All calendar tasks for the selected week</p>
               </div>
             </div>
             <div className="flex items-center gap-2 flex-wrap">
               <input type="date" value={weekStart} onChange={e => setWeekStart(e.target.value)}
-                className="rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-3 py-2 text-xs outline-none focus:border-[#1F3A5F]" />
+                className="rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-3 py-2 text-xs outline-none focus:border-[color:var(--brand-navy-900)]" />
               <button onClick={downloadWeek} disabled={downloading === 'week'}
                 className="flex items-center gap-1.5 rounded-[10px] px-4 py-2 text-xs font-semibold text-white disabled:opacity-60"
                 style={{ background: 'var(--brand-navy-900)' }}>
@@ -186,15 +186,15 @@ export default function ICSExportPanel({ showHeading = true }) {
         </div>
 
         {/* All missions export */}
-        <div className="rounded-[16px] border border-[#E2E8F0] p-4">
+        <div className="rounded-[16px] border border-[color:var(--ink-200)] p-4">
           <div className="flex items-center justify-between gap-4 flex-wrap">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: '#EEF2F6' }}>
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'var(--ink-100)' }}>
                 <ListTodo size={16} style={{ color: 'var(--brand-navy-900)' }} />
               </div>
               <div>
-                <p className="text-sm font-semibold text-[#050816]">Export all active missions</p>
-                <p className="text-xs text-[#64748B]">Missions with deadlines, as all-day calendar events</p>
+                <p className="text-sm font-semibold text-[color:var(--surface-dark-900)]">Export all active missions</p>
+                <p className="text-xs text-[color:var(--ink-500)]">Missions with deadlines, as all-day calendar events</p>
               </div>
             </div>
             <button onClick={downloadMissions} disabled={downloading === 'missions'}
@@ -207,7 +207,7 @@ export default function ICSExportPanel({ showHeading = true }) {
         </div>
       </div>
 
-      <p className="mt-4 text-[10px] text-[#94A3B8]">
+      <p className="mt-4 text-[10px] text-[color:var(--ink-400)]">
         To add a single event to your calendar, use the "Add to Calendar" button on any mission, task, or outreach contact.
       </p>
     </div>

@@ -9,7 +9,7 @@ export default function Roadmap() {
   const [r, setR] = useState();
   useEffect(() => { base44.entities.Roadmap.list('-created_date', 1).then(x => setR(x[0])); }, []);
 
-  if (!r) return <div className="p-10 text-[#64748B]">Loading roadmap...</div>;
+  if (!r) return <div className="p-10 text-[color:var(--ink-500)]">Loading roadmap...</div>;
 
   return (
     <main className="mx-auto max-w-6xl px-5 py-10 sm:px-8">
@@ -28,19 +28,19 @@ export default function Roadmap() {
 
       {/* Feasibility assessment */}
       {r.feasibility_assessment && (
-        <div className="mb-6 flex items-start gap-3 rounded-[20px] p-6" style={{ background: '#081225', border: '1px solid rgba(31,58,95,0.30)' }}>
+        <div className="mb-6 flex items-start gap-3 rounded-[20px] p-6" style={{ background: 'var(--surface-dark-700)', border: '1px solid rgba(31,58,95,0.30)' }}>
           <AlertTriangle size={18} className="shrink-0 mt-0.5" style={{ color: 'var(--brand-navy-900)' }} />
           <div>
             <p className="text-xs font-bold uppercase tracking-wide mb-2" style={{ color: 'var(--brand-navy-900)' }}>Feasibility assessment</p>
-            <p className="text-sm text-slate-300 leading-6">{r.feasibility_assessment}</p>
+            <p className="text-sm text-[color:var(--ink-300)] leading-6">{r.feasibility_assessment}</p>
           </div>
         </div>
       )}
 
       {r.goals_to_defer?.length > 0 && (
-        <div className="mb-6 rounded-[16px] p-4" style={{ background: '#FFFBEB', border: '1px solid rgba(180,83,9,0.25)' }}>
-          <p className="text-xs font-bold uppercase tracking-wide text-[#B45309] mb-2">Goals to defer for now</p>
-          <ul className="space-y-1">{r.goals_to_defer.map((g, i) => <li key={i} className="text-sm text-[#334155]">· {g}</li>)}</ul>
+        <div className="mb-6 rounded-[16px] p-4" style={{ background: 'var(--warning-50)', border: '1px solid rgba(180,83,9,0.25)' }}>
+          <p className="text-xs font-bold uppercase tracking-wide text-[color:var(--warning-700)] mb-2">Goals to defer for now</p>
+          <ul className="space-y-1">{r.goals_to_defer.map((g, i) => <li key={i} className="text-sm text-[color:var(--ink-700)]">· {g}</li>)}</ul>
         </div>
       )}
 

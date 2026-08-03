@@ -49,7 +49,7 @@ export default function ContinuationGate() {
   if (saved) {
     return (
       <section className="rounded-[20px] bg-white p-6 text-center sm:p-8" style={{ border: '1px solid var(--border-light)' }}>
-        <CheckCircle2 size={22} className="mx-auto" style={{ color: '#15803D' }} />
+        <CheckCircle2 size={22} className="mx-auto" style={{ color: 'var(--success-700)' }} />
         <h2 className="font-heading mt-3 text-xl font-bold" style={{ color: 'var(--text-primary)' }}>
           Thanks — that&apos;s recorded.
         </h2>

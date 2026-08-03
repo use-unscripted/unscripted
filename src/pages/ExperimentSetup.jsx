@@ -91,7 +91,7 @@ function StepPick({ rec, options, selected, onSelect, onCustom, onNext }) {
   return (
     <div className="space-y-6">
       {/* Path context card */}
-      <div className="rounded-[20px] p-5 space-y-3" style={{ background: '#081225', color: 'white' }}>
+      <div className="rounded-[20px] p-5 space-y-3" style={{ background: 'var(--surface-dark-700)', color: 'white' }}>
         <p className="text-xs font-bold uppercase tracking-[.14em] opacity-60">Testing Path</p>
         <h2 className="font-heading text-2xl font-bold">{rec.path_name}</h2>
         {rec.fit_reason && (
@@ -120,30 +120,30 @@ function StepPick({ rec, options, selected, onSelect, onCustom, onNext }) {
 
       {/* Experiment options */}
       <div>
-        <p className="text-sm font-bold text-[#050816] mb-3">Choose your experiment:</p>
+        <p className="text-sm font-bold text-[color:var(--surface-dark-900)] mb-3">Choose your experiment:</p>
         <div className="space-y-3">
           {options.map((opt, i) => (
             <button key={i} onClick={() => onSelect(opt)}
               className="w-full text-left rounded-[16px] border p-4 transition"
               style={selected === i
-                ? { background: '#EEF2F6', borderColor: 'var(--brand-navy-900)' }
-                : { background: 'white', borderColor: '#E2E8F0' }}>
+                ? { background: 'var(--ink-100)', borderColor: 'var(--brand-navy-900)' }
+                : { background: 'white', borderColor: 'var(--ink-200)' }}>
               <div className="flex items-start gap-3">
                 <div className="mt-0.5 shrink-0 h-5 w-5 rounded-full border-2 flex items-center justify-center"
-                  style={{ borderColor: selected === i ? 'var(--brand-navy-900)' : '#CBD5E1' }}>
+                  style={{ borderColor: selected === i ? 'var(--brand-navy-900)' : 'var(--ink-300)' }}>
                   {selected === i && <div className="h-2.5 w-2.5 rounded-full" style={{ background: 'var(--brand-navy-900)' }} />}
                 </div>
                 <div>
                   <p className="text-xs font-bold uppercase tracking-wide mb-1" style={{ color: 'var(--brand-navy-700)' }}>{opt.type}</p>
-                  <p className="font-semibold text-[#050816] text-sm">{opt.title}</p>
-                  <p className="mt-1 text-xs text-[#64748B]">{opt.objective}</p>
-                  <p className="mt-1 text-xs text-[#94A3B8]">~{opt.estimated_hours}h · Deliverable: {opt.deliverable.substring(0, 60)}…</p>
+                  <p className="font-semibold text-[color:var(--surface-dark-900)] text-sm">{opt.title}</p>
+                  <p className="mt-1 text-xs text-[color:var(--ink-500)]">{opt.objective}</p>
+                  <p className="mt-1 text-xs text-[color:var(--ink-400)]">~{opt.estimated_hours}h · Deliverable: {opt.deliverable.substring(0, 60)}…</p>
                 </div>
               </div>
             </button>
           ))}
           <button onClick={onCustom}
-            className="w-full text-left rounded-[16px] border border-dashed p-4 text-sm font-semibold text-[#64748B] transition hover:border-[#274C77] hover:text-[#274C77]"
+            className="w-full text-left rounded-[16px] border border-dashed p-4 text-sm font-semibold text-[color:var(--ink-500)] transition hover:border-[color:var(--brand-navy-700)] hover:text-[color:var(--brand-navy-700)]"
             style={{ background: 'white' }}>
             + Create a custom experiment
           </button>
@@ -163,34 +163,34 @@ function StepPick({ rec, options, selected, onSelect, onCustom, onNext }) {
 function StepCustom({ pathName, data, onChange, onBack, onNext }) {
   return (
     <div className="space-y-5">
-      <button onClick={onBack} className="flex items-center gap-1 text-sm text-[#64748B] hover:text-[#050816]">
+      <button onClick={onBack} className="flex items-center gap-1 text-sm text-[color:var(--ink-500)] hover:text-[color:var(--surface-dark-900)]">
         <ArrowLeft size={15} /> Back to suggestions
       </button>
-      <h3 className="font-heading text-xl font-bold text-[#050816]">Custom Experiment</h3>
+      <h3 className="font-heading text-xl font-bold text-[color:var(--surface-dark-900)]">Custom Experiment</h3>
       {[
         { name: 'title', label: 'Experiment title', placeholder: 'e.g. Shadow a product manager for a day' },
         { name: 'objective', label: 'What do you want to learn?', placeholder: 'What question are you trying to answer?' },
         { name: 'deliverable', label: 'Deliverable', placeholder: 'What will you produce or submit as proof?' },
       ].map(f => (
         <label key={f.name} className="block">
-          <span className="text-sm font-semibold text-[#334155] block mb-1">{f.label}</span>
-          <input className="w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-3 text-sm outline-none focus:border-[#1F3A5F]"
+          <span className="text-sm font-semibold text-[color:var(--ink-700)] block mb-1">{f.label}</span>
+          <input className="w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-sm outline-none focus:border-[color:var(--brand-navy-900)]"
             placeholder={f.placeholder} value={data[f.name] || ''} onChange={e => onChange(f.name, e.target.value)} />
         </label>
       ))}
       <label className="block">
-        <span className="text-sm font-semibold text-[#334155] block mb-1">Path being tested</span>
-        <input className="w-full rounded-xl border border-[#E2E8F0] bg-[#F1F5F9] px-4 py-3 text-sm outline-none text-[#334155]"
+        <span className="text-sm font-semibold text-[color:var(--ink-700)] block mb-1">Path being tested</span>
+        <input className="w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--ink-100)] px-4 py-3 text-sm outline-none text-[color:var(--ink-700)]"
           value={pathName} readOnly />
       </label>
       <label className="block">
-        <span className="text-sm font-semibold text-[#334155] block mb-1">Estimated hours</span>
-        <input type="number" min="1" max="40" className="w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-3 text-sm outline-none focus:border-[#1F3A5F]"
+        <span className="text-sm font-semibold text-[color:var(--ink-700)] block mb-1">Estimated hours</span>
+        <input type="number" min="1" max="40" className="w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-sm outline-none focus:border-[color:var(--brand-navy-900)]"
           value={data.estimated_hours || 5} onChange={e => onChange('estimated_hours', Number(e.target.value))} />
       </label>
       <label className="block">
-        <span className="text-sm font-semibold text-[#334155] block mb-1">Deadline (optional)</span>
-        <input type="date" className="w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-3 text-sm outline-none focus:border-[#1F3A5F]"
+        <span className="text-sm font-semibold text-[color:var(--ink-700)] block mb-1">Deadline (optional)</span>
+        <input type="date" className="w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-sm outline-none focus:border-[color:var(--brand-navy-900)]"
           value={data.deadline || ''} onChange={e => onChange('deadline', e.target.value)} />
       </label>
       <button onClick={onNext} disabled={!data.title || !data.objective}
@@ -220,8 +220,8 @@ function StepGenerating({ experiment, missionGuide, error }) {
     return (
       <div className="py-16 text-center space-y-4">
         <Loader2 className="mx-auto animate-spin" size={36} style={{ color: 'var(--brand-navy-900)' }} />
-        <p className="font-heading text-xl font-bold text-[#050816]">Generating your Mission Guide...</p>
-        <p className="text-sm text-[#64748B]">Building a step-by-step guide specific to {experiment?.path_name} and your selected experiment.</p>
+        <p className="font-heading text-xl font-bold text-[color:var(--surface-dark-900)]">Generating your Mission Guide...</p>
+        <p className="text-sm text-[color:var(--ink-500)]">Building a step-by-step guide specific to {experiment?.path_name} and your selected experiment.</p>
       </div>
     );
   }
@@ -245,32 +245,32 @@ function StepSuccess({ experiment, missionGuide, onViewGuide }) {
         />
       )}
 
-      <div className="rounded-[20px] text-center p-8 space-y-3" style={{ background: '#F0FDF4', border: '1px solid #86EFAC' }}>
+      <div className="rounded-[20px] text-center p-8 space-y-3" style={{ background: 'var(--success-50)', border: '1px solid #86EFAC' }}>
         <CheckCircle className="mx-auto text-green-600" size={40} />
-        <h2 className="font-heading text-2xl font-bold text-[#050816]">Mission Created</h2>
+        <h2 className="font-heading text-2xl font-bold text-[color:var(--surface-dark-900)]">Mission Created</h2>
         <div className="space-y-1">
-          <p className="text-sm text-[#334155]"><span className="font-semibold">You are testing:</span> {experiment.path_name}</p>
-          <p className="text-sm text-[#334155]"><span className="font-semibold">Your experiment:</span> {experiment.title}</p>
+          <p className="text-sm text-[color:var(--ink-700)]"><span className="font-semibold">You are testing:</span> {experiment.path_name}</p>
+          <p className="text-sm text-[color:var(--ink-700)]"><span className="font-semibold">Your experiment:</span> {experiment.title}</p>
         </div>
       </div>
 
-      <div className="rounded-[16px] border border-[#E2E8F0] bg-white p-5">
-        <p className="text-xs font-bold uppercase tracking-[.12em] text-[#64748B] mb-2">Your first action</p>
-        <p className="text-sm font-semibold text-[#050816]">{firstStepText}</p>
+      <div className="rounded-[16px] border border-[color:var(--ink-200)] bg-white p-5">
+        <p className="text-xs font-bold uppercase tracking-[.12em] text-[color:var(--ink-500)] mb-2">Your first action</p>
+        <p className="text-sm font-semibold text-[color:var(--surface-dark-900)]">{firstStepText}</p>
       </div>
 
       {missionGuide?.mission_steps?.length > 0 && (
-        <div className="rounded-[16px] border border-[#E2E8F0] bg-white p-5">
-          <p className="text-xs font-bold uppercase tracking-[.12em] text-[#64748B] mb-3">Mission Guide Preview</p>
+        <div className="rounded-[16px] border border-[color:var(--ink-200)] bg-white p-5">
+          <p className="text-xs font-bold uppercase tracking-[.12em] text-[color:var(--ink-500)] mb-3">Mission Guide Preview</p>
           <ol className="space-y-2">
             {missionGuide.mission_steps.slice(0, 5).map((s, i) => (
-              <li key={i} className="flex gap-3 text-sm text-[#334155]">
+              <li key={i} className="flex gap-3 text-sm text-[color:var(--ink-700)]">
                 <span className="shrink-0 font-bold" style={{ color: 'var(--brand-navy-900)' }}>{i + 1}.</span>
                 <span>{typeof s === 'string' ? s : s.step || s.description}</span>
               </li>
             ))}
             {missionGuide.mission_steps.length > 5 && (
-              <li className="text-xs text-[#94A3B8] pl-6">+ {missionGuide.mission_steps.length - 5} more steps in the full guide</li>
+              <li className="text-xs text-[color:var(--ink-400)] pl-6">+ {missionGuide.mission_steps.length - 5} more steps in the full guide</li>
             )}
           </ol>
         </div>
@@ -283,8 +283,8 @@ function StepSuccess({ experiment, missionGuide, onViewGuide }) {
           View Full Mission Guide
         </button>
         <button onClick={() => setShowCal(true)}
-          className="rounded-[12px] border py-3 text-sm font-semibold transition hover:bg-[#F8FAFC]"
-          style={{ borderColor: '#E2E8F0', color: '#334155' }}>
+          className="rounded-[12px] border py-3 text-sm font-semibold transition hover:bg-[color:var(--ink-50)]"
+          style={{ borderColor: 'var(--ink-200)', color: 'var(--ink-700)' }}>
           Add to Calendar
         </button>
         <Link to="/paths" className="col-span-2 text-center text-sm font-semibold transition hover:opacity-80" style={{ color: 'var(--brand-navy-900)' }}>
@@ -300,8 +300,8 @@ function DuplicateModal({ existing, onContinue, onCreateNew, onCancel }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(5,8,22,0.5)' }}>
       <div className="w-full max-w-md rounded-[24px] bg-white p-6 space-y-4">
-        <h3 className="font-heading text-lg font-bold text-[#050816]">You already have an experiment for this path</h3>
-        <p className="text-sm text-[#334155]">
+        <h3 className="font-heading text-lg font-bold text-[color:var(--surface-dark-900)]">You already have an experiment for this path</h3>
+        <p className="text-sm text-[color:var(--ink-700)]">
           <span className="font-semibold">"{existing.title}"</span> is {existing.status === 'draft' ? 'a saved draft' : 'currently active'} for <span className="font-semibold">{existing.path_name}</span>.
         </p>
         <div className="space-y-2">
@@ -311,11 +311,11 @@ function DuplicateModal({ existing, onContinue, onCreateNew, onCancel }) {
             Continue Existing Experiment
           </button>
           <button onClick={onCreateNew}
-            className="w-full rounded-[10px] border py-3 text-sm font-semibold transition hover:bg-[#F8FAFC]"
-            style={{ borderColor: '#E2E8F0', color: '#334155' }}>
+            className="w-full rounded-[10px] border py-3 text-sm font-semibold transition hover:bg-[color:var(--ink-50)]"
+            style={{ borderColor: 'var(--ink-200)', color: 'var(--ink-700)' }}>
             Create a New Experiment
           </button>
-          <button onClick={onCancel} className="w-full py-2 text-sm text-[#94A3B8] hover:text-[#334155]">Cancel</button>
+          <button onClick={onCancel} className="w-full py-2 text-sm text-[color:var(--ink-400)] hover:text-[color:var(--ink-700)]">Cancel</button>
         </div>
       </div>
     </div>
@@ -556,7 +556,7 @@ Be specific. If the experiment involves outreach, include field-specific details
 
   if (loading) {
     return (
-      <main className="min-h-screen flex items-center justify-center" style={{ background: '#FAFAF9' }}>
+      <main className="min-h-screen flex items-center justify-center" style={{ background: 'var(--page-surface)' }}>
         <Loader2 className="animate-spin" size={32} style={{ color: 'var(--brand-navy-900)' }} />
       </main>
     );
@@ -564,10 +564,10 @@ Be specific. If the experiment involves outreach, include field-specific details
 
   if (loadError) {
     return (
-      <main className="min-h-screen px-5 py-10 flex items-center justify-center" style={{ background: '#FAFAF9' }}>
+      <main className="min-h-screen px-5 py-10 flex items-center justify-center" style={{ background: 'var(--page-surface)' }}>
         <div className="max-w-md text-center space-y-4">
           <AlertCircle className="mx-auto text-red-500" size={40} />
-          <h2 className="font-heading text-xl font-bold text-[#050816]">{loadError}</h2>
+          <h2 className="font-heading text-xl font-bold text-[color:var(--surface-dark-900)]">{loadError}</h2>
           <Link to="/paths"
             className="inline-flex items-center gap-2 rounded-[10px] px-5 py-3 text-sm font-semibold text-white"
             style={{ background: 'var(--brand-navy-900)' }}>
@@ -581,7 +581,7 @@ Be specific. If the experiment involves outreach, include field-specific details
   const progressStep = step === 'pick' ? 1 : step === 'custom' ? 2 : step === 'generating' ? 3 : 4;
 
   return (
-    <main className="min-h-screen px-5 py-10" style={{ background: '#FAFAF9' }}>
+    <main className="min-h-screen px-5 py-10" style={{ background: 'var(--page-surface)' }}>
       {duplicate && (
         <DuplicateModal
           existing={duplicate}
@@ -595,7 +595,7 @@ Be specific. If the experiment involves outreach, include field-specific details
         {/* Header */}
         <div className="mb-8 flex items-center justify-between">
           <LogoWordmark />
-          <Link to="/paths" className="flex items-center gap-1 text-sm text-[#64748B] hover:text-[#050816]">
+          <Link to="/paths" className="flex items-center gap-1 text-sm text-[color:var(--ink-500)] hover:text-[color:var(--surface-dark-900)]">
             <ArrowLeft size={15} /> Path Comparison
           </Link>
         </div>
@@ -606,19 +606,19 @@ Be specific. If the experiment involves outreach, include field-specific details
             {['Select Experiment', 'Confirm Details', 'Generate Guide', 'Mission Created'].map((label, i) => (
               <div key={i} className="flex items-center gap-2">
                 <div className="flex items-center gap-1.5">
-                  <div className="h-2 w-2 rounded-full transition-all"
-                    style={{ background: progressStep > i + 1 ? '#15803D' : progressStep === i + 1 ? 'var(--brand-navy-900)' : '#CBD5E1' }} />
+                  <div className="h-2 w-2 rounded-full transition-colors"
+                    style={{ background: progressStep > i + 1 ? 'var(--success-700)' : progressStep === i + 1 ? 'var(--brand-navy-900)' : 'var(--ink-300)' }} />
                   <span className="text-xs font-semibold hidden sm:block"
-                    style={{ color: progressStep === i + 1 ? 'var(--brand-navy-900)' : '#94A3B8' }}>{label}</span>
+                    style={{ color: progressStep === i + 1 ? 'var(--brand-navy-900)' : 'var(--ink-400)' }}>{label}</span>
                 </div>
-                {i < 3 && <div className="h-px w-4 bg-[#E2E8F0]" />}
+                {i < 3 && <div className="h-px w-4 bg-[color:var(--ink-200)]" />}
               </div>
             ))}
           </div>
         </div>
 
         {/* Content */}
-        <div className="rounded-[24px] border border-[#E2E8F0] bg-white p-6 sm:p-8">
+        <div className="rounded-[24px] border border-[color:var(--ink-200)] bg-white p-6 sm:p-8">
           {step === 'pick' && (
             <StepPick
               rec={rec}

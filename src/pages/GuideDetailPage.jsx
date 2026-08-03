@@ -7,10 +7,10 @@ import CampusEventCard from '@/components/experiments/CampusEventCard';
 import { ArrowLeft, Clock, CheckCircle2, Star, Loader2 } from 'lucide-react';
 
 const STATUS_CFG = {
-  active:    { bg: '#F0FDF4', text: '#15803D', label: 'Active' },
-  draft:     { bg: '#F1F5F9', text: '#64748B', label: 'Draft' },
-  inactive:  { bg: '#F1F5F9', text: '#64748B', label: 'Inactive' },
-  completed: { bg: '#EFF6FF', text: '#1D4ED8', label: 'Completed' },
+  active:    { bg: 'var(--success-50)', text: 'var(--success-700)', label: 'Active' },
+  draft:     { bg: 'var(--ink-100)', text: 'var(--ink-500)', label: 'Draft' },
+  inactive:  { bg: 'var(--ink-100)', text: 'var(--ink-500)', label: 'Inactive' },
+  completed: { bg: 'var(--info-50)', text: 'var(--info-700)', label: 'Completed' },
 };
 
 function fmtDate(d) {
@@ -84,7 +84,7 @@ export default function GuideDetailPage() {
   if (error || !guide) {
     return (
       <div className="mx-auto max-w-2xl px-5 py-16 text-center">
-        <p className="text-[#64748B] mb-4">{error || 'Guide not found.'}</p>
+        <p className="text-[color:var(--ink-500)] mb-4">{error || 'Guide not found.'}</p>
         <button onClick={() => navigate('/experiments')} className="text-sm font-semibold text-[var(--brand-navy-900)] underline">
           Back to Missions
         </button>
@@ -99,7 +99,7 @@ export default function GuideDetailPage() {
       {/* Back */}
       <button
         onClick={() => navigate('/experiments')}
-        className="flex items-center gap-2 text-sm font-semibold text-[#64748B] hover:text-[#334155] mb-6 transition"
+        className="flex items-center gap-2 text-sm font-semibold text-[color:var(--ink-500)] hover:text-[color:var(--ink-700)] mb-6 transition"
       >
         <ArrowLeft size={15} /> Back to Missions
       </button>
@@ -107,16 +107,16 @@ export default function GuideDetailPage() {
       {/* Header */}
       <div className="mb-6">
         <div className="flex flex-wrap items-center gap-2 mb-2">
-          <span className="text-xs font-bold text-[#94A3B8]">Version {guide.version_number}</span>
+          <span className="text-xs font-bold text-[color:var(--ink-400)]">Version {guide.version_number}</span>
           <span className="rounded-full px-2.5 py-1 text-xs font-bold" style={{ background: cfg.bg, color: cfg.text }}>{cfg.label}</span>
           {guide.is_active && (
-            <span className="flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold" style={{ background: '#F0FDF4', color: '#15803D' }}>
+            <span className="flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold" style={{ background: 'var(--success-50)', color: 'var(--success-700)' }}>
               <CheckCircle2 size={11} /> Active Guide
             </span>
           )}
         </div>
-        <h1 className="font-heading text-3xl font-bold text-[#050816]">{guide.guide_title}</h1>
-        <div className="flex flex-wrap gap-4 mt-2 text-xs text-[#94A3B8]">
+        <h1 className="font-heading text-3xl font-bold text-[color:var(--surface-dark-900)]">{guide.guide_title}</h1>
+        <div className="flex flex-wrap gap-4 mt-2 text-xs text-[color:var(--ink-400)]">
           <span>Generated {fmtDate(guide.created_date)}</span>
           {guide.estimated_time && <span className="flex items-center gap-1"><Clock size={11} /> {guide.estimated_time}</span>}
           <span>{guide.steps?.length || 0} steps</span>
@@ -128,7 +128,7 @@ export default function GuideDetailPage() {
         <button
           onClick={handleSetActive}
           disabled={settingActive}
-          className="mb-6 flex items-center gap-2 rounded-[10px] border border-[#E2E8F0] px-4 py-2.5 text-sm font-semibold text-[#334155] hover:bg-[#F8FAFC] transition disabled:opacity-60"
+          className="mb-6 flex items-center gap-2 rounded-[10px] border border-[color:var(--ink-200)] px-4 py-2.5 text-sm font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)] transition disabled:opacity-60"
         >
           {settingActive ? <Loader2 size={14} className="animate-spin" /> : <Star size={14} />}
           Set as Active Guide
@@ -138,15 +138,15 @@ export default function GuideDetailPage() {
       {/* Objective */}
       {guide.objective && (
         <section className="mb-6">
-          <p className="text-xs font-bold uppercase tracking-wide text-[#64748B] mb-2">Objective</p>
-          <p className="text-sm text-[#334155] leading-relaxed">{guide.objective}</p>
+          <p className="text-xs font-bold uppercase tracking-wide text-[color:var(--ink-500)] mb-2">Objective</p>
+          <p className="text-sm text-[color:var(--ink-700)] leading-relaxed">{guide.objective}</p>
         </section>
       )}
 
       {/* Steps */}
       {guide.steps?.length > 0 && (
         <section className="mb-6">
-          <p className="text-xs font-bold uppercase tracking-wide text-[#64748B] mb-3">Steps</p>
+          <p className="text-xs font-bold uppercase tracking-wide text-[color:var(--ink-500)] mb-3">Steps</p>
           <ol className="space-y-5">
             {guide.steps.map((s, i) => {
               // Older guides carry estimated_time as free text; newer ones a number.
@@ -164,9 +164,9 @@ export default function GuideDetailPage() {
                         Start here
                       </p>
                     )}
-                    {s.title && <p className="font-semibold text-[#050816] text-sm">{s.title}</p>}
-                    {s.description && <p className="text-sm text-[#64748B] mt-0.5 leading-relaxed">{s.description}</p>}
-                    {time && <p className="text-xs text-[#94A3B8] mt-1 flex items-center gap-1"><Clock size={10} /> {time}</p>}
+                    {s.title && <p className="font-semibold text-[color:var(--surface-dark-900)] text-sm">{s.title}</p>}
+                    {s.description && <p className="text-sm text-[color:var(--ink-500)] mt-0.5 leading-relaxed">{s.description}</p>}
+                    {time && <p className="text-xs text-[color:var(--ink-400)] mt-1 flex items-center gap-1"><Clock size={10} /> {time}</p>}
 
                     {s.campus_event && (
                       <div className="mt-3">
@@ -180,14 +180,14 @@ export default function GuideDetailPage() {
                       <dl className="mt-2 space-y-1 text-xs">
                         {s.done_when && (
                           <div className="flex gap-1.5">
-                            <dt className="shrink-0 font-bold text-[#64748B]">Done when</dt>
-                            <dd className="text-[#64748B]">{s.done_when}</dd>
+                            <dt className="shrink-0 font-bold text-[color:var(--ink-500)]">Done when</dt>
+                            <dd className="text-[color:var(--ink-500)]">{s.done_when}</dd>
                           </div>
                         )}
                         {s.proof_capture && (
                           <div className="flex gap-1.5">
-                            <dt className="shrink-0 font-bold text-[#64748B]">Proof</dt>
-                            <dd className="text-[#64748B]">{s.proof_capture}</dd>
+                            <dt className="shrink-0 font-bold text-[color:var(--ink-500)]">Proof</dt>
+                            <dd className="text-[color:var(--ink-500)]">{s.proof_capture}</dd>
                           </div>
                         )}
                       </dl>
@@ -202,27 +202,27 @@ export default function GuideDetailPage() {
 
       {/* Deliverable */}
       {guide.deliverable && (
-        <section className="mb-4 rounded-xl p-4" style={{ background: '#EEF2F6', border: '1px solid rgba(31,58,95,0.15)' }}>
+        <section className="mb-4 rounded-xl p-4" style={{ background: 'var(--ink-100)', border: '1px solid rgba(31,58,95,0.15)' }}>
           <p className="text-xs font-bold uppercase tracking-wide mb-1" style={{ color: 'var(--brand-navy-900)' }}>Deliverable</p>
-          <p className="text-sm text-[#334155]">{guide.deliverable}</p>
+          <p className="text-sm text-[color:var(--ink-700)]">{guide.deliverable}</p>
         </section>
       )}
 
       {/* Proof required */}
       {guide.proof_requirement && (
-        <section className="mb-4 rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] p-4">
-          <p className="text-xs font-bold uppercase tracking-wide text-[#64748B] mb-1">Proof Required</p>
-          <p className="text-sm text-[#334155]">{guide.proof_requirement}</p>
+        <section className="mb-4 rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] p-4">
+          <p className="text-xs font-bold uppercase tracking-wide text-[color:var(--ink-500)] mb-1">Proof Required</p>
+          <p className="text-sm text-[color:var(--ink-700)]">{guide.proof_requirement}</p>
         </section>
       )}
 
       {/* Reflection questions */}
       {guide.reflection_questions?.length > 0 && (
         <section className="mb-4">
-          <p className="text-xs font-bold uppercase tracking-wide text-[#64748B] mb-2">Reflection Questions</p>
+          <p className="text-xs font-bold uppercase tracking-wide text-[color:var(--ink-500)] mb-2">Reflection Questions</p>
           <ul className="space-y-2">
             {guide.reflection_questions.map((q, i) => (
-              <li key={i} className="flex gap-2 text-sm text-[#334155]">
+              <li key={i} className="flex gap-2 text-sm text-[color:var(--ink-700)]">
                 <span className="shrink-0 font-bold" style={{ color: 'var(--brand-navy-900)' }}>·</span>
                 <span>{q}</span>
               </li>

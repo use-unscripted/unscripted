@@ -8,7 +8,7 @@ import PageHeader from '@/components/PageHeader';
 const Chips = ({ items }) => (
   <div className="flex flex-wrap gap-2">
     {items?.map(x => (
-      <span key={x} className="rounded-full border border-[#E2E8F0] bg-[#FAFAF9] px-3 py-1.5 text-xs font-semibold text-[#334155]">{x}</span>
+      <span key={x} className="rounded-full border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-3 py-1.5 text-xs font-semibold text-[color:var(--ink-700)]">{x}</span>
     ))}
   </div>
 );
@@ -18,13 +18,13 @@ export default function AmbitionProfile() {
   useEffect(() => { base44.entities.AmbitionProfile.list('-created_date', 1).then(x => setP(x[0])); }, []);
 
   if (!p) return (
-    <div className="grid min-h-screen place-items-center" style={{ background: '#FAFAF9' }}>
-      <p className="text-[#64748B]">Loading your profile...</p>
+    <div className="grid min-h-screen place-items-center" style={{ background: 'var(--page-surface)' }}>
+      <p className="text-[color:var(--ink-500)]">Loading your profile...</p>
     </div>
   );
 
   return (
-    <main className="mx-auto max-w-6xl px-5 py-10 sm:px-8" style={{ background: '#FAFAF9' }}>
+    <main className="mx-auto max-w-6xl px-5 py-10 sm:px-8" style={{ background: 'var(--page-surface)' }}>
       <PageHeader
         eyebrow="Your Unscripted Profile"
         title={`You are a ${p.archetype}.`}
@@ -40,20 +40,20 @@ export default function AmbitionProfile() {
         <ProfileCard label="Biggest risk">
           <div className="flex gap-3">
             <AlertTriangle className="shrink-0 text-amber-500" size={18} />
-            <p className="text-sm leading-6 text-[#334155]">{p.biggest_risk}</p>
+            <p className="text-sm leading-6 text-[color:var(--ink-700)]">{p.biggest_risk}</p>
           </div>
         </ProfileCard>
         <ProfileCard label="Biggest opportunity">
           <div className="flex gap-3">
-            <TrendingUp className="shrink-0" size={18} style={{ color: '#15803D' }} />
-            <p className="text-sm leading-6 text-[#334155]">{p.biggest_opportunity}</p>
+            <TrendingUp className="shrink-0" size={18} style={{ color: 'var(--success-700)' }} />
+            <p className="text-sm leading-6 text-[color:var(--ink-700)]">{p.biggest_opportunity}</p>
           </div>
         </ProfileCard>
         <ProfileCard label="Stop doing">
-          <p className="text-sm leading-6 text-[#334155]">{p.stop_doing}</p>
+          <p className="text-sm leading-6 text-[color:var(--ink-700)]">{p.stop_doing}</p>
         </ProfileCard>
         <ProfileCard label="Start doing">
-          <p className="text-sm leading-6 text-[#334155]">{p.start_doing}</p>
+          <p className="text-sm leading-6 text-[color:var(--ink-700)]">{p.start_doing}</p>
         </ProfileCard>
       </div>
       <Link

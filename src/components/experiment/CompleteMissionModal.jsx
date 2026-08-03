@@ -138,8 +138,8 @@ export default function CompleteMissionModal({ mission, experiment, path, onClos
         )}
 
         {error && (
-          <div className="mt-4 flex items-start gap-2 rounded-[10px] p-3" style={{ background: '#FEF2F2', border: '1px solid #FECACA' }}>
-            <AlertTriangle size={14} className="mt-0.5 shrink-0" style={{ color: '#B91C1C' }} />
+          <div className="mt-4 flex items-start gap-2 rounded-[10px] p-3" style={{ background: 'var(--danger-50)', border: '1px solid #FECACA' }}>
+            <AlertTriangle size={14} className="mt-0.5 shrink-0" style={{ color: 'var(--danger-700)' }} />
             <p className="text-sm" style={{ color: '#991B1B' }}>{error}</p>
           </div>
         )}

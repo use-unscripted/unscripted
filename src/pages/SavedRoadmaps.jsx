@@ -19,7 +19,7 @@ export default function SavedRoadmaps() {
           <Link
             to="/roadmap"
             key={r.id}
-            className="flex items-center gap-5 rounded-[20px] border border-[#E2E8F0] bg-white p-6 transition hover:-translate-y-0.5 hover:shadow-md hover:border-[rgba(31,58,95,0.25)]"
+            className="flex items-center gap-5 rounded-[20px] border border-[color:var(--ink-200)] bg-white p-6 transition hover:-translate-y-0.5 hover:shadow-md hover:border-[rgba(31,58,95,0.25)]"
           >
             <span
               className="grid h-12 w-12 place-items-center rounded-xl shrink-0"
@@ -28,17 +28,17 @@ export default function SavedRoadmaps() {
               <Map style={{ color: 'var(--brand-navy-900)' }} size={20} />
             </span>
             <div className="min-w-0 flex-1">
-              <h2 className="font-heading truncate font-bold text-[#07111F]">{r.title}</h2>
-              <p className="mt-1 text-xs text-[#64748B]">
+              <h2 className="font-heading truncate font-bold text-[color:var(--surface-dark-800)]">{r.title}</h2>
+              <p className="mt-1 text-xs text-[color:var(--ink-500)]">
                 Created {new Date(r.created_date).toLocaleDateString()} · {r.thirty_day_plan?.length || 0} milestones
               </p>
             </div>
-            <span className="hidden text-xs font-bold text-[#94A3B8] sm:block">VERSION {items.length - i}</span>
-            <ArrowRight className="text-[#CBD5E1] shrink-0" size={18} />
+            <span className="hidden text-xs font-bold text-[color:var(--ink-400)] sm:block">VERSION {items.length - i}</span>
+            <ArrowRight className="text-[color:var(--ink-300)] shrink-0" size={18} />
           </Link>
         ))}
         {!items.length && (
-          <div className="rounded-[20px] border border-dashed border-[#E2E8F0] p-12 text-center text-[#94A3B8]">
+          <div className="rounded-[20px] border border-dashed border-[color:var(--ink-200)] p-12 text-center text-[color:var(--ink-400)]">
             Your first roadmap will appear here.
           </div>
         )}

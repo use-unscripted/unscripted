@@ -32,7 +32,7 @@ export default function ContinueCard({ action, pathName, onAnchorClick }) {
       </div>
 
       {pathName && <h2 className="font-heading mt-3 text-2xl font-bold text-white sm:text-3xl">{pathName}</h2>}
-      <p className="mt-2 max-w-xl text-sm leading-6 text-slate-300">{action.sub}</p>
+      <p className="mt-2 max-w-xl text-sm leading-6 text-[color:var(--ink-300)]">{action.sub}</p>
 
       <div className="mt-6 rounded-[14px] bg-white p-4 sm:inline-block sm:p-2">
         {action.to ? (

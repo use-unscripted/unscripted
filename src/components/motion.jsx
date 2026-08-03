@@ -7,20 +7,20 @@
    Every primitive checks useReducedMotion() and degrades to a static,
    fully-legible state. Motion is decoration; the page reads without it.
    ────────────────────────────────────────────────────────────────────────── */
-import { useRef, useState, useEffect, useCallback } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import {
   motion,
   useReducedMotion,
-  useMotionValue,
-  useSpring,
-  useTransform,
   useInView,
   animate,
 } from 'framer-motion';
 
 /* Brand easing — expo ease-out. Matches --ease-out in index.css. */
 export const EASE = [0.16, 1, 0.3, 1];
-export const EASE_SPRING = [0.34, 1.56, 0.64, 1];
+/* The EASE_SPRING overshoot curve that used to be exported here is gone.
+   Bounce easing on UI state is a tell, and it had spread to every button and
+   card on the site. Genuine physical interactions can use --ease-overshoot
+   from index.css. */
 
 /* ── Reveal ────────────────────────────────────────────────────────────────
    Drop-in replacement for the existing ScrollReveal. Same props, but driven
@@ -185,130 +185,15 @@ export function UnderlineDraw({ delay = 0.6, height = 4, color = 'var(--brand-go
   );
 }
 
-/* ── Magnetic ──────────────────────────────────────────────────────────────
-   The button leans toward the cursor as it approaches, then springs back.
+/* Magnetic and Tilt used to live here.
 
-   Kept deliberately small (max ~9px of travel). Big magnetic offsets feel
-   like a toy; small ones just make the button feel alive and physical.
+   Magnetic made every CTA lean toward the cursor; Tilt gave each card a
+   pointer-tracked 3D rotation with a gold specular highlight. Both were
+   applied to every button and every card on the landing page, which is the
+   universal-hover-affordance tell — one signal per element, not four. Removed
+   rather than toned down; if a genuinely physical interaction ever needs
+   overshoot, --ease-overshoot is still in index.css for it.
    ──────────────────────────────────────────────────────────────────────── */
-export function Magnetic({ children, strength = 0.28, max = 9, className = '', style }) {
-  const reduce = useReducedMotion();
-  const ref = useRef(null);
-  const x = useMotionValue(0);
-  const y = useMotionValue(0);
-  const springCfg = { stiffness: 240, damping: 16, mass: 0.35 };
-  const sx = useSpring(x, springCfg);
-  const sy = useSpring(y, springCfg);
-
-  const clamp = (v) => Math.max(-max, Math.min(max, v));
-
-  const onMove = useCallback((e) => {
-    const el = ref.current;
-    if (!el) return;
-    const r = el.getBoundingClientRect();
-    const dx = e.clientX - (r.left + r.width / 2);
-    const dy = e.clientY - (r.top + r.height / 2);
-    x.set(clamp(dx * strength));
-    y.set(clamp(dy * strength));
-  }, [strength, max]);
-
-  const reset = useCallback(() => { x.set(0); y.set(0); }, []);
-
-  if (reduce) {
-    return <span className={className} style={{ display: 'inline-block', ...style }}>{children}</span>;
-  }
-
-  return (
-    <motion.span
-      ref={ref}
-      onMouseMove={onMove}
-      onMouseLeave={reset}
-      className={className}
-      style={{ display: 'inline-block', x: sx, y: sy, ...style }}
-    >
-      {children}
-    </motion.span>
-  );
-}
-
-/* ── Tilt ──────────────────────────────────────────────────────────────────
-   Pointer-tracked 3D tilt with a gold specular highlight that follows the
-   cursor. Max rotation is 5deg — past ~7deg it stops reading as "premium
-   material" and starts reading as "CSS demo".
-   ──────────────────────────────────────────────────────────────────────── */
-export function Tilt({ children, className = '', style, maxDeg = 5, glow = true }) {
-  const reduce = useReducedMotion();
-  const ref = useRef(null);
-  const rx = useMotionValue(0);
-  const ry = useMotionValue(0);
-  const gx = useMotionValue(50);
-  const gy = useMotionValue(50);
-  const opacity = useMotionValue(0);
-
-  const cfg = { stiffness: 220, damping: 20, mass: 0.4 };
-  const srx = useSpring(rx, cfg);
-  const sry = useSpring(ry, cfg);
-  const sop = useSpring(opacity, { stiffness: 160, damping: 24 });
-
-  const glowBg = useTransform(
-    [gx, gy],
-    ([px, py]) =>
-      `radial-gradient(340px circle at ${px}% ${py}%, rgba(214,182,106,0.16), transparent 62%)`
-  );
-
-  const onMove = (e) => {
-    const el = ref.current;
-    if (!el) return;
-    const r = el.getBoundingClientRect();
-    const px = (e.clientX - r.left) / r.width;
-    const py = (e.clientY - r.top) / r.height;
-    ry.set((px - 0.5) * maxDeg * 2);
-    rx.set(-(py - 0.5) * maxDeg * 2);
-    gx.set(px * 100);
-    gy.set(py * 100);
-  };
-
-  const onEnter = () => opacity.set(1);
-  const onLeave = () => { rx.set(0); ry.set(0); opacity.set(0); };
-
-  if (reduce) {
-    return <div className={className} style={style}>{children}</div>;
-  }
-
-  return (
-    <motion.div
-      ref={ref}
-      onMouseMove={onMove}
-      onMouseEnter={onEnter}
-      onMouseLeave={onLeave}
-      className={className}
-      style={{
-        ...style,
-        position: 'relative',
-        rotateX: srx,
-        rotateY: sry,
-        transformPerspective: 900,
-        transformStyle: 'preserve-3d',
-        willChange: 'transform',
-      }}
-    >
-      {children}
-      {glow && (
-        <motion.span
-          aria-hidden="true"
-          style={{
-            position: 'absolute',
-            inset: 0,
-            borderRadius: 'inherit',
-            background: glowBg,
-            opacity: sop,
-            pointerEvents: 'none',
-          }}
-        />
-      )}
-    </motion.div>
-  );
-}
 
 /* ── CountUp ───────────────────────────────────────────────────────────────
    Counts to `to` once the element enters the viewport.
@@ -321,7 +206,6 @@ export function CountUp({ to, duration = 1.4, className = '', style }) {
 
   useEffect(() => {
     if (reduce || !inView) return;
-    const mv = { v: 0 };
     const controls = animate(0, to, {
       duration,
       ease: EASE,
@@ -333,24 +217,6 @@ export function CountUp({ to, duration = 1.4, className = '', style }) {
   return <span ref={ref} className={className} style={style}>{display}</span>;
 }
 
-/* ── ScrollProgress ────────────────────────────────────────────────────────
-   Hairline gold progress rule pinned to the top of the page.
-   ──────────────────────────────────────────────────────────────────────── */
-export function ScrollProgress({ scaleX }) {
-  return (
-    <motion.div
-      aria-hidden="true"
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        height: 2,
-        zIndex: 60,
-        transformOrigin: 'left center',
-        scaleX,
-        background: 'linear-gradient(90deg, var(--brand-navy-700), var(--brand-gold-500))',
-      }}
-    />
-  );
-}
+/* ScrollProgress (a fixed gold progress rule pinned to the top of the page)
+   was removed with the landing rebuild — a marketing page is not a long-form
+   article, and the reader already has a scrollbar. */

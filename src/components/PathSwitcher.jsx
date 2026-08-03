@@ -3,12 +3,12 @@ import { createPortal } from 'react-dom';
 import { ChevronDown, Star, Circle, PauseCircle, CheckCircle2, Archive } from 'lucide-react';
 
 const STATUS_CFG = {
-  active:    { label: 'Active',    bg: '#F0FDF4', text: '#15803D', Icon: Circle },
-  draft:     { label: 'Draft',     bg: '#F1F5F9', text: '#64748B', Icon: Circle },
-  paused:    { label: 'Paused',    bg: '#FFFBEB', text: '#B45309', Icon: PauseCircle },
-  completed: { label: 'Completed', bg: '#EFF6FF', text: '#1D4ED8', Icon: CheckCircle2 },
-  archived:  { label: 'Archived',  bg: '#F1F5F9', text: '#94A3B8', Icon: Archive },
-  exploring: { label: 'Exploring', bg: '#EEF2F6', text: '#274C77', Icon: Circle },
+  active:    { label: 'Active',    bg: 'var(--success-50)', text: 'var(--success-700)', Icon: Circle },
+  draft:     { label: 'Draft',     bg: 'var(--ink-100)', text: 'var(--ink-500)', Icon: Circle },
+  paused:    { label: 'Paused',    bg: 'var(--warning-50)', text: 'var(--warning-700)', Icon: PauseCircle },
+  completed: { label: 'Completed', bg: 'var(--info-50)', text: 'var(--info-700)', Icon: CheckCircle2 },
+  archived:  { label: 'Archived',  bg: 'var(--ink-100)', text: 'var(--ink-400)', Icon: Archive },
+  exploring: { label: 'Exploring', bg: 'var(--ink-100)', text: 'var(--brand-navy-700)', Icon: Circle },
 };
 
 function statusCfg(s) { return STATUS_CFG[s] || STATUS_CFG.exploring; }
@@ -54,33 +54,33 @@ export default function PathSwitcher({ paths = [], selectedId, onChange, showAll
   const dropdown = open && (
     <div
       ref={dropdownRef}
-      className="anim-scale-in w-72 rounded-[16px] border border-[#E2E8F0] bg-white shadow-xl py-1.5 overflow-y-auto"
+      className="anim-scale-in w-72 rounded-[16px] border border-[color:var(--ink-200)] bg-white shadow-xl py-1.5 overflow-y-auto"
       style={{ ...dropdownStyle, maxHeight: '320px' }}
       onWheel={e => e.stopPropagation()}
     >
       {showAll && (
         <button
           onClick={() => { onChange('all'); setOpen(false); }}
-          className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition hover:bg-[#EEF2F6] ${selectedId === 'all' ? 'bg-[#EEF2F6]' : ''}`}
+          className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition hover:bg-[color:var(--ink-100)] ${selectedId === 'all' ? 'bg-[color:var(--ink-100)]' : ''}`}
         >
-          <span className="font-semibold text-[#334155]">All Paths</span>
+          <span className="font-semibold text-[color:var(--ink-700)]">All Paths</span>
         </button>
       )}
 
       {activePaths.length > 0 && (
         <>
-          <p className="px-4 pt-2 pb-1 text-[10px] font-bold uppercase tracking-widest text-[#94A3B8]">Active</p>
+          <p className="px-4 pt-2 pb-1 text-[10px] font-bold uppercase tracking-widest text-[color:var(--ink-400)]">Active</p>
           {activePaths.map(p => {
             const c = statusCfg(p.status);
             return (
               <button
                 key={p.id}
                 onClick={() => { onChange(p.id); setOpen(false); }}
-                className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition hover:bg-[#EEF2F6] ${selectedId === p.id ? 'bg-[#EEF2F6]' : ''}`}
+                className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition hover:bg-[color:var(--ink-100)] ${selectedId === p.id ? 'bg-[color:var(--ink-100)]' : ''}`}
               >
                 {p.is_primary_focus && <Star size={13} className="shrink-0" style={{ color: 'var(--brand-gold-500)' }} />}
                 {!p.is_primary_focus && <div className="w-[13px] shrink-0" />}
-                <span className="flex-1 font-semibold text-[#050816] text-left truncate">{p.path_name}</span>
+                <span className="flex-1 font-semibold text-[color:var(--surface-dark-900)] text-left truncate">{p.path_name}</span>
                 <span className="shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold" style={{ background: c.bg, color: c.text }}>
                   {c.label}
                 </span>
@@ -92,17 +92,17 @@ export default function PathSwitcher({ paths = [], selectedId, onChange, showAll
 
       {otherPaths.length > 0 && (
         <>
-          <p className="px-4 pt-2 pb-1 text-[10px] font-bold uppercase tracking-widest text-[#94A3B8]">Other</p>
+          <p className="px-4 pt-2 pb-1 text-[10px] font-bold uppercase tracking-widest text-[color:var(--ink-400)]">Other</p>
           {otherPaths.map(p => {
             const c = statusCfg(p.status);
             return (
               <button
                 key={p.id}
                 onClick={() => { onChange(p.id); setOpen(false); }}
-                className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition hover:bg-[#EEF2F6] ${selectedId === p.id ? 'bg-[#EEF2F6]' : ''}`}
+                className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition hover:bg-[color:var(--ink-100)] ${selectedId === p.id ? 'bg-[color:var(--ink-100)]' : ''}`}
               >
                 <div className="w-[13px] shrink-0" />
-                <span className="flex-1 font-semibold text-[#334155] text-left truncate">{p.path_name}</span>
+                <span className="flex-1 font-semibold text-[color:var(--ink-700)] text-left truncate">{p.path_name}</span>
                 <span className="shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold" style={{ background: c.bg, color: c.text }}>
                   {c.label}
                 </span>
@@ -113,7 +113,7 @@ export default function PathSwitcher({ paths = [], selectedId, onChange, showAll
       )}
 
       {paths.length === 0 && (
-        <p className="px-4 py-3 text-sm text-[#94A3B8]">No paths yet.</p>
+        <p className="px-4 py-3 text-sm text-[color:var(--ink-400)]">No paths yet.</p>
       )}
     </div>
   );
@@ -137,9 +137,9 @@ export default function PathSwitcher({ paths = [], selectedId, onChange, showAll
             </span>
           </>
         ) : (
-          <span className="flex-1 text-left text-[#64748B]">All Paths</span>
+          <span className="flex-1 text-left text-[color:var(--ink-500)]">All Paths</span>
         )}
-        <ChevronDown size={14} className={`shrink-0 text-[#94A3B8] transition-transform ${open ? 'rotate-180' : ''}`} />
+        <ChevronDown size={14} className={`shrink-0 text-[color:var(--ink-400)] transition-transform ${open ? 'rotate-180' : ''}`} />
       </button>
 
       {createPortal(dropdown, document.body)}

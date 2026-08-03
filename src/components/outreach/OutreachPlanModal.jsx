@@ -17,7 +17,7 @@ import { base44 } from '@/api/base44Client';
 import { ProgressBar, OptionRow, GuidedStyles, footerCls } from '@/components/guided/GuidedPieces';
 import { unwrapLLM } from '@/lib/llm';
 
-const inputCls = 'w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-2.5 text-sm outline-none focus:border-[#1F3A5F]';
+const inputCls = 'w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-2.5 text-sm outline-none focus:border-[color:var(--brand-navy-900)]';
 
 // ── Step 1: Survey ─────────────────────────────────────────────────────────────
 const DEFAULT_SURVEY = {
@@ -248,14 +248,14 @@ function SurveyStep({ pathName, survey, setSurvey, index, setIndex, onGenerate, 
     <div className="mb-6">
       <div className="mb-3 flex items-center justify-between gap-3">
         <span className="truncate rounded-full px-2.5 py-1 text-[11px] font-bold"
-          style={{ background: '#EEF2F6', color: 'var(--brand-navy-900)' }}>
+          style={{ background: 'var(--ink-100)', color: 'var(--brand-navy-900)' }}>
           {pathName}
         </span>
         <div className="flex items-center gap-3">
           <span className="whitespace-nowrap text-[11px] font-semibold" style={{ color: 'var(--text-secondary)' }}>
             {reviewing ? 'Review' : `${index + 1} of ${STEPS.length}`}
           </span>
-          <button onClick={onClose} aria-label="Close" className="rounded-lg p-0.5" style={{ color: '#64748B' }}>
+          <button onClick={onClose} aria-label="Close" className="rounded-lg p-0.5" style={{ color: 'var(--ink-500)' }}>
             <X size={18} />
           </button>
         </div>
@@ -270,7 +270,7 @@ function SurveyStep({ pathName, survey, setSurvey, index, setIndex, onGenerate, 
         <GuidedStyles />
         {header}
         <div key="review" className="step-pane-fwd">
-          <h2 className="font-heading text-[26px] font-bold leading-tight" style={{ color: '#050816' }}>
+          <h2 className="font-heading text-[26px] font-bold leading-tight" style={{ color: 'var(--surface-dark-900)' }}>
             That’s everything.
           </h2>
           <p className="mt-1.5 text-sm" style={{ color: 'var(--text-secondary)' }}>
@@ -287,7 +287,7 @@ function SurveyStep({ pathName, survey, setSurvey, index, setIndex, onGenerate, 
               return (
                 <button key={s.key} type="button" onClick={() => go(i, 'back')}
                   className="opt-row flex w-full items-start gap-3 rounded-xl border px-3.5 py-2.5 text-left"
-                  style={{ animationDelay: `${i * 30}ms`, borderColor: '#E2E8F0', background: '#FFFFFF' }}>
+                  style={{ animationDelay: `${i * 30}ms`, borderColor: 'var(--ink-200)', background: 'var(--brand-white)' }}>
                   <span className="min-w-0 flex-1">
                     <span className="block text-[11px] font-semibold uppercase tracking-wide" style={{ color: 'var(--text-secondary)' }}>
                       {s.question}
@@ -296,13 +296,13 @@ function SurveyStep({ pathName, survey, setSurvey, index, setIndex, onGenerate, 
                       {value || 'No preference'}
                     </span>
                   </span>
-                  <Pencil size={13} className="mt-1 shrink-0" style={{ color: '#CBD5E1' }} />
+                  <Pencil size={13} className="mt-1 shrink-0" style={{ color: 'var(--ink-300)' }} />
                 </button>
               );
             })}
           </div>
 
-          <div className="mt-5 rounded-2xl border p-4" style={{ borderColor: '#E2E8F0', background: '#FAFBFC' }}>
+          <div className="mt-5 rounded-2xl border p-4" style={{ borderColor: 'var(--ink-200)', background: '#FAFBFC' }}>
             <p className="text-xs font-semibold" style={{ color: 'var(--text-primary)' }}>Also suggest real people to contact?</p>
             <p className="mt-0.5 text-xs" style={{ color: 'var(--text-secondary)' }}>
               Public figures in this field. You’ll still need to verify each one.
@@ -329,7 +329,7 @@ function SurveyStep({ pathName, survey, setSurvey, index, setIndex, onGenerate, 
             <div className="flex items-center gap-3">
               <button onClick={back}
                 className="flex items-center gap-1 rounded-[10px] border px-4 py-3 text-sm font-semibold"
-                style={{ borderColor: '#E2E8F0', color: 'var(--text-primary)' }}>
+                style={{ borderColor: 'var(--ink-200)', color: 'var(--text-primary)' }}>
                 <ChevronLeft size={15} /> Back
               </button>
               <button onClick={onGenerate}
@@ -350,7 +350,7 @@ function SurveyStep({ pathName, survey, setSurvey, index, setIndex, onGenerate, 
       {header}
 
       <div key={index} className={dir === 'fwd' ? 'step-pane-fwd' : 'step-pane-back'}>
-        <h2 className="font-heading text-[26px] font-bold leading-tight" style={{ color: '#050816' }}>
+        <h2 className="font-heading text-[26px] font-bold leading-tight" style={{ color: 'var(--surface-dark-900)' }}>
           {step.question}
         </h2>
         {step.hint && (
@@ -413,13 +413,13 @@ function SurveyStep({ pathName, survey, setSurvey, index, setIndex, onGenerate, 
           {index > 0 ? (
             <button onClick={back}
               className="flex items-center gap-1 rounded-[10px] border px-4 py-3 text-sm font-semibold"
-              style={{ borderColor: '#E2E8F0', color: 'var(--text-primary)' }}>
+              style={{ borderColor: 'var(--ink-200)', color: 'var(--text-primary)' }}>
               <ChevronLeft size={15} /> Back
             </button>
           ) : (
             <button onClick={onClose}
               className="rounded-[10px] border px-4 py-3 text-sm font-semibold"
-              style={{ borderColor: '#E2E8F0', color: 'var(--text-primary)' }}>
+              style={{ borderColor: 'var(--ink-200)', color: 'var(--text-primary)' }}>
               Cancel
             </button>
           )}
@@ -446,15 +446,15 @@ function SurveyStep({ pathName, survey, setSurvey, index, setIndex, onGenerate, 
 // ── Contact archetype card ─────────────────────────────────────────────────────
 function ArchetypeCard({ archetype }) {
   return (
-    <div className="rounded-[16px] border border-[#E2E8F0] bg-[#F8FAFC] p-4">
+    <div className="rounded-[16px] border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] p-4">
       <div className="flex items-center gap-2 mb-2">
         <User size={14} style={{ color: 'var(--brand-navy-900)' }} />
-        <p className="text-sm font-bold text-[#050816]">{archetype.title}</p>
+        <p className="text-sm font-bold text-[color:var(--surface-dark-900)]">{archetype.title}</p>
       </div>
-      <p className="text-xs text-[#334155] mb-2">{archetype.why_useful}</p>
+      <p className="text-xs text-[color:var(--ink-700)] mb-2">{archetype.why_useful}</p>
       <div className="flex flex-wrap gap-1.5">
         {archetype.where_to_find?.map((w, i) => (
-          <span key={i} className="rounded-full border border-[#E2E8F0] px-2 py-0.5 text-[10px] text-[#64748B]">{w}</span>
+          <span key={i} className="rounded-full border border-[color:var(--ink-200)] px-2 py-0.5 text-[10px] text-[color:var(--ink-500)]">{w}</span>
         ))}
       </div>
     </div>
@@ -464,20 +464,20 @@ function ArchetypeCard({ archetype }) {
 // ── Outreach experiment card ───────────────────────────────────────────────────
 function OutreachExperimentCard({ exp }) {
   return (
-    <div className="rounded-[16px] border border-[#E2E8F0] bg-white p-4 space-y-2">
+    <div className="rounded-[16px] border border-[color:var(--ink-200)] bg-white p-4 space-y-2">
       <div className="flex items-center gap-2">
         <Beaker size={14} style={{ color: 'var(--brand-navy-900)' }} />
-        <p className="text-sm font-bold text-[#050816]">{exp.title}</p>
+        <p className="text-sm font-bold text-[color:var(--surface-dark-900)]">{exp.title}</p>
       </div>
-      <p className="text-xs text-[#334155]">{exp.objective}</p>
-      <div className="grid grid-cols-2 gap-2 text-xs text-[#64748B]">
+      <p className="text-xs text-[color:var(--ink-700)]">{exp.objective}</p>
+      <div className="grid grid-cols-2 gap-2 text-xs text-[color:var(--ink-500)]">
         {exp.target_contact_type && <span><span className="font-semibold">Target:</span> {exp.target_contact_type}</span>}
         {exp.suggested_contacts && <span><span className="font-semibold">Contacts:</span> {exp.suggested_contacts}</span>}
         {exp.timeline && <span><span className="font-semibold">Timeline:</span> {exp.timeline}</span>}
         {exp.deliverable && <span><span className="font-semibold">Deliverable:</span> {exp.deliverable}</span>}
       </div>
       {exp.why_it_tests_path && (
-        <p className="text-xs rounded-lg px-3 py-2" style={{ background: '#EEF2F6', color: 'var(--brand-navy-900)' }}>
+        <p className="text-xs rounded-lg px-3 py-2" style={{ background: 'var(--ink-100)', color: 'var(--brand-navy-900)' }}>
           <span className="font-semibold">Why it tests this path:</span> {exp.why_it_tests_path}
         </p>
       )}
@@ -494,14 +494,14 @@ function MessageTemplate({ template }) {
     setTimeout(() => setCopied(false), 2000);
   };
   return (
-    <div className="rounded-[16px] border border-[#E2E8F0] bg-white p-4">
+    <div className="rounded-[16px] border border-[color:var(--ink-200)] bg-white p-4">
       <div className="flex items-center justify-between mb-2">
-        <p className="text-xs font-bold uppercase tracking-wide text-[#64748B]">{template.label}</p>
+        <p className="text-xs font-bold uppercase tracking-wide text-[color:var(--ink-500)]">{template.label}</p>
         <button onClick={copy} className="text-xs font-semibold transition" style={{ color: 'var(--brand-navy-900)' }}>
           {copied ? '✓ Copied' : 'Copy'}
         </button>
       </div>
-      <pre className="text-xs text-[#334155] whitespace-pre-wrap font-body leading-5 max-h-40 overflow-y-auto">{template.body}</pre>
+      <pre className="text-xs text-[color:var(--ink-700)] whitespace-pre-wrap font-body leading-5 max-h-40 overflow-y-auto">{template.body}</pre>
     </div>
   );
 }
@@ -574,24 +574,24 @@ function ContactSuggestionCard({ suggestion, pathName, experimentId, onSaved, on
           onSaved={(contact) => { setShowSaveModal(false); setSaved(true); onSaved?.(contact); }}
         />
       )}
-      <div className={`rounded-[16px] border p-4 space-y-3 transition ${saved ? 'border-green-200 bg-green-50' : 'border-[#E2E8F0] bg-white'}`}>
+      <div className={`rounded-[16px] border p-4 space-y-3 transition ${saved ? 'border-green-200 bg-green-50' : 'border-[color:var(--ink-200)] bg-white'}`}>
         <div className="flex items-start justify-between gap-2">
           <div className="flex-1 min-w-0">
             {isArchetype ? (
               <div className="flex items-center gap-2 mb-1">
-                <span className="rounded-full px-2 py-0.5 text-[10px] font-bold" style={{ background: '#F1F5F9', color: '#64748B' }}>Archetype</span>
-                <p className="text-sm font-bold text-[#050816]">{suggestion.archetype_title}</p>
+                <span className="rounded-full px-2 py-0.5 text-[10px] font-bold" style={{ background: 'var(--ink-100)', color: 'var(--ink-500)' }}>Archetype</span>
+                <p className="text-sm font-bold text-[color:var(--surface-dark-900)]">{suggestion.archetype_title}</p>
               </div>
             ) : (
               <div>
                 <div className="flex items-center gap-2 mb-0.5">
-                  <span className="rounded-full px-2 py-0.5 text-[10px] font-bold" style={{ background: '#EFF6FF', color: '#1D4ED8' }}>Suggested Contact</span>
-                  <p className="text-sm font-bold text-[#050816]">{suggestion.name}</p>
+                  <span className="rounded-full px-2 py-0.5 text-[10px] font-bold" style={{ background: 'var(--info-50)', color: 'var(--info-700)' }}>Suggested Contact</span>
+                  <p className="text-sm font-bold text-[color:var(--surface-dark-900)]">{suggestion.name}</p>
                 </div>
-                <p className="text-xs text-[#334155]">{suggestion.role}{suggestion.role && suggestion.organization ? ' · ' : ''}{suggestion.organization}</p>
+                <p className="text-xs text-[color:var(--ink-700)]">{suggestion.role}{suggestion.role && suggestion.organization ? ' · ' : ''}{suggestion.organization}</p>
               </div>
             )}
-            <p className="text-xs text-[#64748B] mt-1">{suggestion.why_relevant}</p>
+            <p className="text-xs text-[color:var(--ink-500)] mt-1">{suggestion.why_relevant}</p>
             {!isArchetype && (
               <>
                 {/* Never link directly to a LinkedIn profile URL from AI — always use verified search */}
@@ -602,7 +602,7 @@ function ContactSuggestionCard({ suggestion, pathName, experimentId, onSaved, on
                   style={{ color: 'var(--brand-navy-700)' }}>
                   <ExternalLink size={10} /> Search on LinkedIn
                 </a>
-                <p className="text-[10px] text-[#94A3B8] mt-0.5">
+                <p className="text-[10px] text-[color:var(--ink-400)] mt-0.5">
                   Direct profile not verified. Review search results and confirm this person's company and role before reaching out.
                 </p>
                 <div className="mt-1.5 flex items-center gap-1 text-[10px] text-amber-600">
@@ -613,7 +613,7 @@ function ContactSuggestionCard({ suggestion, pathName, experimentId, onSaved, on
             )}
           </div>
           <button onClick={onDismiss} aria-label="Dismiss suggestion"
-            className="shrink-0 rounded-lg p-1 text-[#CBD5E1] hover:text-[#94A3B8] transition">
+            className="shrink-0 rounded-lg p-1 text-[color:var(--ink-300)] hover:text-[color:var(--ink-400)] transition">
             <X size={14} />
           </button>
         </div>
@@ -630,7 +630,7 @@ function ContactSuggestionCard({ suggestion, pathName, experimentId, onSaved, on
               <Save size={11} /> Save to Outreach
             </button>
             <button onClick={handleCreateMission} disabled={missionLoading}
-              className="flex items-center gap-1.5 rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-xs font-semibold text-[#334155] hover:bg-[#F8FAFC] disabled:opacity-60 transition">
+              className="flex items-center gap-1.5 rounded-lg border border-[color:var(--ink-200)] px-3 py-1.5 text-xs font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)] disabled:opacity-60 transition">
               {missionLoading ? <Loader2 size={11} className="animate-spin" /> : <Target size={11} />}
               Create Mission
             </button>
@@ -696,13 +696,13 @@ function SaveContactConfirmModal({ suggestion, pathName, experimentId, experimen
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" style={{ background: 'rgba(5,8,22,0.6)' }}>
       <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-[24px] bg-white p-6">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="font-heading text-lg font-bold text-[#050816]">Save to Outreach</h3>
-          <button onClick={onClose}><X size={18} className="text-[#64748B]" /></button>
+          <h3 className="font-heading text-lg font-bold text-[color:var(--surface-dark-900)]">Save to Outreach</h3>
+          <button onClick={onClose}><X size={18} className="text-[color:var(--ink-500)]" /></button>
         </div>
 
         {isArchetype && (
-          <div className="mb-4 rounded-xl p-3" style={{ background: '#FFFBEB', border: '1px solid rgba(180,83,9,0.2)' }}>
-            <p className="text-xs text-[#B45309] font-semibold">This is an archetype template. Fill in the actual contact details below before saving.</p>
+          <div className="mb-4 rounded-xl p-3" style={{ background: 'var(--warning-50)', border: '1px solid rgba(180,83,9,0.2)' }}>
+            <p className="text-xs text-[color:var(--warning-700)] font-semibold">This is an archetype template. Fill in the actual contact details below before saving.</p>
           </div>
         )}
 
@@ -714,26 +714,26 @@ function SaveContactConfirmModal({ suggestion, pathName, experimentId, experimen
             { name: 'profile_url', label: 'LinkedIn or public profile URL', placeholder: 'https://...' },
           ].map(f => (
             <label key={f.name} className="block">
-              <span className="text-xs font-semibold text-[#334155] block mb-1">{f.label}{f.required && <span className="text-red-500"> *</span>}</span>
+              <span className="text-xs font-semibold text-[color:var(--ink-700)] block mb-1">{f.label}{f.required && <span className="text-red-500"> *</span>}</span>
               <input name={f.name} value={form[f.name]} onChange={ch} placeholder={f.placeholder} className={inputCls} />
             </label>
           ))}
           <label className="block">
-            <span className="text-xs font-semibold text-[#334155] block mb-1">Reason for outreach</span>
+            <span className="text-xs font-semibold text-[color:var(--ink-700)] block mb-1">Reason for outreach</span>
             <textarea name="reason_for_contact" rows={2} value={form.reason_for_contact} onChange={ch} className={inputCls} />
           </label>
-          <div className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-3 text-xs">
-            <p className="font-semibold text-[#64748B] mb-0.5">Path</p>
-            <p className="text-[#050816] font-bold">{pathName}</p>
+          <div className="rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] px-4 py-3 text-xs">
+            <p className="font-semibold text-[color:var(--ink-500)] mb-0.5">Path</p>
+            <p className="text-[color:var(--surface-dark-900)] font-bold">{pathName}</p>
             {linkedExp && <>
-              <p className="font-semibold text-[#64748B] mt-2 mb-0.5">Linked experiment</p>
-              <p className="text-[#334155]">{linkedExp.title}</p>
+              <p className="font-semibold text-[color:var(--ink-500)] mt-2 mb-0.5">Linked experiment</p>
+              <p className="text-[color:var(--ink-700)]">{linkedExp.title}</p>
             </>}
           </div>
         </div>
 
         <div className="mt-5 flex gap-3">
-          <button onClick={onClose} className="flex-1 rounded-[10px] border border-[#E2E8F0] py-3 text-sm font-semibold text-[#334155] hover:bg-[#F8FAFC]">
+          <button onClick={onClose} className="flex-1 rounded-[10px] border border-[color:var(--ink-200)] py-3 text-sm font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)]">
             Cancel
           </button>
           <button onClick={handleSave} disabled={saving || !form.name.trim()}
@@ -765,7 +765,7 @@ function ResultsStep({ plan, pathName, experimentId, experiments, onContactSaved
   return (
     <div className="space-y-4">
       {savedCount > 0 && (
-        <div className="rounded-xl px-4 py-2.5 flex items-center gap-2 text-xs font-semibold text-green-700" style={{ background: '#F0FDF4', border: '1px solid #BBF7D0' }}>
+        <div className="rounded-xl px-4 py-2.5 flex items-center gap-2 text-xs font-semibold text-green-700" style={{ background: 'var(--success-50)', border: '1px solid #BBF7D0' }}>
           <CheckCircle size={13} /> {savedCount} contact{savedCount !== 1 ? 's' : ''} saved to Outreach
           {missionCount > 0 && ` · ${missionCount} mission${missionCount !== 1 ? 's' : ''} created`}
         </div>
@@ -778,10 +778,10 @@ function ResultsStep({ plan, pathName, experimentId, experiments, onContactSaved
             className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition border"
             style={activeTab === t.id
               ? { background: 'var(--brand-navy-900)', color: '#fff', borderColor: 'var(--brand-navy-900)' }
-              : { background: 'white', color: '#334155', borderColor: '#E2E8F0' }}>
+              : { background: 'white', color: 'var(--ink-700)', borderColor: 'var(--ink-200)' }}>
             <t.icon size={11} /> {t.label}
             <span className="ml-0.5 rounded-full px-1.5 py-0.5 text-[10px]"
-              style={activeTab === t.id ? { background: 'rgba(255,255,255,0.25)' } : { background: '#F1F5F9', color: '#64748B' }}>
+              style={activeTab === t.id ? { background: 'rgba(255,255,255,0.25)' } : { background: 'var(--ink-100)', color: 'var(--ink-500)' }}>
               {t.count}
             </span>
           </button>
@@ -817,7 +817,7 @@ function ResultsStep({ plan, pathName, experimentId, experiments, onContactSaved
       </div>
 
       <button onClick={onClose}
-        className="w-full rounded-[10px] border border-[#E2E8F0] py-3 text-sm font-semibold text-[#334155] hover:bg-[#F8FAFC]">
+        className="w-full rounded-[10px] border border-[color:var(--ink-200)] py-3 text-sm font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)]">
         Done
       </button>
     </div>
@@ -968,15 +968,15 @@ Return only valid JSON. Do not add commentary outside the JSON.`,
         {!isSurvey && (
           <>
             <div className="mb-1 flex items-center justify-between">
-              <h2 className="font-heading text-xl font-bold text-[#050816]">
+              <h2 className="font-heading text-xl font-bold text-[color:var(--surface-dark-900)]">
                 {step === 'generating' ? 'Building your outreach plan…' : 'Your Outreach Plan'}
               </h2>
               {step !== 'generating' && (
-                <button onClick={onClose} aria-label="Close"><X size={20} className="text-[#64748B]" /></button>
+                <button onClick={onClose} aria-label="Close"><X size={20} className="text-[color:var(--ink-500)]" /></button>
               )}
             </div>
             {step !== 'generating' && (
-              <p className="mb-5 text-sm text-[#526274]">Tailored outreach strategy for {path.path_name}.</p>
+              <p className="mb-5 text-sm text-[color:var(--ink-500)]">Tailored outreach strategy for {path.path_name}.</p>
             )}
           </>
         )}
@@ -997,8 +997,8 @@ Return only valid JSON. Do not add commentary outside the JSON.`,
         {step === 'generating' && (
           <div className="py-16 flex flex-col items-center gap-4 text-center">
             <Loader2 size={36} className="animate-spin" style={{ color: 'var(--brand-navy-900)' }} />
-            <p className="font-heading text-lg font-bold text-[#050816]">Generating your personalized outreach plan…</p>
-            <p className="text-sm text-[#64748B] max-w-sm">
+            <p className="font-heading text-lg font-bold text-[color:var(--surface-dark-900)]">Generating your personalized outreach plan…</p>
+            <p className="text-sm text-[color:var(--ink-500)] max-w-sm">
               Building outreach experiments, contact archetypes, and message templates tailored to {path.path_name}.
             </p>
           </div>

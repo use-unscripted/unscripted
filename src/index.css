@@ -1,4 +1,20 @@
-@import url('https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&family=Oswald:wght@400;500;600&display=swap');
+/* Cabinet Grotesk (display/headings) + Switzer (body) from Fontshare, free for
+   commercial use. Geist Mono is the outlier register — wordmark and the
+   readiness scores only, nowhere else.
+
+   Replaced Josefin Sans + Inter as the site's type system. Inter is the most
+   recognisable generated-page body default there is; Josefin is a display face
+   with a very small x-height that was being asked to set form labels.
+
+   Playfair Display and Oswald below are NOT part of the type system and must
+   not be used as such. They exist only for the university marquee, which sets
+   fake school wordmarks in deliberately distinct silhouettes — an old-guard
+   serif and an athletic condensed. They're simulated third-party marks, so
+   they sit outside the display/body/mono rule. Don't reach for them anywhere
+   else on the site. */
+@import url('https://api.fontshare.com/v2/css?f[]=cabinet-grotesk@800,700,500,400&f[]=switzer@400,500,600,700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&family=Oswald:wght@400;500;600&family=Josefin+Sans:wght@600&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -31,18 +47,17 @@
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
     --radius: 0.5rem;
-    /* Josefin Sans is a display face — geometric, very small x-height. It was
-       set on all three roles, so every paragraph, form label and button on the
-       site rendered in it and Inter never fired at all (it sat behind Josefin
-       as a fallback). Body copy now gets Inter; Josefin stays for headings and
-       display, which is what it was drawn for.
+    /* Cabinet Grotesk has a normal x-height where Josefin Sans had a very small
+       one, so headings render visibly larger at the same font-size. Sizes were
+       tuned against Josefin — expect to step a few display sizes down rather
+       than up.
 
-       Josefin ships 300–700 here. Do not use font-extrabold/black with
-       --font-heading: the browser synthesises the weight and the type goes
-       mushy. 700 is the ceiling. */
-    --font-heading: 'Josefin Sans', 'Inter', Arial, ui-sans-serif, system-ui, sans-serif;
-    --font-body: 'Inter', ui-sans-serif, system-ui, Arial, sans-serif;
-    --font-display: 'Josefin Sans', 'Inter', Arial, ui-sans-serif, system-ui, sans-serif;
+       Cabinet Grotesk ships 400/500/700/800 here, so font-extrabold is now a
+       real weight rather than a synthesised one. Switzer carries all body copy,
+       form labels and long text. */
+    --font-heading: 'Cabinet Grotesk', 'Switzer', ui-sans-serif, system-ui, sans-serif;
+    --font-body: 'Switzer', ui-sans-serif, system-ui, sans-serif;
+    --font-display: 'Cabinet Grotesk', 'Switzer', ui-sans-serif, system-ui, sans-serif;
 
     /* Corner radius — two values, deliberately. The landing page had ten
        different arbitrary radii (8, 9, 10, 12, 14, 16, 18, 20, 22, 24px).
@@ -65,26 +80,78 @@
     --brand-charcoal-dark: #222222;
     --brand-white: #FFFFFF;
 
+    /* ── The neutral ramp ────────────────────────────────────────────────
+       One ramp, tinted toward the brand navy (#1F3A5F, hue ~214) rather than
+       stock Tailwind slate. Every grey on the site carries a trace of the
+       navy, which is what stops the product looking like a default admin
+       theme next to the marketing page.
+
+       Before this existed the app ran two competing neutral systems: raw
+       Tailwind slate hexes hard-coded across the screens (#334155, #64748B,
+       #94A3B8, #E2E8F0 — ~1,600 occurrences) and a separate set of custom
+       greys in this token block that almost nothing referenced.
+
+       Measured contrast on the three grounds text actually sits on — white,
+       the page surface, and the ink-100 chip fill:
+
+         ink-900  16.4 / 15.7 / 14.5     ink-400   5.4 / 5.2 / 4.8  ← text floor
+         ink-700  11.1 / 10.6 /  9.7     ink-300   2.0 / 1.9 / 1.8  ← never text
+         ink-500   6.9 /  6.6 /  6.1     ink-200   1.3 / 1.2 / 1.1  ← rules only
+
+       ink-400 is the lightest grey allowed to carry words on a light ground.
+       Its value is inherited from the standalone --text-muted fix that landed
+       separately: that one was measured against the chip fill too, which an
+       earlier draft of this ramp missed at 4.25. The rungs above it were
+       re-spaced to keep a real step once ink-400 moved down.
+
+       ink-300 and lighter are borders, fills and dividers — or text on a dark
+       surface, where ink-300 measures 5.8 on navy. */
+    --ink-900: #16202E;   /* headings, primary text */
+    --ink-800: #22303F;
+    --ink-700: #2E3D50;   /* body text */
+    --ink-600: #3F4E62;
+    --ink-500: #4C5B6F;   /* secondary text */
+    --ink-400: #5D6B7E;   /* muted text — lightest that passes on all three */
+    --ink-300: #AEB9C6;   /* disabled, dividers, muted text ON DARK only */
+    --ink-200: #DDE3EA;   /* borders, hairlines */
+    --ink-100: #EDF1F5;   /* panel and card fills */
+    --ink-50:  #F7F9FB;   /* section surfaces */
+
+    /* Dark surfaces. The app had three near-black navies hard-coded
+       (#050816, #07111F, #081225) that were in no token block at all. */
+    --surface-dark-900: #050816;
+    --surface-dark-800: #07111F;
+    --surface-dark-700: #081225;
+
+    /* Semantic. Never rely on these alone — pair with an icon or a label. */
+    --success-700: #15803D;
+    --success-50:  #F0FDF4;
+    --warning-700: #B45309;
+    --warning-50:  #FFFBEB;
+    --danger-700:  #B91C1C;
+    --danger-50:   #FEF2F2;
+    --info-700:    #1D4ED8;
+    --info-600:    #2563EB;
+    --info-50:     #EFF6FF;
+    /* Tailwind's `/10` opacity modifier can't act on a var() colour — it needs
+       the channels to build rgb(… / α). The focus-ring wash is a real design
+       value, so it gets its own token rather than a hard-coded hex. */
+    --info-600-a10: rgb(37 99 235 / 0.10);
+
     /* Supporting neutrals */
+    /* The public site's paper. Warmer and softer than pure white, which reads
+       flat and synthetic at full-page scale. The landing nav's translucent
+       backdrop is this colour at 82%. */
+    --page-surface: #FAFAF9;
     --background-primary: #FFFFFF;
-    --background-secondary: #F7F8FA;
-    --background-tertiary: #EEF2F6;
-    --border-light: #DCE3EA;
-    --text-primary: #1E293B;
-    --text-secondary: #526274;
-    /* Was #718096, which is 4.02:1 on white — under the 4.5:1 text minimum,
-       and this token is used as body copy app-wide. Darkened in place rather
-       than split into a text/decorative pair: same hue and saturation
-       (hsl 215°, 15%), lightness 52% → 43%.
-
-       Measured: 5.43:1 on #FFFFFF, 5.20:1 on the #FAFAF9 page background,
-       4.82:1 on the --background-tertiary chips it sits on in the network
-       pages. Any replacement has to clear 4.5:1 on all three.
-
-       It is now much closer to --text-secondary (6.25:1) than it used to be,
-       so the two read as a smaller step apart. That is the cost of the
-       one-token fix and it was chosen deliberately. */
-    --text-muted: #5D6B7E;
+    /* Role aliases onto the ramp above. Prefer the --ink-* scale in new code;
+       these stay so the existing screens keep reading. */
+    --background-secondary: var(--ink-50);
+    --background-tertiary: var(--ink-100);
+    --border-light: var(--ink-200);
+    --text-primary: var(--ink-900);
+    --text-secondary: var(--ink-500);
+    --text-muted: var(--ink-400);
     --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
@@ -160,22 +227,30 @@
   --dur-fast:   200ms;
   --dur-base:   280ms;
   --dur-slow:   400ms;
-  --ease-out:   cubic-bezier(0.16, 1, 0.3, 1);       /* expo ease-out (spring feel) */
-  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);  /* subtle overshoot */
+  --ease-out:   cubic-bezier(0.16, 1, 0.3, 1);       /* expo ease-out — the default */
+
+  /* Overshoot. Reserved for genuine physical interactions — a dragged thing
+     being released, a sheet being flung. NOT for buttons, modals, tooltips or
+     cards: bounce easing on UI state is one of the most recognisable
+     generated-interface tells, and this curve was previously applied to
+     `transform` on every link and button on the site. */
+  --ease-overshoot: cubic-bezier(0.34, 1.56, 0.64, 1);
   --ease-smooth: cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
 /* ── Global transition defaults ─────────────────────────────────────────── */
 @layer base {
-  /* Smooth color/shadow transitions everywhere */
+  /* Colour and shadow only. `transform` deliberately is NOT in this list:
+     having it here meant every link and button on the site sprang on any
+     transform change, which is the bounce-easing tell. Elements that genuinely
+     move on interaction declare their own transform transition. */
   a, button, [role="button"] {
     transition:
       color          var(--dur-fast) var(--ease-out),
       background     var(--dur-fast) var(--ease-out),
       border-color   var(--dur-fast) var(--ease-out),
       box-shadow     var(--dur-base) var(--ease-out),
-      opacity        var(--dur-fast) var(--ease-out),
-      transform      var(--dur-base) var(--ease-spring);
+      opacity        var(--dur-fast) var(--ease-out);
   }
 
   /* Focus rings — visible but refined */
@@ -191,20 +266,19 @@
 }
 
 /* ── Interactive lift — apply to cards, buttons, nav items ──────────────── */
+/* One signal, not four. Previously this moved the element, grew a shadow,
+   shifted the border and ran on an overshoot curve all at once — applied to
+   every card, button and nav item on the site. */
 .ui-lift {
   transition:
-    transform  var(--dur-base) var(--ease-spring),
-    box-shadow var(--dur-base) var(--ease-out),
+    box-shadow   var(--dur-base) var(--ease-out),
     border-color var(--dur-fast) var(--ease-out);
-  will-change: transform;
 }
 .ui-lift:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(31, 58, 95, 0.10), 0 2px 6px rgba(31, 58, 95, 0.06);
+  box-shadow: 0 4px 16px rgb(31 58 95 / 0.10);
 }
 .ui-lift:active {
-  transform: translateY(0px) scale(0.99);
-  box-shadow: 0 2px 8px rgba(31, 58, 95, 0.06);
+  box-shadow: 0 1px 4px rgb(31 58 95 / 0.08);
   transition-duration: 80ms;
 }
 
@@ -244,7 +318,7 @@
   animation: fadeIn var(--dur-base) var(--ease-out) both;
 }
 .anim-scale-in {
-  animation: scaleIn var(--dur-base) var(--ease-spring) both;
+  animation: scaleIn var(--dur-base) var(--ease-out) both;
 }
 
 /* Staggered children delay helpers */
@@ -282,7 +356,7 @@
   to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 .anim-overlay { animation: overlayIn var(--dur-fast) var(--ease-out) both; }
-.anim-modal   { animation: modalIn  var(--dur-base) var(--ease-spring) both; }
+.anim-modal   { animation: modalIn  var(--dur-base) var(--ease-out) both; }
 
 /* ── Bottom sheet (mobile modals) ────────────────────────────────────────── */
 @keyframes slideUp {
@@ -296,36 +370,38 @@
   from { opacity: 0; transform: translateY(4px) scale(0.97); }
   to   { opacity: 1; transform: translateY(0) scale(1); }
 }
-.anim-tooltip { animation: tooltipIn var(--dur-fast) var(--ease-spring) both; }
+.anim-tooltip { animation: tooltipIn var(--dur-fast) var(--ease-out) both; }
 
-/* ── Gold shimmer on brand accent elements ───────────────────────────────── */
-@keyframes goldPulse {
-  0%, 100% { opacity: 1; }
-  50%       { opacity: 0.7; }
-}
-.anim-gold-pulse { animation: goldPulse 2.4s ease-in-out infinite; }
+/* The gold pulse that used to live here was a 2.4s opacity loop running
+   forever on accent elements. A page that never stops moving never settles;
+   removed rather than slowed. */
 
 /* ── Global modal entrance (any fixed overlay with a white rounded panel) ── */
 /* Applied automatically via CSS attribute selectors for zero-JS coverage    */
 
-/* Solid primary buttons (navy bg) */
-button[style*="brand-navy"],
-a[style*="brand-navy"] {
+/* Solid primary buttons (navy bg).
+   Matched on the *background* declaration, not the bare token: the earlier
+   [style*="brand-navy"] also caught links that merely named the token for a
+   text colour or a focus ring, so plain footer/legal links grew a navy drop
+   shadow on hover — a floating grey box around the words. */
+button[style*="background: var(--brand-navy"],
+a[style*="background: var(--brand-navy"] {
   transition:
-    background     var(--dur-fast) var(--ease-out),
-    box-shadow     var(--dur-base) var(--ease-out),
-    transform      var(--dur-base) var(--ease-spring),
-    opacity        var(--dur-fast) var(--ease-out);
+    background var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-base) var(--ease-out),
+    opacity    var(--dur-fast) var(--ease-out);
 }
-button[style*="brand-navy"]:hover,
-a[style*="brand-navy"]:hover {
+button[style*="background: var(--brand-navy"]:hover,
+a[style*="background: var(--brand-navy"]:hover {
   box-shadow: 0 6px 20px rgba(31, 58, 95, 0.28);
-  transform: translateY(-1px);
 }
-button[style*="brand-navy"]:active,
-a[style*="brand-navy"]:active {
-  transform: scale(0.97) translateY(0);
-  transition-duration: 80ms;
+/* Press stays — a button depressing under the finger is real feedback, not
+   decoration. Short and linear, no overshoot. Matched on the *background*
+   declaration for the same reason as the hover rule above. */
+button[style*="background: var(--brand-navy"]:active,
+a[style*="background: var(--brand-navy"]:active {
+  transform: scale(0.98);
+  transition: transform 80ms var(--ease-out);
 }
 
 /* ── Reduced motion — always respected ──────────────────────────────────── */

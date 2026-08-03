@@ -11,16 +11,16 @@ function ExperimentDeleteConfirm({ expTitle, onConfirm, onCancel }) {
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" style={{ background: 'rgba(5,8,22,0.55)' }}>
       <div className="w-full max-w-sm rounded-[20px] bg-white p-6 shadow-2xl">
         <div className="flex items-start justify-between gap-3 mb-3">
-          <h3 className="font-heading text-lg font-bold text-[#050816]">Move this experiment to Recently Deleted?</h3>
-          <button onClick={onCancel}><X size={18} className="text-[#94A3B8]" /></button>
+          <h3 className="font-heading text-lg font-bold text-[color:var(--surface-dark-900)]">Move this experiment to Recently Deleted?</h3>
+          <button onClick={onCancel}><X size={18} className="text-[color:var(--ink-400)]" /></button>
         </div>
-        {expTitle && <p className="text-sm font-semibold text-[#334155] mb-2">"{expTitle}"</p>}
-        <p className="text-sm text-[#64748B] mb-5">
+        {expTitle && <p className="text-sm font-semibold text-[color:var(--ink-700)] mb-2">"{expTitle}"</p>}
+        <p className="text-sm text-[color:var(--ink-500)] mb-5">
           It will no longer appear in Missions, but you can restore it for 30 days. Its missions, proof, contacts, and reflections will be preserved.
         </p>
         <div className="flex gap-3">
           <button onClick={onCancel}
-            className="flex-1 rounded-[10px] border border-[#E2E8F0] py-2.5 text-sm font-semibold text-[#334155] hover:bg-[#F8FAFC] transition">
+            className="flex-1 rounded-[10px] border border-[color:var(--ink-200)] py-2.5 text-sm font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)] transition">
             Cancel
           </button>
           <button onClick={onConfirm}
@@ -53,14 +53,14 @@ function EditExperimentModal({ exp, onClose, onSaved }) {
     onSaved({ ...exp, ...data });
   };
 
-  const inputCls = 'w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-3 text-sm outline-none focus:border-[#1F3A5F]';
+  const inputCls = 'w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-sm outline-none focus:border-[color:var(--brand-navy-900)]';
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" style={{ background: 'rgba(5,8,22,0.5)' }}>
       <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-[24px] bg-white p-6 shadow-2xl">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="font-heading text-xl font-bold text-[#050816]">Edit Experiment</h2>
-          <button onClick={onClose}><X size={18} className="text-[#94A3B8]" /></button>
+          <h2 className="font-heading text-xl font-bold text-[color:var(--surface-dark-900)]">Edit Experiment</h2>
+          <button onClick={onClose}><X size={18} className="text-[color:var(--ink-400)]" /></button>
         </div>
         <div className="space-y-4">
           {[
@@ -69,7 +69,7 @@ function EditExperimentModal({ exp, onClose, onSaved }) {
             { name: 'objective', label: 'Objective', rows: 2 },
             { name: 'deliverable', label: 'Deliverable' },
           ].map(f => (
-            <label key={f.name} className="block text-sm font-semibold text-[#334155]">
+            <label key={f.name} className="block text-sm font-semibold text-[color:var(--ink-700)]">
               {f.label}
               {f.rows ? (
                 <textarea rows={f.rows} value={data[f.name] || ''} onChange={e => setData(d => ({ ...d, [f.name]: e.target.value }))} className={`mt-1 ${inputCls}`} />
@@ -78,17 +78,17 @@ function EditExperimentModal({ exp, onClose, onSaved }) {
               )}
             </label>
           ))}
-          <label className="block text-sm font-semibold text-[#334155]">
+          <label className="block text-sm font-semibold text-[color:var(--ink-700)]">
             Estimated hours
             <input type="number" value={data.estimated_hours || ''} onChange={e => setData(d => ({ ...d, estimated_hours: Number(e.target.value) }))} className={`mt-1 ${inputCls}`} />
           </label>
-          <label className="block text-sm font-semibold text-[#334155]">
+          <label className="block text-sm font-semibold text-[color:var(--ink-700)]">
             Deadline
             <input type="date" value={data.deadline || ''} onChange={e => setData(d => ({ ...d, deadline: e.target.value }))} className={`mt-1 ${inputCls}`} />
           </label>
         </div>
         <div className="mt-6 flex gap-3">
-          <button onClick={onClose} className="flex-1 rounded-[10px] border border-[#E2E8F0] py-2.5 text-sm font-semibold text-[#334155] hover:bg-[#F8FAFC] transition">Cancel</button>
+          <button onClick={onClose} className="flex-1 rounded-[10px] border border-[color:var(--ink-200)] py-2.5 text-sm font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)] transition">Cancel</button>
           <button onClick={handleSave} disabled={saving}
             className="flex-1 rounded-[10px] py-2.5 text-sm font-semibold text-white transition disabled:opacity-60"
             style={{ background: 'var(--brand-navy-900)' }}>
@@ -162,30 +162,30 @@ export default function ExperimentActionsMenu({ exp, onDeleted, onPaused, onResu
       <div className="relative" ref={menuRef}>
         <button
           onClick={() => setOpen(v => !v)}
-          className="rounded-xl border border-[#E2E8F0] p-2 text-[#94A3B8] hover:text-[#334155] hover:bg-[#F8FAFC] transition"
+          className="rounded-xl border border-[color:var(--ink-200)] p-2 text-[color:var(--ink-400)] hover:text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)] transition"
           title="More actions"
         >
           <MoreHorizontal size={15} />
         </button>
 
         {open && (
-          <div className="absolute right-0 top-10 z-20 w-52 rounded-xl border border-[#E2E8F0] bg-white shadow-lg py-1.5">
+          <div className="absolute right-0 top-10 z-20 w-52 rounded-xl border border-[color:var(--ink-200)] bg-white shadow-lg py-1.5">
             <button
               onClick={() => { setOpen(false); setShowEdit(true); }}
-              className="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-[#334155] hover:bg-[#F8FAFC] transition"
+              className="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)] transition"
             >
               <Pencil size={14} /> Edit Experiment
             </button>
             <button
               onClick={() => { setOpen(false); setShowCal(true); }}
-              className="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-[#334155] hover:bg-[#F8FAFC] transition"
+              className="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)] transition"
             >
               <Calendar size={14} /> Add to Calendar
             </button>
             {!isPaused && (
               <button
                 onClick={() => { setOpen(false); setShowPause(true); }}
-                className="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-[#334155] hover:bg-[#F8FAFC] transition"
+                className="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)] transition"
               >
                 <PauseCircle size={14} /> Pause Experiment
               </button>
@@ -193,13 +193,13 @@ export default function ExperimentActionsMenu({ exp, onDeleted, onPaused, onResu
             {isPaused && onResumed && (
               <button
                 onClick={() => { setOpen(false); onResumed(exp); }}
-                className="w-full flex items-center gap-2.5 px-4 py-2 text-sm font-semibold hover:bg-[#F0FDF4] transition"
-                style={{ color: '#15803D' }}
+                className="w-full flex items-center gap-2.5 px-4 py-2 text-sm font-semibold hover:bg-[color:var(--success-50)] transition"
+                style={{ color: 'var(--success-700)' }}
               >
                 <Play size={14} /> Resume Experiment
               </button>
             )}
-            <div className="my-1 border-t border-[#F1F5F9]" />
+            <div className="my-1 border-t border-[color:var(--ink-100)]" />
             <button
               onClick={() => { setOpen(false); setShowDeleteConfirm(true); }}
               className="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-red-500 hover:bg-red-50 transition"

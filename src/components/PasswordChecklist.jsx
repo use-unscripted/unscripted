@@ -17,8 +17,8 @@ function StrengthBar({ password, email }) {
         {Array.from({ length: segments }).map((_, i) => (
           <div
             key={i}
-            className="h-1.5 flex-1 rounded-full transition-all duration-300"
-            style={{ background: i < score ? color : "#E2E8F0" }}
+            className="h-1.5 flex-1 rounded-full transition-colors duration-300"
+            style={{ background: i < score ? color : "var(--ink-200)" }}
           />
         ))}
       </div>
@@ -42,22 +42,22 @@ export default function PasswordChecklist({ password, email = "", confirmPasswor
 
   return (
     <div className="mt-2 space-y-1.5" aria-label="Password requirements">
-      <p className="text-xs font-semibold text-[#334155] mb-1">Your password must include:</p>
+      <p className="text-xs font-semibold text-[color:var(--ink-700)] mb-1">Your password must include:</p>
       {REQUIREMENTS.map(({ key, text }) => {
         const met = results[key];
         return (
           <div key={key} className="flex items-center gap-2" role="status" aria-label={`${text}: ${met ? "complete" : "incomplete"}`}>
             <span
               className="flex items-center justify-center w-4 h-4 rounded-full flex-shrink-0"
-              style={{ background: met ? "#22c55e" : "#E2E8F0" }}
+              style={{ background: met ? "#22c55e" : "var(--ink-200)" }}
               aria-hidden="true"
             >
               {met
                 ? <Check className="w-2.5 h-2.5 text-white" strokeWidth={3} />
-                : <X className="w-2.5 h-2.5 text-[#94A3B8]" strokeWidth={3} />
+                : <X className="w-2.5 h-2.5 text-[color:var(--ink-400)]" strokeWidth={3} />
               }
             </span>
-            <span className={`text-xs ${met ? "text-[#15803d] line-through decoration-[#22c55e]" : "text-[#64748B]"}`}>
+            <span className={`text-xs ${met ? "text-[color:var(--success-700)] line-through decoration-[#22c55e]" : "text-[color:var(--ink-500)]"}`}>
               {text}
             </span>
           </div>

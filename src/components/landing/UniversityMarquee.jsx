@@ -60,12 +60,12 @@ const FACES = {
   },
   /* Neutral grotesk, tight. */
   sans: {
-    fontFamily: "'Inter', system-ui, sans-serif",
+    fontFamily: "'Switzer', system-ui, sans-serif",
     fontWeight: 700, '--um-size': '13.5px', letterSpacing: '-0.018em',
   },
   /* Heavy and very tight — reads as a monogram. For the acronym schools. */
   mark: {
-    fontFamily: "'Inter', system-ui, sans-serif",
+    fontFamily: "'Switzer', system-ui, sans-serif",
     fontWeight: 700, '--um-size': '17.5px', letterSpacing: '-0.05em',
   },
 };
@@ -210,11 +210,7 @@ function Row({ trackRef }) {
             <Wordmark name={name} face={face} color={color} />
           </span>
           {/* Decoration, not content — see `.um-sep`. */}
-          <span
-            aria-hidden="true"
-            className="um-dot um-sep"
-            style={{ animationDelay: `${(i % 7) * 0.32}s` }}
-          />
+          <span aria-hidden="true" className="um-dot um-sep" />
         </span>
       ))}
     </div>
@@ -313,11 +309,9 @@ export default function UniversityMarquee() {
       )}
 
       <style>{`
-        @keyframes um-dot-pulse {
-          0%, 100% { opacity: 1; }
-          50%      { opacity: 0.28; }
-        }
-        .um-dot { animation: um-dot-pulse 4.2s ease-in-out infinite; }
+        /* The separator dots used to pulse on a 4.2s infinite loop. The strip
+           they sit in is already scrolling — a second, slower loop inside a
+           moving element is motion nobody can read. */
         /* The separator between wordmarks is pure decoration, and it is
            deliberately built so that it reads that way to a machine too.
 
@@ -361,7 +355,6 @@ export default function UniversityMarquee() {
           .um-mark { --um-scale: 0.82; }
         }
         @media (prefers-reduced-motion: reduce) {
-          .um-dot { animation: none; }
           .um-mark { transition: none; }
         }
       `}</style>

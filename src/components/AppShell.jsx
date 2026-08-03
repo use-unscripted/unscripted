@@ -71,7 +71,7 @@ export default function AppShell() {
           {NAV.map(([to, label, , Icon]) => (
             <NavLink key={to} to={to}
               className={({ isActive }) =>
-                `nav-link mb-1 flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold ${isActive ? 'text-white' : 'text-slate-300 hover:text-white'}`
+                `nav-link mb-1 flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold ${isActive ? 'text-white' : 'text-[color:var(--ink-300)] hover:text-white'}`
               }
               style={({ isActive }) => isActive
                 ? { background: 'var(--brand-navy-700)', borderLeft: '3px solid var(--brand-gold-500)', paddingLeft: '13px' }
@@ -84,7 +84,7 @@ export default function AppShell() {
           {isAdmin && (
             <NavLink to="/pilot"
               className={({ isActive }) =>
-                `nav-link mb-1 flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold ${isActive ? 'text-white' : 'text-slate-300 hover:text-white'}`
+                `nav-link mb-1 flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold ${isActive ? 'text-white' : 'text-[color:var(--ink-300)] hover:text-white'}`
               }
               style={({ isActive }) => isActive
                 ? { background: 'var(--brand-navy-700)', borderLeft: '3px solid var(--brand-gold-500)', paddingLeft: '13px' }
@@ -97,7 +97,7 @@ export default function AppShell() {
           {isAdmin && pendingFeeds > 0 && (
             <NavLink to="/admin/campus-feeds"
               className={({ isActive }) =>
-                `nav-link mb-1 flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold ${isActive ? 'text-white' : 'text-slate-300 hover:text-white'}`
+                `nav-link mb-1 flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold ${isActive ? 'text-white' : 'text-[color:var(--ink-300)] hover:text-white'}`
               }
               style={({ isActive }) => isActive
                 ? { background: 'var(--brand-navy-700)', borderLeft: '3px solid var(--brand-gold-500)', paddingLeft: '13px' }
@@ -109,11 +109,11 @@ export default function AppShell() {
           )}
         </nav>
 
-        <p className="rounded-xl p-3 text-xs leading-5 text-slate-400 mt-4" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
+        <p className="rounded-xl p-3 text-xs leading-5 text-[color:var(--ink-400)] mt-4" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
           Write your unscripted path.
         </p>
         <button onClick={() => base44.auth.logout('/')}
-          className="mt-3 flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium text-slate-400 transition hover:bg-white/5 hover:text-white">
+          className="mt-3 flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium text-[color:var(--ink-400)] transition hover:bg-white/5 hover:text-white">
           <LogOut size={15} /> Log out
         </button>
       </aside>
@@ -128,7 +128,7 @@ export default function AppShell() {
         {NAV.map(([to, , shortLabel, Icon]) => (
           <NavLink key={to} to={to}
             className={({ isActive }) =>
-              `nav-link flex flex-1 flex-col items-center justify-center gap-1 py-2.5 text-[11px] font-semibold ${isActive ? '' : 'text-slate-400'}`
+              `nav-link flex flex-1 flex-col items-center justify-center gap-1 py-2.5 text-[11px] font-semibold ${isActive ? '' : 'text-[color:var(--ink-400)]'}`
             }
             style={({ isActive }) => ({ minHeight: '56px', ...(isActive ? { color: 'var(--brand-navy-900)' } : {}) })}>
             <Icon size={20} />

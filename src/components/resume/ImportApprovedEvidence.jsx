@@ -50,37 +50,37 @@ export default function ImportApprovedEvidence({ resume, onAddEntry, onAddSkills
   if (loading) return null;
 
   return (
-    <div className="mb-5 rounded-[16px] border border-[#E2E8F0] bg-white p-4">
+    <div className="mb-5 rounded-[16px] border border-[color:var(--ink-200)] bg-white p-4">
       <div className="mb-1 flex items-center gap-2">
         <ShieldCheck size={15} style={{ color: 'var(--brand-navy-700)' }} />
-        <p className="text-sm font-bold text-[#050816]">Import approved evidence</p>
+        <p className="text-sm font-bold text-[color:var(--surface-dark-900)]">Import approved evidence</p>
       </div>
-      <p className="mb-3 text-xs text-[#64748B]">
+      <p className="mb-3 text-xs text-[color:var(--ink-500)]">
         Your resume is built from evidence you approved in the Evidence Library. Only your approved wording is imported —
         employers, job titles, metrics, results and dates are never generated for you.
       </p>
 
       {items.length === 0 ? (
-        <p className="text-xs text-[#94A3B8]">
+        <p className="text-xs text-[color:var(--ink-400)]">
           Nothing approved yet. Open Evidence → Library, review a piece of evidence, and approve what is accurate.
         </p>
       ) : (
         <>
-          <label className="mb-3 flex items-center gap-2 text-xs font-semibold text-[#334155]">
+          <label className="mb-3 flex items-center gap-2 text-xs font-semibold text-[color:var(--ink-700)]">
             Import into
             <select value={section} onChange={(e) => setSection(e.target.value)}
-              className="rounded-xl border border-[#E2E8F0] px-3 py-2 text-xs outline-none focus:border-[#1F3A5F]">
+              className="rounded-xl border border-[color:var(--ink-200)] px-3 py-2 text-xs outline-none focus:border-[color:var(--brand-navy-900)]">
               {sections.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}
             </select>
           </label>
 
           <div className="space-y-2">
             {items.map((p) => (
-              <div key={p.id} className="flex items-start gap-3 rounded-xl border border-[#E2E8F0] p-3">
+              <div key={p.id} className="flex items-start gap-3 rounded-xl border border-[color:var(--ink-200)] p-3">
                 <div className="min-w-0 flex-1">
-                  <p className="text-xs font-bold text-[#050816]">{p.approved_title || p.title}</p>
-                  {p.approved_bullet && <p className="mt-0.5 text-[11px] leading-4 text-[#334155]">{p.approved_bullet}</p>}
-                  <p className="mt-0.5 text-[10px] text-[#94A3B8]">
+                  <p className="text-xs font-bold text-[color:var(--surface-dark-900)]">{p.approved_title || p.title}</p>
+                  {p.approved_bullet && <p className="mt-0.5 text-[11px] leading-4 text-[color:var(--ink-700)]">{p.approved_bullet}</p>}
+                  <p className="mt-0.5 text-[10px] text-[color:var(--ink-400)]">
                     {[p.path_tested, p.approved_skills?.join(', ')].filter(Boolean).join(' · ')}
                   </p>
                   {p.approved_link && (

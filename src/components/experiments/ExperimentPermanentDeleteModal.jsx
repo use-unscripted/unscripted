@@ -67,22 +67,22 @@ export default function ExperimentPermanentDeleteModal({ exp, onDeleted, onCance
             <div className="w-8 h-8 rounded-full bg-red-50 flex items-center justify-center shrink-0">
               <AlertTriangle size={16} className="text-red-600" />
             </div>
-            <h3 className="font-heading text-lg font-bold text-[#050816]">Permanently delete experiment?</h3>
+            <h3 className="font-heading text-lg font-bold text-[color:var(--surface-dark-900)]">Permanently delete experiment?</h3>
           </div>
-          <button onClick={onCancel}><X size={18} className="text-[#94A3B8]" /></button>
+          <button onClick={onCancel}><X size={18} className="text-[color:var(--ink-400)]" /></button>
         </div>
 
-        <p className="text-sm font-semibold text-[#334155] mb-1">"{exp.title}"</p>
-        {exp.path_name && <p className="text-xs text-[#94A3B8] mb-4">Path: {exp.path_name}</p>}
+        <p className="text-sm font-semibold text-[color:var(--ink-700)] mb-1">"{exp.title}"</p>
+        {exp.path_name && <p className="text-xs text-[color:var(--ink-400)] mb-4">Path: {exp.path_name}</p>}
 
         {/* Linked record summary */}
         {counts === null ? (
-          <div className="flex items-center gap-2 text-sm text-[#64748B] py-3">
+          <div className="flex items-center gap-2 text-sm text-[color:var(--ink-500)] py-3">
             <Loader2 size={14} className="animate-spin" /> Loading linked records…
           </div>
         ) : (
-          <div className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] p-4 mb-4 space-y-1">
-            <p className="text-xs font-bold uppercase tracking-wide text-[#64748B] mb-2">Linked records</p>
+          <div className="rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] p-4 mb-4 space-y-1">
+            <p className="text-xs font-bold uppercase tracking-wide text-[color:var(--ink-500)] mb-2">Linked records</p>
             {[
               { label: 'Missions', count: counts.missions },
               { label: 'Proof of Work', count: counts.proof },
@@ -90,26 +90,26 @@ export default function ExperimentPermanentDeleteModal({ exp, onDeleted, onCance
               { label: 'Reflections', count: counts.reflections },
             ].map(({ label, count }) => (
               <div key={label} className="flex items-center justify-between text-sm">
-                <span className="text-[#334155]">{label}</span>
-                <span className={`font-bold ${count > 0 ? 'text-[#050816]' : 'text-[#94A3B8]'}`}>{count}</span>
+                <span className="text-[color:var(--ink-700)]">{label}</span>
+                <span className={`font-bold ${count > 0 ? 'text-[color:var(--surface-dark-900)]' : 'text-[color:var(--ink-400)]'}`}>{count}</span>
               </div>
             ))}
           </div>
         )}
 
         {/* Options */}
-        <p className="text-xs font-bold uppercase tracking-wide text-[#64748B] mb-2">Choose what happens to linked records</p>
+        <p className="text-xs font-bold uppercase tracking-wide text-[color:var(--ink-500)] mb-2">Choose what happens to linked records</p>
         <div className="space-y-2 mb-4">
           <button
             onClick={() => { setMode('unlink'); setTyped(''); }}
-            className={`w-full text-left rounded-xl border p-3 transition ${mode === 'unlink' ? 'border-[#1F3A5F] bg-[#EEF2F6]' : 'border-[#E2E8F0] hover:border-[#CBD5E1]'}`}
+            className={`w-full text-left rounded-xl border p-3 transition ${mode === 'unlink' ? 'border-[color:var(--brand-navy-900)] bg-[color:var(--ink-100)]' : 'border-[color:var(--ink-200)] hover:border-[color:var(--ink-300)]'}`}
           >
-            <p className="text-sm font-semibold text-[#050816]">Delete only this experiment</p>
-            <p className="text-xs text-[#64748B] mt-0.5">Missions, proof, contacts, and reflections are kept as unlinked records.</p>
+            <p className="text-sm font-semibold text-[color:var(--surface-dark-900)]">Delete only this experiment</p>
+            <p className="text-xs text-[color:var(--ink-500)] mt-0.5">Missions, proof, contacts, and reflections are kept as unlinked records.</p>
           </button>
           <button
             onClick={() => { setMode('cascade'); setTyped(''); }}
-            className={`w-full text-left rounded-xl border p-3 transition ${mode === 'cascade' ? 'border-red-400 bg-red-50' : 'border-[#E2E8F0] hover:border-[#CBD5E1]'}`}
+            className={`w-full text-left rounded-xl border p-3 transition ${mode === 'cascade' ? 'border-red-400 bg-red-50' : 'border-[color:var(--ink-200)] hover:border-[color:var(--ink-300)]'}`}
           >
             <p className="text-sm font-semibold text-red-700">Delete experiment and all linked records</p>
             <p className="text-xs text-red-500 mt-0.5">This cannot be undone. All missions, proof, contacts, and reflections for this experiment will be permanently removed.</p>
@@ -119,7 +119,7 @@ export default function ExperimentPermanentDeleteModal({ exp, onDeleted, onCance
         {/* Typed confirmation for cascade */}
         {mode === 'cascade' && (
           <div className="mb-4">
-            <p className="text-xs text-[#64748B] mb-1.5">
+            <p className="text-xs text-[color:var(--ink-500)] mb-1.5">
               Type <strong className="font-mono text-red-600">{cascadeConfirmWord}</strong> to confirm:
             </p>
             <input
@@ -135,7 +135,7 @@ export default function ExperimentPermanentDeleteModal({ exp, onDeleted, onCance
         {/* Actions — Cancel is the default / leftmost */}
         <div className="flex gap-3">
           <button onClick={onCancel}
-            className="flex-1 rounded-[10px] border border-[#E2E8F0] py-2.5 text-sm font-semibold text-[#334155] hover:bg-[#F8FAFC] transition">
+            className="flex-1 rounded-[10px] border border-[color:var(--ink-200)] py-2.5 text-sm font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)] transition">
             Cancel
           </button>
           <button

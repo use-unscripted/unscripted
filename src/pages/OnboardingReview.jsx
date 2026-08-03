@@ -102,75 +102,75 @@ export default function OnboardingReview() {
   };
 
   return (
-    <main className="min-h-screen px-5 py-10" style={{ background: '#FAFAF9' }}>
+    <main className="min-h-screen px-5 py-10" style={{ background: 'var(--page-surface)' }}>
       <div className="mx-auto max-w-2xl">
         <div className="mb-10 flex items-center justify-between">
           <LogoWordmark />
-          <Link to="/login" onClick={() => trackFunnel('wall_login_clicked', { placement: 'header' })} className="text-sm font-semibold text-[#64748B] hover:text-[#050816] transition">Log in</Link>
+          <Link to="/login" onClick={() => trackFunnel('wall_login_clicked', { placement: 'header' })} className="text-sm font-semibold text-[color:var(--ink-500)] hover:text-[color:var(--surface-dark-900)] transition">Log in</Link>
         </div>
 
         {/* Completion badge */}
         <div className="mb-8 flex flex-col items-center text-center">
           <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full"
-            style={{ background: '#EEF2F6', border: '2px solid rgba(31,58,95,0.25)' }}>
+            style={{ background: 'var(--ink-100)', border: '2px solid rgba(31,58,95,0.25)' }}>
             <Target size={28} style={{ color: 'var(--brand-navy-900)' }} />
           </div>
-          <h1 className="font-heading text-3xl font-bold tracking-tight text-[#050816]">
+          <h1 className="font-heading text-3xl font-bold tracking-tight text-[color:var(--surface-dark-900)]">
             Your 30-Day Path Test Is Ready
           </h1>
-          <p className="mt-3 max-w-lg text-[#64748B] leading-6">
+          <p className="mt-3 max-w-lg text-[color:var(--ink-500)] leading-6">
             You've completed the intake. Create a free account to generate your three tailored paths, save your Mission Guides, and track what you learn.
           </p>
         </div>
 
         {/* Summary card */}
-        <div className="mb-6 rounded-[24px] border border-[#E2E8F0] bg-white p-7 shadow-sm">
+        <div className="mb-6 rounded-[24px] border border-[color:var(--ink-200)] bg-white p-7 shadow-sm">
           <p className="text-xs font-bold uppercase tracking-[.14em] mb-5" style={{ color: 'var(--brand-navy-700)' }}>Your intake summary</p>
 
           <div className="space-y-4">
             {draft.name && (
               <div className="flex gap-3">
-                <div className="mt-0.5 h-5 w-5 shrink-0 rounded-full flex items-center justify-center" style={{ background: '#EEF2F6' }}>
+                <div className="mt-0.5 h-5 w-5 shrink-0 rounded-full flex items-center justify-center" style={{ background: 'var(--ink-100)' }}>
                   <span className="text-[10px] font-bold" style={{ color: 'var(--brand-navy-900)' }}>1</span>
                 </div>
                 <div>
-                  <p className="text-xs font-bold uppercase tracking-wide text-[#94A3B8]">About you</p>
-                  <p className="text-sm text-[#334155]">{draft.name}{draft.college ? ` · ${draft.college}` : ''}{draft.major ? ` · ${draft.major}` : ''}</p>
+                  <p className="text-xs font-bold uppercase tracking-wide text-[color:var(--ink-400)]">About you</p>
+                  <p className="text-sm text-[color:var(--ink-700)]">{draft.name}{draft.college ? ` · ${draft.college}` : ''}{draft.major ? ` · ${draft.major}` : ''}</p>
                 </div>
               </div>
             )}
 
             <div className="flex gap-3">
-              <div className="mt-0.5 h-5 w-5 shrink-0 rounded-full flex items-center justify-center" style={{ background: '#EEF2F6' }}>
+              <div className="mt-0.5 h-5 w-5 shrink-0 rounded-full flex items-center justify-center" style={{ background: 'var(--ink-100)' }}>
                 <span className="text-[10px] font-bold" style={{ color: 'var(--brand-navy-900)' }}>2</span>
               </div>
               <div>
-                <p className="text-xs font-bold uppercase tracking-wide text-[#94A3B8]">Primary path to test</p>
-                <p className="text-sm font-semibold text-[#050816]">{draft.primary_path}</p>
+                <p className="text-xs font-bold uppercase tracking-wide text-[color:var(--ink-400)]">Primary path to test</p>
+                <p className="text-sm font-semibold text-[color:var(--surface-dark-900)]">{draft.primary_path}</p>
                 {draft.comparison_path && (
-                  <p className="text-sm text-[#64748B]">Comparing against: {draft.comparison_path}</p>
+                  <p className="text-sm text-[color:var(--ink-500)]">Comparing against: {draft.comparison_path}</p>
                 )}
               </div>
             </div>
 
             <div className="flex gap-3">
-              <div className="mt-0.5 h-5 w-5 shrink-0 rounded-full flex items-center justify-center" style={{ background: '#EEF2F6' }}>
+              <div className="mt-0.5 h-5 w-5 shrink-0 rounded-full flex items-center justify-center" style={{ background: 'var(--ink-100)' }}>
                 <Clock size={11} style={{ color: 'var(--brand-navy-900)' }} />
               </div>
               <div>
-                <p className="text-xs font-bold uppercase tracking-wide text-[#94A3B8]">Weekly availability</p>
-                <p className="text-sm text-[#334155]">{draft.available_hours_per_week || 8} hours per week available for path-testing</p>
+                <p className="text-xs font-bold uppercase tracking-wide text-[color:var(--ink-400)]">Weekly availability</p>
+                <p className="text-sm text-[color:var(--ink-700)]">{draft.available_hours_per_week || 8} hours per week available for path-testing</p>
               </div>
             </div>
 
             {tradeoffs && (
               <div className="flex gap-3">
-                <div className="mt-0.5 h-5 w-5 shrink-0 rounded-full flex items-center justify-center" style={{ background: '#EEF2F6' }}>
+                <div className="mt-0.5 h-5 w-5 shrink-0 rounded-full flex items-center justify-center" style={{ background: 'var(--ink-100)' }}>
                   <Zap size={11} style={{ color: 'var(--brand-navy-900)' }} />
                 </div>
                 <div>
-                  <p className="text-xs font-bold uppercase tracking-wide text-[#94A3B8]">Tradeoff to explore</p>
-                  <p className="text-sm text-[#334155]">{tradeoffs}</p>
+                  <p className="text-xs font-bold uppercase tracking-wide text-[color:var(--ink-400)]">Tradeoff to explore</p>
+                  <p className="text-sm text-[color:var(--ink-700)]">{tradeoffs}</p>
                 </div>
               </div>
             )}
@@ -179,7 +179,7 @@ export default function OnboardingReview() {
 
         {/* Personal notes summary */}
         {(hasNotes || editingNotes) && !editingNotes && (
-          <div className="mb-6 rounded-[24px] border border-[#E2E8F0] bg-white p-7 shadow-sm">
+          <div className="mb-6 rounded-[24px] border border-[color:var(--ink-200)] bg-white p-7 shadow-sm">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <FileText size={16} style={{ color: 'var(--brand-navy-900)' }} />
@@ -187,7 +187,7 @@ export default function OnboardingReview() {
               </div>
               <div className="flex gap-2">
                 <button onClick={() => setEditingNotes(true)}
-                  className="flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-semibold text-[#334155] border border-[#E2E8F0] hover:bg-[#F8FAFC]">
+                  className="flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-semibold text-[color:var(--ink-700)] border border-[color:var(--ink-200)] hover:bg-[color:var(--ink-50)]">
                   <Pencil size={11} /> Edit
                 </button>
                 <button onClick={removeNotes}
@@ -199,32 +199,32 @@ export default function OnboardingReview() {
             <div className="space-y-3">
               {draft.personal_notes && (
                 <div>
-                  <p className="text-[10px] font-bold uppercase tracking-wide text-[#94A3B8] mb-0.5">Notes</p>
-                  <p className="text-sm text-[#334155] line-clamp-3">{draft.personal_notes}</p>
+                  <p className="text-[10px] font-bold uppercase tracking-wide text-[color:var(--ink-400)] mb-0.5">Notes</p>
+                  <p className="text-sm text-[color:var(--ink-700)] line-clamp-3">{draft.personal_notes}</p>
                 </div>
               )}
               {draft.long_term_ambitions && (
                 <div>
-                  <p className="text-[10px] font-bold uppercase tracking-wide text-[#94A3B8] mb-0.5">Long-term ambitions</p>
-                  <p className="text-sm text-[#334155] line-clamp-2">{draft.long_term_ambitions}</p>
+                  <p className="text-[10px] font-bold uppercase tracking-wide text-[color:var(--ink-400)] mb-0.5">Long-term ambitions</p>
+                  <p className="text-sm text-[color:var(--ink-700)] line-clamp-2">{draft.long_term_ambitions}</p>
                 </div>
               )}
               {draft.responsibilities_constraints && (
                 <div>
-                  <p className="text-[10px] font-bold uppercase tracking-wide text-[#94A3B8] mb-0.5">Responsibilities</p>
-                  <p className="text-sm text-[#334155] line-clamp-2">{draft.responsibilities_constraints}</p>
+                  <p className="text-[10px] font-bold uppercase tracking-wide text-[color:var(--ink-400)] mb-0.5">Responsibilities</p>
+                  <p className="text-sm text-[color:var(--ink-700)] line-clamp-2">{draft.responsibilities_constraints}</p>
                 </div>
               )}
               {draft.things_to_avoid && (
                 <div>
-                  <p className="text-[10px] font-bold uppercase tracking-wide text-[#94A3B8] mb-0.5">Things to avoid</p>
-                  <p className="text-sm text-[#334155] line-clamp-2">{draft.things_to_avoid}</p>
+                  <p className="text-[10px] font-bold uppercase tracking-wide text-[color:var(--ink-400)] mb-0.5">Things to avoid</p>
+                  <p className="text-sm text-[color:var(--ink-700)] line-clamp-2">{draft.things_to_avoid}</p>
                 </div>
               )}
               {draft.priorities_for_recommendations && (
                 <div>
-                  <p className="text-[10px] font-bold uppercase tracking-wide text-[#94A3B8] mb-0.5">Priorities</p>
-                  <p className="text-sm text-[#334155] line-clamp-2">{draft.priorities_for_recommendations}</p>
+                  <p className="text-[10px] font-bold uppercase tracking-wide text-[color:var(--ink-400)] mb-0.5">Priorities</p>
+                  <p className="text-sm text-[color:var(--ink-700)] line-clamp-2">{draft.priorities_for_recommendations}</p>
                 </div>
               )}
             </div>
@@ -232,7 +232,7 @@ export default function OnboardingReview() {
         )}
 
         {editingNotes && (
-          <div className="mb-6 rounded-[24px] border border-[#1F3A5F] bg-white p-7 shadow-sm">
+          <div className="mb-6 rounded-[24px] border border-[color:var(--brand-navy-900)] bg-white p-7 shadow-sm">
             <p className="text-xs font-bold uppercase tracking-[.14em] mb-4" style={{ color: 'var(--brand-navy-700)' }}>Edit personal context</p>
             {[
               { name: 'personal_notes', label: 'Personal notes and context', maxLength: 3000 },
@@ -241,16 +241,16 @@ export default function OnboardingReview() {
               { name: 'things_to_avoid', label: 'Things I do not want' },
               { name: 'priorities_for_recommendations', label: 'Anything the recommendations should prioritize' },
             ].map(f => (
-              <label key={f.name} className="block text-sm font-semibold text-[#334155] mb-4">
+              <label key={f.name} className="block text-sm font-semibold text-[color:var(--ink-700)] mb-4">
                 {f.label}
                 <textarea rows={3} value={notesForm[f.name]} maxLength={f.maxLength}
                   onChange={e => setNotesForm(n => ({ ...n, [f.name]: e.target.value }))}
-                  className="mt-1 w-full rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-3 text-sm font-normal text-[#050816] placeholder-[#94A3B8] outline-none focus:border-[#1F3A5F]" />
+                  className="mt-1 w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] px-4 py-3 text-sm font-normal text-[color:var(--surface-dark-900)] placeholder-[color:var(--ink-400)] outline-none focus:border-[color:var(--brand-navy-900)]" />
               </label>
             ))}
             <div className="flex gap-3">
               <button onClick={() => setEditingNotes(false)}
-                className="flex-1 rounded-[10px] border border-[#E2E8F0] py-2.5 text-sm font-semibold text-[#334155] hover:bg-[#F8FAFC]">
+                className="flex-1 rounded-[10px] border border-[color:var(--ink-200)] py-2.5 text-sm font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)]">
                 Cancel
               </button>
               <button onClick={saveNotes}
@@ -263,8 +263,8 @@ export default function OnboardingReview() {
         )}
 
         {/* CTA */}
-        <div className="rounded-[24px] border border-[#E2E8F0] bg-white p-7 shadow-sm text-center">
-          <p className="text-sm text-[#64748B] mb-6 leading-6">
+        <div className="rounded-[24px] border border-[color:var(--ink-200)] bg-white p-7 shadow-sm text-center">
+          <p className="text-sm text-[color:var(--ink-500)] mb-6 leading-6">
             Create a free account to generate your three tailored paths, save your Mission Guides, and track what you learn.
           </p>
           <button onClick={handleCreateAccount}
@@ -272,7 +272,7 @@ export default function OnboardingReview() {
             style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}>
             Create My Free Account <ArrowRight size={16} />
           </button>
-          <p className="mt-4 text-sm text-[#94A3B8]">
+          <p className="mt-4 text-sm text-[color:var(--ink-400)]">
             Already have an account?{' '}
             <Link to="/login" onClick={() => trackFunnel('wall_login_clicked', { placement: 'cta' })} className="font-semibold underline" style={{ color: 'var(--brand-navy-900)' }}>Log in</Link>
           </p>
@@ -280,7 +280,8 @@ export default function OnboardingReview() {
 
         <div className="mt-6 flex justify-center">
           <button onClick={() => { trackFunnel('wall_edit_paths_clicked'); nav('/paths-intake'); }}
-            className="flex items-center gap-2 text-sm font-semibold text-[#64748B] hover:text-[#050816] transition">
+            className="flex items-center gap-2 text-sm font-semibold text-[color:var(--ink-500)] hover:text-[color:var(--surface-dark-900)] transition">
+
             <ArrowLeft size={14} /> Edit my path selection
           </button>
         </div>

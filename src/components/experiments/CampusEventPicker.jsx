@@ -133,7 +133,7 @@ export default function CampusEventPicker({ profile, pathName, selected, onSelec
 
   if (loading) {
     return (
-      <div className="mb-5 flex items-center gap-2 rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-3 text-sm text-[#64748B]">
+      <div className="mb-5 flex items-center gap-2 rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] px-4 py-3 text-sm text-[color:var(--ink-500)]">
         <Loader2 size={15} className="animate-spin" aria-hidden="true" />
         Checking your campus calendar...
       </div>
@@ -158,11 +158,11 @@ export default function CampusEventPicker({ profile, pathName, selected, onSelec
 
   return (
     <div className="mb-5">
-      <p className="flex items-center gap-1.5 text-sm font-semibold text-[#334155]">
-        <Sparkles size={14} style={{ color: 'var(--brand-gold-500, #D6B66A)' }} aria-hidden="true" />
+      <p className="flex items-center gap-1.5 text-sm font-semibold text-[color:var(--ink-700)]">
+        <Sparkles size={14} style={{ color: 'var(--brand-gold-500, var(--brand-gold-500))' }} aria-hidden="true" />
         {unranked ? 'Nothing matched — but these are real' : 'Anchor this to something real'}
       </p>
-      <p className="mb-3 mt-0.5 text-xs text-[#64748B]">
+      <p className="mb-3 mt-0.5 text-xs text-[color:var(--ink-500)]">
         {unranked
           ? <>Nothing on {college || 'your campus'}&apos;s calendar lines up with this experiment.
               These are happening anyway, and a date you didn&apos;t set still beats one you did.</>
@@ -183,38 +183,38 @@ export default function CampusEventPicker({ profile, pathName, selected, onSelec
                 className="w-full rounded-xl border-2 p-2 text-left transition disabled:opacity-60"
                 style={{
                   borderColor: isSelected ? 'var(--brand-navy-700)' : 'transparent',
-                  background: isSelected ? 'var(--background-tertiary, #EEF2F6)' : 'transparent',
+                  background: isSelected ? 'var(--background-tertiary, var(--ink-100))' : 'transparent',
                 }}
               >
                 <CampusEventCard event={event} college={college} compact />
                 {event.guidance?.fit_reason && (
-                  <p className="px-1 pb-0.5 pt-2 text-xs leading-relaxed text-[#334155]">
+                  <p className="px-1 pb-0.5 pt-2 text-xs leading-relaxed text-[color:var(--ink-700)]">
                     {event.guidance.fit_reason}
                   </p>
                 )}
                 <span
                   className="mt-1.5 flex items-center gap-1.5 px-1 pb-1 text-xs font-bold"
-                  style={{ color: isSelected ? 'var(--brand-navy-700)' : '#64748B' }}
+                  style={{ color: isSelected ? 'var(--brand-navy-700)' : 'var(--ink-500)' }}
                 >
                   {isSelected ? <><Check size={13} aria-hidden="true" /> Anchoring your guide to this</> : 'Use this event'}
                 </span>
               </button>
 
               {isSelected && event.guidance?.what_to_do?.length > 0 && (
-                <div className="mt-1.5 rounded-xl border border-[#E2E8F0] bg-white px-3 py-2.5">
-                  <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wide text-[#64748B]">
+                <div className="mt-1.5 rounded-xl border border-[color:var(--ink-200)] bg-white px-3 py-2.5">
+                  <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wide text-[color:var(--ink-500)]">
                     What to do there
                   </p>
                   <ol className="space-y-1.5">
                     {event.guidance.what_to_do.map((action, i) => (
-                      <li key={i} className="flex gap-2 text-xs leading-relaxed text-[#334155]">
-                        <span className="shrink-0 pt-px font-bold tabular-nums text-[#64748B]">{i + 1}.</span>
+                      <li key={i} className="flex gap-2 text-xs leading-relaxed text-[color:var(--ink-700)]">
+                        <span className="shrink-0 pt-px font-bold tabular-nums text-[color:var(--ink-500)]">{i + 1}.</span>
                         <span>{action}</span>
                       </li>
                     ))}
                   </ol>
                   {event.guidance.questions_to_ask?.length > 0 && (
-                    <p className="mt-2 border-t border-dashed border-[#E2E8F0] pt-2 text-xs text-[#64748B]">
+                    <p className="mt-2 border-t border-dashed border-[color:var(--ink-200)] pt-2 text-xs text-[color:var(--ink-500)]">
                       Your questions get written into the guide.
                     </p>
                   )}
@@ -232,8 +232,8 @@ export default function CampusEventPicker({ profile, pathName, selected, onSelec
         aria-pressed={!selected}
         className="mt-2 w-full rounded-xl border px-4 py-2.5 text-left text-xs font-semibold transition disabled:opacity-60"
         style={{
-          borderColor: !selected ? 'var(--brand-navy-700)' : '#E2E8F0',
-          color: !selected ? 'var(--brand-navy-700)' : '#64748B',
+          borderColor: !selected ? 'var(--brand-navy-700)' : 'var(--ink-200)',
+          color: !selected ? 'var(--brand-navy-700)' : 'var(--ink-500)',
         }}
       >
         Skip — build the guide without an event
@@ -255,10 +255,10 @@ function EmptyPanel({ icon: Icon, title, children }) {
   return (
     <div
       className="mb-5 overflow-hidden rounded-xl border px-4 py-3.5"
-      style={{ borderColor: '#E2E8F0', background: '#F8FAFC' }}
+      style={{ borderColor: 'var(--ink-200)', background: 'var(--ink-50)' }}
     >
-      <p className="flex items-center gap-1.5 text-sm font-semibold text-[#334155]">
-        <Icon size={14} className="shrink-0" style={{ color: 'var(--brand-gold-500, #D6B66A)' }} aria-hidden="true" />
+      <p className="flex items-center gap-1.5 text-sm font-semibold text-[color:var(--ink-700)]">
+        <Icon size={14} className="shrink-0" style={{ color: 'var(--brand-gold-500, var(--brand-gold-500))' }} aria-hidden="true" />
         {title}
       </p>
       {children}
@@ -327,7 +327,7 @@ function NoCollegeState({ profile, disabled, onSaved }) {
 
   return (
     <EmptyPanel icon={School} title="Which school do you go to?">
-      <p className="mt-1 text-xs leading-relaxed text-[#64748B]">
+      <p className="mt-1 text-xs leading-relaxed text-[color:var(--ink-500)]">
         Tell us and we&apos;ll pull real events off your campus calendar — so the first step of
         your guide has a date somebody else already set.
       </p>
@@ -346,8 +346,8 @@ function NoCollegeState({ profile, disabled, onSaved }) {
           disabled={disabled || saving}
           placeholder="Fairfield University"
           autoComplete="organization"
-          className="min-w-0 flex-1 rounded-lg border bg-white px-3 py-2 text-sm outline-none transition focus:border-[#1F3A5F] disabled:opacity-60"
-          style={{ borderColor: '#E2E8F0' }}
+          className="min-w-0 flex-1 rounded-lg border bg-white px-3 py-2 text-sm outline-none transition focus:border-[color:var(--brand-navy-900)] disabled:opacity-60"
+          style={{ borderColor: 'var(--ink-200)' }}
         />
         <button
           type="submit"
@@ -363,11 +363,11 @@ function NoCollegeState({ profile, disabled, onSaved }) {
       </form>
 
       {error && (
-        <p className="mt-2 flex items-center gap-1.5 text-xs text-[#B91C1C]" role="alert">
+        <p className="mt-2 flex items-center gap-1.5 text-xs text-[color:var(--danger-700)]" role="alert">
           <AlertCircle size={12} aria-hidden="true" /> {error}
         </p>
       )}
-      <p className="mt-2 text-xs text-[#94A3B8]">
+      <p className="mt-2 text-xs text-[color:var(--ink-400)]">
         Saves to your profile. You can skip this and build the guide without an event.
       </p>
     </EmptyPanel>
@@ -433,9 +433,9 @@ function NoFeedState({ college, disabled, onResolved }) {
 
   return (
     <EmptyPanel icon={CalendarSearch} title={`No calendar we can read for ${college || 'your school'}`}>
-      <p className="mt-1 text-xs leading-relaxed text-[#64748B]">
+      <p className="mt-1 text-xs leading-relaxed text-[color:var(--ink-500)]">
         Your school&apos;s main events page usually isn&apos;t one we can read — but your{' '}
-        <strong className="font-semibold text-[#334155]">club portal</strong> normally is. It&apos;s
+        <strong className="font-semibold text-[color:var(--ink-700)]">club portal</strong> normally is. It&apos;s
         where clubs post their own events, and it&apos;s where the career ones actually live.
       </p>
 
@@ -451,8 +451,8 @@ function NoFeedState({ college, disabled, onResolved }) {
           placeholder="yourschool.campusgroups.com"
           aria-invalid={problem ? 'true' : undefined}
           aria-describedby={problem ? 'campus-feed-problem' : 'campus-feed-hint'}
-          className="min-w-0 flex-1 rounded-lg border bg-white px-3 py-2 text-sm outline-none transition focus:border-[#1F3A5F] disabled:opacity-60"
-          style={{ borderColor: problem ? '#B91C1C' : '#E2E8F0' }}
+          className="min-w-0 flex-1 rounded-lg border bg-white px-3 py-2 text-sm outline-none transition focus:border-[color:var(--brand-navy-900)] disabled:opacity-60"
+          style={{ borderColor: problem ? 'var(--danger-700)' : 'var(--ink-200)' }}
         />
         <button
           type="submit"
@@ -468,12 +468,12 @@ function NoFeedState({ college, disabled, onResolved }) {
       </form>
 
       {problem ? (
-        <p id="campus-feed-problem" role="alert" className="mt-2 flex items-start gap-1.5 text-xs leading-relaxed text-[#B91C1C]">
+        <p id="campus-feed-problem" role="alert" className="mt-2 flex items-start gap-1.5 text-xs leading-relaxed text-[color:var(--danger-700)]">
           <AlertCircle size={12} className="mt-0.5 shrink-0" aria-hidden="true" />
           {problem}
         </p>
       ) : (
-        <p id="campus-feed-hint" className="mt-2 text-xs text-[#94A3B8]">
+        <p id="campus-feed-hint" className="mt-2 text-xs text-[color:var(--ink-400)]">
           Engage, CampusGroups, Presence, BeInvolved — whatever yours calls &ldquo;get
           involved.&rdquo; Log in there and copy the address.
         </p>
@@ -491,8 +491,8 @@ function NoFeedState({ college, disabled, onResolved }) {
         that is a better reason to spend thirty seconds than helping us.
       */}
       <p
-        className="mt-2.5 border-t border-dashed pt-2.5 text-xs leading-relaxed text-[#64748B]"
-        style={{ borderColor: '#E2E8F0' }}
+        className="mt-2.5 border-t border-dashed pt-2.5 text-xs leading-relaxed text-[color:var(--ink-500)]"
+        style={{ borderColor: 'var(--ink-200)' }}
       >
         If it works you&apos;ll see your events here straight away. We check it ourselves before
         turning it on for everyone else at {college || 'your school'}.
@@ -505,7 +505,7 @@ function NoFeedState({ college, disabled, onResolved }) {
 function EmptyCalendarState({ college }) {
   return (
     <EmptyPanel icon={CalendarSearch} title="Nothing on your campus calendar right now">
-      <p className="mt-1 text-xs leading-relaxed text-[#64748B]">
+      <p className="mt-1 text-xs leading-relaxed text-[color:var(--ink-500)]">
         We can read {college || 'your school'}&apos;s calendar and it has nothing posted for the
         next six weeks. That usually means a break — worth checking again in a week.
       </p>
@@ -518,7 +518,7 @@ function EmptyCalendarState({ college }) {
 function FeedErrorState({ college, disabled, onRetry }) {
   return (
     <EmptyPanel icon={RotateCw} title="Your campus calendar didn't answer">
-      <p className="mt-1 text-xs leading-relaxed text-[#64748B]">
+      <p className="mt-1 text-xs leading-relaxed text-[color:var(--ink-500)]">
         {college || 'Your school'}&apos;s calendar didn&apos;t respond just now. That&apos;s on their
         end and it usually passes.
       </p>

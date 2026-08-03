@@ -13,9 +13,9 @@
 const live = (r) => r && r.deletion_status !== 'deleted' && r.deletion_status !== 'permanently_deleted';
 
 export const RESUME_STATUS = {
-  not_reviewed: { label: 'Not reviewed', bg: '#F1F5F9', text: '#64748B' },
-  approved:     { label: 'Approved for resume', bg: '#F0FDF4', text: '#15803D' },
-  excluded:     { label: 'Kept off resume', bg: '#FFFBEB', text: '#B45309' },
+  not_reviewed: { label: 'Not reviewed', bg: 'var(--ink-100)', text: 'var(--ink-500)' },
+  approved:     { label: 'Approved for resume', bg: 'var(--success-50)', text: 'var(--success-700)' },
+  excluded:     { label: 'Kept off resume', bg: 'var(--warning-50)', text: 'var(--warning-700)' },
 };
 
 export const VISIBILITY_LABELS = {

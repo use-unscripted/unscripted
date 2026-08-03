@@ -151,7 +151,7 @@ export default function ClaimOnboarding() {
 
   if (error) {
     return (
-      <main className="grid min-h-screen place-items-center px-6 text-center text-white" style={{ background: '#081225' }}>
+      <main className="grid min-h-screen place-items-center px-6 text-center text-white" style={{ background: 'var(--surface-dark-700)' }}>
         <div className="max-w-md">
           <div className="mx-auto mb-6 flex h-14 w-14 items-center justify-center rounded-full"
             style={{ background: 'rgba(31,58,95,0.25)', border: '1px solid rgba(31,58,95,0.4)' }}>
@@ -160,7 +160,7 @@ export default function ClaimOnboarding() {
           <h1 className="font-heading text-2xl font-bold">
             {errorType === 'generate' ? 'Generation failed' : 'Setup failed'}
           </h1>
-          <p className="mt-3 text-sm text-slate-400 leading-6">{error}</p>
+          <p className="mt-3 text-sm text-[color:var(--ink-400)] leading-6">{error}</p>
           <div className="mt-8 flex flex-col items-center gap-3">
             <button onClick={run}
               className="flex items-center gap-2 rounded-[10px] px-6 py-3 text-sm font-semibold text-white transition hover:-translate-y-px"
@@ -169,7 +169,7 @@ export default function ClaimOnboarding() {
             </button>
             {errorType === 'import' && (
               <button onClick={() => nav('/onboarding-review')}
-                className="flex items-center gap-2 text-sm font-semibold text-slate-400 hover:text-white transition">
+                className="flex items-center gap-2 text-sm font-semibold text-[color:var(--ink-400)] hover:text-white transition">
                 <ArrowLeft size={14} /> Back to onboarding review
               </button>
             )}
@@ -180,18 +180,18 @@ export default function ClaimOnboarding() {
   }
 
   return (
-    <main className="grid min-h-screen place-items-center px-6 text-center text-white" style={{ background: '#081225' }}>
+    <main className="grid min-h-screen place-items-center px-6 text-center text-white" style={{ background: 'var(--surface-dark-700)' }}>
       <div>
         <div className="mx-auto flex items-center justify-center h-16 w-16 animate-pulse">
           <CompassIcon size={56} />
         </div>
         <h1 className="font-heading mt-8 text-3xl font-bold">Building your 30-day path test.</h1>
-        <p className="mt-3 text-slate-400">{PHASES[phaseIdx]}</p>
+        <p className="mt-3 text-[color:var(--ink-400)]">{PHASES[phaseIdx]}</p>
         <div className="mx-auto mt-8 h-1.5 w-64 overflow-hidden rounded-full" style={{ background: 'rgba(255,255,255,0.08)' }}>
           <div className="h-full animate-pulse rounded-full"
             style={{ width: `${Math.round((phaseIdx + 1) / PHASES.length * 100)}%`, background: 'var(--brand-navy-900)', transition: 'width 0.5s ease' }} />
         </div>
-        <p className="mt-6 text-xs text-slate-500">This usually takes 20–30 seconds.</p>
+        <p className="mt-6 text-xs text-[color:var(--ink-500)]">This usually takes 20–30 seconds.</p>
       </div>
     </main>
   );

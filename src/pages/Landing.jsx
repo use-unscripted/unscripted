@@ -12,21 +12,17 @@
    ────────────────────────────────────────────────────────────────────────── */
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MotionConfig, useScroll, useSpring } from 'framer-motion';
+import { MotionConfig } from 'framer-motion';
 import { base44 } from '@/api/base44Client';
 import LandingNav from '@/components/landing/LandingNav';
 import Hero from '@/components/landing/Hero';
 import LandingSections from '@/components/landing/LandingSections';
-import { ScrollProgress } from '@/components/motion';
 import SiteFooter from '@/components/SiteFooter';
 import { CompassIcon } from '@/components/UnscriptedLogo';
 
 export default function Landing() {
   const nav = useNavigate();
   const [authChecked, setAuthChecked] = useState(false);
-
-  const { scrollYProgress } = useScroll();
-  const progress = useSpring(scrollYProgress, { stiffness: 140, damping: 30, restDelta: 0.001 });
 
   useEffect(() => {
     base44.auth.isAuthenticated().then(async (authed) => {
@@ -46,10 +42,13 @@ export default function Landing() {
 
   if (!authChecked) {
     return (
-      <div className="grid min-h-screen place-items-center" style={{ background: '#FAFAF9' }}>
+      <div className="grid min-h-screen place-items-center" style={{ background: 'var(--page-surface)' }}>
         <div className="flex flex-col items-center gap-4">
           <CompassIcon size={32} className="animate-pulse" />
-          <div className="w-5 h-5 rounded-full border-2 border-[#E2E8F0] border-t-[#1F3A5F] animate-spin" />
+          <div
+            className="h-5 w-5 animate-spin rounded-full border-2"
+            style={{ borderColor: 'var(--border-light)', borderTopColor: 'var(--brand-navy-900)' }}
+          />
         </div>
       </div>
     );
@@ -57,8 +56,10 @@ export default function Landing() {
 
   return (
     <MotionConfig reducedMotion="user">
-      <div className="min-h-screen" style={{ background: '#FAFAF9' }}>
-        <ScrollProgress scaleX={progress} />
+      {/* The scroll-progress bar that used to sit here was decoration: a
+          marketing page isn't a long-form article, and the reader has a
+          scrollbar. Removed. */}
+      <div className="min-h-screen" style={{ background: 'var(--page-surface)' }}>
         <LandingNav />
         <Hero />
         <LandingSections />

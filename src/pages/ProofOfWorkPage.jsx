@@ -8,7 +8,7 @@ class CardErrorBoundary extends Component {
   componentDidCatch(err) { console.error('[ProofOfWorkPage] Card render error:', err?.message || err); }
   render() {
     if (this.state.hasError)
-      return <div className="rounded-[20px] border border-dashed border-[#E2E8F0] p-6 text-center text-xs text-[#94A3B8]">This record could not be displayed.</div>;
+      return <div className="rounded-[20px] border border-dashed border-[color:var(--ink-200)] p-6 text-center text-xs text-[color:var(--ink-400)]">This record could not be displayed.</div>;
     return this.props.children;
   }
 }
@@ -42,11 +42,11 @@ function getExt(name) { return (name || '').split('.').pop().toLowerCase(); }
 function FileIcon({ name, mime, size = 18 }) {
   const ext = getExt(name);
   if (VIDEO_EXTS.has(ext) || (mime || '').startsWith('video/')) return <Film size={size} style={{ color: 'var(--brand-navy-700)' }} />;
-  if (IMAGE_EXTS.has(ext) || (mime || '').startsWith('image/')) return <Image size={size} style={{ color: '#2563EB' }} />;
+  if (IMAGE_EXTS.has(ext) || (mime || '').startsWith('image/')) return <Image size={size} style={{ color: 'var(--info-600)' }} />;
   if (AUDIO_EXTS.has(ext) || (mime || '').startsWith('audio/')) return <Music size={size} style={{ color: '#7C3AED' }} />;
-  if (SHEET_EXTS.has(ext)) return <FileSpreadsheet size={size} style={{ color: '#15803D' }} />;
+  if (SHEET_EXTS.has(ext)) return <FileSpreadsheet size={size} style={{ color: 'var(--success-700)' }} />;
   if (ext === 'pdf') return <FileText size={size} style={{ color: '#EA580C' }} />;
-  return <File size={size} className="text-[#64748B]" />;
+  return <File size={size} className="text-[color:var(--ink-500)]" />;
 }
 
 function isVideoFile(name, mime) {
@@ -61,11 +61,11 @@ function FilePreviewModal({ entry, onClose }) {
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" style={{ background: 'rgba(5,8,22,0.85)' }}>
       <div className="w-full max-w-3xl rounded-[20px] bg-white overflow-hidden">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-[#E2E8F0]">
-          <p className="font-semibold text-[#050816] truncate">{entry.file_name || entry.title}</p>
-          <button onClick={onClose} aria-label="Close preview"><X size={20} className="text-[#64748B]" /></button>
+        <div className="flex items-center justify-between px-5 py-4 border-b border-[color:var(--ink-200)]">
+          <p className="font-semibold text-[color:var(--surface-dark-900)] truncate">{entry.file_name || entry.title}</p>
+          <button onClick={onClose} aria-label="Close preview"><X size={20} className="text-[color:var(--ink-500)]" /></button>
         </div>
-        <div className="p-5 bg-[#F8FAFC] flex items-center justify-center min-h-[300px]">
+        <div className="p-5 bg-[color:var(--ink-50)] flex items-center justify-center min-h-[300px]">
           {vid && entry.file_url ? (
             <video src={entry.file_url} controls className="max-w-full max-h-[60vh] rounded-xl"
               preload="metadata" aria-label={entry.file_name}>
@@ -73,11 +73,11 @@ function FilePreviewModal({ entry, onClose }) {
             </video>
           ) : entry.file_url ? (
             <div className="text-center">
-              <div className="mx-auto w-16 h-16 rounded-2xl flex items-center justify-center mb-4" style={{ background: '#EEF2F6' }}>
+              <div className="mx-auto w-16 h-16 rounded-2xl flex items-center justify-center mb-4" style={{ background: 'var(--ink-100)' }}>
                 <FileIcon name={entry.file_name} mime={entry.mime_type} size={28} />
               </div>
-              <p className="text-sm font-semibold text-[#050816] mb-1">{entry.file_name}</p>
-              {entry.file_size && <p className="text-xs text-[#64748B] mb-4">{fmtSize(entry.file_size)}</p>}
+              <p className="text-sm font-semibold text-[color:var(--surface-dark-900)] mb-1">{entry.file_name}</p>
+              {entry.file_size && <p className="text-xs text-[color:var(--ink-500)] mb-4">{fmtSize(entry.file_size)}</p>}
               <a href={entry.file_url} target="_blank" rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 rounded-[10px] px-5 py-2.5 text-sm font-semibold text-white"
                 style={{ background: 'var(--brand-navy-900)' }}>
@@ -85,7 +85,7 @@ function FilePreviewModal({ entry, onClose }) {
               </a>
             </div>
           ) : (
-            <p className="text-sm text-[#64748B]">No file attached.</p>
+            <p className="text-sm text-[color:var(--ink-500)]">No file attached.</p>
           )}
         </div>
       </div>
@@ -125,33 +125,33 @@ function ProofCard({ entry, missionsMap, experimentsMap, onDelete, onNavigateToP
   // min-w-0: grid items default to min-width:auto, so a long filename or URL
   // stretches the card past its track and scrolls the whole page sideways.
   return (
-    <div className="min-w-0 rounded-[20px] border border-[#E2E8F0] bg-white p-5">
+    <div className="min-w-0 rounded-[20px] border border-[color:var(--ink-200)] bg-white p-5">
       {showPreview && <FilePreviewModal entry={safeEntry} onClose={() => setShowPreview(false)} />}
 
       {/* Header */}
       <div className="flex items-start justify-between gap-3 mb-3">
         <div className="flex-1 min-w-0">
           <div className="flex flex-wrap items-center gap-2 mb-1.5">
-            <span className="rounded-full px-2.5 py-0.5 text-xs font-bold" style={{ background: '#EEF2F6', color: 'var(--brand-navy-700)' }}>
+            <span className="rounded-full px-2.5 py-0.5 text-xs font-bold" style={{ background: 'var(--ink-100)', color: 'var(--brand-navy-700)' }}>
               {safeEntry.category.replace(/_/g,' ').replace(/\b\w/g,l=>l.toUpperCase())}
             </span>
             {safeEntry.visibility === 'public'
-              ? <span className="rounded-full px-2.5 py-0.5 text-xs font-bold flex items-center gap-1" style={{ background: '#F0FDF4', color: '#15803D' }}><Eye size={10} />Public</span>
-              : <span className="rounded-full px-2.5 py-0.5 text-xs font-bold flex items-center gap-1" style={{ background: '#F8FAFC', color: '#64748B' }}><EyeOff size={10} />Private</span>}
+              ? <span className="rounded-full px-2.5 py-0.5 text-xs font-bold flex items-center gap-1" style={{ background: 'var(--success-50)', color: 'var(--success-700)' }}><Eye size={10} />Public</span>
+              : <span className="rounded-full px-2.5 py-0.5 text-xs font-bold flex items-center gap-1" style={{ background: 'var(--ink-50)', color: 'var(--ink-500)' }}><EyeOff size={10} />Private</span>}
           </div>
-          <h3 className="font-heading font-bold text-[#050816] leading-snug">{safeEntry.title}</h3>
-          {safeEntry.description && <p className="mt-1 text-sm text-[#334155] line-clamp-2">{safeEntry.description}</p>}
+          <h3 className="font-heading font-bold text-[color:var(--surface-dark-900)] leading-snug">{safeEntry.title}</h3>
+          {safeEntry.description && <p className="mt-1 text-sm text-[color:var(--ink-700)] line-clamp-2">{safeEntry.description}</p>}
         </div>
 
         {/* More actions */}
         <div className="relative shrink-0">
           <button onClick={() => setMenuOpen(v => !v)}
-            className="rounded-lg p-1.5 text-[#94A3B8] hover:text-[#334155] hover:bg-[#F1F5F9] transition"
+            className="rounded-lg p-1.5 text-[color:var(--ink-400)] hover:text-[color:var(--ink-700)] hover:bg-[color:var(--ink-100)] transition"
             aria-label="More actions">
             <ChevronDown size={16} />
           </button>
           {menuOpen && (
-            <div className="absolute right-0 top-8 z-10 w-36 rounded-xl border border-[#E2E8F0] bg-white shadow-lg py-1">
+            <div className="absolute right-0 top-8 z-10 w-36 rounded-xl border border-[color:var(--ink-200)] bg-white shadow-lg py-1">
               <button onClick={() => { setMenuOpen(false); onDelete(entry); }}
                 className="w-full flex items-center gap-2 px-4 py-2 text-xs text-red-600 hover:bg-red-50">
                 <Trash2 size={13} /> Delete
@@ -163,13 +163,13 @@ function ProofCard({ entry, missionsMap, experimentsMap, onDelete, onNavigateToP
 
       {/* File preview row */}
       {safeEntry.file_url && (
-        <div className="mb-3 flex items-center gap-3 rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2.5">
-          <div className="shrink-0 w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: '#EEF2F6' }}>
+        <div className="mb-3 flex items-center gap-3 rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] px-3 py-2.5">
+          <div className="shrink-0 w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'var(--ink-100)' }}>
             <FileIcon name={safeEntry.file_name} mime={safeEntry.mime_type} size={16} />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-xs font-semibold text-[#334155] truncate">{safeEntry.file_name || 'Attached file'}</p>
-            {safeEntry.file_size && <p className="text-[10px] text-[#94A3B8]">{fmtSize(safeEntry.file_size)}</p>}
+            <p className="text-xs font-semibold text-[color:var(--ink-700)] truncate">{safeEntry.file_name || 'Attached file'}</p>
+            {safeEntry.file_size && <p className="text-[10px] text-[color:var(--ink-400)]">{fmtSize(safeEntry.file_size)}</p>}
           </div>
           <button onClick={() => setShowPreview(true)}
             className="shrink-0 flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-white"
@@ -192,37 +192,37 @@ function ProofCard({ entry, missionsMap, experimentsMap, onDelete, onNavigateToP
       {safeEntry.skills_demonstrated.length > 0 && (
         <div className="mb-3 flex flex-wrap gap-1.5">
           {safeEntry.skills_demonstrated.map((s, i) => (
-            <span key={i} className="rounded-full border border-[#E2E8F0] px-2.5 py-0.5 text-[10px] text-[#334155]">{s}</span>
+            <span key={i} className="rounded-full border border-[color:var(--ink-200)] px-2.5 py-0.5 text-[10px] text-[color:var(--ink-700)]">{s}</span>
           ))}
         </div>
       )}
 
       {/* Mission / Experiment links */}
       {(mission || experiment || safeEntry.mission_id || safeEntry.experiment_id) && (
-        <div className="pt-3 border-t border-[#F1F5F9] flex flex-wrap gap-3">
+        <div className="pt-3 border-t border-[color:var(--ink-100)] flex flex-wrap gap-3">
           {mission ? (
             <button onClick={() => onNavigateToProof('experiments')}
-              className="text-xs text-[#64748B] hover:text-[#274C77] transition text-left">
-              Mission: <span className="font-semibold text-[#334155]">{mission.title}</span>
+              className="text-xs text-[color:var(--ink-500)] hover:text-[color:var(--brand-navy-700)] transition text-left">
+              Mission: <span className="font-semibold text-[color:var(--ink-700)]">{mission.title}</span>
             </button>
           ) : safeEntry.mission_id ? (
-            <span className="text-xs text-[#94A3B8]">Mission: <span className="italic">No longer available</span></span>
+            <span className="text-xs text-[color:var(--ink-400)]">Mission: <span className="italic">No longer available</span></span>
           ) : null}
           {experiment ? (
             <button onClick={() => onNavigateToProof('experiments')}
-              className="text-xs text-[#64748B] hover:text-[#274C77] transition text-left">
-              Experiment: <span className="font-semibold text-[#334155]">{experiment.title}</span>
+              className="text-xs text-[color:var(--ink-500)] hover:text-[color:var(--brand-navy-700)] transition text-left">
+              Experiment: <span className="font-semibold text-[color:var(--ink-700)]">{experiment.title}</span>
             </button>
           ) : safeEntry.experiment_id ? (
-            <span className="text-xs text-[#94A3B8]">Experiment: <span className="italic">Not linked</span></span>
+            <span className="text-xs text-[color:var(--ink-400)]">Experiment: <span className="italic">Not linked</span></span>
           ) : null}
           {experiment?.path_name && (
-            <span className="text-xs text-[#94A3B8]">Path: {experiment.path_name}</span>
+            <span className="text-xs text-[color:var(--ink-400)]">Path: {experiment.path_name}</span>
           )}
         </div>
       )}
 
-      <p className="mt-2 text-[10px] text-[#94A3B8]">Submitted {fmtDate(safeEntry.created_date) || 'date unavailable'}</p>
+      <p className="mt-2 text-[10px] text-[color:var(--ink-400)]">Submitted {fmtDate(safeEntry.created_date) || 'date unavailable'}</p>
     </div>
   );
 }
@@ -391,27 +391,27 @@ export default function ProofOfWorkPage() {
       {/* Search + Filters */}
       <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:flex-wrap">
         <div className="relative flex-1 min-w-[200px]">
-          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#94A3B8]" />
+          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[color:var(--ink-400)]" />
           <input value={search} onChange={e => setSearch(e.target.value)}
             placeholder="Search by title, mission, experiment, or filename…"
-            className="w-full rounded-xl border border-[#E2E8F0] bg-white pl-9 pr-4 py-2.5 text-sm outline-none focus:border-[#274C77]" />
+            className="w-full rounded-xl border border-[color:var(--ink-200)] bg-white pl-9 pr-4 py-2.5 text-sm outline-none focus:border-[color:var(--brand-navy-700)]" />
         </div>
         {paths.length > 1 && (
           <select value={filterPath} onChange={e => setFilterPath(e.target.value)}
-            className="w-full max-w-full truncate rounded-xl border border-[#E2E8F0] bg-white px-3 py-2.5 text-sm outline-none focus:border-[#1F3A5F] sm:w-[220px]">
+            className="w-full max-w-full truncate rounded-xl border border-[color:var(--ink-200)] bg-white px-3 py-2.5 text-sm outline-none focus:border-[color:var(--brand-navy-900)] sm:w-[220px]">
             <option value="all">All paths</option>
             {paths.filter(p => p !== 'all').map(p => <option key={p} value={p}>{p}</option>)}
           </select>
         )}
         {experiments.length > 0 && (
           <select value={filterExp} onChange={e => setFilterExp(e.target.value)}
-            className="w-full max-w-full truncate rounded-xl border border-[#E2E8F0] bg-white px-3 py-2.5 text-sm outline-none focus:border-[#1F3A5F] sm:w-[220px]">
+            className="w-full max-w-full truncate rounded-xl border border-[color:var(--ink-200)] bg-white px-3 py-2.5 text-sm outline-none focus:border-[color:var(--brand-navy-900)] sm:w-[220px]">
             <option value="all">All experiments</option>
             {experiments.map(ex => <option key={ex.id} value={ex.id}>{ex.title}</option>)}
           </select>
         )}
         <select value={filterVis} onChange={e => setFilterVis(e.target.value)}
-          className="rounded-xl border border-[#E2E8F0] bg-white px-3 py-2.5 text-sm outline-none focus:border-[#1F3A5F]">
+          className="rounded-xl border border-[color:var(--ink-200)] bg-white px-3 py-2.5 text-sm outline-none focus:border-[color:var(--brand-navy-900)]">
           <option value="all">All visibility</option>
           <option value="private">Private</option>
           <option value="public">Public</option>
@@ -419,11 +419,11 @@ export default function ProofOfWorkPage() {
       </div>
 
       {loading ? (
-        <div className="py-20 text-center text-[#64748B]">Loading proof of work…</div>
+        <div className="py-20 text-center text-[color:var(--ink-500)]">Loading proof of work…</div>
       ) : loadError ? (
         <div className="rounded-[24px] border border-dashed border-red-200 p-16 text-center">
-          <h3 className="font-heading text-xl font-bold text-[#050816]">We couldn't load your proof of work.</h3>
-          <p className="mt-2 text-sm text-[#64748B]">There was a problem fetching your records. Please try again.</p>
+          <h3 className="font-heading text-xl font-bold text-[color:var(--surface-dark-900)]">We couldn't load your proof of work.</h3>
+          <p className="mt-2 text-sm text-[color:var(--ink-500)]">There was a problem fetching your records. Please try again.</p>
           <div className="mt-6 flex justify-center gap-3">
             <button onClick={load}
               className="inline-flex items-center gap-2 rounded-[10px] px-5 py-2.5 text-sm font-semibold text-white"
@@ -431,17 +431,17 @@ export default function ProofOfWorkPage() {
               Retry
             </button>
             <button onClick={() => navigate('/journey')}
-              className="inline-flex items-center gap-2 rounded-[10px] border border-[#E2E8F0] px-5 py-2.5 text-sm font-semibold text-[#334155] hover:bg-[#F8FAFC]">
+              className="inline-flex items-center gap-2 rounded-[10px] border border-[color:var(--ink-200)] px-5 py-2.5 text-sm font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)]">
               Return to My Journey
             </button>
           </div>
         </div>
       ) : filtered.length === 0 ? (
-        <div className="rounded-[24px] border border-dashed border-[#E2E8F0] p-16 text-center">
-          <h3 className="font-heading text-xl font-bold text-[#050816]">
+        <div className="rounded-[24px] border border-dashed border-[color:var(--ink-200)] p-16 text-center">
+          <h3 className="font-heading text-xl font-bold text-[color:var(--surface-dark-900)]">
             {entries.length === 0 ? 'No proof submitted yet.' : 'No results match your filters.'}
           </h3>
-          <p className="mt-2 text-sm text-[#64748B]">
+          <p className="mt-2 text-sm text-[color:var(--ink-500)]">
             {entries.length === 0
               ? 'Add work from your experiments and missions to build a record of what you have learned and completed.'
               : 'Try adjusting your search or filters.'}
@@ -456,7 +456,7 @@ export default function ProofOfWorkPage() {
         </div>
       ) : (
         <>
-          <p className="text-xs text-[#94A3B8] mb-4">{filtered.length} submission{filtered.length !== 1 ? 's' : ''} — newest first</p>
+          <p className="text-xs text-[color:var(--ink-400)] mb-4">{filtered.length} submission{filtered.length !== 1 ? 's' : ''} — newest first</p>
           <div className="grid gap-4 sm:grid-cols-2">
             {filtered.map(e => (
               <CardErrorBoundary key={e.id}>

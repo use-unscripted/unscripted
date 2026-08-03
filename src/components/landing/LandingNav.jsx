@@ -10,7 +10,7 @@ import { Link } from 'react-router-dom';
 import { motion, useMotionValueEvent, useScroll, useReducedMotion } from 'framer-motion';
 import { useState } from 'react';
 import { LogoFull } from '@/components/UnscriptedLogo';
-import { Magnetic, EASE } from '@/components/motion';
+import { EASE } from '@/components/motion';
 
 function NavLink({ children, to, href }) {
   const [hover, setHover] = useState(false);
@@ -90,15 +90,13 @@ export default function LandingNav() {
           <NavLink to="/login">Log in</NavLink>
         </div>
 
-        <Magnetic>
-          <Link
-            to="/onboarding"
-            className="block rounded-[var(--r-control)] px-4 py-2.5 text-sm font-semibold text-white"
-            style={{ background: 'var(--brand-navy-900)', boxShadow: '0 6px 20px rgba(31,58,95,0.25)' }}
-          >
-            Start your 30-day test
-          </Link>
-        </Magnetic>
+        <Link
+          to="/onboarding"
+          className="block whitespace-nowrap rounded-[var(--r-control)] px-4 py-2.5 text-sm font-semibold text-white"
+          style={{ background: 'var(--brand-navy-900)', boxShadow: '0 6px 20px rgb(31 58 95 / 0.25)' }}
+        >
+          Start your 30-day test
+        </Link>
       </motion.div>
     </motion.nav>
   );

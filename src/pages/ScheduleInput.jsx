@@ -31,7 +31,7 @@ export default function ScheduleInput() {
   };
 
   return (
-    <main className="min-h-screen px-5 py-10" style={{ background: '#FAFAF9' }}>
+    <main className="min-h-screen px-5 py-10" style={{ background: 'var(--page-surface)' }}>
       <div className="mx-auto max-w-4xl">
         <div className="mb-8">
           <div className="mb-6">
@@ -43,17 +43,17 @@ export default function ScheduleInput() {
           >
             <Clock3 size={20} />
           </div>
-          <h1 className="font-heading text-4xl font-bold tracking-tight text-[#050816]">Build around your real week.</h1>
-          <p className="mt-3 text-[#334155]">Your roadmap should fit your life — not compete with it.</p>
+          <h1 className="font-heading text-4xl font-bold tracking-tight text-[color:var(--surface-dark-900)]">Build around your real week.</h1>
+          <p className="mt-3 text-[color:var(--ink-700)]">Your roadmap should fit your life — not compete with it.</p>
         </div>
 
-        <section className="grid gap-5 rounded-[24px] border border-[#E2E8F0] bg-white p-7 shadow-sm sm:grid-cols-2 sm:p-10">
+        <section className="grid gap-5 rounded-[24px] border border-[color:var(--ink-200)] bg-white p-7 shadow-sm sm:grid-cols-2 sm:p-10">
           {fields.map(([name, label, ph]) => (
             <Field key={name} name={name} label={label} placeholder={ph} value={data[name]} onChange={change} />
           ))}
           <div className="sm:col-span-2">
             <Field type="number" name="available_hours_per_week" label="Realistic weekly hours for growth" value={data.available_hours_per_week} onChange={change} />
-            <p className="mt-2 text-xs text-[#64748B]">Be honest. A focused 6 hours beats an imaginary 20.</p>
+            <p className="mt-2 text-xs text-[color:var(--ink-500)]">Be honest. A focused 6 hours beats an imaginary 20.</p>
           </div>
           <button
             onClick={submit}

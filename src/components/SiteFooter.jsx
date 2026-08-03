@@ -9,6 +9,14 @@
 import { Link } from 'react-router-dom';
 import { PRODUCT, CONTACT_EMAIL } from '@/lib/legal';
 
+/* Hover is a darkening plus an underline, nothing more. The outline colour used
+   to be set inline, which pulled these links into the solid-navy-button rule in
+   index.css and hung a drop shadow behind the word on hover. */
+const LINK_CLASS =
+  'rounded text-sm font-semibold underline-offset-4 decoration-1 ' +
+  'text-[color:var(--text-secondary)] hover:text-[color:var(--text-primary)] hover:underline ' +
+  'focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[color:var(--brand-navy-900)]';
+
 const LINKS = [
   { to: '/about', label: 'About' },
   { to: '/contact', label: 'Contact' },
@@ -19,23 +27,17 @@ const LINKS = [
 export default function SiteFooter() {
   return (
     <footer className="border-t px-6 py-10" style={{ borderColor: 'var(--border-light)' }}>
-      <div className="mx-auto flex max-w-7xl flex-col items-center gap-6">
-        <nav aria-label="Footer" className="flex flex-wrap items-center justify-center gap-x-7 gap-y-3">
+      {/* Left-aligned, matching the rest of the page. A centred link row under
+          a page that reads left the whole way down is the one place the
+          symmetry came back. */}
+      <div className="mx-auto flex max-w-7xl flex-col items-start gap-6">
+        <nav aria-label="Footer" className="flex flex-wrap items-center gap-x-7 gap-y-3">
           {LINKS.map(({ to, label }) => (
-            <Link
-              key={to}
-              to={to}
-              className="rounded text-sm font-semibold underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-4"
-              style={{ color: 'var(--text-secondary)', outlineColor: 'var(--brand-navy-900)' }}
-            >
+            <Link key={to} to={to} className={LINK_CLASS}>
               {label}
             </Link>
           ))}
-          <a
-            href={`mailto:${CONTACT_EMAIL}`}
-            className="rounded text-sm font-semibold underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-4"
-            style={{ color: 'var(--text-secondary)', outlineColor: 'var(--brand-navy-900)' }}
-          >
+          <a href={`mailto:${CONTACT_EMAIL}`} className={LINK_CLASS}>
             {CONTACT_EMAIL}
           </a>
         </nav>
@@ -46,7 +48,7 @@ export default function SiteFooter() {
           © {new Date().getFullYear()} {PRODUCT}. Write your unscripted path.
         </p>
 
-        <p className="max-w-2xl text-center text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+        <p className="max-w-2xl text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
           {PRODUCT} is an independent product. It is not affiliated with, endorsed by, or
           sponsored by any university, and it does not provide career, academic, financial,
           legal or medical advice.

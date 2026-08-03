@@ -3,7 +3,7 @@ import { X, Loader2, ArrowRight } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { unwrapLLM } from '@/lib/llm';
 
-const inputCls = 'w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-3 text-sm text-[#050816] placeholder-[#94A3B8] outline-none focus:border-[#1F3A5F] resize-none';
+const inputCls = 'w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-sm text-[color:var(--surface-dark-900)] placeholder-[color:var(--ink-400)] outline-none focus:border-[color:var(--brand-navy-900)] resize-none';
 
 const SURVEY_QUESTIONS = [
   { name: 'since_last_exploration', label: 'What have you done since you last explored this path?', placeholder: 'Classes, projects, conversations, internships, etc.' },
@@ -145,12 +145,12 @@ Be concrete, practical, and encouraging without being vague.`,
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(5,8,22,0.6)' }}>
       <div className="w-full max-w-2xl max-h-[92vh] overflow-y-auto rounded-[24px] bg-white p-6 sm:p-8">
         <div className="flex items-center justify-between mb-1">
-          <h2 className="font-heading text-xl font-bold text-[#050816]">
+          <h2 className="font-heading text-xl font-bold text-[color:var(--surface-dark-900)]">
             {step === 'survey' ? 'Reactivation Survey' : 'Updated Plan'}
           </h2>
-          <button onClick={onClose} disabled={saving} aria-label="Close"><X size={20} className="text-[#64748B]" /></button>
+          <button onClick={onClose} disabled={saving} aria-label="Close"><X size={20} className="text-[color:var(--ink-500)]" /></button>
         </div>
-        <p className="text-sm text-[#64748B] mb-1">
+        <p className="text-sm text-[color:var(--ink-500)] mb-1">
           {step === 'survey'
             ? `You're returning to: ${path.path_name}. Answer these questions to get an updated plan.`
             : 'Here\'s your updated plan based on where you are now.'}
@@ -164,13 +164,13 @@ Be concrete, practical, and encouraging without being vague.`,
           <div className="space-y-4 mt-5">
             {SURVEY_QUESTIONS.map(q => (
               <div key={q.name}>
-                <label className="block text-sm font-semibold text-[#334155] mb-1.5">{q.label}</label>
+                <label className="block text-sm font-semibold text-[color:var(--ink-700)] mb-1.5">{q.label}</label>
                 <textarea rows={2} name={q.name} value={form[q.name]} onChange={ch} placeholder={q.placeholder} className={inputCls} />
               </div>
             ))}
 
             <div>
-              <label className="block text-sm font-semibold text-[#334155] mb-2">Experiment preference</label>
+              <label className="block text-sm font-semibold text-[color:var(--ink-700)] mb-2">Experiment preference</label>
               <div className="flex gap-3">
                 {[
                   { val: 'continue_old', label: 'Continue old experiments', desc: 'Pick up where I left off' },
@@ -181,18 +181,18 @@ Be concrete, practical, and encouraging without being vague.`,
                     onClick={() => setForm(f => ({ ...f, continue_old_or_new: opt.val }))}
                     className="flex-1 rounded-xl border p-3 text-left transition"
                     style={form.continue_old_or_new === opt.val
-                      ? { borderColor: 'var(--brand-navy-900)', background: '#EEF2F6' }
-                      : { borderColor: '#E2E8F0', background: 'white' }}
+                      ? { borderColor: 'var(--brand-navy-900)', background: 'var(--ink-100)' }
+                      : { borderColor: 'var(--ink-200)', background: 'white' }}
                   >
-                    <p className="text-sm font-semibold" style={{ color: form.continue_old_or_new === opt.val ? 'var(--brand-navy-900)' : '#050816' }}>{opt.label}</p>
-                    <p className="text-xs text-[#64748B] mt-0.5">{opt.desc}</p>
+                    <p className="text-sm font-semibold" style={{ color: form.continue_old_or_new === opt.val ? 'var(--brand-navy-900)' : 'var(--surface-dark-900)' }}>{opt.label}</p>
+                    <p className="text-xs text-[color:var(--ink-500)] mt-0.5">{opt.desc}</p>
                   </button>
                 ))}
               </div>
             </div>
 
             <div className="flex gap-3 mt-6">
-              <button onClick={onClose} className="flex-1 rounded-[10px] border border-[#E2E8F0] py-3 text-sm font-semibold text-[#334155] hover:bg-[#F8FAFC]">Cancel</button>
+              <button onClick={onClose} className="flex-1 rounded-[10px] border border-[color:var(--ink-200)] py-3 text-sm font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)]">Cancel</button>
               <button onClick={handleSubmitSurvey} disabled={generating}
                 className="flex-1 rounded-[10px] py-3 text-sm font-semibold text-white transition disabled:opacity-60"
                 style={{ background: 'var(--brand-navy-900)' }}>
@@ -206,33 +206,33 @@ Be concrete, practical, and encouraging without being vague.`,
         {step === 'primary' && (
           <div className="space-y-5 mt-5">
             {generatedPlan && (
-              <div className="rounded-[20px] p-5" style={{ background: '#081225', border: '1px solid rgba(31,58,95,0.4)' }}>
+              <div className="rounded-[20px] p-5" style={{ background: 'var(--surface-dark-700)', border: '1px solid rgba(31,58,95,0.4)' }}>
                 <p className="text-xs font-bold uppercase tracking-wide mb-3" style={{ color: 'var(--brand-gold-500)' }}>Your Updated Plan</p>
-                <pre className="text-sm text-slate-300 whitespace-pre-wrap font-body leading-6">{generatedPlan}</pre>
+                <pre className="text-sm text-[color:var(--ink-300)] whitespace-pre-wrap font-body leading-6">{generatedPlan}</pre>
               </div>
             )}
 
-            <div className="rounded-[20px] border border-[#E2E8F0] bg-white p-5">
-              <p className="text-sm font-semibold text-[#050816] mb-3">Make this your Primary Focus?</p>
-              <p className="text-xs text-[#64748B] mb-4">Your Primary Focus path gets the highest visibility on the dashboard. You can change this at any time.</p>
+            <div className="rounded-[20px] border border-[color:var(--ink-200)] bg-white p-5">
+              <p className="text-sm font-semibold text-[color:var(--surface-dark-900)] mb-3">Make this your Primary Focus?</p>
+              <p className="text-xs text-[color:var(--ink-500)] mb-4">Your Primary Focus path gets the highest visibility on the dashboard. You can change this at any time.</p>
               <div className="flex gap-3">
                 <button
                   onClick={() => setMakePrimary(true)}
                   className="flex-1 rounded-xl border p-3 text-sm font-semibold transition"
-                  style={makePrimary ? { borderColor: 'var(--brand-navy-900)', background: '#EEF2F6', color: 'var(--brand-navy-900)' } : { borderColor: '#E2E8F0', background: 'white', color: '#334155' }}>
+                  style={makePrimary ? { borderColor: 'var(--brand-navy-900)', background: 'var(--ink-100)', color: 'var(--brand-navy-900)' } : { borderColor: 'var(--ink-200)', background: 'white', color: 'var(--ink-700)' }}>
                   Yes — make it Primary Focus
                 </button>
                 <button
                   onClick={() => setMakePrimary(false)}
                   className="flex-1 rounded-xl border p-3 text-sm font-semibold transition"
-                  style={!makePrimary ? { borderColor: 'var(--brand-navy-900)', background: '#EEF2F6', color: 'var(--brand-navy-900)' } : { borderColor: '#E2E8F0', background: 'white', color: '#334155' }}>
+                  style={!makePrimary ? { borderColor: 'var(--brand-navy-900)', background: 'var(--ink-100)', color: 'var(--brand-navy-900)' } : { borderColor: 'var(--ink-200)', background: 'white', color: 'var(--ink-700)' }}>
                   No — keep current primary
                 </button>
               </div>
             </div>
 
             <div className="flex gap-3">
-              <button onClick={onClose} disabled={saving} className="flex-1 rounded-[10px] border border-[#E2E8F0] py-3 text-sm font-semibold text-[#334155] hover:bg-[#F8FAFC] disabled:opacity-50">Cancel</button>
+              <button onClick={onClose} disabled={saving} className="flex-1 rounded-[10px] border border-[color:var(--ink-200)] py-3 text-sm font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)] disabled:opacity-50">Cancel</button>
               <button onClick={handleFinish} disabled={saving}
                 className="flex-1 rounded-[10px] py-3 text-sm font-semibold text-white transition disabled:opacity-60"
                 style={{ background: 'var(--brand-navy-900)' }}>

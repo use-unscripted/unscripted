@@ -10,11 +10,11 @@ export default function PathSelectedConfirm({ pathName, experiment, onDismiss })
   return (
     <section
       className="rounded-[20px] p-6"
-      style={{ background: '#F0FDF4', border: '1px solid #BBF7D0' }}
+      style={{ background: 'var(--success-50)', border: '1px solid #BBF7D0' }}
       role="status"
     >
       <div className="flex items-start gap-3">
-        <CheckCircle2 size={20} className="mt-0.5 shrink-0" style={{ color: '#15803D' }} />
+        <CheckCircle2 size={20} className="mt-0.5 shrink-0" style={{ color: 'var(--success-700)' }} />
         <div className="min-w-0">
           <h2 className="font-heading text-lg font-bold" style={{ color: '#14532D' }}>
             You are now testing {pathName}. Your first experiment is ready.

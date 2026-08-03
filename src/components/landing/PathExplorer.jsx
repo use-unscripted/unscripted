@@ -159,8 +159,8 @@ function PathCard({ path }) {
           style={{ background: 'rgba(22,163,74,0.06)', border: '1px solid rgba(22,163,74,0.20)' }}
         >
           <div className="flex items-center gap-1.5">
-            <Check size={13} strokeWidth={3} style={{ color: '#15803D' }} />
-            <span className="text-[11px] font-bold uppercase tracking-[.12em]" style={{ color: '#15803D' }}>
+            <Check size={13} strokeWidth={3} style={{ color: 'var(--success-700)' }} />
+            <span className="text-[11px] font-bold uppercase tracking-[.12em]" style={{ color: 'var(--success-700)' }}>
               Signal it fits
             </span>
           </div>
@@ -171,8 +171,8 @@ function PathCard({ path }) {
           style={{ background: 'rgba(220,38,38,0.05)', border: '1px solid rgba(220,38,38,0.18)' }}
         >
           <div className="flex items-center gap-1.5">
-            <AlertTriangle size={13} strokeWidth={2.5} style={{ color: '#B91C1C' }} />
-            <span className="text-[11px] font-bold uppercase tracking-[.12em]" style={{ color: '#B91C1C' }}>
+            <AlertTriangle size={13} strokeWidth={2.5} style={{ color: 'var(--danger-700)' }} />
+            <span className="text-[11px] font-bold uppercase tracking-[.12em]" style={{ color: 'var(--danger-700)' }}>
               Signal it doesn't
             </span>
           </div>
@@ -193,15 +193,15 @@ function PathCard({ path }) {
   );
 }
 
-const PathButton = forwardRef(function PathButton({ path, active, rotateChevron = false, ...rest }, ref) {
+const PathButton = forwardRef(function PathButton({ path, active, rotateChevron = false, fill = false, ...rest }, ref) {
   const Icon = path.icon;
   return (
     <button
       ref={ref}
       type="button"
-      className="group relative flex w-full items-center gap-3 rounded-[var(--r-control)] px-4 py-3.5 text-left transition-all duration-200 hover:-translate-y-px"
+      className={`group relative flex w-full items-center gap-3 rounded-[var(--r-control)] px-4 py-3.5 text-left transition-colors duration-200 hover:-translate-y-px${fill ? ' flex-1' : ''}`}
       style={{
-        background: active ? 'var(--brand-navy-900)' : '#FFFFFF',
+        background: active ? 'var(--brand-navy-900)' : 'var(--brand-white)',
         border: `1px solid ${active ? 'var(--brand-navy-900)' : 'var(--border-light)'}`,
         boxShadow: active ? '0 12px 28px rgba(31,58,95,0.22)' : '0 1px 2px rgba(16,24,40,0.04)',
       }}
@@ -218,7 +218,7 @@ const PathButton = forwardRef(function PathButton({ path, active, rotateChevron 
       </span>
       <span
         className="flex-1 text-sm font-semibold"
-        style={{ color: active ? '#FFFFFF' : 'var(--text-primary)' }}
+        style={{ color: active ? 'var(--brand-white)' : 'var(--text-primary)' }}
       >
         {path.label}
       </span>
@@ -256,6 +256,10 @@ export default function PathExplorer() {
     <div>
       {/* Desktop — vertical tab rail + persistent detail card */}
       <div className="hidden gap-8 lg:grid" style={{ gridTemplateColumns: 'minmax(0,340px) minmax(0,1fr)' }}>
+        {/* The rail already stretches to the detail card's height; the buttons
+            didn't, so the last one stopped ~48px short of the card's bottom
+            edge. `fill` spreads that slack across all seven so both columns end
+            on the same line. */}
         <div
           role="tablist"
           aria-orientation="vertical"
@@ -267,6 +271,7 @@ export default function PathExplorer() {
               key={p.id}
               path={p}
               active={i === selected}
+              fill
               role="tab"
               id={`path-tab-${p.id}`}
               aria-selected={i === selected}
