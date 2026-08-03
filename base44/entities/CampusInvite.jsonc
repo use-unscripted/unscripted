@@ -58,7 +58,13 @@
   //
   // If a claim flow is ever built, the claimant is not the creator and so will
   // not be able to read the invite by token under these rules. That case needs a
-  // privileged backend function, not a loosened `read` here.
+  // backend function that genuinely bypasses RLS — not a loosened `read` here.
+  //
+  // Be careful which mechanism you reach for: `created_by_id` scoping is enforced
+  // even for role admin (measured 2026-08-03 — an admin account read 1 of 72
+  // StudentProfiles and 4 of 225 Experiments), and `asServiceRole` acts *as* admin
+  // rather than bypassing the rules. So neither an admin token nor `asServiceRole`
+  // is sufficient on its own to look an invite up by token.
   "rls": {
     "create": {
       "created_by_id": "{{user.id}}"
