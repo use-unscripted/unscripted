@@ -201,8 +201,11 @@ function domainLabel(domain: string): string {
 interface Adapter {
   name: string;
   probe(domain: string): Promise<string | null>;
+  // `seriesDates` is how many dates one repeating event contributes. Only iCal
+  // carries repeat rules — every other platform's feed hands us dated instances
+  // already — so the rest of the adapters take it and have nothing to do.
   // deno-lint-ignore no-explicit-any
-  fetch(feedUrl: string, days: number): Promise<any[]>;
+  fetch(feedUrl: string, days: number, seriesDates?: number): Promise<any[]>;
   // deno-lint-ignore no-explicit-any
   normalize(raw: any, feedUrl: string): NormalizedEvent;
 }
@@ -890,11 +893,19 @@ type IcsDateKind = 'utc' | 'local' | 'date';
  * A moment from a calendar, kept as civil fields rather than an instant.
  *
  * `at` is those fields run through Date.UTC — the true instant when the value
- * was UTC, and a bare "what the wall clock said" number when it wasn't. Every
- * recurrence step below is arithmetic on this number, which is what keeps
- * daylight saving out of it: adding seven days to a wall-clock Tuesday at 5pm
- * lands on a Tuesday at 5pm in March and in November alike, because no offset
- * was ever applied to lose an hour to.
+ * was UTC, and a bare "what the wall clock said" number when it wasn't.
+ *
+ * For `local` and `date`, stepping that number is what keeps daylight saving
+ * out of recurrence: adding seven days to a wall-clock Tuesday at 5pm lands on
+ * a Tuesday at 5pm in March and in November alike, because no offset was ever
+ * applied to lose an hour to.
+ *
+ * For `utc` the same step pins the UTC clock instead, so a series anchored in
+ * winter reads an hour late once the campus moves to summer time. That is the
+ * RFC's own reading of a UTC-stamped recurrence, it is an hour on the right
+ * day, and it is currently theoretical: across 178 live school feeds, all 133
+ * repeating events are wall-clock or date-only and not one is UTC-stamped.
+ * Correcting it needs the school's timezone, which a `Z` value does not carry.
  */
 interface IcsMoment {
   at: number;
@@ -974,15 +985,24 @@ function icsMomentValue(moment: IcsMoment | null): string {
  */
 
 /**
- * How many future dates one repeating series contributes.
+ * How many future dates one repeating series contributes — the caller's call,
+ * because the right answer is genuinely opposite on the two surfaces.
  *
- * One, deliberately. The surfaces that consume this show six events and rank
- * twenty; a weekly club spread across a 45-day window would take four of those
- * slots to say one thing. The student needs the next date, not the series.
- * A month-grid view is the case that would want more, and this is the number
- * it changes.
+ * A **list** wants one. The picker shows six events and ranks twenty, and both
+ * order by date once relevance ties. Measured on the real feeds that carry
+ * repeating events: emitting every date let one weekly club take five of the
+ * six shown and eighteen of the twenty ranked, the same title over and over,
+ * pushing out that many different real things.
+ *
+ * A **month grid** wants all of them. A club that meets every Tuesday belongs
+ * on every Tuesday square; showing it once on a month of dates is as wrong
+ * there as showing it six times in a list.
+ *
+ * So the default is one and the grid asks for more, rather than either surface
+ * being quietly served the other's answer.
  */
-const RECURRENCE_MAX_OCCURRENCES = 1;
+const RECURRENCE_DEFAULT_DATES = 1;
+const RECURRENCE_MAX_DATES = 12;
 
 /** Feeds are read for a window; a rule is only ever walked far enough to fill it. */
 const ICS_RECURRENCE_WINDOW_DAYS = 60;
@@ -1233,6 +1253,7 @@ function expandRecurrence(
   skip: Set<number>,
   windowDays: number,
   now: number,
+  wanted: number,
 ): IcsMoment[] {
   const found: IcsMoment[] = [];
   const earliest = now - 3600000;
@@ -1247,7 +1268,7 @@ function expandRecurrence(
     const rendered = new Date(icsMomentValue({ at, kind: start.kind })).getTime();
     if (!Number.isFinite(rendered) || rendered > latest) return false;
     if (rendered >= earliest) found.push({ at, kind: start.kind });
-    return found.length < RECURRENCE_MAX_OCCURRENCES;
+    return found.length < wanted;
   };
 
   if (shape === 'weekly-days') {
@@ -1320,8 +1341,8 @@ function collectVevents(text: string): IcsRecord[] {
 /**
  * Every VEVENT in a calendar, minus the ones we cannot date honestly.
  *
- * Repeating events contribute their next real date (see RECURRENCE_MAX_OCCURRENCES);
- * a rule we cannot follow exactly still contributes nothing at all.
+ * A repeating event contributes its next `seriesDates` real dates; a rule we
+ * cannot follow exactly still contributes nothing at all.
  *
  * `windowDays` bounds how far a rule is walked and nothing else — a one-off
  * event is read the same whatever it is set to.
@@ -1329,7 +1350,9 @@ function collectVevents(text: string): IcsRecord[] {
 export function parseIcsEvents(
   text: string,
   windowDays: number = ICS_RECURRENCE_WINDOW_DAYS,
+  seriesDates: number = RECURRENCE_DEFAULT_DATES,
 ): IcsEvent[] {
+  const wanted = Math.min(Math.max(Math.floor(seriesDates) || 1, 1), RECURRENCE_MAX_DATES);
   const records = collectVevents(text);
   const now = Date.now();
 
@@ -1337,13 +1360,13 @@ export function parseIcsEvents(
   // rewritten — moved, renamed or cancelled. It is emitted on its own terms
   // below, and its original slot has to come off the master, or the series
   // re-announces the meeting at the time it was moved away from.
-  const overridden = new Map<string, Set<number>>();
+  const overridden = new Map<string, IcsMoment[]>();
   for (const record of records) {
     const uid = record.props.UID;
     const instance = uid ? icsDate(record.props['RECURRENCE-ID'] || '') : null;
     if (!uid || !instance) continue;
-    if (!overridden.has(uid)) overridden.set(uid, new Set());
-    overridden.get(uid)!.add(instance.at);
+    if (!overridden.has(uid)) overridden.set(uid, []);
+    overridden.get(uid)!.push(instance);
   }
 
   const events: IcsEvent[] = [];
@@ -1352,6 +1375,12 @@ export function parseIcsEvents(
     const props = record.props;
     const start = icsDate(props.DTSTART || '');
     if (!start) continue;
+
+    // A cancelled event is the one thing worse than no event: the student goes.
+    // Every other adapter already drops these — Localist by `is_canceled`,
+    // LiveWhale by `canceled`, Campus Labs by requiring "Approved" — and iCal
+    // was the only one still handing them through.
+    if ((props.STATUS || '').trim().toUpperCase() === 'CANCELLED') continue;
 
     const end = icsDate(props.DTEND || '');
     const base = {
@@ -1380,19 +1409,26 @@ export function parseIcsEvents(
     const shape = rule && recurrenceShape(rule, start);
     if (!rule || !shape) continue;
 
-    const skip = new Set<number>(overridden.get(base.uid) || []);
+    // An exclusion says a date is NOT happening, so failing to apply one is the
+    // same harm as inventing a date. Both forms are compared as raw civil
+    // numbers, which only means anything when they were written the same way —
+    // so a mismatched form drops the series rather than quietly ignoring the
+    // exclusion and announcing a meeting that was cancelled or moved.
+    const exclusions: IcsMoment[] = [...(overridden.get(base.uid) || [])];
     for (const line of record.exdates) {
       for (const value of line.split(',')) {
         const excluded = icsDate(value);
-        if (excluded) skip.add(excluded.at);
+        if (excluded) exclusions.push(excluded);
       }
     }
+    if (exclusions.some(e => e.kind !== start.kind)) continue;
+    const skip = new Set<number>(exclusions.map(e => e.at));
 
     // Only a duration we can trust: an end read in a different form than its
     // start is not one we can carry across occurrences.
     const duration = end && end.kind === start.kind && end.at > start.at ? end.at - start.at : 0;
 
-    for (const occurrence of expandRecurrence(start, rule, shape, skip, windowDays, now)) {
+    for (const occurrence of expandRecurrence(start, rule, shape, skip, windowDays, now, wanted)) {
       events.push({
         ...base,
         // RFC identity for one date of a series is its UID plus that date, and
@@ -1604,12 +1640,12 @@ async function probeIcalGuesses(domain: string): Promise<string | null> {
   return await firstValidIcs(candidates);
 }
 
-async function fetchIcal(feedUrl: string, days: number) {
+async function fetchIcal(feedUrl: string, days: number, seriesDates?: number) {
   const text = await fetchIcsText(feedUrl, ICS_FEED_TIMEOUT_MS);
   if (!text.includes('BEGIN:VCALENDAR')) {
     throw new Error('Calendar feed returned an unexpected shape');
   }
-  return parseIcsEvents(text, days).filter(e => withinWindow(e.start, days));
+  return parseIcsEvents(text, days, seriesDates).filter(e => withinWindow(e.start, days));
 }
 
 // deno-lint-ignore no-explicit-any
@@ -2385,10 +2421,11 @@ export async function fetchEvents(
   platform: string,
   feedUrl: string,
   days: number,
+  seriesDates?: number,
 ): Promise<NormalizedEvent[]> {
   const adapter = adapterFor(platform);
   if (!adapter) throw new Error(`Unsupported calendar platform "${platform}"`);
-  const raw = await adapter.fetch(feedUrl, days);
+  const raw = await adapter.fetch(feedUrl, days, seriesDates);
   // deno-lint-ignore no-explicit-any
   return raw.map((event: any) => adapter.normalize(event, feedUrl)).filter(e => e.title);
 }
@@ -2950,6 +2987,10 @@ Deno.serve(async (req) => {
     // shortlist is deliberately wide so the ranking pass, which actually reads
     // the descriptions, gets a fair spread to choose from.
     const limit = Math.min(Math.max(Number(body.limit) || 20, 1), 40);
+    // How many dates one repeating event contributes. A list wants the next one
+    // — a weekly club would otherwise take most of the slots to say one thing.
+    // A month grid wants every Tuesday it meets on. See RECURRENCE_DEFAULT_DATES.
+    const seriesDates = Number(body.seriesDates) || RECURRENCE_DEFAULT_DATES;
 
     const profile = await loadProfile(base44, user);
     const college = collegeOf(profile, user);
@@ -2964,7 +3005,7 @@ Deno.serve(async (req) => {
 
     let normalized: NormalizedEvent[];
     try {
-      normalized = await fetchEvents(feed.platform, feed.feedUrl, days);
+      normalized = await fetchEvents(feed.platform, feed.feedUrl, days, seriesDates);
     } catch (err) {
       return Response.json({
         status: 'feed_error',

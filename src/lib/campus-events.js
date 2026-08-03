@@ -149,9 +149,9 @@ ${JSON.stringify(events.map(forModel), null, 2)}
 8. Voice: direct, warm, no filler. Short sentences. No corporate language.`;
 }
 
-async function readCampusEvents(days, limit) {
+async function readCampusEvents(days, limit, seriesDates) {
   try {
-    const response = await base44.functions.invoke('campusEvents', { days, limit });
+    const response = await base44.functions.invoke('campusEvents', { days, limit, seriesDates });
     const data = response?.data ?? response;
     if (!data || !Array.isArray(data.events)) {
       return { status: 'feed_error', events: [], college: '' };
@@ -175,14 +175,21 @@ async function readCampusEvents(days, limit) {
  * student is looking at a retry button, and it has to mean something.
  *
  * `refresh` is that button.
+ *
+ * `seriesDates` is how many dates a repeating event contributes. Leave it at 1
+ * for any list — a weekly club would otherwise take most of the slots to say
+ * one thing. A month grid, where that club belongs on every Tuesday square,
+ * is the caller that should raise it.
  */
-export async function fetchCampusEvents({ days = 45, limit = 20, refresh = false } = {}) {
-  const key = `feed:${days}:${limit}`;
+export async function fetchCampusEvents({
+  days = 45, limit = 20, seriesDates = 1, refresh = false,
+} = {}) {
+  const key = `feed:${days}:${limit}:${seriesDates}`;
   // Retry means start over, ranking included — an empty ranking and a model
   // that failed look the same from here, and only one of them is worth keeping.
   if (refresh) cache.clear();
 
-  const pending = cached(key, FEED_TTL_MS, () => readCampusEvents(days, limit));
+  const pending = cached(key, FEED_TTL_MS, () => readCampusEvents(days, limit, seriesDates));
   const data = await pending;
   if (data?.status === 'feed_error') cache.delete(key);
   return data;

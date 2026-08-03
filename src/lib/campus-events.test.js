@@ -259,9 +259,9 @@ describe('fetchCampusEvents', () => {
   it('asks the backend for the window it was given', async () => {
     base44.functions.invoke.mockResolvedValue({ events: [], college: 'Fairfield University' });
 
-    await fetchCampusEvents({ days: 30, limit: 5 });
+    await fetchCampusEvents({ days: 30, limit: 5, seriesDates: 1 });
 
-    expect(base44.functions.invoke).toHaveBeenCalledWith('campusEvents', { days: 30, limit: 5 });
+    expect(base44.functions.invoke).toHaveBeenCalledWith('campusEvents', { days: 30, limit: 5, seriesDates: 1 });
   });
 
   it('defaults the window when called with nothing', async () => {
@@ -269,7 +269,7 @@ describe('fetchCampusEvents', () => {
 
     await fetchCampusEvents();
 
-    expect(base44.functions.invoke).toHaveBeenCalledWith('campusEvents', { days: 45, limit: 20 });
+    expect(base44.functions.invoke).toHaveBeenCalledWith('campusEvents', { days: 45, limit: 20, seriesDates: 1 });
   });
 
   it('returns a raw response as-is', async () => {
@@ -336,6 +336,20 @@ describe('not asking twice', () => {
     await fetchCampusEvents({ days: 30, limit: 20 });
 
     expect(base44.functions.invoke).toHaveBeenCalledTimes(2);
+  });
+
+  // A list and a month grid want opposite answers about a weekly club, so they
+  // are different questions and must not answer each other from cache.
+  it('asks again when a caller wants every date of a repeating event', async () => {
+    base44.functions.invoke.mockResolvedValue({ status: 'ok', events: [] });
+
+    await fetchCampusEvents({ days: 45, limit: 20 });
+    await fetchCampusEvents({ days: 45, limit: 20, seriesDates: 12 });
+
+    expect(base44.functions.invoke).toHaveBeenCalledTimes(2);
+    expect(base44.functions.invoke).toHaveBeenLastCalledWith('campusEvents', {
+      days: 45, limit: 20, seriesDates: 12,
+    });
   });
 
   // A school's server failing to answer is the one outcome worth re-asking
