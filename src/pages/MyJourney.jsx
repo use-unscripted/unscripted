@@ -210,13 +210,15 @@ export default function MyJourney() {
       {experimentDone && counts.proof === 0 && <JourneyEmptyState variant="experiment_done" />}
       {data.cycle?.legacy_review && <JourneyEmptyState variant="legacy" />}
 
-      <JourneyStages stage={stage} detail={stageDetail} />
-
-      {/* The only dated thing on this page. Everything above describes a state —
-          a stage, a count, a status — and none of it says "Thursday". It stays
-          silent for a student with no college set or a calendar we cannot read,
-          so it costs nothing when it has nothing. */}
+      {/* The only dated thing on this page, and the reason it sits directly
+          under the instruction rather than at the bottom: everything else here
+          describes a state — a stage, a count, a status — and none of it says
+          "Thursday". The top of the page is what to do; the spine below is the
+          record. It stays silent for a student with no college set or a
+          calendar we cannot read, so it costs nothing when it has nothing. */}
       <CampusEventsPanel />
+
+      <JourneyStages stage={stage} detail={stageDetail} />
 
       <p className="pt-2 text-center text-xs" style={{ color: 'var(--text-muted)' }}>
         Working on something else? <Link to="/paths" className="font-semibold" style={{ color: 'var(--brand-navy-700)' }}>Compare all paths</Link>
