@@ -9,7 +9,7 @@ import ReactivationModal from '@/components/paths/ReactivationModal';
 import PathRecoveryPanel from '@/components/paths/PathRecoveryPanel';
 import { loadOwnedPaths, authoritativeSet, loadOnboardingSubmission } from '@/lib/path-set';
 import { selectPathForCycle } from '@/lib/career-cycle';
-import { RiskBadge, ConfidenceBadge, RiskConfidenceLegend, RiskNotAssessed } from '@/components/paths/RiskConfidenceBadges';
+import { RiskBadge, ConfidenceBadge, RiskNotAssessed } from '@/components/paths/RiskConfidenceBadges';
 import OutreachPlanModal from '@/components/outreach/OutreachPlanModal';
 import { Search } from 'lucide-react';
 import {
@@ -630,8 +630,6 @@ export default function PathComparison() {
               <PathRecoveryPanel variant="incomplete" existingCount={activeSet.paths.length} onRestored={load} />
             </div>
           )}
-
-          <RiskConfidenceLegend />
 
           {/* Search bar */}
           <div className="relative mb-4">
