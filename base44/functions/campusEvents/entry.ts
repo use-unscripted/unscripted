@@ -1967,8 +1967,14 @@ async function submittedFeedFor(base44: any, college: string, userId: string) {
       '-created_date',
       200,
     );
-  } catch (_) {
-    return null; // The entity may not exist yet. Never costs a student events.
+  } catch (err) {
+    // Never costs a student their events — but say so, because "the entity is
+    // not deployed yet" and "RLS is refusing the service role" are the same
+    // silence otherwise, and the second one is a bug.
+    console.error('[campusEvents] could not read the submission queue', {
+      error: err instanceof Error ? err.message : String(err),
+    });
+    return null;
   }
 
   // Only the submitter's own, and only while it is still pending. Approval
@@ -2228,8 +2234,20 @@ async function handleSubmission(base44: any, user: any, body: any): Promise<Resp
       sample_titles: events.slice(0, SUBMISSION_SAMPLE_TITLES).map(e => e.title),
       failure_reason: failure,
     });
-  } catch (_) {
-    // Logging the submission must never cost the student the events it found.
+  } catch (err) {
+    // Logging the submission must never cost the student the events it found —
+    // but it must not vanish either. This entity is admin-only RLS and
+    // asServiceRole does not bypass RLS, it acts AS admin, so a
+    // misconfiguration here fails exactly like nothing happened: the student
+    // still sees their events, the queue silently stays empty, and the school
+    // never gets switched on for anyone else. Loud in the function logs is the
+    // difference between a bug and a mystery.
+    console.error('[campusEvents] could not record submission', {
+      college,
+      url: check.url,
+      resolved: Boolean(feed),
+      error: err instanceof Error ? err.message : String(err),
+    });
   }
 
   if (!feed) {
