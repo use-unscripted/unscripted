@@ -22,6 +22,9 @@ import {
   SUBMISSION_REJECTIONS,
   listFeedSubmissions,
   reviewFeedSubmission,
+  listCampusFeeds,
+  checkCampusFeeds,
+  reportFeedWrong,
 } from './campus-events';
 
 /** Shaped like normalizeEvent() in the campusEvents backend function. */
@@ -852,5 +855,92 @@ describe('reviewFeedSubmission', () => {
       data: { error: "Couldn't write that feed to the school. Nothing changed." },
     });
     await expect(reviewFeedSubmission('sub-1', 'approved')).rejects.toThrow('Nothing changed');
+  });
+});
+
+// ── Is a feed we already resolved still working? ────────────────────────────
+
+describe('listCampusFeeds', () => {
+  it('reads every school and its health through the function', async () => {
+    base44.functions.invoke.mockResolvedValue({
+      data: { feeds: [{ id: 'u1', canonical_name: 'Fairfield', events_last_error: '' }] },
+    });
+
+    const feeds = await listCampusFeeds();
+
+    expect(feeds).toHaveLength(1);
+    expect(base44.functions.invoke).toHaveBeenCalledWith('campusEvents', { action: 'list_feeds' });
+  });
+
+  // Same reason the queue throws: an empty health page reads as "every school
+  // is fine", which is the one thing it must never say when it doesn't know.
+  it('throws when the backend refuses', async () => {
+    base44.functions.invoke.mockResolvedValue({ data: { error: 'Forbidden' } });
+    await expect(listCampusFeeds()).rejects.toThrow('Forbidden');
+  });
+
+  it('treats a malformed list as no schools', async () => {
+    for (const data of [{}, { feeds: null }, { feeds: 'lots' }, null]) {
+      base44.functions.invoke.mockResolvedValue({ data });
+      expect(await listCampusFeeds()).toEqual([]);
+    }
+  });
+});
+
+describe('checkCampusFeeds', () => {
+  it('carries back what was checked and what was left out', async () => {
+    base44.functions.invoke.mockResolvedValue({
+      data: { checked: [{ college: 'Fairfield', error: '' }], skipped: 4 },
+    });
+
+    const result = await checkCampusFeeds();
+
+    expect(result.checked).toHaveLength(1);
+    // A run that only looked at some of them must not read as a clean sweep.
+    expect(result.skipped).toBe(4);
+    expect(base44.functions.invoke).toHaveBeenCalledWith('campusEvents', { action: 'check_feeds' });
+  });
+
+  it('reports nothing skipped rather than NaN when the backend omits it', async () => {
+    base44.functions.invoke.mockResolvedValue({ data: { checked: [] } });
+    expect(await checkCampusFeeds()).toEqual({ checked: [], skipped: 0 });
+  });
+});
+
+describe('reportFeedWrong', () => {
+  it('sends the student note with the report', async () => {
+    base44.functions.invoke.mockResolvedValue({ data: { status: 'reported' } });
+
+    const result = await reportFeedWrong("this is the law school's calendar");
+
+    expect(base44.functions.invoke).toHaveBeenCalledWith('campusEvents', {
+      action: 'report_feed',
+      note: "this is the law school's calendar",
+    });
+    expect(result.status).toBe('reported');
+  });
+
+  it('sends without a note, because demanding a reason loses the report', async () => {
+    base44.functions.invoke.mockResolvedValue({ data: { status: 'reported' } });
+    await reportFeedWrong();
+    expect(base44.functions.invoke).toHaveBeenCalledWith('campusEvents', {
+      action: 'report_feed',
+      note: '',
+    });
+  });
+
+  // A student telling us something is broken must never be shown a second
+  // broken thing. Everything else in this file that a student touches has the
+  // same contract.
+  it('never throws when the function call fails', async () => {
+    base44.functions.invoke.mockRejectedValue(new Error('offline'));
+    expect(await reportFeedWrong('x')).toEqual({ status: 'report_failed', error: 'offline' });
+  });
+
+  it('treats an unreadable response as a failure rather than a success', async () => {
+    for (const data of [null, {}, 'ok']) {
+      base44.functions.invoke.mockResolvedValue({ data });
+      expect((await reportFeedWrong()).status).toBe('report_failed');
+    }
   });
 });

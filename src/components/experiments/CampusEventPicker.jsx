@@ -8,6 +8,7 @@ import {
   fetchCampusEvents,
   recommendCampusEvents,
   submitCalendarUrl,
+  reportFeedWrong,
   schoolEventsSearchUrl,
   SUBMISSION_REJECTIONS,
 } from '@/lib/campus-events';
@@ -257,6 +258,8 @@ export default function CampusEventPicker({ profile, pathName, selected, onSelec
       >
         Skip — build the guide without an event
       </button>
+
+      <WrongCalendarButton college={college} />
     </div>
   );
 }
@@ -520,6 +523,98 @@ function NoFeedState({ college, disabled, onResolved }) {
   );
 }
 
+/**
+ * "This isn't my school's calendar."
+ *
+ * The one failure the backend cannot see. A feed can resolve, read cleanly and
+ * return a hundred genuinely real events that belong to the library, the
+ * athletics department, or a different campus of the same system — every check
+ * we have passes, and nothing downstream can tell. The student looking at it
+ * can tell in a second.
+ *
+ * Deliberately quiet and deliberately last. It sits under the events rather
+ * than beside them, because for almost everyone the calendar is right and a
+ * prominent "is this wrong?" invites doubt about events that are fine.
+ *
+ * Nothing changes for this student when they press it. Acting on one report by
+ * pulling a school's calendar would hand any single student a switch over
+ * everyone else's, so it goes to the same review queue every other school-wide
+ * change goes through — and the copy says so rather than implying a fix.
+ */
+function WrongCalendarButton({ college }) {
+  const [state, setState] = useState('idle');
+  const [note, setNote] = useState('');
+
+  if (state === 'sent') {
+    return (
+      <p className="mt-3 text-xs text-[color:var(--ink-500)]">
+        Thanks — we&apos;ll look at {college || 'your school'}&apos;s calendar.
+      </p>
+    );
+  }
+
+  if (state === 'idle') {
+    return (
+      <button
+        type="button"
+        onClick={() => setState('asking')}
+        className="mt-3 text-xs font-semibold underline decoration-dotted underline-offset-2 transition hover:no-underline"
+        style={{ color: 'var(--ink-500)' }}
+      >
+        These aren&apos;t {college ? `${college}'s` : 'my school’s'} events
+      </button>
+    );
+  }
+
+  async function send() {
+    setState('sending');
+    const { status } = await reportFeedWrong(note.trim());
+    // "We already have your report" is a success from where the student sits,
+    // and telling them otherwise invites them to send it again.
+    setState(status === 'report_failed' ? 'failed' : 'sent');
+  }
+
+  return (
+    <div className="mt-3 rounded-xl border px-3 py-2.5" style={{ borderColor: 'var(--ink-200)' }}>
+      <label htmlFor="wrong-calendar-note" className="text-xs font-semibold text-[color:var(--ink-700)]">
+        What&apos;s wrong with it? Optional.
+      </label>
+      <input
+        id="wrong-calendar-note"
+        type="text"
+        value={note}
+        onChange={e => setNote(e.target.value)}
+        placeholder="e.g. this is the law school's calendar"
+        maxLength={200}
+        className="mt-1.5 w-full rounded-lg border px-2.5 py-1.5 text-xs"
+        style={{ borderColor: 'var(--ink-200)' }}
+      />
+      <div className="mt-2 flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          onClick={send}
+          disabled={state === 'sending'}
+          className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold text-white transition disabled:opacity-50"
+          style={{ background: 'var(--brand-navy-700)' }}
+        >
+          {state === 'sending' && <Loader2 size={12} className="animate-spin" aria-hidden="true" />}
+          Send it
+        </button>
+        <button
+          type="button"
+          onClick={() => setState('idle')}
+          className="text-xs font-semibold text-[color:var(--ink-500)] transition hover:underline"
+        >
+          Never mind
+        </button>
+        {state === 'failed' && (
+          <span className="text-xs" style={{ color: 'var(--danger-700)' }}>That didn&apos;t send. Try again in a moment.</span>
+        )}
+      </div>
+    </div>
+  );
+}
+
 /** The calendar is real and reachable — there is just nothing on it. */
 function EmptyCalendarState({ college }) {
   return (
@@ -529,6 +624,9 @@ function EmptyCalendarState({ college }) {
         next six weeks. That usually means a break — worth checking again in a week.
       </p>
       <SearchYourSchoolLink college={college} label="Check the school's page yourself" />
+      {/* The state where a wrong calendar is most obvious: their campus is busy
+          and ours says it is empty. */}
+      <WrongCalendarButton college={college} />
     </EmptyPanel>
   );
 }

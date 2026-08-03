@@ -285,6 +285,52 @@ export async function reviewFeedSubmission(id, decision) {
   return data;
 }
 
+/**
+ * Every school with a feed, and whether it is currently working.
+ *
+ * A resolved school is cached and never probed again, so nothing looks at a
+ * calendar twice unless someone asks. This is the asking.
+ */
+export async function listCampusFeeds() {
+  const response = await base44.functions.invoke('campusEvents', { action: 'list_feeds' });
+  const data = response?.data ?? response;
+  if (data?.error) throw new Error(data.error);
+  return Array.isArray(data?.feeds) ? data.feeds : [];
+}
+
+/**
+ * Fetch every school's calendar right now and record what happened.
+ *
+ * Slow on purpose — it reads whole calendars one at a time — so the caller has
+ * to show that it is working.
+ */
+export async function checkCampusFeeds() {
+  const response = await base44.functions.invoke('campusEvents', { action: 'check_feeds' });
+  const data = response?.data ?? response;
+  if (data?.error) throw new Error(data.error);
+  return {
+    checked: Array.isArray(data?.checked) ? data.checked : [],
+    skipped: Number(data?.skipped) || 0,
+  };
+}
+
+/**
+ * A student telling us the calendar we found for their school is the wrong one.
+ *
+ * The one failure nothing on our side can detect: a feed that resolves, reads
+ * cleanly, and belongs to the library or another campus entirely. Never throws
+ * — a student reporting a problem must not be shown a second one.
+ */
+export async function reportFeedWrong(note = '') {
+  try {
+    const response = await base44.functions.invoke('campusEvents', { action: 'report_feed', note });
+    const data = response?.data ?? response;
+    return { status: data?.status || 'report_failed' };
+  } catch (err) {
+    return { status: 'report_failed', error: err?.message || '' };
+  }
+}
+
 /** Why a link we refused to even try was refused, in the student's terms. */
 export const SUBMISSION_REJECTIONS = {
   bad_url: "That doesn't look like a web address. Copy the whole thing from your browser's address bar.",

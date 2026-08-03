@@ -16,9 +16,34 @@
   // Failed rows are kept deliberately. They are the only record of what
   // students tried that we could not read, which is the list that says which
   // calendar platform is worth writing an adapter for next.
+  // The queue also carries the opposite complaint. A student whose school we
+  // DID resolve can say the calendar we found is the wrong one — see `kind`.
+  // Both are the same question ("which calendar does this school use?") landing
+  // in the same place, so they share a row rather than a second table.
   "name": "CampusFeedSubmission",
   "type": "object",
   "properties": {
+    "kind": {
+      // "link"   — a student pointing us at a calendar we did not have
+      // "report" — a student saying the calendar we are serving them is wrong
+      //
+      // A report is the only signal that exists for a feed that resolves, reads
+      // and returns events that belong to somebody else — the library's, the
+      // athletics department's, another campus's. Nothing downstream can tell,
+      // which is exactly why approving a link is a human decision, and this is
+      // the other half of it.
+      "type": "string",
+      "enum": [
+        "link",
+        "report"
+      ],
+      "default": "link"
+    },
+    "report_note": {
+      // What the student said was wrong, in their words. Optional — the report
+      // is worth having without it, and demanding a reason loses most of them.
+      "type": "string"
+    },
     "college": {
       // The free text on the student's profile, matched the same way the
       // events function matches it — normalized, not exact.
@@ -46,7 +71,11 @@
       "default": "failed"
     },
     "review_status": {
-      // "approved" is what promotes this feed to every student at the school.
+      // On a "link" row, "approved" promotes this feed to every student at the
+      // school. On a "report" row it means the opposite thing in the same
+      // direction — the complaint was upheld, so the feed was taken OFF the
+      // school and students there are asked where the right one is. "rejected"
+      // on a report means we looked and the calendar is fine.
       "type": "string",
       "enum": [
         "pending",

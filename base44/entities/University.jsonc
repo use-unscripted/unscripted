@@ -73,6 +73,29 @@
     "events_resolved_at": {
       "type": "string",
       "format": "date-time"
+    },
+    // ── Is that feed still working? ──
+    // A resolved feed is cached forever and never looked at again, so a school
+    // whose calendar moved, expired or emptied out goes on quietly serving
+    // nothing. These three fields are the only way anyone finds out.
+    //
+    // Written on TRANSITION, not on every read: a feed that has been fine for a
+    // week costs no writes, and one that just broke is stamped once. That keeps
+    // this off the hot path of every student's page load.
+    "events_last_ok_at": {
+      // Last time a fetch of this feed came back with at least one real event.
+      "type": "string",
+      "format": "date-time"
+    },
+    "events_last_error": {
+      // Empty means healthy. "Returned no upcoming events" counts as an error,
+      // because a calendar with nothing on it is indistinguishable to a student
+      // from one that is broken, and both need a human to look.
+      "type": "string"
+    },
+    "events_last_error_at": {
+      "type": "string",
+      "format": "date-time"
     }
   },
   "required": [

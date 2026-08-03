@@ -3983,6 +3983,10 @@ async function handleSubmission(base44: any, user: any, body: any): Promise<Resp
 /** How many submissions the review queue hands back at once. */
 const REVIEW_PAGE_SIZE = 200;
 
+/** Schools listed on the health page, and how many one check may fetch. */
+const FEED_PAGE_LIMIT = 500;
+const FEED_CHECK_LIMIT = 25;
+
 /**
  * Admin is checked HERE, not in the page that calls this.
  *
@@ -3995,6 +3999,187 @@ const REVIEW_PAGE_SIZE = 200;
 // deno-lint-ignore no-explicit-any
 function isAdmin(user: any): boolean {
   return user?.role === 'admin';
+}
+
+// ── Is a feed we already resolved still working? ────────────────────────────
+
+/**
+ * A school is probed once ever and then cached forever, which is the whole
+ * point of the cache and also its one blind spot: nothing ever looks again. A
+ * calendar that moves, expires, or simply empties out goes on being the
+ * school's answer, and the only person who finds out is a student who sees an
+ * empty screen and assumes the product is broken.
+ *
+ * So every ordinary fetch now reports back. Two rules keep it cheap and honest:
+ *
+ *   written on TRANSITION only — a feed that has been fine all week costs no
+ *     writes at all, and one that just broke is stamped once. This runs on the
+ *     hot path of every student's page load and must not add a write to it.
+ *   ZERO EVENTS IS A FAILURE — not an error, but the same outcome for the
+ *     student and the same job for us. A feed that reads perfectly and returns
+ *     nothing is the single most likely way this breaks, because it is what an
+ *     expired token, a moved calendar and a finished term all look like.
+ */
+// deno-lint-ignore no-explicit-any
+async function recordFeedHealth(base44: any, university: any, error: string): Promise<void> {
+  if (!university?.id) return;
+
+  const wasFailing = Boolean(university.events_last_error);
+  const isFailing = Boolean(error);
+  // Nothing changed. This is the common case and it costs a boolean.
+  if (wasFailing === isFailing && (!isFailing || university.events_last_error === error)) return;
+
+  const now = new Date().toISOString();
+  const patch = isFailing
+    ? { events_last_error: error.slice(0, 300), events_last_error_at: now }
+    : { events_last_error: '', events_last_error_at: '', events_last_ok_at: now };
+
+  try {
+    await base44.asServiceRole.entities.University.update(university.id, patch);
+  } catch (_) {
+    // Health is bookkeeping. It must never cost a student their events.
+  }
+}
+
+/** Every school with a feed, and whether it is currently working. */
+// deno-lint-ignore no-explicit-any
+async function handleListFeeds(base44: any, user: any): Promise<Response> {
+  if (!isAdmin(user)) return Response.json({ error: 'Forbidden' }, { status: 403 });
+
+  try {
+    const rows = await base44.asServiceRole.entities.University
+      .filter({}, '-created_date', FEED_PAGE_LIMIT);
+    // deno-lint-ignore no-explicit-any
+    const feeds = rows.filter((row: any) => row.events_feed_url || row.events_platform === 'none');
+    return Response.json({ feeds });
+  } catch (_) {
+    return Response.json({ feeds: [] });
+  }
+}
+
+/**
+ * Fetch every school's feed right now and write down what happened.
+ *
+ * The passive signal above only learns about a school somebody visited today,
+ * and most schools have one student or none. This is the button that asks all
+ * of them at once, so a calendar that died in June is found in June rather than
+ * by the student it happens to fail for in September.
+ *
+ * Sequential on purpose. It is an admin pressing a button, not a page load, and
+ * a dozen simultaneous whole-calendar fetches is a good way to get our own
+ * function rate-limited by a school.
+ */
+// deno-lint-ignore no-explicit-any
+async function handleCheckFeeds(base44: any, user: any): Promise<Response> {
+  if (!isAdmin(user)) return Response.json({ error: 'Forbidden' }, { status: 403 });
+
+  // deno-lint-ignore no-explicit-any
+  let rows: any[] = [];
+  try {
+    rows = await base44.asServiceRole.entities.University
+      .filter({}, '-created_date', FEED_PAGE_LIMIT);
+  } catch (_) {
+    return Response.json({ checked: [] });
+  }
+
+  // deno-lint-ignore no-explicit-any
+  const withFeeds = rows.filter((r: any) => r.events_feed_url && adapterFor(r.events_platform));
+  const checked: unknown[] = [];
+
+  for (const row of withFeeds.slice(0, FEED_CHECK_LIMIT)) {
+    const asked = Date.now();
+    let error = '';
+    let count = 0;
+    try {
+      const events = (await fetchEvents(row.events_platform, row.events_feed_url, DEFAULT_DAYS))
+        .filter(isAttendable)
+        .filter(e => stillUpcoming(e.start, e.all_day, asked));
+      count = events.length;
+      if (!count) error = 'Returned no upcoming events';
+    } catch (err) {
+      error = err instanceof Error ? err.message : 'Calendar feed unavailable';
+    }
+    await recordFeedHealth(base44, row, error);
+    checked.push({
+      id: row.id,
+      college: row.canonical_name,
+      platform: row.events_platform,
+      feed_url: row.events_feed_url,
+      event_count: count,
+      error,
+    });
+  }
+
+  return Response.json({
+    checked,
+    // Said out loud rather than silently truncated: a page reporting "all
+    // healthy" while it only looked at half of them is worse than no page.
+    skipped: Math.max(0, withFeeds.length - FEED_CHECK_LIMIT),
+  });
+}
+
+/**
+ * A student saying the calendar we found for their school is the wrong one.
+ *
+ * This is the only signal that exists for the failure the whole review queue is
+ * built around. A feed can resolve, read cleanly and return a hundred real
+ * events that belong to the library, the athletics department, or a different
+ * campus of the same system — and nothing on our side can tell. The student
+ * looking at it can tell immediately.
+ *
+ * It records and stops there. Acting on one report by pulling a school's
+ * calendar would hand any single student a switch over everyone else's, so the
+ * act stays where every other school-wide write already lives: the review page.
+ */
+// deno-lint-ignore no-explicit-any
+async function handleReportFeed(base44: any, user: any, body: any): Promise<Response> {
+  const profile = await loadProfile(base44, user);
+  const college = collegeOf(profile, user);
+  if (!college) return Response.json({ status: 'no_college' });
+
+  const university = await findUniversity(base44, college);
+  const feedUrl = university?.events_feed_url || '';
+  if (!feedUrl) {
+    // Nothing to report. A student with no feed already has the paste box.
+    return Response.json({ status: 'no_feed' });
+  }
+
+  try {
+    const db = base44.asServiceRole.entities.CampusFeedSubmission;
+    // One open report per student per school. The button sits on a page they
+    // reload, and a queue with the same complaint eleven times is a queue
+    // nobody reads.
+    const existing = await db.filter({}, '-created_date', REVIEW_PAGE_SIZE);
+    const already = existing.find((r: { kind?: string; college?: string; submitted_by?: string; review_status?: string }) =>
+      r.kind === 'report' &&
+      r.review_status === 'pending' &&
+      r.submitted_by === user.id &&
+      normalizeName(r.college || '') === normalizeName(college)
+    );
+    if (already) return Response.json({ status: 'already_reported' });
+
+    await db.create({
+      kind: 'report',
+      college,
+      university_id: university?.id || '',
+      submitted_by: user.id,
+      // The feed being complained about, so the reviewer opens the thing under
+      // discussion rather than going to look it up.
+      submitted_url: feedUrl,
+      resolved_feed_url: feedUrl,
+      resolved_platform: university?.events_platform || '',
+      resolution: 'resolved',
+      review_status: 'pending',
+      report_note: String(body?.note || '').slice(0, 500),
+    });
+  } catch (err) {
+    console.error('[campusEvents] could not record a feed report', {
+      error: err instanceof Error ? err.message : String(err),
+    });
+    return Response.json({ status: 'report_failed' });
+  }
+
+  return Response.json({ status: 'reported' });
 }
 
 /** The queue, newest first. Failures included — they are the adapter backlog. */
@@ -4058,6 +4243,48 @@ async function handleReviewSubmission(base44: any, user: any, body: any): Promis
     );
   }
 
+  // A report is the same decision pointed the other way, so it takes the same
+  // two buttons and the opposite write. Upholding one is the only action that
+  // actually fixes a school being served somebody else's calendar: take the
+  // feed off, and let those students be asked where the right one is — which is
+  // the state a school we never resolved is already in, and it works.
+  //
+  // Re-probing instead would be the obvious move and the wrong one: the probe
+  // is deterministic, so it would find the same wrong calendar and hand it
+  // straight back, with the complaint now marked handled.
+  if (row.kind === 'report') {
+    let cleared = false;
+    if (decision === 'approved') {
+      try {
+        const uni = await findUniversity(base44, row.college);
+        if (uni) {
+          await base44.asServiceRole.entities.University.update(uni.id, {
+            events_platform: 'none',
+            events_feed_url: '',
+            // Stamped now, which starts the thirty-day negative-cache clock.
+            // Without it the next page load re-probes and restores the feed
+            // that was just taken off.
+            events_resolved_at: new Date().toISOString(),
+            events_last_error: 'A student reported this calendar as the wrong one',
+            events_last_error_at: new Date().toISOString(),
+          });
+          cleared = true;
+        }
+      } catch (_) {
+        return Response.json(
+          { error: "Couldn't take that feed off the school. Nothing changed." },
+          { status: 500 },
+        );
+      }
+    }
+    try {
+      await db.update(id, { review_status: decision });
+    } catch (_) {
+      return Response.json({ error: "Couldn't update that report" }, { status: 500 });
+    }
+    return Response.json({ ok: true, id, review_status: decision, cleared });
+  }
+
   if (decision === 'approved' && !(row.resolved_feed_url && adapterFor(row.resolved_platform))) {
     return Response.json(
       { error: 'That submission never resolved to a readable calendar' },
@@ -4071,6 +4298,11 @@ async function handleReviewSubmission(base44: any, user: any, body: any): Promis
       events_platform: row.resolved_platform,
       events_feed_url: row.resolved_feed_url,
       events_resolved_at: new Date().toISOString(),
+      // A new feed does not inherit the old one's history. Left behind, the
+      // reason the previous calendar was pulled would sit on the health page
+      // as a live failure against a feed that has never been asked anything.
+      events_last_error: '',
+      events_last_error_at: '',
     };
     try {
       const uni = await findUniversity(base44, row.college);
@@ -4124,6 +4356,15 @@ Deno.serve(async (req) => {
     if (body.action === 'review_submission') {
       return await handleReviewSubmission(base44, user, body);
     }
+    if (body.action === 'report_feed') {
+      return await handleReportFeed(base44, user, body);
+    }
+    if (body.action === 'list_feeds') {
+      return await handleListFeeds(base44, user);
+    }
+    if (body.action === 'check_feeds') {
+      return await handleCheckFeeds(base44, user);
+    }
 
     const days = Math.min(Math.max(Number(body.days) || DEFAULT_DAYS, 1), MAX_DAYS);
     // Keyword overlap is a weak signal on a real feed — plenty of genuinely
@@ -4142,7 +4383,7 @@ Deno.serve(async (req) => {
       return Response.json({ status: 'no_college', events: [], college: '' });
     }
 
-    const { feed } = await resolveFeed(base44, college, user.id);
+    const { feed, university } = await resolveFeed(base44, college, user.id);
     if (!feed) {
       return Response.json({ status: 'no_feed', events: [], college });
     }
@@ -4163,12 +4404,13 @@ Deno.serve(async (req) => {
     try {
       normalized = await fetchEvents(feed.platform, feed.feedUrl, days, seriesDates);
     } catch (err) {
-      return Response.json({
-        status: 'feed_error',
-        events: [],
-        college,
-        error: err instanceof Error ? err.message : 'Calendar feed unavailable',
-      });
+      const message = err instanceof Error ? err.message : 'Calendar feed unavailable';
+      // Awaited, not fired and forgotten: this runtime can tear the request
+      // down the moment we return, and a health record that loses the race is
+      // worse than none — it reads as "still fine" on the page whose whole job
+      // is to say otherwise.
+      await recordFeedHealth(base44, university, message);
+      return Response.json({ status: 'feed_error', events: [], college, error: message });
     }
 
     const terms = termsFrom(
@@ -4187,6 +4429,16 @@ Deno.serve(async (req) => {
       .map(e => ({ ...e, match_score: scoreEvent(e, terms) }))
       .sort((a, b) => (b.match_score - a.match_score) || (new Date(a.start).getTime() - new Date(b.start).getTime()))
       .slice(0, limit);
+
+    // Judged on what the calendar actually held, not on what survived ranking:
+    // `events` has been cut to this student's interests and to `limit`, so a
+    // healthy feed can legitimately leave it empty. `normalized` empty is the
+    // feed itself having nothing, which is the failure worth recording.
+    await recordFeedHealth(
+      base44,
+      university,
+      normalized.length ? '' : 'Returned no upcoming events',
+    );
 
     return Response.json({
       status: events.length ? 'ok' : 'no_matches',
