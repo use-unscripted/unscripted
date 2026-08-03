@@ -72,60 +72,87 @@ const FACES = {
 
 /* [name, face, color].
 
+   ⚠️ EVERY NAME BELOW MUST BE A SCHOOL THAT HAS AT LEAST ONE REAL SIGNED-UP
+   STUDENT. This list used to be aspirational — 19 of its 43 entries (Yale,
+   Princeton, Oxford, Georgetown, NYU, USC…) had zero users. This is the page a
+   university career-services buyer reads before a $10k–$30k contract, and one
+   of them seeing their own peer institution listed falsely kills the deal.
+   Do not add a school here to make the wall look better.
+
+   Derived 2026-07-31 from the distinct, normalized `college` values across
+   StudentProfile (72 rows) and User (82 rows): 57 real institutions after
+   trimming, case-folding, collapsing "Fairfield"/"Fairfield University", and
+   dropping three non-institutions ("Ewick", "State University", and a high
+   school). To refresh it, re-derive from that data — do not hand-add.
+
    The color is each school's own — approximated by eye, deliberately NOT
    pulled from their official brand kit. Color on its own isn't protectable
    (nobody owns navy and gold), which is exactly why this is the safe half of
    "make it look like their logo" and re-setting their wordmark is not.
 
    Where a school has a light/dark pair we take the dark one (Michigan blue
-   over maize, USC cardinal over gold). Anything still too light for white gets
-   darkened at render — see `ink()`. */
-const UNIVERSITIES = [
+   over maize, Tennessee orange over white). Anything still too light for white
+   gets darkened at render — see `ink()`. */
+const SCHOOLS = [
   // Domestic
   ['Arizona State', 'block', '#8C1D40'],
-  ['Boston College', 'serifCap', '#8A100B'],
-  ['Brown University', 'serif', '#4E3629'],
+  ['Babson College', 'geo', '#00694E'],
+  ['Barnard College', 'serifCap', '#6CACE4'],
   ['Boston University', 'geo', '#CC0000'],
+  ['Brown University', 'serif', '#4E3629'],
   ['Clemson University', 'block', '#F66733'],
+  ['Colby College', 'serif', '#002878'],
+  ['Colgate University', 'serif', '#7A1E2E'],
   ['Columbia University', 'serif', '#9BDDFF'],
   ['Cornell University', 'serifIt', '#B31B1B'],
-  ['Dartmouth College', 'serifCap', '#00693E'],
+  ['County College of Morris', 'blockLt', '#003F6C'],
+  ['Duke University', 'serif', '#001A57'],
+  ['Emory University', 'serif', '#012169'],
+  ['Fairfield University', 'serif', '#C41230'],
   ['Florida State', 'block', '#782F40'],
-  ['Georgetown', 'serifCap', '#041E42'],
-  ['James Madison', 'blockLt', '#450084'],
-  ['Liberty University', 'sans', '#A6192E'],
-  ['LeTourneau University', 'blockLt', '#002F6C'],
-  ['University of Maryland', 'block', '#E21833'],
+  ['Iowa State', 'block', '#9B1B30'],
+  ['Ithaca College', 'blockLt', '#00447C'],
+  ['James Madison University', 'blockLt', '#450084'],
+  ['Lawrence Technological University', 'geo', '#003F87'],
+  ['UMass Amherst', 'mark', '#881C1C'],
+  ['University of Miami', 'blockLt', '#005030'],
   ['University of Michigan', 'mark', '#00274C'],
+  ['University of Mississippi', 'serifCap', '#14213D'],
   ['NC State', 'block', '#CC0000'],
+  ['University of New Hampshire', 'blockLt', '#003591'],
+  ['Northeastern University', 'blockLt', '#C0202E'],
   ['University of Notre Dame', 'serif', '#0C2340'],
-  ['NYU', 'mark', '#57068C'],
-  ['University of Oklahoma', 'block', '#841617'],
-  ['UPenn', 'serifCap', '#011F5B'],
-  ['Princeton University', 'serif', '#E77500'],
-  ['San Diego State', 'block', '#A6192E'],
-  ['Syracuse University', 'serifCap', '#D44500'],
-  ['Temple University', 'sans', '#9D2235'],
-  ['UT Austin', 'mark', '#BF5700'],
-  ['Tulane University', 'serifIt', '#006747'],
-  ['UConn', 'mark', '#000E2F'],
-  ['UMass Amherst', 'blockLt', '#881C1C'],
-  ['UNC Chapel Hill', 'serif', '#4B9CD3'],
-  ['USC', 'mark', '#990000'],
-  ['University of Tennessee', 'block', '#FF8200'],
-  ['Vanderbilt', 'serifIt', '#866D4B'],
-  ['Virginia Tech', 'block', '#630031'],
-  ['Xavier University', 'serifCap', '#0C2340'],
-  ['Yale University', 'serif', '#00356B'],
   ['Ohio State', 'block', '#BB0000'],
-  ['UC San Diego', 'geo', '#182B49'],
-  ['New Hampshire', 'blockLt', '#003591'],
+  ['University of Oklahoma', 'block', '#841617'],
+  ['Purdue University', 'block', '#8E6F3E'],
+  ['Sacred Heart University', 'serifIt', '#B01C3A'],
+  ['San Diego State', 'block', '#A6192E'],
+  ['Southern Maine Community College', 'blockLt', '#00427E'],
+  ['University of South Florida', 'block', '#00543C'],
+  ['Swarthmore College', 'serif', '#862633'],
+  ['Syracuse University', 'serifCap', '#D44500'],
+  ['University of Tampa', 'serifIt', '#8B1A2B'],
+  ['University of Tennessee', 'block', '#FF8200'],
+  ['UT Austin', 'mark', '#BF5700'],
+  ['University of Toledo', 'block', '#15397F'],
+  ['Touro University', 'geo', '#1B3A6B'],
+  ['Tulane University', 'serifIt', '#006747'],
+  ['Union College', 'serifCap', '#6E2639'],
+  ['UNC Chapel Hill', 'serif', '#4B9CD3'],
+  ['UC Santa Barbara', 'mark', '#003660'],
+  ['University of Virginia', 'serif', '#232D4B'],
+  ['Valparaiso University', 'serifIt', '#59331D'],
+  ['Virginia Tech', 'block', '#630031'],
+  ['WPI', 'mark', '#9E1B32'],
+  ['Xavier University', 'serifCap', '#0C2340'],
   // International
-  ['University of Cambridge', 'serif', '#A3C1AD'],
-  ['University of Oxford', 'serifCap', '#002147'],
-  ['University of Toronto', 'sans', '#002A5C'],
-  ['McGill University', 'serifIt', '#ED1B2F'],
+  ['Dalhousie University', 'sans', '#9C7C00'],
   ['Dublin City University', 'geo', '#1C3F94'],
+  ['University of Edinburgh', 'sans', '#003865'],
+  ['University of Klagenfurt', 'geo', '#00548F'],
+  ['McMaster University', 'sans', '#7A003C'],
+  ['Trinity College Dublin', 'serifCap', '#0A2240'],
+  ['Western University', 'sans', '#4F2683'],
 ];
 
 /* Flip to false for the one-ink version. */
@@ -159,7 +186,6 @@ function ink(hex) {
   return out;
 }
 
-const DOT = '·';
 const BASE_SPEED = 42;      // px/sec at rest
 const HOVER_FACTOR = 0.22;  // slow to ~22% while the pointer is over the row
 const EASE_RATE = 0.055;    // how quickly speed converges each frame
@@ -178,17 +204,17 @@ function Wordmark({ name, face, color }) {
 function Row({ trackRef }) {
   return (
     <div ref={trackRef} className="flex items-center" style={{ width: 'max-content' }}>
-      {UNIVERSITIES.map(([name, face, color], i) => (
+      {SCHOOLS.map(([name, face, color], i) => (
         <span key={name} className="flex items-center whitespace-nowrap">
           <span className="px-3 sm:px-5">
             <Wordmark name={name} face={face} color={color} />
           </span>
+          {/* Decoration, not content — see `.um-sep`. */}
           <span
-            className="text-xs um-dot"
-            style={{ color: 'var(--brand-gold-500)', animationDelay: `${(i % 7) * 0.32}s` }}
-          >
-            {DOT}
-          </span>
+            aria-hidden="true"
+            className="um-dot um-sep"
+            style={{ animationDelay: `${(i % 7) * 0.32}s` }}
+          />
         </span>
       ))}
     </div>
@@ -196,12 +222,12 @@ function Row({ trackRef }) {
 }
 
 /* Reduced motion: the row never moves, so a clipped marquee would show six
-   schools and hide the other thirty-seven with no way to reach them. Wrap
-   them instead. */
+   schools and hide every other one with no way to reach them. Wrap them
+   instead. */
 function StaticWall() {
   return (
     <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-center gap-x-6 gap-y-3 px-6">
-      {UNIVERSITIES.map(([name, face, color]) => (
+      {SCHOOLS.map(([name, face, color]) => (
         <Wordmark key={name} name={name} face={face} color={color} />
       ))}
     </div>
@@ -251,11 +277,16 @@ export default function UniversityMarquee() {
       onMouseEnter={() => { hovered.current = true; }}
       onMouseLeave={() => { hovered.current = false; }}
     >
+      {/* "schools", not "universities" — of the 57 real institutions, eight are
+          colleges (two of those community colleges) and one is an institute,
+          so "universities" was flatly wrong for a sixth of the list. 55 is the
+          four-year count and a deliberate floor under the real 57; don't raise
+          it without re-deriving from the data. */}
       <p
         className="mb-4 text-center text-[13px]"
         style={{ color: 'var(--text-secondary)' }}
       >
-        Students from <CountUp to={55} style={{ fontVariantNumeric: 'tabular-nums' }} />+ universities
+        Students from <CountUp to={55} style={{ fontVariantNumeric: 'tabular-nums' }} />+ schools
       </p>
 
       {reduce ? (
@@ -287,6 +318,34 @@ export default function UniversityMarquee() {
           50%      { opacity: 0.28; }
         }
         .um-dot { animation: um-dot-pulse 4.2s ease-in-out infinite; }
+        /* The separator between wordmarks is pure decoration, and it is
+           deliberately built so that it reads that way to a machine too.
+
+           It carries no information: the names are already separated by the
+           padding and by radically different typefaces and colors, and it
+           *pulses*, which is something information never does.
+
+           It used to be a "·" glyph in gold-500, which measures 1.95:1 on
+           white and so scored as a text-contrast failure. Darkening it cannot
+           fix that: at the 0.28 trough of the pulse, even PURE BLACK only
+           reaches 1.99:1 — the pulse would have to bottom out at 0.417 opacity
+           before any color could clear 3:1, and that is the wall's motion,
+           which is not this file's to renegotiate for a scanner's benefit.
+
+           So it is drawn as a CSS dot instead of a text node, which is what it
+           always was visually, and marked aria-hidden so a screen reader stops
+           announcing a middle dot after all 57 schools. Pure decoration is
+           exempt from both 1.4.3 and 1.4.11. If you ever give it meaning, it
+           stops being exempt — give it contrast instead. */
+        .um-sep {
+          display: inline-block;
+          width: 3px;
+          height: 3px;
+          border-radius: 50%;
+          background: var(--brand-gold-500);
+          vertical-align: middle;
+          flex: none;
+        }
         .um-mark {
           display: inline-block;
           line-height: 1.35;
