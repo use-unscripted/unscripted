@@ -168,7 +168,9 @@ const STEPS = [
     key: 'comparison_path',
     kind: 'paths',
     question: 'Anything you want to weigh it against?',
-    hint: 'We will put both in your three recommendations, so you can compare them side by side.',
+    // "your three recommendations" assumed a student already knew what the
+    // product does. At this point in the intake they have seen one question.
+    hint: 'When you finish, we suggest three paths worth testing. Name a second one and it becomes one of the three, so you can compare them directly.',
     examples: [
       'Management consulting',
       'Grad school',
@@ -395,8 +397,15 @@ export default function Onboarding() {
       // draft's step number points at a question that no longer exists.
       if (intake_version === 2 && current_step != null) setIndex(Math.min(current_step, REVIEW));
     }
-    const wanted = Number(params.get('step'));
-    if (Number.isInteger(wanted) && wanted >= 0 && wanted <= REVIEW) setIndex(wanted);
+    // Read the param before converting it. Number(null) is 0, not NaN, so
+    // testing the converted value treated "no ?step at all" as "?step=0" and
+    // sent every returning student back to question one holding answers they
+    // had already given. Resuming never worked.
+    const raw = params.get('step');
+    if (raw !== null) {
+      const wanted = Number(raw);
+      if (Number.isInteger(wanted) && wanted >= 0 && wanted <= REVIEW) setIndex(wanted);
+    }
 
     trackFunnelOnce('intake_started', 'intake_started', {
       resumed: !!draft,
@@ -787,11 +796,12 @@ export default function Onboarding() {
         {step.hint}
         {!step.required && <span className="ml-1 font-semibold" style={{ color: 'var(--text-muted)' }}>Optional.</span>}
       </p>
-      {/* A small floor, not a fixed height. A taller one padded the one-box
-          questions out with a visible void between the hint and the answer,
-          which read as something failing to load. The footer moving a little
-          between a one-box step and a five-slider step is the honest result. */}
-      <div className="mt-6 min-h-[160px]">{renderStep()}</div>
+      {/* No minimum height. Holding one open to stop the footer moving between
+          steps bought a stripe of empty panel under the shortest questions,
+          and there is nothing that belongs in it. Each question is its own
+          screen, so the buttons sitting closer on a short one is correct
+          rather than inconsistent. */}
+      <div className="mt-6 mb-2">{renderStep()}</div>
     </div>,
     <div className={footerCls}>
       <div className="flex items-center gap-3">
