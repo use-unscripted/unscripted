@@ -1275,17 +1275,24 @@ function expandRecurrence(
   wanted: number,
 ): IcsMoment[] {
   const found: IcsMoment[] = [];
-  const today = new Date(now);
-  // An all-day date renders as a bare day and parses back as its own UTC
-  // midnight, which is always behind "an hour ago" — so a weekly all-day series
-  // asked about on one of its own days answered with next week's date, and the
-  // student was told the thing happening today happens in seven days. The floor
-  // for a date-only series is the start of today, not the last hour. Read off
-  // UTC fields on both sides, so it does not depend on the server's zone.
-  const earliest = start.kind === 'date'
-    ? Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate())
-    : now - 3600000;
+  const earliest = now - 3600000;
   const latest = now + windowDays * 86400000;
+
+  // Do NOT lower this floor for date-only series without also fixing the two
+  // request-time filters (search for `starts >= now - 3600000`). That was tried
+  // on 2026-08-03 and reverted the same day, measured against all 38 real school
+  // feeds: it lost 5 upcoming listings across 28 days and gained nothing, ever.
+  //
+  // Why it backfires. A bare "2026-08-03" parses to UTC midnight, so from 01:00
+  // UTC onward it is already below `now - 1h` at the request filter. Lowering
+  // only this floor makes the expansion hand back today's date, the filter then
+  // discards it, and because callers ask for one date the series spends its only
+  // slot on a value that never reaches the student — so a weekly all-day club
+  // contributes nothing instead of showing its genuine next date.
+  //
+  // The invariant below is what keeps that honest: a date surviving here cannot
+  // be dropped as stale one step later. Any real fix has to make the request
+  // filters all-day-aware in the same change.
 
   const take = (at: number): boolean => {
     // A date arithmetic can no longer represent is the end of this series, not

@@ -96,16 +96,26 @@ describe('the parser is reachable from a Node test run', () => {
 });
 
 describe('a repeating all-day series', () => {
-  // An all-day date renders as a bare day and parses back as its own UTC
-  // midnight, which is always behind "an hour ago" — so the series answered
-  // with next week's date on the very day it was happening.
-  it('offers today when today is one of its dates', () => {
+  // KNOWN GAP, deliberately pinned as-is: a weekly all-day series answers with
+  // NEXT week's date on the very day it is happening. A bare day parses back as
+  // its own UTC midnight, which is below the "an hour ago" floor from 01:00 UTC.
+  //
+  // Lowering that floor alone was tried on 2026-08-03 and reverted the same day.
+  // It made things worse, measured against all 38 real school feeds: 5 upcoming
+  // listings lost across 28 days, nothing gained on any day. The request-time
+  // filters discard the date the expansion starts producing, and the series
+  // spends its only slot on it. See the long comment on `earliest` in entry.ts.
+  //
+  // Closing this properly means making those filters all-day-aware in the same
+  // change. Until then this test pins today's real behaviour so nobody "fixes"
+  // half of it again and believes a green unit test.
+  it('answers with next week on a day it is actually happening', () => {
     const events = parseIcsEvents(calendar([
       'UID:allday@x',
       'DTSTART;VALUE=DATE:20260727',
       'RRULE:FREQ=WEEKLY',
     ]));
-    expect(starts(events)).toEqual(['2026-08-03']);
+    expect(starts(events)).toEqual(['2026-08-10']);
     expect(events[0].allDay).toBe(true);
   });
 
@@ -119,9 +129,9 @@ describe('a repeating all-day series', () => {
     expect(starts(events)).toEqual(['2026-08-10']);
   });
 
-  it('leaves the floor where it was for a timed series', () => {
-    // The floor moved for date-only values and must not have moved for the
-    // rest. This one is still offered because 5pm today is ahead of now.
+  it('still offers a timed series later the same day', () => {
+    // The counterpart to the gap above: a timed value carries a real clock, so
+    // it sits above the floor and today's meeting is offered as today's.
     const events = parseIcsEvents(calendar([
       'UID:timed@x',
       'DTSTART;TZID=America/New_York:20260727T170000',
