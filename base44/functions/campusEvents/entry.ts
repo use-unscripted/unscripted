@@ -1971,16 +1971,18 @@ async function submittedFeedFor(base44: any, college: string, userId: string) {
     return null; // The entity may not exist yet. Never costs a student events.
   }
 
-  const usable = rows.filter(row =>
-    normalizeName(row.college) === key &&
-    row.resolved_feed_url &&
-    adapterFor(row.resolved_platform) &&
-    row.review_status !== 'rejected'
+  // Only the submitter's own, and only while it is still pending. Approval
+  // writes the feed onto the University row instead, so an approved submission
+  // is served by the ordinary cached path and this stops being a second place
+  // the answer can live. A rejected one is not a fallback — it was looked at
+  // and turned down, which is a stronger signal than the student's own paste.
+  const row = rows.find(r =>
+    normalizeName(r.college) === key &&
+    r.submitted_by === userId &&
+    r.review_status === 'pending' &&
+    r.resolved_feed_url &&
+    adapterFor(r.resolved_platform)
   );
-
-  const approved = usable.find(row => row.review_status === 'approved');
-  const own = usable.find(row => row.submitted_by === userId);
-  const row = approved || own;
   if (!row) return null;
 
   return { platform: row.resolved_platform, feedUrl: row.resolved_feed_url };
@@ -2264,6 +2266,125 @@ async function handleSubmission(base44: any, user: any, body: any): Promise<Resp
   });
 }
 
+// ── Review ──────────────────────────────────────────────────────────────────
+
+/** How many submissions the review queue hands back at once. */
+const REVIEW_PAGE_SIZE = 200;
+
+/**
+ * Admin is checked HERE, not in the page that calls this.
+ *
+ * The React route also checks the role, but that is so the wrong person sees a
+ * sensible screen rather than a broken one. It is not what stops them: anyone
+ * can call a backend function directly. These two actions read every
+ * submission and write the calendar an entire school is served, so the check
+ * that matters is the one on this side of the wire.
+ */
+// deno-lint-ignore no-explicit-any
+function isAdmin(user: any): boolean {
+  return user?.role === 'admin';
+}
+
+/** The queue, newest first. Failures included — they are the adapter backlog. */
+// deno-lint-ignore no-explicit-any
+async function handleListSubmissions(base44: any, user: any): Promise<Response> {
+  if (!isAdmin(user)) return Response.json({ error: 'Forbidden' }, { status: 403 });
+
+  try {
+    const rows = await base44.asServiceRole.entities.CampusFeedSubmission
+      .filter({}, '-created_date', REVIEW_PAGE_SIZE);
+    return Response.json({ submissions: rows });
+  } catch (_) {
+    // The entity does not exist until this branch's schema syncs. An empty
+    // queue is the honest answer, not a 500 on an admin's screen.
+    return Response.json({ submissions: [] });
+  }
+}
+
+/**
+ * Approve or reject one submission.
+ *
+ * Approving is the write with real blast radius, and it does two things: marks
+ * the row, then puts the feed on the University record so every student at
+ * that school is served by the ordinary cached path. Writing it there rather
+ * than leaving it on the submission is what keeps one school from having two
+ * different answers to "where is your calendar".
+ *
+ * Rejecting only marks the row. It deliberately does not touch University: a
+ * school we resolved ourselves must not be cleared because someone turned down
+ * an unrelated paste.
+ */
+// deno-lint-ignore no-explicit-any
+async function handleReviewSubmission(base44: any, user: any, body: any): Promise<Response> {
+  if (!isAdmin(user)) return Response.json({ error: 'Forbidden' }, { status: 403 });
+
+  const id = String(body.id || '').trim();
+  const decision = String(body.decision || '');
+  if (!id || (decision !== 'approved' && decision !== 'rejected')) {
+    return Response.json({ error: 'Bad request' }, { status: 400 });
+  }
+
+  const db = base44.asServiceRole.entities.CampusFeedSubmission;
+
+  // deno-lint-ignore no-explicit-any
+  let row: any = null;
+  try {
+    const rows = await db.filter({ id }, '-created_date', 1);
+    row = rows?.[0] || null;
+  } catch (_) {
+    row = null;
+  }
+  if (!row) return Response.json({ error: 'No such submission' }, { status: 404 });
+
+  if (decision === 'approved' && !(row.resolved_feed_url && adapterFor(row.resolved_platform))) {
+    return Response.json(
+      { error: 'That submission never resolved to a readable calendar' },
+      { status: 400 },
+    );
+  }
+
+  let promoted = false;
+  if (decision === 'approved') {
+    const patch = {
+      events_platform: row.resolved_platform,
+      events_feed_url: row.resolved_feed_url,
+      events_resolved_at: new Date().toISOString(),
+    };
+    try {
+      const uni = await findUniversity(base44, row.college);
+      const universities = base44.asServiceRole.entities.University;
+      if (uni) {
+        const matchKeys = new Set([...(uni.match_keys || []), row.college]);
+        await universities.update(uni.id, { ...patch, match_keys: [...matchKeys] });
+      } else {
+        await universities.create({
+          canonical_name: row.college,
+          match_keys: [row.college],
+          approved_domains: [],
+          active: true,
+          ...patch,
+        });
+      }
+      promoted = true;
+    } catch (_) {
+      // Leave the row pending rather than claim a school is switched over when
+      // it is not. The admin sees it again and can retry.
+      return Response.json(
+        { error: "Couldn't write that feed to the school. Nothing changed." },
+        { status: 500 },
+      );
+    }
+  }
+
+  try {
+    await db.update(id, { review_status: decision });
+  } catch (_) {
+    return Response.json({ error: "Couldn't update that submission" }, { status: 500 });
+  }
+
+  return Response.json({ ok: true, id, review_status: decision, promoted });
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -2274,6 +2395,12 @@ Deno.serve(async (req) => {
 
     if (body.action === 'submit_calendar_url') {
       return await handleSubmission(base44, user, body);
+    }
+    if (body.action === 'list_submissions') {
+      return await handleListSubmissions(base44, user);
+    }
+    if (body.action === 'review_submission') {
+      return await handleReviewSubmission(base44, user, body);
     }
 
     const days = Math.min(Math.max(Number(body.days) || DEFAULT_DAYS, 1), MAX_DAYS);

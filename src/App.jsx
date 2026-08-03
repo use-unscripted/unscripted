@@ -48,6 +48,7 @@ import ResumeBuilder from '@/pages/ResumeBuilder';
 import RecentlyDeleted from '@/pages/RecentlyDeleted';
 import GuideDetailPage from '@/pages/GuideDetailPage';
 import InviteAccept from '@/pages/InviteAccept';
+import AdminCampusFeeds from '@/pages/AdminCampusFeeds';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError } = useAuth();
@@ -100,6 +101,8 @@ const AuthenticatedApp = () => {
           <Route path="/resume" element={<ResumeBuilder />} />
           <Route path="/recently-deleted" element={<RecentlyDeleted />} />
           <Route path="/guide" element={<GuideDetailPage />} />
+          {/* Team-only. The page checks the role, and so does the function behind it. */}
+          <Route path="/admin/campus-feeds" element={<AdminCampusFeeds />} />
 
         </Route>
         <Route path="/invite/:token" element={<InviteAccept />} />

@@ -19,6 +19,8 @@ import {
   schoolEventsSearchUrl,
   submitCalendarUrl,
   SUBMISSION_REJECTIONS,
+  listFeedSubmissions,
+  reviewFeedSubmission,
 } from './campus-events';
 
 /** Shaped like normalizeEvent() in the campusEvents backend function. */
@@ -545,5 +547,57 @@ describe('schoolEventsSearchUrl', () => {
     expect(schoolEventsSearchUrl('')).toBe('');
     expect(schoolEventsSearchUrl(undefined)).toBe('');
     expect(schoolEventsSearchUrl('   ')).toBe('');
+  });
+});
+
+// ── The review queue ────────────────────────────────────────────────────────
+
+describe('listFeedSubmissions', () => {
+  it('reads the queue through the function, not the entity', async () => {
+    base44.functions.invoke.mockResolvedValue({ data: { submissions: [{ id: 'a' }] } });
+
+    expect(await listFeedSubmissions()).toEqual([{ id: 'a' }]);
+    expect(base44.functions.invoke).toHaveBeenCalledWith('campusEvents', {
+      action: 'list_submissions',
+    });
+  });
+
+  it('treats a missing or malformed list as empty', async () => {
+    for (const data of [{}, { submissions: null }, { submissions: 'none' }, null]) {
+      base44.functions.invoke.mockResolvedValue({ data });
+      expect(await listFeedSubmissions()).toEqual([]);
+    }
+  });
+
+  // A 403 from the function must not render as an empty queue — that reads as
+  // "no student has ever sent a link", which is a different fact entirely.
+  it('throws when the backend refuses', async () => {
+    base44.functions.invoke.mockResolvedValue({ data: { error: 'Forbidden' } });
+    await expect(listFeedSubmissions()).rejects.toThrow('Forbidden');
+  });
+});
+
+describe('reviewFeedSubmission', () => {
+  it('sends the decision for one submission', async () => {
+    base44.functions.invoke.mockResolvedValue({ data: { ok: true, promoted: true } });
+
+    const result = await reviewFeedSubmission('sub-1', 'approved');
+
+    expect(base44.functions.invoke).toHaveBeenCalledWith('campusEvents', {
+      action: 'review_submission',
+      id: 'sub-1',
+      decision: 'approved',
+    });
+    expect(result.promoted).toBe(true);
+  });
+
+  // Approving is what turns one student's link into a whole school's calendar.
+  // Swallowing a failure here would leave an admin believing a school is
+  // switched over when nothing was written.
+  it('throws when the promotion failed', async () => {
+    base44.functions.invoke.mockResolvedValue({
+      data: { error: "Couldn't write that feed to the school. Nothing changed." },
+    });
+    await expect(reviewFeedSubmission('sub-1', 'approved')).rejects.toThrow('Nothing changed');
   });
 });

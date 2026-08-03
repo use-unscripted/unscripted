@@ -1,6 +1,9 @@
+import { useEffect, useState } from 'react';
 import { Outlet, NavLink } from 'react-router-dom';
-import { LayoutDashboard, Beaker, CalendarDays, Users, FileText, RotateCcw, Settings, LogOut, Target, BookOpen } from 'lucide-react';
+import { LayoutDashboard, Beaker, CalendarDays, Users, FileText, RotateCcw, Settings, LogOut, Target, BookOpen, Inbox } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
+import { useAuth } from '@/lib/AuthContext';
+import { listFeedSubmissions } from '@/lib/campus-events';
 import { CompassIcon } from '@/components/UnscriptedLogo';
 
 function CompassSVG() {
@@ -58,6 +61,39 @@ const mobileLinks = [
 ['/proof', 'Portfolio', FileText]];
 
 
+/**
+ * The team's link to the campus-feed review queue, with what's waiting on it.
+ *
+ * The count is the point. A student can paste a working calendar link, get
+ * their own events, and have the row sit unreviewed forever — their school
+ * never gets switched on and nobody finds out. A page nobody remembers to open
+ * is the same as no page, so the number has to be somewhere already looked at.
+ *
+ * Silent for everyone else, and silent for an admin with an empty queue.
+ */
+function ReviewQueueLink() {
+  const { user } = useAuth();
+  const [pending, setPending] = useState(0);
+
+  useEffect(() => {
+    if (user?.role !== 'admin') return;
+    let cancelled = false;
+    listFeedSubmissions()
+      .then(rows => {
+        if (cancelled) return;
+        setPending(rows.filter(r => r.resolution === 'resolved' && r.review_status === 'pending').length);
+      })
+      .catch(() => {}); // A nav badge is never worth an error on someone's screen.
+    return () => { cancelled = true; };
+  }, [user?.role]);
+
+  if (user?.role !== 'admin' || pending === 0) return null;
+
+  return (
+    <NavGroup label="Team" links={[['/admin/campus-feeds', `Campus feeds · ${pending}`, Inbox]]} />
+  );
+}
+
 export default function AppShell() {
   return (
     <div className="min-h-screen font-body" style={{ background: 'var(--background-secondary)' }}>
@@ -75,6 +111,7 @@ export default function AppShell() {
           <NavGroup label="Path Test" links={coreLinks} />
           <NavGroup label="Build Evidence" links={buildLinks} />
           <NavGroup label="Account" links={[['/settings', 'Settings', Settings]]} />
+          <ReviewQueueLink />
         </nav>
 
         <p className="rounded-xl p-3 text-xs leading-5 text-slate-400 mt-4" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>

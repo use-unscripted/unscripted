@@ -166,6 +166,38 @@ export async function submitCalendarUrl(url, { days = 45, limit = 20 } = {}) {
   }
 }
 
+/**
+ * The review queue: every calendar link a student has sent us.
+ *
+ * Read through the backend function rather than the entity directly, so the
+ * admin check is server-side and the page does not depend on whatever RLS the
+ * submission entity ends up with.
+ */
+export async function listFeedSubmissions() {
+  const response = await base44.functions.invoke('campusEvents', { action: 'list_submissions' });
+  const data = response?.data ?? response;
+  if (data?.error) throw new Error(data.error);
+  return Array.isArray(data?.submissions) ? data.submissions : [];
+}
+
+/**
+ * Approve or reject one submission.
+ *
+ * Approving is what turns a student's link into the calendar for their whole
+ * school, so unlike everything else in this file it is allowed to throw — the
+ * admin has to find out it did not take.
+ */
+export async function reviewFeedSubmission(id, decision) {
+  const response = await base44.functions.invoke('campusEvents', {
+    action: 'review_submission',
+    id,
+    decision,
+  });
+  const data = response?.data ?? response;
+  if (data?.error) throw new Error(data.error);
+  return data;
+}
+
 /** Why a link we refused to even try was refused, in the student's terms. */
 export const SUBMISSION_REJECTIONS = {
   bad_url: "That doesn't look like a web address. Copy the whole thing from your browser's address bar.",
