@@ -102,17 +102,24 @@ export default function MissionGuideGenerator({ experiment, existingGuides = [],
   const handleSave = async (makeActive) => {
     if (saving || !pendingGuide) return;
     setSaving(true);
+    setError('');
     try {
       const user = await base44.auth.me();
 
-      // Deactivate existing active guide if making this one active
-      if (makeActive) {
-        const activeGuides = existingGuides.filter(g => g.is_active);
-        await Promise.all(activeGuides.map(g =>
-          base44.entities.MissionGuides.update(g.id, { is_active: false, status: 'inactive' })
-        ));
-      }
-
+      // Create BEFORE deactivating anything.
+      //
+      // These are two independent writes with no transaction across them, so the
+      // ordering is decided by which half-finished state a student can survive.
+      // Deactivating first and then failing the create left them with ZERO
+      // active guides: the guide they were using was already dead in the
+      // database, nothing had replaced it, and the screen still offered "keep my
+      // current active guide" — which saved a draft and stranded them with
+      // nothing. Silent, and only visible after a reload.
+      //
+      // Rolling the deactivation back on failure was the other option and is
+      // worse: the compensating write is only as reliable as the write that just
+      // failed, and whatever broke the create (offline, auth, API down) breaks
+      // the rollback too. Create-first needs no compensation to be correct.
       const saved = await base44.entities.MissionGuides.create({
         user_id: user.id,
         experiment_id: experiment.id,
@@ -130,9 +137,40 @@ export default function MissionGuideGenerator({ experiment, existingGuides = [],
         is_active: makeActive,
       });
 
-      onGenerated(saved, makeActive);
+      // Now that a replacement exists, retire the guides it replaces. A failure
+      // here is survivable in a way the old ordering's failure was not: it
+      // leaves two active guides rather than none, and the student still has a
+      // working guide either way. So don't throw — the save the student asked
+      // for did happen, and reporting it as failed would only invite a retry
+      // that creates a duplicate.
+      let deactivatedIds = [];
+      if (makeActive) {
+        const toRetire = existingGuides.filter(g => g.is_active && g.id !== saved.id);
+        const results = await Promise.allSettled(toRetire.map(g =>
+          base44.entities.MissionGuides.update(g.id, { is_active: false, status: 'inactive' })
+        ));
+        deactivatedIds = toRetire.filter((_, i) => results[i].status === 'fulfilled').map(g => g.id);
+        const failed = results.filter(r => r.status === 'rejected');
+        if (failed.length) {
+          console.error(
+            `[MissionGuide] saved ${saved.id} but could not deactivate ${failed.length} previous guide(s); experiment ${experiment.id} now shows more than one active guide:`,
+            failed.map(f => f.reason)
+          );
+        }
+      }
+
+      // Report only what actually landed in the database, so the parent's
+      // guidesMap cannot claim a guide was retired when the update for it failed.
+      onGenerated(saved, makeActive, deactivatedIds);
     } catch (err) {
-      setError('Failed to save guide. Please try again.');
+      // Nothing was written: the create is the first write, so a throw here
+      // means the database still holds exactly what it held before, and the
+      // parent's guidesMap — which is only ever touched on success — still
+      // matches it. The decision screen's "you already have an active guide" is
+      // therefore still true, and the student can simply choose again.
+      console.error('[MissionGuide] save failed:', err);
+      setError("We couldn't save your guide. Nothing was lost — choose an option above to try again.");
+      setActiveDecision(null);
       setSaving(false);
     }
   };

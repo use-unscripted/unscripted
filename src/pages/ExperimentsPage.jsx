@@ -710,10 +710,14 @@ export default function ExperimentsPage() {
     setResumeTarget(null);
   };
 
-  const handleGuideGenerated = (expId, newGuide, makeActive) => {
+  // deactivatedIds is the guides the generator actually retired in the database,
+  // not the ones it meant to. Assuming every active guide was retired put this
+  // map out of step with the database whenever one of those writes failed.
+  const handleGuideGenerated = (expId, newGuide, makeActive, deactivatedIds = []) => {
+    const retired = new Set(deactivatedIds);
     setGuidesMap(prev => {
       const existing = (prev[expId] || []).map(g =>
-        makeActive && g.is_active ? { ...g, is_active: false, status: 'inactive' } : g
+        retired.has(g.id) ? { ...g, is_active: false, status: 'inactive' } : g
       );
       return { ...prev, [expId]: [...existing, newGuide] };
     });
@@ -806,7 +810,7 @@ export default function ExperimentsPage() {
           <MissionGuideGenerator
             experiment={exp}
             existingGuides={guidesMap[showGuideGeneratorFor] || []}
-            onGenerated={(guide, makeActive) => handleGuideGenerated(showGuideGeneratorFor, guide, makeActive)}
+            onGenerated={(guide, makeActive, deactivatedIds) => handleGuideGenerated(showGuideGeneratorFor, guide, makeActive, deactivatedIds)}
             onClose={() => setShowGuideGeneratorFor(null)}
           />
         );
