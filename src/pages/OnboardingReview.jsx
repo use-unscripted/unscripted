@@ -73,8 +73,17 @@ export default function OnboardingReview() {
 
   if (checking || !draft) return null;
 
+  // Cut on a word boundary. A hard slice landed mid-word ("locked into a cu…") on the last
+  // screen a student reads before being asked to create an account.
+  const truncateOnWord = (text, max) => {
+    if (text.length <= max) return text;
+    const cut = text.slice(0, max);
+    const lastSpace = cut.lastIndexOf(' ');
+    return `${(lastSpace > max * 0.6 ? cut.slice(0, lastSpace) : cut).replace(/[,;:.\s]+$/, '')}…`;
+  };
+
   const tradeoffs = draft.desired_lifestyle
-    ? `Lifestyle goal: ${draft.desired_lifestyle.slice(0, 80)}${draft.desired_lifestyle.length > 80 ? '...' : ''}`
+    ? `Lifestyle goal: ${truncateOnWord(draft.desired_lifestyle, 120)}`
     : null;
 
   const handleCreateAccount = () => {
