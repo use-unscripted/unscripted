@@ -37,72 +37,12 @@ import { useNavigate } from 'react-router-dom';
 import PathSwitcher from '@/components/PathSwitcher';
 import { ProgressBar, OptionRow, GuidedStyles } from '@/components/guided/GuidedPieces';
 import { linksForExperiment } from '@/lib/career-cycle';
-
-// ── Dates ──────────────────────────────────────────────────────────────────────
-// Every week key is a local calendar date formatted by hand. The old code built
-// the local Monday and then called toISOString(), which converts to UTC: in
-// America/New_York a Friday 21:00 reflection was filed under a Tuesday, and a
-// Sunday 22:00 one under the previous week. Sunday evening is exactly when
-// people reflect.
-
-function toDateKey(date) {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, '0');
-  const d = String(date.getDate()).padStart(2, '0');
-  return `${y}-${m}-${d}`;
-}
-
-export function getMonday(d) {
-  const date = new Date(d);
-  // Noon, so adding or subtracting days can never cross midnight when a DST
-  // boundary shifts the clock by an hour.
-  date.setHours(12, 0, 0, 0);
-  const day = date.getDay();
-  date.setDate(date.getDate() - (day === 0 ? 6 : day - 1));
-  return toDateKey(date);
-}
-
-// A bare 'YYYY-MM-DD' is parsed as UTC midnight and then rendered in local
-// time, which shows the day before for anyone west of Greenwich. Everything
-// that displays or compares a week key goes through noon.
-function weekDate(key) {
-  return new Date(`${key}T12:00:00`);
-}
-
-export function fmtWeek(key, opts = { month: 'long', day: 'numeric' }) {
-  if (!key) return '';
-  const d = weekDate(key);
-  return Number.isNaN(d.getTime()) ? '' : d.toLocaleDateString('en-US', opts);
-}
-
-// Resume matching is a tolerance, never string equality: a row written by an
-// older build, or by a browser in another timezone, can be a day off and is
-// still this week's reflection.
-export function sameWeek(a, b, toleranceDays = 1) {
-  if (!a || !b) return false;
-  const da = weekDate(a).getTime();
-  const db = weekDate(b).getTime();
-  if (Number.isNaN(da) || Number.isNaN(db)) return false;
-  return Math.abs(da - db) <= toleranceDays * 86400000;
-}
-
-// Dates arrive either as 'YYYY-MM-DD' or as a full ISO timestamp. Only the
-// former needs the noon treatment.
-function toTime(value) {
-  if (!value) return NaN;
-  const s = String(value);
-  return /^\d{4}-\d{2}-\d{2}$/.test(s) ? weekDate(s).getTime() : new Date(s).getTime();
-}
-
-function inWeek(value, mondayKey) {
-  const t = toTime(value);
-  if (!Number.isFinite(t) || !mondayKey) return false;
-  const start = new Date(`${mondayKey}T00:00:00`);
-  if (Number.isNaN(start.getTime())) return false;
-  const end = new Date(start);
-  end.setDate(end.getDate() + 7);
-  return t >= start.getTime() && t < end.getTime();
-}
+// Week keys, and the parse that turns a Base44 timestamp into the right
+// instant. Both used to live in this file; they moved so they could be tested.
+// See src/lib/dates.js for what Base44 sends and why it cannot go straight into
+// `new Date()`.
+import { getMonday, fmtWeek, sameWeek } from '@/lib/dates';
+import { activityFor } from '@/lib/weekly-activity';
 
 // ── Small helpers ──────────────────────────────────────────────────────────────
 const isActive = (r) => !r?.deletion_status || r.deletion_status === 'active';
@@ -231,43 +171,10 @@ function clearDraft() {
   try { localStorage.removeItem(DRAFT_KEY); } catch { /* private mode */ }
 }
 
-// ── Activity read-out ──────────────────────────────────────────────────────────
-/**
- * What this student actually logged against this experiment during this week.
- * When there is anything here, step 1 shows it back to them instead of the
- * canned options — their own record beats a guess about their week.
- *
- * Everything is filtered to one experiment id, and the experiment list this id
- * came from is itself row-level-scoped to the signed-in user. That filter is
- * load-bearing for proof: ProofOfWork has `"read": null` in the schema, so
- * ProofOfWork.list() returns *every student's* proof. Removing it puts another
- * student's work on this screen.
- */
-function activityFor({ missions, proofs, outreach }, expId, weekKey) {
-  if (!expId || !weekKey) return [];
-  const items = [];
-
-  missions
-    .filter(m => isActive(m) && m.experiment_id === expId && m.status === 'completed')
-    .filter(m => inWeek(m.updated_date || m.created_date, weekKey))
-    .forEach(m => items.push({ key: `mission:${m.id}`, label: m.title, desc: 'Mission you marked complete' }));
-
-  proofs
-    .filter(p => isActive(p) && p.experiment_id === expId)
-    .filter(p => inWeek(p.completed_at || p.created_date, weekKey))
-    .forEach(p => items.push({ key: `proof:${p.id}`, label: p.title, desc: 'Proof you logged' }));
-
-  outreach
-    .filter(c => isActive(c) && c.experiment_id === expId)
-    .filter(c => inWeek(c.last_contacted_date || c.date_contacted || c.created_date, weekKey))
-    .forEach(c => items.push({
-      key: `outreach:${c.id}`,
-      label: c.company ? `${c.name} — ${c.company}` : c.name,
-      desc: 'Someone you reached out to',
-    }));
-
-  return items.filter(i => i.label);
-}
+// The activity read-out — what this student actually logged against this
+// experiment during this week — is src/lib/weekly-activity.js. When there is
+// anything in it, step 1 shows it back to them instead of the canned options:
+// their own record beats a guess about their week.
 
 // ── Success Toast ──────────────────────────────────────────────────────────────
 function SuccessToast({ experiment, mission, onOpenExp, onDismiss }) {
