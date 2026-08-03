@@ -123,7 +123,7 @@ export default function ActiveExperiment() {
 
       <div className="space-y-5">
         {justDone && (
-          <section className="rounded-[16px] p-5" role="status" style={{ background: '#F0FDF4', border: '1px solid #BBF7D0' }}>
+          <section className="rounded-[16px] p-5" role="status" style={{ background: 'var(--success-50)', border: '1px solid #BBF7D0' }}>
             <p className="flex items-center gap-2 text-sm font-bold" style={{ color: '#14532D' }}>
               <CheckCircle2 size={16} /> Evidence attached to this mission{justDone.reused ? ' (already recorded)' : ''}.
             </p>
@@ -156,7 +156,7 @@ export default function ActiveExperiment() {
             <h3 className="font-heading flex items-center gap-1.5 text-base font-bold" style={{ color: 'var(--text-primary)' }}>
               <Wand2 size={14} style={{ color: 'var(--brand-navy-700)' }} /> Mission Guide
               {activeGuide && (
-                <span className="rounded-full px-2 py-0.5 text-[10px] font-bold" style={{ background: '#F0FDF4', color: '#15803D' }}>
+                <span className="rounded-full px-2 py-0.5 text-[10px] font-bold" style={{ background: 'var(--success-50)', color: 'var(--success-700)' }}>
                   v{activeGuide.version_number}
                 </span>
               )}

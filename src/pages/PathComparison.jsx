@@ -21,13 +21,13 @@ import {
 import { autoAssessPathRisk } from '@/lib/risk-assessor';
 
 const STATUS_CFG = {
-  active:        { label: 'Active',         bg: '#F0FDF4', text: '#15803D' },
-  draft:         { label: 'Draft',          bg: '#F1F5F9', text: '#64748B' },
-  paused:        { label: 'Paused',         bg: '#FFFBEB', text: '#B45309' },
-  completed:     { label: 'Completed',      bg: '#EFF6FF', text: '#1D4ED8' },
-  archived:      { label: 'Archived',       bg: '#F1F5F9', text: '#94A3B8' },
-  exploring:     { label: 'Exploring',      bg: '#EEF2F6', text: '#274C77' },
-  deprioritized: { label: 'Deprioritized',  bg: '#F1F5F9', text: '#94A3B8' },
+  active:        { label: 'Active',         bg: 'var(--success-50)', text: 'var(--success-700)' },
+  draft:         { label: 'Draft',          bg: 'var(--ink-100)', text: 'var(--ink-500)' },
+  paused:        { label: 'Paused',         bg: 'var(--warning-50)', text: 'var(--warning-700)' },
+  completed:     { label: 'Completed',      bg: 'var(--info-50)', text: 'var(--info-700)' },
+  archived:      { label: 'Archived',       bg: 'var(--ink-100)', text: 'var(--ink-400)' },
+  exploring:     { label: 'Exploring',      bg: 'var(--ink-100)', text: 'var(--brand-navy-700)' },
+  deprioritized: { label: 'Deprioritized',  bg: 'var(--ink-100)', text: 'var(--ink-400)' },
 };
 
 function fmtDate(d) {
@@ -47,9 +47,9 @@ function PausedPathPanel({ path, experiments, missions, proof, contacts, reflect
 
   return (
     <div className="rounded-[20px] border-2 p-6 space-y-5" style={{ borderColor: 'rgba(180,83,9,0.3)', background: '#FFFDF7' }}>
-      <div className="rounded-xl p-4" style={{ background: '#FFFBEB', border: '1px solid rgba(180,83,9,0.2)' }}>
-        <p className="text-sm font-bold text-[#B45309]">You previously explored this path.</p>
-        {path.last_active_at && <p className="text-xs text-[#334155] mt-1">Last active: {fmtDate(path.last_active_at)}</p>}
+      <div className="rounded-xl p-4" style={{ background: 'var(--warning-50)', border: '1px solid rgba(180,83,9,0.2)' }}>
+        <p className="text-sm font-bold text-[color:var(--warning-700)]">You previously explored this path.</p>
+        {path.last_active_at && <p className="text-xs text-[color:var(--ink-700)] mt-1">Last active: {fmtDate(path.last_active_at)}</p>}
       </div>
 
       <div className="grid gap-3 sm:grid-cols-4 text-center">
@@ -59,21 +59,21 @@ function PausedPathPanel({ path, experiments, missions, proof, contacts, reflect
           { label: 'Proof submitted', val: pathProof.length },
           { label: 'Contacts', val: pathContacts.length },
         ].map(({ label, val }) => (
-          <div key={label} className="rounded-xl border border-[#E2E8F0] bg-white p-3">
-            <p className="font-heading text-2xl font-bold text-[#050816]">{val}</p>
-            <p className="text-xs text-[#64748B] mt-0.5">{label}</p>
+          <div key={label} className="rounded-xl border border-[color:var(--ink-200)] bg-white p-3">
+            <p className="font-heading text-2xl font-bold text-[color:var(--surface-dark-900)]">{val}</p>
+            <p className="text-xs text-[color:var(--ink-500)] mt-0.5">{label}</p>
           </div>
         ))}
       </div>
 
       {completedExps.length > 0 && (
         <div>
-          <p className="text-xs font-bold uppercase tracking-wide text-[#64748B] mb-2">Completed experiments</p>
+          <p className="text-xs font-bold uppercase tracking-wide text-[color:var(--ink-500)] mb-2">Completed experiments</p>
           <div className="space-y-1.5">
             {completedExps.map(e => (
               <div key={e.id} className="flex items-center gap-2 text-sm">
                 <CheckCircle2 size={13} className="text-green-600 shrink-0" />
-                <span className="text-[#334155]">{e.title}</span>
+                <span className="text-[color:var(--ink-700)]">{e.title}</span>
               </div>
             ))}
           </div>
@@ -81,7 +81,7 @@ function PausedPathPanel({ path, experiments, missions, proof, contacts, reflect
       )}
 
       {pathReflections.length > 0 && (
-        <p className="text-xs text-[#64748B]">{pathReflections.length} reflection{pathReflections.length > 1 ? 's' : ''} saved on this path.</p>
+        <p className="text-xs text-[color:var(--ink-500)]">{pathReflections.length} reflection{pathReflections.length > 1 ? 's' : ''} saved on this path.</p>
       )}
 
       <div className="flex flex-wrap gap-3">
@@ -91,7 +91,7 @@ function PausedPathPanel({ path, experiments, missions, proof, contacts, reflect
           <RotateCcw size={14} /> Resume This Path
         </button>
         <button onClick={onArchive}
-          className="flex items-center gap-2 rounded-[10px] border border-[#E2E8F0] px-5 py-2.5 text-sm font-semibold text-[#334155] hover:bg-[#F8FAFC]">
+          className="flex items-center gap-2 rounded-[10px] border border-[color:var(--ink-200)] px-5 py-2.5 text-sm font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)]">
           <Archive size={14} /> Archive Path
         </button>
       </div>
@@ -110,13 +110,13 @@ function PathCard({ path, experiments, missions, proof, contacts, reflections, o
   const isPausedOrCompleted = ['paused', 'completed'].includes(path.status);
 
   return (
-    <div className="rounded-[20px] border border-[#E2E8F0] bg-white overflow-hidden">
+    <div className="rounded-[20px] border border-[color:var(--ink-200)] bg-white overflow-hidden">
       <div className="p-6">
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1 min-w-0">
             <div className="flex flex-wrap items-center gap-2 mb-2">
               {path.is_primary_focus && (
-                <span className="rounded-full px-2.5 py-1 text-xs font-bold flex items-center gap-1" style={{ background: '#EEF2F6', color: 'var(--brand-navy-900)' }}>
+                <span className="rounded-full px-2.5 py-1 text-xs font-bold flex items-center gap-1" style={{ background: 'var(--ink-100)', color: 'var(--brand-navy-900)' }}>
                   <Star size={11} /> Primary Focus
                 </span>
               )}
@@ -124,28 +124,28 @@ function PathCard({ path, experiments, missions, proof, contacts, reflections, o
               {path.risk_level ? <RiskBadge riskLevel={path.risk_level} /> : <RiskNotAssessed onAutoAssess={onAutoAssess} onAssess={() => onAction('edit', path)} assessing={assessing} />}
               {path.confidence_level && <ConfidenceBadge confidenceLevel={path.confidence_level} />}
             </div>
-            <h2 className="font-heading text-xl font-bold text-[#050816]">{path.path_name}</h2>
-            {path.path_category && <p className="text-xs text-[#94A3B8] mt-0.5">{path.path_category}</p>}
-            <p className="mt-2 text-sm text-[#334155] line-clamp-2">{path.why_it_fits || path.fit_reason}</p>
+            <h2 className="font-heading text-xl font-bold text-[color:var(--surface-dark-900)]">{path.path_name}</h2>
+            {path.path_category && <p className="text-xs text-[color:var(--ink-400)] mt-0.5">{path.path_category}</p>}
+            <p className="mt-2 text-sm text-[color:var(--ink-700)] line-clamp-2">{path.why_it_fits || path.fit_reason}</p>
 
             {pathExps.length > 0 && (
               <div className="mt-3">
-                <div className="flex justify-between text-xs text-[#94A3B8] mb-1">
+                <div className="flex justify-between text-xs text-[color:var(--ink-400)] mb-1">
                   <span>Experiment progress</span>
                   <span>{completedExps.length}/{pathExps.length}</span>
                 </div>
-                <div className="h-1.5 rounded-full overflow-hidden bg-[#F1F5F9]">
-                  <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: 'var(--brand-navy-900)' }} />
+                <div className="h-1.5 rounded-full overflow-hidden bg-[color:var(--ink-100)]">
+                  <div className="h-full rounded-full transition-[width]" style={{ width: `${pct}%`, background: 'var(--brand-navy-900)' }} />
                 </div>
               </div>
             )}
 
             {path.last_active_at && (
-              <p className="mt-2 text-xs text-[#94A3B8] flex items-center gap-1"><Clock size={11} /> Last active {fmtDate(path.last_active_at)}</p>
+              <p className="mt-2 text-xs text-[color:var(--ink-400)] flex items-center gap-1"><Clock size={11} /> Last active {fmtDate(path.last_active_at)}</p>
             )}
           </div>
 
-          <button onClick={onToggle} className="shrink-0 rounded-xl border border-[#E2E8F0] p-2 hover:bg-[#F8FAFC]">
+          <button onClick={onToggle} className="shrink-0 rounded-xl border border-[color:var(--ink-200)] p-2 hover:bg-[color:var(--ink-50)]">
             {expanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
           </button>
         </div>
@@ -157,18 +157,18 @@ function PathCard({ path, experiments, missions, proof, contacts, reflections, o
             <Users size={12} /> Build Outreach Plan
           </button>
           <button onClick={() => onAction('edit', path)}
-            className="flex items-center gap-1.5 rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-xs font-semibold text-[#334155] hover:bg-[#F8FAFC]">
+            className="flex items-center gap-1.5 rounded-lg border border-[color:var(--ink-200)] px-3 py-1.5 text-xs font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)]">
             <Pencil size={12} /> Edit
           </button>
           {!path.is_primary_focus && ACTIVE_STATUSES.includes(path.status) && (
             <button onClick={() => onAction('make_primary', path)}
-              className="flex items-center gap-1.5 rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-xs font-semibold text-[#334155] hover:bg-[#F8ECEF]">
+              className="flex items-center gap-1.5 rounded-lg border border-[color:var(--ink-200)] px-3 py-1.5 text-xs font-semibold text-[color:var(--ink-700)] hover:bg-[#F8ECEF]">
               <Star size={12} /> Make Primary
             </button>
           )}
           {ACTIVE_STATUSES.includes(path.status) && (
             <button onClick={() => onAction('pause', path)}
-              className="flex items-center gap-1.5 rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-xs font-semibold text-[#334155] hover:bg-[#F8FAFC]">
+              className="flex items-center gap-1.5 rounded-lg border border-[color:var(--ink-200)] px-3 py-1.5 text-xs font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)]">
               <Pause size={12} /> Pause
             </button>
           )}
@@ -181,7 +181,7 @@ function PathCard({ path, experiments, missions, proof, contacts, reflections, o
           )}
           {path.status !== 'archived' && path.status !== 'completed' && (
             <button onClick={() => onAction('complete', path)}
-              className="flex items-center gap-1.5 rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-xs font-semibold text-[#334155] hover:bg-[#F8FAFC]">
+              className="flex items-center gap-1.5 rounded-lg border border-[color:var(--ink-200)] px-3 py-1.5 text-xs font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)]">
               <CheckCircle2 size={12} /> Mark Complete
             </button>
           )}
@@ -193,13 +193,13 @@ function PathCard({ path, experiments, missions, proof, contacts, reflections, o
           )}
           {path.status !== 'archived' && (
             <button onClick={() => onAction('archive', path)}
-              className="flex items-center gap-1.5 rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-xs font-semibold text-[#64748B] hover:bg-[#F8FAFC]">
+              className="flex items-center gap-1.5 rounded-lg border border-[color:var(--ink-200)] px-3 py-1.5 text-xs font-semibold text-[color:var(--ink-500)] hover:bg-[color:var(--ink-50)]">
               <Archive size={12} /> Archive
             </button>
           )}
           {path.status === 'archived' && (
             <button onClick={() => onAction('unarchive', path)}
-              className="flex items-center gap-1.5 rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-xs font-semibold text-[#334155] hover:bg-[#F0FDF4] hover:border-green-200 hover:text-green-700 transition">
+              className="flex items-center gap-1.5 rounded-lg border border-[color:var(--ink-200)] px-3 py-1.5 text-xs font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--success-50)] hover:border-green-200 hover:text-green-700 transition">
               <ArchiveRestore size={12} /> Un-archive
             </button>
           )}
@@ -207,7 +207,7 @@ function PathCard({ path, experiments, missions, proof, contacts, reflections, o
       </div>
 
       {expanded && (
-        <div className="border-t border-[#E2E8F0] p-6 space-y-5">
+        <div className="border-t border-[color:var(--ink-200)] p-6 space-y-5">
           {isPausedOrCompleted && (
             <PausedPathPanel
               path={path}
@@ -222,39 +222,39 @@ function PathCard({ path, experiments, missions, proof, contacts, reflections, o
           )}
 
           {(path.why_it_may_not_fit || path.concern) && (
-            <div className="rounded-xl p-3" style={{ background: '#FFFBEB', border: '1px solid rgba(180,83,9,0.2)' }}>
-              <p className="text-xs font-bold text-[#B45309] uppercase tracking-wide mb-1">Potential concern</p>
-              <p className="text-sm text-[#334155]">{path.why_it_may_not_fit || path.concern}</p>
+            <div className="rounded-xl p-3" style={{ background: 'var(--warning-50)', border: '1px solid rgba(180,83,9,0.2)' }}>
+              <p className="text-xs font-bold text-[color:var(--warning-700)] uppercase tracking-wide mb-1">Potential concern</p>
+              <p className="text-sm text-[color:var(--ink-700)]">{path.why_it_may_not_fit || path.concern}</p>
             </div>
           )}
 
           {(path.lifestyle_implications || d.lifestyle) && (
             <div>
-              <p className="text-xs font-bold uppercase tracking-[.12em] text-[#64748B] mb-2">Lifestyle</p>
-              <p className="text-sm text-[#334155]">{path.lifestyle_implications || d.lifestyle}</p>
+              <p className="text-xs font-bold uppercase tracking-[.12em] text-[color:var(--ink-500)] mb-2">Lifestyle</p>
+              <p className="text-sm text-[color:var(--ink-700)]">{path.lifestyle_implications || d.lifestyle}</p>
             </div>
           )}
 
           {d.income_trajectory && (
             <div>
-              <p className="text-xs font-bold uppercase tracking-[.12em] text-[#64748B] mb-2">Income trajectory</p>
-              <p className="text-sm text-[#334155]">{d.income_trajectory}</p>
+              <p className="text-xs font-bold uppercase tracking-[.12em] text-[color:var(--ink-500)] mb-2">Income trajectory</p>
+              <p className="text-sm text-[color:var(--ink-700)]">{d.income_trajectory}</p>
             </div>
           )}
 
           {path.goals && (
             <div>
-              <p className="text-xs font-bold uppercase tracking-[.12em] text-[#64748B] mb-2">Your goals</p>
-              <p className="text-sm text-[#334155]">{path.goals}</p>
+              <p className="text-xs font-bold uppercase tracking-[.12em] text-[color:var(--ink-500)] mb-2">Your goals</p>
+              <p className="text-sm text-[color:var(--ink-700)]">{path.goals}</p>
             </div>
           )}
 
           {(path.skill_gaps?.length > 0 || path.current_gaps?.length > 0) && (
             <div>
-              <p className="text-xs font-bold uppercase tracking-[.12em] text-[#64748B] mb-2">Skill gaps</p>
+              <p className="text-xs font-bold uppercase tracking-[.12em] text-[color:var(--ink-500)] mb-2">Skill gaps</p>
               <div className="flex flex-wrap gap-2">
                 {(path.skill_gaps || path.current_gaps || []).map((g, i) => (
-                  <span key={i} className="rounded-full border border-[#E2E8F0] px-3 py-1 text-xs text-[#334155]">{g}</span>
+                  <span key={i} className="rounded-full border border-[color:var(--ink-200)] px-3 py-1 text-xs text-[color:var(--ink-700)]">{g}</span>
                 ))}
               </div>
             </div>
@@ -265,13 +265,13 @@ function PathCard({ path, experiments, missions, proof, contacts, reflections, o
               {path.first_experiment && (
                 <div className="rounded-xl p-4" style={{ background: 'var(--background-tertiary)', border: '1px solid var(--border-light)' }}>
                    <p className="text-xs font-bold uppercase tracking-[.12em] mb-2" style={{ color: 'var(--brand-navy-900)' }}>Suggested first experiment</p>
-                  <p className="text-sm text-[#334155]">{path.first_experiment}</p>
+                  <p className="text-sm text-[color:var(--ink-700)]">{path.first_experiment}</p>
                 </div>
               )}
               {d.day_to_day && (
                 <div>
-                  <p className="text-xs font-bold uppercase tracking-[.12em] text-[#64748B] mb-2">Day-to-day reality</p>
-                  <p className="text-sm text-[#334155]">{d.day_to_day}</p>
+                  <p className="text-xs font-bold uppercase tracking-[.12em] text-[color:var(--ink-500)] mb-2">Day-to-day reality</p>
+                  <p className="text-sm text-[color:var(--ink-700)]">{d.day_to_day}</p>
                 </div>
               )}
             </div>
@@ -279,13 +279,13 @@ function PathCard({ path, experiments, missions, proof, contacts, reflections, o
 
           {path.notes && (
             <div>
-              <p className="text-xs font-bold uppercase tracking-[.12em] text-[#64748B] mb-2">Notes</p>
-              <p className="text-sm text-[#334155]">{path.notes}</p>
+              <p className="text-xs font-bold uppercase tracking-[.12em] text-[color:var(--ink-500)] mb-2">Notes</p>
+              <p className="text-sm text-[color:var(--ink-700)]">{path.notes}</p>
             </div>
           )}
 
           <div>
-            <p className="text-xs font-bold uppercase tracking-[.12em] text-[#64748B] mb-3 flex items-center gap-1.5"><History size={12} /> Path history</p>
+            <p className="text-xs font-bold uppercase tracking-[.12em] text-[color:var(--ink-500)] mb-3 flex items-center gap-1.5"><History size={12} /> Path history</p>
             <div className="space-y-1.5">
               {[
                 path.created_date && { date: path.created_date, label: 'Path created' },
@@ -294,15 +294,15 @@ function PathCard({ path, experiments, missions, proof, contacts, reflections, o
                 path.completed_at && { date: path.completed_at, label: 'Completed' },
                 path.last_active_at && path.status === 'active' && { date: path.last_active_at, label: 'Last active' },
               ].filter(Boolean).map((evt, i) => (
-                <div key={i} className="flex items-center gap-3 text-xs text-[#64748B]">
+                <div key={i} className="flex items-center gap-3 text-xs text-[color:var(--ink-500)]">
                   <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: 'var(--brand-navy-900)' }} />
                   <span className="font-medium">{fmtDate(evt.date)}</span>
                   <span>{evt.label}</span>
                 </div>
               ))}
               {pathExps.map(e => (
-                <div key={e.id} className="flex items-center gap-3 text-xs text-[#94A3B8]">
-                  <div className="w-1.5 h-1.5 rounded-full shrink-0 bg-[#E2E8F0]" />
+                <div key={e.id} className="flex items-center gap-3 text-xs text-[color:var(--ink-400)]">
+                  <div className="w-1.5 h-1.5 rounded-full shrink-0 bg-[color:var(--ink-200)]" />
                   <span className="font-medium">{fmtDate(e.created_date)}</span>
                   <span>Experiment: {e.title}</span>
                   {e.status === 'completed' && <CheckCircle2 size={11} className="text-green-600" />}
@@ -334,16 +334,16 @@ function SortFilterBar({ paths, sortBy, setSortBy, filters, setFilters }) {
 
   const clearFilters = () => setFilters(DEFAULT_FILTERS);
 
-  const sel = 'rounded-xl border border-[#E2E8F0] bg-white px-3 py-2 text-sm text-[#334155] focus:border-[#1F3A5F] focus:outline-none';
+  const sel = 'rounded-xl border border-[color:var(--ink-200)] bg-white px-3 py-2 text-sm text-[color:var(--ink-700)] focus:border-[color:var(--brand-navy-900)] focus:outline-none';
 
   return (
-    <div className="mb-5 rounded-[16px] border border-[#E2E8F0] bg-white p-4">
+    <div className="mb-5 rounded-[16px] border border-[color:var(--ink-200)] bg-white p-4">
       <div className="flex flex-wrap items-center gap-3">
         <div className="flex items-center gap-2 shrink-0">
-          <SlidersHorizontal size={14} className="text-[#64748B]" />
-          <span className="text-xs font-bold uppercase tracking-[.12em] text-[#64748B]">Sort & Filter</span>
+          <SlidersHorizontal size={14} className="text-[color:var(--ink-500)]" />
+          <span className="text-xs font-bold uppercase tracking-[.12em] text-[color:var(--ink-500)]">Sort & Filter</span>
           {hasActiveFilters && (
-            <span className="rounded-full px-2 py-0.5 text-[10px] font-bold" style={{ background: '#EEF2F6', color: 'var(--brand-navy-700)' }}>
+            <span className="rounded-full px-2 py-0.5 text-[10px] font-bold" style={{ background: 'var(--ink-100)', color: 'var(--brand-navy-700)' }}>
               {activeCount} active
             </span>
           )}
@@ -416,7 +416,7 @@ function SortFilterBar({ paths, sortBy, setSortBy, filters, setFilters }) {
         {hasActiveFilters && (
           <button
             onClick={clearFilters}
-            className="flex items-center gap-1 rounded-lg border border-[#E2E8F0] px-3 py-2 text-xs font-semibold text-[#64748B] hover:text-red-600 hover:border-red-200 transition"
+            className="flex items-center gap-1 rounded-lg border border-[color:var(--ink-200)] px-3 py-2 text-xs font-semibold text-[color:var(--ink-500)] hover:text-red-600 hover:border-red-200 transition"
             aria-label="Clear all filters"
           >
             <X size={12} /> Clear filters
@@ -608,15 +608,15 @@ export default function PathComparison() {
       />
 
       {loading ? (
-        <div className="py-20 text-center text-[#64748B]">Loading your paths…</div>
+        <div className="py-20 text-center text-[color:var(--ink-500)]">Loading your paths…</div>
       ) : loadFailed || (paths.length === 0 && submission) ? (
         // Onboarding was completed but no paths came back — recoverable, never blank,
         // and never silently regenerated.
         <PathRecoveryPanel variant="missing" onRestored={load} />
       ) : paths.length === 0 ? (
-        <div className="rounded-[24px] border border-dashed border-[#E2E8F0] p-16 text-center">
-          <h3 className="font-heading text-xl font-bold text-[#050816]">No paths yet.</h3>
-          <p className="mt-2 text-sm text-[#64748B]">Create your first path to start tracking experiments, reflections, and progress.</p>
+        <div className="rounded-[24px] border border-dashed border-[color:var(--ink-200)] p-16 text-center">
+          <h3 className="font-heading text-xl font-bold text-[color:var(--surface-dark-900)]">No paths yet.</h3>
+          <p className="mt-2 text-sm text-[color:var(--ink-500)]">Create your first path to start tracking experiments, reflections, and progress.</p>
           <button onClick={() => setShowCreate(true)}
             className="mt-6 inline-flex items-center gap-2 rounded-[10px] px-6 py-3 text-sm font-semibold text-white"
             style={{ background: 'var(--brand-navy-900)' }}>
@@ -635,15 +635,15 @@ export default function PathComparison() {
 
           {/* Search bar */}
           <div className="relative mb-4">
-            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#94A3B8]" />
+            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[color:var(--ink-400)]" />
             <input
               value={search}
               onChange={e => setSearch(e.target.value)}
               placeholder="Search paths by name, category, or description…"
-              className="w-full rounded-xl border border-[#E2E8F0] bg-white pl-9 pr-4 py-2.5 text-sm outline-none focus:border-[#1F3A5F]"
+              className="w-full rounded-xl border border-[color:var(--ink-200)] bg-white pl-9 pr-4 py-2.5 text-sm outline-none focus:border-[color:var(--brand-navy-900)]"
             />
             {search && (
-              <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#94A3B8] hover:text-[#334155]">
+              <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-[color:var(--ink-400)] hover:text-[color:var(--ink-700)]">
                 <X size={14} />
               </button>
             )}
@@ -658,18 +658,18 @@ export default function PathComparison() {
           />
 
           {/* Result count */}
-          <p className="mb-4 text-xs text-[#94A3B8]">
+          <p className="mb-4 text-xs text-[color:var(--ink-400)]">
             {displayedPaths.length} path{displayedPaths.length !== 1 ? 's' : ''} shown
             {paths.length !== displayedPaths.length ? ` of ${paths.length}` : ''}
           </p>
 
           {displayedPaths.length === 0 ? (
-            <div className="rounded-[24px] border border-dashed border-[#E2E8F0] py-16 text-center">
-              <p className="text-sm font-semibold text-[#050816]">No paths match these filters.</p>
-              <p className="text-xs text-[#94A3B8] mt-1">Try adjusting your sort or filter options.</p>
+            <div className="rounded-[24px] border border-dashed border-[color:var(--ink-200)] py-16 text-center">
+              <p className="text-sm font-semibold text-[color:var(--surface-dark-900)]">No paths match these filters.</p>
+              <p className="text-xs text-[color:var(--ink-400)] mt-1">Try adjusting your sort or filter options.</p>
               <button
                 onClick={() => setFilters(DEFAULT_FILTERS)}
-                className="mt-4 inline-flex items-center gap-1.5 rounded-[10px] border border-[#E2E8F0] px-4 py-2 text-xs font-semibold text-[#334155] hover:bg-[#F8FAFC]"
+                className="mt-4 inline-flex items-center gap-1.5 rounded-[10px] border border-[color:var(--ink-200)] px-4 py-2 text-xs font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)]"
               >
                 <X size={12} /> Clear Filters
               </button>
@@ -691,7 +691,7 @@ export default function PathComparison() {
             </div>
           )}
 
-          <div className="mt-8 rounded-[20px] p-5 text-center text-sm text-[#64748B]"
+          <div className="mt-8 rounded-[20px] p-5 text-center text-sm text-[color:var(--ink-500)]"
             style={{ background: 'var(--background-tertiary)', border: '1px solid var(--border-light)' }}>
             These paths are recommendations and tests — not permanent commitments. Your goal is to learn what fits you, not to pick one and stay forever.
           </div>

@@ -7,10 +7,10 @@ import { ChevronDown, ChevronUp, Clock, CheckCircle2, FileText } from 'lucide-re
 import MissionOutreachPanel from './MissionOutreachPanel';
 
 const STATUS = {
-  planned: { bg: '#F1F5F9', text: '#334155', label: 'Planned' },
-  in_progress: { bg: '#FFFBEB', text: '#B45309', label: 'In progress' },
-  completed: { bg: '#F0FDF4', text: '#15803D', label: 'Completed' },
-  skipped: { bg: '#F8FAFC', text: '#94A3B8', label: 'Skipped' },
+  planned: { bg: 'var(--ink-100)', text: 'var(--ink-700)', label: 'Planned' },
+  in_progress: { bg: 'var(--warning-50)', text: 'var(--warning-700)', label: 'In progress' },
+  completed: { bg: 'var(--success-50)', text: 'var(--success-700)', label: 'Completed' },
+  skipped: { bg: 'var(--ink-50)', text: 'var(--ink-400)', label: 'Skipped' },
 };
 
 function Block({ label, children }) {
@@ -78,7 +78,7 @@ export default function MissionItem({ mission, experiment, path, contacts, proof
           {proofs.length > 0 && (
             <div className="mt-3 space-y-1">
               {proofs.map(p => (
-                <p key={p.id} className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: '#15803D' }}>
+                <p key={p.id} className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: 'var(--success-700)' }}>
                   <FileText size={12} /> {p.title}
                 </p>
               ))}

@@ -17,7 +17,7 @@ export const TEMPLATES = [
     id: 'startup',
     name: 'Startup & Operations',
     description: 'Modern single-column optimized for high-growth roles.',
-    accentColor: '#1F3A5F',
+    accentColor: 'var(--brand-navy-900)',
   },
   {
     id: 'healthcare',
@@ -29,7 +29,7 @@ export const TEMPLATES = [
     id: 'technology',
     name: 'Technology',
     description: 'Skills-forward layout for engineering and product roles.',
-    accentColor: '#1D4ED8',
+    accentColor: 'var(--info-700)',
   },
   {
     id: 'general',

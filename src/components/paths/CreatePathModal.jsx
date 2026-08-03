@@ -3,7 +3,7 @@ import { X, Loader2, ArrowRight, ChevronRight } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { unwrapLLM } from '@/lib/llm';
 
-const inputCls = 'w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-3 text-sm text-[#050816] placeholder-[#94A3B8] outline-none focus:border-[#1F3A5F]';
+const inputCls = 'w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-sm text-[color:var(--surface-dark-900)] placeholder-[color:var(--ink-400)] outline-none focus:border-[color:var(--brand-navy-900)]';
 
 const RISK_LEVELS = ['low', 'medium', 'high'];
 const CONFIDENCE_LEVELS = ['low', 'medium', 'high'];
@@ -142,10 +142,10 @@ Generate a structured path profile for them to save and test. Be realistic and h
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(5,8,22,0.6)' }}>
         <div className="w-full max-w-lg rounded-[24px] bg-white p-6 sm:p-8">
           <div className="flex items-center justify-between mb-2">
-            <h2 className="font-heading text-xl font-bold text-[#050816]">Create Another Path</h2>
-            <button onClick={onClose}><X size={20} className="text-[#64748B]" /></button>
+            <h2 className="font-heading text-xl font-bold text-[color:var(--surface-dark-900)]">Create Another Path</h2>
+            <button onClick={onClose}><X size={20} className="text-[color:var(--ink-500)]" /></button>
           </div>
-          <p className="text-sm text-[#64748B] mb-6">How would you like to add this path?</p>
+          <p className="text-sm text-[color:var(--ink-500)] mb-6">How would you like to add this path?</p>
           <div className="space-y-3">
             {[
               { id: 'survey', label: 'Short path-specific survey', desc: 'Answer 4 questions, AI generates the path profile' },
@@ -153,16 +153,16 @@ Generate a structured path profile for them to save and test. Be realistic and h
               ...(unactivatedRecs.length > 0 ? [{ id: 'from_rec', label: 'Activate a prior recommendation', desc: `${unactivatedRecs.length} recommendation${unactivatedRecs.length > 1 ? 's' : ''} not yet activated` }] : []),
             ].map(opt => (
               <button key={opt.id} onClick={() => { setMode(opt.id); setStep(1); }}
-                className="w-full flex items-center justify-between rounded-[16px] border border-[#E2E8F0] bg-white p-4 text-left transition hover:border-[#1F3A5F] hover:bg-[#EEF2F6] group">
+                className="w-full flex items-center justify-between rounded-[16px] border border-[color:var(--ink-200)] bg-white p-4 text-left transition hover:border-[color:var(--brand-navy-900)] hover:bg-[color:var(--ink-100)] group">
                 <div>
-                  <p className="text-sm font-bold text-[#050816] group-hover:text-[#1F3A5F]">{opt.label}</p>
-                  <p className="text-xs text-[#64748B] mt-0.5">{opt.desc}</p>
+                  <p className="text-sm font-bold text-[color:var(--surface-dark-900)] group-hover:text-[color:var(--brand-navy-900)]">{opt.label}</p>
+                  <p className="text-xs text-[color:var(--ink-500)] mt-0.5">{opt.desc}</p>
                 </div>
-                <ChevronRight size={16} className="text-[#94A3B8] group-hover:text-[#1F3A5F]" />
+                <ChevronRight size={16} className="text-[color:var(--ink-400)] group-hover:text-[color:var(--brand-navy-900)]" />
               </button>
             ))}
           </div>
-          <button onClick={onClose} className="mt-4 w-full rounded-[10px] border border-[#E2E8F0] py-2.5 text-sm font-semibold text-[#334155] hover:bg-[#F8FAFC]">Cancel</button>
+          <button onClick={onClose} className="mt-4 w-full rounded-[10px] border border-[color:var(--ink-200)] py-2.5 text-sm font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)]">Cancel</button>
         </div>
       </div>
     );
@@ -173,22 +173,22 @@ Generate a structured path profile for them to save and test. Be realistic and h
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(5,8,22,0.6)' }}>
         <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-[24px] bg-white p-6 sm:p-8">
           <div className="flex items-center justify-between mb-1">
-            <h2 className="font-heading text-xl font-bold text-[#050816]">Prior Recommendations</h2>
-            <button onClick={onClose}><X size={20} className="text-[#64748B]" /></button>
+            <h2 className="font-heading text-xl font-bold text-[color:var(--surface-dark-900)]">Prior Recommendations</h2>
+            <button onClick={onClose}><X size={20} className="text-[color:var(--ink-500)]" /></button>
           </div>
-          <p className="text-sm text-[#64748B] mb-5">Select a recommendation to activate as a new active path.</p>
+          <p className="text-sm text-[color:var(--ink-500)] mb-5">Select a recommendation to activate as a new active path.</p>
           {error && <div className="mb-3 p-3 rounded-xl bg-red-50 text-sm text-red-700">{error}</div>}
           <div className="space-y-3">
             {unactivatedRecs.map(rec => (
               <button key={rec.id} onClick={() => handleSelectRec(rec)} disabled={saving}
-                className="w-full rounded-[16px] border border-[#E2E8F0] p-4 text-left transition hover:border-[#1F3A5F] hover:bg-[#EEF2F6] disabled:opacity-60">
-                <p className="text-sm font-bold text-[#050816]">{rec.path_name}</p>
-                <p className="text-xs text-[#64748B] mt-1 line-clamp-2">{rec.fit_reason}</p>
-                <span className="mt-2 inline-block rounded-full px-2 py-0.5 text-[10px] font-bold" style={{ background: '#F1F5F9', color: '#64748B' }}>{rec.status}</span>
+                className="w-full rounded-[16px] border border-[color:var(--ink-200)] p-4 text-left transition hover:border-[color:var(--brand-navy-900)] hover:bg-[color:var(--ink-100)] disabled:opacity-60">
+                <p className="text-sm font-bold text-[color:var(--surface-dark-900)]">{rec.path_name}</p>
+                <p className="text-xs text-[color:var(--ink-500)] mt-1 line-clamp-2">{rec.fit_reason}</p>
+                <span className="mt-2 inline-block rounded-full px-2 py-0.5 text-[10px] font-bold" style={{ background: 'var(--ink-100)', color: 'var(--ink-500)' }}>{rec.status}</span>
               </button>
             ))}
           </div>
-          <button onClick={() => setMode(null)} className="mt-4 text-sm text-[#64748B] hover:text-[#334155]">← Back</button>
+          <button onClick={() => setMode(null)} className="mt-4 text-sm text-[color:var(--ink-500)] hover:text-[color:var(--ink-700)]">← Back</button>
         </div>
       </div>
     );
@@ -198,12 +198,12 @@ Generate a structured path profile for them to save and test. Be realistic and h
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(5,8,22,0.6)' }}>
       <div className="w-full max-w-2xl max-h-[92vh] overflow-y-auto rounded-[24px] bg-white p-6 sm:p-8">
         <div className="flex items-center justify-between mb-1">
-          <h2 className="font-heading text-xl font-bold text-[#050816]">
+          <h2 className="font-heading text-xl font-bold text-[color:var(--surface-dark-900)]">
             {mode === 'survey' && step === 1 ? 'Quick Path Survey' : 'Path Details'}
           </h2>
-          <button onClick={onClose}><X size={20} className="text-[#64748B]" /></button>
+          <button onClick={onClose}><X size={20} className="text-[color:var(--ink-500)]" /></button>
         </div>
-        <p className="text-sm text-[#64748B] mb-5">
+        <p className="text-sm text-[color:var(--ink-500)] mb-5">
           {mode === 'survey' && step === 1
             ? 'Answer 4 quick questions and AI will generate your path profile.'
             : 'Review and edit the path details before saving.'}
@@ -220,13 +220,13 @@ Generate a structured path profile for them to save and test. Be realistic and h
               { name: 'concerns', label: 'What concerns you about this path?', placeholder: 'Honestly — what worries you or makes you hesitant?' },
             ].map(q => (
               <div key={q.name}>
-                <label className="block text-sm font-semibold text-[#334155] mb-1.5">{q.label}</label>
+                <label className="block text-sm font-semibold text-[color:var(--ink-700)] mb-1.5">{q.label}</label>
                 <textarea rows={2} name={q.name} value={survey[q.name]} onChange={chSurvey} placeholder={q.placeholder}
-                  className="w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-3 text-sm outline-none focus:border-[#1F3A5F] resize-none placeholder-[#94A3B8]" />
+                  className="w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-sm outline-none focus:border-[color:var(--brand-navy-900)] resize-none placeholder-[color:var(--ink-400)]" />
               </div>
             ))}
             <div className="flex gap-3 mt-4">
-              <button onClick={() => setMode(null)} className="flex-1 rounded-[10px] border border-[#E2E8F0] py-3 text-sm font-semibold text-[#334155]">Back</button>
+              <button onClick={() => setMode(null)} className="flex-1 rounded-[10px] border border-[color:var(--ink-200)] py-3 text-sm font-semibold text-[color:var(--ink-700)]">Back</button>
               <button onClick={handleGenerateFromSurvey} disabled={generating}
                 className="flex-1 rounded-[10px] py-3 text-sm font-semibold text-white disabled:opacity-60"
                 style={{ background: 'var(--brand-navy-900)' }}>
@@ -248,10 +248,10 @@ Generate a structured path profile for them to save and test. Be realistic and h
               { name: 'notes', label: 'Notes', placeholder: 'Anything else worth tracking', rows: 2 },
             ].map(f => (
               <div key={f.name}>
-                <label className="block text-sm font-semibold text-[#334155] mb-1.5">{f.label}</label>
+                <label className="block text-sm font-semibold text-[color:var(--ink-700)] mb-1.5">{f.label}</label>
                 {f.rows ? (
                   <textarea rows={f.rows} name={f.name} value={form[f.name]} onChange={ch} placeholder={f.placeholder}
-                    className="w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-3 text-sm outline-none focus:border-[#1F3A5F] resize-none placeholder-[#94A3B8]" />
+                    className="w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-sm outline-none focus:border-[color:var(--brand-navy-900)] resize-none placeholder-[color:var(--ink-400)]" />
                 ) : (
                   <input name={f.name} value={form[f.name]} onChange={ch} placeholder={f.placeholder} className={inputCls} />
                 )}
@@ -260,26 +260,26 @@ Generate a structured path profile for them to save and test. Be realistic and h
 
             <div className="grid gap-4 sm:grid-cols-3">
               <div>
-                <label className="block text-sm font-semibold text-[#334155] mb-1.5">Risk level</label>
+                <label className="block text-sm font-semibold text-[color:var(--ink-700)] mb-1.5">Risk level</label>
                 <select name="risk_level" value={form.risk_level} onChange={ch} className={inputCls}>
                   {RISK_LEVELS.map(r => <option key={r} value={r}>{r.charAt(0).toUpperCase() + r.slice(1)}</option>)}
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-semibold text-[#334155] mb-1.5">Confidence</label>
+                <label className="block text-sm font-semibold text-[color:var(--ink-700)] mb-1.5">Confidence</label>
                 <select name="confidence_level" value={form.confidence_level} onChange={ch} className={inputCls}>
                   {CONFIDENCE_LEVELS.map(c => <option key={c} value={c}>{c.charAt(0).toUpperCase() + c.slice(1)}</option>)}
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-semibold text-[#334155] mb-1.5">Weekly hours</label>
+                <label className="block text-sm font-semibold text-[color:var(--ink-700)] mb-1.5">Weekly hours</label>
                 <input type="number" name="weekly_hours" value={form.weekly_hours} onChange={ch} min={1} max={80} className={inputCls} />
               </div>
             </div>
 
             <div className="flex gap-3 mt-4">
               <button onClick={() => mode === 'survey' ? setStep(1) : setMode(null)}
-                className="flex-1 rounded-[10px] border border-[#E2E8F0] py-3 text-sm font-semibold text-[#334155]">Back</button>
+                className="flex-1 rounded-[10px] border border-[color:var(--ink-200)] py-3 text-sm font-semibold text-[color:var(--ink-700)]">Back</button>
               <button onClick={handleSave} disabled={saving}
                 className="flex-1 rounded-[10px] py-3 text-sm font-semibold text-white disabled:opacity-60"
                 style={{ background: 'var(--brand-navy-900)' }}>

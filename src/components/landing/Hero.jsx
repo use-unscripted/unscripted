@@ -19,7 +19,7 @@ import { motion, useScroll, useSpring, useTransform, useReducedMotion } from 'fr
 import UniversityMarquee from '@/components/landing/UniversityMarquee';
 import HeroBackdrop from '@/components/landing/HeroBackdrop';
 import PathPreview from '@/components/landing/PathPreview';
-import { Reveal, WordReveal, UnderlineDraw, Magnetic, Tilt, EASE } from '@/components/motion';
+import { Reveal, WordReveal, UnderlineDraw, EASE } from '@/components/motion';
 
 /* Numbering earns its place here: the rail below fills in order and the four
    steps are a real sequence, so 01–04 is carrying information rather than
@@ -44,7 +44,7 @@ function RailNode({ index, progress }) {
   const scale = useTransform(progress, [a, b], [0.55, 1]);
   /* Literal hex, not var(--brand-gold-500) — framer-motion interpolates
      colour values, and it can't parse a CSS custom property. */
-  const bg = useTransform(progress, [a, b], ['#DCE3EA', '#D6B66A']);
+  const bg = useTransform(progress, [a, b], ['var(--ink-200)', 'var(--brand-gold-500)']);
   const ring = useTransform(progress, [a, b], [0, 1]);
   const ringScale = useTransform(ring, [0, 1], [0.6, 1]);
 
@@ -77,35 +77,45 @@ function RailNode({ index, progress }) {
   );
 }
 
+/* Steps are unboxed on purpose. Four equal-width, equal-height bordered cards
+   in a row is the feature-grid shape every generated landing page ships; the
+   borders were also doing nothing the rail doesn't already do. Without the
+   boxes the copy lengths differ naturally, the numbers can carry real display
+   weight, and the row reads as a sequence rather than a set of tiles.
+
+   The staggered top offset (steps 2 and 4 sit lower) is what stops the row
+   scanning as a flat grid. It's dropped below lg, where the cards stack. */
+const STEP_OFFSET = ['lg:mt-0', 'lg:mt-7', 'lg:mt-0', 'lg:mt-7'];
+
 function StepCard({ step, index, progress }) {
   const [a, b] = bandFor(index);
-  const numberColor = useTransform(progress, [a, b], ['rgba(31,58,95,0.15)', 'rgba(31,58,95,0.85)']);
-  const borderColor = useTransform(progress, [a, b], ['#DCE3EA', 'rgba(214,182,106,0.55)']);
+  const numberColor = useTransform(progress, [a, b], ['rgba(31,58,95,0.18)', 'rgba(31,58,95,0.9)']);
   const lift = useTransform(progress, [a, b], [10, 0]);
   /* Floor at 0.78, not 0.45. A step the rail hasn't reached yet should read
      as "not yet", not as disabled — and if someone lands with the section
      already in view, or never scrolls it fully, the copy still has to be
-     comfortably legible. The number, border and node carry the state change;
-     the body text barely moves. */
+     comfortably legible. The number and node carry the state change; the body
+     text barely moves. */
   const opacity = useTransform(progress, [a - 0.06, b], [0.78, 1]);
 
   return (
-    <Tilt className="h-full rounded-[var(--r-surface)]">
-      <motion.div
-        className="h-full rounded-[var(--r-surface)] bg-white p-6"
-        style={{ borderWidth: 1, borderStyle: 'solid', borderColor, y: lift, opacity }}
+    <motion.div
+      className={`h-full pr-4 ${STEP_OFFSET[index] || ''}`}
+      style={{ y: lift, opacity }}
+    >
+      <motion.span
+        className="font-heading block text-4xl font-bold tabular-nums"
+        style={{ color: numberColor, letterSpacing: '-0.02em' }}
       >
-        <motion.span className="font-heading text-3xl font-bold block" style={{ color: numberColor }}>
-          {step.n}
-        </motion.span>
-        <h3 className="font-heading mt-3 text-base font-bold" style={{ color: 'var(--text-primary)' }}>
-          {step.title}
-        </h3>
-        <p className="mt-2 text-sm leading-6" style={{ color: 'var(--text-secondary)' }}>
-          {step.body}
-        </p>
-      </motion.div>
-    </Tilt>
+        {step.n}
+      </motion.span>
+      <h3 className="font-heading mt-3 text-lg font-bold" style={{ color: 'var(--text-primary)' }}>
+        {step.title}
+      </h3>
+      <p className="mt-2 max-w-[34ch] text-sm leading-6" style={{ color: 'var(--text-secondary)' }}>
+        {step.body}
+      </p>
+    </motion.div>
   );
 }
 
@@ -139,7 +149,10 @@ function ProcessRail() {
     <section
       id="how-it-works"
       ref={ref}
-      className="mx-auto max-w-7xl px-6 pt-16 pb-24"
+      /* Deliberately the most generous block on the page — this is where the
+         product is actually explained, and section padding that's identical
+         top to bottom is what makes a page read as templated. */
+      className="mx-auto max-w-7xl px-6 pt-24 pb-32"
       style={{ scrollMarginTop: 88 }}
     >
       {/* This section is the target of the nav's "How it works" link and it
@@ -211,7 +224,7 @@ function ProcessRail() {
 function StackNode({ index, progress }) {
   const [a, b] = bandFor(index);
   const scale = useTransform(progress, [a, b], [0.55, 1]);
-  const bg = useTransform(progress, [a, b], ['#DCE3EA', '#D6B66A']);
+  const bg = useTransform(progress, [a, b], ['var(--ink-200)', 'var(--brand-gold-500)']);
 
   return (
     <motion.span
@@ -232,10 +245,15 @@ export default function Hero() {
   return (
     <>
       {/* Hero */}
-      <section className="relative mx-auto max-w-7xl px-6 pb-20 pt-16 lg:pt-24">
+      <section className="relative mx-auto max-w-7xl px-6 pb-20 pt-14 lg:pt-20">
         <HeroBackdrop />
 
-        <div className="relative mx-auto max-w-3xl text-center" style={{ zIndex: 1 }}>
+        {/* Left-biased, not centred. Centred headline over centred body over a
+            centred button pair, section after section, is the single most
+            recognisable generated-page shape — and it was what this page did
+            top to bottom. The copy column is capped for measure but sits at
+            the container's left edge, so the fold has a direction. */}
+        <div className="relative max-w-[54rem]" style={{ zIndex: 1 }}>
           {/* The pill that used to sit here — tiny letterspaced caps, gold dot
              pulsing on a 2.6s loop, reading "Write your own path" — said
              nothing the headline doesn't say two lines later, and that exact
@@ -243,10 +261,13 @@ export default function Hero() {
              landing page. Removed rather than restyled. The headline is the
              first thing on the page now. */}
           <h1
-            className="font-heading text-[3rem] font-bold leading-[1.04] tracking-[-0.02em] sm:text-[4rem]"
-            style={{ color: 'var(--text-primary)' }}
+            className="font-heading font-bold leading-[1.02] tracking-[-0.025em]"
+            /* Sized down from 3/4rem: Cabinet Grotesk has a far larger x-height
+               than the Josefin Sans this was tuned against, so it renders
+               visibly bigger at the same font-size. */
+            style={{ color: 'var(--text-primary)', fontSize: 'clamp(2.5rem, 5vw + 0.5rem, 3.75rem)' }}
           >
-            <WordReveal text="Don't guess your next path." delay={0.05} />{' '}
+            <WordReveal text="Don’t guess your next path." delay={0.05} />{' '}
             <span className="relative inline-block">
               <WordReveal text="Test it." delay={0.34} />
               <UnderlineDraw delay={0.72} height={5} />
@@ -254,40 +275,40 @@ export default function Hero() {
           </h1>
 
           <Reveal delay={620} y={16}>
-            <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 font-body" style={{ color: 'var(--text-secondary)' }}>
-              Pick a career you're weighing up. You get 30 days of real assignments — who to email, what to say, what to bring back. By the end you'll know whether it fits, because you'll have tried it.
+            <p className="mt-6 max-w-[52ch] text-lg leading-8 font-body" style={{ color: 'var(--text-secondary)' }}>
+              Pick a career you’re weighing up. You get 30 days of real assignments — who to email, what to say, what to bring back. By the end you’ll know whether it fits, because you’ll have tried it.
             </p>
           </Reveal>
 
           <Reveal delay={740} y={16}>
-            <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
-              <Magnetic>
-                <Link
-                  to="/onboarding"
-                  className="group flex items-center gap-2 rounded-[var(--r-control)] px-7 py-3.5 text-sm font-semibold text-white"
-                  style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}
+            <div className="mt-9 flex flex-wrap items-center gap-3">
+              <Link
+                to="/onboarding"
+                className="group flex items-center gap-2 whitespace-nowrap rounded-[var(--r-control)] px-7 py-3.5 text-sm font-semibold text-white"
+                style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgb(31 58 95 / 0.25)' }}
+              >
+                Start your 30-day test
+                <motion.span
+                  className="inline-flex"
+                  initial={false}
+                  whileHover={{ x: 3 }}
+                  transition={{ duration: 0.3, ease: EASE }}
                 >
-                  Start your 30-day test
-                  <motion.span
-                    className="inline-flex"
-                    initial={false}
-                    whileHover={{ x: 3 }}
-                    transition={{ duration: 0.3, ease: EASE }}
-                  >
-                    <ArrowRight size={17} aria-hidden="true" />
-                  </motion.span>
-                </Link>
-              </Magnetic>
+                  <ArrowRight size={17} aria-hidden="true" />
+                </motion.span>
+              </Link>
 
-              <Magnetic strength={0.2} max={6}>
-                <a
-                  href="#how-it-works"
-                  className="block rounded-[var(--r-control)] px-7 py-3.5 text-sm font-semibold"
-                  style={{ background: 'white', border: '1px solid var(--border-light)', color: 'var(--text-primary)' }}
-                >
-                  See how it works
-                </a>
-              </Magnetic>
+              <a
+                href="#how-it-works"
+                className="block whitespace-nowrap rounded-[var(--r-control)] px-7 py-3.5 text-sm font-semibold"
+                style={{
+                  background: 'var(--background-primary)',
+                  border: '1px solid var(--border-light)',
+                  color: 'var(--text-primary)',
+                }}
+              >
+                See how it works
+              </a>
             </div>
             <p className="mt-4 text-sm" style={{ color: 'var(--text-secondary)' }}>
               Already have an account?{' '}

@@ -3,26 +3,26 @@ import { DEFAULT_FILTERS, typeLabel, VISIBILITY_LABELS, RESUME_STATUS } from '@/
 
 // w-full inside the grid below: on a phone each control takes its own cell instead
 // of pushing the page sideways.
-const sel = 'w-full min-w-0 sm:w-auto rounded-xl border border-[#E2E8F0] bg-white px-3 py-2 text-sm text-[#334155] outline-none focus:border-[#1F3A5F]';
+const sel = 'w-full min-w-0 sm:w-auto rounded-xl border border-[color:var(--ink-200)] bg-white px-3 py-2 text-sm text-[color:var(--ink-700)] outline-none focus:border-[color:var(--brand-navy-900)]';
 
 export default function EvidenceFilters({ filters, setFilters, options, shown, total }) {
   const set = (key) => (e) => setFilters((f) => ({ ...f, [key]: e.target.value }));
   const activeCount = Object.keys(DEFAULT_FILTERS).filter((k) => filters[k] !== DEFAULT_FILTERS[k]).length;
 
   return (
-    <div className="mb-5 rounded-[16px] border border-[#E2E8F0] bg-white p-4">
+    <div className="mb-5 rounded-[16px] border border-[color:var(--ink-200)] bg-white p-4">
       <div className="relative mb-3">
-        <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#94A3B8]" />
+        <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[color:var(--ink-400)]" />
         <input value={filters.q} onChange={set('q')} placeholder="Search evidence by title, path, experiment, mission or skill…"
-          className="w-full rounded-xl border border-[#E2E8F0] bg-white py-2.5 pl-9 pr-4 text-sm outline-none focus:border-[#1F3A5F]" />
+          className="w-full rounded-xl border border-[color:var(--ink-200)] bg-white py-2.5 pl-9 pr-4 text-sm outline-none focus:border-[color:var(--brand-navy-900)]" />
       </div>
 
       <div className="grid grid-cols-1 items-center gap-2 sm:flex sm:flex-wrap">
         <div className="flex shrink-0 items-center gap-2 sm:col-span-2">
-          <SlidersHorizontal size={14} className="text-[#64748B]" />
-          <span className="text-xs font-bold uppercase tracking-[.12em] text-[#64748B]">Organize by</span>
+          <SlidersHorizontal size={14} className="text-[color:var(--ink-500)]" />
+          <span className="text-xs font-bold uppercase tracking-[.12em] text-[color:var(--ink-500)]">Organize by</span>
           {activeCount > 0 && (
-            <span className="rounded-full px-2 py-0.5 text-[10px] font-bold" style={{ background: '#EEF2F6', color: 'var(--brand-navy-700)' }}>
+            <span className="rounded-full px-2 py-0.5 text-[10px] font-bold" style={{ background: 'var(--ink-100)', color: 'var(--brand-navy-700)' }}>
               {activeCount} active
             </span>
           )}
@@ -68,22 +68,22 @@ export default function EvidenceFilters({ filters, setFilters, options, shown, t
           {Object.entries(RESUME_STATUS).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
         </select>
 
-        <label className="flex min-w-0 items-center gap-1.5 text-xs text-[#64748B]">
+        <label className="flex min-w-0 items-center gap-1.5 text-xs text-[color:var(--ink-500)]">
           From <input type="date" value={filters.from} onChange={set('from')} aria-label="From date" className={sel} />
         </label>
-        <label className="flex min-w-0 items-center gap-1.5 text-xs text-[#64748B]">
+        <label className="flex min-w-0 items-center gap-1.5 text-xs text-[color:var(--ink-500)]">
           To <input type="date" value={filters.to} onChange={set('to')} aria-label="To date" className={sel} />
         </label>
 
         {activeCount > 0 && (
           <button onClick={() => setFilters(DEFAULT_FILTERS)}
-            className="flex items-center gap-1 rounded-lg border border-[#E2E8F0] px-3 py-2 text-xs font-semibold text-[#64748B] transition hover:border-red-200 hover:text-red-600">
+            className="flex items-center gap-1 rounded-lg border border-[color:var(--ink-200)] px-3 py-2 text-xs font-semibold text-[color:var(--ink-500)] transition hover:border-red-200 hover:text-red-600">
             <X size={12} /> Clear
           </button>
         )}
       </div>
 
-      <p className="mt-3 text-xs text-[#94A3B8]">
+      <p className="mt-3 text-xs text-[color:var(--ink-400)]">
         {shown} piece{shown !== 1 ? 's' : ''} of evidence shown{total !== shown ? ` of ${total}` : ''}.
       </p>
     </div>

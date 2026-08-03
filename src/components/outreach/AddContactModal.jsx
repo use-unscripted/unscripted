@@ -4,7 +4,7 @@ import { base44 } from '@/api/base44Client';
 import { linksForExperiment } from '@/lib/career-cycle';
 import { trackPilotEvent } from '@/lib/pilot-metrics';
 
-const inputCls = 'w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-2.5 text-sm outline-none focus:border-[#1F3A5F]';
+const inputCls = 'w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-2.5 text-sm outline-none focus:border-[color:var(--brand-navy-900)]';
 
 const CONTACT_TYPES = [
   ['informational_interview','Informational Interview'],['networking','Networking Contact'],
@@ -46,23 +46,23 @@ export function ContactSuccessToast({ contact, experimentTitle, missionTitle, on
       className="fixed bottom-6 right-6 z-[100] max-w-sm w-full rounded-[20px] bg-white border border-green-100 shadow-2xl p-5 flex flex-col gap-3"
       style={{ boxShadow: '0 20px 60px rgba(0,0,0,0.15)' }}>
       <div className="flex items-start gap-3">
-        <div className="shrink-0 w-9 h-9 rounded-full flex items-center justify-center" style={{ background: '#F0FDF4' }}>
+        <div className="shrink-0 w-9 h-9 rounded-full flex items-center justify-center" style={{ background: 'var(--success-50)' }}>
           <CheckCircle size={20} className="text-green-600" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-bold text-[#050816]">Contact saved successfully.</p>
-          <p className="text-xs text-[#64748B] mt-0.5 truncate">{contact.name}</p>
-          {experimentTitle && <p className="text-xs text-[#94A3B8] truncate">Experiment: {experimentTitle}</p>}
-          {missionTitle && <p className="text-xs text-[#94A3B8] truncate">Mission: {missionTitle}</p>}
+          <p className="text-sm font-bold text-[color:var(--surface-dark-900)]">Contact saved successfully.</p>
+          <p className="text-xs text-[color:var(--ink-500)] mt-0.5 truncate">{contact.name}</p>
+          {experimentTitle && <p className="text-xs text-[color:var(--ink-400)] truncate">Experiment: {experimentTitle}</p>}
+          {missionTitle && <p className="text-xs text-[color:var(--ink-400)] truncate">Mission: {missionTitle}</p>}
         </div>
-        <button onClick={onDismiss} aria-label="Dismiss" className="shrink-0 text-[#94A3B8] hover:text-[#334155]">
+        <button onClick={onDismiss} aria-label="Dismiss" className="shrink-0 text-[color:var(--ink-400)] hover:text-[color:var(--ink-700)]">
           <X size={16} />
         </button>
       </div>
       <div className="flex gap-2">
         <button onClick={onViewContact} className="flex-1 rounded-[8px] py-2 text-xs font-semibold text-white"
           style={{ background: 'var(--brand-navy-900)' }}>View Contact</button>
-        <button onClick={onOpenExperiment} className="flex-1 rounded-[8px] border border-[#E2E8F0] py-2 text-xs font-semibold text-[#334155] hover:bg-[#F8FAFC]">
+        <button onClick={onOpenExperiment} className="flex-1 rounded-[8px] border border-[color:var(--ink-200)] py-2 text-xs font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)]">
           Open Experiment
         </button>
       </div>
@@ -210,36 +210,36 @@ export default function AddContactModal({ contact, onClose, onSaved }) {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(5,8,22,0.55)' }}>
       <div className="w-full max-w-2xl max-h-[92vh] overflow-y-auto rounded-[24px] bg-white p-6 sm:p-8">
         <div className="flex items-center justify-between mb-1">
-          <h2 className="font-heading text-xl font-bold text-[#050816]">{isEdit ? 'Edit Contact' : 'Add Contact'}</h2>
-          <button onClick={onClose} disabled={saving} aria-label="Close"><X size={20} className="text-[#64748B]" /></button>
+          <h2 className="font-heading text-xl font-bold text-[color:var(--surface-dark-900)]">{isEdit ? 'Edit Contact' : 'Add Contact'}</h2>
+          <button onClick={onClose} disabled={saving} aria-label="Close"><X size={20} className="text-[color:var(--ink-500)]" /></button>
         </div>
-        <p className="text-sm text-[#64748B] mb-5">{isEdit ? 'Update contact details and linked experiment.' : 'Connect this contact to an experiment and track outreach.'}</p>
+        <p className="text-sm text-[color:var(--ink-500)] mb-5">{isEdit ? 'Update contact details and linked experiment.' : 'Connect this contact to an experiment and track outreach.'}</p>
 
         {saveError && <div className="mb-4 p-3 rounded-lg bg-red-50 text-red-700 text-sm" role="alert">{saveError}</div>}
 
         {loadingData ? (
-          <div className="py-10 text-center text-sm text-[#64748B]"><Loader2 size={20} className="animate-spin mx-auto mb-2" />Loading…</div>
+          <div className="py-10 text-center text-sm text-[color:var(--ink-500)]"><Loader2 size={20} className="animate-spin mx-auto mb-2" />Loading…</div>
         ) : (
           <div className="space-y-4">
 
             {/* Contact info */}
-            <p className="text-xs font-bold uppercase tracking-wide text-[#94A3B8]">Contact Information</p>
+            <p className="text-xs font-bold uppercase tracking-wide text-[color:var(--ink-400)]">Contact Information</p>
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <label className="block mb-1 text-xs font-semibold text-[#334155]">Full name <span className="text-red-500">*</span></label>
+                <label className="block mb-1 text-xs font-semibold text-[color:var(--ink-700)]">Full name <span className="text-red-500">*</span></label>
                 <input name="name" value={data.name} onChange={ch} placeholder="Jane Smith" className={inputCls} />
                 {errors.name && <p className="mt-1 text-xs text-red-600">{errors.name}</p>}
               </div>
               <div>
-                <label className="block mb-1 text-xs font-semibold text-[#334155]">Company or organization</label>
+                <label className="block mb-1 text-xs font-semibold text-[color:var(--ink-700)]">Company or organization</label>
                 <input name="company" value={data.company} onChange={ch} placeholder="Goldman Sachs" className={inputCls} />
               </div>
               <div>
-                <label className="block mb-1 text-xs font-semibold text-[#334155]">Job title</label>
+                <label className="block mb-1 text-xs font-semibold text-[color:var(--ink-700)]">Job title</label>
                 <input name="role" value={data.role} onChange={ch} placeholder="Analyst, Associate…" className={inputCls} />
               </div>
               <div>
-                <label className="block mb-1 text-xs font-semibold text-[#334155]">Contact type</label>
+                <label className="block mb-1 text-xs font-semibold text-[color:var(--ink-700)]">Contact type</label>
                 <select name="contact_type" value={data.contact_type} onChange={ch} className={inputCls}>
                   {CONTACT_TYPES.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
                 </select>
@@ -247,37 +247,37 @@ export default function AddContactModal({ contact, onClose, onSaved }) {
             </div>
 
             {/* Contact methods */}
-            <p className="text-xs font-bold uppercase tracking-wide text-[#94A3B8] pt-1">Contact Methods <span className="normal-case font-normal">(at least one required)</span></p>
+            <p className="text-xs font-bold uppercase tracking-wide text-[color:var(--ink-400)] pt-1">Contact Methods <span className="normal-case font-normal">(at least one required)</span></p>
             {errors.contact_method && <p className="text-xs text-red-600 -mt-2">{errors.contact_method}</p>}
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <label className="block mb-1 text-xs font-semibold text-[#334155]">Email</label>
+                <label className="block mb-1 text-xs font-semibold text-[color:var(--ink-700)]">Email</label>
                 <input name="email" type="email" value={data.email} onChange={ch} placeholder="jane@company.com" className={inputCls} />
                 {errors.email && <p className="mt-1 text-xs text-red-600">{errors.email}</p>}
               </div>
               <div>
-                <label className="block mb-1 text-xs font-semibold text-[#334155]">Phone number</label>
+                <label className="block mb-1 text-xs font-semibold text-[color:var(--ink-700)]">Phone number</label>
                 <input name="phone" type="tel" value={data.phone} onChange={ch} placeholder="(203) 555-0148 or +1 203 555 0148" className={inputCls} />
                 {errors.phone && <p className="mt-1 text-xs text-red-600">{errors.phone}</p>}
               </div>
               <div>
-                <label className="block mb-1 text-xs font-semibold text-[#334155]">LinkedIn URL</label>
+                <label className="block mb-1 text-xs font-semibold text-[color:var(--ink-700)]">LinkedIn URL</label>
                 <input name="profile_url" value={data.profile_url} onChange={ch} placeholder="linkedin.com/in/janedoe" className={inputCls} />
                 {errors.profile_url && <p className="mt-1 text-xs text-red-600">{errors.profile_url}</p>}
               </div>
               <div>
-                <label className="block mb-1 text-xs font-semibold text-[#334155]">Website or portfolio</label>
+                <label className="block mb-1 text-xs font-semibold text-[color:var(--ink-700)]">Website or portfolio</label>
                 <input name="website_url" value={data.website_url} onChange={ch} placeholder="https://janedoe.com" className={inputCls} />
                 {errors.website_url && <p className="mt-1 text-xs text-red-600">{errors.website_url}</p>}
               </div>
             </div>
 
             {/* Experiment / Path / Mission */}
-            <p className="text-xs font-bold uppercase tracking-wide text-[#94A3B8] pt-1">Experiment &amp; Path</p>
+            <p className="text-xs font-bold uppercase tracking-wide text-[color:var(--ink-400)] pt-1">Experiment &amp; Path</p>
             <div>
-              <label className="block mb-1 text-xs font-semibold text-[#334155]">Experiment <span className="text-red-500">*</span></label>
+              <label className="block mb-1 text-xs font-semibold text-[color:var(--ink-700)]">Experiment <span className="text-red-500">*</span></label>
               {experiments.length === 0
-                ? <p className="text-sm text-[#64748B] rounded-xl border border-[#E2E8F0] px-4 py-2.5">No experiments found. Create one first.</p>
+                ? <p className="text-sm text-[color:var(--ink-500)] rounded-xl border border-[color:var(--ink-200)] px-4 py-2.5">No experiments found. Create one first.</p>
                 : <select value={selectedExpId} onChange={e => handleExpChange(e.target.value)} className={inputCls}>
                     <option value="">Select an experiment…</option>
                     {experiments.map(exp => (
@@ -291,19 +291,19 @@ export default function AddContactModal({ contact, onClose, onSaved }) {
             </div>
 
             {selectedExp && (
-              <div className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-3">
-                <p className="text-[10px] font-bold uppercase tracking-wide text-[#64748B] mb-0.5">Path</p>
-                <p className="text-sm font-semibold text-[#050816]">
-                  {selectedExp.path_name || <span className="text-[#94A3B8] font-normal">No path connected to this experiment</span>}
+              <div className="rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] px-4 py-3">
+                <p className="text-[10px] font-bold uppercase tracking-wide text-[color:var(--ink-500)] mb-0.5">Path</p>
+                <p className="text-sm font-semibold text-[color:var(--surface-dark-900)]">
+                  {selectedExp.path_name || <span className="text-[color:var(--ink-400)] font-normal">No path connected to this experiment</span>}
                 </p>
               </div>
             )}
 
             {selectedExpId && (
               <div>
-                <label className="block mb-1 text-xs font-semibold text-[#334155]">Mission <span className="text-xs font-normal text-[#94A3B8]">(optional)</span></label>
+                <label className="block mb-1 text-xs font-semibold text-[color:var(--ink-700)]">Mission <span className="text-xs font-normal text-[color:var(--ink-400)]">(optional)</span></label>
                 {expMissions.length === 0
-                  ? <p className="text-xs text-[#94A3B8] rounded-xl border border-[#E2E8F0] px-4 py-2.5">No missions are currently linked to this experiment.</p>
+                  ? <p className="text-xs text-[color:var(--ink-400)] rounded-xl border border-[color:var(--ink-200)] px-4 py-2.5">No missions are currently linked to this experiment.</p>
                   : <select value={selectedMissionId} onChange={e => setSelectedMissionId(e.target.value)} className={inputCls}>
                       <option value="">No specific mission — overall experiment</option>
                       {expMissions.map(m => <option key={m.id} value={m.id}>{m.title}</option>)}
@@ -314,35 +314,35 @@ export default function AddContactModal({ contact, onClose, onSaved }) {
             )}
 
             {/* Outreach details */}
-            <p className="text-xs font-bold uppercase tracking-wide text-[#94A3B8] pt-1">Outreach Details</p>
+            <p className="text-xs font-bold uppercase tracking-wide text-[color:var(--ink-400)] pt-1">Outreach Details</p>
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <label className="block mb-1 text-xs font-semibold text-[#334155]">Outreach status</label>
+                <label className="block mb-1 text-xs font-semibold text-[color:var(--ink-700)]">Outreach status</label>
                 <select name="response_status" value={data.response_status} onChange={ch} className={inputCls}>
                   {STATUS_OPTIONS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
                 </select>
               </div>
               <div>
-                <label className="block mb-1 text-xs font-semibold text-[#334155]">Date first contacted</label>
+                <label className="block mb-1 text-xs font-semibold text-[color:var(--ink-700)]">Date first contacted</label>
                 <input type="date" name="date_contacted" value={data.date_contacted} onChange={ch} className={inputCls} />
               </div>
               <div>
-                <label className="block mb-1 text-xs font-semibold text-[#334155]">Last contacted</label>
+                <label className="block mb-1 text-xs font-semibold text-[color:var(--ink-700)]">Last contacted</label>
                 <input type="date" name="last_contacted_date" value={data.last_contacted_date} onChange={ch} className={inputCls} />
               </div>
               <div>
-                <label className="block mb-1 text-xs font-semibold text-[#334155]">Follow-up date</label>
+                <label className="block mb-1 text-xs font-semibold text-[color:var(--ink-700)]">Follow-up date</label>
                 <input type="date" name="followup_date" value={data.followup_date} onChange={ch} className={inputCls} />
               </div>
             </div>
 
             <div>
-              <label className="block mb-1 text-xs font-semibold text-[#334155]">Reason for contact</label>
+              <label className="block mb-1 text-xs font-semibold text-[color:var(--ink-700)]">Reason for contact</label>
               <textarea rows={2} name="reason_for_contact" value={data.reason_for_contact} onChange={ch}
                 placeholder="What specific question can only they answer?" className={inputCls} />
             </div>
             <div>
-              <label className="block mb-1 text-xs font-semibold text-[#334155]">Notes</label>
+              <label className="block mb-1 text-xs font-semibold text-[color:var(--ink-700)]">Notes</label>
               <textarea rows={2} name="notes" value={data.notes} onChange={ch}
                 placeholder="Any context or follow-up notes" className={inputCls} />
             </div>
@@ -351,7 +351,7 @@ export default function AddContactModal({ contact, onClose, onSaved }) {
 
         <div className="mt-6 flex gap-3">
           <button onClick={onClose} disabled={saving}
-            className="flex-1 rounded-[10px] border border-[#E2E8F0] py-3 text-sm font-semibold text-[#334155] hover:bg-[#F8FAFC] disabled:opacity-50">
+            className="flex-1 rounded-[10px] border border-[color:var(--ink-200)] py-3 text-sm font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)] disabled:opacity-50">
             Cancel
           </button>
           <button onClick={handleSave} disabled={saving || loadingData}

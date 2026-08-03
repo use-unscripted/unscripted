@@ -53,9 +53,9 @@ const PATHS = [
 ];
 
 const TONE = {
-  best: { chipBg: 'rgba(214,182,106,0.18)', chipFg: 'var(--brand-gold-700)', bar: '#D6B66A', border: 'rgba(214,182,106,0.55)' },
-  alt: { chipBg: 'rgba(39,76,119,0.10)', chipFg: '#274C77', bar: '#274C77', border: 'var(--border-light)' },
-  contrarian: { chipBg: 'rgba(30,41,59,0.07)', chipFg: '#526274', bar: '#94A3B8', border: 'var(--border-light)' },
+  best: { chipBg: 'rgba(214,182,106,0.18)', chipFg: 'var(--brand-gold-700)', bar: 'var(--brand-gold-500)', border: 'rgba(214,182,106,0.55)' },
+  alt: { chipBg: 'rgba(39,76,119,0.10)', chipFg: 'var(--brand-navy-700)', bar: 'var(--brand-navy-700)', border: 'var(--border-light)' },
+  contrarian: { chipBg: 'rgba(30,41,59,0.07)', chipFg: 'var(--ink-500)', bar: 'var(--ink-400)', border: 'var(--border-light)' },
 };
 
 function ReadinessBar({ score, tone }) {
@@ -139,10 +139,12 @@ function PathCard({ path }) {
   );
 }
 
+/* Full container width and left-aligned caption, so the sample cards sit under
+   the left-biased hero rather than floating centred beneath it. */
 export default function PathPreview() {
   return (
-    <div className="relative mx-auto mt-16 max-w-5xl">
-      <p className="mb-4 text-center text-[13px]" style={{ color: 'var(--text-secondary)' }}>
+    <div className="relative mt-16">
+      <p className="mb-4 text-[13px]" style={{ color: 'var(--text-secondary)' }}>
         Sample output. This is what three paths look like.
       </p>
 

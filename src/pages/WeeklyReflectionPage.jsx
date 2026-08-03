@@ -127,8 +127,8 @@ function dedupe(list) {
   return Array.from(new Set(list.filter(Boolean)));
 }
 
-const inputCls = 'w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-3 text-sm text-[#050816] placeholder-[#94A3B8] outline-none focus:border-[#1F3A5F]';
-const bigInputCls = 'w-full rounded-2xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-4 text-base text-[#050816] placeholder-[#94A3B8] outline-none focus:border-[#1F3A5F]';
+const inputCls = 'w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-sm text-[color:var(--surface-dark-900)] placeholder-[color:var(--ink-400)] outline-none focus:border-[color:var(--brand-navy-900)]';
+const bigInputCls = 'w-full rounded-2xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-4 text-base text-[color:var(--surface-dark-900)] placeholder-[color:var(--ink-400)] outline-none focus:border-[color:var(--brand-navy-900)]';
 
 // ── Step 1 options ─────────────────────────────────────────────────────────────
 // Asked, never asserted. The page cannot substantiate "nothing got logged this
@@ -275,22 +275,22 @@ function SuccessToast({ experiment, mission, onOpenExp, onDismiss }) {
     <div role="alert" className="fixed bottom-24 right-4 z-[100] max-w-sm w-[calc(100%-2rem)] sm:bottom-6 sm:right-6 sm:w-full rounded-[20px] bg-white border border-green-100 shadow-2xl p-5 flex flex-col gap-3"
       style={{ boxShadow: '0 20px 60px rgba(0,0,0,0.15)' }}>
       <div className="flex items-start gap-3">
-        <div className="shrink-0 w-9 h-9 rounded-full flex items-center justify-center" style={{ background: '#F0FDF4' }}>
+        <div className="shrink-0 w-9 h-9 rounded-full flex items-center justify-center" style={{ background: 'var(--success-50)' }}>
           <CheckCircle size={20} className="text-green-600" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-bold text-[#050816]">Reflection saved.</p>
-          {experiment && <p className="text-xs text-[#64748B] mt-0.5 truncate">Experiment: {experiment.title}</p>}
-          {mission && <p className="text-xs text-[#94A3B8] truncate">Mission: {mission.title}</p>}
+          <p className="text-sm font-bold text-[color:var(--surface-dark-900)]">Reflection saved.</p>
+          {experiment && <p className="text-xs text-[color:var(--ink-500)] mt-0.5 truncate">Experiment: {experiment.title}</p>}
+          {mission && <p className="text-xs text-[color:var(--ink-400)] truncate">Mission: {mission.title}</p>}
         </div>
-        <button onClick={onDismiss} aria-label="Dismiss" className="shrink-0 text-[#94A3B8] hover:text-[#334155]">
+        <button onClick={onDismiss} aria-label="Dismiss" className="shrink-0 text-[color:var(--ink-400)] hover:text-[color:var(--ink-700)]">
           <X size={16} />
         </button>
       </div>
       {/* No "View Reflection" button: saving already switches to History with
           the row on screen, so it did nothing at all when pressed. */}
       {experiment && (
-        <button onClick={onOpenExp} className="w-full rounded-[8px] border border-[#E2E8F0] py-2 text-xs font-semibold text-[#334155] hover:bg-[#F8FAFC]">
+        <button onClick={onOpenExp} className="w-full rounded-[8px] border border-[color:var(--ink-200)] py-2 text-xs font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)]">
           Open Experiment
         </button>
       )}
@@ -782,7 +782,7 @@ function ReflectionFlow({ experiments, missions, proofs, outreach, initialData, 
   const backButton = (
     <button onClick={back} disabled={saving}
       className="flex items-center gap-1 rounded-[10px] border px-4 py-3 text-sm font-semibold disabled:opacity-50"
-      style={{ borderColor: '#E2E8F0', color: 'var(--text-primary)' }}>
+      style={{ borderColor: 'var(--ink-200)', color: 'var(--text-primary)' }}>
       <ChevronLeft size={15} /> Back
     </button>
   );
@@ -804,7 +804,7 @@ function ReflectionFlow({ experiments, missions, proofs, outreach, initialData, 
       className={`flex items-center justify-center gap-2 rounded-[10px] py-3 text-sm font-semibold disabled:opacity-40 ${primary ? 'flex-1 text-white' : 'basis-full px-4 border sm:basis-auto'}`}
       style={primary
         ? { background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }
-        : { borderColor: '#E2E8F0', color: 'var(--text-primary)', background: '#FFFFFF' }}>
+        : { borderColor: 'var(--ink-200)', color: 'var(--text-primary)', background: 'var(--brand-white)' }}>
       {saving
         ? <><Loader2 size={15} className="animate-spin" />Saving…</>
         : <><Save size={15} />{primary ? (isEdit ? 'Save changes' : 'Save reflection') : 'Done for now'}</>}
@@ -976,7 +976,7 @@ function ReflectionFlow({ experiments, missions, proofs, outreach, initialData, 
             {STEMS.map(stem => (
               <button key={stem} type="button" onClick={() => insertStem(stem)}
                 className="ui-press rounded-full border px-3 py-1.5 text-xs font-semibold"
-                style={{ borderColor: '#E2E8F0', color: 'var(--brand-navy-700)', background: '#FFFFFF' }}>
+                style={{ borderColor: 'var(--ink-200)', color: 'var(--brand-navy-700)', background: 'var(--brand-white)' }}>
                 {stem} …
               </button>
             ))}
@@ -1009,13 +1009,13 @@ function ReflectionFlow({ experiments, missions, proofs, outreach, initialData, 
         )}
 
         {summary && (
-          <div className="rounded-[20px] p-5" style={{ background: '#081225', border: '1px solid rgba(31,58,95,0.5)' }}>
+          <div className="rounded-[20px] p-5" style={{ background: 'var(--surface-dark-700)', border: '1px solid rgba(31,58,95,0.5)' }}>
             <p className="mb-2 text-xs font-bold uppercase tracking-wide" style={{ color: 'var(--brand-gold-500)' }}>Unscripted&apos;s analysis</p>
-            <p className="text-sm leading-6 text-slate-300">{summary}</p>
+            <p className="text-sm leading-6 text-[color:var(--ink-300)]">{summary}</p>
             {adjustments.length > 0 && (
               <ul className="mt-4 space-y-2">
                 {adjustments.map((a, i) => (
-                  <li key={i} className="flex gap-2 text-sm text-slate-300">
+                  <li key={i} className="flex gap-2 text-sm text-[color:var(--ink-300)]">
                     <ArrowRight size={14} className="mt-0.5 shrink-0" style={{ color: 'var(--brand-gold-500)' }} />{a}
                   </li>
                 ))}
@@ -1056,7 +1056,7 @@ function ReflectionFlow({ experiments, missions, proofs, outreach, initialData, 
 
       <div className="mb-6">
         <div className="mb-3 flex items-center justify-between gap-3">
-          <span className="truncate rounded-full px-2.5 py-1 text-[11px] font-bold" style={{ background: '#EEF2F6', color: 'var(--brand-navy-900)' }}>
+          <span className="truncate rounded-full px-2.5 py-1 text-[11px] font-bold" style={{ background: 'var(--ink-100)', color: 'var(--brand-navy-900)' }}>
             Week of {fmtWeek(weekStart)}
           </span>
           <span className="whitespace-nowrap text-[11px] font-semibold" style={{ color: 'var(--text-secondary)' }}>
@@ -1067,7 +1067,7 @@ function ReflectionFlow({ experiments, missions, proofs, outreach, initialData, 
       </div>
 
       <div key={index} className={dir === 'fwd' ? 'step-pane-fwd' : 'step-pane-back'}>
-        <h2 ref={headingRef} tabIndex={-1} className="font-heading text-[26px] font-bold leading-tight outline-none" style={{ color: '#050816' }}>
+        <h2 ref={headingRef} tabIndex={-1} className="font-heading text-[26px] font-bold leading-tight outline-none" style={{ color: 'var(--surface-dark-900)' }}>
           {question}
         </h2>
         {hint && <p className="mt-1.5 text-sm" style={{ color: 'var(--text-secondary)' }}>{hint}</p>}
@@ -1245,8 +1245,8 @@ export default function WeeklyReflectionPage() {
   };
 
   const tabCls = (on) => ({
-    background: on ? 'var(--brand-navy-900)' : '#F1F5F9',
-    color: on ? '#fff' : '#334155',
+    background: on ? 'var(--brand-navy-900)' : 'var(--ink-100)',
+    color: on ? '#fff' : 'var(--ink-700)',
   });
 
   return (
@@ -1287,11 +1287,11 @@ export default function WeeklyReflectionPage() {
       />
 
       {loading ? (
-        <div className="py-20 text-center text-[#64748B]">Loading reflections…</div>
+        <div className="py-20 text-center text-[color:var(--ink-500)]">Loading reflections…</div>
       ) : view === 'form' ? (
         experiments.length === 0 ? (
           <div className="rounded-[24px] border border-dashed p-12 text-center" style={{ borderColor: 'var(--border-light)' }}>
-            <p className="text-sm text-[#64748B]">There is nothing to reflect on yet. Start an experiment first.</p>
+            <p className="text-sm text-[color:var(--ink-500)]">There is nothing to reflect on yet. Start an experiment first.</p>
             <button onClick={() => navigate('/experiments')}
               className="mt-4 rounded-[10px] px-5 py-3 text-sm font-semibold text-white"
               style={{ background: 'var(--brand-navy-900)' }}>
@@ -1304,7 +1304,7 @@ export default function WeeklyReflectionPage() {
             {draftOffer && !activeDraft && !editingReflection && (
               <div className="anim-slide-up mb-4 flex flex-wrap items-center gap-3 rounded-[16px] border px-4 py-3"
                 style={{ borderColor: 'var(--border-light)', background: 'var(--background-tertiary)' }}>
-                <p className="flex-1 text-sm text-[#334155]">
+                <p className="flex-1 text-sm text-[color:var(--ink-700)]">
                   You started a reflection for the week of <strong>{fmtWeek(draftOffer.week_start)}</strong> and didn&apos;t save it.
                 </p>
                 <button onClick={() => setActiveDraft(draftOffer)}
@@ -1312,7 +1312,7 @@ export default function WeeklyReflectionPage() {
                   Pick it up
                 </button>
                 <button onClick={() => { clearDraft(); setDraftOffer(null); }}
-                  className="rounded-[8px] border border-[#E2E8F0] px-3 py-1.5 text-xs font-semibold text-[#334155] hover:bg-[#F8FAFC]">
+                  className="rounded-[8px] border border-[color:var(--ink-200)] px-3 py-1.5 text-xs font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)]">
                   Start fresh
                 </button>
               </div>
@@ -1324,7 +1324,7 @@ export default function WeeklyReflectionPage() {
                 exactly when the next save would create a SECOND row — and
                 disappeared once it became accurate. */}
             {currentWeekRow && editingReflection?.id === currentWeekRow.id && (
-              <p className="mb-4 text-sm text-[#64748B]">
+              <p className="mb-4 text-sm text-[color:var(--ink-500)]">
                 Picking up this week&apos;s reflection. Saving updates it rather than adding a second.
               </p>
             )}
@@ -1356,20 +1356,20 @@ export default function WeeklyReflectionPage() {
                 onChange={setSelectedPathId}
                 showAll
               />
-              {selectedPath && <span className="text-xs text-[#94A3B8]">Reflections for <strong className="text-[#334155]">{selectedPath.path_name}</strong></span>}
+              {selectedPath && <span className="text-xs text-[color:var(--ink-400)]">Reflections for <strong className="text-[color:var(--ink-700)]">{selectedPath.path_name}</strong></span>}
             </div>
           )}
 
           <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center">
             <div className="relative flex-1">
-              <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#94A3B8]" />
+              <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[color:var(--ink-400)]" />
               <input value={search} onChange={e => setSearch(e.target.value)}
                 placeholder="Search reflections…"
-                className="w-full rounded-xl border border-[#E2E8F0] bg-white py-2.5 pl-9 pr-4 text-sm outline-none focus:border-[#1F3A5F]" />
+                className="w-full rounded-xl border border-[color:var(--ink-200)] bg-white py-2.5 pl-9 pr-4 text-sm outline-none focus:border-[color:var(--brand-navy-900)]" />
             </div>
             {experiments.length > 0 && (
               <select value={filterExp} onChange={e => setFilterExp(e.target.value)}
-                className="max-w-full rounded-xl border border-[#E2E8F0] bg-white px-3 py-2.5 text-sm outline-none focus:border-[#1F3A5F]">
+                className="max-w-full rounded-xl border border-[color:var(--ink-200)] bg-white px-3 py-2.5 text-sm outline-none focus:border-[color:var(--brand-navy-900)]">
                 <option value="all">All experiments</option>
                 {experiments.map(exp => <option key={exp.id} value={exp.id}>{exp.title}</option>)}
               </select>
@@ -1382,7 +1382,7 @@ export default function WeeklyReflectionPage() {
           </div>
 
           {filteredReflections.length === 0 ? (
-            <div className="rounded-[24px] border border-dashed border-[#E2E8F0] p-12 text-center text-[#64748B]">
+            <div className="rounded-[24px] border border-dashed border-[color:var(--ink-200)] p-12 text-center text-[color:var(--ink-500)]">
               {reflections.length === 0
                 ? 'No reflections yet. The first one takes about a minute.'
                 : 'No reflections match your search or filter.'}
@@ -1395,10 +1395,10 @@ export default function WeeklyReflectionPage() {
                 const preview = r.generated_summary || r.lessons || r.next_changes
                   || toStringArray(r.completed_items).join(' · ') || toStringArray(r.avoided_items).join(' · ');
                 return (
-                  <div key={r.id} className="rounded-[20px] border border-[#E2E8F0] bg-white p-5">
+                  <div key={r.id} className="rounded-[20px] border border-[color:var(--ink-200)] bg-white p-5">
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0 flex-1">
-                        <p className="font-heading font-bold text-[#050816]">
+                        <p className="font-heading font-bold text-[color:var(--surface-dark-900)]">
                           Week of {fmtWeek(r.week_start, { month: 'long', day: 'numeric', year: 'numeric' })}
                         </p>
 
@@ -1407,23 +1407,23 @@ export default function WeeklyReflectionPage() {
                             {linkedExp.title}{linkedExp.path_name ? ` — ${linkedExp.path_name}` : ''}
                           </p>
                         ) : (
-                          <p className="mt-0.5 text-xs text-[#94A3B8]">Experiment not linked.</p>
+                          <p className="mt-0.5 text-xs text-[color:var(--ink-400)]">Experiment not linked.</p>
                         )}
 
-                        {linkedMission && <p className="mt-0.5 text-xs text-[#64748B]">Mission: {linkedMission.title}</p>}
-                        {preview && <p className="mt-2 line-clamp-2 text-sm text-[#64748B]">{preview}</p>}
+                        {linkedMission && <p className="mt-0.5 text-xs text-[color:var(--ink-500)]">Mission: {linkedMission.title}</p>}
+                        {preview && <p className="mt-2 line-clamp-2 text-sm text-[color:var(--ink-500)]">{preview}</p>}
                       </div>
-                      {r.generated_summary && <CheckCircle size={18} className="mt-1 shrink-0" style={{ color: '#15803D' }} />}
+                      {r.generated_summary && <CheckCircle size={18} className="mt-1 shrink-0" style={{ color: 'var(--success-700)' }} />}
                     </div>
 
                     <div className="mt-3 flex flex-wrap gap-2">
                       <button onClick={() => { setEditingReflection(r); setView('form'); }}
-                        className="rounded-[8px] border border-[#E2E8F0] px-3 py-1.5 text-xs font-semibold text-[#334155] transition hover:bg-[#F8FAFC]">
+                        className="rounded-[8px] border border-[color:var(--ink-200)] px-3 py-1.5 text-xs font-semibold text-[color:var(--ink-700)] transition hover:bg-[color:var(--ink-50)]">
                         View / Edit
                       </button>
                       {linkedExp && (
                         <button onClick={() => navigate('/experiments')}
-                          className="flex items-center gap-1 rounded-[8px] border border-[#E2E8F0] px-3 py-1.5 text-xs font-semibold text-[#334155] transition hover:bg-[#F8FAFC]">
+                          className="flex items-center gap-1 rounded-[8px] border border-[color:var(--ink-200)] px-3 py-1.5 text-xs font-semibold text-[color:var(--ink-700)] transition hover:bg-[color:var(--ink-50)]">
                           <ExternalLink size={11} /> Open Experiment
                         </button>
                       )}

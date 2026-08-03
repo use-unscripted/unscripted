@@ -15,11 +15,11 @@ import ExperimentActionsMenu from '@/components/experiments/ExperimentActionsMen
 import ResumeExperimentModal from '@/components/experiments/ResumeExperimentModal';
 
 const STATUS_STYLES = {
-  planned:     { bg: '#F1F5F9', text: '#334155', label: 'Planned' },
-  in_progress: { bg: '#FFFBEB', text: '#B45309', label: 'In Progress' },
-  completed:   { bg: '#F0FDF4', text: '#15803D', label: 'Completed' },
-  skipped:     { bg: '#F8FAFC', text: '#94A3B8', label: 'Skipped' },
-  paused:      { bg: '#FFFBEB', text: '#B45309', label: 'Paused' },
+  planned:     { bg: 'var(--ink-100)', text: 'var(--ink-700)', label: 'Planned' },
+  in_progress: { bg: 'var(--warning-50)', text: 'var(--warning-700)', label: 'In Progress' },
+  completed:   { bg: 'var(--success-50)', text: 'var(--success-700)', label: 'Completed' },
+  skipped:     { bg: 'var(--ink-50)', text: 'var(--ink-400)', label: 'Skipped' },
+  paused:      { bg: 'var(--warning-50)', text: 'var(--warning-700)', label: 'Paused' },
 };
 
 // The 'active' filter chip means "not yet finished", not "not paused" (see allActive).
@@ -51,12 +51,12 @@ function PathDropdown({ paths, value, onChange, error }) {
 
   if (paths.filter(p => !['archived', 'deprioritized'].includes(p.status)).length === 0) {
     return (
-      <div className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] p-4 text-center">
-        <p className="text-sm font-semibold text-[#334155] mb-1">No paths available</p>
-        <p className="text-xs text-[#64748B]">You need to create or activate a path before creating an experiment.</p>
+      <div className="rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] p-4 text-center">
+        <p className="text-sm font-semibold text-[color:var(--ink-700)] mb-1">No paths available</p>
+        <p className="text-xs text-[color:var(--ink-500)]">You need to create or activate a path before creating an experiment.</p>
         <div className="mt-3 flex gap-2 justify-center flex-wrap">
           <a href="/paths" className="rounded-lg px-3 py-1.5 text-xs font-semibold text-white" style={{ background: 'var(--brand-navy-900)' }}>Create a Path</a>
-          <a href="/paths" className="rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-xs font-semibold text-[#334155]">View Path Recommendations</a>
+          <a href="/paths" className="rounded-lg border border-[color:var(--ink-200)] px-3 py-1.5 text-xs font-semibold text-[color:var(--ink-700)]">View Path Recommendations</a>
         </div>
       </div>
     );
@@ -71,17 +71,17 @@ function PathDropdown({ paths, value, onChange, error }) {
     <div>
       {eligible.length > 4 && (
         <div className="relative mb-2">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#94A3B8]" />
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[color:var(--ink-400)]" />
           <input
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Search paths..."
-            className="w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] pl-8 pr-4 py-2.5 text-sm outline-none focus:border-[#1F3A5F]"
+            className="w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] pl-8 pr-4 py-2.5 text-sm outline-none focus:border-[color:var(--brand-navy-900)]"
           />
         </div>
       )}
       <select
-        className={`w-full rounded-xl border bg-[#FAFAF9] px-4 py-3 text-sm outline-none focus:border-[#1F3A5F] ${error ? 'border-red-400' : 'border-[#E2E8F0]'}`}
+        className={`w-full rounded-xl border bg-[color:var(--page-surface)] px-4 py-3 text-sm outline-none focus:border-[color:var(--brand-navy-900)] ${error ? 'border-red-400' : 'border-[color:var(--ink-200)]'}`}
         value={value}
         onChange={e => onChange(e.target.value)}
       >
@@ -115,7 +115,7 @@ function MissionRow({ mission, experiment, onProofAdded, onDeleted }) {
   };
 
   return (
-    <div className="flex items-center justify-between gap-3 rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-3">
+    <div className="flex items-center justify-between gap-3 rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] px-4 py-3">
       {confirmDelete && (
         <SoftDeleteConfirm
           itemName={mission.title}
@@ -141,18 +141,18 @@ function MissionRow({ mission, experiment, onProofAdded, onDeleted }) {
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
           <span className="rounded-full px-2 py-0.5 text-xs font-bold" style={{ background: s.bg, color: s.text }}>{s.label}</span>
-          <span className="text-sm font-semibold text-[#050816] truncate">{mission.title}</span>
+          <span className="text-sm font-semibold text-[color:var(--surface-dark-900)] truncate">{mission.title}</span>
         </div>
-        {mission.objective && <p className="mt-0.5 text-xs text-[#64748B] line-clamp-1">{mission.objective}</p>}
+        {mission.objective && <p className="mt-0.5 text-xs text-[color:var(--ink-500)] line-clamp-1">{mission.objective}</p>}
       </div>
       <div className="flex gap-2 shrink-0">
-        <button onClick={() => setShowCal(true)} className="flex items-center gap-1.5 rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-xs font-semibold text-[#334155] hover:bg-white transition">
+        <button onClick={() => setShowCal(true)} className="flex items-center gap-1.5 rounded-lg border border-[color:var(--ink-200)] px-3 py-1.5 text-xs font-semibold text-[color:var(--ink-700)] hover:bg-white transition">
           <Calendar size={12} /> Add to Calendar
         </button>
-        <button onClick={() => setShowProof(true)} className="flex items-center gap-1.5 rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-xs font-semibold text-[#334155] hover:bg-white transition">
+        <button onClick={() => setShowProof(true)} className="flex items-center gap-1.5 rounded-lg border border-[color:var(--ink-200)] px-3 py-1.5 text-xs font-semibold text-[color:var(--ink-700)] hover:bg-white transition">
           <FileText size={12} /> Add Proof
         </button>
-        <button onClick={() => setConfirmDelete(true)} className="flex items-center gap-1.5 rounded-lg border border-[#E2E8F0] px-2 py-1.5 text-xs text-red-300 hover:text-red-500 hover:border-red-200 transition" title="Delete mission">
+        <button onClick={() => setConfirmDelete(true)} className="flex items-center gap-1.5 rounded-lg border border-[color:var(--ink-200)] px-2 py-1.5 text-xs text-red-300 hover:text-red-500 hover:border-red-200 transition" title="Delete mission">
           <Trash2 size={12} />
         </button>
       </div>
@@ -166,7 +166,7 @@ function MissionsSection({ experiment, missions, loadingMissions, onMissionAdded
   const hasMissions = missions.length > 0;
 
   return (
-    <div className="border-t border-[#E2E8F0] pt-4">
+    <div className="border-t border-[color:var(--ink-200)] pt-4">
       {showAdd && (
         <AddMissionModal
           experiment={experiment}
@@ -175,7 +175,7 @@ function MissionsSection({ experiment, missions, loadingMissions, onMissionAdded
         />
       )}
       <div className="flex items-center justify-between mb-3">
-        <p className="text-xs font-bold uppercase tracking-wide text-[#64748B]">
+        <p className="text-xs font-bold uppercase tracking-wide text-[color:var(--ink-500)]">
           Missions {hasMissions ? `(${missions.length})` : ''}
         </p>
         <button onClick={() => setShowAdd(true)}
@@ -185,7 +185,7 @@ function MissionsSection({ experiment, missions, loadingMissions, onMissionAdded
         </button>
       </div>
       {loadingMissions ? (
-        <div className="flex items-center gap-2 text-xs text-[#64748B] py-2">
+        <div className="flex items-center gap-2 text-xs text-[color:var(--ink-500)] py-2">
           <Loader2 size={13} className="animate-spin" /> Loading missions...
         </div>
       ) : hasMissions ? (
@@ -195,7 +195,7 @@ function MissionsSection({ experiment, missions, loadingMissions, onMissionAdded
           ))}
         </div>
       ) : (
-        <p className="text-xs text-[#94A3B8] italic">No missions yet. Add one to track progress and submit proof.</p>
+        <p className="text-xs text-[color:var(--ink-400)] italic">No missions yet. Add one to track progress and submit proof.</p>
       )}
     </div>
   );
@@ -209,7 +209,7 @@ function ExperimentCard({ exp, onStatusChange, onExpand, expanded, missions, loa
   const isPaused = exp.status === 'paused';
 
   return (
-    <div className={`rounded-[20px] border bg-white overflow-hidden ${isPaused ? 'border-amber-200' : 'border-[#E2E8F0]'}`}>
+    <div className={`rounded-[20px] border bg-white overflow-hidden ${isPaused ? 'border-amber-200' : 'border-[color:var(--ink-200)]'}`}>
       <div className="p-5">
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1">
@@ -217,11 +217,11 @@ function ExperimentCard({ exp, onStatusChange, onExpand, expanded, missions, loa
               <span className="rounded-full px-2.5 py-1 text-xs font-bold" style={{ background: s.bg, color: s.text }}>{s.label}</span>
               {exp.path_name && <span className="rounded-full px-2.5 py-1 text-xs font-semibold" style={{ background: 'var(--background-tertiary)', color: 'var(--brand-navy-700)' }}>{exp.path_name}</span>}
               {isPaused && exp.paused_at && (
-                <span className="text-xs text-[#94A3B8]">Paused {fmtDate(exp.paused_at)}</span>
+                <span className="text-xs text-[color:var(--ink-400)]">Paused {fmtDate(exp.paused_at)}</span>
               )}
             </div>
-            <h3 className="font-heading font-bold text-[#050816]">{exp.title}</h3>
-            <p className="mt-1 text-sm text-[#334155]">{exp.objective}</p>
+            <h3 className="font-heading font-bold text-[color:var(--surface-dark-900)]">{exp.title}</h3>
+            <p className="mt-1 text-sm text-[color:var(--ink-700)]">{exp.objective}</p>
           </div>
           <div className="flex items-center gap-2 shrink-0">
             <ExperimentActionsMenu
@@ -231,12 +231,12 @@ function ExperimentCard({ exp, onStatusChange, onExpand, expanded, missions, loa
               onResumed={onResumed}
               onEdited={onEdited}
             />
-            <button onClick={onExpand} className="rounded-xl border border-[#E2E8F0] p-2 hover:bg-[#F8FAFC]">
+            <button onClick={onExpand} className="rounded-xl border border-[color:var(--ink-200)] p-2 hover:bg-[color:var(--ink-50)]">
               {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
             </button>
           </div>
         </div>
-        <div className="mt-3 flex items-center gap-4 text-xs text-[#64748B] flex-wrap">
+        <div className="mt-3 flex items-center gap-4 text-xs text-[color:var(--ink-500)] flex-wrap">
           {exp.estimated_hours && <span className="flex items-center gap-1"><Clock size={12} /> ~{exp.estimated_hours}h</span>}
           {exp.deadline && <span>Due {new Date(exp.deadline).toLocaleDateString()}</span>}
           {exp.deliverable && <span className="flex items-center gap-1"><BookOpen size={12} /> {exp.deliverable}</span>}
@@ -256,7 +256,7 @@ function ExperimentCard({ exp, onStatusChange, onExpand, expanded, missions, loa
           {isPaused && (
             <button onClick={() => onResumed(exp)}
               className="flex items-center gap-1.5 rounded-lg px-3 py-1 text-xs font-semibold text-white transition"
-              style={{ background: '#15803D' }}>
+              style={{ background: 'var(--success-700)' }}>
               <Play size={11} /> Resume Experiment
             </button>
           )}
@@ -264,17 +264,17 @@ function ExperimentCard({ exp, onStatusChange, onExpand, expanded, missions, loa
       </div>
 
       {expanded && (
-        <div className="border-t border-[#E2E8F0] p-5 space-y-4">
+        <div className="border-t border-[color:var(--ink-200)] p-5 space-y-4">
           {isPaused && (
-            <div className="rounded-xl p-3 flex items-start gap-3" style={{ background: '#FFFBEB', border: '1px solid rgba(180,83,9,0.2)' }}>
-              <PauseCircle size={16} className="text-[#B45309] shrink-0 mt-0.5" />
+            <div className="rounded-xl p-3 flex items-start gap-3" style={{ background: 'var(--warning-50)', border: '1px solid rgba(180,83,9,0.2)' }}>
+              <PauseCircle size={16} className="text-[color:var(--warning-700)] shrink-0 mt-0.5" />
               <div>
-                <p className="text-sm font-bold text-[#B45309]">This experiment is paused</p>
-                {exp.pause_reason && <p className="text-xs text-[#334155] mt-0.5">{exp.pause_reason}</p>}
-                {exp.paused_at && <p className="text-xs text-[#94A3B8] mt-0.5">Paused on {fmtDate(exp.paused_at)}</p>}
+                <p className="text-sm font-bold text-[color:var(--warning-700)]">This experiment is paused</p>
+                {exp.pause_reason && <p className="text-xs text-[color:var(--ink-700)] mt-0.5">{exp.pause_reason}</p>}
+                {exp.paused_at && <p className="text-xs text-[color:var(--ink-400)] mt-0.5">Paused on {fmtDate(exp.paused_at)}</p>}
                 <button onClick={() => onResumed(exp)}
                   className="mt-2 flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold text-white"
-                  style={{ background: '#15803D' }}>
+                  style={{ background: 'var(--success-700)' }}>
                   <Play size={11} /> Resume Experiment
                 </button>
               </div>
@@ -282,14 +282,14 @@ function ExperimentCard({ exp, onStatusChange, onExpand, expanded, missions, loa
           )}
 
           {exp.expected_learning && (
-            <div><p className="text-xs font-bold uppercase tracking-wide text-[#64748B] mb-1">Expected learning</p><p className="text-sm text-[#334155]">{exp.expected_learning}</p></div>
+            <div><p className="text-xs font-bold uppercase tracking-wide text-[color:var(--ink-500)] mb-1">Expected learning</p><p className="text-sm text-[color:var(--ink-700)]">{exp.expected_learning}</p></div>
           )}
           {exp.mission_steps?.length > 0 && (
             <div>
-              <p className="text-xs font-bold uppercase tracking-wide text-[#64748B] mb-2">Mission steps</p>
+              <p className="text-xs font-bold uppercase tracking-wide text-[color:var(--ink-500)] mb-2">Mission steps</p>
               <ol className="space-y-2">
                 {exp.mission_steps.map((step, i) => (
-                  <li key={i} className="flex gap-3 text-sm text-[#334155]">
+                  <li key={i} className="flex gap-3 text-sm text-[color:var(--ink-700)]">
                     <span className="shrink-0 font-bold" style={{ color: 'var(--brand-navy-900)' }}>{i + 1}.</span>
                     <span>{typeof step === 'string' ? step : step.step || step.description || step.title || JSON.stringify(step)}</span>
                   </li>
@@ -300,13 +300,13 @@ function ExperimentCard({ exp, onStatusChange, onExpand, expanded, missions, loa
           {exp.proof_required && (
             <div className="rounded-xl p-3" style={{ background: 'var(--background-tertiary)', border: '1px solid var(--border-light)' }}>
               <p className="text-xs font-bold uppercase tracking-wide mb-1" style={{ color: 'var(--brand-navy-900)' }}>Proof required</p>
-              <p className="text-sm text-[#334155]">{exp.proof_required}</p>
+              <p className="text-sm text-[color:var(--ink-700)]">{exp.proof_required}</p>
             </div>
           )}
           {exp.reflection_questions?.length > 0 && (
             <div>
-              <p className="text-xs font-bold uppercase tracking-wide text-[#64748B] mb-2">Reflection questions</p>
-              <ul className="space-y-1">{exp.reflection_questions.map((q, i) => <li key={i} className="text-sm text-[#334155]">· {q}</li>)}</ul>
+              <p className="text-xs font-bold uppercase tracking-wide text-[color:var(--ink-500)] mb-2">Reflection questions</p>
+              <ul className="space-y-1">{exp.reflection_questions.map((q, i) => <li key={i} className="text-sm text-[color:var(--ink-700)]">· {q}</li>)}</ul>
             </div>
           )}
 
@@ -316,7 +316,7 @@ function ExperimentCard({ exp, onStatusChange, onExpand, expanded, missions, loa
               {['planned', 'in_progress', 'completed', 'skipped'].map(st => (
                 <button key={st} onClick={() => onStatusChange(exp.id, st)}
                   className="rounded-lg px-3 py-1.5 text-xs font-semibold transition border"
-                  style={exp.status === st ? { background: 'var(--brand-navy-900)', color: '#fff', borderColor: 'var(--brand-navy-900)' } : { background: 'white', color: '#334155', borderColor: '#E2E8F0' }}>
+                  style={exp.status === st ? { background: 'var(--brand-navy-900)', color: '#fff', borderColor: 'var(--brand-navy-900)' } : { background: 'white', color: 'var(--ink-700)', borderColor: 'var(--ink-200)' }}>
                   {STATUS_STYLES[st].label}
                 </button>
               ))}
@@ -324,11 +324,11 @@ function ExperimentCard({ exp, onStatusChange, onExpand, expanded, missions, loa
           )}
 
           {/* Mission Guide */}
-          <div className="border-t border-[#E2E8F0] pt-4">
+          <div className="border-t border-[color:var(--ink-200)] pt-4">
             <div className="flex items-center justify-between mb-2">
-              <p className="text-xs font-bold uppercase tracking-wide text-[#64748B] flex items-center gap-1.5">
+              <p className="text-xs font-bold uppercase tracking-wide text-[color:var(--ink-500)] flex items-center gap-1.5">
                 <Wand2 size={12} /> Mission Guide
-                {activeGuide && <span className="rounded-full px-2 py-0.5 text-[10px] font-bold" style={{ background: '#F0FDF4', color: '#15803D' }}>Active: v{activeGuide.version_number}</span>}
+                {activeGuide && <span className="rounded-full px-2 py-0.5 text-[10px] font-bold" style={{ background: 'var(--success-50)', color: 'var(--success-700)' }}>Active: v{activeGuide.version_number}</span>}
               </p>
               <button onClick={onGenerateGuide}
                 className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold text-white transition hover:-translate-y-px"
@@ -347,7 +347,7 @@ function ExperimentCard({ exp, onStatusChange, onExpand, expanded, missions, loa
                 onGenerateAnother={onGenerateGuide}
               />
             ) : (
-              <p className="text-xs text-[#94A3B8] italic">No guides yet. Generate one to get step-by-step instructions.</p>
+              <p className="text-xs text-[color:var(--ink-400)] italic">No guides yet. Generate one to get step-by-step instructions.</p>
             )}
           </div>
 
@@ -375,14 +375,14 @@ function PausedSection({ experiments, missions, guides, onResumed, onDelete, onE
     return (
       <div className="mb-8">
         <button onClick={() => setOpen(v => !v)} className="flex items-center gap-2 mb-3">
-          <PauseCircle size={15} className="text-[#B45309]" />
-          <h2 className="font-heading text-base font-bold text-[#050816]">Paused</h2>
-          {open ? <ChevronUp size={14} className="text-[#94A3B8]" /> : <ChevronDown size={14} className="text-[#94A3B8]" />}
+          <PauseCircle size={15} className="text-[color:var(--warning-700)]" />
+          <h2 className="font-heading text-base font-bold text-[color:var(--surface-dark-900)]">Paused</h2>
+          {open ? <ChevronUp size={14} className="text-[color:var(--ink-400)]" /> : <ChevronDown size={14} className="text-[color:var(--ink-400)]" />}
         </button>
         {open && (
           <div className="rounded-[16px] border border-dashed border-amber-200 bg-amber-50/40 p-6 text-center">
-            <p className="text-sm font-semibold text-[#334155]">No paused experiments.</p>
-            <p className="text-xs text-[#94A3B8] mt-1">Experiments you pause will appear here so you can return to them later.</p>
+            <p className="text-sm font-semibold text-[color:var(--ink-700)]">No paused experiments.</p>
+            <p className="text-xs text-[color:var(--ink-400)] mt-1">Experiments you pause will appear here so you can return to them later.</p>
           </div>
         )}
       </div>
@@ -395,10 +395,10 @@ function PausedSection({ experiments, missions, guides, onResumed, onDelete, onE
   return (
     <div className="mb-8">
       <button onClick={() => setOpen(v => !v)} className="flex items-center gap-2 mb-3">
-        <PauseCircle size={15} className="text-[#B45309]" />
-        <h2 className="font-heading text-base font-bold text-[#050816]">Paused</h2>
-        <span className="rounded-full px-2 py-0.5 text-[10px] font-bold" style={{ background: '#FFFBEB', color: '#B45309' }}>{experiments.length}</span>
-        {open ? <ChevronUp size={14} className="text-[#94A3B8]" /> : <ChevronDown size={14} className="text-[#94A3B8]" />}
+        <PauseCircle size={15} className="text-[color:var(--warning-700)]" />
+        <h2 className="font-heading text-base font-bold text-[color:var(--surface-dark-900)]">Paused</h2>
+        <span className="rounded-full px-2 py-0.5 text-[10px] font-bold" style={{ background: 'var(--warning-50)', color: 'var(--warning-700)' }}>{experiments.length}</span>
+        {open ? <ChevronUp size={14} className="text-[color:var(--ink-400)]" /> : <ChevronDown size={14} className="text-[color:var(--ink-400)]" />}
       </button>
       {open && (
         <div className="space-y-3">
@@ -419,14 +419,14 @@ function PausedSection({ experiments, missions, guides, onResumed, onDelete, onE
                         </span>
                         {exp.path_name && <span className="rounded-full px-2.5 py-1 text-xs font-semibold" style={{ background: 'var(--background-tertiary)', color: 'var(--brand-navy-700)' }}>{exp.path_name}</span>}
                       </div>
-                      <h3 className="font-heading font-bold text-[#050816]">{exp.title}</h3>
-                      <p className="mt-1 text-sm text-[#334155] line-clamp-2">{exp.objective}</p>
-                      <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-[#94A3B8]">
+                      <h3 className="font-heading font-bold text-[color:var(--surface-dark-900)]">{exp.title}</h3>
+                      <p className="mt-1 text-sm text-[color:var(--ink-700)] line-clamp-2">{exp.objective}</p>
+                      <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-[color:var(--ink-400)]">
                         {exp.paused_at && <span className="flex items-center gap-1"><PauseCircle size={11} /> Paused {fmtDate(exp.paused_at)}</span>}
                         {totalCount(exp.id) > 0 && <span><Target size={11} className="inline mr-0.5" />{completedCount(exp.id)}/{totalCount(exp.id)} missions done</span>}
                         {activeGuide && <span className="flex items-center gap-1"><Wand2 size={11} /> Guide v{activeGuide.version_number}</span>}
                       </div>
-                      {exp.pause_reason && <p className="mt-1 text-xs text-[#64748B] italic">"{exp.pause_reason}"</p>}
+                      {exp.pause_reason && <p className="mt-1 text-xs text-[color:var(--ink-500)] italic">"{exp.pause_reason}"</p>}
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
                       <ExperimentActionsMenu
@@ -436,7 +436,7 @@ function PausedSection({ experiments, missions, guides, onResumed, onDelete, onE
                         onResumed={onResumed}
                         onEdited={onEdited}
                       />
-                      <button onClick={() => setExpandedId(isExpanded ? null : exp.id)} className="rounded-xl border border-[#E2E8F0] p-2 hover:bg-[#F8FAFC]">
+                      <button onClick={() => setExpandedId(isExpanded ? null : exp.id)} className="rounded-xl border border-[color:var(--ink-200)] p-2 hover:bg-[color:var(--ink-50)]">
                         {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                       </button>
                     </div>
@@ -445,11 +445,11 @@ function PausedSection({ experiments, missions, guides, onResumed, onDelete, onE
                   <div className="mt-3 flex gap-2 flex-wrap">
                     <button onClick={() => onResumed(exp)}
                       className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold text-white transition"
-                      style={{ background: '#15803D' }}>
+                      style={{ background: 'var(--success-700)' }}>
                       <Play size={12} /> Resume Experiment
                     </button>
                     <button onClick={() => setExpandedId(isExpanded ? null : exp.id)}
-                      className="flex items-center gap-1.5 rounded-lg border border-[#E2E8F0] px-3 py-2 text-xs font-semibold text-[#334155] hover:bg-[#F8FAFC] transition">
+                      className="flex items-center gap-1.5 rounded-lg border border-[color:var(--ink-200)] px-3 py-2 text-xs font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)] transition">
                       View Details
                     </button>
                   </div>
@@ -458,18 +458,18 @@ function PausedSection({ experiments, missions, guides, onResumed, onDelete, onE
                 {isExpanded && (
                   <div className="border-t border-amber-100 p-5 space-y-3">
                     {exp.proof_required && (
-                      <div><p className="text-xs font-bold text-[#64748B] uppercase tracking-wide mb-1">Proof required</p><p className="text-sm text-[#334155]">{exp.proof_required}</p></div>
+                      <div><p className="text-xs font-bold text-[color:var(--ink-500)] uppercase tracking-wide mb-1">Proof required</p><p className="text-sm text-[color:var(--ink-700)]">{exp.proof_required}</p></div>
                     )}
                     {expMissions.length > 0 && (
                       <div>
-                        <p className="text-xs font-bold uppercase tracking-wide text-[#64748B] mb-2">Missions ({expMissions.length})</p>
+                        <p className="text-xs font-bold uppercase tracking-wide text-[color:var(--ink-500)] mb-2">Missions ({expMissions.length})</p>
                         <div className="space-y-1.5">
                           {expMissions.map(m => {
                             const ms = STATUS_STYLES[m.status] || STATUS_STYLES.planned;
                             return (
-                              <div key={m.id} className="flex items-center gap-2 rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2">
+                              <div key={m.id} className="flex items-center gap-2 rounded-lg border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] px-3 py-2">
                                 <span className="rounded-full px-2 py-0.5 text-xs font-bold" style={{ background: ms.bg, color: ms.text }}>{ms.label}</span>
-                                <span className="text-sm text-[#334155]">{m.title}</span>
+                                <span className="text-sm text-[color:var(--ink-700)]">{m.title}</span>
                               </div>
                             );
                           })}
@@ -478,12 +478,12 @@ function PausedSection({ experiments, missions, guides, onResumed, onDelete, onE
                     )}
                     {expGuides.length > 0 && (
                       <div>
-                        <p className="text-xs font-bold uppercase tracking-wide text-[#64748B] mb-1">Mission Guides ({expGuides.length})</p>
+                        <p className="text-xs font-bold uppercase tracking-wide text-[color:var(--ink-500)] mb-1">Mission Guides ({expGuides.length})</p>
                         {expGuides.map(g => (
-                          <div key={g.id} className="flex items-center gap-2 text-xs text-[#334155]">
+                          <div key={g.id} className="flex items-center gap-2 text-xs text-[color:var(--ink-700)]">
                             <Wand2 size={11} style={{ color: 'var(--brand-navy-700)' }} />
                             <span>{g.guide_title} — v{g.version_number}</span>
-                            {g.is_active && <span className="rounded-full px-1.5 py-0.5 font-bold" style={{ background: '#F0FDF4', color: '#15803D' }}>Active</span>}
+                            {g.is_active && <span className="rounded-full px-1.5 py-0.5 font-bold" style={{ background: 'var(--success-50)', color: 'var(--success-700)' }}>Active</span>}
                           </div>
                         ))}
                       </div>
@@ -533,12 +533,12 @@ function NewExperimentModal({ onClose, onSave, paths }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(5,8,22,0.5)' }}>
       <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-[24px] bg-white p-6 sm:p-8">
-        <h2 className="font-heading text-2xl font-bold text-[#050816] mb-1">New Experiment</h2>
-        <p className="text-sm text-[#64748B] mb-6">Define what you want to test. Open the experiment after saving to generate a Mission Guide.</p>
+        <h2 className="font-heading text-2xl font-bold text-[color:var(--surface-dark-900)] mb-1">New Experiment</h2>
+        <p className="text-sm text-[color:var(--ink-500)] mb-6">Define what you want to test. Open the experiment after saving to generate a Mission Guide.</p>
         <div className="space-y-4">
           <div>
-            <label className="text-sm font-semibold text-[#334155] block mb-1">Choose an experiment type</label>
-            <select className="w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-3 text-sm outline-none focus:border-[#1F3A5F]"
+            <label className="text-sm font-semibold text-[color:var(--ink-700)] block mb-1">Choose an experiment type</label>
+            <select className="w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-sm outline-none focus:border-[color:var(--brand-navy-900)]"
               value={data.experiment_type} onChange={e => setData(d => ({ ...d, experiment_type: e.target.value, title: d.title || e.target.value }))}>
               <option value="">Select or type your own below</option>
               {EXPERIMENT_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
@@ -546,13 +546,13 @@ function NewExperimentModal({ onClose, onSave, paths }) {
           </div>
 
           <label className="block">
-            <span className="text-sm font-semibold text-[#334155] block mb-1">Experiment title</span>
-            <input className="w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-3 text-sm outline-none focus:border-[#1F3A5F]"
+            <span className="text-sm font-semibold text-[color:var(--ink-700)] block mb-1">Experiment title</span>
+            <input className="w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-sm outline-none focus:border-[color:var(--brand-navy-900)]"
               placeholder="e.g. Interview 3 investment bankers" value={data.title || ''} onChange={e => setData(d => ({ ...d, title: e.target.value }))} />
           </label>
 
           <div>
-            <label className="text-sm font-semibold text-[#334155] block mb-1">Path being tested <span className="text-red-500">*</span></label>
+            <label className="text-sm font-semibold text-[color:var(--ink-700)] block mb-1">Path being tested <span className="text-red-500">*</span></label>
             <PathDropdown paths={paths} value={data.path_name} onChange={handlePathChange} error={pathError} />
           </div>
 
@@ -561,19 +561,19 @@ function NewExperimentModal({ onClose, onSave, paths }) {
             { name: 'deliverable', label: 'Deliverable', placeholder: 'What will you produce or submit?' },
           ].map(f => (
             <label key={f.name} className="block">
-              <span className="text-sm font-semibold text-[#334155] block mb-1">{f.label}</span>
-              <input className="w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-3 text-sm outline-none focus:border-[#1F3A5F]"
+              <span className="text-sm font-semibold text-[color:var(--ink-700)] block mb-1">{f.label}</span>
+              <input className="w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-sm outline-none focus:border-[color:var(--brand-navy-900)]"
                 placeholder={f.placeholder} value={data[f.name] || ''} onChange={e => setData(d => ({ ...d, [f.name]: e.target.value }))} />
             </label>
           ))}
           <label className="block">
-            <span className="text-sm font-semibold text-[#334155] block mb-1">Deadline</span>
-            <input type="date" className="w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-3 text-sm outline-none focus:border-[#1F3A5F]"
+            <span className="text-sm font-semibold text-[color:var(--ink-700)] block mb-1">Deadline</span>
+            <input type="date" className="w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-sm outline-none focus:border-[color:var(--brand-navy-900)]"
               value={data.deadline || ''} onChange={e => setData(d => ({ ...d, deadline: e.target.value }))} />
           </label>
         </div>
         <div className="mt-6 flex gap-3">
-          <button onClick={onClose} className="flex-1 rounded-[10px] border border-[#E2E8F0] py-3 text-sm font-semibold text-[#334155] transition hover:bg-[#F8FAFC]">Cancel</button>
+          <button onClick={onClose} className="flex-1 rounded-[10px] border border-[color:var(--ink-200)] py-3 text-sm font-semibold text-[color:var(--ink-700)] transition hover:bg-[color:var(--ink-50)]">Cancel</button>
           <button onClick={handleSave} disabled={saving}
             className="flex-1 rounded-[10px] py-3 text-sm font-semibold text-white transition hover:-translate-y-px disabled:opacity-60"
             style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}>
@@ -586,12 +586,12 @@ function NewExperimentModal({ onClose, onSave, paths }) {
 }
 
 // ── Section header ────────────────────────────────────────────────────────────
-function SectionHeader({ label, count, color = '#334155' }) {
+function SectionHeader({ label, count, color = 'var(--ink-700)' }) {
   return (
     <div className="flex items-center gap-2 mb-3">
       <h2 className="font-heading text-base font-bold" style={{ color }}>{label}</h2>
       {count > 0 && (
-        <span className="rounded-full px-2 py-0.5 text-[10px] font-bold bg-[#F1F5F9] text-[#64748B]">{count}</span>
+        <span className="rounded-full px-2 py-0.5 text-[10px] font-bold bg-[color:var(--ink-100)] text-[color:var(--ink-500)]">{count}</span>
       )}
     </div>
   );
@@ -861,12 +861,12 @@ export default function ExperimentsPage() {
             onChange={setSelectedPathId}
             showAll
           />
-          {selectedPath && <span className="text-xs text-[#94A3B8]">Showing experiments for <strong className="text-[#334155]">{selectedPath.path_name}</strong></span>}
+          {selectedPath && <span className="text-xs text-[color:var(--ink-400)]">Showing experiments for <strong className="text-[color:var(--ink-700)]">{selectedPath.path_name}</strong></span>}
         </div>
       )}
 
       {loading ? (
-        <div className="py-20 text-center text-[#64748B]">Loading experiments...</div>
+        <div className="py-20 text-center text-[color:var(--ink-500)]">Loading experiments...</div>
       ) : (
         <>
           {/* Paused section — always visible */}
@@ -901,16 +901,16 @@ export default function ExperimentsPage() {
           </div>
 
           {activeFiltered.length === 0 ? (
-            <div className="rounded-[24px] border border-dashed border-[#E2E8F0] p-16 text-center">
+            <div className="rounded-[24px] border border-dashed border-[color:var(--ink-200)] p-16 text-center">
               {filter !== 'all' ? (
                 <>
-                  <h3 className="font-heading text-xl font-bold text-[#050816]">No {filter.replace('_', ' ')} experiments.</h3>
+                  <h3 className="font-heading text-xl font-bold text-[color:var(--surface-dark-900)]">No {filter.replace('_', ' ')} experiments.</h3>
                   <button onClick={() => setFilter('all')} className="mt-4 text-sm font-semibold" style={{ color: 'var(--brand-navy-900)' }}>Show all</button>
                 </>
               ) : (
                 <>
-                  <h3 className="font-heading text-xl font-bold text-[#050816]">No experiments yet.</h3>
-                  <p className="mt-2 text-sm text-[#64748B]">Start your first experiment to test a path in the real world.</p>
+                  <h3 className="font-heading text-xl font-bold text-[color:var(--surface-dark-900)]">No experiments yet.</h3>
+                  <p className="mt-2 text-sm text-[color:var(--ink-500)]">Start your first experiment to test a path in the real world.</p>
                   <button onClick={() => setShowNew(true)}
                     className="mt-6 inline-flex items-center gap-2 rounded-[10px] px-6 py-3 text-sm font-semibold text-white"
                     style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}>

@@ -43,13 +43,13 @@ function PermanentDeleteConfirm({ itemName, onConfirm, onCancel }) {
           <div className="w-9 h-9 rounded-full flex items-center justify-center bg-red-50 shrink-0">
             <AlertTriangle size={18} className="text-red-600" />
           </div>
-          <h3 className="font-heading text-lg font-bold text-[#050816]">Permanently delete?</h3>
+          <h3 className="font-heading text-lg font-bold text-[color:var(--surface-dark-900)]">Permanently delete?</h3>
         </div>
-        <p className="text-sm text-[#334155] mb-1">"{itemName}"</p>
-        <p className="text-sm text-[#64748B] mb-5">This cannot be recovered.</p>
+        <p className="text-sm text-[color:var(--ink-700)] mb-1">"{itemName}"</p>
+        <p className="text-sm text-[color:var(--ink-500)] mb-5">This cannot be recovered.</p>
         <div className="flex gap-3">
           <button onClick={onCancel}
-            className="flex-1 rounded-[10px] border border-[#E2E8F0] py-2.5 text-sm font-semibold text-[#334155] hover:bg-[#F8FAFC] transition">
+            className="flex-1 rounded-[10px] border border-[color:var(--ink-200)] py-2.5 text-sm font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)] transition">
             Cancel
           </button>
           <button onClick={onConfirm}
@@ -81,24 +81,24 @@ function ExperimentDeletedCard({ exp, onRestore, onPermanentDelete, actionLoadin
   }, [exp.id]);
 
   return (
-    <div className="rounded-[16px] border border-[#E2E8F0] bg-white p-4">
+    <div className="rounded-[16px] border border-[color:var(--ink-200)] bg-white p-4">
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
           <div className="flex flex-wrap items-center gap-2 mb-1">
-            <span className="rounded-full px-2.5 py-0.5 text-[10px] font-bold" style={{ background: '#EEF2F6', color: 'var(--brand-navy-900)' }}>Experiment</span>
+            <span className="rounded-full px-2.5 py-0.5 text-[10px] font-bold" style={{ background: 'var(--ink-100)', color: 'var(--brand-navy-900)' }}>Experiment</span>
             <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold flex items-center gap-1 ${urgent ? 'bg-red-50 text-red-600' : 'bg-amber-50 text-amber-700'}`}>
               <Clock size={9} /> {days === 0 ? 'Expires today' : `${days} day${days !== 1 ? 's' : ''} left`}
             </span>
-            <span className="rounded-full px-2.5 py-0.5 text-[10px] font-semibold bg-[#F1F5F9] text-[#334155]">{statusLabel} before deletion</span>
+            <span className="rounded-full px-2.5 py-0.5 text-[10px] font-semibold bg-[color:var(--ink-100)] text-[color:var(--ink-700)]">{statusLabel} before deletion</span>
           </div>
-          <p className="font-semibold text-sm text-[#050816] truncate">{exp.title}</p>
+          <p className="font-semibold text-sm text-[color:var(--surface-dark-900)] truncate">{exp.title}</p>
           {exp.path_name && <p className="text-[10px] font-semibold mt-0.5" style={{ color: 'var(--brand-navy-700)' }}>Path: {exp.path_name}</p>}
-          {exp.objective && <p className="text-[10px] text-[#64748B] mt-0.5 line-clamp-1">{exp.objective}</p>}
-          <p className="text-[10px] text-[#94A3B8] mt-0.5">Deleted {fmtDate(exp.deleted_at)}</p>
+          {exp.objective && <p className="text-[10px] text-[color:var(--ink-500)] mt-0.5 line-clamp-1">{exp.objective}</p>}
+          <p className="text-[10px] text-[color:var(--ink-400)] mt-0.5">Deleted {fmtDate(exp.deleted_at)}</p>
 
           {/* Linked counts */}
           {counts === null ? (
-            <p className="text-[10px] text-[#94A3B8] mt-2 flex items-center gap-1"><Loader2 size={9} className="animate-spin" /> Loading linked records…</p>
+            <p className="text-[10px] text-[color:var(--ink-400)] mt-2 flex items-center gap-1"><Loader2 size={9} className="animate-spin" /> Loading linked records…</p>
           ) : (
             <div className="mt-2 flex flex-wrap gap-3">
               {[
@@ -107,7 +107,7 @@ function ExperimentDeletedCard({ exp, onRestore, onPermanentDelete, actionLoadin
                 { label: 'Contact', count: counts.contacts },
                 { label: 'Reflection', count: counts.reflections },
               ].map(({ label, count }) => (
-                <span key={label} className="text-[10px] text-[#64748B]">
+                <span key={label} className="text-[10px] text-[color:var(--ink-500)]">
                   {count} {label}{count !== 1 ? 's' : ''}
                 </span>
               ))}
@@ -119,7 +119,7 @@ function ExperimentDeletedCard({ exp, onRestore, onPermanentDelete, actionLoadin
           <button
             onClick={() => onRestore(exp)}
             disabled={actionLoading === exp.id}
-            className="flex items-center gap-1 rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-xs font-semibold text-[#334155] hover:border-green-400 hover:text-green-700 transition disabled:opacity-50"
+            className="flex items-center gap-1 rounded-lg border border-[color:var(--ink-200)] px-3 py-1.5 text-xs font-semibold text-[color:var(--ink-700)] hover:border-green-400 hover:text-green-700 transition disabled:opacity-50"
           >
             {actionLoading === exp.id ? <Loader2 size={11} className="animate-spin" /> : <RotateCcw size={11} />} Restore
           </button>
@@ -145,33 +145,33 @@ function DeletedItemCard({ item, tab, experimentsMap, missionsMap, onRestore, on
   const mission = item.mission_id ? missionsMap[item.mission_id] : null;
 
   return (
-    <div className="rounded-[16px] border border-[#E2E8F0] bg-white p-4">
+    <div className="rounded-[16px] border border-[color:var(--ink-200)] bg-white p-4">
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
           <div className="flex flex-wrap items-center gap-2 mb-1">
-            <span className="rounded-full px-2.5 py-0.5 text-[10px] font-bold" style={{ background: '#EEF2F6', color: 'var(--brand-navy-900)' }}>
+            <span className="rounded-full px-2.5 py-0.5 text-[10px] font-bold" style={{ background: 'var(--ink-100)', color: 'var(--brand-navy-900)' }}>
               {tab.label.replace(/s$/, '')}
             </span>
             <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold flex items-center gap-1 ${urgent ? 'bg-red-50 text-red-600' : 'bg-amber-50 text-amber-700'}`}>
               <Clock size={9} /> {days === 0 ? 'Expires today' : `${days} day${days !== 1 ? 's' : ''} left`}
             </span>
           </div>
-          <p className="font-semibold text-sm text-[#050816] truncate">{name}</p>
-          <p className="text-[10px] text-[#94A3B8] mt-0.5">Deleted {fmtDate(item.deleted_at)}</p>
+          <p className="font-semibold text-sm text-[color:var(--surface-dark-900)] truncate">{name}</p>
+          <p className="text-[10px] text-[color:var(--ink-400)] mt-0.5">Deleted {fmtDate(item.deleted_at)}</p>
           <div className="mt-1.5 flex flex-wrap gap-3">
             {exp ? (
-              <p className="text-[10px] text-[#64748B]">Experiment: <span className="font-semibold">{exp.title}</span></p>
+              <p className="text-[10px] text-[color:var(--ink-500)]">Experiment: <span className="font-semibold">{exp.title}</span></p>
             ) : item.experiment_id ? (
-              <p className="text-[10px] text-[#94A3B8] italic">Experiment no longer exists — can restore as unlinked</p>
+              <p className="text-[10px] text-[color:var(--ink-400)] italic">Experiment no longer exists — can restore as unlinked</p>
             ) : null}
-            {exp?.path_name && <p className="text-[10px] text-[#94A3B8]">Path: {exp.path_name}</p>}
-            {mission && <p className="text-[10px] text-[#94A3B8]">Mission: {mission.title}</p>}
+            {exp?.path_name && <p className="text-[10px] text-[color:var(--ink-400)]">Path: {exp.path_name}</p>}
+            {mission && <p className="text-[10px] text-[color:var(--ink-400)]">Mission: {mission.title}</p>}
           </div>
         </div>
         <div className="flex gap-2 shrink-0 mt-1">
           <button onClick={() => onRestore(item, tab)}
             disabled={actionLoading === item.id}
-            className="flex items-center gap-1 rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-xs font-semibold text-[#334155] hover:border-green-400 hover:text-green-700 transition disabled:opacity-50">
+            className="flex items-center gap-1 rounded-lg border border-[color:var(--ink-200)] px-3 py-1.5 text-xs font-semibold text-[color:var(--ink-700)] hover:border-green-400 hover:text-green-700 transition disabled:opacity-50">
             {actionLoading === item.id ? <Loader2 size={11} className="animate-spin" /> : <RotateCcw size={11} />} Restore
           </button>
           <button onClick={() => onPermanentDelete(item, tab)}
@@ -296,24 +296,24 @@ export default function RecentlyDeleted() {
       />
 
       {/* Tabs */}
-      <div className="flex gap-1 mb-6 border-b border-[#E2E8F0] overflow-x-auto">
+      <div className="flex gap-1 mb-6 border-b border-[color:var(--ink-200)] overflow-x-auto">
         {TABS.map(tab => {
           const count = (items[tab.id] || []).length;
           return (
             <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-              className={`shrink-0 px-4 py-2.5 text-sm font-semibold transition border-b-2 -mb-px ${activeTab === tab.id ? 'border-[#1F3A5F] text-[#1F3A5F]' : 'border-transparent text-[#64748B] hover:text-[#334155]'}`}>
-              {tab.label} {count > 0 && <span className="ml-1 rounded-full px-1.5 py-0.5 text-[10px] font-bold bg-[#EEF2F6] text-[#1F3A5F]">{count}</span>}
+              className={`shrink-0 px-4 py-2.5 text-sm font-semibold transition border-b-2 -mb-px ${activeTab === tab.id ? 'border-[color:var(--brand-navy-900)] text-[color:var(--brand-navy-900)]' : 'border-transparent text-[color:var(--ink-500)] hover:text-[color:var(--ink-700)]'}`}>
+              {tab.label} {count > 0 && <span className="ml-1 rounded-full px-1.5 py-0.5 text-[10px] font-bold bg-[color:var(--ink-100)] text-[color:var(--brand-navy-900)]">{count}</span>}
             </button>
           );
         })}
       </div>
 
       {loading ? (
-        <div className="py-20 text-center text-[#64748B]">Loading…</div>
+        <div className="py-20 text-center text-[color:var(--ink-500)]">Loading…</div>
       ) : currentItems.length === 0 ? (
-        <div className="rounded-[24px] border border-dashed border-[#E2E8F0] py-16 text-center">
-          <p className="text-sm font-semibold text-[#050816]">No deleted {currentTab?.label.toLowerCase()} found.</p>
-          <p className="text-xs text-[#94A3B8] mt-1">Items you delete will appear here for 30 days.</p>
+        <div className="rounded-[24px] border border-dashed border-[color:var(--ink-200)] py-16 text-center">
+          <p className="text-sm font-semibold text-[color:var(--surface-dark-900)]">No deleted {currentTab?.label.toLowerCase()} found.</p>
+          <p className="text-xs text-[color:var(--ink-400)] mt-1">Items you delete will appear here for 30 days.</p>
         </div>
       ) : (
         <div className="space-y-3">

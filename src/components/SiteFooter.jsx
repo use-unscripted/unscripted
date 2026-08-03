@@ -19,8 +19,11 @@ const LINKS = [
 export default function SiteFooter() {
   return (
     <footer className="border-t px-6 py-10" style={{ borderColor: 'var(--border-light)' }}>
-      <div className="mx-auto flex max-w-7xl flex-col items-center gap-6">
-        <nav aria-label="Footer" className="flex flex-wrap items-center justify-center gap-x-7 gap-y-3">
+      {/* Left-aligned, matching the rest of the page. A centred link row under
+          a page that reads left the whole way down is the one place the
+          symmetry came back. */}
+      <div className="mx-auto flex max-w-7xl flex-col items-start gap-6">
+        <nav aria-label="Footer" className="flex flex-wrap items-center gap-x-7 gap-y-3">
           {LINKS.map(({ to, label }) => (
             <Link
               key={to}
@@ -46,7 +49,7 @@ export default function SiteFooter() {
           © {new Date().getFullYear()} {PRODUCT}. Write your unscripted path.
         </p>
 
-        <p className="max-w-2xl text-center text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+        <p className="max-w-2xl text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
           {PRODUCT} is an independent product. It is not affiliated with, endorsed by, or
           sponsored by any university, and it does not provide career, academic, financial,
           legal or medical advice.

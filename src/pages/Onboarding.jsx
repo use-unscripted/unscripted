@@ -60,9 +60,9 @@ const STEPS = [
 ];
 
 function Field({ field, value, onChange, error }) {
-  const baseClass = `mt-2 w-full rounded-xl border bg-[#F8FAFC] px-4 py-3 text-sm text-[#050816] placeholder-[#94A3B8] outline-none transition focus:border-[#1F3A5F] focus:bg-white ${error ? 'border-red-400' : 'border-[#E2E8F0]'}`;
+  const baseClass = `mt-2 w-full rounded-xl border bg-[color:var(--ink-50)] px-4 py-3 text-sm text-[color:var(--surface-dark-900)] placeholder-[color:var(--ink-400)] outline-none transition focus:border-[color:var(--brand-navy-900)] focus:bg-white ${error ? 'border-red-400' : 'border-[color:var(--ink-200)]'}`;
   return (
-    <label className="block text-sm font-semibold text-[#334155]">
+    <label className="block text-sm font-semibold text-[color:var(--ink-700)]">
       {field.label}{field.required && <span className="ml-1 text-red-500">*</span>}
       {field.rows ? (
         <textarea rows={field.rows} name={field.name} value={value || ''} onChange={onChange} placeholder={field.placeholder} className={baseClass} />
@@ -88,7 +88,7 @@ const TIMEFRAME_OPTIONS = [
 ];
 
 function VisionField({ data, onChange, onCheck }) {
-  const baseClass = 'mt-2 w-full rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-3 text-sm text-[#050816] placeholder-[#94A3B8] outline-none transition focus:border-[#1F3A5F] focus:bg-white';
+  const baseClass = 'mt-2 w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] px-4 py-3 text-sm text-[color:var(--surface-dark-900)] placeholder-[color:var(--ink-400)] outline-none transition focus:border-[color:var(--brand-navy-900)] focus:bg-white';
   const selectedThemes = Array.isArray(data.vision_themes) ? data.vision_themes : [];
 
   const toggleTheme = (theme) => {
@@ -100,10 +100,10 @@ function VisionField({ data, onChange, onCheck }) {
 
   return (
     <div className="space-y-4">
-      <label className="block text-sm font-semibold text-[#334155]">
+      <label className="block text-sm font-semibold text-[color:var(--ink-700)]">
         Where do you see yourself in five to ten years?
-        <span className="ml-2 text-xs font-normal text-[#94A3B8]">Optional</span>
-        <p className="mt-1 mb-2 text-xs font-normal text-[#64748B]">Think about the type of work, lifestyle, impact, financial position, relationships, location, or autonomy you may want. Your answer can change over time.</p>
+        <span className="ml-2 text-xs font-normal text-[color:var(--ink-400)]">Optional</span>
+        <p className="mt-1 mb-2 text-xs font-normal text-[color:var(--ink-500)]">Think about the type of work, lifestyle, impact, financial position, relationships, location, or autonomy you may want. Your answer can change over time.</p>
         <textarea
           rows={4}
           name="desired_lifestyle"
@@ -115,7 +115,7 @@ function VisionField({ data, onChange, onCheck }) {
       </label>
 
       <div>
-        <p className="text-xs font-semibold text-[#64748B] uppercase tracking-wide mb-2">Themes that resonate <span className="font-normal normal-case">(optional — select any)</span></p>
+        <p className="text-xs font-semibold text-[color:var(--ink-500)] uppercase tracking-wide mb-2">Themes that resonate <span className="font-normal normal-case">(optional — select any)</span></p>
         <div className="flex flex-wrap gap-2">
           {VISION_THEMES.map(theme => (
             <button
@@ -125,7 +125,7 @@ function VisionField({ data, onChange, onCheck }) {
               className="rounded-full border px-3 py-1 text-xs font-semibold transition"
               style={selectedThemes.includes(theme)
                 ? { background: 'var(--brand-navy-900)', color: '#fff', borderColor: 'var(--brand-navy-900)' }
-                : { background: 'white', color: '#334155', borderColor: '#E2E8F0' }}
+                : { background: 'white', color: 'var(--ink-700)', borderColor: 'var(--ink-200)' }}
             >
               {theme}
             </button>
@@ -134,7 +134,7 @@ function VisionField({ data, onChange, onCheck }) {
       </div>
 
       <div>
-        <p className="text-xs font-semibold text-[#64748B] uppercase tracking-wide mb-2">Preferred timeframe <span className="font-normal normal-case">(optional)</span></p>
+        <p className="text-xs font-semibold text-[color:var(--ink-500)] uppercase tracking-wide mb-2">Preferred timeframe <span className="font-normal normal-case">(optional)</span></p>
         <div className="flex flex-wrap gap-2">
           {TIMEFRAME_OPTIONS.map(opt => (
             <button
@@ -143,8 +143,8 @@ function VisionField({ data, onChange, onCheck }) {
               onClick={() => onCheck('vision_timeframe', data.vision_timeframe === opt.value ? null : opt.value)}
               className="rounded-full border px-3 py-1.5 text-xs font-semibold transition"
               style={data.vision_timeframe === opt.value
-                ? { background: '#050816', color: '#fff', borderColor: '#050816' }
-                : { background: 'white', color: '#334155', borderColor: '#E2E8F0' }}
+                ? { background: 'var(--surface-dark-900)', color: '#fff', borderColor: 'var(--surface-dark-900)' }
+                : { background: 'white', color: 'var(--ink-700)', borderColor: 'var(--ink-200)' }}
             >
               {opt.label}
             </button>
@@ -162,22 +162,22 @@ function PrioritiesStep({ step, data, onChange, onCheck }) {
       {step.fields.filter(f => f.type !== 'vision').map(f => (
         <Field key={f.name} field={f} value={data[f.name]} onChange={onChange} />
       ))}
-      <div className="border-t border-[#E2E8F0] pt-6">
-        <p className="text-sm font-semibold text-[#334155] mb-4">What matters most to you? (1 = not important, 5 = essential)</p>
+      <div className="border-t border-[color:var(--ink-200)] pt-6">
+        <p className="text-sm font-semibold text-[color:var(--ink-700)] mb-4">What matters most to you? (1 = not important, 5 = essential)</p>
         {step.sliders.map(s => (
           <label key={s.name} className="block mb-5">
             <div className="mb-2 flex items-center justify-between">
-              <span className="text-sm font-semibold text-[#334155]">{s.label}</span>
+              <span className="text-sm font-semibold text-[color:var(--ink-700)]">{s.label}</span>
               <span className="text-sm font-bold" style={{ color: 'var(--brand-navy-900)' }}>{data[s.name] || 3}/5</span>
             </div>
-            <input type="range" min="1" max="5" name={s.name} value={data[s.name] || 3} onChange={onChange} className="w-full accent-[#1F3A5F]" />
+            <input type="range" min="1" max="5" name={s.name} value={data[s.name] || 3} onChange={onChange} className="w-full accent-[color:var(--brand-navy-900)]" />
           </label>
         ))}
-        <div className="mt-4 space-y-3 border-t border-[#E2E8F0] pt-4">
+        <div className="mt-4 space-y-3 border-t border-[color:var(--ink-200)] pt-4">
           {step.checkboxes.map(c => (
             <label key={c.name} className="flex cursor-pointer items-center gap-3">
-              <input type="checkbox" checked={!!data[c.name]} onChange={e => onCheck(c.name, e.target.checked)} className="h-4 w-4 rounded accent-[#1F3A5F]" />
-              <span className="text-sm text-[#334155]">{c.label}</span>
+              <input type="checkbox" checked={!!data[c.name]} onChange={e => onCheck(c.name, e.target.checked)} className="h-4 w-4 rounded accent-[color:var(--brand-navy-900)]" />
+              <span className="text-sm text-[color:var(--ink-700)]">{c.label}</span>
             </label>
           ))}
         </div>
@@ -187,12 +187,12 @@ function PrioritiesStep({ step, data, onChange, onCheck }) {
 }
 
 function PersonalNotesStep({ data, onChange }) {
-  const baseClass = 'mt-2 w-full rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-3 text-sm text-[#050816] placeholder-[#94A3B8] outline-none transition focus:border-[#1F3A5F] focus:bg-white';
+  const baseClass = 'mt-2 w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] px-4 py-3 text-sm text-[color:var(--surface-dark-900)] placeholder-[color:var(--ink-400)] outline-none transition focus:border-[color:var(--brand-navy-900)] focus:bg-white';
   return (
     <div className="space-y-5">
-      <label className="block text-sm font-semibold text-[#334155]">
+      <label className="block text-sm font-semibold text-[color:var(--ink-700)]">
         Personal notes and context
-        <span className="ml-2 text-xs font-normal text-[#94A3B8]">Optional</span>
+        <span className="ml-2 text-xs font-normal text-[color:var(--ink-400)]">Optional</span>
         <textarea
           rows={4} name="personal_notes" value={data.personal_notes || ''} onChange={onChange}
           maxLength={3000}
@@ -200,13 +200,13 @@ function PersonalNotesStep({ data, onChange }) {
           className={baseClass}
         />
         {(data.personal_notes || '').length > 0 && (
-          <p className="mt-1 text-right text-xs text-[#94A3B8]">{(data.personal_notes || '').length}/3000</p>
+          <p className="mt-1 text-right text-xs text-[color:var(--ink-400)]">{(data.personal_notes || '').length}/3000</p>
         )}
       </label>
 
-      <label className="block text-sm font-semibold text-[#334155]">
+      <label className="block text-sm font-semibold text-[color:var(--ink-700)]">
         Long-term ambitions
-        <span className="ml-2 text-xs font-normal text-[#94A3B8]">Optional</span>
+        <span className="ml-2 text-xs font-normal text-[color:var(--ink-400)]">Optional</span>
         <textarea
           rows={3} name="long_term_ambitions" value={data.long_term_ambitions || ''} onChange={onChange}
           placeholder="What do you ultimately want to build, achieve, or become in the next 5–10 years?"
@@ -214,9 +214,9 @@ function PersonalNotesStep({ data, onChange }) {
         />
       </label>
 
-      <label className="block text-sm font-semibold text-[#334155]">
+      <label className="block text-sm font-semibold text-[color:var(--ink-700)]">
         Responsibilities or constraints
-        <span className="ml-2 text-xs font-normal text-[#94A3B8]">Optional</span>
+        <span className="ml-2 text-xs font-normal text-[color:var(--ink-400)]">Optional</span>
         <textarea
           rows={3} name="responsibilities_constraints" value={data.responsibilities_constraints || ''} onChange={onChange}
           placeholder="e.g. family responsibilities, commuting, athletics, financial limits, health routines, academic requirements..."
@@ -224,9 +224,9 @@ function PersonalNotesStep({ data, onChange }) {
         />
       </label>
 
-      <label className="block text-sm font-semibold text-[#334155]">
+      <label className="block text-sm font-semibold text-[color:var(--ink-700)]">
         Things I do not want
-        <span className="ml-2 text-xs font-normal text-[#94A3B8]">Optional</span>
+        <span className="ml-2 text-xs font-normal text-[color:var(--ink-400)]">Optional</span>
         <textarea
           rows={3} name="things_to_avoid" value={data.things_to_avoid || ''} onChange={onChange}
           placeholder="Careers, lifestyles, or commitments you want to avoid — be specific about what you're ruling out and why..."
@@ -234,9 +234,9 @@ function PersonalNotesStep({ data, onChange }) {
         />
       </label>
 
-      <label className="block text-sm font-semibold text-[#334155]">
+      <label className="block text-sm font-semibold text-[color:var(--ink-700)]">
         Anything the recommendations should prioritize
-        <span className="ml-2 text-xs font-normal text-[#94A3B8]">Optional</span>
+        <span className="ml-2 text-xs font-normal text-[color:var(--ink-400)]">Optional</span>
         <textarea
           rows={3} name="priorities_for_recommendations" value={data.priorities_for_recommendations || ''} onChange={onChange}
           placeholder="Specific factors, values, or goals that should weigh heavily in how we evaluate paths for you..."
@@ -244,7 +244,7 @@ function PersonalNotesStep({ data, onChange }) {
         />
       </label>
 
-      <p className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-3 text-xs text-[#64748B]">
+      <p className="rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] px-4 py-3 text-xs text-[color:var(--ink-500)]">
         🔒 Your notes are private to your account and are used only to personalize your Unscripted experience.
       </p>
     </div>
@@ -261,13 +261,13 @@ function CapacityStep({ step, data, onChange, hours, setHours }) {
           </div>
         ))}
       </div>
-      <div className="border-t border-[#E2E8F0] pt-5">
-        <label className="block text-sm font-semibold text-[#334155]">
+      <div className="border-t border-[color:var(--ink-200)] pt-5">
+        <label className="block text-sm font-semibold text-[color:var(--ink-700)]">
           Realistic available hours per week for path-testing
           <input type="number" min="1" max="40" value={hours}
             onChange={e => setHours(Number(e.target.value))}
-            className="mt-2 w-full rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-3 text-sm outline-none focus:border-[#1F3A5F]" />
-          <p className="mt-1 text-xs text-[#94A3B8]">Be conservative. This determines what we can realistically assign you.</p>
+            className="mt-2 w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] px-4 py-3 text-sm outline-none focus:border-[color:var(--brand-navy-900)]" />
+          <p className="mt-1 text-xs text-[color:var(--ink-400)]">Be conservative. This determines what we can realistically assign you.</p>
         </label>
       </div>
     </div>
@@ -353,31 +353,31 @@ export default function Onboarding() {
   };
 
   return (
-    <main className="min-h-screen px-5 py-10" style={{ background: '#FAFAF9' }}>
+    <main className="min-h-screen px-5 py-10" style={{ background: 'var(--page-surface)' }}>
       <div className="mx-auto max-w-3xl">
         <div className="mb-10 flex items-center justify-between">
           <LogoWordmark />
           <div className="flex items-center gap-4">
-            <span className="text-xs font-bold text-[#64748B]">STEP {step + 1} OF {STEPS.length + 1}</span>
-            <Link to="/login" className="text-xs font-semibold text-[#64748B] hover:text-[#050816] transition">Log in</Link>
+            <span className="text-xs font-bold text-[color:var(--ink-500)]">STEP {step + 1} OF {STEPS.length + 1}</span>
+            <Link to="/login" className="text-xs font-semibold text-[color:var(--ink-500)] hover:text-[color:var(--surface-dark-900)] transition">Log in</Link>
           </div>
         </div>
 
-        <div className="mb-2 flex justify-between text-xs text-[#64748B]">
+        <div className="mb-2 flex justify-between text-xs text-[color:var(--ink-500)]">
           <span>Quick intake — 5 to 8 minutes</span>
           <span>{pct}% complete</span>
         </div>
-        <div className="mb-10 h-1.5 rounded-full overflow-hidden" style={{ background: '#E2E8F0' }}>
-        <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: 'var(--brand-navy-900)' }} />
+        <div className="mb-10 h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--ink-200)' }}>
+        <div className="h-full rounded-full transition-[width]" style={{ width: `${pct}%`, background: 'var(--brand-navy-900)' }} />
         </div>
 
-        <section className="rounded-[24px] border border-[#E2E8F0] bg-white p-7 shadow-sm sm:p-10">
-          <h1 className="font-heading mb-2 mt-3 text-2xl font-bold tracking-tight text-[#050816]">{currentStep.label}</h1>
-          <p className="mb-8 text-sm text-[#64748B]">{currentStep.subtitle}</p>
+        <section className="rounded-[24px] border border-[color:var(--ink-200)] bg-white p-7 shadow-sm sm:p-10">
+          <h1 className="font-heading mb-2 mt-3 text-2xl font-bold tracking-tight text-[color:var(--surface-dark-900)]">{currentStep.label}</h1>
+          <p className="mb-8 text-sm text-[color:var(--ink-500)]">{currentStep.subtitle}</p>
           {renderStep()}
           <div className="mt-10 flex justify-between">
             <button onClick={goBack}
-              className="flex items-center gap-2 px-3 py-2 text-sm font-semibold text-[#64748B] hover:text-[#050816] transition">
+              className="flex items-center gap-2 px-3 py-2 text-sm font-semibold text-[color:var(--ink-500)] hover:text-[color:var(--surface-dark-900)] transition">
               <ArrowLeft size={16} /> Back
             </button>
             <button onClick={next}
@@ -388,9 +388,9 @@ export default function Onboarding() {
           </div>
         </section>
 
-        <p className="mt-6 text-center text-xs text-[#94A3B8]">
+        <p className="mt-6 text-center text-xs text-[color:var(--ink-400)]">
           No account required yet. We gather only what we need to recommend useful paths.{' '}
-          <Link to="/login" className="underline hover:text-[#334155]">Already have an account?</Link>
+          <Link to="/login" className="underline hover:text-[color:var(--ink-700)]">Already have an account?</Link>
         </p>
       </div>
     </main>

@@ -29,11 +29,11 @@ export default function PathRecoveryPanel({ variant = 'missing', existingCount =
   };
 
   return (
-    <div className="rounded-[24px] border p-8 sm:p-10" style={{ borderColor: '#FDE68A', background: '#FFFBEB' }}>
+    <div className="rounded-[24px] border p-8 sm:p-10" style={{ borderColor: '#FDE68A', background: 'var(--warning-50)' }}>
       <div className="flex items-start gap-4">
-        <AlertTriangle size={22} className="mt-0.5 shrink-0" style={{ color: '#B45309' }} />
+        <AlertTriangle size={22} className="mt-0.5 shrink-0" style={{ color: 'var(--warning-700)' }} />
         <div className="flex-1">
-          <h3 className="font-heading text-xl font-bold" style={{ color: '#050816' }}>
+          <h3 className="font-heading text-xl font-bold" style={{ color: 'var(--surface-dark-900)' }}>
             {incomplete ? 'Your path set is incomplete.' : 'We could not load your personalized paths.'}
           </h3>
           <p className="mt-2 text-sm leading-6" style={{ color: '#78350F' }}>
@@ -42,7 +42,7 @@ export default function PathRecoveryPanel({ variant = 'missing', existingCount =
               : 'Your onboarding answers are safe — we just could not find the path recommendations that were generated from them. Nothing has been deleted.'}
           </p>
 
-          {error && <p className="mt-3 text-sm font-semibold" style={{ color: '#B91C1C' }}>{error}</p>}
+          {error && <p className="mt-3 text-sm font-semibold" style={{ color: 'var(--danger-700)' }}>{error}</p>}
 
           {!confirming ? (
             <button
@@ -54,7 +54,7 @@ export default function PathRecoveryPanel({ variant = 'missing', existingCount =
             </button>
           ) : (
             <div className="mt-5 rounded-xl border bg-white p-4" style={{ borderColor: '#FDE68A' }}>
-              <p className="text-sm font-semibold" style={{ color: '#050816' }}>
+              <p className="text-sm font-semibold" style={{ color: 'var(--surface-dark-900)' }}>
                 Generate a new set of paths from your saved onboarding answers?
               </p>
               <p className="mt-1 text-xs leading-5" style={{ color: 'var(--text-secondary)' }}>

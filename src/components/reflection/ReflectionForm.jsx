@@ -139,7 +139,7 @@ export default function ReflectionForm({ ctx, onSaved, onSubmit }) {
                   aria-pressed={on}
                   className="ui-press rounded-[12px] p-3 text-left"
                   style={on
-                    ? { background: 'var(--brand-navy-900)', color: '#FFFFFF', minHeight: '48px' }
+                    ? { background: 'var(--brand-navy-900)', color: 'var(--brand-white)', minHeight: '48px' }
                     : { background: 'var(--background-secondary)', border: '1px solid var(--border-light)', color: 'var(--text-primary)', minHeight: '48px' }}
                 >
                   <span className="block text-sm font-bold">{o.label}</span>
@@ -186,7 +186,7 @@ export default function ReflectionForm({ ctx, onSaved, onSubmit }) {
                 aria-pressed={answers.clarity === n}
                 className="h-12 w-12 rounded-[10px] text-sm font-bold"
                 style={answers.clarity === n
-                  ? { background: 'var(--brand-navy-900)', color: '#FFFFFF' }
+                  ? { background: 'var(--brand-navy-900)', color: 'var(--brand-white)' }
                   : { background: 'var(--background-secondary)', border: '1px solid var(--border-light)', color: 'var(--text-primary)' }}
               >
                 {n}

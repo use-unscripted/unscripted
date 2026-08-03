@@ -30,9 +30,9 @@ export default function CampusEventCard({ event, college = '', compact = false }
     >
       <div
         className="flex items-center justify-between gap-3 border-b px-3 py-2"
-        style={{ borderColor: '#E2E8F0', background: '#F8FAFC' }}
+        style={{ borderColor: 'var(--ink-200)', background: 'var(--ink-50)' }}
       >
-        <span className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-[#64748B]">
+        <span className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-[color:var(--ink-500)]">
           <Calendar size={12} /> On your campus calendar
         </span>
         {countdown && (
@@ -46,14 +46,14 @@ export default function CampusEventCard({ event, college = '', compact = false }
       </div>
 
       <div className={compact ? 'px-3 py-2.5' : 'px-3 py-3'}>
-        <p className="text-sm font-semibold leading-snug text-[#050816]">{event.title}</p>
+        <p className="text-sm font-semibold leading-snug text-[color:var(--surface-dark-900)]">{event.title}</p>
 
-        <dl className="mt-2 space-y-1 text-xs text-[#64748B]">
+        <dl className="mt-2 space-y-1 text-xs text-[color:var(--ink-500)]">
           {when && (
             <div className="flex items-start gap-1.5">
               <dt className="sr-only">When</dt>
               <Calendar size={12} className="mt-0.5 shrink-0" aria-hidden="true" />
-              <dd className="font-semibold text-[#334155]">{when}</dd>
+              <dd className="font-semibold text-[color:var(--ink-700)]">{when}</dd>
             </div>
           )}
           {place && (
@@ -78,8 +78,8 @@ export default function CampusEventCard({ event, college = '', compact = false }
               href={event.ics_url}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-semibold text-[#334155] transition hover:bg-[#F8FAFC]"
-              style={{ borderColor: '#E2E8F0' }}
+              className="inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-semibold text-[color:var(--ink-700)] transition hover:bg-[color:var(--ink-50)]"
+              style={{ borderColor: 'var(--ink-200)' }}
             >
               <CalendarPlus size={12} aria-hidden="true" />
               Add to calendar
@@ -98,12 +98,12 @@ export default function CampusEventCard({ event, college = '', compact = false }
         afternoon — so the check is a permanent part of the card, not an error
         state, and it always offers a route that survives a dead permalink.
       */}
-      <div className="border-t px-3 py-2.5" style={{ borderColor: '#E2E8F0', background: '#FCFBF7' }}>
-        <p className="flex items-start gap-1.5 text-xs font-semibold text-[#334155]">
+      <div className="border-t px-3 py-2.5" style={{ borderColor: 'var(--ink-200)', background: '#FCFBF7' }}>
+        <p className="flex items-start gap-1.5 text-xs font-semibold text-[color:var(--ink-700)]">
           <ShieldCheck size={13} className="mt-px shrink-0" style={{ color: '#7A5B12' }} aria-hidden="true" />
           Confirm the date and place before you go
         </p>
-        <p className="mt-1 text-xs leading-relaxed text-[#64748B]">
+        <p className="mt-1 text-xs leading-relaxed text-[color:var(--ink-500)]">
           {sourceHost
             ? <>We took this from {sourceHost}. Check the school&apos;s listing for the final time and room.</>
             : <>Check the school&apos;s own listing for the final time and room.</>}
@@ -127,8 +127,8 @@ export default function CampusEventCard({ event, college = '', compact = false }
               href={searchUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-semibold text-[#334155] transition hover:bg-white"
-              style={{ borderColor: '#E2E8F0' }}
+              className="flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-semibold text-[color:var(--ink-700)] transition hover:bg-white"
+              style={{ borderColor: 'var(--ink-200)' }}
             >
               <Search size={12} aria-hidden="true" />
               {event.url ? 'Search for it' : 'Search for this event'}

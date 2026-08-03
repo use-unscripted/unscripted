@@ -212,27 +212,27 @@ export default function MissionGuideGenerator({ experiment, existingGuides = [],
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(5,8,22,0.5)' }}>
         <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-[24px] bg-white p-6 sm:p-8">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="font-heading text-xl font-bold text-[#050816]">Guide generated</h2>
-            <button onClick={onClose}><X size={20} className="text-[#64748B]" /></button>
+            <h2 className="font-heading text-xl font-bold text-[color:var(--surface-dark-900)]">Guide generated</h2>
+            <button onClick={onClose}><X size={20} className="text-[color:var(--ink-500)]" /></button>
           </div>
 
           {/* Preview */}
-          <div className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] p-4 mb-5">
-            <p className="text-xs font-bold uppercase tracking-wide text-[#64748B] mb-1">Version {pendingGuide.version_number}</p>
-            <p className="font-semibold text-[#050816] text-sm">{pendingGuide.guide_title}</p>
-            <p className="text-xs text-[#64748B] mt-1">{pendingGuide.objective}</p>
-            <div className="flex gap-3 mt-2 text-xs text-[#94A3B8]">
+          <div className="rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] p-4 mb-5">
+            <p className="text-xs font-bold uppercase tracking-wide text-[color:var(--ink-500)] mb-1">Version {pendingGuide.version_number}</p>
+            <p className="font-semibold text-[color:var(--surface-dark-900)] text-sm">{pendingGuide.guide_title}</p>
+            <p className="text-xs text-[color:var(--ink-500)] mt-1">{pendingGuide.objective}</p>
+            <div className="flex gap-3 mt-2 text-xs text-[color:var(--ink-400)]">
               <span>{pendingGuide.steps?.length} steps</span>
               {pendingGuide.estimated_time && <span>· {pendingGuide.estimated_time}</span>}
             </div>
             {pendingGuide.steps?.[0] && (
-              <div className="mt-3 rounded-lg border border-[#E2E8F0] bg-white p-3">
-                <p className="text-[10px] font-bold uppercase tracking-wide" style={{ color: 'var(--brand-gold-500, #D6B66A)' }}>
+              <div className="mt-3 rounded-lg border border-[color:var(--ink-200)] bg-white p-3">
+                <p className="text-[10px] font-bold uppercase tracking-wide" style={{ color: 'var(--brand-gold-500, var(--brand-gold-500))' }}>
                   Start here · {pendingGuide.steps[0].estimated_minutes} min
                 </p>
-                <p className="text-sm font-semibold text-[#050816] mt-0.5">{pendingGuide.steps[0].title}</p>
+                <p className="text-sm font-semibold text-[color:var(--surface-dark-900)] mt-0.5">{pendingGuide.steps[0].title}</p>
                 {pendingGuide.steps[0].artifact?.kind !== 'none' && (
-                  <p className="text-xs text-[#64748B] mt-1">Comes pre-written — you fill in the blanks.</p>
+                  <p className="text-xs text-[color:var(--ink-500)] mt-1">Comes pre-written — you fill in the blanks.</p>
                 )}
                 {pendingGuide.steps[0].campus_event && (
                   <div className="mt-2">
@@ -243,7 +243,7 @@ export default function MissionGuideGenerator({ experiment, existingGuides = [],
             )}
           </div>
 
-          <p className="text-sm font-semibold text-[#334155] mb-3">
+          <p className="text-sm font-semibold text-[color:var(--ink-700)] mb-3">
             {hasActive ? 'You already have an active guide. What would you like to do?' : 'Set this as your active guide?'}
           </p>
 
@@ -254,28 +254,28 @@ export default function MissionGuideGenerator({ experiment, existingGuides = [],
               className="w-full rounded-xl border-2 px-4 py-3 text-sm font-semibold text-left transition hover:bg-[#F8ECEF] disabled:opacity-60"
               style={{ borderColor: 'var(--brand-navy-700)', color: 'var(--brand-navy-700)' }}>
               Make this the active guide
-              {hasActive && <span className="block text-xs font-normal text-[#B45309] mt-0.5">Will deactivate your current guide</span>}
+              {hasActive && <span className="block text-xs font-normal text-[color:var(--warning-700)] mt-0.5">Will deactivate your current guide</span>}
             </button>
             <button
               onClick={() => { setActiveDecision('keep_current'); handleSave(false); }}
               disabled={saving}
-              className="w-full rounded-xl border border-[#E2E8F0] px-4 py-3 text-sm font-semibold text-[#334155] text-left transition hover:bg-[#F8FAFC] disabled:opacity-60">
+              className="w-full rounded-xl border border-[color:var(--ink-200)] px-4 py-3 text-sm font-semibold text-[color:var(--ink-700)] text-left transition hover:bg-[color:var(--ink-50)] disabled:opacity-60">
               {hasActive ? 'Keep my current active guide' : 'Save as draft'}
-              <span className="block text-xs font-normal text-[#94A3B8] mt-0.5">New guide saved as draft</span>
+              <span className="block text-xs font-normal text-[color:var(--ink-400)] mt-0.5">New guide saved as draft</span>
             </button>
             {hasActive && (
               <button
                 onClick={() => { setActiveDecision('compare'); handleSave(false); }}
                 disabled={saving}
-                className="w-full rounded-xl border border-[#E2E8F0] px-4 py-3 text-sm font-semibold text-[#64748B] text-left transition hover:bg-[#F8FAFC] disabled:opacity-60">
+                className="w-full rounded-xl border border-[color:var(--ink-200)] px-4 py-3 text-sm font-semibold text-[color:var(--ink-500)] text-left transition hover:bg-[color:var(--ink-50)] disabled:opacity-60">
                 Compare guides first
-                <span className="block text-xs font-normal text-[#94A3B8] mt-0.5">Opens comparison view after saving</span>
+                <span className="block text-xs font-normal text-[color:var(--ink-400)] mt-0.5">Opens comparison view after saving</span>
               </button>
             )}
           </div>
 
           {saving && (
-            <div className="flex items-center justify-center gap-2 text-sm text-[#64748B]">
+            <div className="flex items-center justify-center gap-2 text-sm text-[color:var(--ink-500)]">
               <Loader2 size={15} className="animate-spin" /> Saving guide...
             </div>
           )}
@@ -290,21 +290,21 @@ export default function MissionGuideGenerator({ experiment, existingGuides = [],
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(5,8,22,0.5)' }}>
       <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-[24px] bg-white p-6 sm:p-8">
         <div className="flex items-center justify-between mb-1">
-          <h2 className="font-heading text-xl font-bold text-[#050816]">
+          <h2 className="font-heading text-xl font-bold text-[color:var(--surface-dark-900)]">
             {hasExisting ? 'Generate Another Mission Guide' : 'Generate Mission Guide'}
           </h2>
-          <button onClick={onClose} disabled={generating}><X size={20} className="text-[#64748B]" /></button>
+          <button onClick={onClose} disabled={generating}><X size={20} className="text-[color:var(--ink-500)]" /></button>
         </div>
-        <p className="text-sm text-[#64748B] mb-5">
+        <p className="text-sm text-[color:var(--ink-500)] mb-5">
           {hasExisting
             ? `Version ${nextVersion} will be created. Previous guides are preserved.`
             : 'AI will generate a step-by-step guide for this experiment.'}
         </p>
 
         {/* Experiment context */}
-        <div className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] p-3 mb-5">
-          <p className="text-xs font-bold uppercase tracking-wide text-[#64748B] mb-0.5">Experiment</p>
-          <p className="text-sm font-semibold text-[#050816]">{experiment.title}</p>
+        <div className="rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] p-3 mb-5">
+          <p className="text-xs font-bold uppercase tracking-wide text-[color:var(--ink-500)] mb-0.5">Experiment</p>
+          <p className="text-sm font-semibold text-[color:var(--surface-dark-900)]">{experiment.title}</p>
           {experiment.path_name && <p className="text-xs" style={{ color: 'var(--brand-navy-700)' }}>{experiment.path_name}</p>}
         </div>
 
@@ -320,7 +320,7 @@ export default function MissionGuideGenerator({ experiment, existingGuides = [],
         {/* Variation picker — only for subsequent guides */}
         {hasExisting && (
           <div className="mb-5">
-            <p className="text-sm font-semibold text-[#334155] mb-2">What should be different?</p>
+            <p className="text-sm font-semibold text-[color:var(--ink-700)] mb-2">What should be different?</p>
             <div className="space-y-2">
               {VARIATION_OPTIONS.map(opt => (
                 <button
@@ -329,9 +329,9 @@ export default function MissionGuideGenerator({ experiment, existingGuides = [],
                   className="w-full rounded-xl border px-4 py-3 text-sm text-left transition"
                   style={variation === opt.value
                     ? { borderColor: 'var(--brand-navy-700)', background: 'var(--background-tertiary)', color: 'var(--brand-navy-700)' }
-                    : { borderColor: '#E2E8F0', background: 'white', color: '#334155' }}>
+                    : { borderColor: 'var(--ink-200)', background: 'white', color: 'var(--ink-700)' }}>
                   <span className="font-semibold">{opt.label}</span>
-                  <span className="block text-xs text-[#94A3B8] mt-0.5">{opt.description}</span>
+                  <span className="block text-xs text-[color:var(--ink-400)] mt-0.5">{opt.description}</span>
                 </button>
               ))}
             </div>
@@ -341,7 +341,7 @@ export default function MissionGuideGenerator({ experiment, existingGuides = [],
                 placeholder="Describe what you want to change or focus on..."
                 value={customInstruction}
                 onChange={e => setCustomInstruction(e.target.value)}
-                className="mt-3 w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-3 text-sm outline-none focus:border-[#1F3A5F]"
+                className="mt-3 w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-sm outline-none focus:border-[color:var(--brand-navy-900)]"
               />
             )}
           </div>
@@ -359,7 +359,7 @@ export default function MissionGuideGenerator({ experiment, existingGuides = [],
 
         <div className="flex gap-3">
           <button onClick={onClose} disabled={generating}
-            className="flex-1 rounded-[10px] border border-[#E2E8F0] py-3 text-sm font-semibold text-[#334155] hover:bg-[#F8FAFC] disabled:opacity-60">
+            className="flex-1 rounded-[10px] border border-[color:var(--ink-200)] py-3 text-sm font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)] disabled:opacity-60">
             Cancel
           </button>
           <button

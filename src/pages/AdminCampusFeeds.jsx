@@ -100,7 +100,7 @@ export default function AdminCampusFeeds() {
 
       {error && (
         <p className="mb-5 flex items-start gap-2 rounded-xl border px-4 py-3 text-sm"
-          style={{ borderColor: '#FECACA', background: '#FEF2F2', color: '#B91C1C' }} role="alert">
+          style={{ borderColor: '#FECACA', background: 'var(--danger-50)', color: 'var(--danger-700)' }} role="alert">
           <AlertCircle size={15} className="mt-0.5 shrink-0" aria-hidden="true" /> {error}
         </p>
       )}
@@ -115,7 +115,7 @@ export default function AdminCampusFeeds() {
             className="rounded-full border px-3.5 py-1.5 text-xs font-bold transition"
             style={tab === id
               ? { borderColor: 'var(--brand-navy-700)', background: 'var(--brand-navy-700)', color: '#fff' }
-              : { borderColor: '#E2E8F0', color: '#64748B' }}
+              : { borderColor: 'var(--ink-200)', color: 'var(--ink-500)' }}
           >
             {label} {count > 0 && <span className="tabular-nums opacity-80">· {count}</span>}
           </button>
@@ -152,8 +152,8 @@ function EmptyQueue({ tab }) {
   }[tab];
 
   return (
-    <div className="rounded-xl border px-5 py-8 text-center" style={{ borderColor: '#E2E8F0', background: '#F8FAFC' }}>
-      <Inbox size={20} className="mx-auto mb-2" style={{ color: '#94A3B8' }} aria-hidden="true" />
+    <div className="rounded-xl border px-5 py-8 text-center" style={{ borderColor: 'var(--ink-200)', background: 'var(--ink-50)' }}>
+      <Inbox size={20} className="mx-auto mb-2" style={{ color: 'var(--ink-400)' }} aria-hidden="true" />
       <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{copy[0]}</p>
       <p className="mx-auto mt-1 max-w-sm text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{copy[1]}</p>
     </div>
@@ -170,7 +170,7 @@ function fmtDate(value) {
 
 const STATUS_STYLE = {
   approved: { background: '#DCFCE7', color: '#166534' },
-  rejected: { background: '#F1F5F9', color: '#475569' },
+  rejected: { background: 'var(--ink-100)', color: 'var(--ink-600)' },
 };
 
 function SubmissionCard({ row, busy, onDecide }) {
@@ -178,11 +178,11 @@ function SubmissionCard({ row, busy, onDecide }) {
   const titles = Array.isArray(row.sample_titles) ? row.sample_titles : [];
 
   return (
-    <div className="overflow-hidden rounded-xl border bg-white" style={{ borderColor: '#E2E8F0' }}>
+    <div className="overflow-hidden rounded-xl border bg-white" style={{ borderColor: 'var(--ink-200)' }}>
       <div className="flex flex-wrap items-center justify-between gap-2 border-b px-4 py-2.5"
-        style={{ borderColor: '#E2E8F0', background: '#F8FAFC' }}>
+        style={{ borderColor: 'var(--ink-200)', background: 'var(--ink-50)' }}>
         <p className="flex items-center gap-1.5 text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
-          <School size={14} className="shrink-0" style={{ color: '#94A3B8' }} aria-hidden="true" />
+          <School size={14} className="shrink-0" style={{ color: 'var(--ink-400)' }} aria-hidden="true" />
           {row.college || 'Unknown school'}
         </p>
         <div className="flex items-center gap-2">
@@ -192,7 +192,7 @@ function SubmissionCard({ row, busy, onDecide }) {
               {row.review_status}
             </span>
           )}
-          <span className="text-xs tabular-nums" style={{ color: '#94A3B8' }}>{fmtDate(row.created_date)}</span>
+          <span className="text-xs tabular-nums" style={{ color: 'var(--ink-400)' }}>{fmtDate(row.created_date)}</span>
         </div>
       </div>
 
@@ -215,7 +215,7 @@ function SubmissionCard({ row, busy, onDecide }) {
         ) : (
           <>
             <p className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs" style={{ color: 'var(--text-secondary)' }}>
-              <CalendarCheck2 size={12} className="shrink-0" style={{ color: '#94A3B8' }} aria-hidden="true" />
+              <CalendarCheck2 size={12} className="shrink-0" style={{ color: 'var(--ink-400)' }} aria-hidden="true" />
               <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>{row.resolved_platform}</span>
               <span>·</span>
               <span className="tabular-nums">{row.event_count} upcoming</span>
@@ -227,7 +227,7 @@ function SubmissionCard({ row, busy, onDecide }) {
               the university's calendar or the library's; five real titles can.
             */}
             {titles.length > 0 && (
-              <ul className="mt-2 space-y-0.5 rounded-lg px-3 py-2" style={{ background: '#F8FAFC' }}>
+              <ul className="mt-2 space-y-0.5 rounded-lg px-3 py-2" style={{ background: 'var(--ink-50)' }}>
                 {titles.map((title, i) => (
                   <li key={i} className="truncate text-xs" style={{ color: 'var(--text-secondary)' }}>{title}</li>
                 ))}
@@ -253,7 +253,7 @@ function SubmissionCard({ row, busy, onDecide }) {
               disabled={busy}
               onClick={() => onDecide(row, 'rejected')}
               className="inline-flex items-center gap-1.5 rounded-lg border px-3.5 py-2 text-xs font-bold transition disabled:opacity-50"
-              style={{ borderColor: '#E2E8F0', color: '#64748B' }}
+              style={{ borderColor: 'var(--ink-200)', color: 'var(--ink-500)' }}
             >
               <X size={13} aria-hidden="true" /> Reject
             </button>

@@ -3,7 +3,7 @@ import { base44 } from '@/api/base44Client';
 import { X, ShieldCheck, Check } from 'lucide-react';
 import { extractResumeDraft } from '@/lib/evidence-library';
 
-const field = 'w-full rounded-xl border border-[#E2E8F0] px-3 py-2 text-sm text-[#334155] outline-none focus:border-[#1F3A5F]';
+const field = 'w-full rounded-xl border border-[color:var(--ink-200)] px-3 py-2 text-sm text-[color:var(--ink-700)] outline-none focus:border-[color:var(--brand-navy-900)]';
 const listToText = (a) => (a || []).join(', ');
 const textToList = (t) => t.split(',').map((s) => s.trim()).filter(Boolean);
 
@@ -47,14 +47,14 @@ export default function ResumeApprovalModal({ item, onClose, onSaved }) {
         <div className="mb-1 flex items-start justify-between gap-3">
           <div>
             <p className="text-[11px] font-bold uppercase tracking-[.14em]" style={{ color: 'var(--brand-navy-700)' }}>Review for your resume</p>
-            <h2 className="font-heading text-xl font-bold text-[#050816]">{item.title}</h2>
+            <h2 className="font-heading text-xl font-bold text-[color:var(--surface-dark-900)]">{item.title}</h2>
           </div>
-          <button onClick={onClose} aria-label="Close"><X size={18} className="text-[#94A3B8]" /></button>
+          <button onClick={onClose} aria-label="Close"><X size={18} className="text-[color:var(--ink-400)]" /></button>
         </div>
 
         <div className="my-4 flex gap-2 rounded-xl p-3" style={{ background: 'var(--background-tertiary)' }}>
           <ShieldCheck size={15} className="mt-0.5 shrink-0" style={{ color: 'var(--brand-navy-700)' }} />
-          <p className="text-xs leading-5 text-[#334155]">
+          <p className="text-xs leading-5 text-[color:var(--ink-700)]">
             These details come only from what you submitted. Nothing is invented — no employers, job titles, metrics,
             results, certifications or dates are added for you. Edit anything that is not accurate, then approve.
           </p>
@@ -62,30 +62,30 @@ export default function ResumeApprovalModal({ item, onClose, onSaved }) {
 
         <div className="space-y-3">
           <label className="block">
-            <span className="mb-1 block text-xs font-bold text-[#334155]">Project title</span>
+            <span className="mb-1 block text-xs font-bold text-[color:var(--ink-700)]">Project title</span>
             <input value={form.approved_title} onChange={set('approved_title')} className={field} />
           </label>
           <label className="block">
-            <span className="mb-1 block text-xs font-bold text-[#334155]">Deliverable</span>
+            <span className="mb-1 block text-xs font-bold text-[color:var(--ink-700)]">Deliverable</span>
             <input value={form.approved_deliverable} onChange={set('approved_deliverable')} placeholder="What you actually produced" className={field} />
           </label>
           <label className="block">
-            <span className="mb-1 block text-xs font-bold text-[#334155]">Accomplishment bullet</span>
+            <span className="mb-1 block text-xs font-bold text-[color:var(--ink-700)]">Accomplishment bullet</span>
             <textarea value={form.approved_bullet} onChange={set('approved_bullet')} rows={3}
               placeholder="One line in your own words — only what you did." className={field} />
           </label>
           <label className="block">
-            <span className="mb-1 block text-xs font-bold text-[#334155]">Skills demonstrated</span>
+            <span className="mb-1 block text-xs font-bold text-[color:var(--ink-700)]">Skills demonstrated</span>
             <input value={form.approved_skills} onChange={set('approved_skills')} placeholder="Comma separated" className={field} />
           </label>
           <label className="block">
-            <span className="mb-1 block text-xs font-bold text-[#334155]">Tools used</span>
+            <span className="mb-1 block text-xs font-bold text-[color:var(--ink-700)]">Tools used</span>
             <input value={form.approved_tools} onChange={set('approved_tools')} placeholder="Comma separated" className={field} />
           </label>
           <label className="block">
-            <span className="mb-1 block text-xs font-bold text-[#334155]">Public project link (optional)</span>
+            <span className="mb-1 block text-xs font-bold text-[color:var(--ink-700)]">Public project link (optional)</span>
             <input value={form.approved_link} onChange={set('approved_link')} placeholder="https://…" className={field} />
-            <span className="mt-1 block text-[11px] text-[#94A3B8]">Uploaded files stay private. Only a link you paste here can appear on a resume.</span>
+            <span className="mt-1 block text-[11px] text-[color:var(--ink-400)]">Uploaded files stay private. Only a link you paste here can appear on a resume.</span>
           </label>
         </div>
 
@@ -96,11 +96,11 @@ export default function ResumeApprovalModal({ item, onClose, onSaved }) {
             <Check size={14} /> {saving ? 'Saving…' : 'Approve for resume'}
           </button>
           <button onClick={() => save('excluded')} disabled={saving}
-            className="rounded-[10px] border border-[#E2E8F0] px-4 py-2.5 text-sm font-semibold text-[#334155] hover:bg-[#F8FAFC]">
+            className="rounded-[10px] border border-[color:var(--ink-200)] px-4 py-2.5 text-sm font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)]">
             Keep off my resume
           </button>
         </div>
-        <p className="mt-3 text-center text-[11px] text-[#94A3B8]">Approving does not add anything to a resume — you choose when to import it.</p>
+        <p className="mt-3 text-center text-[11px] text-[color:var(--ink-400)]">Approving does not add anything to a resume — you choose when to import it.</p>
       </div>
     </div>
   );

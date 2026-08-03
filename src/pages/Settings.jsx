@@ -7,7 +7,7 @@ import Field from '@/components/onboarding/Field';
 import ICSExportPanel from '@/components/calendar/ICSExportPanel';
 import { generatePathTest } from '@/lib/path-generator';
 
-const textareaCls = 'mt-1 w-full rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-3 text-sm text-[#050816] placeholder-[#94A3B8] outline-none focus:border-[#274C77] resize-none';
+const textareaCls = 'mt-1 w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] px-4 py-3 text-sm text-[color:var(--surface-dark-900)] placeholder-[color:var(--ink-400)] outline-none focus:border-[color:var(--brand-navy-700)] resize-none';
 
 const NOTES_FIELDS = [
   { name: 'personal_notes', label: 'Personal notes and context', placeholder: 'Anything about your situation or background that should personalize your recommendations...', maxLength: 3000 },
@@ -80,7 +80,7 @@ export default function Settings() {
         title="Keep your context current."
         description="Your direction can change. Update the facts that shape future roadmaps."
       />
-      <section className="mb-8 grid gap-5 rounded-[24px] border border-[#E2E8F0] bg-white p-7 shadow-sm sm:grid-cols-2">
+      <section className="mb-8 grid gap-5 rounded-[24px] border border-[color:var(--ink-200)] bg-white p-7 shadow-sm sm:grid-cols-2">
         <Field label="Full name" value={user.full_name} name="full_name" onChange={change} />
         <Field label="Email" value={user.email} name="email" onChange={change} />
         <Field label="College" value={user.college} name="college" onChange={change} />
@@ -96,29 +96,29 @@ export default function Settings() {
         </button>
         <button
           onClick={() => base44.auth.logout('/')}
-          className="text-sm font-semibold text-[#64748B] hover:text-[#050816] transition sm:col-span-2"
+          className="text-sm font-semibold text-[color:var(--ink-500)] hover:text-[color:var(--surface-dark-900)] transition sm:col-span-2"
         >
           Log out
         </button>
       </section>
 
       <div className="mb-3 mt-10">
-        <h2 className="font-heading text-xl font-bold text-[#050816] mb-1">Personal context</h2>
-        <p className="text-sm text-[#334155] mb-5">Add context, ambitions, constraints, or priorities that personalize your path recommendations. Changes influence future recommendations but do not rewrite past ones.</p>
+        <h2 className="font-heading text-xl font-bold text-[color:var(--surface-dark-900)] mb-1">Personal context</h2>
+        <p className="text-sm text-[color:var(--ink-700)] mb-5">Add context, ambitions, constraints, or priorities that personalize your path recommendations. Changes influence future recommendations but do not rewrite past ones.</p>
       </div>
-      <section className="mb-10 rounded-[24px] border border-[#E2E8F0] bg-white p-7 shadow-sm space-y-5">
+      <section className="mb-10 rounded-[24px] border border-[color:var(--ink-200)] bg-white p-7 shadow-sm space-y-5">
         {NOTES_FIELDS.map(f => (
-          <label key={f.name} className="block text-sm font-semibold text-[#334155]">
+          <label key={f.name} className="block text-sm font-semibold text-[color:var(--ink-700)]">
             {f.label}
-            <span className="ml-2 text-xs font-normal text-[#94A3B8]">Optional</span>
+            <span className="ml-2 text-xs font-normal text-[color:var(--ink-400)]">Optional</span>
             <textarea rows={3} name={f.name} value={notes[f.name] || ''} onChange={changeNote}
               placeholder={f.placeholder} maxLength={f.maxLength} className={textareaCls} />
             {f.maxLength && (notes[f.name] || '').length > 0 && (
-              <span className="block text-right text-xs text-[#94A3B8] mt-0.5">{(notes[f.name] || '').length}/{f.maxLength}</span>
+              <span className="block text-right text-xs text-[color:var(--ink-400)] mt-0.5">{(notes[f.name] || '').length}/{f.maxLength}</span>
             )}
           </label>
         ))}
-        <p className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-3 text-xs text-[#64748B]">
+        <p className="rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] px-4 py-3 text-xs text-[color:var(--ink-500)]">
           🔒 Your notes are private to your account and are used only to personalize your Unscripted experience.
         </p>
         <button onClick={saveNotes} disabled={!profile}
@@ -128,9 +128,9 @@ export default function Settings() {
         </button>
 
         {showRegenPrompt && !regenDone && (
-          <div className="rounded-[16px] border border-[#274C77] bg-[#EEF2F6] p-5">
-            <p className="text-sm font-bold text-[#1F3A5F] mb-1">Want to refresh your recommended paths?</p>
-            <p className="text-xs text-[#334155] mb-4">Your personal context has been updated. Unscripted can generate new path recommendations tailored to your updated preferences — for example, if you now want to focus only on law-related roles.</p>
+          <div className="rounded-[16px] border border-[color:var(--brand-navy-700)] bg-[color:var(--ink-100)] p-5">
+            <p className="text-sm font-bold text-[color:var(--brand-navy-900)] mb-1">Want to refresh your recommended paths?</p>
+            <p className="text-xs text-[color:var(--ink-700)] mb-4">Your personal context has been updated. Unscripted can generate new path recommendations tailored to your updated preferences — for example, if you now want to focus only on law-related roles.</p>
             <div className="flex flex-wrap gap-2">
               <button onClick={handleRegenerate} disabled={regenerating}
                 className="flex items-center gap-2 rounded-[10px] px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-60 transition"
@@ -139,7 +139,7 @@ export default function Settings() {
                 {regenerating ? 'Generating new paths…' : 'Yes, refresh my paths'}
               </button>
               <button onClick={() => setShowRegenPrompt(false)} disabled={regenerating}
-                className="rounded-[10px] border border-[#E2E8F0] px-5 py-2.5 text-sm font-semibold text-[#334155] hover:bg-white transition">
+                className="rounded-[10px] border border-[color:var(--ink-200)] px-5 py-2.5 text-sm font-semibold text-[color:var(--ink-700)] hover:bg-white transition">
                 No, keep existing paths
               </button>
             </div>
@@ -164,16 +164,16 @@ export default function Settings() {
       </section>
 
       <div className="mb-3">
-        <h2 className="font-heading text-xl font-bold text-[#050816] mb-1">Export to calendar</h2>
-        <p className="text-sm text-[#334155]">Download .ics files to add your Unscripted schedule to Google Calendar, Apple Calendar, Outlook, or any standard calendar app.</p>
+        <h2 className="font-heading text-xl font-bold text-[color:var(--surface-dark-900)] mb-1">Export to calendar</h2>
+        <p className="text-sm text-[color:var(--ink-700)]">Download .ics files to add your Unscripted schedule to Google Calendar, Apple Calendar, Outlook, or any standard calendar app.</p>
       </div>
       <ICSExportPanel showHeading={false} />
 
       <div className="mt-10">
-        <h2 className="font-heading text-xl font-bold text-[#050816] mb-1">Recently deleted</h2>
-        <p className="text-sm text-[#334155] mb-4">Mission Guides, contacts, reflections, and proof of work you've deleted are kept for 30 days before permanent removal.</p>
+        <h2 className="font-heading text-xl font-bold text-[color:var(--surface-dark-900)] mb-1">Recently deleted</h2>
+        <p className="text-sm text-[color:var(--ink-700)] mb-4">Mission Guides, contacts, reflections, and proof of work you've deleted are kept for 30 days before permanent removal.</p>
         <Link to="/recently-deleted"
-          className="inline-flex items-center gap-2 rounded-[10px] border border-[#E2E8F0] px-5 py-3 text-sm font-semibold text-[#334155] hover:bg-[#F8FAFC] transition">
+          className="inline-flex items-center gap-2 rounded-[10px] border border-[color:var(--ink-200)] px-5 py-3 text-sm font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)] transition">
           <Trash2 size={15} /> View Recently Deleted
         </Link>
       </div>

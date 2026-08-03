@@ -58,9 +58,9 @@ function CopyButton({ getText, label }) {
       aria-label={copied ? 'Copied to clipboard' : label}
       className="flex shrink-0 items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-semibold transition"
       style={{
-        borderColor: copied ? '#BBF7D0' : '#E2E8F0',
-        background: copied ? '#F0FDF4' : '#fff',
-        color: copied ? '#15803D' : '#334155',
+        borderColor: copied ? '#BBF7D0' : 'var(--ink-200)',
+        background: copied ? 'var(--success-50)' : '#fff',
+        color: copied ? 'var(--success-700)' : 'var(--ink-700)',
       }}
     >
       {copied ? <Check size={12} /> : <Copy size={12} />}
@@ -96,30 +96,30 @@ export default function StepArtifact({ artifact: raw, profile }) {
     : items.join('\n');
 
   return (
-    <div className="mt-3 overflow-hidden rounded-xl border border-[#E2E8F0] bg-white">
-      <div className="flex items-center justify-between gap-3 border-b border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2">
-        <span className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-[#64748B]">
+    <div className="mt-3 overflow-hidden rounded-xl border border-[color:var(--ink-200)] bg-white">
+      <div className="flex items-center justify-between gap-3 border-b border-[color:var(--ink-200)] bg-[color:var(--ink-50)] px-3 py-2">
+        <span className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-[color:var(--ink-500)]">
           <Icon size={12} /> {meta.label}
         </span>
         <CopyButton getText={() => payload} label={`Copy the ${isWritten ? 'message' : 'text to paste'}`} />
       </div>
 
       {instruction && (
-        <p className="border-b border-[#F1F5F9] px-3 py-2 text-xs leading-relaxed text-[#64748B]">
+        <p className="border-b border-[color:var(--ink-100)] px-3 py-2 text-xs leading-relaxed text-[color:var(--ink-500)]">
           <WithBlanks text={instruction} />
         </p>
       )}
 
       <div className="px-3 py-3">
         {isWritten && subject && (
-          <p className="mb-3 border-b border-dashed border-[#E2E8F0] pb-2 text-sm text-[#050816]">
-            <span className="text-[#94A3B8]">Subject: </span>
+          <p className="mb-3 border-b border-dashed border-[color:var(--ink-200)] pb-2 text-sm text-[color:var(--surface-dark-900)]">
+            <span className="text-[color:var(--ink-400)]">Subject: </span>
             <span className="font-semibold"><WithBlanks text={subject} /></span>
           </p>
         )}
 
         {isWritten && body && (
-          <p className="whitespace-pre-wrap text-sm leading-relaxed text-[#334155]">
+          <p className="whitespace-pre-wrap text-sm leading-relaxed text-[color:var(--ink-700)]">
             <WithBlanks text={body} />
           </p>
         )}
@@ -133,7 +133,7 @@ export default function StepArtifact({ artifact: raw, profile }) {
                   // Wrap rather than scroll — a clipped query hides the part the
                   // student needs to check before pasting.
                   className="whitespace-pre-wrap break-words rounded-lg px-3 py-2 text-xs leading-relaxed"
-                  style={{ fontFamily: MONO, background: '#F8FAFC', border: '1px solid #EEF2F6', color: '#334155' }}
+                  style={{ fontFamily: MONO, background: 'var(--ink-50)', border: '1px solid var(--ink-100)', color: 'var(--ink-700)' }}
                 >
                   <WithBlanks text={item} />
                 </p>
@@ -142,8 +142,8 @@ export default function StepArtifact({ artifact: raw, profile }) {
           ) : (
             <ol className="space-y-2">
               {items.map((item, i) => (
-                <li key={i} className="flex gap-2.5 text-sm leading-relaxed text-[#334155]">
-                  <span className="shrink-0 pt-0.5 text-xs font-bold tabular-nums text-[#94A3B8]">
+                <li key={i} className="flex gap-2.5 text-sm leading-relaxed text-[color:var(--ink-700)]">
+                  <span className="shrink-0 pt-0.5 text-xs font-bold tabular-nums text-[color:var(--ink-400)]">
                     {numbered ? `${i + 1}.` : '·'}
                   </span>
                   <span><WithBlanks text={item} /></span>
@@ -155,11 +155,11 @@ export default function StepArtifact({ artifact: raw, profile }) {
       </div>
 
       {(blanks.length > 0 || prefilled.length > 0) && (
-        <div className="border-t border-[#E2E8F0] bg-[#FCFBF7] px-3 py-2.5">
-          <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wide text-[#64748B]">
+        <div className="border-t border-[color:var(--ink-200)] bg-[#FCFBF7] px-3 py-2.5">
+          <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wide text-[color:var(--ink-500)]">
             {blanks.length > 0 ? `You fill in (${blanks.length})` : 'Ready as-is'}
             {prefilled.length > 0 && (
-              <span className="font-medium normal-case tracking-normal text-[#94A3B8]">
+              <span className="font-medium normal-case tracking-normal text-[color:var(--ink-400)]">
                 {' · '}{prefilled.length} already filled from your profile
               </span>
             )}
@@ -167,7 +167,7 @@ export default function StepArtifact({ artifact: raw, profile }) {
           {blanks.length > 0 && (
             <ul className="space-y-1">
               {blanks.map((blank, i) => (
-                <li key={i} className="text-xs text-[#64748B]">
+                <li key={i} className="text-xs text-[color:var(--ink-500)]">
                   <code className="font-semibold" style={{ fontFamily: MONO, color: '#7A5B12' }}>
                     {blank.token}
                   </code>

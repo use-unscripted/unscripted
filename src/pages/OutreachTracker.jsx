@@ -10,15 +10,15 @@ import SoftDeleteConfirm, { softDeletePayload } from '@/components/SoftDeleteCon
 import { safeExternalUrl } from '@/lib/safe-url';
 
 const ALL_STATUS_OPTIONS = [
-  { value: 'not_sent', label: 'Not contacted', bg: '#F1F5F9', text: '#334155' },
-  { value: 'planning', label: 'Planning', bg: '#EFF6FF', text: '#1D4ED8' },
-  { value: 'sent', label: 'Contacted', bg: '#FFFBEB', text: '#B45309' },
+  { value: 'not_sent', label: 'Not contacted', bg: 'var(--ink-100)', text: 'var(--ink-700)' },
+  { value: 'planning', label: 'Planning', bg: 'var(--info-50)', text: 'var(--info-700)' },
+  { value: 'sent', label: 'Contacted', bg: 'var(--warning-50)', text: 'var(--warning-700)' },
   { value: 'follow_up_needed', label: 'Follow-up needed', bg: '#FEF3C7', text: '#D97706' },
-  { value: 'call_scheduled', label: 'Meeting scheduled', bg: '#EEF2F6', text: '#274C77' },
-  { value: 'responded', label: 'Completed', bg: '#F0FDF4', text: '#15803D' },
-  { value: 'no_response', label: 'No response', bg: '#F1F5F9', text: '#64748B' },
-  { value: 'completed', label: 'Closed', bg: '#F0FDF4', text: '#15803D' },
-  { value: 'other', label: 'Other', bg: '#F1F5F9', text: '#334155' },
+  { value: 'call_scheduled', label: 'Meeting scheduled', bg: 'var(--ink-100)', text: 'var(--brand-navy-700)' },
+  { value: 'responded', label: 'Completed', bg: 'var(--success-50)', text: 'var(--success-700)' },
+  { value: 'no_response', label: 'No response', bg: 'var(--ink-100)', text: 'var(--ink-500)' },
+  { value: 'completed', label: 'Closed', bg: 'var(--success-50)', text: 'var(--success-700)' },
+  { value: 'other', label: 'Other', bg: 'var(--ink-100)', text: 'var(--ink-700)' },
 ];
 
 const CONTACT_TYPE_LABELS = {
@@ -46,7 +46,7 @@ function ContactCard({ c, experimentsMap, missionsMap, onEdit, onStatusChange, o
   const websiteHref = safeExternalUrl(c.website_url) || safeExternalUrl('https://' + (c.website_url || ''));
 
   return (
-    <div className="rounded-[20px] border border-[#E2E8F0] bg-white p-5">
+    <div className="rounded-[20px] border border-[color:var(--ink-200)] bg-white p-5">
       {confirmDelete && (
         <SoftDeleteConfirm
           itemName={c.name}
@@ -59,7 +59,7 @@ function ContactCard({ c, experimentsMap, missionsMap, onEdit, onStatusChange, o
         <div className="flex-1 min-w-0">
           <div className="flex flex-wrap items-center gap-2 mb-1">
             {c.contact_type && (
-              <span className="rounded-full px-2.5 py-0.5 text-xs font-bold" style={{ background: '#EEF2F6', color: 'var(--brand-navy-700)' }}>
+              <span className="rounded-full px-2.5 py-0.5 text-xs font-bold" style={{ background: 'var(--ink-100)', color: 'var(--brand-navy-700)' }}>
                 {CONTACT_TYPE_LABELS[c.contact_type] || c.contact_type}
               </span>
             )}
@@ -67,30 +67,30 @@ function ContactCard({ c, experimentsMap, missionsMap, onEdit, onStatusChange, o
               {s.label}
             </span>
             {c.thank_you_sent && (
-              <span className="rounded-full px-2.5 py-0.5 text-xs font-bold flex items-center gap-1" style={{ background: '#F0FDF4', color: '#15803D' }}>
+              <span className="rounded-full px-2.5 py-0.5 text-xs font-bold flex items-center gap-1" style={{ background: 'var(--success-50)', color: 'var(--success-700)' }}>
                 <CheckCircle size={10} /> Thank-you sent
               </span>
             )}
           </div>
-          <h3 className="font-heading font-bold text-[#050816] leading-snug">{c.name}</h3>
+          <h3 className="font-heading font-bold text-[color:var(--surface-dark-900)] leading-snug">{c.name}</h3>
           {(c.role || c.company) && (
-            <p className="text-sm text-[#334155]">
+            <p className="text-sm text-[color:var(--ink-700)]">
               {c.role}{c.role && c.company ? ' · ' : ''}{c.company}
             </p>
           )}
         </div>
         <div className="relative shrink-0">
-          <button onClick={() => setMenuOpen(v => !v)} className="rounded-lg p-1.5 text-[#94A3B8] hover:text-[#334155] hover:bg-[#F1F5F9] transition" aria-label="More actions">
+          <button onClick={() => setMenuOpen(v => !v)} className="rounded-lg p-1.5 text-[color:var(--ink-400)] hover:text-[color:var(--ink-700)] hover:bg-[color:var(--ink-100)] transition" aria-label="More actions">
             <ChevronDown size={16} />
           </button>
           {menuOpen && (
-            <div className="absolute right-0 top-8 z-10 w-44 rounded-xl border border-[#E2E8F0] bg-white shadow-lg py-1">
+            <div className="absolute right-0 top-8 z-10 w-44 rounded-xl border border-[color:var(--ink-200)] bg-white shadow-lg py-1">
               <button onClick={() => { setMenuOpen(false); onEdit(c); }}
-                className="w-full flex items-center gap-2 px-4 py-2 text-xs text-[#334155] hover:bg-[#F8FAFC]">
+                className="w-full flex items-center gap-2 px-4 py-2 text-xs text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)]">
                 <Pencil size={13} /> Edit contact
               </button>
               <button onClick={() => { setMenuOpen(false); onToggleThankYou(c); }}
-                className="w-full flex items-center gap-2 px-4 py-2 text-xs text-[#334155] hover:bg-[#F8FAFC]">
+                className="w-full flex items-center gap-2 px-4 py-2 text-xs text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)]">
                 <CheckCircle size={13} /> {c.thank_you_sent ? 'Unmark thank-you' : 'Mark thank-you sent'}
               </button>
               <button onClick={() => { setMenuOpen(false); setConfirmDelete(true); }}
@@ -105,24 +105,24 @@ function ContactCard({ c, experimentsMap, missionsMap, onEdit, onStatusChange, o
       {/* Contact methods */}
       <div className="flex flex-wrap gap-3 mb-3">
         {c.email && (
-          <a href={`mailto:${c.email}`} className="flex items-center gap-1 text-xs text-[#64748B] hover:text-[#274C77] transition">
+          <a href={`mailto:${c.email}`} className="flex items-center gap-1 text-xs text-[color:var(--ink-500)] hover:text-[color:var(--brand-navy-700)] transition">
             <Mail size={12} />{c.email}
           </a>
         )}
         {c.phone && (
-          <a href={`tel:${c.phone}`} className="flex items-center gap-1 text-xs text-[#64748B] hover:text-[#274C77] transition">
+          <a href={`tel:${c.phone}`} className="flex items-center gap-1 text-xs text-[color:var(--ink-500)] hover:text-[color:var(--brand-navy-700)] transition">
             <Phone size={12} />{c.phone}
           </a>
         )}
         {profileHref && (
           <a href={profileHref} target="_blank" rel="noopener noreferrer"
-            className="flex items-center gap-1 text-xs text-[#64748B] hover:text-[#274C77] transition">
+            className="flex items-center gap-1 text-xs text-[color:var(--ink-500)] hover:text-[color:var(--brand-navy-700)] transition">
             <ExternalLink size={12} />LinkedIn
           </a>
         )}
         {websiteHref && (
           <a href={websiteHref} target="_blank" rel="noopener noreferrer"
-            className="flex items-center gap-1 text-xs text-[#64748B] hover:text-[#274C77] transition">
+            className="flex items-center gap-1 text-xs text-[color:var(--ink-500)] hover:text-[color:var(--brand-navy-700)] transition">
             <ExternalLink size={12} />Website
           </a>
         )}
@@ -131,17 +131,17 @@ function ContactCard({ c, experimentsMap, missionsMap, onEdit, onStatusChange, o
       {/* Status selector */}
       <div className="mb-3">
         <select value={c.response_status} onChange={e => onStatusChange(c.id, e.target.value)}
-          className="rounded-lg border border-[#E2E8F0] px-2.5 py-1.5 text-xs outline-none"
+          className="rounded-lg border border-[color:var(--ink-200)] px-2.5 py-1.5 text-xs outline-none"
           style={{ background: s.bg, color: s.text }}>
           {ALL_STATUS_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
         </select>
       </div>
 
       {/* Dates */}
-      <div className="flex flex-wrap gap-3 text-xs text-[#94A3B8] mb-3">
-        {c.date_contacted && <span>First contact: <span className="text-[#64748B] font-medium">{fmtDate(c.date_contacted)}</span></span>}
+      <div className="flex flex-wrap gap-3 text-xs text-[color:var(--ink-400)] mb-3">
+        {c.date_contacted && <span>First contact: <span className="text-[color:var(--ink-500)] font-medium">{fmtDate(c.date_contacted)}</span></span>}
         {c.followup_date && (
-          <span className={isOverdue ? 'text-[#B91C1C] font-semibold' : ''}>
+          <span className={isOverdue ? 'text-[color:var(--danger-700)] font-semibold' : ''}>
             {isOverdue ? '⚠ Follow-up overdue: ' : 'Follow-up: '}
             <span className="font-medium">{fmtDate(c.followup_date)}</span>
           </span>
@@ -149,21 +149,21 @@ function ContactCard({ c, experimentsMap, missionsMap, onEdit, onStatusChange, o
       </div>
 
       {/* Notes preview */}
-      {c.notes && <p className="text-xs text-[#64748B] line-clamp-2 mb-3">{c.notes}</p>}
+      {c.notes && <p className="text-xs text-[color:var(--ink-500)] line-clamp-2 mb-3">{c.notes}</p>}
 
       {/* Experiment / Path / Mission */}
       {(exp || c.path_being_tested || mission) && (
-        <div className="pt-3 border-t border-[#F1F5F9] flex flex-wrap gap-3">
+        <div className="pt-3 border-t border-[color:var(--ink-100)] flex flex-wrap gap-3">
           {exp && (
-            <span className="flex items-center gap-1 text-xs text-[#64748B]">
-              <Beaker size={11} />Experiment: <span className="font-semibold text-[#334155]">{exp.title}</span>
+            <span className="flex items-center gap-1 text-xs text-[color:var(--ink-500)]">
+              <Beaker size={11} />Experiment: <span className="font-semibold text-[color:var(--ink-700)]">{exp.title}</span>
             </span>
           )}
           {(c.path_being_tested || exp?.path_name) && (
-            <span className="text-xs text-[#94A3B8]">Path: {c.path_being_tested || exp?.path_name}</span>
+            <span className="text-xs text-[color:var(--ink-400)]">Path: {c.path_being_tested || exp?.path_name}</span>
           )}
           {mission && (
-            <span className="text-xs text-[#94A3B8]">Mission: <span className="font-semibold text-[#64748B]">{mission.title}</span></span>
+            <span className="text-xs text-[color:var(--ink-400)]">Mission: <span className="font-semibold text-[color:var(--ink-500)]">{mission.title}</span></span>
           )}
         </div>
       )}
@@ -310,7 +310,7 @@ export default function OutreachTracker() {
             onChange={setSelectedPathId}
             showAll
           />
-          {selectedPath && <span className="text-xs text-[#94A3B8]">Contacts for <strong className="text-[#334155]">{selectedPath.path_name}</strong></span>}
+          {selectedPath && <span className="text-xs text-[color:var(--ink-400)]">Contacts for <strong className="text-[color:var(--ink-700)]">{selectedPath.path_name}</strong></span>}
           {selectedPath && (
             <button
               onClick={() => setOutreachPlanPath(selectedPath)}
@@ -323,29 +323,29 @@ export default function OutreachTracker() {
       )}
 
       {overdue.length > 0 && (
-        <div className="mb-6 rounded-[16px] p-4" style={{ background: '#FFFBEB', border: '1px solid rgba(180,83,9,0.25)' }}>
-          <p className="text-xs font-bold uppercase tracking-wide text-[#B45309] mb-1">Follow-ups overdue</p>
-          <p className="text-sm text-[#334155]">{overdue.length} contact{overdue.length > 1 ? 's' : ''} need follow-up. Reschedule or mark complete.</p>
+        <div className="mb-6 rounded-[16px] p-4" style={{ background: 'var(--warning-50)', border: '1px solid rgba(180,83,9,0.25)' }}>
+          <p className="text-xs font-bold uppercase tracking-wide text-[color:var(--warning-700)] mb-1">Follow-ups overdue</p>
+          <p className="text-sm text-[color:var(--ink-700)]">{overdue.length} contact{overdue.length > 1 ? 's' : ''} need follow-up. Reschedule or mark complete.</p>
         </div>
       )}
 
       {/* Search + Filters */}
       <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
         <div className="relative flex-1 min-w-[200px]">
-          <Mail size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#94A3B8]" />
+          <Mail size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[color:var(--ink-400)]" />
           <input value={search} onChange={e => setSearch(e.target.value)}
             placeholder="Search by name, company, email, experiment…"
-            className="w-full rounded-xl border border-[#E2E8F0] bg-white pl-9 pr-4 py-2.5 text-sm outline-none focus:border-[#1F3A5F]" />
+            className="w-full rounded-xl border border-[color:var(--ink-200)] bg-white pl-9 pr-4 py-2.5 text-sm outline-none focus:border-[color:var(--brand-navy-900)]" />
         </div>
         {experiments.length > 0 && (
           <select value={filterExp} onChange={e => setFilterExp(e.target.value)}
-            className="rounded-xl border border-[#E2E8F0] bg-white px-3 py-2.5 text-sm outline-none focus:border-[#1F3A5F]">
+            className="rounded-xl border border-[color:var(--ink-200)] bg-white px-3 py-2.5 text-sm outline-none focus:border-[color:var(--brand-navy-900)]">
             <option value="all">All experiments</option>
             {experiments.map(exp => <option key={exp.id} value={exp.id}>{exp.title}</option>)}
           </select>
         )}
         <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)}
-          className="rounded-xl border border-[#E2E8F0] bg-white px-3 py-2.5 text-sm outline-none focus:border-[#1F3A5F]">
+          className="rounded-xl border border-[color:var(--ink-200)] bg-white px-3 py-2.5 text-sm outline-none focus:border-[color:var(--brand-navy-900)]">
           <option value="all">All statuses</option>
           {ALL_STATUS_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
         </select>
@@ -365,9 +365,9 @@ export default function OutreachTracker() {
               { label: 'Follow-up', body: 'Hi [Name],\n\nI wanted to follow up on my previous note. I completely understand you\'re busy, and I appreciate your time. If a 20-minute call doesn\'t work, even a brief email with one piece of advice would be incredibly helpful.\n\nThank you again.\n\n[Your Name]' },
               { label: 'Thank-you note', body: 'Hi [Name],\n\nThank you for taking the time to speak with me. Your insight about [specific thing they said] was genuinely valuable and I\'ve already begun [action taken].\n\nI\'ll keep you updated on my progress. Thank you again for your generosity.\n\n[Your Name]' },
             ].map(t => (
-              <div key={t.label} className="rounded-[16px] border border-[#E2E8F0] bg-white p-4">
+              <div key={t.label} className="rounded-[16px] border border-[color:var(--ink-200)] bg-white p-4">
                 <p className="text-xs font-bold uppercase tracking-wide mb-2" style={{ color: 'var(--brand-navy-900)' }}>{t.label}</p>
-                <pre className="text-xs text-[#334155] whitespace-pre-wrap font-body leading-5">{t.body}</pre>
+                <pre className="text-xs text-[color:var(--ink-700)] whitespace-pre-wrap font-body leading-5">{t.body}</pre>
               </div>
             ))}
           </div>
@@ -375,32 +375,32 @@ export default function OutreachTracker() {
       </div>
 
       {loading ? (
-        <div className="py-20 text-center text-[#64748B]">Loading outreach contacts…</div>
+        <div className="py-20 text-center text-[color:var(--ink-500)]">Loading outreach contacts…</div>
       ) : loadError ? (
         <div className="rounded-[24px] border border-dashed border-red-200 p-16 text-center">
-          <h3 className="font-heading text-xl font-bold text-[#050816]">We couldn't load your outreach contacts.</h3>
-          <p className="mt-2 text-sm text-[#64748B]">There was a problem fetching your records. Please try again.</p>
+          <h3 className="font-heading text-xl font-bold text-[color:var(--surface-dark-900)]">We couldn't load your outreach contacts.</h3>
+          <p className="mt-2 text-sm text-[color:var(--ink-500)]">There was a problem fetching your records. Please try again.</p>
           <div className="mt-6 flex justify-center gap-3">
             <button onClick={load} className="inline-flex items-center gap-2 rounded-[10px] px-5 py-2.5 text-sm font-semibold text-white" style={{ background: 'var(--brand-navy-900)' }}>Retry</button>
-            <button onClick={() => navigate('/journey')} className="inline-flex items-center gap-2 rounded-[10px] border border-[#E2E8F0] px-5 py-2.5 text-sm font-semibold text-[#334155] hover:bg-[#F8FAFC]">Return to Dashboard</button>
+            <button onClick={() => navigate('/journey')} className="inline-flex items-center gap-2 rounded-[10px] border border-[color:var(--ink-200)] px-5 py-2.5 text-sm font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)]">Return to Dashboard</button>
           </div>
         </div>
       ) : contacts.length === 0 ? (
-        <div className="rounded-[24px] border border-dashed border-[#E2E8F0] p-16 text-center">
-          <Mail size={32} className="mx-auto mb-4 text-[#CBD5E1]" />
-          <h3 className="font-heading text-xl font-bold text-[#050816]">No contacts added yet.</h3>
-          <p className="mt-2 text-sm text-[#64748B]">Add people connected to your experiments so you can track outreach, conversations, and follow-ups.</p>
+        <div className="rounded-[24px] border border-dashed border-[color:var(--ink-200)] p-16 text-center">
+          <Mail size={32} className="mx-auto mb-4 text-[color:var(--ink-300)]" />
+          <h3 className="font-heading text-xl font-bold text-[color:var(--surface-dark-900)]">No contacts added yet.</h3>
+          <p className="mt-2 text-sm text-[color:var(--ink-500)]">Add people connected to your experiments so you can track outreach, conversations, and follow-ups.</p>
           <button onClick={() => setModal('new')} className="mt-6 inline-flex items-center gap-2 rounded-[10px] px-6 py-3 text-sm font-semibold text-white"
             style={{ background: 'var(--brand-navy-900)' }}><Plus size={16} /> Add Contact</button>
         </div>
       ) : filtered.length === 0 ? (
-        <div className="rounded-[24px] border border-dashed border-[#E2E8F0] p-12 text-center">
-          <p className="font-heading text-lg font-bold text-[#050816]">No results match your filters.</p>
-          <p className="mt-2 text-sm text-[#64748B]">Try adjusting your search or filter.</p>
+        <div className="rounded-[24px] border border-dashed border-[color:var(--ink-200)] p-12 text-center">
+          <p className="font-heading text-lg font-bold text-[color:var(--surface-dark-900)]">No results match your filters.</p>
+          <p className="mt-2 text-sm text-[color:var(--ink-500)]">Try adjusting your search or filter.</p>
         </div>
       ) : (
         <>
-          <p className="text-xs text-[#94A3B8] mb-4">{filtered.length} contact{filtered.length !== 1 ? 's' : ''}</p>
+          <p className="text-xs text-[color:var(--ink-400)] mb-4">{filtered.length} contact{filtered.length !== 1 ? 's' : ''}</p>
           <div className="grid gap-4 sm:grid-cols-2">
             {filtered.map(c => (
               <ContactCard

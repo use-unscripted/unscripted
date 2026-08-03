@@ -14,12 +14,12 @@ import { Check } from 'lucide-react';
 // A guided panel drops its own bottom padding so this bar can stick to the
 // panel's edge — the primary action stays reachable however long the list is.
 export const footerCls =
-  'sticky bottom-0 z-10 -mx-6 mt-6 rounded-b-[24px] border-t border-[#EEF2F6] bg-white px-6 pb-6 pt-4 sm:-mx-8 sm:px-8';
+  'sticky bottom-0 z-10 -mx-6 mt-6 rounded-b-[24px] border-t border-[color:var(--ink-100)] bg-white px-6 pb-6 pt-4 sm:-mx-8 sm:px-8';
 
 
 export function ProgressBar({ value }) {
   return (
-    <div className="h-[3px] w-full overflow-hidden rounded-full" style={{ background: '#EEF2F6' }}>
+    <div className="h-[3px] w-full overflow-hidden rounded-full" style={{ background: 'var(--ink-100)' }}>
       <div
         className="h-full rounded-full"
         style={{
@@ -43,8 +43,8 @@ export function OptionRow({ option, selected, index, onSelect, multi }) {
         // Capped: an uncapped stagger leaves the tail of a long list invisible
         // for seconds.
         animationDelay: `${40 + Math.min(index, 8) * 45}ms`,
-        borderColor: selected ? 'var(--brand-navy-900)' : '#E2E8F0',
-        background: selected ? '#F3F7FC' : '#FFFFFF',
+        borderColor: selected ? 'var(--brand-navy-900)' : 'var(--ink-200)',
+        background: selected ? '#F3F7FC' : 'var(--brand-white)',
         boxShadow: selected ? '0 6px 18px rgba(31,58,95,0.12)' : 'none',
       }}
     >
@@ -52,7 +52,7 @@ export function OptionRow({ option, selected, index, onSelect, multi }) {
       <span
         className={`opt-dot flex h-5 w-5 shrink-0 items-center justify-center border ${multi ? 'rounded-[7px]' : 'rounded-full'}`}
         style={{
-          borderColor: selected ? 'var(--brand-navy-900)' : '#CBD5E1',
+          borderColor: selected ? 'var(--brand-navy-900)' : 'var(--ink-300)',
           background: selected ? 'var(--brand-navy-900)' : 'transparent',
         }}
       >
@@ -65,7 +65,7 @@ export function OptionRow({ option, selected, index, onSelect, multi }) {
       {/* only the first nine are reachable by number key, so only those get the hint */}
       {index < 9 && (
         <span className="opt-key hidden shrink-0 rounded-md border px-1.5 py-0.5 text-[10px] font-semibold sm:block"
-          style={{ borderColor: '#E2E8F0', color: '#64748B' }}>
+          style={{ borderColor: 'var(--ink-200)', color: 'var(--ink-500)' }}>
           {index + 1}
         </span>
       )}

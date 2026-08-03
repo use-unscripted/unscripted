@@ -19,8 +19,8 @@ import { base44 } from '@/api/base44Client';
 import { ProgressBar, OptionRow, GuidedStyles, footerCls } from '@/components/guided/GuidedPieces';
 import { linksForExperiment } from '@/lib/career-cycle';
 
-const inputCls = 'w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-3 text-sm outline-none focus:border-[#1F3A5F]';
-const bigInputCls = 'w-full rounded-2xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-4 text-base outline-none focus:border-[#1F3A5F]';
+const inputCls = 'w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-sm outline-none focus:border-[color:var(--brand-navy-900)]';
+const bigInputCls = 'w-full rounded-2xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-4 text-base outline-none focus:border-[color:var(--brand-navy-900)]';
 
 // footerCls comes from GuidedPieces. The panel below drops its own bottom
 // padding (pb-0) so that bar can stick to the panel's edge, and its -mx values
@@ -79,20 +79,20 @@ function FileDropZone({ file, uploadState, onSelect, onRemove }) {
   if (file) {
     const vid = isVideo(file);
     return (
-      <div className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] p-4">
+      <div className="rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] p-4">
         <div className="flex items-start gap-3">
-          <div className="shrink-0 w-9 h-9 rounded-lg flex items-center justify-center" style={{ background: '#EEF2F6' }}>
+          <div className="shrink-0 w-9 h-9 rounded-lg flex items-center justify-center" style={{ background: 'var(--ink-100)' }}>
             {vid ? <Film size={18} style={{ color: 'var(--brand-navy-700)' }} /> : <FileText size={18} style={{ color: 'var(--brand-navy-700)' }} />}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-[#050816] truncate">{file.name}</p>
-            <p className="text-xs text-[#64748B]">{fmtSize(file.size)} · {getExt(file.name).toUpperCase()}</p>
+            <p className="text-sm font-semibold text-[color:var(--surface-dark-900)] truncate">{file.name}</p>
+            <p className="text-xs text-[color:var(--ink-500)]">{fmtSize(file.size)} · {getExt(file.name).toUpperCase()}</p>
             {uploadState === 'uploading' && (
               <div className="mt-2">
                 <div className="flex items-center gap-2 text-xs" style={{ color: 'var(--brand-navy-700)' }}>
                   <Loader2 size={12} className="animate-spin" /> Uploading...
                 </div>
-                <div className="mt-1.5 h-1.5 w-full rounded-full bg-[#E2E8F0] overflow-hidden">
+                <div className="mt-1.5 h-1.5 w-full rounded-full bg-[color:var(--ink-200)] overflow-hidden">
                   <div className="h-full rounded-full animate-pulse" style={{ width: '60%', background: 'var(--brand-navy-700)' }} />
                 </div>
               </div>
@@ -101,7 +101,7 @@ function FileDropZone({ file, uploadState, onSelect, onRemove }) {
             {uploadState === 'error' && <div className="mt-1 flex items-center gap-1 text-xs text-red-600"><AlertCircle size={12} /> Upload failed</div>}
           </div>
           {uploadState !== 'uploading' && (
-            <button onClick={onRemove} aria-label="Remove file" className="shrink-0 text-[#94A3B8] hover:text-red-500 transition">
+            <button onClick={onRemove} aria-label="Remove file" className="shrink-0 text-[color:var(--ink-400)] hover:text-red-500 transition">
               <Trash2 size={15} />
             </button>
           )}
@@ -116,14 +116,14 @@ function FileDropZone({ file, uploadState, onSelect, onRemove }) {
       onDragOver={e => { e.preventDefault(); setDragging(true); }}
       onDragLeave={() => setDragging(false)}
       onClick={() => inputRef.current?.click()}
-      className={`rounded-xl border-2 border-dashed px-6 py-7 text-center cursor-pointer transition ${dragging ? 'border-[#1F3A5F] bg-[#EEF2F6]' : 'border-[#E2E8F0] bg-[#F8FAFC] hover:border-[#1F3A5F] hover:bg-[#EEF2F6]'}`}>
+      className={`rounded-xl border-2 border-dashed px-6 py-7 text-center cursor-pointer transition ${dragging ? 'border-[color:var(--brand-navy-900)] bg-[color:var(--ink-100)]' : 'border-[color:var(--ink-200)] bg-[color:var(--ink-50)] hover:border-[color:var(--brand-navy-900)] hover:bg-[color:var(--ink-100)]'}`}>
       <input ref={inputRef} type="file"
         accept=".pdf,.doc,.docx,.ppt,.pptx,.txt,.html,.png,.jpg,.jpeg,.webp,.svg,.csv,.xls,.xlsx,.json,.mp3,.wav,.mp4,.webm,.mov,.avi,.mkv,.m4v,.wmv,.ogv,.3gp,.3g2"
         className="hidden" onChange={e => { if (e.target.files[0]) onSelect(e.target.files[0]); }} />
-      <Upload size={22} className="mx-auto mb-2 text-[#94A3B8]" />
-      <p className="text-sm font-semibold text-[#334155]">Click or drag a file here</p>
-      <p className="mt-1 text-xs text-[#94A3B8]">Videos up to 100 MB · All other files up to 50 MB</p>
-      <p className="mt-0.5 text-xs text-[#94A3B8]">PDF, DOC, PPT, XLS, image, video, audio</p>
+      <Upload size={22} className="mx-auto mb-2 text-[color:var(--ink-400)]" />
+      <p className="text-sm font-semibold text-[color:var(--ink-700)]">Click or drag a file here</p>
+      <p className="mt-1 text-xs text-[color:var(--ink-400)]">Videos up to 100 MB · All other files up to 50 MB</p>
+      <p className="mt-0.5 text-xs text-[color:var(--ink-400)]">PDF, DOC, PPT, XLS, image, video, audio</p>
     </div>
   );
 }
@@ -458,11 +458,11 @@ export default function AddProofFlow({ onClose, onSaved, preselectedMission, pre
   const chipCls = 'truncate rounded-full px-2.5 py-1 text-[11px] font-bold';
   const chip = preselectedMission ? (
     <div className="flex min-w-0 flex-wrap items-center gap-1.5">
-      <span className={chipCls} style={{ background: '#EEF2F6', color: 'var(--brand-navy-900)' }}>{preselectedMission.title}</span>
-      {selectedExp && <span className={chipCls} style={{ background: '#F1F5F9', color: '#64748B' }}>{selectedExp.title}</span>}
+      <span className={chipCls} style={{ background: 'var(--ink-100)', color: 'var(--brand-navy-900)' }}>{preselectedMission.title}</span>
+      {selectedExp && <span className={chipCls} style={{ background: 'var(--ink-100)', color: 'var(--ink-500)' }}>{selectedExp.title}</span>}
     </div>
   ) : (
-    <span className={chipCls} style={{ background: '#EEF2F6', color: 'var(--brand-navy-900)' }}>
+    <span className={chipCls} style={{ background: 'var(--ink-100)', color: 'var(--brand-navy-900)' }}>
       {selectedExp ? selectedExp.title : 'New proof'}
     </span>
   );
@@ -470,7 +470,7 @@ export default function AddProofFlow({ onClose, onSaved, preselectedMission, pre
   const backButton = (
     <button onClick={back} disabled={saving}
       className="flex items-center gap-1 rounded-[10px] border px-4 py-3 text-sm font-semibold disabled:opacity-50"
-      style={{ borderColor: '#E2E8F0', color: 'var(--text-primary)' }}>
+      style={{ borderColor: 'var(--ink-200)', color: 'var(--text-primary)' }}>
       <ChevronLeft size={15} /> Back
     </button>
   );
@@ -478,7 +478,7 @@ export default function AddProofFlow({ onClose, onSaved, preselectedMission, pre
   const cancelButton = (
     <button onClick={requestClose} disabled={saving}
       className="rounded-[10px] border px-4 py-3 text-sm font-semibold disabled:opacity-50"
-      style={{ borderColor: '#E2E8F0', color: 'var(--text-primary)' }}>
+      style={{ borderColor: 'var(--ink-200)', color: 'var(--text-primary)' }}>
       Cancel
     </button>
   );
@@ -502,7 +502,7 @@ export default function AddProofFlow({ onClose, onSaved, preselectedMission, pre
         <Loader2 size={20} className="animate-spin mx-auto mb-2" />Loading your experiments…
       </div>
     ) : noExperiments ? (
-      <div className="rounded-2xl border px-4 py-5 text-sm" style={{ borderColor: '#E2E8F0', background: '#F8FAFC', color: 'var(--text-secondary)' }}>
+      <div className="rounded-2xl border px-4 py-5 text-sm" style={{ borderColor: 'var(--ink-200)', background: 'var(--ink-50)', color: 'var(--text-secondary)' }}>
         No experiments found. Create one first, then come back and log what you did.
       </div>
     ) : (
@@ -618,16 +618,16 @@ export default function AddProofFlow({ onClose, onSaved, preselectedMission, pre
           onClick={() => setDetailOpen(o => !o)}
           aria-expanded={detailOpen}
           className="mt-5 flex w-full items-center justify-between rounded-2xl border px-4 py-3 text-left"
-          style={{ borderColor: '#E2E8F0', background: '#FFFFFF' }}
+          style={{ borderColor: 'var(--ink-200)', background: 'var(--brand-white)' }}
         >
           <span className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
             Add more detail <span className="font-normal" style={{ color: 'var(--text-secondary)' }}>· optional</span>
           </span>
-          <ChevronDown size={16} style={{ color: '#94A3B8', transform: detailOpen ? 'rotate(180deg)' : 'none', transition: 'transform var(--dur-fast) var(--ease-out)' }} />
+          <ChevronDown size={16} style={{ color: 'var(--ink-400)', transform: detailOpen ? 'rotate(180deg)' : 'none', transition: 'transform var(--dur-fast) var(--ease-out)' }} />
         </button>
 
         {detailOpen && (
-          <div className="anim-slide-up mt-2 space-y-4 rounded-2xl border p-4" style={{ borderColor: '#E2E8F0', background: '#FAFBFC' }}>
+          <div className="anim-slide-up mt-2 space-y-4 rounded-2xl border p-4" style={{ borderColor: 'var(--ink-200)', background: '#FAFBFC' }}>
             {!preselectedMission && expMissions.length > 0 && (
               <label className="block">
                 <span className="mb-1 block text-xs font-semibold" style={{ color: 'var(--text-secondary)' }}>Mission</span>
@@ -720,7 +720,7 @@ export default function AddProofFlow({ onClose, onSaved, preselectedMission, pre
                   {index + 1} of {steps.length}
                 </span>
                 <button onClick={requestClose} disabled={saving} aria-label="Close"
-                  className="rounded-lg p-0.5 disabled:opacity-40" style={{ color: '#64748B' }}>
+                  className="rounded-lg p-0.5 disabled:opacity-40" style={{ color: 'var(--ink-500)' }}>
                   <X size={18} />
                 </button>
               </div>
@@ -729,7 +729,7 @@ export default function AddProofFlow({ onClose, onSaved, preselectedMission, pre
           </div>
 
           <div key={index} className={dir === 'fwd' ? 'step-pane-fwd' : 'step-pane-back'}>
-            <h2 ref={headingRef} tabIndex={-1} className="font-heading text-[26px] font-bold leading-tight outline-none" style={{ color: '#050816' }}>
+            <h2 ref={headingRef} tabIndex={-1} className="font-heading text-[26px] font-bold leading-tight outline-none" style={{ color: 'var(--surface-dark-900)' }}>
               {question}
             </h2>
             {hint && <p className="mt-1.5 text-sm" style={{ color: 'var(--text-secondary)' }}>{hint}</p>}

@@ -15,24 +15,24 @@ function normalise(raw) {
 
 // ── Risk config ───────────────────────────────────────────────────────────────
 const RISK_CFG = {
-  very_low: { label: 'Very Low Risk', bg: '#F0FDF4', text: '#14532D', border: '#86EFAC', barColor: '#16A34A', score: 1 },
-  low: { label: 'Low Risk', bg: '#DCFCE7', text: '#15803D', border: '#4ADE80', barColor: '#22C55E', score: 2 },
+  very_low: { label: 'Very Low Risk', bg: 'var(--success-50)', text: '#14532D', border: '#86EFAC', barColor: '#16A34A', score: 1 },
+  low: { label: 'Low Risk', bg: '#DCFCE7', text: 'var(--success-700)', border: '#4ADE80', barColor: '#22C55E', score: 2 },
   low_to_moderate: { label: 'Low–Moderate Risk', bg: '#ECFCCB', text: '#3F6212', border: '#A3E635', barColor: '#84CC16', score: 3 },
-  moderate: { label: 'Moderate Risk', bg: '#FFFBEB', text: '#92400E', border: '#FCD34D', barColor: '#EAB308', score: 4 },
-  medium: { label: 'Moderate Risk', bg: '#FFFBEB', text: '#92400E', border: '#FCD34D', barColor: '#EAB308', score: 4 },
+  moderate: { label: 'Moderate Risk', bg: 'var(--warning-50)', text: '#92400E', border: '#FCD34D', barColor: '#EAB308', score: 4 },
+  medium: { label: 'Moderate Risk', bg: 'var(--warning-50)', text: '#92400E', border: '#FCD34D', barColor: '#EAB308', score: 4 },
   moderate_to_high: { label: 'Moderate–High Risk', bg: '#FFF7ED', text: '#9A3412', border: '#FDBA74', barColor: '#F97316', score: 5 },
-  high: { label: 'High Risk', bg: '#FEF3C7', text: '#B45309', border: '#F59E0B', barColor: '#EA580C', score: 6 },
-  very_high: { label: 'Very High Risk', bg: '#FEF2F2', text: '#B91C1C', border: '#FCA5A5', barColor: '#DC2626', score: 7 }
+  high: { label: 'High Risk', bg: '#FEF3C7', text: 'var(--warning-700)', border: '#F59E0B', barColor: '#EA580C', score: 6 },
+  very_high: { label: 'Very High Risk', bg: 'var(--danger-50)', text: 'var(--danger-700)', border: '#FCA5A5', barColor: '#DC2626', score: 7 }
 };
 
 // ── Confidence config ─────────────────────────────────────────────────────────
 const CONFIDENCE_CFG = {
-  very_high: { label: 'Very High Confidence', bg: '#F0FDF4', text: '#14532D', border: '#86EFAC' },
-  high: { label: 'High Confidence', bg: '#DCFCE7', text: '#15803D', border: '#4ADE80' },
-  moderate: { label: 'Moderate Confidence', bg: '#FFFBEB', text: '#92400E', border: '#FCD34D' },
-  medium: { label: 'Moderate Confidence', bg: '#FFFBEB', text: '#92400E', border: '#FCD34D' },
+  very_high: { label: 'Very High Confidence', bg: 'var(--success-50)', text: '#14532D', border: '#86EFAC' },
+  high: { label: 'High Confidence', bg: '#DCFCE7', text: 'var(--success-700)', border: '#4ADE80' },
+  moderate: { label: 'Moderate Confidence', bg: 'var(--warning-50)', text: '#92400E', border: '#FCD34D' },
+  medium: { label: 'Moderate Confidence', bg: 'var(--warning-50)', text: '#92400E', border: '#FCD34D' },
   low: { label: 'Low Confidence', bg: '#FFF7ED', text: '#9A3412', border: '#FDBA74' },
-  very_low: { label: 'Very Low Confidence', bg: '#FEF2F2', text: '#B91C1C', border: '#FCA5A5' }
+  very_low: { label: 'Very Low Confidence', bg: 'var(--danger-50)', text: 'var(--danger-700)', border: '#FCA5A5' }
 };
 
 const RISK_TOOLTIP = 'Risk reflects the uncertainty, time commitment, financial exposure, competitiveness, lifestyle tradeoffs, and readiness associated with this path based on your current profile.';
@@ -56,13 +56,13 @@ function Tooltip({ text }) {
           <span className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
           <span
           role="tooltip"
-          className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 z-50 w-60 rounded-xl border border-[#E2E8F0] bg-white p-3 text-[11px] leading-relaxed text-[#334155] shadow-xl">
+          className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 z-50 w-60 rounded-xl border border-[color:var(--ink-200)] bg-white p-3 text-[11px] leading-relaxed text-[color:var(--ink-700)] shadow-xl">
           
             {text}
             <button
             type="button"
             onClick={() => setOpen(false)}
-            className="absolute top-1.5 right-1.5 text-[#94A3B8] hover:text-[#334155]"
+            className="absolute top-1.5 right-1.5 text-[color:var(--ink-400)] hover:text-[color:var(--ink-700)]"
             aria-label="Close tooltip">
             
               <X size={10} />
@@ -92,7 +92,7 @@ function RiskBar({ score, barColor, label }) {
         style={{
           width: 5,
           height: 10,
-          background: i < score ? barColor : '#E2E8F0'
+          background: i < score ? barColor : 'var(--ink-200)'
         }} />
 
       )}
@@ -141,7 +141,7 @@ export function RiskNotAssessed({ onAssess, onAutoAssess, assessing }) {
     <span
       role="img"
       aria-label="Risk not yet assessed"
-      className="relative inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold border border-[#E2E8F0] text-[#94A3B8] bg-[#F8FAFC]">
+      className="relative inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold border border-[color:var(--ink-200)] text-[color:var(--ink-400)] bg-[color:var(--ink-50)]">
       <AlertTriangle size={11} aria-hidden="true" />
       {assessing ? 'Assessing…' : 'Risk not assessed'}
       {!assessing && onAutoAssess && (
@@ -157,7 +157,7 @@ export function RiskNotAssessed({ onAssess, onAutoAssess, assessing }) {
         <button
           type="button"
           onClick={(e) => { e.stopPropagation(); onAssess(); }}
-          className="font-bold hover:underline text-[10px] text-[#64748B]">
+          className="font-bold hover:underline text-[10px] text-[color:var(--ink-500)]">
           or edit
         </button>
       )}
@@ -182,16 +182,16 @@ export function ConfidenceBadge({ confidenceLevel }) {
 // ── Legend ────────────────────────────────────────────────────────────────────
 export function RiskConfidenceLegend() {
   return (
-    <div className="rounded-[16px] border border-[#E2E8F0] bg-white p-4 mb-6">
-      <p className="text-xs font-bold uppercase tracking-[.12em] text-[#64748B] mb-3">How to read Risk &amp; Confidence</p>
+    <div className="rounded-[16px] border border-[color:var(--ink-200)] bg-white p-4 mb-6">
+      <p className="text-xs font-bold uppercase tracking-[.12em] text-[color:var(--ink-500)] mb-3">How to read Risk &amp; Confidence</p>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
 
         {/* Risk */}
         <div>
           <div className="flex items-center gap-2 mb-3">
-            <ShieldAlert size={13} className="text-[#64748B]" />
-            <p className="font-bold text-[#334155] text-xs">Risk</p>
-            <span className="text-[#94A3B8] text-xs">Lower = better</span>
+            <ShieldAlert size={13} className="text-[color:var(--ink-500)]" />
+            <p className="font-bold text-[color:var(--ink-700)] text-xs">Risk</p>
+            <span className="text-[color:var(--ink-400)] text-xs">Lower = better</span>
           </div>
           <div className="flex flex-col gap-1.5">
             {[RISK_CFG.very_low, RISK_CFG.low, RISK_CFG.moderate, RISK_CFG.high, RISK_CFG.very_high].map((cfg) =>
@@ -208,9 +208,9 @@ export function RiskConfidenceLegend() {
         {/* Confidence */}
         <div>
           <div className="flex items-center gap-2 mb-3">
-            <TrendingUp size={13} className="text-[#64748B]" />
-            <p className="font-bold text-[#334155] text-xs">Fit Confidence</p>
-            <span className="text-[#94A3B8] text-xs">Higher = better</span>
+            <TrendingUp size={13} className="text-[color:var(--ink-500)]" />
+            <p className="font-bold text-[color:var(--ink-700)] text-xs">Fit Confidence</p>
+            <span className="text-[color:var(--ink-400)] text-xs">Higher = better</span>
           </div>
           <div className="flex flex-col gap-1.5">
             {[CONFIDENCE_CFG.very_high, CONFIDENCE_CFG.high, CONFIDENCE_CFG.moderate, CONFIDENCE_CFG.low, CONFIDENCE_CFG.very_low].map((cfg) =>

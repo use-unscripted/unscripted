@@ -8,12 +8,11 @@
    nine rows fading in. It's the one place on this page where the animation
    is arguing the product's case, not just decorating it.
    ────────────────────────────────────────────────────────────────────────── */
-import { useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
-import { motion, useScroll, useTransform, useSpring, useReducedMotion } from 'framer-motion';
+import { motion } from 'framer-motion';
 import PathExplorer from '@/components/landing/PathExplorer';
-import { Reveal, WordReveal, Magnetic, EASE } from '@/components/motion';
+import { Reveal, EASE } from '@/components/motion';
 
 const missionSteps = [
   'Identify 10 relevant professionals',
@@ -54,7 +53,7 @@ function ChecklistStep({ text, index }) {
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" className="relative block">
           <motion.circle
             cx="12" cy="12" r="10"
-            stroke="#D6B66A" strokeWidth="1.8" strokeOpacity="0.5"
+            stroke="var(--brand-gold-500)" strokeWidth="1.8" strokeOpacity="0.5"
             initial={{ pathLength: 0 }}
             whileInView={{ pathLength: 1 }}
             viewport={{ once: true, amount: 0.5 }}
@@ -63,7 +62,7 @@ function ChecklistStep({ text, index }) {
           />
           <motion.path
             d="M7.8 12.4 L10.6 15.2 L16.2 9.4"
-            stroke="#D6B66A" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"
+            stroke="var(--brand-gold-500)" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"
             initial={{ pathLength: 0 }}
             whileInView={{ pathLength: 1 }}
             viewport={{ once: true, amount: 0.5 }}
@@ -71,7 +70,7 @@ function ChecklistStep({ text, index }) {
           />
         </svg>
       </span>
-      <span className="text-sm leading-6 text-slate-300">{text}</span>
+      <span className="text-sm leading-6 text-[color:var(--ink-300)]">{text}</span>
     </motion.div>
   );
 }
@@ -105,27 +104,12 @@ function MissionChecklist() {
   );
 }
 
-/* ── Bottom CTA with scroll parallax ────────────────────────────────────── */
-function ParallaxCTA({ children }) {
-  const ref = useRef(null);
-  const reduce = useReducedMotion();
-  const { scrollYProgress } = useScroll({ target: ref, offset: ['start end', 'end start'] });
-  const raw = useTransform(scrollYProgress, [0, 1], [46, -46]);
-  const y = useSpring(raw, { stiffness: 110, damping: 30, restDelta: 0.5 });
-
-  return (
-    <div ref={ref} className="mx-auto max-w-7xl">
-      <motion.div style={reduce ? undefined : { y, willChange: 'transform' }}>{children}</motion.div>
-    </div>
-  );
-}
-
 export default function LandingSections() {
   return (
     <>
       {/* What are you trying to test? */}
       <section
-        className="px-6 py-20"
+        className="px-6 pt-20 pb-24"
         style={{ background: 'var(--background-secondary)', borderTop: '1px solid var(--border-light)' }}
       >
         <div className="mx-auto max-w-7xl">
@@ -135,13 +119,13 @@ export default function LandingSections() {
              The headings carry their own sections now. */}
           <Reveal delay={0}>
             <h2 className="font-heading text-3xl font-bold" style={{ color: 'var(--text-primary)' }}>
-              Pick something you're actually weighing up.
+              Pick something you’re actually weighing up.
             </h2>
             <p className="mt-3 max-w-2xl" style={{ color: 'var(--text-secondary)' }}>
               The process is the same whichever one you choose: compare the options, run the missions, come back with proof.
             </p>
             <p className="mt-5 text-sm font-semibold" style={{ color: 'var(--brand-navy-700)' }}>
-              Choose one to see its first missions and what you'd walk away with.
+              Choose one to see its first missions and what you’d walk away with.
             </p>
           </Reveal>
 
@@ -156,7 +140,7 @@ export default function LandingSections() {
       </section>
 
       {/* Problem / Unscripted method */}
-      <section className="relative overflow-hidden px-6 py-28" style={{ background: 'var(--brand-navy-900)' }}>
+      <section className="relative overflow-hidden px-6 py-32" style={{ background: 'var(--brand-navy-900)' }}>
         {/* Faint gold horizon so the dark block isn't flat */}
         <div
           aria-hidden="true"
@@ -175,7 +159,7 @@ export default function LandingSections() {
               </h2>
             </Reveal>
             <Reveal delay={420} y={16}>
-              <p className="mt-6 leading-7 text-slate-300">
+              <p className="mt-6 leading-7 text-[color:var(--ink-300)]">
                 Most people choose on prestige, or on what a parent said, or on a guess made at eighteen. The bill for guessing wrong is four years and a lot of money, and it arrives long after the decision.
               </p>
             </Reveal>
@@ -189,7 +173,7 @@ export default function LandingSections() {
               <h3 className="font-heading mb-4 text-2xl font-bold text-white">
                 Compare. Test. Execute. Reflect. Adjust.
               </h3>
-              <p className="leading-7 text-slate-300">
+              <p className="leading-7 text-[color:var(--ink-300)]">
                 You compare three paths, run real missions against the one you pick, work them around the schedule you already have, and move your ranking as the evidence comes in.
               </p>
             </div>
@@ -198,7 +182,7 @@ export default function LandingSections() {
       </section>
 
       {/* Mission Guide Preview */}
-      <section className="mx-auto max-w-7xl px-6 py-28">
+      <section className="mx-auto max-w-7xl px-6 py-24">
         <div className="grid items-center gap-12 lg:grid-cols-2">
           <div>
             <Reveal delay={60} y={20}>
@@ -208,23 +192,21 @@ export default function LandingSections() {
             </Reveal>
             <Reveal delay={340} y={16}>
               <p className="mt-5 leading-7" style={{ color: 'var(--text-secondary)' }}>
-                Not a list of things to go do. The email you send, the questions to ask once they're on the call, the mistakes most people make the first time, and what to write down afterwards.
+                Not a list of things to go do. The email you send, the questions to ask once they’re on the call, the mistakes most people make the first time, and what to write down afterwards.
               </p>
             </Reveal>
             <Reveal delay={440} y={16}>
-              <Magnetic>
-                {/* ?intent=mission-guide — the register screen headlines
-                    itself for whatever sent you there. Without it this CTA
-                    lands on "Save Your Path Test", which is a path test the
-                    visitor never took. */}
-                <Link
-                  to="/register?intent=mission-guide"
-                  className="mt-8 inline-flex items-center gap-2 rounded-[var(--r-control)] px-6 py-3.5 text-sm font-semibold text-white"
-                  style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}
-                >
-                  See a full mission guide <ArrowRight size={17} aria-hidden="true" />
-                </Link>
-              </Magnetic>
+              <Link
+                /* ?intent=mission-guide — the register screen headlines
+                   itself for whatever sent you there. Without it this CTA
+                   lands on "Save Your Path Test", which is a path test the
+                   visitor never took. */
+                to="/register?intent=mission-guide"
+                className="mt-8 inline-flex items-center gap-2 whitespace-nowrap rounded-[var(--r-control)] px-6 py-3.5 text-sm font-semibold text-white"
+                style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgb(31 58 95 / 0.25)' }}
+              >
+                See a full mission guide <ArrowRight size={17} aria-hidden="true" />
+              </Link>
             </Reveal>
           </div>
 
@@ -242,10 +224,10 @@ export default function LandingSections() {
                 </span>
               </div>
               <h3 className="font-heading mb-1 text-lg font-bold text-white">
-                Interview someone doing the job you're considering
+                Interview someone doing the job you’re considering
               </h3>
               {/* slate-300 on the navy card; slate-400 was 4.48:1 */}
-              <p className="mb-6 text-xs text-slate-300">
+              <p className="mb-6 text-xs text-[color:var(--ink-300)]">
                 4–6 hours. You end up with a written summary and an updated ranking.
               </p>
               <MissionChecklist />
@@ -254,49 +236,46 @@ export default function LandingSections() {
         </div>
       </section>
 
-      {/* Bottom CTA */}
+      {/* Bottom CTA.
+
+          Was a centred gradient panel with a word-by-word headline reveal and
+          a gold sheen sweeping across it — the third centred block on a page
+          that was already centred throughout, plus two animations doing the
+          job of none. Now it closes the page the way the page opened: left,
+          on a flat navy field, with the action sitting beside the statement
+          rather than under it. */}
       <section className="overflow-hidden px-6 pb-28">
-        <ParallaxCTA>
+        <div className="mx-auto max-w-7xl">
           <Reveal delay={0} y={20} amount={0.1}>
             <div
-              className="relative overflow-hidden rounded-[var(--r-surface)] px-8 py-20 text-center text-white"
-              style={{ background: 'linear-gradient(135deg, var(--brand-navy-900) 0%, var(--brand-navy-700) 100%)' }}
+              className="rounded-[var(--r-surface)] px-8 py-20 text-white sm:px-14"
+              style={{ background: 'var(--brand-navy-900)' }}
             >
-              {/* Slow gold sheen crossing the panel */}
-              <motion.div
-                aria-hidden="true"
-                className="pointer-events-none absolute inset-y-0 w-1/3"
-                style={{
-                  background: 'linear-gradient(90deg, transparent, rgba(214,182,106,0.10), transparent)',
-                }}
-                initial={{ x: '-120%' }}
-                whileInView={{ x: '420%' }}
-                viewport={{ once: true, amount: 0.4 }}
-                transition={{ duration: 2.4, ease: EASE, delay: 0.3 }}
-              />
+              <div className="grid items-end gap-10 lg:grid-cols-[1.35fr_auto]">
+                <h2 className="font-heading max-w-[20ch] text-4xl font-bold leading-[1.08] tracking-[-0.02em] sm:text-5xl">
+                  You don’t need to choose your entire life today.
+                </h2>
 
-              <h2 className="font-heading relative mx-auto max-w-3xl text-4xl font-bold leading-tight sm:text-5xl">
-                <WordReveal
-                  text="You don't need to choose your entire life today. You need a better way to test what comes next."
-                  stagger={0.03}
-                  duration={0.85}
-                />
-              </h2>
-
-              <Reveal delay={620} y={14}>
-                <Magnetic>
+                <div className="lg:pb-2">
+                  <p className="mb-6 max-w-[34ch] leading-7 text-[color:var(--ink-300)]">
+                    You need a better way to test what comes next.
+                  </p>
                   <Link
                     to="/onboarding"
-                    className="mt-10 inline-flex items-center gap-2 rounded-[var(--r-control)] bg-white px-7 py-4 text-sm font-semibold"
-                    style={{ color: 'var(--brand-navy-900)', boxShadow: '0 4px 16px rgba(31,58,95,0.18)' }}
+                    className="inline-flex items-center gap-2 whitespace-nowrap rounded-[var(--r-control)] px-7 py-4 text-sm font-semibold"
+                    style={{
+                      background: 'var(--brand-white)',
+                      color: 'var(--brand-navy-900)',
+                      boxShadow: '0 4px 16px rgb(31 58 95 / 0.18)',
+                    }}
                   >
                     Start your 30-day test <ArrowRight size={17} aria-hidden="true" />
                   </Link>
-                </Magnetic>
-              </Reveal>
+                </div>
+              </div>
             </div>
           </Reveal>
-        </ParallaxCTA>
+        </div>
       </section>
     </>
   );
