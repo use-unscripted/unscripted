@@ -373,6 +373,18 @@
   border-radius: 8px;
 }
 
+/* Indeterminate progress, for waits too long to shimmer through — a model call
+   rather than a fetch. It sweeps rather than fills, because filling implies a
+   percentage we do not have. */
+@keyframes pickerProgress {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(400%); }
+}
+.picker-progress {
+  width: 25%;
+  animation: pickerProgress 1.6s var(--ease-smooth) infinite;
+}
+
 /* Real content replacing a skeleton. Opacity only — a translate here would put
    back the movement the skeletons exist to remove, and it reads as a settle
    rather than an arrival. */

@@ -19,6 +19,7 @@ import ReflectionForm from '@/components/reflection/ReflectionForm';
 import DecisionStep from '@/components/reflection/DecisionStep';
 import CycleSummary from '@/components/reflection/CycleSummary';
 import JourneyEmptyState from '@/components/journey/JourneyEmptyState';
+import { Sk } from '@/components/PageSkeleton';
 
 function Shell({ children }) {
   return <main className="mx-auto max-w-3xl px-5 py-8 sm:px-8 sm:py-10"><div className="space-y-5">{children}</div></main>;
@@ -92,10 +93,16 @@ export default function ExperimentReflection() {
   }
 
   if (!ctx) {
+    // The context card, then the form or gate that follows it, then the
+    // footer links — at the sizes they actually occupy. Two arbitrary grey
+    // blocks used to stand here and neither matched what replaced it.
     return (
       <Shell>
-        <div className="skeleton h-32 w-full" />
-        <div className="skeleton h-64 w-full" />
+        <Sk h={132} r={20} />
+        <Sk h={368} r={20} />
+        <div className="flex justify-center pt-1">
+          <Sk h={12} w={286} r={4} />
+        </div>
       </Shell>
     );
   }

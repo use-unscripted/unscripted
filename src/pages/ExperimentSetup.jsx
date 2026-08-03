@@ -4,6 +4,7 @@ import { base44 } from '@/api/base44Client';
 import { unwrapLLM } from '@/lib/llm';
 import { ArrowLeft, ArrowRight, CheckCircle, Loader2, AlertCircle } from 'lucide-react';
 import { LogoWordmark } from '@/components/UnscriptedLogo';
+import { Sk, SkCards } from '@/components/PageSkeleton';
 import AddToCalendarModal from '@/components/calendar/AddToCalendarModal';
 import {
   ensureActiveCycle, assertNoActiveExperiment, attachExperimentToCycle,
@@ -555,9 +556,42 @@ Be specific. If the experiment involves outreach, include field-specific details
   };
 
   if (loading) {
+    // The wordmark, the back link and the four-step rail are all known before
+    // the path comes back — only the card's contents depend on the fetch. This
+    // was a spinner centred on an empty page, so the step rail that tells the
+    // student how long this takes arrived last instead of first.
     return (
-      <main className="min-h-screen flex items-center justify-center" style={{ background: 'var(--page-surface)' }}>
-        <Loader2 className="animate-spin" size={32} style={{ color: 'var(--brand-navy-900)' }} />
+      <main className="min-h-screen px-5 py-10" style={{ background: 'var(--page-surface)' }}>
+        <div className="mx-auto max-w-2xl">
+          <div className="mb-8 flex items-center justify-between">
+            <LogoWordmark />
+            <Link to="/paths" className="flex items-center gap-1 text-sm text-[color:var(--ink-500)] hover:text-[color:var(--surface-dark-900)]">
+              <ArrowLeft size={15} /> Path Comparison
+            </Link>
+          </div>
+
+          <div className="mb-8">
+            <div className="mb-2 flex items-center gap-2">
+              {['Select Experiment', 'Confirm Details', 'Generate Guide', 'Mission Created'].map((label, i) => (
+                <div key={i} className="flex items-center gap-2">
+                  <div className="flex items-center gap-1.5">
+                    <div className="h-2 w-2 rounded-full" style={{ background: i === 0 ? 'var(--brand-navy-900)' : 'var(--ink-300)' }} />
+                    <span className="hidden text-xs font-semibold sm:block"
+                      style={{ color: i === 0 ? 'var(--brand-navy-900)' : 'var(--ink-400)' }}>{label}</span>
+                  </div>
+                  {i < 3 && <div className="h-px w-4 bg-[color:var(--ink-200)]" />}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="rounded-[24px] border border-[color:var(--ink-200)] bg-white p-6 sm:p-8">
+            <div className="flex h-8 items-center"><Sk h={24} w="70%" r={7} /></div>
+            <div className="mt-2 flex h-6 items-center"><Sk h={13} w="92%" r={5} /></div>
+            <div className="mt-6"><SkCards count={3} h={92} gap={12} r={16} /></div>
+            <Sk h={48} r={10} className="mt-6" />
+          </div>
+        </div>
       </main>
     );
   }

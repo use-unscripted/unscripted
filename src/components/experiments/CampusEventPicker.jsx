@@ -13,6 +13,7 @@ import {
   SUBMISSION_REJECTIONS,
 } from '@/lib/campus-events';
 import CampusEventCard from './CampusEventCard';
+import { Sk } from '@/components/PageSkeleton';
 
 /** How many real events to show when the model ranked none of them. */
 const BROWSE_LIMIT = 6;
@@ -55,6 +56,11 @@ const BROWSE_LIMIT = 6;
  */
 export default function CampusEventPicker({ profile, pathName, selected, onSelect, disabled }) {
   const [loading, setLoading] = useState(true);
+  // Two very different waits wear one `loading` flag. Reading the calendar is a
+  // second or two; ranking those events is a model call that measured ~22s.
+  // A shimmer is right for the first and a lie for the second — it promises
+  // content is a moment away and then keeps promising it for half a minute.
+  const [phase, setPhase] = useState('feed'); // 'feed' | 'ranking'
   const [status, setStatus] = useState('');
   const [college, setCollege] = useState('');
   const [picks, setPicks] = useState([]);
@@ -81,6 +87,7 @@ export default function CampusEventPicker({ profile, pathName, selected, onSelec
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
+    setPhase('feed');
 
     const isRetry = reloadKey !== servedReload.current;
     servedReload.current = reloadKey;
@@ -102,6 +109,7 @@ export default function CampusEventPicker({ profile, pathName, selected, onSelec
           return;
         }
 
+        setPhase('ranking');
         const recommended = await recommendCampusEvents(feed.events, profile, { pathName });
         if (cancelled) return;
 
@@ -152,10 +160,50 @@ export default function CampusEventPicker({ profile, pathName, selected, onSelec
   }, [profile, pathName]);
 
   if (loading) {
+    // Both waits reserve the same box. This sits inside an open modal, and the
+    // old single-line "Checking your campus calendar…" bar meant the dialog
+    // grew by ~300px under the reader's cursor when the events landed.
     return (
-      <div className="mb-5 flex items-center gap-2 rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] px-4 py-3 text-sm text-[color:var(--ink-500)]">
-        <Loader2 size={15} className="animate-spin" aria-hidden="true" />
-        Checking your campus calendar...
+      <div className="mb-5" style={{ minHeight: 564 }}>
+        {phase === 'feed' ? (
+          <>
+            {/* A second or two. Trace what it becomes: heading, two lines of
+                explanation, then event cards at the height a real one occupies
+                once its date, venue and confirm-before-you-go panel are on it. */}
+            <div className="flex h-5 items-center gap-1.5">
+              <Sk h={14} w={14} r={4} />
+              <Sk h={13} w={196} r={4} />
+            </div>
+            <div className="mb-3 mt-1">
+              <div className="flex h-4 items-center"><Sk h={11} w="94%" r={4} /></div>
+              <div className="flex h-4 items-center"><Sk h={11} w="62%" r={4} /></div>
+            </div>
+            <div className="space-y-2">
+              {[0, 1].map(i => <Sk key={i} h={244} r={12} />)}
+            </div>
+          </>
+        ) : (
+          // ~20 seconds. Say what is happening and roughly how long, because a
+          // shimmer this long reads as broken rather than as working.
+          <div
+            className="flex h-full flex-col items-center justify-center rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] px-6 py-10 text-center"
+            style={{ minHeight: 564 }}
+            role="status"
+            aria-live="polite"
+          >
+            <Sparkles size={20} style={{ color: 'var(--brand-navy-700)' }} aria-hidden="true" />
+            <p className="mt-3 text-sm font-bold text-[color:var(--ink-700)]">
+              Working through {college ? `${college}'s` : 'your campus'} calendar
+            </p>
+            <p className="mt-1.5 max-w-xs text-xs leading-relaxed text-[color:var(--ink-500)]">
+              {feedEvents.length} events are coming up. Finding the ones that actually fit
+              this experiment takes about twenty seconds.
+            </p>
+            <div className="mt-5 h-1 w-40 overflow-hidden rounded-full" style={{ background: 'var(--ink-200)' }}>
+              <div className="picker-progress h-full rounded-full" style={{ background: 'var(--brand-navy-700)' }} />
+            </div>
+          </div>
+        )}
       </div>
     );
   }
