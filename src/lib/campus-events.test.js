@@ -425,6 +425,46 @@ describe('not asking twice', () => {
     expect(base44.integrations.Core.InvokeLLM).toHaveBeenCalledTimes(2);
   });
 
+  // Before the cache, reopening the picker asked the model again, so a blip
+  // healed itself. A remembered failure would have taken that away.
+  it('does not remember a ranking the model failed to produce', async () => {
+    const events = [calendarEvent()];
+    base44.integrations.Core.InvokeLLM.mockRejectedValue(new Error('rate limited'));
+    await expect(recommendCampusEvents(events, PROFILE)).resolves.toEqual([]);
+
+    base44.integrations.Core.InvokeLLM.mockResolvedValue({
+      recommendations: [{ event_id: '1', fit_reason: 'Alumni who do the job.' }],
+    });
+    const picks = await recommendCampusEvents(events, PROFILE);
+
+    expect(picks).toHaveLength(1);
+    expect(base44.integrations.Core.InvokeLLM).toHaveBeenCalledTimes(2);
+  });
+
+  it('does not remember a response it could not read', async () => {
+    const events = [calendarEvent()];
+    base44.integrations.Core.InvokeLLM.mockResolvedValue({ recommendations: 'not a list' });
+    await expect(recommendCampusEvents(events, PROFILE)).resolves.toEqual([]);
+
+    base44.integrations.Core.InvokeLLM.mockResolvedValue({ recommendations: [] });
+    await recommendCampusEvents(events, PROFILE);
+
+    expect(base44.integrations.Core.InvokeLLM).toHaveBeenCalledTimes(2);
+  });
+
+  // The opposite case, and the one the cache exists for: a model that read the
+  // events and genuinely ranked none of them has answered, and re-asking costs
+  // money to be told the same thing.
+  it('remembers a model that ranked nothing', async () => {
+    const events = [calendarEvent()];
+    base44.integrations.Core.InvokeLLM.mockResolvedValue({ recommendations: [] });
+
+    await recommendCampusEvents(events, PROFILE);
+    await recommendCampusEvents(events, PROFILE);
+
+    expect(base44.integrations.Core.InvokeLLM).toHaveBeenCalledTimes(1);
+  });
+
   it('a retry clears the ranking too, not just the calendar', async () => {
     const events = [calendarEvent()];
     base44.functions.invoke.mockResolvedValue({ status: 'ok', events });

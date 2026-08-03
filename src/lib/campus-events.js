@@ -276,16 +276,22 @@ export async function recommendCampusEvents(events, profile, { pathName = '' } =
   if (!Array.isArray(events) || events.length === 0) return [];
 
   // Same student, same events, same path — the model has already answered this.
-  return cached(
-    `rank:${[
-      pathName,
-      profile?.college, profile?.major, profile?.school_year,
-      profile?.career_interests, profile?.favorite_topics, profile?.desired_skills,
-      events.map(e => e.id).join(','),
-    ].join('|')}`,
-    RANKING_TTL_MS,
-    () => rankCampusEvents(events, profile, pathName),
-  );
+  const key = `rank:${[
+    pathName,
+    profile?.college, profile?.major, profile?.school_year,
+    profile?.career_interests, profile?.favorite_topics, profile?.desired_skills,
+    events.map(e => e.id).join(','),
+  ].join('|')}`;
+
+  const outcome = await cached(key, RANKING_TTL_MS, () => rankCampusEvents(events, profile, pathName));
+
+  // "The model judged none of these relevant" and "the model call failed" reach
+  // the caller as the same empty list, and only the first is worth remembering
+  // for half an hour. Keeping the second would leave a student who hit a blip
+  // looking at the unranked list every time they reopened the picker, where
+  // before the cache the next open simply asked again.
+  if (outcome.failed) cache.delete(key);
+  return outcome.picks;
 }
 
 async function rankCampusEvents(events, profile, pathName) {
@@ -297,7 +303,7 @@ async function rankCampusEvents(events, profile, pathName) {
       response_json_schema: RECOMMENDATION_SCHEMA,
     });
   } catch {
-    return [];
+    return { picks: [], failed: true };
   }
 
   const byId = new Map(events.map(e => [String(e.id), e]));
@@ -308,7 +314,8 @@ async function rankCampusEvents(events, profile, pathName) {
   // The picker awaits this inside an effect with no catch, so throwing here
   // leaves the student on a spinner that never resolves.
   const payload = unwrapLLM(result);
-  const recommendations = Array.isArray(payload?.recommendations) ? payload.recommendations : [];
+  const malformed = !Array.isArray(payload?.recommendations);
+  const recommendations = malformed ? [] : payload.recommendations;
 
   for (const rec of recommendations) {
     const id = String(rec?.event_id || '');
@@ -330,7 +337,8 @@ async function rankCampusEvents(events, profile, pathName) {
     if (picks.length >= MAX_RECOMMENDATIONS) break;
   }
 
-  return picks;
+  // A response we could not read is a failure, not a verdict of "nothing fits".
+  return { picks, failed: malformed };
 }
 
 // ── Display helpers ─────────────────────────────────────────────────────────

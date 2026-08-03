@@ -821,10 +821,14 @@ const ICS_MAX_BYTES = 4_000_000;
  * A runaway guard, not a page size.
  *
  * VEVENTs come in the order the calendar felt like writing them, which is not
- * date order — Syracuse publishes 1,506 and Duke's opens on entries from 2007.
- * A cap low enough to bite would therefore throw away the future and keep the
- * past, and the feed would read as empty rather than large. The real bound is
- * ICS_MAX_BYTES; this only stops a pathological file from spinning.
+ * date order — Syracuse publishes 1,506. A cap low enough to bite would
+ * therefore throw away the future and keep the past, and the feed would read as
+ * empty rather than large. The real bound is ICS_MAX_BYTES; this only stops a
+ * pathological file from spinning.
+ *
+ * This used to also cite Duke as opening on entries from 2007. That was wrong —
+ * those dates are in its VTIMEZONE block, not its events. The ordering point
+ * stands on its own; the example did not.
  */
 const ICS_MAX_EVENTS = 20_000;
 
@@ -972,9 +976,21 @@ function icsMomentValue(moment: IcsMoment | null): string {
 /**
  * Repeating events are where a campus calendar keeps the things a student can
  * actually walk into every week — club meetings, office hours, language tables.
- * They were dropped outright until now, which cost us those entirely: Duke
- * publishes live weekly entries whose master record is dated 2007, and a feed
- * of nothing but those read to us as an empty calendar.
+ * They were dropped outright until now, which cost us those entirely: a feed of
+ * nothing but weekly meetings read to us as an empty calendar.
+ *
+ * **How much this is worth is measured and modest.** Across the 38 .ics feeds
+ * the national sweep resolved, 133 events carry a repeat rule and 11 of them
+ * have an upcoming date. It buys nothing at all on Localist, LiveWhale, Campus
+ * Labs, Trumba or Drupal, which expand recurrence server-side and hand us dated
+ * instances — and those are most schools, and are preferred over .ics anyway.
+ * Google-Calendar-backed feeds are the realistic source of event-level repeats.
+ *
+ * Do not repeat the claim that Duke publishes live weekly entries dated 2007.
+ * It was in this file before recurrence existed and it is wrong: Duke's feed
+ * has 40 events and zero event-level rules. The 2007 dates are `20070311` and
+ * `20071104` inside its VTIMEZONE block — the US daylight-saving change — which
+ * is what a grep for DTSTART across the whole file finds.
  *
  * The rule that makes this safe is that we only expand rules we can follow
  * exactly, and drop the rest untouched. A wrong date here is not a cosmetic
