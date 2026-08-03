@@ -138,6 +138,42 @@ export async function fetchCampusEvents({ days = 45, limit = 20 } = {}) {
 }
 
 /**
+ * Tell the backend where this student's school keeps its calendar.
+ *
+ * Returns the same shape as fetchCampusEvents, so a successful submission
+ * flows into exactly the same rendering path as a feed we found ourselves —
+ * the student sees their events on this request rather than a promise to look
+ * into it later.
+ *
+ * Never throws, for the same reason fetchCampusEvents doesn't: a calendar is
+ * an optional enhancement and nothing here is worth breaking a guide over.
+ */
+export async function submitCalendarUrl(url, { days = 45, limit = 20 } = {}) {
+  try {
+    const response = await base44.functions.invoke('campusEvents', {
+      action: 'submit_calendar_url',
+      url,
+      days,
+      limit,
+    });
+    const data = response?.data ?? response;
+    if (!data || typeof data !== 'object') {
+      return { status: 'submission_failed', reason: '', events: [] };
+    }
+    return { events: [], ...data };
+  } catch (err) {
+    return { status: 'submission_failed', reason: err?.message || '', events: [] };
+  }
+}
+
+/** Why a link we refused to even try was refused, in the student's terms. */
+export const SUBMISSION_REJECTIONS = {
+  bad_url: "That doesn't look like a web address. Copy the whole thing from your browser's address bar.",
+  blocked_port: 'We only read calendars published on the normal web address, without a port number.',
+  wrong_school: 'That address is somewhere else. It has to be on your school’s own site, or a calendar service like Engage or CampusGroups.',
+};
+
+/**
  * Ranks real events and writes the on-the-ground playbook for each.
  *
  * Returns the full feed record with a `guidance` object attached, so callers
@@ -262,6 +298,24 @@ export function eventSourceHost(event) {
   } catch {
     return '';
   }
+}
+
+/**
+ * A search that lands on the school's own events page.
+ *
+ * The escape hatch for every state where we have no calendar to show. It costs
+ * us nothing, it is never wrong, and for a student whose school we cannot read
+ * it is the difference between "we failed" and "here is where to look."
+ *
+ * `looking` is what to search FOR, and it matters more than it looks. A school
+ * we cannot read is a school whose main calendar page is a dead end for us —
+ * measured at 0 for 12 — so pointing that student at "events calendar" sends
+ * them to the one page that cannot help. The club portal is what resolves.
+ */
+export function schoolEventsSearchUrl(college, looking = 'events calendar') {
+  const name = (college || '').trim();
+  if (!name) return '';
+  return `https://www.google.com/search?q=${encodeURIComponent(`${name} ${looking}`)}`;
 }
 
 /**

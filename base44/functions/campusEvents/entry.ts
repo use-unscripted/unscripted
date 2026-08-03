@@ -1680,6 +1680,201 @@ export async function probeCalendar(
   return null;
 }
 
+// ── A calendar the student pointed us at ────────────────────────────────────
+
+/**
+ * Calendar products a school's own events genuinely live on, off its domain.
+ *
+ * Discovery refuses to leave the school's registrable domain, which is right
+ * when we are following links off a page we did not choose. A student typing
+ * the address of their own student-life portal is a different act: they know
+ * where their clubs post, and for a lot of schools that is the only place
+ * events exist at all. CampusGroups on <slug>.campusgroups.com is the case
+ * this exists for — it is a known miss with a working adapter behind it.
+ *
+ * Every host here is a calendar SaaS and nothing else, so the worst a student
+ * can do with one is point us at another school's public calendar.
+ */
+const CALENDAR_VENDOR_HOSTS = [
+  'campuslabs.com',
+  'campusgroups.com',
+  'trumba.com',
+  '25livepub.collegenet.com',
+  'localist.com',
+  'calendar.google.com',
+  // No adapter for Presence, so this can only ever end in an honest "we could
+  // not read that". It is here anyway: it is a real student-engagement
+  // platform — San Diego State's is sdsu.presence.io — and telling a student
+  // who pasted their own school's portal that the address "is somewhere else"
+  // is a worse answer than telling them we could not read it.
+  'presence.io',
+];
+
+function onVendorHost(host: string): boolean {
+  return CALENDAR_VENDOR_HOSTS.some(v => host === v || host.endsWith(`.${v}`));
+}
+
+export type SubmissionCheck =
+  | { ok: true; url: string; host: string; domain: string }
+  | { ok: false; reason: 'bad_url' | 'blocked_port' | 'wrong_school' };
+
+/**
+ * Is this a URL we are willing to fetch on a student's say-so?
+ *
+ * This is the only place in the function where a URL originates with the
+ * caller rather than with the school, so it carries the whole trust boundary
+ * for the feature. The rules are deliberately the same ones discovery already
+ * lives under, for the same reasons:
+ *
+ *   - the school's own registrable domain, or a calendar vendor's — a student
+ *     cannot use us to fetch an arbitrary host
+ *   - no explicit port, because a school's domain also covers its internal
+ *     hosts and a port turns this into a way to knock on them
+ *   - no IPs, no .internal/.lan/localhost, and a TLD a real school uses
+ *
+ * `allowedDomains` is what we believe the school's domains are. An empty list
+ * means we could not work out the school at all, and a URL is refused rather
+ * than waved through — failing closed here costs one student an empty state
+ * and failing open costs us a server-side request to anywhere.
+ */
+export function checkSubmittedUrl(raw: string, allowedDomains: string[]): SubmissionCheck {
+  // webcal:// first. It is a real scheme that subscribe buttons publish, so it
+  // has to be rewritten before the missing-scheme guess below, or "webcal://x"
+  // becomes "https://webcal://x" and a link the school itself handed out is
+  // refused as malformed.
+  const trimmed = normalizeIcsUrl(String(raw || '').trim());
+  if (!trimmed) return { ok: false, reason: 'bad_url' };
+
+  // Students paste "events.fairfield.edu" without a scheme far more often than
+  // they paste a well-formed URL, and refusing that reads as us being broken.
+  // Anything that already names a scheme is left alone, so a non-web one still
+  // reaches the protocol check below rather than being papered over.
+  const withScheme = /^[a-z][a-z0-9+.-]*:/i.test(trimmed)
+    ? trimmed
+    : `https://${trimmed.replace(/^\/+/, '')}`;
+
+  let parsed: URL;
+  try {
+    parsed = new URL(withScheme);
+  } catch (_) {
+    return { ok: false, reason: 'bad_url' };
+  }
+
+  if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') {
+    return { ok: false, reason: 'bad_url' };
+  }
+  if (parsed.port) return { ok: false, reason: 'blocked_port' };
+
+  const host = stripWww(parsed.hostname.toLowerCase());
+  if (!isProbeableDomain(host)) return { ok: false, reason: 'bad_url' };
+
+  if (onVendorHost(host)) {
+    return { ok: true, url: parsed.toString(), host, domain: host };
+  }
+
+  const domain = allowedDomains
+    .map(d => stripWww(String(d || '').toLowerCase().trim()))
+    .find(d => isProbeableDomain(d) && sameSite(host, d));
+
+  if (!domain) return { ok: false, reason: 'wrong_school' };
+  return { ok: true, url: parsed.toString(), host, domain };
+}
+
+/** Which platform, if any, a JSON body we already have in hand looks like. */
+function platformOfJson(payload: unknown, url: string): { platform: string; feedUrl: string } | null {
+  const bare = url.split('?')[0];
+  if (looksLikeLocalist(payload)) return { platform: 'localist', feedUrl: bare };
+  if (looksLikeLiveWhale(payload)) return { platform: 'livewhale', feedUrl: bare };
+  if (looksLikeCampusLabs(payload)) return { platform: 'campuslabs', feedUrl: bare };
+  if (looksLikeTrumba(payload)) return { platform: 'trumba', feedUrl: url };
+  if (looksLikeTribe(payload)) return { platform: 'wptribe', feedUrl: bare };
+  if (looksLikeDrupalEvents(payload)) return { platform: 'drupal', feedUrl: bare };
+  return null;
+}
+
+/**
+ * Turn an address a student gave us into a feed, or nothing.
+ *
+ * A student pastes whatever their school calls its calendar, so this has to
+ * accept all three shapes that arrive: the feed itself, the page that embeds
+ * one, and the portal that hosts one. What it must never do is lower the bar —
+ * the result still has to parse as a real calendar with something upcoming in
+ * it before a single event reaches anybody, exactly as a probed feed does.
+ *
+ * The ordering is cheapest-first for the same reason probeCalendar's is: a
+ * student is watching a spinner while this runs.
+ */
+export async function resolveSubmittedUrl(
+  url: string,
+  host: string,
+  domain: string,
+): Promise<{ platform: string; feedUrl: string } | null> {
+  // 1. The URL is the feed. Someone who found their school's JSON endpoint or
+  //    subscribe link has handed us the answer outright.
+  try {
+    const payload = await probeJson(url);
+    const hit = platformOfJson(payload, url);
+    if (hit) return hit;
+  } catch (_) { /* Not JSON, or unreachable. Try it as a calendar file. */ }
+
+  try {
+    if (looksLikeIcal(await fetchIcsText(url, ICS_PROBE_TIMEOUT_MS))) {
+      return { platform: 'ical', feedUrl: url };
+    }
+  } catch (_) { /* Not a calendar file either. Read it as a page. */ }
+
+  // 2. A Campus Labs / CampusGroups portal address names its own slug, and the
+  //    discovery endpoint behind it is a fixed rewrite. This is the case the
+  //    vendor allowlist exists for, so it is worth trying before reading HTML.
+  if (onVendorHost(host)) {
+    const slug = host.split('.')[0];
+    if (slug && (host.endsWith('campuslabs.com') || host.endsWith('campusgroups.com'))) {
+      const base = `https://${slug}.campuslabs.com/engage/api/discovery/event/search`;
+      const hit = await firstValidUrl(
+        [`${base}?endsAfter=${encodeURIComponent(new Date().toISOString())}&take=1`],
+        looksLikeCampusLabs,
+      );
+      if (hit) return { platform: 'campuslabs', feedUrl: base };
+    }
+  }
+
+  // 3. The page that embeds the calendar. This is what most students will
+  //    actually paste, because it is the thing their school links "Events" to.
+  let page: { finalHost: string; finalUrl: string; html: string };
+  try {
+    page = await fetchPage(url, DISCOVERY_SCAN_BYTES);
+  } catch (_) {
+    return null;
+  }
+
+  if (page.html) {
+    const ics = await firstValidIcs(icsLinksFrom(page.html, domain, page.finalUrl));
+    if (ics) return { platform: 'ical', feedUrl: ics };
+
+    for (const slug of trumbaSlugsFrom(page.html).slice(0, TRUMBA_MAX_SLUGS)) {
+      const hit = await firstValidUrl(
+        TRUMBA_HOSTS.map(h => `${h}/${slug}.json`),
+        looksLikeTrumba,
+      );
+      if (hit) return { platform: 'trumba', feedUrl: hit };
+    }
+  }
+
+  // 4. Whatever host the page actually landed on, checked the way discovery
+  //    checks a host it just learned about. A student who pastes the school's
+  //    events page has told us the host even when the page itself is a shell
+  //    that renders its calendar client-side and names no feed in its markup.
+  const landed = page.finalHost && isProbeableDomain(page.finalHost) ? page.finalHost : host;
+  if (landed === host || sameSite(landed, domain) || onVendorHost(landed)) {
+    try {
+      const hit = await probeKnownHost(landed, domain);
+      if (hit) return hit;
+    } catch (_) { /* Nothing there. */ }
+  }
+
+  return null;
+}
+
 export async function fetchEvents(
   platform: string,
   feedUrl: string,
@@ -1731,28 +1926,77 @@ Rules:
   }
 }
 
+/** The University row this free-text college name refers to, if we have one. */
+// deno-lint-ignore no-explicit-any
+async function findUniversity(base44: any, college: string): Promise<any> {
+  const key = normalizeName(college);
+  if (!key) return null;
+  try {
+    const rows = await base44.asServiceRole.entities.University.filter({}, '-created_date', 500);
+    // deno-lint-ignore no-explicit-any
+    return rows.find((row: any) => {
+      if (normalizeName(row.canonical_name) === key) return true;
+      return (row.match_keys || []).some((k: string) => normalizeName(k) === key);
+    }) || null;
+  } catch (_) {
+    return null;
+  }
+}
+
+/**
+ * A feed a student told us about, if one applies to this student.
+ *
+ * Two different permissions, deliberately kept apart. A submission that
+ * resolved is used immediately for **the student who sent it** — they did the
+ * work of finding it and should not have to wait on us to see their own
+ * events. It reaches everybody else at that school only once it has been
+ * approved, because the blast radius is the whole school: a link to the
+ * library's calendar, or athletics, or one department's, would quietly become
+ * what every student there is shown, and nothing downstream could tell.
+ */
+// deno-lint-ignore no-explicit-any
+async function submittedFeedFor(base44: any, college: string, userId: string) {
+  const key = normalizeName(college);
+  if (!key) return null;
+
+  // deno-lint-ignore no-explicit-any
+  let rows: any[] = [];
+  try {
+    rows = await base44.asServiceRole.entities.CampusFeedSubmission.filter(
+      { resolution: 'resolved' },
+      '-created_date',
+      200,
+    );
+  } catch (_) {
+    return null; // The entity may not exist yet. Never costs a student events.
+  }
+
+  const usable = rows.filter(row =>
+    normalizeName(row.college) === key &&
+    row.resolved_feed_url &&
+    adapterFor(row.resolved_platform) &&
+    row.review_status !== 'rejected'
+  );
+
+  const approved = usable.find(row => row.review_status === 'approved');
+  const own = usable.find(row => row.submitted_by === userId);
+  const row = approved || own;
+  if (!row) return null;
+
+  return { platform: row.resolved_platform, feedUrl: row.resolved_feed_url };
+}
+
 /**
  * Finds (or creates) the University row for this school and makes sure its
  * feed URL is resolved. One probe per school, ever — not one per page load.
  */
 // deno-lint-ignore no-explicit-any
-async function resolveFeed(base44: any, college: string) {
+async function resolveFeed(base44: any, college: string, userId = '') {
   const key = normalizeName(college);
   if (!key) return { feed: null, university: null };
 
   const db = base44.asServiceRole.entities.University;
-
-  let university = null;
-  try {
-    const rows = await db.filter({}, '-created_date', 500);
-    // deno-lint-ignore no-explicit-any
-    university = rows.find((row: any) => {
-      if (normalizeName(row.canonical_name) === key) return true;
-      return (row.match_keys || []).some((k: string) => normalizeName(k) === key);
-    }) || null;
-  } catch (_) {
-    university = null;
-  }
+  let university = await findUniversity(base44, college);
 
   // Already resolved — platform plus URL is everything an adapter needs, so a
   // cached school never gets probed again.
@@ -1762,6 +2006,12 @@ async function resolveFeed(base44: any, college: string) {
       university,
     };
   }
+
+  // Before the negative cache, not after it. A school we failed to resolve is
+  // exactly the school a student will have sent us a link for, and checking
+  // this second would mean their own submission never got used.
+  const submitted = await submittedFeedFor(base44, college, userId);
+  if (submitted) return { feed: submitted, university };
   if (university?.events_platform === 'none' && university.events_resolved_at) {
     const age = Date.now() - new Date(university.events_resolved_at).getTime();
     if (age < NEGATIVE_RECHECK_DAYS * 86400000) {
@@ -1865,6 +2115,155 @@ export function isAttendable(event: NormalizedEvent): boolean {
 
 // ── Handler ─────────────────────────────────────────────────────────────────
 
+/**
+ * The student's own profile.
+ *
+ * The college is read from here, never taken from the caller — this function
+ * fetches remote URLs, so the host it builds must not be steerable from the
+ * client.
+ */
+// deno-lint-ignore no-explicit-any
+async function loadProfile(base44: any, user: any): Promise<any> {
+  try {
+    const rows = await base44.entities.StudentProfile.filter({ user_id: user.id }, '-created_date', 1);
+    return rows?.[0] || null;
+  } catch (_) {
+    return null;
+  }
+}
+
+// deno-lint-ignore no-explicit-any
+function collegeOf(profile: any, user: any): string {
+  const college = (profile?.college || user?.college || '').trim();
+  return !college || college.toLowerCase() === 'not specified' ? '' : college;
+}
+
+/** Enough of a feed to tell a real university calendar from the rec centre's. */
+const SUBMISSION_SAMPLE_TITLES = 5;
+
+/**
+ * A student telling us where their school's calendar actually is.
+ *
+ * Roughly a quarter of our own students attend a school we cannot resolve, and
+ * for most of them the calendar exists — it is just somewhere our guesses do
+ * not reach. They know where it is. This is the one path where that knowledge
+ * can get in.
+ *
+ * The student's own events come back on this request, because a "thanks, we'll
+ * look into it" in exchange for going and finding a URL is a trade nobody
+ * makes twice. What does NOT happen here is the write to the University row:
+ * promoting one student's link to the feed for everybody at that school is a
+ * review, not a side effect.
+ */
+// deno-lint-ignore no-explicit-any
+async function handleSubmission(base44: any, user: any, body: any): Promise<Response> {
+  const profile = await loadProfile(base44, user);
+  const college = collegeOf(profile, user);
+  if (!college) {
+    return Response.json({ status: 'no_college', events: [], college: '' });
+  }
+
+  const university = await findUniversity(base44, college);
+  const known = (university?.approved_domains || [])
+    .map((d: string) => stripWww(String(d).toLowerCase().trim()))
+    .filter(isProbeableDomain);
+  // A school with no row yet, or one whose row predates domain caching, still
+  // deserves an answer — so fall back to the same guess the probe path uses.
+  const allowed = known.length ? known : await guessDomains(base44, college);
+
+  const check = checkSubmittedUrl(body.url, allowed);
+  if (!check.ok) {
+    return Response.json({ status: 'submission_rejected', reason: check.reason, college, events: [] });
+  }
+
+  const days = Math.min(Math.max(Number(body.days) || DEFAULT_DAYS, 1), MAX_DAYS);
+
+  let feed: { platform: string; feedUrl: string } | null = null;
+  let events: NormalizedEvent[] = [];
+  let failure = '';
+
+  try {
+    feed = await resolveSubmittedUrl(check.url, check.host, check.domain);
+  } catch (err) {
+    failure = err instanceof Error ? err.message : 'Could not read that address';
+  }
+
+  // Resolving is not enough. A feed that parses but has nothing upcoming is
+  // the same dead end the student started in, and caching it would shadow a
+  // working calendar we might otherwise find later.
+  if (feed) {
+    try {
+      events = (await fetchEvents(feed.platform, feed.feedUrl, days))
+        .filter(isAttendable)
+        .filter(e => {
+          const starts = new Date(e.start).getTime();
+          return Number.isFinite(starts) && starts >= Date.now() - 3600000;
+        });
+      if (!events.length) {
+        failure = 'That calendar has nothing coming up';
+        feed = null;
+      }
+    } catch (err) {
+      failure = err instanceof Error ? err.message : 'That calendar would not load';
+      feed = null;
+    }
+  }
+
+  // The queue. Written for both outcomes on purpose: the failures are the only
+  // record of what students tried that we could not read, which is the list
+  // that says which adapter to write next.
+  try {
+    await base44.asServiceRole.entities.CampusFeedSubmission.create({
+      college,
+      university_id: university?.id || '',
+      submitted_by: user.id,
+      submitted_url: check.url,
+      resolution: feed ? 'resolved' : 'failed',
+      review_status: 'pending',
+      resolved_platform: feed?.platform || '',
+      resolved_feed_url: feed?.feedUrl || '',
+      event_count: events.length,
+      sample_titles: events.slice(0, SUBMISSION_SAMPLE_TITLES).map(e => e.title),
+      failure_reason: failure,
+    });
+  } catch (_) {
+    // Logging the submission must never cost the student the events it found.
+  }
+
+  if (!feed) {
+    return Response.json({
+      status: 'submission_failed',
+      reason: failure || 'Nothing at that address reads as a calendar',
+      college,
+      events: [],
+    });
+  }
+
+  const terms = termsFrom(
+    profile?.career_interests,
+    profile?.interests,
+    profile?.favorite_topics,
+    profile?.desired_skills,
+    profile?.major,
+    profile?.long_term_ambitions,
+  );
+  const limit = Math.min(Math.max(Number(body.limit) || 20, 1), 40);
+
+  return Response.json({
+    status: 'ok',
+    from_submission: true,
+    college,
+    source: feed.feedUrl,
+    platform: feed.platform,
+    window_days: days,
+    matched_on: terms.slice(0, 25),
+    events: events
+      .map(e => ({ ...e, match_score: scoreEvent(e, terms) }))
+      .sort((a, b) => (b.match_score - a.match_score) || (new Date(a.start).getTime() - new Date(b.start).getTime()))
+      .slice(0, limit),
+  });
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -1872,6 +2271,11 @@ Deno.serve(async (req) => {
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
     const body = await req.json().catch(() => ({}));
+
+    if (body.action === 'submit_calendar_url') {
+      return await handleSubmission(base44, user, body);
+    }
+
     const days = Math.min(Math.max(Number(body.days) || DEFAULT_DAYS, 1), MAX_DAYS);
     // Keyword overlap is a weak signal on a real feed — plenty of genuinely
     // relevant events share no vocabulary with what a student typed. The
@@ -1879,24 +2283,13 @@ Deno.serve(async (req) => {
     // the descriptions, gets a fair spread to choose from.
     const limit = Math.min(Math.max(Number(body.limit) || 20, 1), 40);
 
-    // The college is read from the student's own profile, never taken from the
-    // caller — this function fetches remote URLs, so the host it builds must
-    // not be steerable from the client.
-    // deno-lint-ignore no-explicit-any
-    let profile: any = null;
-    try {
-      const rows = await base44.entities.StudentProfile.filter({ user_id: user.id }, '-created_date', 1);
-      profile = rows?.[0] || null;
-    } catch (_) {
-      profile = null;
-    }
-
-    const college = (profile?.college || user.college || '').trim();
-    if (!college || college.toLowerCase() === 'not specified') {
+    const profile = await loadProfile(base44, user);
+    const college = collegeOf(profile, user);
+    if (!college) {
       return Response.json({ status: 'no_college', events: [], college: '' });
     }
 
-    const { feed } = await resolveFeed(base44, college);
+    const { feed } = await resolveFeed(base44, college, user.id);
     if (!feed) {
       return Response.json({ status: 'no_feed', events: [], college });
     }

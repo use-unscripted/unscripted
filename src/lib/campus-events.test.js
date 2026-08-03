@@ -16,6 +16,9 @@ import {
   eventSearchUrl,
   eventSourceHost,
   recommendCampusEvents,
+  schoolEventsSearchUrl,
+  submitCalendarUrl,
+  SUBMISSION_REJECTIONS,
 } from './campus-events';
 
 /** Shaped like normalizeEvent() in the campusEvents backend function. */
@@ -457,5 +460,90 @@ describe('recommendCampusEvents — model-dependent response shape', () => {
       response: 'some string',
     });
     expect(await recommendCampusEvents(events, {})).toHaveLength(1);
+  });
+});
+
+// ── A calendar the student found for us ─────────────────────────────────────
+
+describe('submitCalendarUrl', () => {
+  it('sends the action the backend routes on, with the pasted URL', async () => {
+    base44.functions.invoke.mockResolvedValue({ data: { status: 'ok', events: [], college: 'Babson' } });
+
+    await submitCalendarUrl('engage.babson.edu', { days: 45, limit: 20 });
+
+    expect(base44.functions.invoke).toHaveBeenCalledWith('campusEvents', {
+      action: 'submit_calendar_url',
+      url: 'engage.babson.edu',
+      days: 45,
+      limit: 20,
+    });
+  });
+
+  it('returns the resolved feed in the same shape a found feed uses', async () => {
+    const event = calendarEvent();
+    base44.functions.invoke.mockResolvedValue({
+      data: { status: 'ok', from_submission: true, college: 'Babson', events: [event] },
+    });
+
+    const result = await submitCalendarUrl('https://engage.babson.edu/events');
+
+    expect(result.status).toBe('ok');
+    expect(result.events).toEqual([event]);
+  });
+
+  // The whole point of the paste is that the student sees something. A thrown
+  // error here would leave them on a spinner inside a modal they cannot leave.
+  it('never throws when the function call fails', async () => {
+    base44.functions.invoke.mockRejectedValue(new Error('network down'));
+
+    const result = await submitCalendarUrl('https://events.example.edu');
+
+    expect(result.status).toBe('submission_failed');
+    expect(result.events).toEqual([]);
+  });
+
+  it('survives a response that is not an object', async () => {
+    base44.functions.invoke.mockResolvedValue({ data: 'nope' });
+    expect(await submitCalendarUrl('https://events.example.edu')).toEqual({
+      status: 'submission_failed',
+      reason: '',
+      events: [],
+    });
+  });
+
+  // Callers render result.events without guarding it, so a backend answer that
+  // omits the key entirely must still arrive as a list.
+  it('always carries an events array, even when the backend omits one', async () => {
+    base44.functions.invoke.mockResolvedValue({ data: { status: 'submission_rejected', reason: 'wrong_school' } });
+
+    const result = await submitCalendarUrl('https://someone-elses-site.com');
+
+    expect(result.events).toEqual([]);
+    expect(SUBMISSION_REJECTIONS[result.reason]).toBeTruthy();
+  });
+});
+
+describe('schoolEventsSearchUrl', () => {
+  it('searches for the school by name', () => {
+    expect(schoolEventsSearchUrl('Sacred Heart University')).toBe(
+      'https://www.google.com/search?q=Sacred%20Heart%20University%20events%20calendar',
+    );
+  });
+
+  // The no-feed state must not send a student to the main events page: that is
+  // the one page measured at 0 for 12 on schools we cannot read.
+  it('can look for the club portal instead of the calendar', () => {
+    expect(schoolEventsSearchUrl('Barnard College', 'student club portal get involved')).toBe(
+      'https://www.google.com/search?q=Barnard%20College%20student%20club%20portal%20get%20involved',
+    );
+  });
+
+  // Every empty state renders this link, including the one where we never
+  // learned the school's name. An href of "undefined events calendar" is worse
+  // than no link at all.
+  it('has nothing to offer without a school name', () => {
+    expect(schoolEventsSearchUrl('')).toBe('');
+    expect(schoolEventsSearchUrl(undefined)).toBe('');
+    expect(schoolEventsSearchUrl('   ')).toBe('');
   });
 });
