@@ -65,7 +65,13 @@ export default function CampusEventCard({ event, college = '', compact = false }
           )}
         </dl>
 
-        {(event.has_register || !event.is_free) && (
+        {/*
+          Only on positive evidence. `is_free` is null whenever the school's
+          calendar carried no price — which is most of them — and saying
+          "Ticketed event" off the back of that tells a student a free ice
+          cream social costs money.
+        */}
+        {(event.has_register || event.is_free === false) && (
           <p className="mt-2 flex items-center gap-1.5 text-xs font-semibold" style={{ color: '#7A5B12' }}>
             <Ticket size={12} aria-hidden="true" />
             {event.has_register ? 'Registration required' : 'Ticketed event'}

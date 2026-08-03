@@ -228,6 +228,27 @@ describe('recommendCampusEvents', () => {
     await expect(recommendCampusEvents([calendarEvent()], null)).resolves.toEqual([]);
     expect(base44.integrations.Core.InvokeLLM).toHaveBeenCalledTimes(1);
   });
+
+  // Most school calendars say nothing about money, and a model handed
+  // "free: null" will happily write "and it's free" into a fit reason. The
+  // field is left out entirely so there is nothing to read either way.
+  it('tells the model nothing about price when the calendar did not say', async () => {
+    base44.integrations.Core.InvokeLLM.mockResolvedValue({ recommendations: [] });
+
+    await recommendCampusEvents([calendarEvent({ is_free: null })], PROFILE);
+
+    const { prompt } = base44.integrations.Core.InvokeLLM.mock.calls[0][0];
+    expect(prompt).not.toContain('"free"');
+  });
+
+  it('tells the model the price when the calendar did say', async () => {
+    base44.integrations.Core.InvokeLLM.mockResolvedValue({ recommendations: [] });
+
+    await recommendCampusEvents([calendarEvent({ is_free: false })], PROFILE);
+
+    const { prompt } = base44.integrations.Core.InvokeLLM.mock.calls[0][0];
+    expect(prompt).toContain('"free": false');
+  });
 });
 
 describe('fetchCampusEvents', () => {
