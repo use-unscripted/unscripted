@@ -966,7 +966,10 @@ function icsMomentValue(moment: IcsMoment | null): string {
   if (moment.kind === 'utc') return d.toISOString();
 
   const pad = (n: number) => String(n).padStart(2, '0');
-  const day = `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}`;
+  // The year is padded too. A feed carrying a typo'd year would otherwise
+  // render "999-01-01", which no Date parse accepts, so the event is discarded
+  // a step later as unreadable rather than shown as the odd date it is.
+  const day = `${String(d.getUTCFullYear()).padStart(4, '0')}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}`;
   if (moment.kind === 'date') return day;
   return `${day}T${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}:${pad(d.getUTCSeconds())}`;
 }
@@ -1272,7 +1275,16 @@ function expandRecurrence(
   wanted: number,
 ): IcsMoment[] {
   const found: IcsMoment[] = [];
-  const earliest = now - 3600000;
+  const today = new Date(now);
+  // An all-day date renders as a bare day and parses back as its own UTC
+  // midnight, which is always behind "an hour ago" — so a weekly all-day series
+  // asked about on one of its own days answered with next week's date, and the
+  // student was told the thing happening today happens in seven days. The floor
+  // for a date-only series is the start of today, not the last hour. Read off
+  // UTC fields on both sides, so it does not depend on the server's zone.
+  const earliest = start.kind === 'date'
+    ? Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate())
+    : now - 3600000;
   const latest = now + windowDays * 86400000;
 
   const take = (at: number): boolean => {

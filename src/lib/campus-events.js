@@ -47,10 +47,37 @@ const cache = new Map();
 
 function cached(key, ttl, produce) {
   const hit = cache.get(key);
-  if (hit && Date.now() - hit.at < ttl) return hit.value;
+  if (hit && Date.now() - hit.at < ttl) {
+    // Re-insert so a used answer moves to the back of the queue. The calendar
+    // is read once and then ranked against over and over, so without this it
+    // stays the oldest key in the map and a run of rankings evicts the one
+    // entry all of them depend on.
+    cache.delete(key);
+    cache.set(key, hit);
+    return hit.value;
+  }
 
   const value = produce();
-  cache.set(key, { at: Date.now(), value });
+  const entry = { at: Date.now(), value };
+  cache.set(key, entry);
+
+  // There are two ways a ranking fails to be an answer, and they are handled in
+  // two different places. Do not collapse them:
+  //
+  //   it RETURNED a failure — the model call errored, or answered something we
+  //     could not read. `recommendCampusEvents` sees `outcome.failed` and drops
+  //     the key itself. That is the incumbent path and it stays where it is.
+  //   it THREW — nothing after the model call is wrapped, so anything that
+  //     raises leaves a REJECTED PROMISE in the map. `outcome.failed` is never
+  //     reached to clear it, and every later read re-throws the same stale
+  //     failure until the TTL runs out.
+  //
+  // This covers the second. Nothing is memoised that did not resolve.
+  if (value && typeof value.then === 'function') {
+    value.then(undefined, () => {
+      if (cache.get(key) === entry) cache.delete(key);
+    });
+  }
 
   // The oldest key is the first one Map iterates, so this is the whole eviction.
   while (cache.size > CACHE_MAX_ENTRIES) cache.delete(cache.keys().next().value);
@@ -294,6 +321,25 @@ export async function recommendCampusEvents(events, profile, { pathName = '' } =
   return outcome.picks;
 }
 
+/**
+ * A list of non-empty strings, whatever the model actually sent.
+ *
+ * `response_json_schema` is a request, not a guarantee. A model asked for an
+ * array of strings returns a bare string often enough that calling `.filter` on
+ * it is a live crash — and this one throws from inside a promise the picker
+ * awaits with no catch. A single string is read as the one step it plainly is;
+ * anything else contributes nothing.
+ */
+function textList(value) {
+  const items = Array.isArray(value) ? value : [value];
+  return items.filter(item => typeof item === 'string' && item.trim()).map(item => item.trim());
+}
+
+/** A string the student can be shown, or nothing. */
+function text(value) {
+  return typeof value === 'string' ? value : '';
+}
+
 async function rankCampusEvents(events, profile, pathName) {
   let result;
   try {
@@ -327,10 +373,10 @@ async function rankCampusEvents(events, profile, pathName) {
     picks.push({
       ...event,
       guidance: {
-        fit_reason: rec.fit_reason || '',
-        what_to_do: (rec.what_to_do || []).filter(Boolean),
-        questions_to_ask: (rec.questions_to_ask || []).filter(Boolean),
-        proof_to_capture: rec.proof_to_capture || '',
+        fit_reason: text(rec.fit_reason),
+        what_to_do: textList(rec.what_to_do),
+        questions_to_ask: textList(rec.questions_to_ask),
+        proof_to_capture: text(rec.proof_to_capture),
       },
     });
 
