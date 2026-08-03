@@ -366,12 +366,53 @@ const DATE_ONLY = /^\d{4}-\d{2}-\d{2}$/;
  * date field can be date-only and that adapter has no all-day flag to set. A
  * value with no time in it is not a moment under any reading, so it gets the
  * whole-day window whether or not the feed admitted what it was.
+ *
+ * ## How the end date is used, and why it can only ever extend
+ *
+ * A start alone cannot describe a three-day orientation fair or a month-long
+ * exhibition: anchored to the start, the window shuts 24h in whatever the
+ * event's real length is, so it is offered on day one and gone on day two. The
+ * end is therefore consulted, and across this file it always names the LAST DAY
+ * the event runs — see `icsInclusiveEnd` for the one feed that states it the
+ * other way.
+ *
+ * The two windows are combined with `Math.max`, which is the whole safety
+ * argument: whatever an end says, the answer is never earlier than the
+ * start-only answer was. A missing, malformed, or nonsense-early end therefore
+ * cannot drop a listing that shows today — it can only fail to extend one. That
+ * matters because the previous attempt in this area was reverted for losing five
+ * real events while gaining none, and an end date is the least trustworthy field
+ * in every feed here.
  */
-export function stillUpcoming(start: string, allDay: boolean, now: number): boolean {
+export function stillUpcoming(
+  start: string,
+  end: string,
+  allDay: boolean,
+  now: number,
+): boolean {
   const at = new Date(start).getTime();
   if (!Number.isFinite(at)) return false;
   const wholeDay = allDay || DATE_ONLY.test(String(start).trim());
-  return at + (wholeDay ? WHOLE_DAY_MS : STARTED_GRACE_MS) >= now;
+  const fromStart = at + (wholeDay ? WHOLE_DAY_MS : STARTED_GRACE_MS);
+  return Math.max(fromStart, closesAfterEnd(end)) >= now;
+}
+
+/**
+ * The instant an event's own end stops being in the future, or `-Infinity` when
+ * the feed gave us nothing usable — which is the common case, since several
+ * platforms omit an end entirely and one omits it for any event lasting a single
+ * day.
+ *
+ * A bare day gets the same whole-day treatment as a bare start: it names the
+ * last day, so it runs until that day is over. A timestamped end is a real
+ * moment and gets the same hour of grace a timed start does.
+ */
+function closesAfterEnd(end: string): number {
+  const text = String(end || '').trim();
+  if (!text) return -Infinity;
+  const at = new Date(text).getTime();
+  if (!Number.isFinite(at)) return -Infinity;
+  return at + (DATE_ONLY.test(text) ? WHOLE_DAY_MS : STARTED_GRACE_MS);
 }
 
 /**
@@ -1982,6 +2023,31 @@ function icsDate(value: string): IcsMoment | null {
   return null;
 }
 
+/**
+ * iCal is the one feed here that states an all-day end exclusively: RFC 5545
+ * writes a one-day event on the 3rd as DTEND 20260804, and the 1st-to-3rd fair
+ * as DTEND 20260804 as well. Everywhere else in this file — EMS computes it that
+ * way deliberately, and the calendar export adds a day back when it writes its
+ * own DTEND — an all-day end names the LAST DAY the event runs.
+ *
+ * So it is converted once, here, rather than left for each reader to remember.
+ * Getting this wrong is not abstract: an exclusive end reaching the export
+ * writes a three-day fair into a student's calendar as four days.
+ *
+ * A one-day event collapses to an end equal to its start, and is dropped here —
+ * a same-date end tells a student nothing, which is the rule the EMS adapter
+ * already states, and it is what keeps a single day out of a student's calendar
+ * as two.
+ *
+ * Only `date` values move. A timestamped DTEND is already a real closing moment
+ * under every reading.
+ */
+function icsInclusiveEnd(end: IcsMoment | null, start: IcsMoment): IcsMoment | null {
+  if (!end || end.kind !== 'date') return end;
+  const last = { at: end.at - WHOLE_DAY_MS, kind: 'date' as const };
+  return last.at > start.at ? last : null;
+}
+
 /** The string the client renders — byte-for-byte what each form came in as. */
 function icsMomentValue(moment: IcsMoment | null): string {
   if (!moment) return '';
@@ -2437,7 +2503,7 @@ export function parseIcsEvents(
     // was the only one still handing them through.
     if ((props.STATUS || '').trim().toUpperCase() === 'CANCELLED') continue;
 
-    const end = icsDate(props.DTEND || '');
+    const end = icsInclusiveEnd(icsDate(props.DTEND || ''), start);
     const base = {
       uid: props.UID || '',
       summary: unescapeIcsText(props.SUMMARY || ''),
@@ -4015,7 +4081,7 @@ async function handleSubmission(base44: any, user: any, body: any): Promise<Resp
       const asked = Date.now();
       events = (await fetchEvents(feed.platform, feed.feedUrl, days))
         .filter(isAttendable)
-        .filter(e => stillUpcoming(e.start, e.all_day, asked));
+        .filter(e => stillUpcoming(e.start, e.end, e.all_day, asked));
       if (!events.length) {
         failure = 'That calendar has nothing coming up';
         feed = null;
@@ -4208,7 +4274,7 @@ async function handleCheckFeeds(base44: any, user: any): Promise<Response> {
     try {
       const events = (await fetchEvents(row.events_platform, row.events_feed_url, DEFAULT_DAYS))
         .filter(isAttendable)
-        .filter(e => stillUpcoming(e.start, e.all_day, asked));
+        .filter(e => stillUpcoming(e.start, e.end, e.all_day, asked));
       count = events.length;
       if (!count) error = 'Returned no upcoming events';
     } catch (err) {
@@ -4540,7 +4606,7 @@ Deno.serve(async (req) => {
 
     const events = normalized
       .filter(isAttendable)
-      .filter(e => stillUpcoming(e.start, e.all_day, asked))
+      .filter(e => stillUpcoming(e.start, e.end, e.all_day, asked))
       .map(e => ({ ...e, match_score: scoreEvent(e, terms) }))
       .sort((a, b) => (b.match_score - a.match_score) || (new Date(a.start).getTime() - new Date(b.start).getTime()))
       .slice(0, limit);
