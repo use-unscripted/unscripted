@@ -1,0 +1,583 @@
+/**
+ * Student pulse: one evidence-based read of where a student actually is.
+ *
+ * The rule that defines this file: **do not believe the status field.**
+ * `status: 'in_progress'` on an experiment means somebody clicked a button once.
+ * `updated_date` means a row got touched, and the 2026-08-01 backfill touched
+ * every mission in the database inside one second. Neither is proof a student
+ * did anything.
+ *
+ * Evidence is a record that could only exist because a student did real work:
+ * a ProofOfWork row, a mission actually marked completed, a contact actually
+ * written to, a reflection actually filled in, a guide they at least asked for,
+ * and the PilotEvent ledger, which is a real activity log and is read here
+ * rather than rebuilt.
+ *
+ * The output keeps `claimed` (what the status fields assert) and `evidence`
+ * (what happened) in separate buckets on purpose, with `gap` between them. That
+ * gap is the product's whole problem in one object: 265 experiments, 14 guides,
+ * 1 proof row.
+ *
+ * Pure and dependency free. No SDK import, no network, no clock. `now` is a
+ * parameter so a caller can ask "where was this student last Tuesday", and so
+ * this can be unit tested and later run unchanged inside a Deno backend
+ * function. Nothing in here throws: every row in this database was written by a
+ * model at some point and is capable of being any shape.
+ */
+// Relative and extension qualified so a Deno backend function can import this
+// file as it stands, without the `@/` alias the Vite build supplies.
+import { entityDate, entityTime } from './dates.js';
+
+const DAY = 86400000;
+
+/** Soft-deleted rows are the easiest way to overcount evidence. */
+const isLive = (r) => !!r && typeof r === 'object'
+  && (!r.deletion_status || r.deletion_status === 'active');
+
+/** Guides carry the deletion twice: `deletion_status` and their own status enum. */
+const isLiveGuide = (g) => isLive(g) && g.status !== 'deleted';
+
+/** Paths (PathRecommendations rows) have no deletion_status, only an archive status. */
+const isLivePath = (p) => isLive(p) && p.status !== 'archived';
+
+const rows = (v) => (Array.isArray(v) ? v.filter((r) => !!r && typeof r === 'object') : []);
+
+const num = (n) => (Number.isFinite(n) ? n : 0);
+
+const text = (v) => (typeof v === 'string' && v.trim() ? v.trim() : '');
+
+/** A contact in one of these has not been written to yet, whatever else the row says. */
+const UNSENT_STATUSES = ['not_sent', 'planning'];
+/** Somebody wrote back. */
+const REPLIED_STATUSES = ['responded', 'call_scheduled', 'completed'];
+
+/**
+ * Whole days between two instants, clamped at 0. A future created_date is a
+ * real thing here (clock skew, and a model writing a date it invented), and a
+ * negative day count reads as nonsense in every downstream sentence.
+ */
+function daysBetween(fromValue, nowMs) {
+  const t = entityTime(fromValue);
+  if (!Number.isFinite(t) || !Number.isFinite(nowMs)) return null;
+  return Math.max(0, Math.floor((nowMs - t) / DAY));
+}
+
+/** Local calendar day of a timestamp, 'YYYY-MM-DD', or ''. */
+function dayKey(value) {
+  const d = entityDate(value);
+  if (!d) return '';
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+/** An ISO string for a value that may be a date-only day or a zoneless stamp. */
+function iso(value) {
+  const d = entityDate(value);
+  return d ? d.toISOString() : null;
+}
+
+/**
+ * The moment a mission was finished. `completed_at` is written once, at the
+ * moment of completion, and never moves. `created_date` is the fallback for
+ * rows completed before that field started being written. `updated_date` is
+ * deliberately not consulted anywhere in this file.
+ */
+const missionDoneAt = (m) => m.completed_at || m.created_date;
+const proofDoneAt = (p) => p.completed_at || p.created_date;
+const contactDoneAt = (c) => c.last_contacted_date || c.date_contacted || c.created_date;
+const eventAt = (e) => e.occurred_at || e.created_date;
+
+/** When an experiment actually went in_progress, from its own status history. */
+function inProgressSince(exp) {
+  const history = Array.isArray(exp.status_history) ? exp.status_history : [];
+  let best = null;
+  for (const h of history) {
+    if (!h || typeof h !== 'object' || h.to_status !== 'in_progress') continue;
+    const t = entityTime(h.changed_at);
+    if (!Number.isFinite(t)) continue;
+    if (best === null || t > best) best = t;
+  }
+  if (best !== null) return new Date(best).toISOString();
+  return exp.resumed_at || exp.created_date || null;
+}
+
+const sent = (c) => !!text(c.date_contacted)
+  || (!!text(c.response_status) && !UNSENT_STATUSES.includes(c.response_status));
+
+const replied = (c) => REPLIED_STATUSES.includes(c.response_status);
+
+/**
+ * Reads one student's whole history and says where they are.
+ *
+ * Every array is optional. A missing user is tolerated: the signed-out draft
+ * flow can produce paths and an experiment with no account behind them yet.
+ *
+ * @param {{
+ *   now: Date|string|number,
+ *   user?: object|null, profile?: object|null,
+ *   paths?: object[], experiments?: object[], missions?: object[], guides?: object[],
+ *   proof?: object[], reflections?: object[], outreach?: object[], events?: object[],
+ * }} input
+ * @returns {object} Pulse
+ */
+export function readPulse(input = {}) {
+  const {
+    now, user = null, profile = null,
+    paths, experiments, missions, guides, proof, reflections, outreach, events,
+  } = input || {};
+
+  const nowMs = entityTime(now);
+  const hasNow = Number.isFinite(nowMs);
+
+  const livePaths = rows(paths).filter(isLivePath);
+  const liveExps = rows(experiments).filter(isLive);
+  const liveMissions = rows(missions).filter(isLive);
+  const liveGuides = rows(guides).filter(isLiveGuide);
+  const liveProof = rows(proof).filter(isLive);
+  const liveRefl = rows(reflections).filter(isLive);
+  const liveOutreach = rows(outreach).filter(isLive);
+  // PilotEvent has no deletion_status. Nothing ever deletes one.
+  const liveEvents = rows(events);
+
+  const doneMissions = liveMissions.filter((m) => m.status === 'completed');
+  const sentOutreach = liveOutreach.filter(sent);
+  const repliedOutreach = liveOutreach.filter(replied);
+
+  const evidence = {
+    proof: liveProof.length,
+    missionsCompleted: doneMissions.length,
+    outreachSent: sentOutreach.length,
+    outreachResponded: repliedOutreach.length,
+    reflections: liveRefl.length,
+    guides: liveGuides.length,
+  };
+
+  const claimed = {
+    paths: livePaths.length,
+    experiments: liveExps.length,
+    experimentsInProgress: liveExps.filter((e) => e.status === 'in_progress').length,
+    experimentsCompleted: liveExps.filter((e) => e.status === 'completed').length,
+    missionsPlanned: liveMissions.filter((m) => m.status === 'planned').length,
+  };
+
+  const guidesFor = (expId) => liveGuides.filter((g) => expId && g.experiment_id === expId);
+  const proofFor = (expId) => liveProof.filter((p) => expId && p.experiment_id === expId);
+  const doneMissionsFor = (expId) => doneMissions.filter((m) => expId && m.experiment_id === expId);
+
+  const gap = {
+    experimentsWithoutGuide: liveExps.filter((e) => guidesFor(e.id).length === 0).length,
+    experimentsWithoutProof: liveExps.filter((e) => proofFor(e.id).length === 0).length,
+    missionsNeverCompleted: liveMissions.filter((m) => m.status !== 'completed').length,
+  };
+
+  // Every timestamp that counts as a student having done something. Ordered so
+  // that a tie on the same instant resolves to the strongest kind.
+  const marks = [];
+  const mark = (kind, value) => {
+    const t = entityTime(value);
+    if (Number.isFinite(t)) marks.push({ kind, t });
+  };
+  liveProof.forEach((p) => mark('proof', proofDoneAt(p)));
+  doneMissions.forEach((m) => mark('mission', missionDoneAt(m)));
+  sentOutreach.forEach((c) => mark('outreach', contactDoneAt(c)));
+  liveRefl.forEach((r) => mark('reflection', r.created_date));
+  liveGuides.forEach((g) => mark('guide', g.created_date));
+  liveEvents.forEach((e) => mark('event', eventAt(e)));
+
+  const KIND_RANK = { proof: 6, mission: 5, outreach: 4, reflection: 3, guide: 2, event: 1 };
+  let latest = null;
+  for (const m of marks) {
+    if (!latest || m.t > latest.t || (m.t === latest.t && KIND_RANK[m.kind] > KIND_RANK[latest.kind])) {
+      latest = m;
+    }
+  }
+
+  const lastEvidenceAt = latest ? new Date(latest.t).toISOString() : null;
+  const lastEvidenceKind = latest ? latest.kind : null;
+  const daysSinceEvidence = latest ? daysBetween(lastEvidenceAt, nowMs) : null;
+  const daysSinceSignup = daysBetween(user?.created_date, nowMs);
+
+  // Never came back: every mark, if there are any, lands on the calendar day
+  // they signed up. With no signup day there is nothing to compare against, so
+  // this stays false rather than asserting something unsupported.
+  const signupDay = dayKey(user?.created_date);
+  const neverReturned = signupDay
+    ? marks.every((m) => dayKey(new Date(m.t)) <= signupDay)
+    : false;
+
+  const chosenPath = livePaths.find((p) => p.is_primary_focus)
+    || livePaths.find((p) => p.status === 'active')
+    || null;
+
+  const stalls = findStalls({
+    nowMs, hasNow, user, chosenPath, livePaths, liveExps, liveMissions, liveGuides,
+    liveProof, liveRefl, liveOutreach, guidesFor, proofFor, doneMissionsFor,
+    lastEvidenceAt, daysSinceEvidence, daysSinceSignup,
+  });
+
+  const state = resolveState({
+    profile, livePaths, liveExps, chosenPath, evidence, marks,
+    liveRefl, liveEvents, daysSinceEvidence, daysSinceSignup, stalls,
+  });
+
+  return {
+    state,
+    daysSinceSignup,
+    lastEvidenceAt,
+    daysSinceEvidence,
+    lastEvidenceKind,
+    neverReturned,
+    evidence,
+    claimed,
+    gap,
+    stalls,
+    topStall: stalls[0] || null,
+  };
+}
+
+// Base severities, nine apart, in the order the kinds are listed in the design.
+// A stall gains at most 8 points for sitting there, so age sharpens a stall but
+// never lets it jump a tier.
+const BASE_SEVERITY = {
+  no_path_selected: 90,
+  path_without_experiment: 81,
+  experiment_without_guide: 72,
+  guide_never_acted_on: 63,
+  mission_planned_stale: 54,
+  outreach_never_sent: 45,
+  outreach_no_followup: 36,
+  experiment_no_proof: 27,
+  reflection_overdue: 18,
+  dormant_account: 9,
+};
+
+function severityFor(kind, days) {
+  const base = BASE_SEVERITY[kind] || 1;
+  const bump = Math.min(8, Math.floor(num(days) / 7));
+  return Math.max(1, Math.min(100, base + bump));
+}
+
+const quote = (s) => `“${s}”`;
+const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
+
+function findStalls(ctx) {
+  const {
+    nowMs, hasNow, user, chosenPath, livePaths, liveExps, liveMissions, liveGuides,
+    liveRefl, liveOutreach, guidesFor, proofFor, doneMissionsFor,
+    lastEvidenceAt, daysSinceEvidence, daysSinceSignup,
+  } = ctx;
+
+  const out = [];
+  const add = (kind, { subjectId = null, subjectType, label, since, days }) => {
+    const d = Number.isFinite(days) ? Math.max(0, Math.floor(days)) : 0;
+    out.push({
+      kind,
+      severity: severityFor(kind, d),
+      subjectId: subjectId || null,
+      subjectType,
+      label,
+      sinceISO: iso(since),
+      days: d,
+    });
+  };
+
+  // Paths exist and none of them was picked.
+  if (livePaths.length > 0 && !chosenPath) {
+    let newest = null;
+    for (const p of livePaths) {
+      const t = entityTime(p.generated_at || p.created_date);
+      if (Number.isFinite(t) && (newest === null || t > newest)) newest = t;
+    }
+    const since = newest === null ? null : new Date(newest).toISOString();
+    add('no_path_selected', {
+      subjectType: 'path',
+      label: 'You have paths to compare, and you have not picked one to test yet.',
+      since,
+      days: daysBetween(since, nowMs),
+    });
+  }
+
+  // A path was picked and nothing was ever set up under it.
+  if (chosenPath) {
+    const name = text(chosenPath.path_name);
+    const under = liveExps.filter(
+      (e) => (chosenPath.path_id && e.path_id === chosenPath.path_id)
+        || (name && e.path_name === name),
+    );
+    if (under.length === 0) {
+      const since = chosenPath.started_at || chosenPath.created_date || null;
+      add('path_without_experiment', {
+        subjectId: chosenPath.id,
+        subjectType: 'path',
+        label: name
+          ? `You picked ${name} and there is still no experiment under it.`
+          : 'You picked a path and there is still no experiment under it.',
+        since,
+        days: daysBetween(since, nowMs),
+      });
+    }
+  }
+
+  const openExps = liveExps.filter((e) => e.status !== 'completed' && e.status !== 'skipped');
+
+  // An experiment nobody ever generated steps for. This is the 252-of-265 case.
+  for (const e of openExps) {
+    if (guidesFor(e.id).length > 0) continue;
+    const days = daysBetween(e.created_date, nowMs);
+    if (!hasNow || days === null || days <= 3) continue;
+    const title = text(e.title);
+    add('experiment_without_guide', {
+      subjectId: e.id,
+      subjectType: 'experiment',
+      label: title
+        ? `${quote(title)} has no steps yet, so there is nothing to start on.`
+        : 'One of your experiments has no steps yet, so there is nothing to start on.',
+      since: e.created_date,
+      days,
+    });
+  }
+
+  // Steps exist and nothing came of them.
+  for (const g of liveGuides) {
+    const expId = g.experiment_id;
+    if (doneMissionsFor(expId).length > 0 || proofFor(expId).length > 0) continue;
+    const days = daysBetween(g.created_date, nowMs);
+    if (!hasNow || days === null || days <= 5) continue;
+    const title = text(g.guide_title);
+    add('guide_never_acted_on', {
+      subjectId: expId || null,
+      subjectType: 'experiment',
+      label: title
+        ? `You asked for the steps to ${quote(title)} ${plural(days, 'day')} ago and have not run any of them.`
+        : `You asked for steps ${plural(days, 'day')} ago and have not run any of them.`,
+      since: g.created_date,
+      days,
+    });
+  }
+
+  // A mission that has been sitting on the list.
+  for (const m of liveMissions) {
+    if (m.status !== 'planned' || m.completed_at) continue;
+    const days = daysBetween(m.created_date, nowMs);
+    if (!hasNow || days === null || days <= 7) continue;
+    const title = text(m.title);
+    add('mission_planned_stale', {
+      subjectId: m.id,
+      subjectType: 'mission',
+      label: title
+        ? `${quote(title)} has been on your list for ${plural(days, 'day')} and has not been started.`
+        : `A mission has been on your list for ${plural(days, 'day')} and has not been started.`,
+      since: m.created_date,
+      days,
+    });
+  }
+
+  for (const c of liveOutreach) {
+    const name = text(c.name) || 'someone';
+    if (!sent(c)) {
+      const days = daysBetween(c.created_date, nowMs);
+      if (!hasNow || days === null || days <= 5) continue;
+      add('outreach_never_sent', {
+        subjectId: c.id,
+        subjectType: 'outreach',
+        label: `You saved ${name} ${plural(days, 'day')} ago and never sent anything.`,
+        since: c.created_date,
+        days,
+      });
+      continue;
+    }
+    if (c.response_status !== 'sent') continue;
+    const sinceContact = daysBetween(c.date_contacted || c.created_date, nowMs);
+    const followupDue = Number.isFinite(entityTime(c.followup_date))
+      && Number.isFinite(nowMs)
+      && entityTime(c.followup_date) <= nowMs;
+    if (!hasNow) continue;
+    if (!followupDue && (sinceContact === null || sinceContact <= 7)) continue;
+    add('outreach_no_followup', {
+      subjectId: c.id,
+      subjectType: 'outreach',
+      label: `You wrote to ${name} and have not heard back. A short nudge is normal here.`,
+      since: c.followup_date || c.date_contacted || c.created_date,
+      days: sinceContact,
+    });
+  }
+
+  // Marked in_progress, which costs one click, with nothing to show for it.
+  for (const e of liveExps) {
+    if (e.status !== 'in_progress' || proofFor(e.id).length > 0) continue;
+    const since = inProgressSince(e);
+    const days = daysBetween(since, nowMs);
+    if (!hasNow || days === null || days <= 10) continue;
+    const title = text(e.title);
+    add('experiment_no_proof', {
+      subjectId: e.id,
+      subjectType: 'experiment',
+      label: title
+        ? `${quote(title)} has been open for ${plural(days, 'day')} with nothing logged against it.`
+        : `An experiment has been open for ${plural(days, 'day')} with nothing logged against it.`,
+      since,
+      days,
+    });
+  }
+
+  // Running for a week or more with no write-up. One stall, not one per row.
+  const runningLong = liveExps
+    .filter((e) => e.status === 'in_progress')
+    .map((e) => ({ e, days: daysBetween(inProgressSince(e), nowMs) }))
+    .filter((x) => x.days !== null && x.days > 7)
+    .sort((a, b) => b.days - a.days)[0];
+  if (hasNow && runningLong) {
+    let newestRefl = null;
+    for (const r of liveRefl) {
+      const t = entityTime(r.created_date);
+      if (Number.isFinite(t) && (newestRefl === null || t > newestRefl)) newestRefl = t;
+    }
+    const reflDays = newestRefl === null ? null : daysBetween(new Date(newestRefl).toISOString(), nowMs);
+    if (reflDays === null || reflDays > 7) {
+      const title = text(runningLong.e.title);
+      add('reflection_overdue', {
+        subjectId: runningLong.e.id,
+        subjectType: 'experiment',
+        label: title
+          ? `You have not written down what ${quote(title)} is teaching you.`
+          : 'You have not written down what any of this is teaching you.',
+        since: newestRefl === null ? inProgressSince(runningLong.e) : new Date(newestRefl).toISOString(),
+        days: reflDays === null ? runningLong.days : reflDays,
+      });
+    }
+  }
+
+  // Gone quiet, or never made a sound in the first place.
+  const neverAny = lastEvidenceAt === null;
+  const quietTooLong = daysSinceEvidence !== null && daysSinceEvidence > 14;
+  const silentSinceSignup = neverAny && daysSinceSignup !== null && daysSinceSignup > 3;
+  if (hasNow && (quietTooLong || silentSinceSignup)) {
+    const days = quietTooLong ? daysSinceEvidence : daysSinceSignup;
+    add('dormant_account', {
+      subjectId: user?.id || null,
+      subjectType: 'account',
+      label: neverAny
+        ? `You signed up ${plural(num(days), 'day')} ago and nothing has happened since.`
+        : `Nothing has happened here in ${plural(num(days), 'day')}.`,
+      since: lastEvidenceAt || user?.created_date || null,
+      days,
+    });
+  }
+
+  out.sort((a, b) => (b.severity - a.severity) || (b.days - a.days) || a.kind.localeCompare(b.kind));
+  return out;
+}
+
+function resolveState(ctx) {
+  const {
+    profile, livePaths, liveExps, chosenPath, evidence, marks,
+    liveRefl, liveEvents, daysSinceEvidence, daysSinceSignup, stalls,
+  } = ctx;
+
+  // Reached the end of a cycle on purpose. This is the only good terminal state
+  // and it is read from what the student wrote, not from a status field.
+  const concluded = liveRefl.some((r) => r.is_experiment_conclusion === true)
+    || liveEvents.some((e) => e.event_name === 'final_decision_submitted' || e.event_name === 'cycle_completed');
+  if (concluded) return 'decided';
+
+  const hasAnything = livePaths.length > 0 || liveExps.length > 0 || marks.length > 0 || !!profile;
+  if (!hasAnything) return 'never_started';
+
+  const neverAny = marks.length === 0;
+  if ((daysSinceEvidence !== null && daysSinceEvidence > 14)
+    || (neverAny && daysSinceSignup !== null && daysSinceSignup > 14)) {
+    return 'dormant';
+  }
+
+  if (!chosenPath && liveExps.length === 0) return 'no_path';
+
+  const realWork = evidence.proof + evidence.missionsCompleted + evidence.outreachSent + evidence.reflections;
+  if (realWork > 0 && daysSinceEvidence !== null && daysSinceEvidence <= 7) return 'working';
+
+  if (stalls.length > 0) return 'stalled';
+  return 'planning';
+}
+
+const STATE_WORDS = {
+  never_started: 'has not started anything',
+  no_path: 'has not picked a path to test',
+  planning: 'has things set up and nothing done yet',
+  working: 'is doing the work',
+  stalled: 'has stopped partway',
+  dormant: 'has gone quiet',
+  decided: 'finished a test and made a call',
+};
+
+const LAST_KIND_WORDS = {
+  proof: 'logging proof',
+  mission: 'finishing a mission',
+  outreach: 'writing to someone',
+  reflection: 'writing a reflection',
+  guide: 'asking for steps',
+  event: 'clicking around',
+};
+
+/** Joins a short list without a trailing serial comma. */
+function joinList(items) {
+  if (items.length <= 1) return items[0] || '';
+  if (items.length === 2) return `${items[0]} and ${items[1]}`;
+  return `${items.slice(0, -1).join(', ')} and ${items[items.length - 1]}`;
+}
+
+/**
+ * Three or four plain sentences an operator can read in a log, and the seed for
+ * the prompt that writes the nudge.
+ *
+ * @param {object} pulse the object readPulse returned
+ * @returns {string}
+ */
+export function summarizePulse(pulse) {
+  if (!pulse || typeof pulse !== 'object') return 'There is nothing to read yet.';
+
+  const state = STATE_WORDS[pulse.state] || 'is somewhere unclear';
+  const ev = pulse.evidence || {};
+  const claimed = pulse.claimed || {};
+  const gap = pulse.gap || {};
+  const out = [];
+
+  const signup = pulse.daysSinceSignup;
+  out.push(Number.isFinite(signup)
+    ? `Signed up ${plural(signup, 'day')} ago and ${state}.`
+    : `This student ${state}.`);
+
+  const done = [];
+  if (num(ev.proof)) done.push(plural(num(ev.proof), 'piece') + ' of proof');
+  if (num(ev.missionsCompleted)) done.push(`${plural(num(ev.missionsCompleted), 'mission')} finished`);
+  if (num(ev.outreachSent)) {
+    const n = num(ev.outreachSent);
+    done.push(`${n} ${n === 1 ? 'person' : 'people'} written to`);
+  }
+  if (num(ev.reflections)) done.push(`${plural(num(ev.reflections), 'reflection')} written`);
+  if (done.length) {
+    out.push(`Real work so far: ${joinList(done)}.`);
+  } else if (pulse.neverReturned) {
+    out.push('Nothing real has ever been logged, and everything on the account happened the day they signed up.');
+  } else {
+    out.push('Nothing real has ever been logged.');
+  }
+
+  if (num(claimed.experiments) > 0) {
+    out.push(`On paper there ${num(claimed.experiments) === 1 ? 'is' : 'are'} `
+      + `${plural(num(claimed.experiments), 'experiment')}, `
+      + `${num(gap.experimentsWithoutProof)} of them with nothing to show.`);
+  } else if (num(claimed.paths) > 0) {
+    out.push(`${plural(num(claimed.paths), 'path')} to compare and no experiment started.`);
+  }
+
+  const top = pulse.topStall;
+  if (top && top.label) {
+    out.push(`Most stuck right now: ${top.label}`);
+  } else if (pulse.lastEvidenceKind) {
+    out.push(`Last sign of life was ${LAST_KIND_WORDS[pulse.lastEvidenceKind] || 'activity'}, `
+      + `${plural(num(pulse.daysSinceEvidence), 'day')} ago.`);
+  }
+
+  return out.join(' ');
+}
