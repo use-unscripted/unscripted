@@ -317,6 +317,63 @@ function withinWindow(start: string, days: number): boolean {
   return Number.isFinite(at) && at <= Date.now() + days * 86400000;
 }
 
+/** A started timed event is still worth offering for an hour. */
+const STARTED_GRACE_MS = 3600000;
+/** An all-day event is worth offering until its day is over. */
+const WHOLE_DAY_MS = 86400000;
+
+/** "2026-08-03" with nothing after it. There is no clock anywhere in that. */
+const DATE_ONLY = /^\d{4}-\d{2}-\d{2}$/;
+
+/**
+ * Is this event still ahead of the student?
+ *
+ * A timed event carries a real clock, so "started an hour ago" is the line. An
+ * all-day event has no clock at all: it names a whole day, and it is upcoming
+ * until the END of that day, not until the start of it. Reading a bare day as
+ * an instant is what told a weekly all-day club it met next Tuesday on the
+ * Tuesday it was actually running.
+ *
+ * ## What "the end of its day" means here, and what it costs
+ *
+ * 24 hours after whatever instant the start value parses to — never end-of-day
+ * in a named zone. A `VALUE=DATE` value carries no zone, and this file's rule
+ * everywhere else is to refuse rather than guess one (a `TZID` is passed
+ * through unresolved for the same reason). Guessing here would move a listing
+ * by a day, which is the failure this whole function is built to avoid.
+ *
+ * That makes it server-timezone-independent by construction: `new Date()` on a
+ * bare `YYYY-MM-DD` is UTC midnight by spec on every host, so the window closes
+ * at 00:00 UTC the next day whatever the box is set to.
+ *
+ * **The tradeoff, plainly.** 00:00 UTC is 8pm US Eastern, 5pm Pacific. So on a
+ * US campus an all-day event stops being offered in the last few hours of its
+ * own evening rather than at local midnight, and east of Greenwich it lingers
+ * an hour or two into the next morning. Both are small and only one direction
+ * is dangerous: showing a day that has passed walks a student into an empty
+ * room, and showing nothing is the lesser harm. This errs toward nothing
+ * everywhere the campus is west of us, which is every US school.
+ *
+ * Where a feed does carry an offset the answer is exact for free — Localist and
+ * LiveWhale stamp an all-day event at real local midnight, so +24h lands on
+ * local end-of-day.
+ *
+ * ## Why the flag is not the only test
+ *
+ * `all_day` is used where a feed sets it, but two feeds hand us a bare day
+ * without it: Localist falls back to `first_date` when an event has no
+ * instance, and its `all_day` comes off the instance that isn't there; Drupal's
+ * date field can be date-only and that adapter has no all-day flag to set. A
+ * value with no time in it is not a moment under any reading, so it gets the
+ * whole-day window whether or not the feed admitted what it was.
+ */
+export function stillUpcoming(start: string, allDay: boolean, now: number): boolean {
+  const at = new Date(start).getTime();
+  if (!Number.isFinite(at)) return false;
+  const wholeDay = allDay || DATE_ONLY.test(String(start).trim());
+  return at + (wholeDay ? WHOLE_DAY_MS : STARTED_GRACE_MS) >= now;
+}
+
 /**
  * The shape the client consumes. A platform that does not carry a field leaves
  * it empty — never filled in from a sibling field, a default, or a guess. An
@@ -2241,24 +2298,21 @@ function expandRecurrence(
   wanted: number,
 ): IcsMoment[] {
   const found: IcsMoment[] = [];
-  const earliest = now - 3600000;
+  // Exactly the window `stillUpcoming` applies at request time: an hour's grace
+  // on a clock, the whole day on a bare day. `start.kind === 'date'` is the same
+  // test that sets `allDay` on every occurrence emitted below, so the two agree
+  // by construction rather than by coincidence.
+  //
+  // This floor and those filters have to move together or not at all. Lowering
+  // only this one was tried on 2026-08-03 and reverted the same day: the
+  // expansion started handing back today's date, the request filter still threw
+  // it away as stale, and because callers ask for ONE date per series (see
+  // `seriesDates`) the series spent its only slot on a value no student ever
+  // saw — a weekly all-day club went from a wrong date to nothing at all.
+  // Measured across all 38 real school feeds: 5 upcoming listings lost over 28
+  // days, none gained. If you change either number, change both.
+  const earliest = now - (start.kind === 'date' ? WHOLE_DAY_MS : STARTED_GRACE_MS);
   const latest = now + windowDays * 86400000;
-
-  // Do NOT lower this floor for date-only series without also fixing the two
-  // request-time filters (search for `starts >= now - 3600000`). That was tried
-  // on 2026-08-03 and reverted the same day, measured against all 38 real school
-  // feeds: it lost 5 upcoming listings across 28 days and gained nothing, ever.
-  //
-  // Why it backfires. A bare "2026-08-03" parses to UTC midnight, so from 01:00
-  // UTC onward it is already below `now - 1h` at the request filter. Lowering
-  // only this floor makes the expansion hand back today's date, the filter then
-  // discards it, and because callers ask for one date the series spends its only
-  // slot on a value that never reaches the student — so a weekly all-day club
-  // contributes nothing instead of showing its genuine next date.
-  //
-  // The invariant below is what keeps that honest: a date surviving here cannot
-  // be dropped as stale one step later. Any real fix has to make the request
-  // filters all-day-aware in the same change.
 
   const take = (at: number): boolean => {
     // A date arithmetic can no longer represent is the end of this series, not
@@ -2445,7 +2499,16 @@ export function parseIcsEvents(
   return events;
 }
 
-/** A calendar is only useful to us if it still has something ahead of today. */
+/**
+ * A calendar is only useful to us if it still has something ahead of today.
+ *
+ * Not a fourth copy of `stillUpcoming` — this decides whether a whole feed is
+ * worth keeping, not whether one listing is shown, so it is deliberately the
+ * looser test: a day's grace on everything, timed events included. It already
+ * accepts an all-day event happening today (its UTC midnight is inside the
+ * day), so the all-day window costs it nothing, and tightening it to the
+ * per-listing rule could only throw away a school we can read.
+ */
 export function looksLikeIcal(text: unknown): boolean {
   if (typeof text !== 'string' || !text.includes('BEGIN:VCALENDAR')) return false;
   const events = parseIcsEvents(text);
@@ -3832,12 +3895,10 @@ async function handleSubmission(base44: any, user: any, body: any): Promise<Resp
   // working calendar we might otherwise find later.
   if (feed) {
     try {
+      const asked = Date.now();
       events = (await fetchEvents(feed.platform, feed.feedUrl, days))
         .filter(isAttendable)
-        .filter(e => {
-          const starts = new Date(e.start).getTime();
-          return Number.isFinite(starts) && starts >= Date.now() - 3600000;
-        });
+        .filter(e => stillUpcoming(e.start, e.all_day, asked));
       if (!events.length) {
         failure = 'That calendar has nothing coming up';
         feed = null;
@@ -4084,6 +4145,18 @@ Deno.serve(async (req) => {
       return Response.json({ status: 'no_feed', events: [], college });
     }
 
+    // Stamped BEFORE the fetch, and it has to stay there. The expansion floor
+    // inside `fetchEvents` reads its own clock, so if we read ours afterwards
+    // the filter below is stricter than the expansion by however long the feed
+    // took — up to the 12s ICS timeout. A request that straddles 00:00 UTC then
+    // reproduces the 2026-08-03 revert exactly: expansion admits today's
+    // all-day date, this filter calls it stale, and because callers ask for ONE
+    // date per series the series spends its only slot on a value no student
+    // sees. Reading the clock first can only make this filter more generous
+    // than the expansion, which is the safe direction. `handleSubmission` does
+    // the same thing for the same reason.
+    const asked = Date.now();
+
     let normalized: NormalizedEvent[];
     try {
       normalized = await fetchEvents(feed.platform, feed.feedUrl, days, seriesDates);
@@ -4106,13 +4179,9 @@ Deno.serve(async (req) => {
       body.extraInterests
     );
 
-    const now = Date.now();
     const events = normalized
       .filter(isAttendable)
-      .filter(e => {
-        const starts = new Date(e.start).getTime();
-        return Number.isFinite(starts) && starts >= now - 3600000;
-      })
+      .filter(e => stillUpcoming(e.start, e.all_day, asked))
       .map(e => ({ ...e, match_score: scoreEvent(e, terms) }))
       .sort((a, b) => (b.match_score - a.match_score) || (new Date(a.start).getTime() - new Date(b.start).getTime()))
       .slice(0, limit);

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { RotateCcw, Trash2, Clock, AlertTriangle, Loader2 } from 'lucide-react';
 import PageHeader from '@/components/PageHeader';
+import { SkCards } from '@/components/PageSkeleton';
 import { restorePayload } from '@/components/SoftDeleteConfirm';
 import ExperimentPermanentDeleteModal from '@/components/experiments/ExperimentPermanentDeleteModal';
 
@@ -309,7 +310,7 @@ export default function RecentlyDeleted() {
       </div>
 
       {loading ? (
-        <div className="py-20 text-center text-[color:var(--ink-500)]">Loading…</div>
+        <SkCards count={3} h={128} gap={12} r={20} />
       ) : currentItems.length === 0 ? (
         <div className="rounded-[24px] border border-dashed border-[color:var(--ink-200)] py-16 text-center">
           <p className="text-sm font-semibold text-[color:var(--surface-dark-900)]">No deleted {currentTab?.label.toLowerCase()} found.</p>

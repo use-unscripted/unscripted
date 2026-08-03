@@ -15,6 +15,7 @@ class CardErrorBoundary extends Component {
 import { Plus, ExternalLink, Search, Play, FileText, Film, Image, FileSpreadsheet, Music, File, ChevronDown, Eye, EyeOff, Trash2, X } from 'lucide-react';
 import SoftDeleteConfirm, { softDeletePayload } from '@/components/SoftDeleteConfirm';
 import PageHeader from '@/components/PageHeader';
+import { Sk, SkControls, SkGrid } from '@/components/PageSkeleton';
 import { ProofSuccessToast } from '@/components/experiments/AddProofModal';
 import PathSwitcher from '@/components/PathSwitcher';
 import AddProofStandaloneModal from '@/components/experiments/AddProofStandaloneModal';
@@ -388,7 +389,14 @@ export default function ProofOfWorkPage() {
         }
       />
 
-      {/* Search + Filters */}
+      {/* Search + Filters.
+          Held back until the data lands. The path and experiment dropdowns only
+          exist once there are paths and experiments to put in them, so rendering
+          the row early meant it grew by two controls — and on mobile by two
+          stacked rows — the moment loading finished, pushing every card down. */}
+      {loading ? (
+        <SkControls search filters={3} />
+      ) : (
       <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:flex-wrap">
         <div className="relative flex-1 min-w-[200px]">
           <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[color:var(--ink-400)]" />
@@ -417,9 +425,13 @@ export default function ProofOfWorkPage() {
           <option value="public">Public</option>
         </select>
       </div>
+      )}
 
       {loading ? (
-        <div className="py-20 text-center text-[color:var(--ink-500)]">Loading proof of work…</div>
+        <>
+          <div className="mb-4 flex h-4 items-center"><Sk h={11} w={190} r={4} /></div>
+          <SkGrid count={4} h={218} cols={2} r={24} />
+        </>
       ) : loadError ? (
         <div className="rounded-[24px] border border-dashed border-red-200 p-16 text-center">
           <h3 className="font-heading text-xl font-bold text-[color:var(--surface-dark-900)]">We couldn't load your proof of work.</h3>

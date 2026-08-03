@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { ExternalLink, Star } from 'lucide-react';
 import PageHeader from '@/components/PageHeader';
+import { SkGrid } from '@/components/PageSkeleton';
 
 const CATEGORY_LABELS = {
   ib_prep: 'Investment Banking', consulting_prep: 'Consulting', startup_fellowships: 'Startup Fellowships',
@@ -46,7 +47,10 @@ export default function ResourceHub() {
         description="Unscripted recommends specialized resources — not to replace them, but to help you choose the right one at the right time."
       />
 
-      <div className="mb-8 flex flex-wrap gap-2">
+      {/* The category list is derived from the resources, so during the fetch
+          it is a single "All categories" pill and then jumps to two wrapped
+          rows. Reserve the loaded height. */}
+      <div className="mb-8 flex flex-wrap content-start items-start gap-2" style={{ minHeight: 96 }}>
         {categories.map(c => (
           <button key={c} onClick={() => setFilter(c)}
             className="rounded-full px-4 py-1.5 text-xs font-semibold transition border"
@@ -56,8 +60,14 @@ export default function ResourceHub() {
         ))}
       </div>
 
+      {/* Two rows at the real card height, and the region holds that height
+          once loaded. The card count is unknowable mid-fetch, so this is a
+          deliberate middle: an empty library no longer yanks the note below it
+          up the screen, and a full one only pushes it down by the rows the
+          reserve did not cover. */}
+      <div style={{ minHeight: 664 }}>
       {loading ? (
-        <div className="py-20 text-center text-[color:var(--ink-500)]">Loading resources...</div>
+        <SkGrid count={6} h={324} cols={3} r={20} />
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map((r, i) => {
@@ -99,6 +109,7 @@ export default function ResourceHub() {
           })}
         </div>
       )}
+      </div>
 
       <div className="mt-10 rounded-[20px] p-5" style={{ background: 'var(--ink-100)', border: '1px solid var(--ink-200)' }}>
         <p className="text-xs font-bold uppercase tracking-wide text-[color:var(--ink-500)] mb-1">Coming later</p>

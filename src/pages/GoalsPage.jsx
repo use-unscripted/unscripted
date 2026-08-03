@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Plus, AlertTriangle, CheckCircle, Clock } from 'lucide-react';
 import PageHeader from '@/components/PageHeader';
+import { SkCards } from '@/components/PageSkeleton';
 
 const FEASIBILITY_STYLES = {
   realistic: { bg: 'var(--success-50)', text: 'var(--success-700)', icon: CheckCircle },
@@ -65,7 +66,7 @@ export default function GoalsPage() {
       </div>
 
       {loading ? (
-        <div className="py-20 text-center text-[color:var(--ink-500)]">Loading goals...</div>
+        <SkCards count={3} h={168} gap={12} r={20} />
       ) : filteredGoals.length === 0 ? (
         <div className="rounded-[24px] border border-dashed border-[color:var(--ink-200)] p-12 text-center text-[color:var(--ink-500)]">
           No {tab} goals yet. Complete the goal intake or add one manually.

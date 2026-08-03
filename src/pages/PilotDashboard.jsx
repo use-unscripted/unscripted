@@ -9,6 +9,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { ShieldAlert, RefreshCw, Loader2 } from 'lucide-react';
 import PageHeader from '@/components/PageHeader';
+import { PageSkeleton, SkControls, SkStats } from '@/components/PageSkeleton';
 import PilotStat from '@/components/pilot/PilotStat';
 import { loadPilotAccess } from '@/lib/pilot-access';
 import { loadPilotReport } from '@/lib/pilot-report';
@@ -48,7 +49,12 @@ export default function PilotDashboard() {
   }, [load]);
 
   if (!access) {
-    return <main className="mx-auto max-w-5xl px-5 py-10"><div className="skeleton h-24 w-full" /></main>;
+    return (
+      <PageSkeleton maxWidth="5xl">
+        <SkControls search={false} filters={2} />
+        <SkStats count={8} />
+      </PageSkeleton>
+    );
   }
 
   if (!access.isAdmin) {
@@ -107,7 +113,7 @@ export default function PilotDashboard() {
       </div>
 
       {!report ? (
-        <div className="skeleton h-40 w-full" />
+        <SkStats count={8} />
       ) : (
         <div className="space-y-6">
           <section className="grid grid-cols-2 gap-3 sm:grid-cols-4">

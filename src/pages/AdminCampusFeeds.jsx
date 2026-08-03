@@ -3,6 +3,7 @@ import {
   Loader2, Check, X, ExternalLink, AlertCircle, Inbox, School, CalendarCheck2,
 } from 'lucide-react';
 import PageHeader from '@/components/PageHeader';
+import { SkCards } from '@/components/PageSkeleton';
 import { useAuth } from '@/lib/AuthContext';
 import { listFeedSubmissions, reviewFeedSubmission } from '@/lib/campus-events';
 
@@ -123,9 +124,7 @@ export default function AdminCampusFeeds() {
       </div>
 
       {loading ? (
-        <p className="flex items-center gap-2 text-sm" style={{ color: 'var(--text-secondary)' }}>
-          <Loader2 size={15} className="animate-spin" aria-hidden="true" /> Loading the queue...
-        </p>
+        <SkCards count={3} h={136} gap={12} r={16} />
       ) : groups[tab].length === 0 ? (
         <EmptyQueue tab={tab} />
       ) : (

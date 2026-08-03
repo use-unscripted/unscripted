@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Plus, FileText, Clock, Copy, Trash2, ChevronRight, RotateCcw, Save, Eye, Edit3, X, Check } from 'lucide-react';
 import PageHeader from '@/components/PageHeader';
+import { SkCards } from '@/components/PageSkeleton';
 import { TEMPLATES, DEFAULT_SECTIONS, BLANK_CONTACT, CLASSIC_FINANCE_SECTIONS, DEFAULT_SKILL_GROUPS } from '@/components/resume/resumeTemplates';
 import ResumeEditor from '@/components/resume/ResumeEditor';
 import ResumePreview from '@/components/resume/ResumePreview';
@@ -460,7 +461,7 @@ export default function ResumeBuilder() {
         <aside className="w-56 shrink-0 hidden md:block">
           <p className="text-[10px] font-bold uppercase tracking-widest text-[color:var(--ink-400)] mb-3">My Resumes</p>
           {loading ? (
-            <p className="text-xs text-[color:var(--ink-500)]">Loading…</p>
+            <SkCards count={3} h={62} gap={8} r={14} />
           ) : resumes.length === 0 ? (
             <div className="rounded-[16px] border border-dashed border-[color:var(--ink-200)] p-4 text-center">
               <p className="text-xs text-[color:var(--ink-400)]">No resumes yet.</p>

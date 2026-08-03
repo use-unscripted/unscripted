@@ -4,6 +4,7 @@ import { base44 } from '@/api/base44Client';
 import { ArrowRight, AlertTriangle, TrendingUp } from 'lucide-react';
 import ProfileCard from '@/components/ProfileCard';
 import PageHeader from '@/components/PageHeader';
+import { SkHeader, SkGrid } from '@/components/PageSkeleton';
 
 const Chips = ({ items }) => (
   <div className="flex flex-wrap gap-2">
@@ -17,10 +18,14 @@ export default function AmbitionProfile() {
   const [p, setP] = useState();
   useEffect(() => { base44.entities.AmbitionProfile.list('-created_date', 1).then(x => setP(x[0])); }, []);
 
+  // A centred line of text on an otherwise empty screen, replaced by a full
+  // two-column page, is the most violent swap on the site. Stand the page up
+  // where it will actually be instead.
   if (!p) return (
-    <div className="grid min-h-screen place-items-center" style={{ background: 'var(--page-surface)' }}>
-      <p className="text-[color:var(--ink-500)]">Loading your profile...</p>
-    </div>
+    <main className="mx-auto max-w-6xl px-5 py-10 sm:px-8" style={{ background: 'var(--page-surface)' }}>
+      <SkHeader eyebrow />
+      <SkGrid count={4} h={210} cols={2} gap={20} r={24} />
+    </main>
   );
 
   return (

@@ -19,6 +19,7 @@ import PathComparisonWorkspace from '@/components/journey/PathComparisonWorkspac
 import PathSelectedConfirm from '@/components/journey/PathSelectedConfirm';
 import JourneyEmptyState from '@/components/journey/JourneyEmptyState';
 import ContinuationGate from '@/components/journey/ContinuationGate';
+import { Sk } from '@/components/PageSkeleton';
 import { loadPilotAccess, CycleLimitError } from '@/lib/pilot-access';
 import { trackPilotEvent } from '@/lib/pilot-metrics';
 
@@ -86,10 +87,25 @@ export default function MyJourney() {
   }, [data, load]);
 
   if (!data) {
+    // Same wrapper, same header, same card rhythm as the loaded page below —
+    // the title is real because it never changes, so only the parts that
+    // depend on data are standing in for anything.
     return (
-      <main className="mx-auto max-w-4xl px-5 py-10 sm:px-8">
-        <div className="skeleton h-24 w-full" />
-        <div className="skeleton mt-4 h-48 w-full" />
+      <main className="mx-auto max-w-4xl px-5 py-8 sm:px-8 sm:py-10">
+        <header className="mb-6">
+          <h1 className="font-heading text-3xl font-bold tracking-tight sm:text-4xl" style={{ color: 'var(--text-primary)' }}>
+            My Journey
+          </h1>
+          <div className="mt-2 flex h-6 items-center">
+            <Sk h={13} r={5} w="72%" style={{ maxWidth: 440 }} />
+          </div>
+        </header>
+        <div className="space-y-5">
+          <Sk h={148} r={20} />
+          <Sk h={104} r={20} />
+          <Sk h={84} r={20} />
+          <Sk h={128} r={20} />
+        </div>
       </main>
     );
   }

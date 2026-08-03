@@ -1,12 +1,13 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
-import { Plus, ChevronDown, ChevronUp, Clock, BookOpen, Target, FileText, Loader2, Calendar, Trash2, Users, Wand2, PauseCircle, Play, Search } from 'lucide-react';
+import { Plus, ChevronDown, ChevronUp, Clock, BookOpen, Target, FileText, Calendar, Trash2, Users, Wand2, PauseCircle, Play, Search } from 'lucide-react';
 import MissionGuideGenerator from '@/components/experiments/MissionGuideGenerator';
 import MissionGuideHistory from '@/components/experiments/MissionGuideHistory';
 import OutreachPlanModal from '@/components/outreach/OutreachPlanModal';
 import AddToCalendarModal from '@/components/calendar/AddToCalendarModal';
 import PageHeader from '@/components/PageHeader';
+import { Sk, SkPills, SkCards } from '@/components/PageSkeleton';
 import AddMissionModal from '@/components/experiments/AddMissionModal';
 import AddProofModal, { ProofSuccessToast } from '@/components/experiments/AddProofModal';
 import PathSwitcher from '@/components/PathSwitcher';
@@ -185,9 +186,7 @@ function MissionsSection({ experiment, missions, loadingMissions, onMissionAdded
         </button>
       </div>
       {loadingMissions ? (
-        <div className="flex items-center gap-2 text-xs text-[color:var(--ink-500)] py-2">
-          <Loader2 size={13} className="animate-spin" /> Loading missions...
-        </div>
+        <SkCards count={2} h={54} gap={8} r={12} />
       ) : hasMissions ? (
         <div className="space-y-2">
           {missions.map(m => (
@@ -853,7 +852,17 @@ export default function ExperimentsPage() {
         }
       />
 
-      {paths.length > 0 && (
+      {/* The path switcher only exists once paths are loaded, so during the
+          fetch it stands in as a block of the same height — otherwise the
+          whole experiment list dropped 52px the instant the data arrived. */}
+      {loading && (
+        <div className="mb-4 flex items-center gap-3">
+          <Sk h={38} w={230} r={12} />
+          <Sk h={13} w={200} r={5} />
+        </div>
+      )}
+
+      {!loading && paths.length > 0 && (
         <div className="mb-4 flex items-center gap-3">
           <PathSwitcher
             paths={paths.filter(p => p.status !== 'archived')}
@@ -866,7 +875,14 @@ export default function ExperimentsPage() {
       )}
 
       {loading ? (
-        <div className="py-20 text-center text-[color:var(--ink-500)]">Loading experiments...</div>
+        <>
+          {/* Section heading + filter pills + experiment cards, in place */}
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <Sk h={18} w={210} r={6} />
+            <SkPills count={6} className="" />
+          </div>
+          <SkCards count={3} h={186} r={24} />
+        </>
       ) : (
         <>
           {/* Paused section — always visible */}

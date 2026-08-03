@@ -4,12 +4,43 @@ import { base44 } from '@/api/base44Client';
 import { CalendarDays, AlertTriangle } from 'lucide-react';
 import PageHeader from '@/components/PageHeader';
 import RoadmapSection from '@/components/RoadmapSection';
+import { PageSkeleton, SkCards } from '@/components/PageSkeleton';
 
 export default function Roadmap() {
   const [r, setR] = useState();
-  useEffect(() => { base44.entities.Roadmap.list('-created_date', 1).then(x => setR(x[0])); }, []);
+  // `loaded` is separate from `r` on purpose: a student with no roadmap yet
+  // gets undefined back, and testing `r` alone left them on the loading state
+  // forever with no way to tell that apart from a slow fetch.
+  const [loaded, setLoaded] = useState(false);
+  useEffect(() => {
+    base44.entities.Roadmap.list('-created_date', 1)
+      .then(x => setR(x[0]))
+      .catch(() => {})
+      .finally(() => setLoaded(true));
+  }, []);
 
-  if (!r) return <div className="p-10 text-[color:var(--ink-500)]">Loading roadmap...</div>;
+  if (!loaded) {
+    return (
+      <PageSkeleton maxWidth="6xl" eyebrow action actionWidth={172}>
+        <SkCards count={3} h={196} gap={20} r={24} />
+      </PageSkeleton>
+    );
+  }
+
+  if (!r) {
+    return (
+      <main className="mx-auto max-w-6xl px-5 py-10 sm:px-8">
+        <PageHeader
+          eyebrow="Personal roadmap"
+          title="No roadmap yet."
+          description="Your roadmap is built from your paths and experiments. Start an experiment and it will appear here."
+        />
+        <Link to="/journey" className="text-sm font-semibold" style={{ color: 'var(--brand-navy-700)' }}>
+          Go to My Journey →
+        </Link>
+      </main>
+    );
+  }
 
   return (
     <main className="mx-auto max-w-6xl px-5 py-10 sm:px-8">
