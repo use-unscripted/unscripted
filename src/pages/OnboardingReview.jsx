@@ -177,6 +177,28 @@ export default function OnboardingReview() {
           </div>
         </div>
 
+        {/* The intake stops at the questions the generator needs. Personal
+            context is offered here instead, once a student can see what it is
+            for — and it stays editable in Settings afterwards. */}
+        {!hasNotes && !editingNotes && (
+          <div className="mb-6 rounded-[24px] border border-dashed border-[color:var(--ink-200)] bg-white p-6 shadow-sm">
+            <div className="flex items-start gap-3">
+              <FileText size={16} className="mt-0.5 shrink-0" style={{ color: 'var(--brand-navy-900)' }} />
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-bold text-[color:var(--surface-dark-900)]">Want to add personal context?</p>
+                <p className="mt-1 text-sm text-[color:var(--ink-500)] leading-6">
+                  Responsibilities, things you want to rule out, what your recommendations should weigh
+                  heavily. Entirely optional. You can add it now or any time from your settings.
+                </p>
+                <button onClick={() => setEditingNotes(true)}
+                  className="mt-3 rounded-[10px] border border-[color:var(--ink-200)] px-4 py-2 text-xs font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)]">
+                  Add personal context
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Personal notes summary */}
         {(hasNotes || editingNotes) && !editingNotes && (
           <div className="mb-6 rounded-[24px] border border-[color:var(--ink-200)] bg-white p-7 shadow-sm">
@@ -279,7 +301,7 @@ export default function OnboardingReview() {
         </div>
 
         <div className="mt-6 flex justify-center">
-          <button onClick={() => { trackFunnel('wall_edit_paths_clicked'); nav('/paths-intake'); }}
+          <button onClick={() => { trackFunnel('wall_edit_paths_clicked'); nav('/onboarding?step=0'); }}
             className="flex items-center gap-2 text-sm font-semibold text-[color:var(--ink-500)] hover:text-[color:var(--surface-dark-900)] transition">
 
             <ArrowLeft size={14} /> Edit my path selection

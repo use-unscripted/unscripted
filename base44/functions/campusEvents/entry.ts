@@ -37,6 +37,8 @@ const DEFAULT_DAYS = 45;
 const MAX_DAYS = 120;
 const FEED_PAGE_SIZE = 100; // Localist's per-page ceiling
 const PROBE_TIMEOUT_MS = 6000;
+/** Once a host has answered as a calendar it is no longer a guess — see probeJson. */
+const PROBE_BODY_TIMEOUT_MS = 12000;
 const FEED_TIMEOUT_MS = 9000;
 
 /** Villanova and Tufts answer a bare Deno UA with 403; they serve a browser fine. */
@@ -54,7 +56,32 @@ const NEGATIVE_RECHECK_DAYS = 30;
  */
 const DOMAIN_RE = /^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$/;
 const ALLOWED_TLDS = ['edu', 'ca', 'uk', 'au', 'nz', 'ie', 'org', 'net', 'com'];
-const BLOCKED_HOST_PARTS = ['localhost', '.local', '.internal', '.lan', 'metadata'];
+/**
+ * Names that must never be fetched server-side — matched by host LABEL, never by
+ * substring.
+ *
+ * Substring matching refused far more than it meant to. Every Localist host
+ * contains ".local" inside ".localist.com", so the link-local guard was quietly
+ * rejecting one of the largest calendar platforms we support: a school whose own
+ * /events redirects onto <slug>.enterprise.localist.com read as a school with no
+ * calendar, and nothing anywhere said why.
+ *
+ * What is refused is unchanged — link-local and internal names, and the cloud
+ * metadata endpoint. They are now refused because of what they are named rather
+ * than because a real hostname happened to contain those letters. This sits
+ * behind ALLOWED_TLDS, which already excludes every one of these suffixes; it is
+ * kept as defence in depth, so it must be exactly as strict and no wider.
+ */
+const BLOCKED_HOST_SUFFIXES = ['.local', '.internal', '.lan', '.localdomain'];
+const BLOCKED_HOST_LABELS = ['localhost', 'metadata'];
+
+export function isBlockedHost(domain: string): boolean {
+  const host = String(domain || '').toLowerCase();
+  if (BLOCKED_HOST_SUFFIXES.some(suffix => host === suffix.slice(1) || host.endsWith(suffix))) {
+    return true;
+  }
+  return host.split('.').some(label => BLOCKED_HOST_LABELS.includes(label));
+}
 
 const SUBDOMAIN_CANDIDATES = ['events', 'calendar', 'calendars'];
 
@@ -174,7 +201,7 @@ export function isProbeableDomain(domain: string): boolean {
   if (!domain || domain.length > 100) return false;
   if (!DOMAIN_RE.test(domain)) return false;
   if (/^\d+\./.test(domain)) return false; // bare IP
-  if (BLOCKED_HOST_PARTS.some(part => domain.includes(part))) return false;
+  if (isBlockedHost(domain)) return false;
   const tld = domain.split('.').pop() || '';
   return ALLOWED_TLDS.includes(tld);
 }
@@ -264,18 +291,44 @@ async function guardedFetch(
 }
 
 /** GET a candidate URL and hand back parsed JSON, or null for anything else. */
-async function probeJson(url: string, guard: HopGuard = null): Promise<unknown> {
-  const res = await guardedFetch(url, {
-    headers: { Accept: 'application/json' },
-    signal: AbortSignal.timeout(PROBE_TIMEOUT_MS),
-  }, guard);
-  // An unread body holds the connection open; these probes lose far more often
-  // than they win, so the losers have to be closed explicitly.
-  if (!res.ok || !(res.headers.get('content-type') || '').includes('json')) {
-    await res.body?.cancel().catch(() => {});
-    return null;
+async function probeJson(
+  url: string,
+  guard: HopGuard = null,
+  extraHeaders: Record<string, string> = {},
+): Promise<unknown> {
+  // Two budgets, because a probe is answering two different questions and only
+  // the first one is a guess.
+  //
+  // Until the headers arrive, the host is a guess — mostly a subdomain that does
+  // not exist — and the tight budget is what stops a school with no calendar
+  // spending a student's whole request on dead hosts.
+  //
+  // Once a host has answered 200 with a JSON content type, it is not a guess any
+  // more: it is a calendar, and the only question left is how big. Holding it to
+  // the guess budget silently punished exactly the schools with the most events.
+  // Florida Tech publishes 558 future events and Texas A&M publishes 1,000; both
+  // are near a megabyte, both took longer than the guess budget under load, and
+  // both were recorded nationally as schools with no calendar at all. A large
+  // calendar reading as an absent one is the worst direction for this to fail in.
+  const controller = new AbortController();
+  let timer = setTimeout(() => controller.abort(), PROBE_TIMEOUT_MS);
+  try {
+    const res = await guardedFetch(url, {
+      headers: { Accept: 'application/json', ...extraHeaders },
+      signal: controller.signal,
+    }, guard);
+    // An unread body holds the connection open; these probes lose far more often
+    // than they win, so the losers have to be closed explicitly.
+    if (!res.ok || !(res.headers.get('content-type') || '').includes('json')) {
+      await res.body?.cancel().catch(() => {});
+      return null;
+    }
+    clearTimeout(timer);
+    timer = setTimeout(() => controller.abort(), PROBE_BODY_TIMEOUT_MS);
+    return await res.json();
+  } finally {
+    clearTimeout(timer);
   }
-  return await res.json();
 }
 
 /**
@@ -289,6 +342,7 @@ async function probeJson(url: string, guard: HopGuard = null): Promise<unknown> 
 async function firstValidUrl(
   candidates: string[],
   isValid: (payload: unknown) => boolean,
+  extraHeaders: Record<string, string> = {},
 ): Promise<string | null> {
   // Every request starts now, but they are read back in preference order, so
   // the first candidate answering in 40ms returns in 40ms instead of waiting
@@ -296,7 +350,7 @@ async function firstValidUrl(
   // probes are already caught, so nothing is left unhandled.
   const attempts = candidates.map(async (url) => {
     try {
-      return isValid(await probeJson(url));
+      return isValid(await probeJson(url, null, extraHeaders));
     } catch (_) {
       return false; // Unreachable, timed out, or not JSON.
     }
@@ -587,6 +641,12 @@ function liveWhaleRows(body: unknown): any[] {
 
 async function probeLiveWhale(domain: string): Promise<string | null> {
   const bases = ['events', 'calendar'].map(sub => `https://${sub}.${domain}/live/json/events`);
+  // Not every school gives LiveWhale a subdomain. Angelo State serves 763 future
+  // events straight off its main site at www.angelo.edu/live/json/events, and a
+  // subdomain-only guess reads that as a school with no calendar. This is the one
+  // extra candidate worth its cost on every school: the path is distinctive
+  // enough that a site not running LiveWhale answers 404 immediately.
+  bases.push(`https://www.${domain}/live/json/events`);
   return await firstValidUrl(bases, looksLikeLiveWhale);
 }
 
@@ -1915,7 +1975,12 @@ const ICS_PATHS = ['/events.ics', '/calendar.ics', '/webcal', '/ical', '/events/
  * rather than run calendar software, and its public .ics is a fixed, readable
  * shape.
  */
-const ICS_VENDOR_HOSTS = ['calendar.google.com'];
+/**
+ * Hosts that are calendars in their own right, so a school linking one is
+ * naming its own calendar rather than sending us somewhere else. Both are
+ * reached only by deriving a feed URL from a link the school itself published.
+ */
+const ICS_VENDOR_HOSTS = ['calendar.google.com', 'calendarwiz.com'];
 
 /**
  * RFC 5545 line folding: a line starting with a space or tab continues the one
@@ -2460,6 +2525,21 @@ function collectVevents(text: string): IcsRecord[] {
 }
 
 /**
+ * A calendar telling us about itself, rather than about an event.
+ *
+ * Deliberately narrow. This drops real rows out of a student's calendar, so it
+ * matches the vendor notices actually observed and nothing that merely reads
+ * like a warning — a genuine campus event can quite reasonably be titled
+ * "Warning signs of burnout".
+ */
+export function isFeedStatusNotice(summary: string): boolean {
+  const text = String(summary || '').trim().toLowerCase();
+  return text === 'warning: ical feeds disabled' ||
+    text === 'warning: ical feed disabled' ||
+    text === 'ical feeds are disabled';
+}
+
+/**
  * Every VEVENT in a calendar, minus the ones we cannot date honestly.
  *
  * A repeating event contributes its next `seriesDates` real dates; a rule we
@@ -2496,6 +2576,14 @@ export function parseIcsEvents(
     const props = record.props;
     const start = icsDate(props.DTSTART || '');
     if (!start) continue;
+
+    // Some calendars answer a disabled export with a well-formed VEVENT whose
+    // only job is to say the export is disabled. Randolph Community College's
+    // CalendarWiz returns exactly one event, today, titled "Warning: iCal feeds
+    // disabled" — so the feed parses, validates, and puts a fake event in front
+    // of a student. A status message dressed as an event is worse than an empty
+    // calendar, because nothing downstream can tell it is not real.
+    if (isFeedStatusNotice(props.SUMMARY || '')) continue;
 
     // A cancelled event is the one thing worse than no event: the student goes.
     // Every other adapter already drops these — Localist by `is_canceled`,
@@ -2674,6 +2762,28 @@ export function googleCalendarIcsFrom(embedUrl: string): string {
   }
 }
 
+/**
+ * CalendarWiz embeds an iframe keyed by a slug, and publishes that same
+ * calendar as plain iCal. Arkansas State Beebe's holds 297 future events, and
+ * the slug — the only unknown — is stated on the school's own events page.
+ *
+ * The capitalisation is not a style choice. `CalendarWiz_iCal.php` is the only
+ * spelling that answers; the all-lowercase path 404s.
+ */
+export function calendarWizIcsFrom(embedUrl: string): string {
+  try {
+    const url = new URL(embedUrl);
+    if (stripWww(url.hostname.toLowerCase()) !== 'calendarwiz.com') return '';
+    const slug = url.searchParams.get('crd');
+    // The slug goes into a URL we then fetch, so it is checked rather than
+    // trusted: this string came off a page we do not control.
+    if (!slug || !/^[A-Za-z0-9_-]{1,64}$/.test(slug)) return '';
+    return `https://www.calendarwiz.com/CalendarWiz_iCal.php?crd=${slug}`;
+  } catch (_) {
+    return '';
+  }
+}
+
 /** Is this .ics URL one the school itself is entitled to point us at? */
 export function isAllowedIcsUrl(url: string, domain: string): boolean {
   let parsed: URL;
@@ -2737,6 +2847,16 @@ export function icsLinksFrom(html: string, domain: string, baseUrl = ''): string
 
   for (const match of html.matchAll(/["'](https?:\/\/calendar\.google\.com\/calendar\/embed\?[^"'<>]+)["']/gi)) {
     const ics = googleCalendarIcsFrom(decodeEntities(match[1]));
+    if (ics && !found.includes(ics)) {
+      found.push(ics);
+      if (found.length >= 8) return found;
+    }
+  }
+
+  // Same shape of trick for CalendarWiz: the page embeds the viewer, and the
+  // viewer's slug is also the key to a plain iCal export.
+  for (const match of html.matchAll(/["'](https?:\/\/(?:www\.)?calendarwiz\.com\/[^"'<>]*crd=[^"'<>]+)["']/gi)) {
+    const ics = calendarWizIcsFrom(decodeEntities(match[1]));
     if (ics && !found.includes(ics)) {
       found.push(ics);
       if (found.length >= 8) return found;
@@ -2816,12 +2936,32 @@ const icalAdapter: Adapter = {
 
 const TRIBE_PATH = '/wp-json/tribe/events/v1/events';
 
+/**
+ * The plugin answered in its own shape, whether or not this window holds
+ * anything.
+ *
+ * Kept apart from `looksLikeTribe` because the two questions are asked at
+ * different moments and only one of them is about coverage. Probing has to
+ * insist on a real event — an empty feed is a miss, deliberately. Fetching does
+ * not: by then the school is already known to run the plugin, and a date window
+ * with nothing in it is an ordinary quiet fortnight, not a broken feed.
+ *
+ * Conflating them cost a real school. Connors State publishes one future event;
+ * the probe found it, then the windowed fetch came back `{"events":[]}` and
+ * threw, so the school read as broken rather than as quiet.
+ */
+export function isTribeShape(payload: unknown): boolean {
+  if (!payload || typeof payload !== 'object') return false;
+  return Array.isArray((payload as Record<string, unknown>).events);
+}
+
 /** Events with a real start_date, not merely a 200 from some other plugin. */
 export function looksLikeTribe(payload: unknown): boolean {
-  if (!payload || typeof payload !== 'object') return false;
-  const events = (payload as Record<string, unknown>).events;
-  if (!Array.isArray(events) || !events.length) return false;
-  const first = events[0];
+  if (!isTribeShape(payload)) return false;
+  const events = (payload as Record<string, unknown>).events as unknown[];
+  if (!events.length) return false;
+  // deno-lint-ignore no-explicit-any
+  const first = events[0] as any;
   return Boolean(
     first && typeof first === 'object' &&
     typeof first.title === 'string' &&
@@ -2851,7 +2991,7 @@ async function fetchTribe(feedUrl: string, days: number) {
   });
   if (!res.ok) throw new Error(`Calendar feed returned ${res.status}`);
   const body = await res.json();
-  if (!looksLikeTribe(body)) throw new Error('Calendar feed returned an unexpected shape');
+  if (!isTribeShape(body)) throw new Error('Calendar feed returned an unexpected shape');
   // deno-lint-ignore no-explicit-any
   return (body.events as any[]).filter(e => e && withinWindow(tribeDate(e.start_date), days));
 }
@@ -3221,6 +3361,39 @@ function sameSite(host: string, domain: string): boolean {
 }
 
 /**
+ * A host named in a page, with the scheme optional.
+ *
+ * The scheme has to be optional because the vendors ship it that way. LiveWhale's
+ * own embed widget is `<script src="//calendar.fit.edu/...">` — protocol-relative,
+ * which is the ordinary way to write an embed that has to work on http and https
+ * pages alike. Requiring `http(s)://` therefore skipped an entire product's
+ * standard install: fit.edu publishes 555 future events on a host it names right
+ * there in its homepage markup, and we read past it.
+ */
+const CALENDAR_HOST_RE = /(?:https?:)?\/\/([a-z0-9.-]+\.[a-z]{2,})/gi;
+
+/**
+ * Calendar-looking hosts inside the school's own registrable domain.
+ *
+ * Both filters are load-bearing and neither is about tidiness. `sameSite` is the
+ * reason it is safe to read hosts out of arbitrary markup at all — these get
+ * fetched server-side, so a host that is not the school's own never becomes a
+ * request. The label test is what keeps a school's CDN, its font host and its
+ * marketing subdomains from each costing a probe.
+ */
+export function calendarHostsFrom(html: string, domain: string): string[] {
+  const found: string[] = [];
+  for (const match of String(html || '').matchAll(CALENDAR_HOST_RE)) {
+    const host = stripWww(match[1].toLowerCase());
+    if (found.includes(host)) continue;
+    if (!isProbeableDomain(host) || !sameSite(host, domain)) continue;
+    const label = host.slice(0, Math.max(0, host.length - domain.length - 1));
+    if (label && CALENDAR_LABEL_RE.test(label)) found.push(host);
+  }
+  return found;
+}
+
+/**
  * Ask the school where its calendar is, instead of guessing three subdomains.
  *
  * Guessing loses two whole classes of school. UC Santa Barbara's Localist
@@ -3277,12 +3450,8 @@ async function discoverCalendarLocations(
       else domains.add(landed);
     }
 
-    for (const match of page.html.matchAll(/https?:\/\/([a-z0-9.-]+\.[a-z]{2,})/gi)) {
-      const host = stripWww(match[1].toLowerCase());
-      if (alreadyTried.has(host) || hosts.has(host)) continue;
-      if (!isProbeableDomain(host) || !sameSite(host, domain)) continue;
-      const label = host.slice(0, Math.max(0, host.length - domain.length - 1));
-      if (label && CALENDAR_LABEL_RE.test(label)) hosts.add(host);
+    for (const host of calendarHostsFrom(page.html, domain)) {
+      if (!alreadyTried.has(host)) hosts.add(host);
     }
 
     // The same pages carry the "Subscribe" links, and those are how the
@@ -3477,6 +3646,19 @@ export async function probeCalendar(
   for (const alias of found.domains) {
     try {
       const hit = await probeCalendar(alias, { discover: false });
+      if (hit) return hit;
+    } catch (_) { /* Next domain. */ }
+
+    // The adapters above ask "does this domain run a calendar on one of its
+    // subdomains", which is the right question when the school has simply
+    // renamed itself. It is the wrong question when the school's own /events
+    // redirected us onto the calendar itself: CNM sends us to
+    // cnm.enterprise.localist.com, and asking that host for *its* subdomains
+    // finds nothing while the host in hand answers on the first request. A
+    // landing place the school chose is worth probing as a calendar, not just
+    // as another school.
+    try {
+      const hit = await probeKnownHost(alias, alias);
       if (hit) return hit;
     } catch (_) { /* Next domain. */ }
   }
