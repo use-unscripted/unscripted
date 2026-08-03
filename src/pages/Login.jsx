@@ -38,6 +38,8 @@ export default function Login() {
       icon={LogIn}
       title="Welcome back"
       subtitle="Log in to continue your path test, experiments, and Mission Guides."
+      backTo="/"
+      backLabel="Back to Unscripted"
       footer={
         <>
           New to Unscripted?{" "}

@@ -1,5 +1,5 @@
 import React, { useState, useRef } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { redirectAfterAuth } from "@/lib/post-auth-redirect";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
@@ -14,7 +14,39 @@ import PasswordField from "@/components/PasswordField";
 import PasswordChecklist from "@/components/PasswordChecklist";
 import { validatePassword, isPasswordValid } from "@/lib/password-validation";
 
+/* This screen is reached from more than one place, and it used to introduce
+   itself as a path test no matter which. Someone who clicked "See a full
+   mission guide" on the landing page got a password form headed "Save Your
+   Path Test" for something they never started, with no way back. The heading
+   has to name the thing that was clicked. */
+const INTENTS = {
+  "mission-guide": {
+    title: "See a full Mission Guide",
+    // Guides are per-experiment and generated on request. Only the setup flow
+    // generates one for you; an experiment created anywhere else starts with no
+    // guide at all. Promise the route to a guide, not its automatic arrival.
+    subtitle:
+      "Mission Guides are written for the experiment you choose, so they live inside your account. Create one, pick an experiment, and generate its guide.",
+    backTo: "/",
+    backLabel: "Back to Unscripted",
+  },
+};
+
+const DEFAULT_INTENT = {
+  title: "Save Your Path Test",
+  subtitle:
+    "Create an account to generate your tailored paths, save your progress, and return anytime.",
+  backTo: "/",
+  backLabel: "Back to Unscripted",
+};
+
 export default function Register() {
+  const [searchParams] = useSearchParams();
+  // Own-property lookup only: ?intent=toString (or constructor, __proto__, ...)
+  // otherwise resolves up the prototype chain to something truthy, which slips
+  // past the ?? fallback and renders the screen with no heading and no way back.
+  const intentKey = searchParams.get("intent");
+  const intent = Object.hasOwn(INTENTS, intentKey ?? "") ? INTENTS[intentKey] : DEFAULT_INTENT;
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -135,8 +167,10 @@ export default function Register() {
   return (
     <AuthLayout
       icon={UserPlus}
-      title="Save Your Path Test"
-      subtitle="Create an account to generate your tailored paths, save your progress, and return anytime."
+      title={intent.title}
+      subtitle={intent.subtitle}
+      backTo={intent.backTo}
+      backLabel={intent.backLabel}
       footer={
         <>
           Already have an account?{" "}

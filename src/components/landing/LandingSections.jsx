@@ -213,8 +213,12 @@ export default function LandingSections() {
             </Reveal>
             <Reveal delay={440} y={16}>
               <Magnetic>
+                {/* ?intent=mission-guide — the register screen headlines
+                    itself for whatever sent you there. Without it this CTA
+                    lands on "Save Your Path Test", which is a path test the
+                    visitor never took. */}
                 <Link
-                  to="/register"
+                  to="/register?intent=mission-guide"
                   className="mt-8 inline-flex items-center gap-2 rounded-[var(--r-control)] px-6 py-3.5 text-sm font-semibold text-white"
                   style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}
                 >
