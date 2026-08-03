@@ -63,10 +63,10 @@ export default function CampusEventPicker({ profile, pathName, selected, onSelec
 
   const [reloadKey, setReloadKey] = useState(0);
   const retry = useCallback(() => setReloadKey(k => k + 1), []);
-  // Which reload this effect has already served. Comparing against it is what
-  // keeps "try again" a one-off: keyed off reloadKey > 0 instead, every later
-  // change of profile or path would clear the whole cache and re-bill the model
-  // for the rest of the session.
+  // Which reload this effect has already served. Comparing against it keeps
+  // "try again" a one-off: read as `reloadKey > 0` it stays switched on, so
+  // every later change of profile or path clears the whole cache and pays for
+  // the ranking again for the rest of the session.
   const servedReload = useRef(0);
 
   // A profile object is rebuilt on every parent render, so depending on it
@@ -110,10 +110,10 @@ export default function CampusEventPicker({ profile, pathName, selected, onSelec
         setStatus(recommended.length ? 'ok' : 'unranked');
         setLoading(false);
       } catch {
-        // Neither call is supposed to throw, and a spinner is what the student
-        // gets if one ever does — this component early-returns on `loading`, so
-        // the retry button that would recover never renders. An unexpected
-        // failure has to land on a screen with a way out of it.
+        // Neither call is meant to throw, and this component early-returns its
+        // spinner while `loading` is true — so anything that does throw leaves
+        // the student on it with no retry and no skip. An unexpected failure
+        // has to land on a screen that has a way off it.
         if (cancelled) return;
         setPicks([]);
         setStatus('feed_error');
