@@ -51,6 +51,8 @@
         "wptribe",
         "drupal",
         "campusgroups",
+        "moderncampus",
+        "presence",
         "none"
       ],
       "default": "unknown"
@@ -62,6 +64,8 @@
       //   trumba      https://www.trumba.com/calendars/tufts.json
       //   campuslabs  https://nyu.campuslabs.com/engage/api/discovery/event/search
       //   campusgroups https://usf.campusgroups.com/mobile_ws/v17/mobile_events_list
+      //   moderncampus https://api.calendar.moderncampus.net/pubcalendar/<uuid>/events
+      //   presence    https://api.presence.io/sdsu/v1/events
       // Empty when events_platform is "none".
       "type": "string"
     },

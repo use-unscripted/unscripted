@@ -1035,6 +1035,250 @@ const campusGroupsAdapter: Adapter = {
   normalize: normalizeCampusGroups,
 };
 
+// ── Adapter: Modern Campus ──────────────────────────────────────────────────
+
+/**
+ * Modern Campus (formerly OmniUpdate), and the richest data of anything here.
+ *
+ * South Florida and San Diego State both sat in the "no calendar we can read"
+ * list, and both were running this: a documented, unauthenticated REST API with
+ * full descriptions, categories, organizers, rooms and images. Their public
+ * pages are empty shells that load a widget, which is why nothing in the HTML
+ * ever named a feed.
+ *
+ * ## Discovery is an id in the markup, not a guessable path
+ *
+ * Every calendar is a UUID and the endpoint is useless without it. The page
+ * that embeds the widget names it outright:
+ *
+ *   <omnicms-calendar data-calendar-id="03614054-50cb-4e9d-82e6-3565ba147743">
+ *
+ * so the id is readable from the HTML source with no browser, which is what
+ * makes this discoverable at all.
+ */
+
+const MODERN_CAMPUS_API = 'https://api.calendar.moderncampus.net/pubcalendar';
+
+/**
+ * The pages a school most often puts the widget on.
+ *
+ * Kept short deliberately: this is the only probe here that costs a page read
+ * rather than one API call, and it runs against both www and the bare domain.
+ * A school is probed once and the answer is stored, so six reads once is
+ * affordable — sixteen would not be.
+ */
+const MODERN_CAMPUS_PAGES = ['/calendar/', '/events/', '/events-calendar'];
+
+const MODERN_CAMPUS_ID =
+  /data-calendar-id\s*=\s*["']([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})["']/gi;
+
+/** Every Modern Campus calendar id named in a page's markup. */
+export function modernCampusIdsFrom(html: string): string[] {
+  return [...new Set([...String(html || '').matchAll(MODERN_CAMPUS_ID)].map(m => m[1].toLowerCase()))];
+}
+
+function modernCampusWindow(days: number): string {
+  const now = new Date();
+  const end = new Date(now.getTime() + days * 86400000);
+  const day = (d: Date) => d.toISOString().slice(0, 10);
+  return `?start=${day(now)}&end=${day(end)}`;
+}
+
+/**
+ * Non-empty, for the same reason every other probe here insists on it: a
+ * school can run a well-formed calendar that has had nothing on it for years,
+ * and caching one shadows a platform that would have answered.
+ */
+export function looksLikeModernCampus(payload: unknown): boolean {
+  // deno-lint-ignore no-explicit-any
+  return Array.isArray(payload) && payload.some((e: any) => e?.title && (e.startDate || e.startDatetime));
+}
+
+async function probeModernCampus(domain: string): Promise<string | null> {
+  for (const host of [`www.${domain}`, domain]) {
+    for (const path of MODERN_CAMPUS_PAGES) {
+      let html = '';
+      try {
+        html = (await fetchPage(`https://${host}${path}`, DISCOVERY_SCAN_BYTES)).html;
+      } catch (_) {
+        continue;
+      }
+      const hit = await firstValidModernCampus(modernCampusIdsFrom(html));
+      if (hit) return hit;
+    }
+  }
+  return null;
+}
+
+/** The first of these calendar ids that answers with real events. */
+async function firstValidModernCampus(ids: string[]): Promise<string | null> {
+  if (!ids.length) return null;
+  const bases = ids.slice(0, 4).map(id => `${MODERN_CAMPUS_API}/${id}/events`);
+  const hit = await firstValidUrl(
+    bases.map(base => base + modernCampusWindow(DEFAULT_DAYS)),
+    looksLikeModernCampus,
+  );
+  return hit ? hit.split('?')[0] : null;
+}
+
+async function fetchModernCampus(feedUrl: string, days: number) {
+  const res = await fetch(feedUrl + modernCampusWindow(days), {
+    headers: { Accept: 'application/json' },
+    signal: AbortSignal.timeout(FEED_TIMEOUT_MS),
+  });
+  if (!res.ok) throw new Error(`Calendar feed returned ${res.status}`);
+  const body = await res.json();
+  if (!Array.isArray(body)) throw new Error('Calendar feed returned an unexpected shape');
+  // Anything not CONFIRMED is a draft, a pending submission, or a cancellation.
+  // deno-lint-ignore no-explicit-any
+  return body.filter((e: any) => !e?.status || e.status === 'CONFIRMED');
+}
+
+/**
+ * Two date shapes, and they map exactly onto the two this file already has.
+ *
+ *   startDatetime  "2026-08-04T14:30"  wall-clock, no offset — emitted as-is,
+ *                                      the same treatment iCal and Trumba get,
+ *                                      because a student standing on that
+ *                                      campus reads the clock on the wall
+ *   startDate      "2026-07-13"        all-day — emitted date-only and flagged
+ *
+ * The calendar's IANA zone is available from the metadata endpoint and is
+ * deliberately not used. Converting a wall-clock time with it would be the one
+ * thing `icsDate` is written not to do.
+ */
+function modernCampusWhen(date: unknown, dateTime: unknown): { value: string; allDay: boolean } {
+  const dt = String(dateTime || '').trim();
+  if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(dt)) {
+    // Seconds are optional in what they send and required by what we emit.
+    return { value: dt.length === 16 ? `${dt}:00` : dt, allDay: false };
+  }
+  const d = String(date || '').trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(d)) return { value: d, allDay: true };
+  return { value: '', allDay: false };
+}
+
+// deno-lint-ignore no-explicit-any
+function normalizeModernCampus(event: any): NormalizedEvent {
+  const start = modernCampusWhen(event.startDate, event.startDatetime);
+  const end = modernCampusWhen(event.endDate, event.endDatetime);
+  const ticket = String(event.ticketOption || '').trim();
+
+  return {
+    ...emptyEvent(),
+    id: String(event.id ?? ''),
+    title: plainText(event.title),
+    // descriptionText is their own plain-text rendering of the HTML body.
+    description: plainText(event.descriptionText || event.description).slice(0, 600),
+    start: start.value,
+    end: end.value,
+    all_day: start.allDay,
+    location: plainText(event.location),
+    room: plainText(event.locationRoom),
+    // Their "other" location is a place that is not a campus building — an away
+    // fixture's town, an off-campus venue.
+    address: plainText(event.locationOther),
+    is_free: /^free$/i.test(ticket) ? true : ticket ? false : null,
+    ticket_url: cleanUrl(event.ticketUrl),
+    // Same reading as CampusGroups: a ticket link is a sign-up page, and their
+    // own button says so — "RSVP", "Register Here", "Reserve your spot".
+    has_register: Boolean(event.ticketUrl || event.ticketButtonLabel),
+    types: cleanList([event.categoryName]),
+    departments: event.organizer ? [plainText(event.organizer)] : [],
+    keywords: cleanList(event.tags),
+  };
+}
+
+const modernCampusAdapter: Adapter = {
+  name: 'moderncampus',
+  probe: probeModernCampus,
+  fetch: fetchModernCampus,
+  normalize: normalizeModernCampus,
+};
+
+// ── Adapter: Presence ───────────────────────────────────────────────────────
+
+/**
+ * Presence, which this file has been refusing to read on purpose.
+ *
+ * `presence.io` has been on the vendor allowlist with a comment admitting we
+ * had no adapter — kept there so a student who pasted their real portal got an
+ * honest "we could not read that" rather than "that address is somewhere
+ * else". This is the endpoint that retires the comment.
+ *
+ * One address pattern serves every school on the platform:
+ *
+ *   https://api.presence.io/<slug>/v1/events
+ *
+ * Confirmed against six: San Diego State, Keene State, Bloomsburg, Salem
+ * State, Westfield State and Plymouth State. Unauthenticated, real UTC
+ * timestamps, descriptions, locations and the hosting organisation.
+ */
+
+const PRESENCE_API = 'https://api.presence.io';
+
+export function looksLikePresence(payload: unknown): boolean {
+  // deno-lint-ignore no-explicit-any
+  return Array.isArray(payload) && payload.some((e: any) => e?.eventName && e?.startDateTimeUtc);
+}
+
+function presenceSlug(feedUrl: string): string {
+  try {
+    return new URL(feedUrl).pathname.split('/').filter(Boolean)[0] || '';
+  } catch (_) {
+    return '';
+  }
+}
+
+async function probePresence(domain: string): Promise<string | null> {
+  const slug = domainLabel(domain);
+  if (!slug) return null;
+  const base = `${PRESENCE_API}/${slug}/v1/events`;
+  return await firstValidUrl([base], looksLikePresence) ? base : null;
+}
+
+async function fetchPresence(feedUrl: string, days: number) {
+  const res = await fetch(feedUrl, {
+    headers: { Accept: 'application/json' },
+    signal: AbortSignal.timeout(FEED_TIMEOUT_MS),
+  });
+  if (!res.ok) throw new Error(`Calendar feed returned ${res.status}`);
+  const body = await res.json();
+  if (!Array.isArray(body)) throw new Error('Calendar feed returned an unexpected shape');
+  // The endpoint returns the whole history, and says outright which are over.
+  // deno-lint-ignore no-explicit-any
+  return body.filter((e: any) => !e?.hasEventEnded && withinWindow(e?.startDateTimeUtc, days));
+}
+
+// deno-lint-ignore no-explicit-any
+function normalizePresence(event: any, feedUrl: string): NormalizedEvent {
+  // The row carries its own subdomain; the feed URL is the fallback for a row
+  // that does not, so a link is never built from the wrong school.
+  const slug = String(event.subdomain || '').trim() || presenceSlug(feedUrl);
+
+  return {
+    ...emptyEvent(),
+    id: String(event.eventNoSqlId ?? ''),
+    title: plainText(event.eventName),
+    description: plainText(event.description).slice(0, 600),
+    url: slug && event.uri ? `https://${slug}.presence.io/event/${event.uri}` : '',
+    start: event.startDateTimeUtc || '',
+    end: event.endDateTimeUtc || '',
+    location: plainText(event.location),
+    // rsvpStatus is a mode rather than a flag, so the link is the honest signal.
+    has_register: Boolean(event.rsvpLink),
+    departments: event.organizationName ? [plainText(event.organizationName)] : [],
+    keywords: cleanList(event.tags),
+  };
+}
+
+const presenceAdapter: Adapter = {
+  name: 'presence',
+  probe: probePresence,
+  fetch: fetchPresence,
+  normalize: normalizePresence,
+};
+
 // ── Adapter: iCalendar (.ics) ───────────────────────────────────────────────
 
 /**
@@ -2224,10 +2468,15 @@ const drupalAdapter: Adapter = {
 const ADAPTERS: Adapter[] = [
   localistAdapter,
   liveWhaleAdapter,
+  // Ahead of the club portals: it is a whole-campus calendar and carries more
+  // per event than anything else here. Its probe costs a page read, so it sits
+  // behind the two that answer in a single request.
+  modernCampusAdapter,
   campusLabsAdapter,
   // Beside Campus Labs, and after it: same one-request cost, and a school
   // running both should get its campus-wide calendar rather than its clubs.
   campusGroupsAdapter,
+  presenceAdapter,
   tribeAdapter,
   trumbaAdapter,
   drupalAdapter,
@@ -2510,11 +2759,10 @@ const CALENDAR_VENDOR_HOSTS = [
   '25livepub.collegenet.com',
   'localist.com',
   'calendar.google.com',
-  // No adapter for Presence, so this can only ever end in an honest "we could
-  // not read that". It is here anyway: it is a real student-engagement
-  // platform — San Diego State's is sdsu.presence.io — and telling a student
-  // who pasted their own school's portal that the address "is somewhere else"
-  // is a worse answer than telling them we could not read it.
+  // Read properly since 2026-08-03. It was on this list for a year before that
+  // with no adapter behind it, so that a student who pasted their own school's
+  // portal got "we could not read that" rather than "that address is somewhere
+  // else" — San Diego State's is sdsu.presence.io.
   'presence.io',
 ];
 
@@ -2600,6 +2848,8 @@ function platformOfJson(payload: unknown, url: string): { platform: string; feed
   if (looksLikeLiveWhale(payload)) return { platform: 'livewhale', feedUrl: bare };
   if (looksLikeCampusLabs(payload)) return { platform: 'campuslabs', feedUrl: bare };
   if (looksLikeCampusGroups(payload)) return { platform: 'campusgroups', feedUrl: bare };
+  if (looksLikeModernCampus(payload)) return { platform: 'moderncampus', feedUrl: bare };
+  if (looksLikePresence(payload)) return { platform: 'presence', feedUrl: bare };
   if (looksLikeTrumba(payload)) return { platform: 'trumba', feedUrl: url };
   if (looksLikeTribe(payload)) return { platform: 'wptribe', feedUrl: bare };
   if (looksLikeDrupalEvents(payload)) return { platform: 'drupal', feedUrl: bare };
@@ -2676,6 +2926,12 @@ export async function resolveSubmittedUrl(
       );
       if (hit) return { platform: 'campuslabs', feedUrl: base };
     }
+    if (slug && host.endsWith('presence.io')) {
+      const base = `${PRESENCE_API}/${slug}/v1/events`;
+      if (await firstValidUrl([base], looksLikePresence)) {
+        return { platform: 'presence', feedUrl: base };
+      }
+    }
     if (slug && host.endsWith('campusgroups.com')) {
       // Keyed off the host the student actually pasted, not off their school's
       // domain, because the slug is routinely nothing like it — Columbia's
@@ -2698,6 +2954,9 @@ export async function resolveSubmittedUrl(
   if (page.html) {
     const ics = await firstValidIcs(icsLinksFrom(page.html, domain, page.finalUrl), guard);
     if (ics) return { platform: 'ical', feedUrl: ics };
+
+    const modernCampus = await firstValidModernCampus(modernCampusIdsFrom(page.html));
+    if (modernCampus) return { platform: 'moderncampus', feedUrl: modernCampus };
 
     for (const slug of trumbaSlugsFrom(page.html).slice(0, TRUMBA_MAX_SLUGS)) {
       const hit = await firstValidUrl(
