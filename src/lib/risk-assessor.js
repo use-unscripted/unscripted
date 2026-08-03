@@ -67,7 +67,7 @@ ${PLAIN_PROSE_RULES}${correction}`;
     feature: 'risk_assessment',
     model: 'gemini_3_flash',
     context: { path_id: path.id },
-    call: (correction) => unwrapLLM(base44.integrations.Core.InvokeLLM({
+    call: async (correction) => unwrapLLM(await base44.integrations.Core.InvokeLLM({
       prompt: buildPrompt(correction),
       model: 'gemini_3_flash',
       response_json_schema: {

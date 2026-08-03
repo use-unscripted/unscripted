@@ -17,6 +17,7 @@
 
 import { base44 } from '@/api/base44Client';
 import { unwrapLLM, PLAIN_PROSE_RULES } from '@/lib/llm';
+import { reportAiFailure } from '@/lib/ai-failures';
 
 const MAX_RECOMMENDATIONS = 3;
 
@@ -396,6 +397,11 @@ async function rankCampusEvents(events, profile, pathName) {
       response_json_schema: RECOMMENDATION_SCHEMA,
     });
   } catch {
+    reportAiFailure('campus_event_ranking', {
+      stage: 'invoke_llm',
+      codes: ['unexpected_error'],
+      model: 'claude_sonnet_4_6',
+    });
     return { picks: [], failed: true };
   }
 
@@ -431,6 +437,17 @@ async function rankCampusEvents(events, profile, pathName) {
   }
 
   // A response we could not read is a failure, not a verdict of "nothing fits".
+  if (malformed) {
+    // A malformed ranking is indistinguishable from "your campus has nothing on"
+    // from the student's side, which is the outage this file already shipped
+    // once. It needs a row precisely because nobody would report it.
+    reportAiFailure('campus_event_ranking', {
+      stage: 'validate',
+      codes: ['recommendations_not_array'],
+      model: 'claude_sonnet_4_6',
+    });
+  }
+
   return { picks, failed: malformed };
 }
 

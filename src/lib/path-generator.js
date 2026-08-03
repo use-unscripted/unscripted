@@ -182,6 +182,7 @@ ${PLAIN_PROSE_RULES}`;
   // point of validating before the first `create` rather than after it.
   let validation = null;
   let correction = '';
+  const rejectedCodes = [];
 
   for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
     let raw;
@@ -205,7 +206,23 @@ ${PLAIN_PROSE_RULES}`;
     if (import.meta.env?.DEV && validation.warnings.length) {
       console.warn('[path-gen] repaired:', validation.warnings);
     }
-    if (validation.ok) break;
+    if (validation.ok) {
+      if (attempt > 0) {
+        // The student never saw this. It is still the model drifting, and this
+        // is the highest-volume generation in the app, so without this row the
+        // "recovered on retry" signal would be blind exactly where it matters.
+        logAiFailure('path_generation', {
+          stage: STAGES.VALIDATE,
+          codes: rejectedCodes,
+          attempts: attempt + 1,
+          recovered: true,
+          model: 'gemini_3_1_pro',
+        });
+      }
+      break;
+    }
+
+    rejectedCodes.push(...validation.codes);
 
     // Capped. Nothing bounds how many problems one response can have, and an
     // uncapped list would put the whole of a bad response back into the retry
@@ -220,7 +237,7 @@ ${PLAIN_PROSE_RULES}`;
     // Only the codes are logged, and only the first few. The prose reasons can
     // quote generated text, which is derived from what the student told us
     // about their life.
-    const codes = validation.codes.slice(0, MAX_REPORTED_PROBLEMS);
+    const codes = [...new Set([...rejectedCodes, ...validation.codes])].slice(0, MAX_REPORTED_PROBLEMS);
     logStage(STAGES.VALIDATE, codes, { attempts: MAX_ATTEMPTS, recovered: false });
     throw new PathGenerationError(
       'Your results came back incomplete. Your answers are saved, please try again.',

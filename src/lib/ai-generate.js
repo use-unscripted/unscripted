@@ -45,7 +45,9 @@ export function buildCorrection(errors = []) {
  *
  * @returns {Promise<{ok: boolean, data: any, errors: string[], codes: string[], attempts: number}>}
  *   Resolves with `ok: false` when every attempt was rejected. Rejects only if
- *   the model call itself threw, and records that before rethrowing.
+ *   the model call itself threw, and records that before rethrowing. A
+ *   validator that throws is caught and treated as a rejection, so a bug in a
+ *   validator cannot escape as an unexplained failure with no row behind it.
  */
 export async function generateValidated({
   feature,
@@ -75,15 +77,23 @@ export async function generateValidated({
       throw e;
     }
 
-    result = validate(raw) || { ok: false, errors: [], codes: ['validator_returned_nothing'] };
+    try {
+      result = validate(raw) || { ok: false, errors: [], codes: ['validator_returned_nothing'] };
+    } catch {
+      // A validator that throws is our bug, not the model's, and it must not
+      // escape as an unexplained rejection with no row behind it.
+      result = { ok: false, errors: [], codes: ['validator_threw'] };
+    }
 
     if (onWarnings && result.warnings?.length) onWarnings(result.warnings);
 
     if (result.ok) {
       // Record the attempts that failed on the way here. The student saw none
-      // of this, which is exactly why it needs a row.
+      // of this, which is exactly why it needs a row. Not awaited: this is the
+      // path where everything worked and the student is watching a spinner, so
+      // they must never wait on bookkeeping.
       for (const codes of rejected) {
-        await reportAiFailure(feature, {
+        reportAiFailure(feature, {
           stage: 'validate',
           codes,
           attempts: attempt,
@@ -98,9 +108,14 @@ export async function generateValidated({
     rejected.push(result.codes || []);
   }
 
+  // Every attempt's codes, de-duplicated. Keeping only the last one hid the
+  // case where a retry failed differently, which is the shape that says a model
+  // is getting worse rather than being unlucky once.
+  const allCodes = [...new Set([...rejected.flat(), ...(result?.codes || [])])];
+
   await reportAiFailure(feature, {
     stage: 'validate',
-    codes: result?.codes || [],
+    codes: allCodes,
     attempts,
     recovered: false,
     model,

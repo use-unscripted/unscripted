@@ -974,7 +974,7 @@ export default function OutreachPlanModal({ path, experiment, onClose, onContact
         model: 'gemini_3_1_pro',
         context: { path_id: path.id, experiment_id: experiment?.id },
         validate: validateOutreachPlan,
-        call: (correction) => unwrapLLM(base44.integrations.Core.InvokeLLM({
+        call: async (correction) => unwrapLLM(await base44.integrations.Core.InvokeLLM({
         model: 'gemini_3_1_pro',
         prompt: `You are an expert career coach helping a college student build a targeted outreach plan for the career path: "${path.path_name}".
 
@@ -1067,10 +1067,33 @@ ${PLAIN_PROSE_RULES}${correction}`,
       })),
       });
 
-      if (!ok) {
+      // A partial plan is still worth showing. The retry has already asked once
+      // more for the missing sections; if they are still missing, the templates
+      // and archetypes that DID come back are the part students actually use,
+      // and the results view is built to open on the first section with
+      // content. Only a plan with nothing in it at all is a dead end.
+      const total = data
+        ? data.outreach_experiments.length + data.contact_archetypes.length
+          + data.contact_suggestions.length + data.message_templates.length
+        : 0;
+
+      if (!total) {
         setError('That plan came back empty both times we asked. Try building it again.');
         setStep('survey');
         return;
+      }
+
+      if (!ok) {
+        // Rendered anyway, but recorded: a section the model keeps skipping is
+        // a prompt problem, and the empty tab is the only other clue.
+        reportAiFailure('outreach_plan', {
+          stage: 'partial',
+          codes: ['plan_partial'],
+          attempts: 2,
+          recovered: true,
+          model: 'gemini_3_1_pro',
+          path_id: path.id,
+        });
       }
 
       setPlan(data);

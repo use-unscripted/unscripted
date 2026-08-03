@@ -79,7 +79,7 @@ export default function BlueprintLibrary() {
             codes: ['blueprint_empty'],
           };
         },
-        call: (correction) => unwrapLLM(base44.integrations.Core.InvokeLLM({
+        call: async (correction) => unwrapLLM(await base44.integrations.Core.InvokeLLM({
       model: 'gemini_3_flash',
       prompt: `You are Unscripted, a life-design and execution platform for ambitious college students. Generate a detailed, actionable playbook for the "${bp.label}" path. Be specific and practical. No generic advice. Focus on what a college student can actually do today. Include honest tradeoffs.
 

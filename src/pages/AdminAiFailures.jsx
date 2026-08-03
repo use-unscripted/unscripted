@@ -88,8 +88,14 @@ export default function AdminAiFailures() {
   const summary = useMemo(() => {
     const byFeature = new Map(AI_FEATURES.map(f => [f, { feature: f, total: 0, recovered: 0, unreviewed: 0 }]));
     for (const row of rows) {
+      // A row whose feature is not in the list still gets counted, under its own
+      // heading. Skipping it made these totals disagree with the tab counts
+      // below, which is the kind of quiet mismatch that makes a dashboard
+      // untrustworthy.
+      if (!byFeature.has(row.feature)) {
+        byFeature.set(row.feature, { feature: row.feature || 'unknown', total: 0, recovered: 0, unreviewed: 0 });
+      }
       const entry = byFeature.get(row.feature);
-      if (!entry) continue;
       entry.total += 1;
       if (row.recovered) entry.recovered += 1;
       if (!row.reviewed) entry.unreviewed += 1;
@@ -219,7 +225,7 @@ export default function AdminAiFailures() {
                     </div>
                     <p className="mt-1 font-mono text-xs text-[color:var(--ink-500)]">
                       stage={row.stage || 'unknown'}
-                      {row.codes?.length ? ` · ${row.codes.join(', ')}` : ''}
+                      {Array.isArray(row.codes) && row.codes.length ? ` · ${row.codes.join(', ')}` : ''}
                       {row.attempts ? ` · ${row.attempts} attempt${row.attempts === 1 ? '' : 's'}` : ''}
                       {row.model ? ` · ${row.model}` : ''}
                     </p>

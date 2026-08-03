@@ -129,8 +129,12 @@ export async function logAiFailure(feature, props = {}) {
  * The console line carries the same slugs the row does and nothing more.
  */
 export function reportAiFailure(feature, props = {}) {
+  // The feature is checked here as well as in logAiFailure, because the console
+  // line is printed first and the guarantee is that nothing unslugged is ever
+  // printed or stored, not that the row is clean.
+  const name = AI_FEATURES.includes(feature) ? feature : 'unknown_feature';
   const stage = slug(props.stage, 'unknown');
   const codes = slugList(props.codes);
-  console.error(`[ai:${feature}] failed at stage=${stage}${codes.length ? ` codes=${codes.join(',')}` : ''}`);
+  console.error(`[ai:${name}] failed at stage=${stage}${codes.length ? ` codes=${codes.join(',')}` : ''}`);
   return logAiFailure(feature, props);
 }

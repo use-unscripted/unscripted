@@ -531,7 +531,7 @@ export default function ExperimentSetup() {
         model: 'gemini_3_1_pro',
         context: { path_id: rec.id, experiment_id: saved.id },
         validate: validateMissionGuide,
-        call: (correction) => unwrapLLM(base44.integrations.Core.InvokeLLM({
+        call: async (correction) => unwrapLLM(await base44.integrations.Core.InvokeLLM({
         model: 'gemini_3_1_pro',
         prompt: `You are Unscripted, a path-testing platform for ambitious college students.
 
