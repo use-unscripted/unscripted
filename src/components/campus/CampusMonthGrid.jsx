@@ -11,8 +11,25 @@ import {
  * A month of real campus events.
  *
  * Presentational only — it is handed the month to draw and the events already
- * bucketed by day, so both the dashboard panel and the full calendar page get
- * the same grid at two densities rather than two grids that drift apart.
+ * bucketed by day, so every width gets the same grid at one of two densities
+ * rather than two grids that drift apart.
+ *
+ * ## The two densities
+ *
+ * Full squares carry event titles, which is what makes a day worth tapping.
+ * They need about 72px of width to say anything useful; below that a title
+ * clamps to "Fall Wel…" and the square is telling the student nothing they
+ * could act on while taking up the room of something that could.
+ *
+ * So under that width the square drops the titles and keeps the one thing a
+ * month grid is uniquely good at: which days have something on them. A number,
+ * a dot per event, gold if one of them is recommended. The titles are still one
+ * tap away in the panel, and the list view is still one press away for a
+ * student who wants to read rather than scan.
+ *
+ * The caller decides which, by measuring the space it actually has. A media
+ * query would be guessing: the same 900px browser window gives this grid a
+ * different width depending on whether the day panel is beside it.
  *
  * ## Why the arrows get disabled
  *
@@ -76,8 +93,16 @@ export default function CampusMonthGrid({
             className="pb-1 text-center text-[10px] font-bold uppercase tracking-wide"
             style={{ color: 'var(--text-muted)' }}
           >
-            {/* One letter on the compact grid — "Wed" does not fit a dashboard cell. */}
-            {compact ? label.charAt(0) : label}
+            {/*
+              The full short name at both densities.
+
+              This used to drop to one letter whenever the grid was compact,
+              which was right for the 36px cell on the dashboard it was built
+              for and is wrong now: the narrowest compact square is 44px, and
+              "SUN" fits in that with room to spare. "S T T S" down the top of a
+              calendar is a puzzle nobody should have to solve.
+            */}
+            {label}
           </div>
         ))}
       </div>
@@ -145,7 +170,9 @@ function DayCell({ day, events, pickIds, selected, onSelect, compact }) {
   // to say that something worth going to is down there.
   const hiddenPick = Boolean(pickIds) && events.slice(2).some(e => pickIds.has(e.id));
 
-  const base = compact ? 'h-9 text-xs' : 'min-h-[86px] text-sm';
+  // 44px, not the 36 this started at. A compact square is a touch target on a
+  // phone, and it is the only way into a day when the titles are not on it.
+  const base = compact ? 'h-11 text-xs' : 'min-h-[86px] text-sm';
   const numberTone = !inMonth
     ? 'var(--text-muted)'
     : isToday
@@ -191,17 +218,28 @@ function DayCell({ day, events, pickIds, selected, onSelect, compact }) {
       {compact ? (
         <span className="grid place-items-center gap-0.5">
           <DayNumber value={dayOfMonth} tone={numberTone} isToday={isToday} compact />
-          <span
-            className="block rounded-full"
-            style={{
-              // A recommended day gets a fatter dot. On a 36px square that is
-              // the only difference there is room for, and it still reads.
-              height: hasPick ? 4 : 3,
-              width: hasPick ? 4 : 3,
-              background: hasPick ? 'var(--brand-gold-600)' : 'var(--border-light)',
-            }}
-            aria-hidden="true"
-          />
+          {/*
+            A dot per event, capped at three.
+
+            One dot for every day with anything on it made a Tuesday with one
+            club meeting look identical to a Thursday with a career fair, three
+            info sessions and a game — and "which days are busy" is most of what
+            a month grid is for once the titles are gone. Three is where they
+            stop fitting; the count in the panel is exact anyway.
+          */}
+          <span className="flex items-center gap-[2px]" aria-hidden="true">
+            {Array.from({ length: Math.min(count, 3) }, (_, i) => (
+              <span
+                key={i}
+                className="block rounded-full"
+                style={{
+                  height: hasPick ? 4 : 3,
+                  width: hasPick ? 4 : 3,
+                  background: hasPick ? 'var(--brand-gold-600)' : 'var(--border-light)',
+                }}
+              />
+            ))}
+          </span>
         </span>
       ) : (
         <>
