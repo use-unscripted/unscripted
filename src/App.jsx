@@ -38,6 +38,7 @@ import Terms from '@/pages/Terms';
 import AppShell from '@/components/AppShell';
 import MyJourney from '@/pages/MyJourney';
 import Evidence from '@/pages/Evidence';
+import CampusEventsPage from '@/pages/CampusEventsPage';
 import ExperimentSetup from '@/pages/ExperimentSetup';
 import Roadmap from '@/pages/Roadmap';
 import WeeklyCalendar from '@/pages/WeeklyCalendar';
@@ -105,6 +106,9 @@ const AuthenticatedApp = () => {
           {/* My Journey — the default authenticated destination */}
           <Route path="/journey" element={<MyJourney />} />
           <Route path="/evidence" element={<Evidence />} />
+          {/* A deep screen, reached from My Journey rather than competing with it
+              in the nav — the same rule paths, missions and the week follow. */}
+          <Route path="/campus" element={<CampusEventsPage />} />
           {/* Legacy routes kept for old links/bookmarks — they now land inside My Journey */}
           <Route path="/dashboard" element={<Navigate to="/journey" replace />} />
           <Route path="/roadmap" element={<Roadmap />} />
