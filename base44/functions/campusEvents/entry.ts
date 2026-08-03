@@ -3099,6 +3099,18 @@ Deno.serve(async (req) => {
       return Response.json({ status: 'no_feed', events: [], college });
     }
 
+    // Stamped BEFORE the fetch, and it has to stay there. The expansion floor
+    // inside `fetchEvents` reads its own clock, so if we read ours afterwards
+    // the filter below is stricter than the expansion by however long the feed
+    // took — up to the 12s ICS timeout. A request that straddles 00:00 UTC then
+    // reproduces the 2026-08-03 revert exactly: expansion admits today's
+    // all-day date, this filter calls it stale, and because callers ask for ONE
+    // date per series the series spends its only slot on a value no student
+    // sees. Reading the clock first can only make this filter more generous
+    // than the expansion, which is the safe direction. `handleSubmission` does
+    // the same thing for the same reason.
+    const asked = Date.now();
+
     let normalized: NormalizedEvent[];
     try {
       normalized = await fetchEvents(feed.platform, feed.feedUrl, days, seriesDates);
@@ -3121,10 +3133,9 @@ Deno.serve(async (req) => {
       body.extraInterests
     );
 
-    const now = Date.now();
     const events = normalized
       .filter(isAttendable)
-      .filter(e => stillUpcoming(e.start, e.all_day, now))
+      .filter(e => stillUpcoming(e.start, e.all_day, asked))
       .map(e => ({ ...e, match_score: scoreEvent(e, terms) }))
       .sort((a, b) => (b.match_score - a.match_score) || (new Date(a.start).getTime() - new Date(b.start).getTime()))
       .slice(0, limit);
