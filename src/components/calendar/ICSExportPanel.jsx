@@ -1,7 +1,17 @@
 import { useState } from 'react';
 import { Download, Calendar, FileDown, ListTodo } from 'lucide-react';
-import { downloadICSFromForm } from '@/components/calendar/AddToCalendarModal';
 import { base44 } from '@/api/base44Client';
+import {
+  addICSDays,
+  buildICS,
+  calendarTaskEvent,
+  countICSEvents,
+  downloadICSFile,
+  icsDate,
+  missionEvent,
+} from '@/lib/ics';
+
+const localTimezone = () => Intl.DateTimeFormat().resolvedOptions().timeZone || '';
 
 const inputCls = 'w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-3 py-2.5 text-sm outline-none focus:border-[color:var(--brand-navy-900)]';
 
@@ -23,65 +33,22 @@ export default function ICSExportPanel({ showHeading = true }) {
     setError('');
     setDownloading('week');
     try {
-      const resp = await base44.functions.invoke('generateICS', { mode: 'week', weekStart });
-      // resp.data is the ICS text returned from the function
-      // But since functions.invoke returns JSON, we use client-side builder for week too
-      // Fetch tasks for the week and build ICS client-side
       const tasks = await base44.entities.CalendarTasks.list('-date', 200);
-      const start = new Date(weekStart);
-      const end = new Date(weekStart);
-      end.setDate(end.getDate() + 7);
+      // Window compared as YYYYMMDD strings so no Date object — and therefore no
+      // timezone — sits between the stored date and the comparison.
+      const start = weekStart.replace(/-/g, '');
+      const end = addICSDays(start, 7);
       const weekTasks = tasks.filter(t => {
-        if (!t.date) return false;
-        const d = new Date(t.date);
-        return d >= start && d < end;
+        const d = icsDate(t.date);
+        return d && d >= start && d < end;
       });
 
-      const lines = [
-        'BEGIN:VCALENDAR',
-        'VERSION:2.0',
-        'PRODID:-//Unscripted//Calendar Export//EN',
-        'CALSCALE:GREGORIAN',
-        'METHOD:PUBLISH',
-      ];
-
-      for (const t of weekTasks) {
-        const form = { title: t.title, description: t.description, date: t.date, start_time: t.start_time, end_time: t.end_time };
-        const esc = s => (s||'').replace(/\\/g,'\\\\').replace(/;/g,'\\;').replace(/,/g,'\\,').replace(/\n/g,'\\n');
-        const toStamp = (date, time) => {
-          if (!date) return null;
-          if (!time) return date.replace(/-/g,'');
-          const dt = new Date(`${date}T${time}`);
-          if (isNaN(dt.getTime())) return date.replace(/-/g,'');
-          const p = n => String(n).padStart(2,'0');
-          return `${dt.getFullYear()}${p(dt.getMonth()+1)}${p(dt.getDate())}T${p(dt.getHours())}${p(dt.getMinutes())}00`;
-        };
-        const allDay = !t.start_time;
-        const dtStart = toStamp(t.date, t.start_time);
-        const dtEnd = toStamp(t.date, t.end_time) || dtStart;
-        if (!dtStart) continue;
-        const now = new Date().toISOString().replace(/[-:]/g,'').split('.')[0]+'Z';
-        lines.push(
-          'BEGIN:VEVENT',
-          `UID:${t.id}-unscripted@app`,
-          `DTSTAMP:${now}`,
-          allDay ? `DTSTART;VALUE=DATE:${dtStart}` : `DTSTART:${dtStart}`,
-          allDay ? `DTEND;VALUE=DATE:${dtEnd}` : `DTEND:${dtEnd}`,
-          `SUMMARY:${esc(t.title)}`,
-          t.description ? `DESCRIPTION:${esc(t.description)}` : null,
-          'END:VEVENT',
-        ).filter(Boolean);
+      const ics = buildICS(weekTasks.map(calendarTaskEvent), { timezone: localTimezone() });
+      if (countICSEvents(ics) === 0) {
+        setError('No tasks scheduled for that week, so there is nothing to export.');
+        return;
       }
-
-      lines.push('END:VCALENDAR');
-      const blob = new Blob([lines.join('\r\n')], { type: 'text/calendar;charset=utf-8' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `unscripted-week-${weekStart}.ics`;
-      document.body.appendChild(a);
-      a.click();
-      setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 1000);
+      downloadICSFile(ics, `unscripted-week-${weekStart}.ics`);
     } catch (err) {
       setError('Could not export week. Please try again.');
     } finally {
@@ -94,46 +61,17 @@ export default function ICSExportPanel({ showHeading = true }) {
     setDownloading('missions');
     try {
       const missions = await base44.entities.Missions.list('-created_date', 200);
-      const active = missions.filter(m => m.status !== 'completed' && m.status !== 'skipped' && m.deadline);
+      const active = missions.filter(m =>
+        m.status !== 'completed' && m.status !== 'skipped'
+        && m.deletion_status !== 'deleted'
+        && m.deadline);
 
-      const lines = [
-        'BEGIN:VCALENDAR',
-        'VERSION:2.0',
-        'PRODID:-//Unscripted//Calendar Export//EN',
-        'CALSCALE:GREGORIAN',
-        'METHOD:PUBLISH',
-      ];
-
-      const esc = s => (s||'').replace(/\\/g,'\\\\').replace(/;/g,'\\;').replace(/,/g,'\\,').replace(/\n/g,'\\n');
-      const now = new Date().toISOString().replace(/[-:]/g,'').split('.')[0]+'Z';
-
-      for (const m of active) {
-        const d = m.deadline.replace(/-/g,'');
-        const endDate = new Date(m.deadline);
-        endDate.setDate(endDate.getDate() + 1);
-        const p = n => String(n).padStart(2,'0');
-        const endD = `${endDate.getFullYear()}${p(endDate.getMonth()+1)}${p(endDate.getDate())}`;
-        lines.push(
-          'BEGIN:VEVENT',
-          `UID:${m.id}-unscripted@app`,
-          `DTSTAMP:${now}`,
-          `DTSTART;VALUE=DATE:${d}`,
-          `DTEND;VALUE=DATE:${endD}`,
-          `SUMMARY:${esc('[Mission] ' + m.title)}`,
-          m.objective ? `DESCRIPTION:${esc(m.objective)}` : null,
-          'END:VEVENT',
-        ).filter(Boolean);
+      const ics = buildICS(active.map(missionEvent), { timezone: localTimezone() });
+      if (countICSEvents(ics) === 0) {
+        setError('No active missions have a deadline yet, so there is nothing to export.');
+        return;
       }
-
-      lines.push('END:VCALENDAR');
-      const blob = new Blob([lines.join('\r\n')], { type: 'text/calendar;charset=utf-8' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `unscripted-missions.ics`;
-      document.body.appendChild(a);
-      a.click();
-      setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 1000);
+      downloadICSFile(ics, 'unscripted-missions.ics');
     } catch (err) {
       setError('Could not export missions. Please try again.');
     } finally {

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { X, Calendar, Download, Clock } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
+import { buildICS, downloadICSFile, icsDate, icsDateTime } from '@/lib/ics';
 
 const REMINDER_OPTIONS = [
   { label: 'At start time', value: 0 },
@@ -55,6 +56,12 @@ export default function AddToCalendarModal({ item, itemType, onClose }) {
     ? (parseInt(form.customMinutes, 10) || null)
     : form.reminder;
 
+  // Only claim the download started if a file actually left the browser.
+  const finishDownload = () => {
+    if (downloadICSFromForm(form, effectiveReminder, item?.id || 'new')) setDone(true);
+    else setError('That date could not be read. Please pick it again.');
+  };
+
   const handleDownload = async () => {
     if (!form.date) { setError('Please select a date.'); return; }
     setError('');
@@ -77,12 +84,10 @@ export default function AddToCalendarModal({ item, itemType, onClose }) {
       });
 
       // Build ICS client-side from form data (more reliable than server round-trip for single events)
-      downloadICSFromForm(form, effectiveReminder, item?.id || 'new');
-      setDone(true);
+      finishDownload();
     } catch (err) {
       // Fallback: build ICS entirely client-side
-      downloadICSFromForm(form, effectiveReminder, item?.id || 'new');
-      setDone(true);
+      finishDownload();
     } finally {
       setDownloading(false);
     }
@@ -194,53 +199,24 @@ export default function AddToCalendarModal({ item, itemType, onClose }) {
   );
 }
 
-// Client-side ICS builder — reliable fallback that doesn't need a round-trip
+// Client-side ICS builder — reliable fallback that doesn't need a round-trip.
+// The .ics itself is written by @/lib/ics so this shares the folding, escaping
+// and all-day end-date rules with the week and mission exports.
 export function downloadICSFromForm(form, reminderMinutes, uid) {
-  function esc(s) {
-    return (s || '').replace(/\\/g,'\\\\').replace(/;/g,'\\;').replace(/,/g,'\\,').replace(/\n/g,'\\n');
-  }
-  function toStamp(date, time) {
-    if (!date) return null;
-    if (!time) return date.replace(/-/g,'');
-    const dt = new Date(`${date}T${time}`);
-    if (isNaN(dt.getTime())) return date.replace(/-/g,'');
-    const p = n => String(n).padStart(2,'0');
-    return `${dt.getFullYear()}${p(dt.getMonth()+1)}${p(dt.getDate())}T${p(dt.getHours())}${p(dt.getMinutes())}00`;
-  }
-
   const allDay = !form.start_time;
-  const dtStart = toStamp(form.date, form.start_time);
-  const dtEnd = toStamp(form.date, form.end_time) || dtStart;
-  const now = new Date().toISOString().replace(/[-:]/g,'').split('.')[0]+'Z';
+  const start = allDay ? icsDate(form.date) : icsDateTime(form.date, form.start_time);
+  if (!start) return false;
 
-  const lines = [
-    'BEGIN:VCALENDAR',
-    'VERSION:2.0',
-    'PRODID:-//Unscripted//Calendar Export//EN',
-    'CALSCALE:GREGORIAN',
-    'METHOD:PUBLISH',
-    'BEGIN:VEVENT',
-    `UID:${uid}-unscripted@app`,
-    `DTSTAMP:${now}`,
-    allDay ? `DTSTART;VALUE=DATE:${dtStart}` : `DTSTART:${dtStart}`,
-    allDay ? `DTEND;VALUE=DATE:${dtEnd}` : `DTEND:${dtEnd}`,
-    `SUMMARY:${esc(form.title)}`,
-    form.description ? `DESCRIPTION:${esc(form.description)}` : null,
-  ].filter(Boolean);
+  const ics = buildICS([{
+    uid: `${uid}-unscripted@app`,
+    summary: form.title,
+    description: form.description,
+    start,
+    end: allDay ? null : (icsDateTime(form.date, form.end_time) || start),
+    allDay,
+    reminderMinutes,
+  }], { timezone: form.timezone });
 
-  if (typeof reminderMinutes === 'number') {
-    lines.push('BEGIN:VALARM','ACTION:DISPLAY',`DESCRIPTION:Reminder`,
-      reminderMinutes === 0 ? 'TRIGGER:PT0S' : `TRIGGER:-PT${reminderMinutes}M`,
-      'END:VALARM');
-  }
-  lines.push('END:VEVENT','END:VCALENDAR');
-
-  const blob = new Blob([lines.join('\r\n')], { type: 'text/calendar;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `unscripted-event.ics`;
-  document.body.appendChild(a);
-  a.click();
-  setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 1000);
+  downloadICSFile(ics, 'unscripted-event.ics');
+  return true;
 }
