@@ -50,12 +50,25 @@
     "inviter_user_id",
     "token"
   ],
+  // Creator-scoped on all four verbs. `read` and `update` were both null, which
+  // made every invite world-readable and — the one that mattered — world-writable:
+  // any logged-in student could revoke someone else's invite, push out its
+  // expiry, or raise max_uses. Nothing in the app reads or writes this entity
+  // today (no invite flow exists), so scoping it costs nothing.
+  //
+  // If a claim flow is ever built, the claimant is not the creator and so will
+  // not be able to read the invite by token under these rules. That case needs a
+  // privileged backend function, not a loosened `read` here.
   "rls": {
     "create": {
       "created_by_id": "{{user.id}}"
     },
-    "read": null,
-    "update": null,
+    "read": {
+      "created_by_id": "{{user.id}}"
+    },
+    "update": {
+      "created_by_id": "{{user.id}}"
+    },
     "delete": {
       "created_by_id": "{{user.id}}"
     }
