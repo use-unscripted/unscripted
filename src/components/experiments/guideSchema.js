@@ -400,6 +400,9 @@ function describeStep(step) {
 }
 
 /** Accepts 15, "15", "15 minutes", "about 20 min". Returns null if unparseable. */
+/** A single step should fit in one sitting. Four hours is already generous. */
+const MAX_STEP_MINUTES = 240;
+
 function coerceMinutes(value) {
   if (typeof value === 'number' && Number.isFinite(value)) return Math.round(value);
   if (typeof value !== 'string') return null;
@@ -509,9 +512,15 @@ export function validateGuide(raw, { campusEvent = null } = {}) {
       errors.push(`${label}: every step needs a title. An untitled step renders as an empty row the student cannot act on.`);
     }
 
+    // Only the first rep was ever bounded, so a later step claiming 600 minutes
+    // shipped and rolled straight into the guide's total time. A step longer
+    // than a long afternoon is the model ignoring the brief, not an estimate.
     const minutes = coerceMinutes(step.estimated_minutes ?? step.estimated_time);
     if (minutes === null) {
       warnings.push(`${label}: no usable time estimate; defaulted to 15 minutes.`);
+      step.estimated_minutes = 15;
+    } else if (minutes <= 0 || minutes > MAX_STEP_MINUTES) {
+      warnings.push(`${label}: time estimate of ${minutes} minutes is outside 1 to ${MAX_STEP_MINUTES}; defaulted to 15 minutes.`);
       step.estimated_minutes = 15;
     } else {
       step.estimated_minutes = minutes;

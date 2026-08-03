@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { ChevronDown, ChevronUp, Eye, EyeOff, Trash2, Plus, Sparkles, X, Undo2, AlertTriangle } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { unwrapLLM, PLAIN_PROSE_RULES } from '@/lib/llm';
+import { toText } from '@/lib/ai-validation';
 import {
   newEntry, newEducationCF, newCert, newAward, newResearch,
   MONTH_OPTIONS, CF_SKILL_GROUP_LABELS, CF_SKILL_GROUP_IDS,
@@ -13,6 +14,7 @@ function BulletAIPopover({ bullet, onApply, onClose }) {
   const [original] = useState(bullet);
   const [loading, setLoading] = useState(false);
   const [mode, setMode] = useState('');
+  const [error, setError] = useState('');
 
   const actions = [
     { id: 'improve', label: 'Improve this bullet' },
@@ -23,6 +25,7 @@ function BulletAIPopover({ bullet, onApply, onClose }) {
 
   const run = async (actionId) => {
     setMode(actionId);
+    setError('');
     setLoading(true);
     const prompts = {
       improve: `Improve this resume bullet. Make it concrete and specific about what was done and what came of it. Return ONLY the improved bullet text, nothing else. Original: "${bullet}"${PLAIN_PROSE_RULES}`,
@@ -38,7 +41,21 @@ function BulletAIPopover({ bullet, onApply, onClose }) {
         prompt: prompts[actionId],
         model: 'gemini_3_flash',
       }));
-      setResult(typeof res === 'string' ? res.trim() : JSON.stringify(res));
+      // Never fall back to stringified JSON. This popover has an Apply button
+      // next to it, so anything shown here is one click from the student's
+      // resume and an employer reading it.
+      const text = toText(res);
+      if (!text) {
+        setError('That came back empty. Try again.');
+        setResult('');
+      } else {
+        setResult(text);
+      }
+    } catch (e) {
+      // The prompt carries the student's own bullet, so log the shape only.
+      console.error(`[resume] bullet rewrite failed (${e?.name || 'error'})`);
+      setError('We could not rewrite that just now. Try again in a moment.');
+      setResult('');
     } finally {
       setLoading(false);
     }
@@ -61,6 +78,7 @@ function BulletAIPopover({ bullet, onApply, onClose }) {
         ))}
       </div>
       {loading && <p className="text-xs text-[color:var(--ink-500)]">Generating…</p>}
+      {!loading && error && <p className="mb-3 text-xs" style={{ color: 'var(--warning-700)' }}>{error}</p>}
       {result && (
         <div className="rounded-lg bg-[color:var(--ink-50)] border border-[color:var(--ink-200)] p-3 mb-3">
           <p className="text-xs text-[color:var(--surface-dark-900)] leading-relaxed">{result}</p>

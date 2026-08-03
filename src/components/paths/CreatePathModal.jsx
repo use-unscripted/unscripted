@@ -2,6 +2,7 @@ import { useState, useRef } from 'react';
 import { X, Loader2, ArrowRight, ChevronRight } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { unwrapLLM, PLAIN_PROSE_RULES } from '@/lib/llm';
+import { toText, toEnum, LEVELS } from '@/lib/ai-validation';
 
 const inputCls = 'w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-sm text-[color:var(--surface-dark-900)] placeholder-[color:var(--ink-400)] outline-none focus:border-[color:var(--brand-navy-900)]';
 
@@ -58,25 +59,31 @@ ${PLAIN_PROSE_RULES}`,
             description: { type: 'string' },
             why_it_fits: { type: 'string' },
             why_it_may_not_fit: { type: 'string' },
-            risk_level: { type: 'string' },
+            risk_level: { type: 'string', enum: ['low', 'medium', 'high'] },
             lifestyle_implications: { type: 'string' },
             first_experiment: { type: 'string' },
             skill_gaps: { type: 'array', items: { type: 'string' } },
           }
         }
       }));
+      // The student reviews and edits every one of these before anything is
+      // saved, so the text fields only need to be strings rather than correct.
+      // risk_level is the exception: it feeds a <select> and then an enum field
+      // on the entity, so an off-list value renders as nothing selected and
+      // then fails the save with no explanation.
       setForm(f => ({
         ...f,
-        path_name: result.path_name || '',
-        path_category: result.path_category || '',
-        description: result.description || '',
-        why_it_fits: result.why_it_fits || '',
-        why_it_may_not_fit: result.why_it_may_not_fit || '',
-        risk_level: result.risk_level || 'medium',
-        lifestyle_implications: result.lifestyle_implications || '',
+        path_name: toText(result.path_name),
+        path_category: toText(result.path_category),
+        description: toText(result.description),
+        why_it_fits: toText(result.why_it_fits),
+        why_it_may_not_fit: toText(result.why_it_may_not_fit),
+        risk_level: toEnum(result.risk_level, LEVELS, 'medium'),
+        lifestyle_implications: toText(result.lifestyle_implications),
       }));
       setStep(2);
     } catch (err) {
+      console.error(`[create-path] survey generation failed (${err?.name || 'error'})`);
       setError('Generation failed. Fill in the details manually below.');
       setStep(2);
     } finally {
@@ -117,6 +124,7 @@ ${PLAIN_PROSE_RULES}`,
       }
       onCreated(saved);
     } catch (err) {
+      console.error(`[create-path] save failed (${err?.name || 'error'})`);
       setError('Failed to save path. Please try again.');
       setSaving(false);
       submittingRef.current = false;

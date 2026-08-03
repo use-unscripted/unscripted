@@ -1,9 +1,25 @@
 import { base44 } from '@/api/base44Client';
 import { unwrapLLM, PLAIN_PROSE_RULES } from '@/lib/llm';
+import { toEnum, LEVELS } from '@/lib/ai-validation';
+
+/** Thrown when the model's answer is not one of the two levels we asked for. */
+export class RiskAssessmentError extends Error {
+  constructor(message) {
+    super(message);
+    this.name = 'RiskAssessmentError';
+  }
+}
 
 /**
  * Auto-assess risk_level and confidence_level for a path using the user's profile.
  * Returns the updated PathRecommendation record.
+ *
+ * Both fields are enums on the entity and are read as enums everywhere: the
+ * badges on the compare screen, the sort and filter controls, and the path
+ * summary. "moderate" or "Medium" either gets refused by the entity or lands as
+ * a value nothing matches, and the student sees a blank badge on a path that
+ * had a correct one a moment earlier. So the write only happens when both
+ * values are one of the three we asked for.
  */
 export async function autoAssessPathRisk(path) {
   const [profiles, schedules] = await Promise.all([
@@ -60,10 +76,19 @@ ${PLAIN_PROSE_RULES}`;
     }
   }));
 
-  const updated = await base44.entities.PathRecommendations.update(path.id, {
-    risk_level: result.risk_level,
-    confidence_level: result.confidence_level,
-  });
+  const risk = toEnum(result.risk_level, LEVELS);
+  const confidence = toEnum(result.confidence_level, LEVELS);
 
-  return updated;
+  if (!risk || !confidence) {
+    // Which field, never the value. The value is generated from the student's
+    // own profile answers.
+    const missing = [!risk && 'risk_level', !confidence && 'confidence_level'].filter(Boolean).join(',');
+    console.error(`[risk-assessor] rejected: unusable ${missing}`);
+    throw new RiskAssessmentError('The assessment came back in a form we could not use. Nothing was changed.');
+  }
+
+  return base44.entities.PathRecommendations.update(path.id, {
+    risk_level: risk,
+    confidence_level: confidence,
+  });
 }

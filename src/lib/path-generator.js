@@ -2,7 +2,7 @@ import { base44 } from '@/api/base44Client';
 import { loadOwnedPaths, authoritativeSet, loadOnboardingSubmission } from '@/lib/path-set';
 import { trackPilotEvent } from '@/lib/pilot-metrics';
 import { unwrapLLM, PLAIN_PROSE_RULES } from '@/lib/llm';
-import { validatePathSet, READINESS_MIN, READINESS_MAX } from '@/lib/path-validation';
+import { validatePathSet, pathRecSchema, experimentSchema, str } from '@/lib/path-validation';
 
 /**
  * The stage a generation reached before it failed.
@@ -51,58 +51,11 @@ function logStage(stage, codes = []) {
 /** How many times the model is asked, including the guided retry. */
 const MAX_ATTEMPTS = 2;
 
-const str = { type: 'string' };
-const strArr = { type: 'array', items: { type: 'string' } };
-
-const missionStepSchema = {
-  type: 'object',
-  properties: {
-    order: { type: 'number' },
-    title: { type: 'string' },
-    description: { type: 'string' },
-    estimated_minutes: { type: 'number' },
-    status: { type: 'string' },
-    proof_required: { type: 'string' },
-  }
-};
-
-const pathRecSchema = {
-  type: 'object',
-  properties: {
-    path_name: str,
-    fit_reason: str,
-    concern: str,
-    lifestyle_implications: str,
-    main_tradeoffs: str,
-    // Bounded here as well as in the validator. The schema is the cheap ask —
-    // it costs a retry only when the model ignores it — and 261 live rows were
-    // written before anything stated the scale at all.
-    readiness_score: { type: 'number', minimum: READINESS_MIN, maximum: READINESS_MAX },
-    confidence_level: { type: 'string', enum: ['low', 'medium', 'high'] },
-    risk_level: { type: 'string', enum: ['low', 'medium', 'high'] },
-    current_gaps: strArr,
-    first_experiment: str,
-    path_fit_signals: strArr,
-  }
-};
-
-const experimentSchema = {
-  type: 'object',
-  properties: {
-    title: str,
-    objective: str,
-    why_recommended: str,
-    expected_learning: str,
-    estimated_hours: { type: 'number' },
-    deliverable: str,
-    completion_criteria: str,
-    proof_required: str,
-    mission_steps: { type: 'array', items: missionStepSchema },
-    reflection_questions: strArr,
-    common_mistakes: strArr,
-    alternative_version: str,
-  }
-};
+/**
+ * Cap on problems carried into a retry prompt, a log line, or an analytics
+ * event. Without it a pathological response makes all three unbounded.
+ */
+const MAX_REPORTED_PROBLEMS = 8;
 
 /**
  * Generates the student's path set.
@@ -248,19 +201,25 @@ ${PLAIN_PROSE_RULES}`;
     }
     if (validation.ok) break;
 
+    // Capped. Nothing bounds how many problems one response can have, and an
+    // uncapped list would put the whole of a bad response back into the retry
+    // prompt. The first few are what a retry actually needs.
     correction = `\n\nYour previous attempt was rejected for these reasons:\n${validation.errors
+      .slice(0, MAX_REPORTED_PROBLEMS)
       .map(e => `- ${e}`)
       .join('\n')}\nFix every one of them.`;
   }
 
   if (!validation.ok) {
-    // Only the codes are logged. The prose reasons can quote generated text,
-    // which is derived from what the student told us about their life.
-    logStage(STAGES.VALIDATE, validation.codes);
+    // Only the codes are logged, and only the first few. The prose reasons can
+    // quote generated text, which is derived from what the student told us
+    // about their life.
+    const codes = validation.codes.slice(0, MAX_REPORTED_PROBLEMS);
+    logStage(STAGES.VALIDATE, codes);
     throw new PathGenerationError(
-      'Your results came back incomplete. Your answers are saved. Please try again.',
+      'Your results came back incomplete. Your answers are saved, please try again.',
       STAGES.VALIDATE,
-      { codes: validation.codes }
+      { codes }
     );
   }
 

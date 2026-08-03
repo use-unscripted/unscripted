@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { unwrapLLM, PLAIN_PROSE_RULES } from '@/lib/llm';
+import { toText, toTextList, isPlainObject } from '@/lib/ai-validation';
 import { Hammer, Rocket, Dumbbell, Bot, Zap, Newspaper, TrendingUp, Target } from 'lucide-react';
 import PageHeader from '@/components/PageHeader';
 import BlueprintCard from '@/components/blueprints/BlueprintCard';
@@ -17,18 +18,51 @@ const BLUEPRINTS = [
   { id: 'high-agency-student', label: 'High-Agency Student Path', Icon: Target, summary: 'Maximize every year of college by stacking experiences, skills, and proof of work deliberately.' },
 ];
 
+/**
+ * Coerce a generated playbook into the shape the detail view renders.
+ *
+ * Nothing here is saved and no student data goes in, so there is nothing to
+ * reject: the only real failure is a type that throws mid-render. Every list
+ * the view calls `.map` on is forced to an array of strings, and the 30-day
+ * plan's nested `actions` array gets the same treatment one level down.
+ */
+function repairBlueprint(raw) {
+  if (!isPlainObject(raw)) return null;
+  return {
+    what_this_path_means: toText(raw.what_this_path_means),
+    who_it_fits: toText(raw.who_it_fits),
+    skills_required: toTextList(raw.skills_required),
+    content_strategy: toText(raw.content_strategy),
+    weekly_actions: toTextList(raw.weekly_actions),
+    first_project_idea: toText(raw.first_project_idea),
+    networking_strategy: toText(raw.networking_strategy),
+    monetization_paths: toTextList(raw.monetization_paths),
+    mistakes_to_avoid: toTextList(raw.mistakes_to_avoid),
+    thirty_day_plan: (Array.isArray(raw.thirty_day_plan) ? raw.thirty_day_plan : [])
+      .filter(isPlainObject)
+      .map(w => ({
+        week: toText(w.week),
+        focus: toText(w.focus),
+        actions: toTextList(w.actions),
+      })),
+  };
+}
+
 export default function BlueprintLibrary() {
   const [selected, setSelected] = useState(null);
   const [detail, setDetail] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const openBlueprint = async (bp) => {
     setSelected(bp);
     setDetail(null);
+    setError('');
     setLoading(true);
+    try {
     // Generic reference content for six fixed blueprints — no student data goes
     // in and nothing is personalised. Cheap tier; see src/lib/llm.js.
-    const result = unwrapLLM(await base44.integrations.Core.InvokeLLM({
+      const result = unwrapLLM(await base44.integrations.Core.InvokeLLM({
       model: 'gemini_3_flash',
       prompt: `You are Unscripted, a life-design and execution platform for ambitious college students. Generate a detailed, actionable playbook for the "${bp.label}" path. Be specific and practical. No generic advice. Focus on what a college student can actually do today. Include honest tradeoffs.
 ${PLAIN_PROSE_RULES}`,
@@ -48,14 +82,28 @@ ${PLAIN_PROSE_RULES}`,
         }
       }
     }));
-    setDetail(result);
-    setLoading(false);
+
+      const repaired = repairBlueprint(result);
+      if (!repaired) {
+        console.error('[blueprints] rejected: no playbook object');
+        setError('That playbook came back empty. Try opening it again.');
+      } else {
+        setDetail(repaired);
+      }
+    } catch (e) {
+      // Before this, a thrown call skipped setLoading(false) entirely and left
+      // the student watching a skeleton that never resolved.
+      console.error(`[blueprints] generation failed (${e?.name || 'error'})`);
+      setError('We could not build that playbook just now. Try again in a moment.');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const close = () => { setSelected(null); setDetail(null); };
+  const close = () => { setSelected(null); setDetail(null); setError(''); };
 
   if (selected) {
-    return <BlueprintDetail bp={selected} detail={detail} loading={loading} onBack={close} />;
+    return <BlueprintDetail bp={selected} detail={detail} loading={loading} error={error} onBack={close} />;
   }
 
   return (

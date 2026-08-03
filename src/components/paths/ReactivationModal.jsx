@@ -2,6 +2,7 @@ import { useState, useRef } from 'react';
 import { X, Loader2, ArrowRight } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { unwrapLLM, PLAIN_PROSE_RULES } from '@/lib/llm';
+import { toText, toTextList } from '@/lib/ai-validation';
 
 const inputCls = 'w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-sm text-[color:var(--surface-dark-900)] placeholder-[color:var(--ink-400)] outline-none focus:border-[color:var(--brand-navy-900)] resize-none';
 
@@ -77,20 +78,37 @@ ${PLAIN_PROSE_RULES}`,
         }
       }));
 
+      // This whole plan is saved as one text blob and shown back to the
+      // student, so a list item that came back as an object used to render as
+      // "[object Object]" in the middle of their own plan.
+      const summary = toText(result.summary);
+      const plan = toTextList(result.thirty_day_plan);
+      const continueItems = toTextList(result.continue_items);
+      const reviseItems = toTextList(result.revise_items);
+      const retireItems = toTextList(result.retire_items);
+
+      if (!summary && !plan.length) {
+        console.error('[reactivation] rejected: empty plan');
+        setError('The plan came back empty. You can still reactivate manually.');
+        setStep('primary');
+        return;
+      }
+
       const planText = [
-        result.summary,
+        summary,
         '',
-        '30-Day Plan:',
-        ...(result.thirty_day_plan || []).map((item, i) => `${i + 1}. ${item}`),
+        plan.length ? '30-Day Plan:' : '',
+        ...plan.map((item, i) => `${i + 1}. ${item}`),
         '',
-        result.continue_items?.length ? `Continue: ${result.continue_items.join(', ')}` : '',
-        result.revise_items?.length ? `Revise: ${result.revise_items.join(', ')}` : '',
-        result.retire_items?.length ? `Retire: ${result.retire_items.join(', ')}` : '',
+        continueItems.length ? `Continue: ${continueItems.join(', ')}` : '',
+        reviseItems.length ? `Revise: ${reviseItems.join(', ')}` : '',
+        retireItems.length ? `Retire: ${retireItems.join(', ')}` : '',
       ].filter(Boolean).join('\n');
 
       setGeneratedPlan(planText);
       setStep('primary');
     } catch (err) {
+      console.error(`[reactivation] plan generation failed (${err?.name || 'error'})`);
       setError('Failed to generate plan. You can still reactivate manually.');
       setStep('primary');
     } finally {

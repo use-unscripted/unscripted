@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { unwrapLLM, PLAIN_PROSE_RULES } from '@/lib/llm';
+import { toText, toTextList } from '@/lib/ai-validation';
 import { ArrowLeft, ArrowRight, CheckCircle, Loader2, AlertCircle } from 'lucide-react';
 import { LogoWordmark } from '@/components/UnscriptedLogo';
 import { Sk, SkCards } from '@/components/PageSkeleton';
@@ -10,6 +11,42 @@ import {
   ensureActiveCycle, assertNoActiveExperiment, attachExperimentToCycle,
   ActiveExperimentError, cycleLinks,
 } from '@/lib/career-cycle';
+
+/**
+ * Repair a generated Mission Guide into the shape the experiment record and the
+ * three screens that read it actually expect.
+ *
+ * The schema asks for `mission_steps` as an array of strings. When the model
+ * returns objects instead, the old code wrapped each one as `{ step: <object> }`
+ * and saved it, and both the experiment list and the success screen the student
+ * is looking at render `step.step` directly. React refuses an object as a child,
+ * so that threw and unmounted the page. Steps are coerced to strings here, at
+ * the one place they are written.
+ *
+ * Returns `{ guide, usable }`. `usable` is false when nothing survived that a
+ * student could act on, which is the signal not to stamp the experiment as
+ * having a guide.
+ */
+function repairMissionGuide(raw) {
+  const steps = toTextList(raw?.mission_steps);
+  return {
+    guide: {
+      mission_objective: toText(raw?.mission_objective),
+      why_this_helps: toText(raw?.why_this_helps),
+      expected_learning: toText(raw?.expected_learning),
+      mission_steps: steps,
+      tools: toTextList(raw?.tools),
+      proof_required: toText(raw?.proof_required),
+      reflection_questions: toTextList(raw?.reflection_questions),
+      common_mistakes: toTextList(raw?.common_mistakes),
+      completion_criteria: toText(raw?.completion_criteria),
+      next_step: toText(raw?.next_step),
+    },
+    // A guide with no steps is not a guide. Everything else can be thin without
+    // making the mission impossible to start.
+    usable: steps.length > 0,
+  };
+}
 
 // Generate 3 path-specific experiment options based on path name
 function getExperimentOptions(pathName) {
@@ -233,8 +270,9 @@ function StepGenerating({ experiment, missionGuide, error }) {
 // ─── Step 4: Success ─────────────────────────────────────────────────────────
 function StepSuccess({ experiment, missionGuide, onViewGuide }) {
   const [showCal, setShowCal] = useState(false);
-  const firstStep = missionGuide?.mission_steps?.[0];
-  const firstStepText = typeof firstStep === 'string' ? firstStep : firstStep?.step || firstStep?.description || 'Start your first action';
+  // Rows written before guides were validated can hold steps as objects, and an
+  // object handed to React as a child throws and blanks this screen.
+  const firstStepText = toText(missionGuide?.mission_steps?.[0]) || 'Start your first action';
 
   return (
     <div className="space-y-6">
@@ -267,7 +305,7 @@ function StepSuccess({ experiment, missionGuide, onViewGuide }) {
             {missionGuide.mission_steps.slice(0, 5).map((s, i) => (
               <li key={i} className="flex gap-3 text-sm text-[color:var(--ink-700)]">
                 <span className="shrink-0 font-bold" style={{ color: 'var(--brand-navy-900)' }}>{i + 1}.</span>
-                <span>{typeof s === 'string' ? s : s.step || s.description}</span>
+                <span>{toText(s)}</span>
               </li>
             ))}
             {missionGuide.mission_steps.length > 5 && (
@@ -471,7 +509,7 @@ export default function ExperimentSetup() {
       // Generates the Mission Guide, including the outreach email template a
       // student sends to a real professional. Highest-quality tier; see
       // src/lib/llm.js.
-      const guide = unwrapLLM(await base44.integrations.Core.InvokeLLM({
+      const rawGuide = unwrapLLM(await base44.integrations.Core.InvokeLLM({
         model: 'gemini_3_1_pro',
         prompt: `You are Unscripted, a path-testing platform for ambitious college students.
 
@@ -515,11 +553,24 @@ ${PLAIN_PROSE_RULES}`,
         }
       }));
 
+      const { guide, usable } = repairMissionGuide(rawGuide);
+
+      // An experiment stamped "generated" is one the app stops offering to
+      // generate. Stamping an empty answer is how a student ends up with a
+      // mission the product says is ready and that has nothing in it, so a
+      // guide with no steps is treated as a failure and left retryable.
+      if (!usable) {
+        console.error('[mission-guide] rejected: no usable steps');
+        setGenError('The Mission Guide came back empty. Your experiment draft was saved. You can retry from the Missions page.');
+        await base44.entities.Experiments.update(saved.id, { status: 'planned', mission_guide_status: 'not_generated' });
+        return;
+      }
+
       await base44.entities.Experiments.update(saved.id, {
         status: 'planned',
         mission_guide_status: 'generated',
         expected_learning: guide.expected_learning,
-        mission_steps: guide.mission_steps?.map(s => ({ step: s })),
+        mission_steps: guide.mission_steps.map(s => ({ step: s })),
         tools: guide.tools,
         proof_required: guide.proof_required,
         reflection_questions: guide.reflection_questions,
@@ -533,8 +584,12 @@ ${PLAIN_PROSE_RULES}`,
       setMissionGuide(guide);
       setStep('success');
     } catch (e) {
+      // Shape only. The prompt carries the student's own path and objective, so
+      // a raw error can echo them back into the console.
+      console.error(`[mission-guide] generation failed (${e?.name || 'error'})`);
       setGenError('Mission Guide generation failed. Your experiment draft was saved. You can retry from the Missions page.');
-      await base44.entities.Experiments.update(saved.id, { status: 'planned', mission_guide_status: 'not_generated' });
+      await base44.entities.Experiments.update(saved.id, { status: 'planned', mission_guide_status: 'not_generated' })
+        .catch(() => console.error('[mission-guide] could not reset the draft status'));
     }
   };
 
