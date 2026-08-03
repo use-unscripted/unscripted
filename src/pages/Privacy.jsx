@@ -435,8 +435,11 @@ export default function Privacy() {
           The categories of Personal Information we have collected in the preceding twelve (12)
           months, the sources of that information, the business purposes for its collection and
           the categories of recipient to whom it has been disclosed are set out in Sections 3, 4
-          and 7. All Personal Information is collected directly from you, save for the account
-          information released by Google where you elect to use that sign-in method.
+          and 7. Personal Information is collected directly from you, save for (i) the account
+          information released by Google where you elect to use that sign-in method, and (ii) the
+          information described in Sections 3.2 and 3.3, which is generated automatically by your
+          device and browser, by your interaction with the Services, and by software operated by
+          the Platform Provider, rather than supplied by you.
         </Sub>
         <Sub n="14.2" title="Sensitive personal information">
           We do not collect sensitive personal information for the purpose of inferring
