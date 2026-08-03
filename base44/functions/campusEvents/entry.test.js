@@ -149,31 +149,31 @@ describe('how long an event stays upcoming', () => {
   const NOON = Date.parse('2026-08-03T12:00:00Z');
 
   it('keeps an all-day event through its own day', () => {
-    expect(stillUpcoming('2026-08-03', true, Date.parse('2026-08-03T00:59:00Z'))).toBe(true);
-    expect(stillUpcoming('2026-08-03', true, NOON)).toBe(true);
-    expect(stillUpcoming('2026-08-03', true, Date.parse('2026-08-03T23:59:00Z'))).toBe(true);
+    expect(stillUpcoming('2026-08-03', '', true, Date.parse('2026-08-03T00:59:00Z'))).toBe(true);
+    expect(stillUpcoming('2026-08-03', '', true, NOON)).toBe(true);
+    expect(stillUpcoming('2026-08-03', '', true, Date.parse('2026-08-03T23:59:00Z'))).toBe(true);
   });
 
   it('drops it once the day is over', () => {
-    expect(stillUpcoming('2026-08-03', true, Date.parse('2026-08-04T00:01:00Z'))).toBe(false);
-    expect(stillUpcoming('2026-08-02', true, NOON)).toBe(false);
+    expect(stillUpcoming('2026-08-03', '', true, Date.parse('2026-08-04T00:01:00Z'))).toBe(false);
+    expect(stillUpcoming('2026-08-02', '', true, NOON)).toBe(false);
   });
 
   it('treats a bare day as a whole day even where the feed set no flag', () => {
     // Localist falls back to a date-only `first_date` when an event has no
     // instance, and reads `all_day` off the instance that is not there; Drupal
     // has no all-day flag at all. A value with no clock in it is not a moment.
-    expect(stillUpcoming('2026-08-03', false, NOON)).toBe(true);
-    expect(stillUpcoming('2026-08-03', false, Date.parse('2026-08-04T00:01:00Z'))).toBe(false);
+    expect(stillUpcoming('2026-08-03', '', false, NOON)).toBe(true);
+    expect(stillUpcoming('2026-08-03', '', false, Date.parse('2026-08-04T00:01:00Z'))).toBe(false);
   });
 
   it('leaves a timed event on the hour of grace it always had', () => {
-    expect(stillUpcoming('2026-08-03T11:30:00Z', false, NOON)).toBe(true);
-    expect(stillUpcoming('2026-08-03T10:30:00Z', false, NOON)).toBe(false);
+    expect(stillUpcoming('2026-08-03T11:30:00Z', '', false, NOON)).toBe(true);
+    expect(stillUpcoming('2026-08-03T10:30:00Z', '', false, NOON)).toBe(false);
     // The all-day marking is what widens the window, not the time of day: an
     // event a feed stamped at real local midnight and flagged all-day runs to
     // local end-of-day, which is the right answer and comes for free.
-    expect(stillUpcoming('2026-08-03T00:00:00-04:00', true, Date.parse('2026-08-03T23:00:00Z')))
+    expect(stillUpcoming('2026-08-03T00:00:00-04:00', '', true, Date.parse('2026-08-03T23:00:00Z')))
       .toBe(true);
   });
 
@@ -181,13 +181,50 @@ describe('how long an event stays upcoming', () => {
     // The one thing that must not depend on where this runs. No named zone is
     // guessed anywhere in the window, so TZ cannot enter into it.
     expect(new Date('2026-08-03').getTime()).toBe(Date.UTC(2026, 7, 3));
-    expect(stillUpcoming('2026-08-03', true, Date.UTC(2026, 7, 3, 23, 59))).toBe(true);
-    expect(stillUpcoming('2026-08-03', true, Date.UTC(2026, 7, 4, 0, 1))).toBe(false);
+    expect(stillUpcoming('2026-08-03', '', true, Date.UTC(2026, 7, 3, 23, 59))).toBe(true);
+    expect(stillUpcoming('2026-08-03', '', true, Date.UTC(2026, 7, 4, 0, 1))).toBe(false);
   });
 
   it('refuses a value it cannot read at all', () => {
-    expect(stillUpcoming('', true, NOON)).toBe(false);
-    expect(stillUpcoming('sometime next week', false, NOON)).toBe(false);
+    expect(stillUpcoming('', '', true, NOON)).toBe(false);
+    expect(stillUpcoming('sometime next week', '', false, NOON)).toBe(false);
+  });
+
+  it('keeps a multi-day all-day event up through its last day', () => {
+    // The three-day orientation fair. Anchored to the start alone this vanished
+    // on the morning of day two while it was still running.
+    const fair = ['2026-08-03', '2026-08-05'];
+    expect(stillUpcoming(...fair, true, NOON)).toBe(true);
+    expect(stillUpcoming(...fair, true, Date.parse('2026-08-04T12:00:00Z'))).toBe(true);
+    expect(stillUpcoming(...fair, true, Date.parse('2026-08-05T23:59:00Z'))).toBe(true);
+  });
+
+  it('drops it once its last day is over', () => {
+    expect(stillUpcoming('2026-08-03', '2026-08-05', true, Date.parse('2026-08-06T00:01:00Z')))
+      .toBe(false);
+  });
+
+  it('carries a month-long exhibition the whole month', () => {
+    expect(stillUpcoming('2026-08-01', '2026-08-31', true, Date.parse('2026-08-28T12:00:00Z')))
+      .toBe(true);
+  });
+
+  // The safety property the whole design rests on. An end is the least reliable
+  // field in every feed here, so it is only ever allowed to extend the window —
+  // no value of it can drop a listing the start alone would have shown.
+  it('never lets an end shorten the window a start alone would give', () => {
+    const early = ['2026-08-03', '2026-07-01']; // end before the start
+    expect(stillUpcoming(...early, true, NOON)).toBe(true);
+    expect(stillUpcoming('2026-08-03', 'not a date', true, NOON)).toBe(true);
+    expect(stillUpcoming('2026-08-03', '', true, NOON)).toBe(true);
+    // And a timed event keeps exactly the hour of grace it always had.
+    expect(stillUpcoming('2026-08-03T10:30:00Z', '2026-08-03T10:45:00Z', false, NOON)).toBe(false);
+  });
+
+  it('extends a timed event that runs long', () => {
+    // An all-day conference stamped with real clock times, still in its closing
+    // session. The start is nine hours past its hour of grace.
+    expect(stillUpcoming('2026-08-03T02:00:00Z', '2026-08-03T17:00:00Z', false, NOON)).toBe(true);
   });
 });
 
@@ -214,7 +251,7 @@ describe('the whole path, feed to what a student is shown', () => {
     const events = await fetchEvents('ical', FEED, 45);
     return events
       .filter(isAttendable)
-      .filter(e => stillUpcoming(e.start, e.all_day, Date.now()))
+      .filter(e => stillUpcoming(e.start, e.end, e.all_day, Date.now()))
       .map(e => e.start);
   }
 
@@ -248,6 +285,43 @@ describe('the whole path, feed to what a student is shown', () => {
       ['UID:later@x', 'SUMMARY:Panel', 'DTSTART:20260805T180000Z'],
     ));
     expect(await shown()).toEqual(['2026-08-03T11:30:00.000Z', '2026-08-05T18:00:00.000Z']);
+  });
+
+  /** Same three-day fair, read from a real RFC 5545 exclusive DTEND. */
+  const FAIR = ['UID:fair@x', 'SUMMARY:Orientation Fair',
+    'DTSTART;VALUE=DATE:20260803', 'DTEND;VALUE=DATE:20260806'];
+
+  it('still offers a three-day fair on its second and third days', async () => {
+    vi.setSystemTime(new Date('2026-08-04T12:00:00Z'));
+    serve(calendar(FAIR));
+    expect(await shown()).toEqual(['2026-08-03']);
+
+    vi.setSystemTime(new Date('2026-08-05T23:00:00Z'));
+    expect(await shown()).toEqual(['2026-08-03']);
+  });
+
+  it('drops the fair the morning after it finishes', async () => {
+    vi.setSystemTime(new Date('2026-08-06T00:30:00Z'));
+    serve(calendar(FAIR));
+    expect(await shown()).toEqual([]);
+  });
+
+  // The convention mismatch, caught at the boundary rather than in the export.
+  // RFC 5545 ends this fair on the 6th, exclusively; everything downstream here
+  // means the last day it runs, and the export adds the day back itself.
+  it('hands on the last day the event runs, not the exclusive next one', async () => {
+    serve(calendar(FAIR));
+    const [fair] = await fetchEvents('ical', FEED, 45);
+    expect(fair.end).toBe('2026-08-05');
+  });
+
+  it('leaves a single-day all-day event no end at all', async () => {
+    // A same-date end tells a student nothing, and an exclusive one would put a
+    // second day in their calendar.
+    serve(calendar(['UID:one@x', 'SUMMARY:Involvement Fair',
+      'DTSTART;VALUE=DATE:20260803', 'DTEND;VALUE=DATE:20260804']));
+    const [event] = await fetchEvents('ical', FEED, 45);
+    expect(event.end).toBe('');
   });
 });
 
