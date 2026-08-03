@@ -16,16 +16,16 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { X, Loader2, Upload, FileText, Film, CheckCircle, AlertCircle, RefreshCw, Trash2, ChevronRight, ChevronLeft, ChevronDown, Save } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
-import { ProgressBar, OptionRow, GuidedStyles } from '@/components/guided/GuidedPieces';
+import { ProgressBar, OptionRow, GuidedStyles, footerCls } from '@/components/guided/GuidedPieces';
 import { linksForExperiment } from '@/lib/career-cycle';
 
 const inputCls = 'w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-3 text-sm outline-none focus:border-[#1F3A5F]';
 const bigInputCls = 'w-full rounded-2xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-4 text-base outline-none focus:border-[#1F3A5F]';
 
-// The panel drops its own bottom padding (pb-0) so this bar can stick to the
-// panel's edge. The -mx values must cancel the panel's px values exactly.
-const footerCls =
-  'sticky bottom-0 z-10 -mx-6 mt-6 rounded-b-[24px] border-t border-[#EEF2F6] bg-white px-6 pb-6 pt-4 sm:-mx-8 sm:px-8';
+// footerCls comes from GuidedPieces. The panel below drops its own bottom
+// padding (pb-0) so that bar can stick to the panel's edge, and its -mx values
+// cancel these px values exactly — keep the two in step by changing the shared
+// one, not by re-declaring it here.
 
 const VIDEO_EXTS = new Set(['mp4','webm','mov','avi','mkv','m4v','wmv','ogv','3gp','3g2']);
 const VIDEO_MIMES = new Set(['video/mp4','video/webm','video/quicktime','video/x-msvideo','video/x-matroska','video/x-ms-wmv','video/ogg','video/3gpp','video/3gpp2']);
