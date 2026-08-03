@@ -1,0 +1,113 @@
+// Every AI generation that failed or was rejected, recorded for triage.
+//
+// DIAGNOSTICS ONLY. This table holds ids, fixed slugs and counts. It must never
+// hold a prompt, a model response, a student's onboarting answers, a generated
+// path name, or a raw server message: the prompts at these call sites are built
+// from what students told us about their lives, and this is a table staff read.
+// src/lib/ai-failures.js enforces that on the way in by rejecting any code or
+// stage that is not a lowercase slug.
+{
+  "name": "AiFailure",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string"
+    },
+    // Which generation broke. Fixed list, so the admin view can group without
+    // reading free text.
+    "feature": {
+      "type": "string",
+      "enum": [
+        "path_generation",
+        "mission_guide",
+        "mission_guide_prefilled",
+        "outreach_plan",
+        "risk_assessment",
+        "blueprint",
+        "create_path",
+        "reactivation",
+        "resume_bullet",
+        "weekly_reflection",
+        "campus_event_ranking"
+      ]
+    },
+    // Where in the pipeline it stopped: load_profile, invoke_llm, validate,
+    // save_paths, and so on. A lowercase slug, never a message.
+    "stage": {
+      "type": "string"
+    },
+    // Content-free cause codes from the validator, e.g. rec_missing_name.
+    "codes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    // How many model calls were made before giving up, including retries.
+    "attempts": {
+      "type": "number"
+    },
+    // True when a retry after this failure produced something usable, so the
+    // student never saw it. These are the ones that show the model drifting
+    // without the funnel showing any damage yet.
+    "recovered": {
+      "type": "boolean"
+    },
+    // The model id the call was pinned to, so a bad tier is visible.
+    "model": {
+      "type": "string"
+    },
+    "path_id": {
+      "type": "string"
+    },
+    "experiment_id": {
+      "type": "string"
+    },
+    "occurred_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    // Triage state, set from the admin view.
+    "reviewed": {
+      "type": "boolean",
+      "default": false
+    },
+    "reviewed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "reviewed_by": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "feature"
+  ],
+  "rls": {
+    "create": {
+      "created_by_id": "{{user.id}}"
+    },
+    "read": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

@@ -16,6 +16,9 @@ import { X, Loader2, Users, Beaker, User, ExternalLink, CheckCircle, ChevronRigh
 import { base44 } from '@/api/base44Client';
 import { ProgressBar, OptionRow, GuidedStyles, footerCls } from '@/components/guided/GuidedPieces';
 import { unwrapLLM, PLAIN_PROSE_RULES } from '@/lib/llm';
+import { toText, toTextList, isPlainObject } from '@/lib/ai-validation';
+import { generateValidated } from '@/lib/ai-generate';
+import { reportAiFailure } from '@/lib/ai-failures';
 
 const inputCls = 'w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-2.5 text-sm outline-none focus:border-[color:var(--brand-navy-900)]';
 
@@ -525,9 +528,11 @@ function isLinkedInProfileUrl(url) {
 function ContactSuggestionCard({ suggestion, pathName, experimentId, onSaved, onMissionCreated, dismissed, onDismiss, experiments }) {
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [missionLoading, setMissionLoading] = useState(false);
+  const [missionError, setMissionError] = useState('');
   const [saved, setSaved] = useState(false);
 
   const handleCreateMission = async () => {
+    setMissionError('');
     setMissionLoading(true);
     try {
       const user = await base44.auth.me();
@@ -553,6 +558,11 @@ function ContactSuggestionCard({ suggestion, pathName, experimentId, onSaved, on
         proof_required: 'Notes from the conversation saved to Outreach Tracker.',
       });
       onMissionCreated?.();
+    } catch (e) {
+      // Without this the button just stopped spinning and the count never
+      // moved, which reads as the click having done nothing.
+      console.error(`[outreach] mission create failed (${e?.name || 'error'})`);
+      setMissionError('We could not create that mission. Try again.');
     } finally {
       setMissionLoading(false);
     }
@@ -635,6 +645,9 @@ function ContactSuggestionCard({ suggestion, pathName, experimentId, onSaved, on
               Create Mission
             </button>
           </div>
+        )}
+        {missionError && (
+          <p className="mt-2 text-xs" style={{ color: 'var(--warning-700)' }}>{missionError}</p>
         )}
       </div>
     </>
@@ -748,19 +761,115 @@ function SaveContactConfirmModal({ suggestion, pathName, experimentId, experimen
   );
 }
 
+/**
+ * Coerce a generated outreach plan into the shape the results tabs render.
+ *
+ * This is the highest-stakes text in the product: the templates are pasted into
+ * messages students send to real professionals, and the suggestions name real
+ * people. Nothing here is written to an entity by this function, so the job is
+ * to make every field a safe type and to drop items too empty to act on, rather
+ * than to reject the plan wholesale.
+ *
+ * Items with no title and no body are dropped rather than rendered as a card
+ * with a Copy button that copies nothing.
+ */
+export function repairOutreachPlan(raw) {
+  if (!isPlainObject(raw)) return null;
+  const list = (value) => (Array.isArray(value) ? value.filter(isPlainObject) : []);
+
+  return {
+    outreach_experiments: list(raw.outreach_experiments).map(e => ({
+      title: toText(e.title),
+      objective: toText(e.objective),
+      why_it_tests_path: toText(e.why_it_tests_path),
+      target_contact_type: toText(e.target_contact_type),
+      suggested_contacts: toText(e.suggested_contacts),
+      timeline: toText(e.timeline),
+      deliverable: toText(e.deliverable),
+      reflection_question: toText(e.reflection_question),
+    })).filter(e => e.title),
+
+    contact_archetypes: list(raw.contact_archetypes).map(a => ({
+      title: toText(a.title),
+      why_useful: toText(a.why_useful),
+      where_to_find: toTextList(a.where_to_find),
+    })).filter(a => a.title),
+
+    contact_suggestions: list(raw.contact_suggestions).map(c => ({
+      is_archetype: c.is_archetype === true,
+      archetype_title: toText(c.archetype_title),
+      name: toText(c.name),
+      role: toText(c.role),
+      organization: toText(c.organization),
+      why_relevant: toText(c.why_relevant),
+      source_url: toText(c.source_url),
+      verified_date: toText(c.verified_date),
+      context: toText(c.context),
+    })).filter(c => c.name || c.archetype_title),
+
+    message_templates: list(raw.message_templates).map(t => ({
+      label: toText(t.label),
+      body: toText(t.body),
+    })).filter(t => t.body),
+  };
+}
+
+/**
+ * The retry loop's view of the repair. A section the model skipped is worth one
+ * more ask with the gap named, because a plan missing its message templates is
+ * missing the part students actually use.
+ */
+export function validateOutreachPlan(raw) {
+  const plan = repairOutreachPlan(raw);
+  if (!plan) {
+    return { ok: false, data: null, errors: ['You returned no plan object.'], codes: ['plan_not_object'] };
+  }
+
+  const sections = [
+    ['outreach_experiments', plan.outreach_experiments, '3 to 5 outreach experiments'],
+    ['contact_archetypes', plan.contact_archetypes, '4 to 6 contact archetypes'],
+    ['contact_suggestions', plan.contact_suggestions, '3 to 5 contact suggestions'],
+    ['message_templates', plan.message_templates, '3 message templates'],
+  ];
+  const empty = sections.filter(([, items]) => items.length === 0);
+
+  if (!empty.length) return { ok: true, data: plan, errors: [], codes: [] };
+
+  return {
+    ok: false,
+    data: plan,
+    errors: empty.map(([key, , wanted]) => `"${key}" came back empty. It must contain ${wanted}, each an object with every field in the schema filled in.`),
+    codes: empty.map(([key]) => `${key}_empty`),
+  };
+}
+
 // ── Results Step ───────────────────────────────────────────────────────────────
 function ResultsStep({ plan, pathName, experimentId, experiments, onContactSaved, onClose }) {
   const [dismissed, setDismissed] = useState(new Set());
   const [savedCount, setSavedCount] = useState(0);
   const [missionCount, setMissionCount] = useState(0);
-  const [activeTab, setActiveTab] = useState('experiments');
+  const [activeTab, setActiveTab] = useState(() => {
+    const first = ['experiments', 'archetypes', 'suggestions', 'templates']
+      .find(id => ({
+        experiments: plan.outreach_experiments,
+        archetypes: plan.contact_archetypes,
+        suggestions: plan.contact_suggestions,
+        templates: plan.message_templates,
+      })[id]?.length);
+    return first || 'experiments';
+  });
 
+  // Every tab stays, including empty ones. Filtering them out meant a section
+  // the model skipped simply vanished, and the student had no way to know it
+  // was supposed to be there or that trying again would produce it.
   const tabs = [
-    { id: 'experiments', label: 'Outreach Experiments', icon: Beaker, count: plan.outreach_experiments?.length },
-    { id: 'archetypes', label: 'Contact Archetypes', icon: Users, count: plan.contact_archetypes?.length },
-    { id: 'suggestions', label: 'Suggested Contacts', icon: User, count: plan.contact_suggestions?.length },
-    { id: 'templates', label: 'Message Templates', icon: BookOpen, count: plan.message_templates?.length },
-  ].filter(t => t.count > 0);
+    { id: 'experiments', label: 'Outreach Experiments', icon: Beaker, count: plan.outreach_experiments.length },
+    { id: 'archetypes', label: 'Contact Archetypes', icon: Users, count: plan.contact_archetypes.length },
+    { id: 'suggestions', label: 'Suggested Contacts', icon: User, count: plan.contact_suggestions.length },
+    { id: 'templates', label: 'Message Templates', icon: BookOpen, count: plan.message_templates.length },
+  ];
+
+  const activeCount = tabs.find(t => t.id === activeTab)?.count ?? 0;
 
   return (
     <div className="space-y-4">
@@ -789,6 +898,13 @@ function ResultsStep({ plan, pathName, experimentId, experiments, onContactSaved
       </div>
 
       <div className="space-y-3 max-h-[55vh] overflow-y-auto pr-1">
+        {activeCount === 0 && (
+          <p className="rounded-xl px-4 py-3 text-xs text-[color:var(--ink-500)]"
+            style={{ background: 'var(--ink-50)', border: '1px solid var(--ink-200)' }}>
+            This section came back empty. Close the plan and build it again to fill it in.
+          </p>
+        )}
+
         {activeTab === 'experiments' && plan.outreach_experiments?.map((exp, i) => (
           <OutreachExperimentCard key={i} exp={exp} />
         ))}
@@ -853,7 +969,12 @@ export default function OutreachPlanModal({ path, experiment, onClose, onContact
       // Produces message templates the student sends to real professionals and
       // names real people — the site least tolerant of a weaker model. Highest
       // quality tier; see src/lib/llm.js.
-      const result = unwrapLLM(await base44.integrations.Core.InvokeLLM({
+      const { ok, data } = await generateValidated({
+        feature: 'outreach_plan',
+        model: 'gemini_3_1_pro',
+        context: { path_id: path.id, experiment_id: experiment?.id },
+        validate: validateOutreachPlan,
+        call: async (correction) => unwrapLLM(await base44.integrations.Core.InvokeLLM({
         model: 'gemini_3_1_pro',
         prompt: `You are an expert career coach helping a college student build a targeted outreach plan for the career path: "${path.path_name}".
 
@@ -882,8 +1003,8 @@ Generate a complete outreach plan with:
 
 4. message_templates: 3 outreach message templates tailored to "${path.path_name}" and the preferred channel (${survey.preferred_channel}). Match the student's networking comfort level (${survey.networking_comfort}). Each must include: label (e.g. "Cold LinkedIn message"), body (complete editable template using [Name], [Your Name], [School] placeholders).
 
-Return only valid JSON. Do not add commentary outside the JSON.
-${PLAIN_PROSE_RULES}`,
+Return only valid JSON. Do not add commentary outside the JSON. All four sections are required and none may be empty.
+${PLAIN_PROSE_RULES}${correction}`,
         response_json_schema: {
           type: 'object',
           properties: {
@@ -943,11 +1064,42 @@ ${PLAIN_PROSE_RULES}`,
             },
           }
         }
-      }));
+      })),
+      });
 
-      setPlan(result);
+      // A partial plan is still worth showing. The retry has already asked once
+      // more for the missing sections; if they are still missing, the templates
+      // and archetypes that DID come back are the part students actually use,
+      // and the results view is built to open on the first section with
+      // content. Only a plan with nothing in it at all is a dead end.
+      const total = data
+        ? data.outreach_experiments.length + data.contact_archetypes.length
+          + data.contact_suggestions.length + data.message_templates.length
+        : 0;
+
+      if (!total) {
+        setError('That plan came back empty both times we asked. Try building it again.');
+        setStep('survey');
+        return;
+      }
+
+      // No row is written here. The retry loop already recorded this rejection,
+      // with the codes naming which sections were missing, and a second row
+      // would double-count one generation in the totals. It would also have to
+      // claim `recovered`, which everywhere else means "a later retry
+      // succeeded" and here would mean "we showed it anyway".
+
+      setPlan(data);
       setStep('results');
     } catch (e) {
+      // The prompt carries the student's own survey answers, so slugs only.
+      // The retry loop already recorded the model call itself failing.
+      reportAiFailure('outreach_plan', {
+        stage: 'render',
+        codes: ['unexpected_error'],
+        model: 'gemini_3_1_pro',
+        path_id: path.id,
+      });
       setError('That didn’t go through. Try building the plan again.');
       setStep('survey');
     } finally {

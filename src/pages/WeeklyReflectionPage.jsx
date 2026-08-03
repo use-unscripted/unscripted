@@ -27,6 +27,7 @@
 import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import { base44 } from '@/api/base44Client';
 import { unwrapLLM, PLAIN_PROSE_RULES } from '@/lib/llm';
+import { reportAiFailure } from '@/lib/ai-failures';
 import {
   ArrowRight, CheckCircle, Plus, Search, X, ExternalLink, Trash2,
   ChevronLeft, ChevronRight, Loader2, AlertCircle, Save, Sparkles,
@@ -632,10 +633,16 @@ function ReflectionFlow({ experiments, missions, proofs, outreach, initialData, 
       }));
       setSummary(typeof result?.summary === 'string' ? result.summary : '');
       setAdjustments(toStringArray(result?.path_adjustments));
-    } catch (err) {
+    } catch {
       // Without this the promise rejected unhandled, the spinner stopped, and
-      // nothing on screen said why.
-      console.error('[WeeklyReflectionPage] Generate failed:', err?.message || err);
+      // nothing on screen said why. The message is no longer printed: this
+      // prompt carries the student's own reflection text, which is the most
+      // private writing in the product, so a server error can echo it back.
+      reportAiFailure('weekly_reflection', {
+        stage: 'invoke_llm',
+        codes: ['unexpected_error'],
+        model: 'gemini_3_flash',
+      });
       setGenError("Couldn't generate insights just now. Your answers are safe. Save them and try again later.");
     } finally {
       setGenerating(false);

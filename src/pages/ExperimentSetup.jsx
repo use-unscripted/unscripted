@@ -2,6 +2,9 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { unwrapLLM, PLAIN_PROSE_RULES } from '@/lib/llm';
+import { toText, toTextList, STEP_TEXT_KEYS } from '@/lib/ai-validation';
+import { generateValidated } from '@/lib/ai-generate';
+import { reportAiFailure } from '@/lib/ai-failures';
 import { ArrowLeft, ArrowRight, CheckCircle, Loader2, AlertCircle } from 'lucide-react';
 import { LogoWordmark } from '@/components/UnscriptedLogo';
 import { Sk, SkCards } from '@/components/PageSkeleton';
@@ -10,6 +13,57 @@ import {
   ensureActiveCycle, assertNoActiveExperiment, attachExperimentToCycle,
   ActiveExperimentError, cycleLinks,
 } from '@/lib/career-cycle';
+
+/**
+ * Repair a generated Mission Guide into the shape the experiment record and the
+ * three screens that read it actually expect.
+ *
+ * The schema asks for `mission_steps` as an array of strings. When the model
+ * returns objects instead, the old code wrapped each one as `{ step: <object> }`
+ * and saved it, and both the experiment list and the success screen the student
+ * is looking at render `step.step` directly. React refuses an object as a child,
+ * so that threw and unmounted the page. Steps are coerced to strings here, at
+ * the one place they are written.
+ *
+ * Returns `{ guide, usable }`. `usable` is false when nothing survived that a
+ * student could act on, which is the signal not to stamp the experiment as
+ * having a guide.
+ */
+export function repairMissionGuide(raw) {
+  const steps = toTextList(raw?.mission_steps, { splitLines: true });
+  return {
+    guide: {
+      mission_objective: toText(raw?.mission_objective),
+      why_this_helps: toText(raw?.why_this_helps),
+      expected_learning: toText(raw?.expected_learning),
+      mission_steps: steps,
+      tools: toTextList(raw?.tools),
+      proof_required: toText(raw?.proof_required),
+      reflection_questions: toTextList(raw?.reflection_questions),
+      common_mistakes: toTextList(raw?.common_mistakes),
+      completion_criteria: toText(raw?.completion_criteria),
+      next_step: toText(raw?.next_step),
+    },
+    // A guide with no steps is not a guide. Everything else can be thin without
+    // making the mission impossible to start.
+    usable: steps.length > 0,
+  };
+}
+
+/**
+ * The retry loop's view of the same repair: a guide with no steps is rejected
+ * with a reason the model can act on, rather than becoming a dead experiment.
+ */
+export function validateMissionGuide(raw) {
+  const { guide, usable } = repairMissionGuide(raw);
+  if (usable) return { ok: true, data: guide, errors: [], codes: [] };
+  return {
+    ok: false,
+    data: null,
+    errors: ['You returned no usable mission steps. "mission_steps" must be an array of 8 to 12 plain strings, each one an action the student can actually do.'],
+    codes: ['guide_no_steps'],
+  };
+}
 
 // Generate 3 path-specific experiment options based on path name
 function getExperimentOptions(pathName) {
@@ -233,8 +287,9 @@ function StepGenerating({ experiment, missionGuide, error }) {
 // ─── Step 4: Success ─────────────────────────────────────────────────────────
 function StepSuccess({ experiment, missionGuide, onViewGuide }) {
   const [showCal, setShowCal] = useState(false);
-  const firstStep = missionGuide?.mission_steps?.[0];
-  const firstStepText = typeof firstStep === 'string' ? firstStep : firstStep?.step || firstStep?.description || 'Start your first action';
+  // Rows written before guides were validated can hold steps as objects, and an
+  // object handed to React as a child throws and blanks this screen.
+  const firstStepText = toText(missionGuide?.mission_steps?.[0], STEP_TEXT_KEYS) || 'Start your first action';
 
   return (
     <div className="space-y-6">
@@ -267,7 +322,7 @@ function StepSuccess({ experiment, missionGuide, onViewGuide }) {
             {missionGuide.mission_steps.slice(0, 5).map((s, i) => (
               <li key={i} className="flex gap-3 text-sm text-[color:var(--ink-700)]">
                 <span className="shrink-0 font-bold" style={{ color: 'var(--brand-navy-900)' }}>{i + 1}.</span>
-                <span>{typeof s === 'string' ? s : s.step || s.description}</span>
+                <span>{toText(s, STEP_TEXT_KEYS)}</span>
               </li>
             ))}
             {missionGuide.mission_steps.length > 5 && (
@@ -471,7 +526,12 @@ export default function ExperimentSetup() {
       // Generates the Mission Guide, including the outreach email template a
       // student sends to a real professional. Highest-quality tier; see
       // src/lib/llm.js.
-      const guide = unwrapLLM(await base44.integrations.Core.InvokeLLM({
+      const guideResult = await generateValidated({
+        feature: 'mission_guide_prefilled',
+        model: 'gemini_3_1_pro',
+        context: { path_id: rec.id, experiment_id: saved.id },
+        validate: validateMissionGuide,
+        call: async (correction) => unwrapLLM(await base44.integrations.Core.InvokeLLM({
         model: 'gemini_3_1_pro',
         prompt: `You are Unscripted, a path-testing platform for ambitious college students.
 
@@ -497,7 +557,9 @@ The guide must be specific to "${experimentData.path_name}", not generic network
 12. What to do next after completing this experiment
 
 Be specific. If the experiment involves outreach, include field-specific details. If it involves building something, specify exactly what to build.
-${PLAIN_PROSE_RULES}`,
+
+"mission_steps" must be an array of plain strings. A step returned as an object is a failure.
+${PLAIN_PROSE_RULES}${correction}`,
         response_json_schema: {
           type: 'object',
           properties: {
@@ -513,13 +575,28 @@ ${PLAIN_PROSE_RULES}`,
             next_step: { type: 'string' },
           }
         }
-      }));
+        })),
+      });
+
+      // An experiment stamped "generated" is one the app stops offering to
+      // generate. Stamping an empty answer is how a student ends up with a
+      // mission the product says is ready and that has nothing in it, so a
+      // guide with no usable steps stays retryable instead. The model has
+      // already been asked a second time with the reason in hand by this point.
+      if (!guideResult.ok) {
+        setGenError('The Mission Guide came back empty both times we asked. Your experiment draft was saved. You can retry from the Missions page.');
+        await base44.entities.Experiments.update(saved.id, { status: 'planned', mission_guide_status: 'not_generated' })
+          .catch(() => {});
+        return;
+      }
+
+      const guide = guideResult.data;
 
       await base44.entities.Experiments.update(saved.id, {
         status: 'planned',
         mission_guide_status: 'generated',
         expected_learning: guide.expected_learning,
-        mission_steps: guide.mission_steps?.map(s => ({ step: s })),
+        mission_steps: guide.mission_steps.map(s => ({ step: s })),
         tools: guide.tools,
         proof_required: guide.proof_required,
         reflection_questions: guide.reflection_questions,
@@ -533,8 +610,18 @@ ${PLAIN_PROSE_RULES}`,
       setMissionGuide(guide);
       setStep('success');
     } catch (e) {
+      // Slugs only. The prompt carries the student's own path and objective, so
+      // a raw error can echo them back into the console and the log.
+      reportAiFailure('mission_guide_prefilled', {
+        stage: 'save_experiment',
+        codes: ['unexpected_error'],
+        model: 'gemini_3_1_pro',
+        path_id: rec.id,
+        experiment_id: saved.id,
+      });
       setGenError('Mission Guide generation failed. Your experiment draft was saved. You can retry from the Missions page.');
-      await base44.entities.Experiments.update(saved.id, { status: 'planned', mission_guide_status: 'not_generated' });
+      await base44.entities.Experiments.update(saved.id, { status: 'planned', mission_guide_status: 'not_generated' })
+        .catch(() => {});
     }
   };
 
