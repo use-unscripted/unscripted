@@ -219,6 +219,27 @@ describe('recommendCampusEvents', () => {
     }
   });
 
+  // `response_json_schema` is a request, not a guarantee. A model that answers
+  // with a string where an array was asked for used to take the whole picker
+  // down with a TypeError, from inside a promise nothing was catching.
+  it('degrades a wrongly-typed model field instead of throwing', async () => {
+    base44.integrations.Core.InvokeLLM.mockResolvedValue({
+      recommendations: [{
+        event_id: '1',
+        fit_reason: 'Alumni who do the job.',
+        what_to_do: 'Get there ten minutes early.',
+        questions_to_ask: { first: 'What does your Tuesday look like?' },
+        proof_to_capture: ['a photo of the panel'],
+      }],
+    });
+
+    const [pick] = await recommendCampusEvents([calendarEvent()], PROFILE);
+
+    expect(pick.guidance.what_to_do).toEqual(['Get there ten minutes early.']);
+    expect(pick.guidance.questions_to_ask).toEqual([]);
+    expect(pick.guidance.proof_to_capture).toBe('');
+  });
+
   it('does not call the model when there is nothing to rank', async () => {
     for (const input of [[], null, undefined, 'not a list', {}]) {
       await expect(recommendCampusEvents(input, PROFILE)).resolves.toEqual([]);
@@ -388,6 +409,60 @@ describe('not asking twice', () => {
     await recommendCampusEvents(events, PROFILE, { pathName: 'Product Management' });
 
     expect(base44.integrations.Core.InvokeLLM).toHaveBeenCalledTimes(2);
+  });
+
+  // A remembered failure is the worst thing this cache can hold. The picker
+  // awaits the ranking inside an effect with no catch, so a rejection leaves
+  // `loading` true forever, the component returns its spinner, and the retry
+  // button that would clear the cache never renders. Before the cache existed,
+  // closing and reopening the modal recovered; a memoised rejection turns that
+  // into a full page reload or a thirty-minute wait.
+  it('does not remember a ranking that blew up', async () => {
+    // Only the model call is wrapped in a try/catch, so anything after it that
+    // throws rejects the promise the cache is holding. What that something is
+    // does not matter — this one is a payload that refuses to be read — the
+    // point is that a failure must not be the answer for the next half hour.
+    const events = [calendarEvent()];
+    const unreadable = {};
+    Object.defineProperty(unreadable, 'response', {
+      enumerable: true,
+      get() { throw new Error('unreadable payload'); },
+    });
+    base44.integrations.Core.InvokeLLM.mockResolvedValue(unreadable);
+
+    await expect(recommendCampusEvents(events, PROFILE)).rejects.toThrow();
+    await expect(recommendCampusEvents(events, PROFILE)).rejects.toThrow();
+
+    // A memoised rejection would have re-thrown without asking the model again.
+    expect(base44.integrations.Core.InvokeLLM).toHaveBeenCalledTimes(2);
+  });
+
+  it('does not remember a feed read that blew up', async () => {
+    base44.functions.invoke.mockImplementation(() => { throw new Error('boom'); });
+    await fetchCampusEvents().catch(() => {});
+
+    base44.functions.invoke.mockReset();
+    base44.functions.invoke.mockResolvedValue({ status: 'ok', events: [calendarEvent()] });
+    await expect(fetchCampusEvents()).resolves.toMatchObject({ status: 'ok' });
+  });
+
+  // Every open of the picker reads the calendar and then ranks against it. The
+  // ranking key carries the student's profile, so a student editing their
+  // interests writes a new entry each time while the calendar stays one. If a
+  // hit does not move the entry to the back of the queue, the calendar is the
+  // oldest key in a 24-slot map and a run of rankings evicts the one thing all
+  // of them share — sending us back to the school's server for an answer we
+  // were already holding.
+  it('keeps the calendar rather than evicting it behind a run of rankings', async () => {
+    base44.functions.invoke.mockResolvedValue({ status: 'ok', events: [calendarEvent()] });
+    base44.integrations.Core.InvokeLLM.mockResolvedValue({ recommendations: [] });
+
+    for (let i = 0; i < 30; i++) {
+      await fetchCampusEvents();
+      await recommendCampusEvents([calendarEvent()], { ...PROFILE, major: `Major ${i}` });
+    }
+
+    expect(base44.functions.invoke).toHaveBeenCalledTimes(1);
   });
 
   it('a retry clears the ranking too, not just the calendar', async () => {

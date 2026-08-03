@@ -63,6 +63,11 @@ export default function CampusEventPicker({ profile, pathName, selected, onSelec
 
   const [reloadKey, setReloadKey] = useState(0);
   const retry = useCallback(() => setReloadKey(k => k + 1), []);
+  // Which reload this effect has already served. Comparing against it is what
+  // keeps "try again" a one-off: keyed off reloadKey > 0 instead, every later
+  // change of profile or path would clear the whole cache and re-bill the model
+  // for the rest of the session.
+  const servedReload = useRef(0);
 
   // A profile object is rebuilt on every parent render, so depending on it
   // directly would re-run this effect forever — and each run costs a feed fetch
@@ -76,30 +81,44 @@ export default function CampusEventPicker({ profile, pathName, selected, onSelec
     let cancelled = false;
     setLoading(true);
 
+    const isRetry = reloadKey !== servedReload.current;
+    servedReload.current = reloadKey;
+
     (async () => {
-      // Reopening the picker reuses the calendar and the ranking it already
-      // paid for; pressing "try again" is the one thing that must not.
-      const feed = await fetchCampusEvents({ days: 45, limit: 20, refresh: reloadKey > 0 });
-      if (cancelled) return;
+      try {
+        // Reopening the picker reuses the calendar and the ranking it already
+        // paid for; pressing "try again" is the one thing that must not.
+        const feed = await fetchCampusEvents({ days: 45, limit: 20, refresh: isRetry });
+        if (cancelled) return;
 
-      setCollege(feed.college || '');
-      setFeedEvents(feed.events || []);
+        setCollege(feed.college || '');
+        setFeedEvents(feed.events || []);
 
-      if (!feed.events?.length) {
-        setPicks([]);
-        setStatus(feed.status || 'no_matches');
+        if (!feed.events?.length) {
+          setPicks([]);
+          setStatus(feed.status || 'no_matches');
+          setLoading(false);
+          return;
+        }
+
+        const recommended = await recommendCampusEvents(feed.events, profile, { pathName });
+        if (cancelled) return;
+
+        setPicks(recommended);
+        // A real feed full of real events that the model declined to rank is not
+        // the same outcome as an empty calendar, and must not render as one.
+        setStatus(recommended.length ? 'ok' : 'unranked');
         setLoading(false);
-        return;
+      } catch {
+        // Neither call is supposed to throw, and a spinner is what the student
+        // gets if one ever does — this component early-returns on `loading`, so
+        // the retry button that would recover never renders. An unexpected
+        // failure has to land on a screen with a way out of it.
+        if (cancelled) return;
+        setPicks([]);
+        setStatus('feed_error');
+        setLoading(false);
       }
-
-      const recommended = await recommendCampusEvents(feed.events, profile, { pathName });
-      if (cancelled) return;
-
-      setPicks(recommended);
-      // A real feed full of real events that the model declined to rank is not
-      // the same outcome as an empty calendar, and must not render as one.
-      setStatus(recommended.length ? 'ok' : 'unranked');
-      setLoading(false);
     })();
 
     return () => { cancelled = true; };
