@@ -3088,6 +3088,67 @@ function discoveryPages(domain: string): string[] {
   ];
 }
 
+/**
+ * A same-site page that is probably the school's events page.
+ *
+ * The five pages above are guesses at where a calendar lives, and the guess is
+ * too narrow in a way that shows up constantly: a school that publishes a
+ * perfectly readable Modern Campus or Trumba calendar at
+ * `/student-life/events-calendar.html` or `/about/calendars/index.html` reads as
+ * having no calendar at all, because nothing ever opens the page holding the
+ * widget. Two independent sweeps of 45 schools each landed on this as the single
+ * biggest gap, with a proven school apiece.
+ *
+ * So the school's own navigation gets read: any link whose path looks like an
+ * events or calendar page is worth opening once. Restricted to the school's own
+ * registrable domain, like every other link discovery follows.
+ */
+const EVENT_PAGE_PATH = /\/[^?#]*(events?|calendars?)[^?#]*$/i;
+
+/** Anything that is plainly not a page. */
+const NOT_A_PAGE = /\.(pdf|jpe?g|png|gif|svg|webp|zip|docx?|xlsx?|pptx?|mp4|mp3|ics|xml|json|rss)$/i;
+
+const MAX_DISCOVERED_PAGES = 4;
+
+/** Same-site pages named like an events page, resolved and de-duplicated. */
+export function eventPageLinks(html: string, domain: string, baseUrl = ''): string[] {
+  const found: string[] = [];
+
+  for (const match of String(html || '').matchAll(/href\s*=\s*["']([^"']+)["']/gi)) {
+    let url: string;
+    try {
+      url = new URL(decodeEntities(match[1]).trim(), baseUrl || `https://${domain}`).toString();
+    } catch (_) {
+      continue;
+    }
+
+    let parsed: URL;
+    try {
+      parsed = new URL(url);
+    } catch (_) {
+      continue;
+    }
+    if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') continue;
+    if (parsed.port) continue;
+
+    const host = stripWww(parsed.hostname.toLowerCase());
+    if (!isProbeableDomain(host) || !sameSite(host, domain)) continue;
+    if (NOT_A_PAGE.test(parsed.pathname)) continue;
+    // The bare root is already read, and it matches nothing anyway.
+    if (parsed.pathname === '/' || !EVENT_PAGE_PATH.test(parsed.pathname)) continue;
+
+    // The query string is dropped: a calendar page linked once per month
+    // ("?date=2026-09") is the same page, and keeping it would spend the whole
+    // budget on twelve copies of one URL.
+    const clean = `${parsed.origin}${parsed.pathname}`;
+    if (found.includes(clean)) continue;
+    found.push(clean);
+    if (found.length >= MAX_DISCOVERED_PAGES * 3) break;
+  }
+
+  return found;
+}
+
 /** "campuscalendar.ucsb.edu" and "ucsb.edu" are the same institution. */
 function sameSite(host: string, domain: string): boolean {
   return host === domain || host.endsWith(`.${domain}`);
@@ -3114,11 +3175,12 @@ function sameSite(host: string, domain: string): boolean {
  */
 async function discoverCalendarLocations(
   domain: string,
-): Promise<{ hosts: string[]; domains: string[]; icsUrls: string[] }> {
+): Promise<{ hosts: string[]; domains: string[]; icsUrls: string[]; pages: string[] }> {
   const alreadyTried = new Set([domain, ...SUBDOMAIN_CANDIDATES.map(s => `${s}.${domain}`)]);
   const hosts = new Set<string>();
   const domains = new Set<string>();
   const icsUrls = new Set<string>();
+  const eventPages = new Set<string>();
 
   // The student-life portal is worth trying blind, because the main site often
   // does not link to it at all. Babson's whole club calendar is published at
@@ -3162,13 +3224,55 @@ async function discoverCalendarLocations(
     // /phpbin/calendar/ical.php and Babson's under a per-group ical path. No
     // list of guessed paths was ever going to contain either.
     for (const url of icsLinksFrom(page.html, domain, page.finalUrl)) icsUrls.add(url);
+
+    // And the school's own navigation, for the calendar that is embedded on a
+    // page nobody would guess the name of.
+    for (const url of eventPageLinks(page.html, domain, page.finalUrl)) {
+      if (url !== page.finalUrl) eventPages.add(url);
+    }
   }
 
   return {
     hosts: [...hosts].slice(0, MAX_DISCOVERED_HOSTS),
     domains: [...domains].slice(0, MAX_DISCOVERED_DOMAINS),
     icsUrls: [...icsUrls].slice(0, MAX_DISCOVERED_ICS),
+    pages: [...eventPages].slice(0, MAX_DISCOVERED_PAGES),
   };
+}
+
+/**
+ * Read one of the school's own events pages and see what calendar it embeds.
+ *
+ * The same three checks `resolveSubmittedUrl` runs on a page a student pasted,
+ * for the same reason: the page itself is not the feed, it is the thing that
+ * names one. Kept in this order because it is cost order — the .ics links are
+ * already in hand, the Modern Campus id is a regex over markup we have, and
+ * Trumba costs a request per slug.
+ */
+async function probeEmbeddedCalendar(
+  pageUrl: string,
+  domain: string,
+): Promise<{ platform: string; feedUrl: string } | null> {
+  let page: { finalHost: string; finalUrl: string; html: string };
+  try {
+    page = await fetchPage(pageUrl, DISCOVERY_SCAN_BYTES);
+  } catch (_) {
+    return null;
+  }
+  if (!page.html) return null;
+
+  const ics = await firstValidIcs(icsLinksFrom(page.html, domain, page.finalUrl));
+  if (ics) return { platform: 'ical', feedUrl: ics };
+
+  const modernCampus = await firstValidModernCampus(modernCampusIdsFrom(page.html));
+  if (modernCampus) return { platform: 'moderncampus', feedUrl: modernCampus };
+
+  for (const slug of trumbaSlugsFrom(page.html).slice(0, TRUMBA_MAX_SLUGS)) {
+    const hit = await firstValidUrl(TRUMBA_HOSTS.map(h => `${h}/${slug}.json`), looksLikeTrumba);
+    if (hit) return { platform: 'trumba', feedUrl: hit };
+  }
+
+  return null;
 }
 
 /**
@@ -3272,7 +3376,7 @@ export async function probeCalendar(
   // school whose calendar sits where we expect never pays for this.
   if (!discover) return null;
 
-  let found: { hosts: string[]; domains: string[]; icsUrls: string[] };
+  let found: { hosts: string[]; domains: string[]; icsUrls: string[]; pages: string[] };
   try {
     found = await discoverCalendarLocations(domain);
   } catch (_) {
@@ -3290,7 +3394,18 @@ export async function probeCalendar(
     try {
       const ics = await firstValidIcs(found.icsUrls);
       if (ics) return { platform: 'ical', feedUrl: ics };
-    } catch (_) { /* Fall through to the alias domains. */ }
+    } catch (_) { /* Fall through to the school's own events pages. */ }
+  }
+
+  // The school's own events page, which is where the widget-embedded calendars
+  // live. Last of the same-domain attempts because it costs a page read each,
+  // and ahead of the alias domains because a page on the school's own site is a
+  // better answer than a guess at a different school's.
+  for (const page of found.pages) {
+    try {
+      const hit = await probeEmbeddedCalendar(page, domain);
+      if (hit) return hit;
+    } catch (_) { /* Next page. */ }
   }
 
   for (const alias of found.domains) {
