@@ -6,7 +6,7 @@ import MissionGuideGenerator from '@/components/experiments/MissionGuideGenerato
 import MissionGuideHistory from '@/components/experiments/MissionGuideHistory';
 import OutreachPlanModal from '@/components/outreach/OutreachPlanModal';
 import AddToCalendarModal from '@/components/calendar/AddToCalendarModal';
-import { toText } from '@/lib/ai-validation';
+import { toText, STEP_TEXT_KEYS } from '@/lib/ai-validation';
 import PageHeader from '@/components/PageHeader';
 import { Sk, SkPills, SkCards } from '@/components/PageSkeleton';
 import AddMissionModal from '@/components/experiments/AddMissionModal';
@@ -291,7 +291,7 @@ function ExperimentCard({ exp, onStatusChange, onExpand, expanded, missions, loa
                 {exp.mission_steps.map((step, i) => (
                   <li key={i} className="flex gap-3 text-sm text-[color:var(--ink-700)]">
                     <span className="shrink-0 font-bold" style={{ color: 'var(--brand-navy-900)' }}>{i + 1}.</span>
-                    <span>{toText(step)}</span>
+                    <span>{toText(step, STEP_TEXT_KEYS)}</span>
                   </li>
                 ))}
               </ol>

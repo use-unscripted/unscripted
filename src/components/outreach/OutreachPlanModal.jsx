@@ -773,7 +773,7 @@ function SaveContactConfirmModal({ suggestion, pathName, experimentId, experimen
  * Items with no title and no body are dropped rather than rendered as a card
  * with a Copy button that copies nothing.
  */
-function repairOutreachPlan(raw) {
+export function repairOutreachPlan(raw) {
   if (!isPlainObject(raw)) return null;
   const list = (value) => (Array.isArray(value) ? value.filter(isPlainObject) : []);
 
@@ -819,7 +819,7 @@ function repairOutreachPlan(raw) {
  * more ask with the gap named, because a plan missing its message templates is
  * missing the part students actually use.
  */
-function validateOutreachPlan(raw) {
+export function validateOutreachPlan(raw) {
   const plan = repairOutreachPlan(raw);
   if (!plan) {
     return { ok: false, data: null, errors: ['You returned no plan object.'], codes: ['plan_not_object'] };

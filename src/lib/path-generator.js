@@ -2,7 +2,10 @@ import { base44 } from '@/api/base44Client';
 import { loadOwnedPaths, authoritativeSet, loadOnboardingSubmission } from '@/lib/path-set';
 import { trackPilotEvent } from '@/lib/pilot-metrics';
 import { unwrapLLM, PLAIN_PROSE_RULES } from '@/lib/llm';
-import { validatePathSet, pathRecSchema, experimentSchema, str } from '@/lib/path-validation';
+import {
+  validatePathSet, pathRecSchema, experimentSchema, str,
+  READINESS_MIN, READINESS_MAX,
+} from '@/lib/path-validation';
 import { logAiFailure } from '@/lib/ai-failures';
 
 /**

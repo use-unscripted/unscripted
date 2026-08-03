@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { unwrapLLM, PLAIN_PROSE_RULES } from '@/lib/llm';
-import { toText, toTextList } from '@/lib/ai-validation';
+import { toText, toTextList, STEP_TEXT_KEYS } from '@/lib/ai-validation';
 import { generateValidated } from '@/lib/ai-generate';
 import { reportAiFailure } from '@/lib/ai-failures';
 import { ArrowLeft, ArrowRight, CheckCircle, Loader2, AlertCircle } from 'lucide-react';
@@ -29,8 +29,8 @@ import {
  * student could act on, which is the signal not to stamp the experiment as
  * having a guide.
  */
-function repairMissionGuide(raw) {
-  const steps = toTextList(raw?.mission_steps);
+export function repairMissionGuide(raw) {
+  const steps = toTextList(raw?.mission_steps, { splitLines: true });
   return {
     guide: {
       mission_objective: toText(raw?.mission_objective),
@@ -54,7 +54,7 @@ function repairMissionGuide(raw) {
  * The retry loop's view of the same repair: a guide with no steps is rejected
  * with a reason the model can act on, rather than becoming a dead experiment.
  */
-function validateMissionGuide(raw) {
+export function validateMissionGuide(raw) {
   const { guide, usable } = repairMissionGuide(raw);
   if (usable) return { ok: true, data: guide, errors: [], codes: [] };
   return {
@@ -289,7 +289,7 @@ function StepSuccess({ experiment, missionGuide, onViewGuide }) {
   const [showCal, setShowCal] = useState(false);
   // Rows written before guides were validated can hold steps as objects, and an
   // object handed to React as a child throws and blanks this screen.
-  const firstStepText = toText(missionGuide?.mission_steps?.[0]) || 'Start your first action';
+  const firstStepText = toText(missionGuide?.mission_steps?.[0], STEP_TEXT_KEYS) || 'Start your first action';
 
   return (
     <div className="space-y-6">
@@ -322,7 +322,7 @@ function StepSuccess({ experiment, missionGuide, onViewGuide }) {
             {missionGuide.mission_steps.slice(0, 5).map((s, i) => (
               <li key={i} className="flex gap-3 text-sm text-[color:var(--ink-700)]">
                 <span className="shrink-0 font-bold" style={{ color: 'var(--brand-navy-900)' }}>{i + 1}.</span>
-                <span>{toText(s)}</span>
+                <span>{toText(s, STEP_TEXT_KEYS)}</span>
               </li>
             ))}
             {missionGuide.mission_steps.length > 5 && (

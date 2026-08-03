@@ -28,7 +28,7 @@ const BLUEPRINTS = [
  * the view calls `.map` on is forced to an array of strings, and the 30-day
  * plan's nested `actions` array gets the same treatment one level down.
  */
-function repairBlueprint(raw) {
+export function repairBlueprint(raw) {
   if (!isPlainObject(raw)) return null;
   return {
     what_this_path_means: toText(raw.what_this_path_means),

@@ -399,10 +399,10 @@ function describeStep(step) {
   return `a ${typeof step}`;
 }
 
-/** Accepts 15, "15", "15 minutes", "about 20 min". Returns null if unparseable. */
 /** A single step should fit in one sitting. Four hours is already generous. */
 const MAX_STEP_MINUTES = 240;
 
+/** Accepts 15, "15", "15 minutes", "about 20 min". Returns null if unparseable. */
 function coerceMinutes(value) {
   if (typeof value === 'number' && Number.isFinite(value)) return Math.round(value);
   if (typeof value !== 'string') return null;

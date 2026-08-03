@@ -45,7 +45,13 @@ function BulletAIPopover({ bullet, onApply, onClose }) {
       // Never fall back to stringified JSON. This popover has an Apply button
       // next to it, so anything shown here is one click from the student's
       // resume and an employer reading it.
-      const text = toText(res);
+      //
+      // This is the app's only call with no response_json_schema, so it comes
+      // back as a bare string. unwrapLLM deliberately leaves a primitive under
+      // `response` alone (an array or a string there is far more likely to be a
+      // real field), which is right for structured calls and wrong here, so the
+      // wrapper is unwrapped explicitly.
+      const text = toText(typeof res?.response === 'string' ? res.response : res);
       if (!text) {
         reportAiFailure('resume_bullet', { stage: 'validate', codes: ['empty_response'], model: 'gemini_3_flash' });
         setError('That came back empty. Try again.');
