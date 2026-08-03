@@ -198,10 +198,16 @@ Be honest about fit AND misfit. Do not claim any path is objectively correct. Fi
     const incoming = (result.path_recommendations || []).slice(0, 3);
     const setStatus = incoming.length === 3 ? 'complete' : 'incomplete';
 
+    // The first recommendation is the best-fit slot by construction — the prompt asks for
+    // best fit, strong alternative, contrarian, in that order. Mark it as the primary
+    // focus: nothing else in the generate flow does, and the dashboard reads its headline
+    // straight off is_primary_focus, so without this every student who has just finished
+    // generating lands on "No primary path set / No path selected yet".
     const savedRecs = await base44.entities.PathRecommendations.bulkCreate(
-      incoming.map(r => ({
+      incoming.map((r, i) => ({
         ...r,
         status: 'exploring',
+        is_primary_focus: i === 0,
         user_id: user.id,
         onboarding_submission_id: submission?.id || profile.id || '',
         path_set_id: pathSetId,
@@ -215,11 +221,21 @@ Be honest about fit AND misfit. Do not claim any path is objectively correct. Fi
     experimentDeadline.setDate(experimentDeadline.getDate() + 30);
     const deadlineStr = experimentDeadline.toISOString().split('T')[0];
 
+    // Tag the experiments with the primary recommendation's own name, not the intake label.
+    // Every path-to-experiment linkage in the app is a `path_name` string match against
+    // PathRecommendations (dashboard, path comparison, missions, outreach, reflection,
+    // proof). The intake label is a generic bucket — "Marketing / brand" — while the
+    // recommendation carries a generated name like "Digital Brand Strategist for Boutique
+    // Agencies", so the two have never matched and none of those views ever linked up.
+    const primaryRec = savedRecs[0];
+    const experimentPathName = primaryRec?.path_name || primaryPath;
+
     const savedExps = await base44.entities.Experiments.bulkCreate(
       (result.experiments || []).slice(0, 3).map(e => ({
         ...normalizeExperiment(e),
         user_id: user.id,
-        path_name: primaryPath,
+        path_name: experimentPathName,
+        path_recommendation_id: primaryRec?.id,
         status: 'planned',
         deadline: deadlineStr,
       }))
@@ -248,6 +264,17 @@ Be honest about fit AND misfit. Do not claim any path is objectively correct. Fi
       strengths: [],
     });
     savedAmbitionId = ambition.id;
+
+    // Keep the one-primary invariant the rest of the app assumes. Only runs for a student
+    // who already had paths (an explicit forced regeneration) — done last, so a failure
+    // above rolls back without having touched anything they already had.
+    const newIds = new Set(savedRecIds);
+    const stalePrimaries = (await base44.entities.PathRecommendations.list('-created_date', 100)
+      .catch(() => []))
+      .filter(p => p.is_primary_focus && !newIds.has(p.id));
+    await Promise.allSettled(
+      stalePrimaries.map(p => base44.entities.PathRecommendations.update(p.id, { is_primary_focus: false }))
+    );
 
     await trackPilotEvent('paths_generated', { value: savedRecs.length, dedupe_key: pathSetId });
 
