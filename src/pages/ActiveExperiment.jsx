@@ -17,6 +17,7 @@ import MissionGuideHistory from '@/components/experiments/MissionGuideHistory';
 import MissionGuideGenerator from '@/components/experiments/MissionGuideGenerator';
 import AddMissionModal from '@/components/experiments/AddMissionModal';
 import JourneyEmptyState from '@/components/journey/JourneyEmptyState';
+import { Sk } from '@/components/PageSkeleton';
 
 const OPEN = ['draft', 'planned', 'in_progress'];
 const alive = (rows) => (Array.isArray(rows) ? rows : []).filter(r => r.deletion_status !== 'deleted');
@@ -74,10 +75,16 @@ export default function ActiveExperiment() {
   };
 
   if (!state) {
+    // Matches the loaded page's padding and its space-y-5 card stack. The old
+    // version used py-10 where the real page uses py-8 on mobile, so the whole
+    // screen slid up 8px the moment it loaded.
     return (
-      <main className="mx-auto max-w-3xl px-5 py-10 sm:px-8">
-        <div className="skeleton h-32 w-full" />
-        <div className="skeleton mt-4 h-48 w-full" />
+      <main className="mx-auto max-w-3xl px-5 py-8 sm:px-8 sm:py-10">
+        <div className="space-y-5">
+          <Sk h={140} r={20} />
+          <Sk h={188} r={20} />
+          <Sk h={112} r={20} />
+        </div>
       </main>
     );
   }

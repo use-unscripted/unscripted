@@ -4,6 +4,7 @@ import { base44 } from '@/api/base44Client';
 import { Plus, Mail, CheckCircle, Clock, ExternalLink, Phone, Pencil, ChevronDown, Beaker, Trash2, Users } from 'lucide-react';
 import OutreachPlanModal from '@/components/outreach/OutreachPlanModal';
 import PageHeader from '@/components/PageHeader';
+import { Sk, SkControls, SkCards } from '@/components/PageSkeleton';
 import AddContactModal, { ContactSuccessToast } from '@/components/outreach/AddContactModal';
 import PathSwitcher from '@/components/PathSwitcher';
 import SoftDeleteConfirm, { softDeletePayload } from '@/components/SoftDeleteConfirm';
@@ -302,7 +303,21 @@ export default function OutreachTracker() {
         }
       />
 
-      {paths.length > 0 && (
+      {/* Everything from here down depends on the fetch, so it swaps in one
+          go behind a skeleton. Gating each piece separately meant the path
+          switcher, the overdue banner and the two dropdowns each appeared on
+          their own beat and shoved the contact list down three times. */}
+      {loading && (
+        <>
+          <div className="mb-4 flex flex-wrap items-center gap-3">
+            <Sk h={38} w={230} r={12} />
+            <Sk h={13} w={150} r={5} />
+          </div>
+          <SkControls search filters={2} />
+        </>
+      )}
+
+      {!loading && paths.length > 0 && (
         <div className="mb-4 flex items-center gap-3 flex-wrap">
           <PathSwitcher
             paths={paths.filter(p => p.status !== 'archived')}
@@ -330,6 +345,7 @@ export default function OutreachTracker() {
       )}
 
       {/* Search + Filters */}
+      {!loading && (
       <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
         <div className="relative flex-1 min-w-[200px]">
           <Mail size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[color:var(--ink-400)]" />
@@ -350,6 +366,7 @@ export default function OutreachTracker() {
           {ALL_STATUS_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
         </select>
       </div>
+      )}
 
       {/* Email Templates */}
       <div className="mb-6">
@@ -375,7 +392,7 @@ export default function OutreachTracker() {
       </div>
 
       {loading ? (
-        <div className="py-20 text-center text-[color:var(--ink-500)]">Loading outreach contacts…</div>
+        <SkCards count={4} h={150} r={20} />
       ) : loadError ? (
         <div className="rounded-[24px] border border-dashed border-red-200 p-16 text-center">
           <h3 className="font-heading text-xl font-bold text-[color:var(--surface-dark-900)]">We couldn't load your outreach contacts.</h3>

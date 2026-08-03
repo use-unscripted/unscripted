@@ -1,7 +1,8 @@
 import { Toaster } from "@/components/ui/toaster"
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, useLocation } from 'react-router-dom';
+import AppShellSkeleton, { isShellRoute } from '@/components/AppShellSkeleton';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
@@ -58,8 +59,15 @@ import AdminCampusFeeds from '@/pages/AdminCampusFeeds';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError } = useAuth();
+  const { pathname } = useLocation();
 
   if (isLoadingPublicSettings || isLoadingAuth) {
+    // On a signed-in destination, draw the shell rather than a spinner on an
+    // empty screen — the nav and the page frame are known before the auth
+    // check comes back, so there is no reason to make people wait for them.
+    // Public pages get the plain spinner: we don't know yet whether the
+    // visitor has an account, and showing them a sidebar would be a lie.
+    if (isShellRoute(pathname)) return <AppShellSkeleton />;
     return (
       <div className="fixed inset-0 flex items-center justify-center">
         <div className="w-8 h-8 border-4 border-[color:var(--ink-200)] border-t-[color:var(--brand-navy-900)] rounded-full animate-spin"></div>

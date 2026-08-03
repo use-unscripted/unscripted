@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { Plus, Star, Pencil, Pause, Play, Archive, ArchiveRestore, ChevronDown, ChevronUp, Clock, CheckCircle2, History, ArrowRight, RotateCcw, SlidersHorizontal, X, Users } from 'lucide-react';
 import PageHeader from '@/components/PageHeader';
+import { Sk, SkCards } from '@/components/PageSkeleton';
 import CreatePathModal from '@/components/paths/CreatePathModal';
 import EditPathModal from '@/components/paths/EditPathModal';
 import ReactivationModal from '@/components/paths/ReactivationModal';
@@ -608,7 +609,11 @@ export default function PathComparison() {
       />
 
       {loading ? (
-        <div className="py-20 text-center text-[color:var(--ink-500)]">Loading your paths…</div>
+        <>
+          <Sk h={42} r={12} className="mb-4" />
+          <Sk h={46} r={12} className="mb-5" />
+          <SkCards count={3} h={210} r={24} />
+        </>
       ) : loadFailed || (paths.length === 0 && submission) ? (
         // Onboarding was completed but no paths came back — recoverable, never blank,
         // and never silently regenerated.

@@ -8,6 +8,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Library, Layers, FileText, ArrowRight, Lock } from 'lucide-react';
 import PageHeader from '@/components/PageHeader';
+import { Sk, SkCards } from '@/components/PageSkeleton';
 import EvidenceFilters from '@/components/evidence/EvidenceFilters';
 import EvidenceCard from '@/components/evidence/EvidenceCard';
 import CycleRecordView from '@/components/evidence/CycleRecordView';
@@ -54,7 +55,16 @@ export default function EvidenceLibrary() {
       />
 
       {!raw ? (
-        <p className="py-20 text-center text-[color:var(--ink-500)]">Loading your evidence…</p>
+        <div>
+          {/* view toggle · privacy note · filter bar · cards — in place, at size */}
+          <div className="mb-5 flex gap-2">
+            <Sk h={42} w={128} r={10} />
+            <Sk h={42} w={162} r={10} />
+          </div>
+          <Sk h={40} r={12} className="mb-5" />
+          <Sk h={64} r={16} className="mb-5" />
+          <SkCards count={4} h={132} r={16} />
+        </div>
       ) : openRecord ? (
         <CycleRecordView record={openRecord} onBack={() => setOpenCycleId(null)} onReview={setReviewItem} />
       ) : (

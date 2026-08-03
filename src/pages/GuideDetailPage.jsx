@@ -4,6 +4,7 @@ import { base44 } from '@/api/base44Client';
 import StepArtifact from '@/components/experiments/StepArtifact';
 import { trackPilotEvent } from '@/lib/pilot-metrics';
 import CampusEventCard from '@/components/experiments/CampusEventCard';
+import { Sk, SkCards } from '@/components/PageSkeleton';
 import { ArrowLeft, Clock, CheckCircle2, Star, Loader2 } from 'lucide-react';
 
 const STATUS_CFG = {
@@ -74,10 +75,27 @@ export default function GuideDetailPage() {
   };
 
   if (loading) {
+    // Back link · badge row · guide title · meta · steps — the real page's
+    // shape, so the guide fills the frame rather than replacing a spinner.
     return (
-      <div className="flex items-center justify-center py-32">
-        <Loader2 size={28} className="animate-spin text-[var(--brand-navy-900)]" />
-      </div>
+      <main className="mx-auto max-w-3xl px-5 py-10 sm:px-8">
+        <Sk h={14} w={150} r={5} className="mb-6" />
+        <div className="mb-6">
+          <div className="mb-2 flex flex-wrap gap-2">
+            <Sk h={22} w={78} r={999} />
+            <Sk h={22} w={64} r={999} />
+          </div>
+          <div className="flex h-9 items-center"><Sk h={30} w="76%" r={8} /></div>
+          <div className="mt-2 flex h-4 flex-wrap items-center gap-4">
+            <Sk h={11} w={130} r={4} />
+            <Sk h={11} w={70} r={4} />
+            <Sk h={11} w={54} r={4} />
+          </div>
+        </div>
+        <Sk h={42} w={196} r={10} className="mb-6" />
+        <Sk h={112} r={20} className="mb-6" />
+        <SkCards count={4} h={132} r={20} />
+      </main>
     );
   }
 

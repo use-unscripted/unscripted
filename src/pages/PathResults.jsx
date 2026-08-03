@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { ArrowRight, AlertTriangle, TrendingUp, Zap, Loader2, Rocket } from 'lucide-react';
 import { LogoWordmark } from '@/components/UnscriptedLogo';
+import { Sk, SkCards } from '@/components/PageSkeleton';
 
 const LABELS = ['Best apparent fit', 'Strong alternative', 'Contrarian option'];
 const LABEL_STYLES = [
@@ -174,10 +175,24 @@ export default function PathResults() {
     }
   };
 
+  // Wordmark, heading, standfirst, three path cards — the shape of the page
+  // this becomes. This is the first real screen a new student sees, so it is
+  // the last place we want a bare centred sentence that then vanishes.
   if (loading) return (
-    <div className="grid min-h-screen place-items-center" style={{ background: 'var(--page-surface)' }}>
-      <p className="text-[color:var(--ink-500)]">Loading your path recommendations...</p>
-    </div>
+    <main className="min-h-screen px-5 py-10" style={{ background: 'var(--page-surface)' }}>
+      <div className="mx-auto max-w-3xl">
+        <div className="mb-8"><LogoWordmark /></div>
+        <div className="mb-3">
+          <div className="mt-2 flex h-9 items-center"><Sk h={30} w="64%" r={8} /></div>
+          <div className="mt-3 max-w-xl">
+            <div className="flex h-5 items-center"><Sk h={13} w="96%" r={5} /></div>
+            <div className="flex h-5 items-center"><Sk h={13} w="88%" r={5} /></div>
+            <div className="flex h-5 items-center"><Sk h={13} w="52%" r={5} /></div>
+          </div>
+        </div>
+        <div className="mt-8"><SkCards count={3} h={232} gap={20} r={24} /></div>
+      </div>
+    </main>
   );
 
   return (

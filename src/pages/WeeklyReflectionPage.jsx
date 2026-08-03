@@ -33,6 +33,7 @@ import {
 } from 'lucide-react';
 import SoftDeleteConfirm, { softDeletePayload } from '@/components/SoftDeleteConfirm';
 import PageHeader from '@/components/PageHeader';
+import { SkCards } from '@/components/PageSkeleton';
 import { useNavigate } from 'react-router-dom';
 import PathSwitcher from '@/components/PathSwitcher';
 import { ProgressBar, OptionRow, GuidedStyles } from '@/components/guided/GuidedPieces';
@@ -1194,7 +1195,7 @@ export default function WeeklyReflectionPage() {
       />
 
       {loading ? (
-        <div className="py-20 text-center text-[color:var(--ink-500)]">Loading reflections…</div>
+        <SkCards count={3} h={172} gap={16} r={24} />
       ) : view === 'form' ? (
         experiments.length === 0 ? (
           <div className="rounded-[24px] border border-dashed p-12 text-center" style={{ borderColor: 'var(--border-light)' }}>

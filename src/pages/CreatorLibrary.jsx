@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { ExternalLink, Instagram, Youtube, Linkedin } from 'lucide-react';
 import PageHeader from '@/components/PageHeader';
+import { SkGrid } from '@/components/PageSkeleton';
 
 const FILTER_TAGS = ['All', 'Founder', 'Creator', 'Finance', 'Consulting', 'Startup', 'Fitness', 'Healthcare', 'Technology', 'Media', 'Personal Brand', 'Social Impact', 'Freelancing'];
 
@@ -145,8 +146,12 @@ export default function CreatorLibrary() {
         ))}
       </div>
 
+      {/* One row reserved, and the region holds that height once loaded, so
+          the note underneath does not slide when the grid turns out shorter
+          than the skeleton. */}
+      <div style={{ minHeight: 200 }}>
       {loading ? (
-        <div className="py-20 text-center text-[color:var(--ink-500)]">Loading profiles...</div>
+        <SkGrid count={3} h={200} cols={3} r={20} />
       ) : filtered.length === 0 ? (
         <div className="rounded-[24px] border border-dashed border-[color:var(--ink-200)] p-12 text-center text-[color:var(--ink-500)]">
           No profiles in this category yet. More are being added regularly.
@@ -169,6 +174,7 @@ export default function CreatorLibrary() {
           ))}
         </div>
       )}
+      </div>
 
       <div className="mt-10 rounded-[20px] p-5" style={{ background: 'var(--ink-100)' }}>
         <p className="text-xs font-bold uppercase tracking-wide text-[color:var(--ink-500)] mb-1">About these profiles</p>

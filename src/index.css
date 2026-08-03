@@ -224,6 +224,15 @@
     overflow-x: clip;
   }
 
+  /* Hold the scrollbar's space open whether or not the page currently needs
+     one. Without this, a screen that loads short and then fills in gains a
+     scrollbar the instant its data lands, the viewport narrows by ~15px, and
+     every centred thing on the page slides sideways. That sideways twitch is
+     part of what "the whole site jumps when it loads" was. */
+  html {
+    scrollbar-gutter: stable;
+  }
+
   body {
     @apply bg-background text-foreground font-body antialiased;
   }
@@ -362,6 +371,17 @@
   background-size: 800px 100%;
   animation: shimmer 1.4s ease-in-out infinite;
   border-radius: 8px;
+}
+
+/* Real content replacing a skeleton. Opacity only — a translate here would put
+   back the movement the skeletons exist to remove, and it reads as a settle
+   rather than an arrival. */
+@keyframes contentIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.content-in {
+  animation: contentIn 220ms var(--ease-out) both;
 }
 
 /* ── Modal / overlay entrance ────────────────────────────────────────────── */
