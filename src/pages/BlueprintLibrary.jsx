@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { base44 } from '@/api/base44Client';
+import { unwrapLLM } from '@/lib/llm';
 import PageHeader from '@/components/PageHeader';
 import BlueprintCard from '@/components/blueprints/BlueprintCard';
 import BlueprintDetail from '@/components/blueprints/BlueprintDetail';
@@ -24,7 +25,10 @@ export default function BlueprintLibrary() {
     setSelected(bp);
     setDetail(null);
     setLoading(true);
-    const result = await base44.integrations.Core.InvokeLLM({
+    // Generic reference content for six fixed blueprints — no student data goes
+    // in and nothing is personalised. Cheap tier; see src/lib/llm.js.
+    const result = unwrapLLM(await base44.integrations.Core.InvokeLLM({
+      model: 'gemini_3_flash',
       prompt: `You are Unscripted, a life-design and execution platform for ambitious college students. Generate a detailed, actionable playbook for the "${bp.label}" path. Be specific and practical—no generic advice. Focus on what a college student can actually do today. Include honest tradeoffs.`,
       response_json_schema: {
         type: 'object',
@@ -41,7 +45,7 @@ export default function BlueprintLibrary() {
           thirty_day_plan: { type: 'array', items: { type: 'object', properties: { week: { type: 'string' }, focus: { type: 'string' }, actions: { type: 'array', items: { type: 'string' } } } } },
         }
       }
-    });
+    }));
     setDetail(result);
     setLoading(false);
   };

@@ -15,6 +15,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { X, Loader2, Users, Beaker, User, ExternalLink, CheckCircle, ChevronRight, ChevronLeft, AlertTriangle, BookOpen, Save, Target, Pencil, Sparkles } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { ProgressBar, OptionRow, GuidedStyles, footerCls } from '@/components/guided/GuidedPieces';
+import { unwrapLLM } from '@/lib/llm';
 
 const inputCls = 'w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-2.5 text-sm outline-none focus:border-[#1F3A5F]';
 
@@ -849,7 +850,11 @@ export default function OutreachPlanModal({ path, experiment, onClose, onContact
     const wantPublicProfiles = survey.suggestion_type === 'both';
 
     try {
-      const result = await base44.integrations.Core.InvokeLLM({
+      // Produces message templates the student sends to real professionals and
+      // names real people — the site least tolerant of a weaker model. Highest
+      // quality tier; see src/lib/llm.js.
+      const result = unwrapLLM(await base44.integrations.Core.InvokeLLM({
+        model: 'gemini_3_1_pro',
         prompt: `You are an expert career coach helping a college student build a targeted outreach plan for the career path: "${path.path_name}".
 
 Student's context:
@@ -937,7 +942,7 @@ Return only valid JSON. Do not add commentary outside the JSON.`,
             },
           }
         }
-      });
+      }));
 
       setPlan(result);
       setStep('results');

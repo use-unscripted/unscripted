@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
+import { unwrapLLM } from '@/lib/llm';
 import { ArrowLeft, ArrowRight, CheckCircle, Loader2, AlertCircle } from 'lucide-react';
 import { LogoWordmark } from '@/components/UnscriptedLogo';
 import AddToCalendarModal from '@/components/calendar/AddToCalendarModal';
@@ -466,7 +467,11 @@ export default function ExperimentSetup() {
     // Generate Mission Guide
     try {
       await base44.entities.Experiments.update(saved.id, { mission_guide_status: 'generating' });
-      const guide = await base44.integrations.Core.InvokeLLM({
+      // Generates the Mission Guide, including the outreach email template a
+      // student sends to a real professional. Highest-quality tier; see
+      // src/lib/llm.js.
+      const guide = unwrapLLM(await base44.integrations.Core.InvokeLLM({
+        model: 'gemini_3_1_pro',
         prompt: `You are Unscripted, a path-testing platform for ambitious college students.
 
 Generate a highly specific Mission Guide for this exact experiment:
@@ -506,7 +511,7 @@ Be specific. If the experiment involves outreach, include field-specific details
             next_step: { type: 'string' },
           }
         }
-      });
+      }));
 
       await base44.entities.Experiments.update(saved.id, {
         status: 'planned',

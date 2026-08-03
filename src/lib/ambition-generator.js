@@ -1,4 +1,5 @@
 import { base44 } from '@/api/base44Client';
+import { unwrapLLM } from '@/lib/llm';
 
 const stringArray = { type: 'array', items: { type: 'string' } };
 
@@ -98,8 +99,11 @@ Student profile: ${JSON.stringify(profiles[0])}
 Schedule: ${JSON.stringify(schedules[0])}
 Goals: ${JSON.stringify(goals)}`;
 
-  const result = await base44.integrations.Core.InvokeLLM({
+  // Summarises answers the student already gave into a profile and roadmap.
+  // Stays in the app; nobody outside reads it. Cheap tier; see src/lib/llm.js.
+  const result = unwrapLLM(await base44.integrations.Core.InvokeLLM({
     prompt,
+    model: 'gemini_3_flash',
     response_json_schema: {
       type: 'object',
       properties: {
@@ -107,7 +111,7 @@ Goals: ${JSON.stringify(goals)}`;
         roadmap: { type: 'object', properties: roadmapProps }
       }
     }
-  });
+  }));
 
   await base44.entities.AmbitionProfile.create(result.profile);
   // profile_id references the StudentProfile this roadmap was generated from — NOT the

@@ -1,4 +1,5 @@
 import { base44 } from '@/api/base44Client';
+import { unwrapLLM } from '@/lib/llm';
 
 /**
  * Auto-assess risk_level and confidence_level for a path using the user's profile.
@@ -42,8 +43,11 @@ Assess:
 
 Be honest — not every path is medium risk/confidence.`;
 
-  const result = await base44.integrations.Core.InvokeLLM({
+  // Two enum labels plus reasoning the app never reads back — a classification,
+  // not a piece of writing. Cheap tier; see src/lib/llm.js.
+  const result = unwrapLLM(await base44.integrations.Core.InvokeLLM({
     prompt,
+    model: 'gemini_3_flash',
     response_json_schema: {
       type: 'object',
       properties: {
@@ -53,7 +57,7 @@ Be honest — not every path is medium risk/confidence.`;
         confidence_reasoning: { type: 'string' },
       }
     }
-  });
+  }));
 
   const updated = await base44.entities.PathRecommendations.update(path.id, {
     risk_level: result.risk_level,

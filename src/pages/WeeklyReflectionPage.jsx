@@ -26,6 +26,7 @@
  */
 import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import { base44 } from '@/api/base44Client';
+import { unwrapLLM } from '@/lib/llm';
 import {
   ArrowRight, CheckCircle, Plus, Search, X, ExternalLink, Trash2,
   ChevronLeft, ChevronRight, Loader2, AlertCircle, Save, Sparkles,
@@ -662,7 +663,11 @@ function ReflectionFlow({ experiments, missions, proofs, outreach, initialData, 
       // Named fields, not the whole component state. Stringifying state sent
       // ids, draft flags and step bookkeeping to the model and cost tokens on
       // every one of them.
-      const result = await base44.integrations.Core.InvokeLLM({
+      //
+      // Summarises a reflection the student just wrote, back to them. Short,
+      // stays in the app. Cheap tier; see src/lib/llm.js.
+      const result = unwrapLLM(await base44.integrations.Core.InvokeLLM({
+        model: 'gemini_3_flash',
         prompt: [
           'You are Unscripted. A college student is testing a career path with a real-world experiment.',
           'Using only their answers below, write: 1) a direct summary of what this week actually taught them,',
@@ -689,7 +694,7 @@ function ReflectionFlow({ experiments, missions, proofs, outreach, initialData, 
             path_adjustments: { type: 'array', items: { type: 'string' } },
           },
         },
-      });
+      }));
       setSummary(typeof result?.summary === 'string' ? result.summary : '');
       setAdjustments(toStringArray(result?.path_adjustments));
     } catch (err) {

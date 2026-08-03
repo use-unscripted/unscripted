@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import { X, Loader2, ArrowRight, ChevronRight } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
+import { unwrapLLM } from '@/lib/llm';
 
 const inputCls = 'w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-3 text-sm text-[#050816] placeholder-[#94A3B8] outline-none focus:border-[#1F3A5F]';
 
@@ -37,7 +38,10 @@ export default function CreatePathModal({ existingRecommendations = [], onClose,
     setError('');
     setGenerating(true);
     try {
-      const result = await base44.integrations.Core.InvokeLLM({
+      // Fills in one path profile from a four-question survey; the student edits
+      // every field on the next step. Cheap tier; see src/lib/llm.js.
+      const result = unwrapLLM(await base44.integrations.Core.InvokeLLM({
+        model: 'gemini_3_flash',
         prompt: `You are Unscripted, a career guidance platform. A college student wants to explore a new career path. Based on their short survey:
 - What draws them to this path: ${survey.what_draws_you}
 - What day-to-day they hope for: ${survey.day_to_day_hope}
@@ -59,7 +63,7 @@ Generate a structured path profile for them to save and test. Be realistic and h
             skill_gaps: { type: 'array', items: { type: 'string' } },
           }
         }
-      });
+      }));
       setForm(f => ({
         ...f,
         path_name: result.path_name || '',

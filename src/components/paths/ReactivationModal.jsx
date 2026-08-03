@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import { X, Loader2, ArrowRight } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
+import { unwrapLLM } from '@/lib/llm';
 
 const inputCls = 'w-full rounded-xl border border-[#E2E8F0] bg-[#FAFAF9] px-4 py-3 text-sm text-[#050816] placeholder-[#94A3B8] outline-none focus:border-[#1F3A5F] resize-none';
 
@@ -41,7 +42,10 @@ export default function ReactivationModal({ path, onClose, onReactivated }) {
     setGenerating(true);
 
     try {
-      const result = await base44.integrations.Core.InvokeLLM({
+      // Summarises the student's own reactivation answers back to them as a
+      // plan. Stays in the app. Cheap tier; see src/lib/llm.js.
+      const result = unwrapLLM(await base44.integrations.Core.InvokeLLM({
+        model: 'gemini_3_flash',
         prompt: `You are Unscripted, a career guidance platform for college students. A student is reactivating the path: "${path.path_name}". 
 
 Their reactivation survey answers:
@@ -70,7 +74,7 @@ Be concrete, practical, and encouraging without being vague.`,
             retire_items: { type: 'array', items: { type: 'string' } },
           }
         }
-      });
+      }));
 
       const planText = [
         result.summary,
