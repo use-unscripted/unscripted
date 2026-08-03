@@ -18,6 +18,7 @@ import JourneySnapshot from '@/components/journey/JourneySnapshot';
 import PathComparisonWorkspace from '@/components/journey/PathComparisonWorkspace';
 import PathSelectedConfirm from '@/components/journey/PathSelectedConfirm';
 import JourneyEmptyState from '@/components/journey/JourneyEmptyState';
+import CampusEventsPanel from '@/components/campus/CampusEventsPanel';
 import ContinuationGate from '@/components/journey/ContinuationGate';
 import { Sk } from '@/components/PageSkeleton';
 import { loadPilotAccess, CycleLimitError } from '@/lib/pilot-access';
@@ -207,12 +208,20 @@ export default function MyJourney() {
 
       <JourneySnapshot counts={counts} />
 
+      {/* The only dated thing on this page. Everything above describes a state —
+          a stage, a count, a status — and none of it says "Thursday". It stays
+          silent for a student with no college set or a calendar we cannot read,
+          so it costs nothing when it has nothing. */}
+      <CampusEventsPanel />
+
       <p className="pt-2 text-center text-xs" style={{ color: 'var(--text-muted)' }}>
         Working on something else? <Link to="/paths" className="font-semibold" style={{ color: 'var(--brand-navy-700)' }}>Compare all paths</Link>
         {' · '}
         <Link to="/experiments" className="font-semibold" style={{ color: 'var(--brand-navy-700)' }}>All missions</Link>
         {' · '}
         <Link to="/calendar" className="font-semibold" style={{ color: 'var(--brand-navy-700)' }}>Your week</Link>
+        {' · '}
+        <Link to="/campus" className="font-semibold" style={{ color: 'var(--brand-navy-700)' }}>Campus events</Link>
       </p>
     </>,
     currentPath
