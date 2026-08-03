@@ -7,6 +7,27 @@ import { createGuideOnce, newIdempotencyKey } from './guideIdempotency';
 import CampusEventPicker from './CampusEventPicker';
 import CampusEventCard from './CampusEventCard';
 
+/**
+ * What the wait screen says while the guide is being written.
+ *
+ * Measured, not guessed: one generation call took 42s on a real experiment,
+ * and a guide that fails validation pays for a second one. That is far too
+ * long for a spinner in a button — at 40 seconds an unlabelled spinner reads
+ * as a hang, and the student's next move is to press it again or leave.
+ *
+ * The lines below track what the model is actually asked to produce, in the
+ * order the prompt asks for it, so they are a description rather than
+ * decoration. They advance on a timer because the call streams nothing back to
+ * key off — which means they must never claim a step is *finished*.
+ */
+const GUIDE_STAGES = [
+  'Reading your experiment and what it has to prove',
+  'Working out the first move, and the one after that',
+  'Writing the email you send — in full, ready to use',
+  'Setting what counts as done, and the proof to keep',
+];
+const STAGE_MS = 9000;
+
 const VARIATION_OPTIONS = [
   { value: 'shorter', label: 'Shorter', description: 'Reduce scope and time commitment' },
   { value: 'detailed', label: 'More detailed', description: 'Add depth, resources, and sub-steps' },
@@ -36,6 +57,17 @@ export default function MissionGuideGenerator({ experiment, existingGuides = [],
   const [profile, setProfile] = useState(null);
   const [campusEvent, setCampusEvent] = useState(null);
   const generatingRef = useRef(false);
+  // Which of the two attempts is running. The second one exists because the
+  // model drifts on artifact completeness; when it happens the wait roughly
+  // doubles, and saying so beats leaving the student on a stalled estimate.
+  const [attempt, setAttempt] = useState(0);
+  const [stage, setStage] = useState(0);
+
+  useEffect(() => {
+    if (!generating) { setStage(0); return; }
+    const id = setInterval(() => setStage(s => Math.min(s + 1, GUIDE_STAGES.length - 1)), STAGE_MS);
+    return () => clearInterval(id);
+  }, [generating]);
 
   // The picker needs the profile to judge which events are worth a walk across
   // campus. A missing profile just means no events are offered.
@@ -80,6 +112,8 @@ export default function MissionGuideGenerator({ experiment, existingGuides = [],
     if (generatingRef.current) return;
     generatingRef.current = true;
     setGenerating(true);
+    setAttempt(0);
+    setStage(0);
     setError('');
 
     let promptContext = buildPrompt();
@@ -90,6 +124,8 @@ export default function MissionGuideGenerator({ experiment, existingGuides = [],
       let validation = null;
 
       for (let attempt = 0; attempt < 2; attempt++) {
+        setAttempt(attempt);
+        if (attempt > 0) setStage(0);
         // Mission Guides carry the outreach email a student sends to a real
         // professional. Highest-quality tier; see src/lib/llm.js.
         const result = unwrapLLM(await base44.integrations.Core.InvokeLLM({
@@ -309,6 +345,62 @@ export default function MissionGuideGenerator({ experiment, existingGuides = [],
             </div>
           )}
           {error && <p className="text-sm text-red-600 mt-2">{error}</p>}
+        </div>
+      </div>
+    );
+  }
+
+  // ── While the guide is being written ──────────────────────────────────────
+  //
+  // A screen of its own rather than a spinner in the button. The call was
+  // measured at 42 seconds, and a validation retry doubles it; nothing else in
+  // the product asks a student to wait that long at a control that still looks
+  // pressable. The options they picked are gone from view on purpose — there is
+  // nothing to change now, and leaving them there invites a second press.
+  if (generating) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(5,8,22,0.5)' }}>
+        <div className="w-full max-w-lg rounded-[24px] bg-white p-6 text-center sm:p-8" role="status" aria-live="polite">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full" style={{ background: 'var(--ink-100)' }}>
+            <Wand2 size={24} style={{ color: 'var(--brand-navy-700)' }} aria-hidden="true" />
+          </div>
+
+          <h2 className="font-heading mt-5 text-xl font-bold text-[color:var(--surface-dark-900)]">
+            {attempt > 0 ? 'Rewriting a section that came back short' : 'Writing your Mission Guide'}
+          </h2>
+          <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-[color:var(--ink-500)]">
+            {experiment.title}
+          </p>
+
+          {/* Reserved so the line changing underneath never moves the dialog. */}
+          <p className="mx-auto mt-5 flex min-h-[40px] max-w-sm items-center justify-center text-sm text-[color:var(--ink-700)]">
+            {GUIDE_STAGES[stage]}
+          </p>
+
+          <div className="mx-auto mt-4 h-1 w-48 overflow-hidden rounded-full" style={{ background: 'var(--ink-200)' }}>
+            <div className="picker-progress h-full rounded-full" style={{ background: 'var(--brand-navy-700)' }} />
+          </div>
+
+          <p className="mt-5 text-xs text-[color:var(--ink-400)]">
+            {attempt > 0
+              ? 'This one needs a second pass, so it will take about another forty seconds.'
+              : 'This usually takes about forty seconds. It writes the whole guide in one go — steps, the email, and what counts as proof.'}
+          </p>
+
+          {/* A way out. Forty seconds with no exit is a trap, and the previous
+              version had one too — its close button was disabled for the whole
+              call. Backing out is safe: nothing is written until the student
+              picks what to do with the finished guide, so leaving just drops a
+              result that was never saved. */}
+          <button
+            onClick={onClose}
+            className="mt-6 text-xs font-semibold text-[color:var(--ink-500)] underline underline-offset-2 hover:text-[color:var(--ink-700)]"
+          >
+            Stop and go back
+          </button>
+          <p className="mt-2 text-xs text-[color:var(--ink-400)]">
+            Nothing is saved until you choose what to do with it.
+          </p>
         </div>
       </div>
     );
