@@ -358,7 +358,16 @@ export default function ProofOfWorkPage() {
         />
       )}
 
-      {userPaths.length > 0 && (
+      {/* The path switcher sits above the page title, so it only existing once
+          paths land pushed the heading and everything under it down a row.
+          Stand in a block of the same height for the length of the fetch. */}
+      {loading && (
+        <div className="mb-4 flex items-center gap-3">
+          <Sk h={38} w={180} r={12} />
+        </div>
+      )}
+
+      {!loading && userPaths.length > 0 && (
         <div className="mb-4 flex items-center gap-3 flex-wrap">
           <PathSwitcher
             paths={userPaths.filter(p => p.status !== 'archived')}

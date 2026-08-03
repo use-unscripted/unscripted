@@ -11,13 +11,12 @@ import { loadOwnedPaths, authoritativeSet, loadOnboardingSubmission } from '@/li
 import { getActiveCycle } from '@/lib/career-cycle';
 import { selectPathAndBeginExperiment } from '@/lib/path-selection';
 import CycleStageSync from '@/components/journey/CycleStageSync';
-import JourneyStages from '@/components/journey/JourneyStages';
-import JourneyStatusHeader from '@/components/journey/JourneyStatusHeader';
-import ContinueCard from '@/components/journey/ContinueCard';
-import JourneySnapshot from '@/components/journey/JourneySnapshot';
+import JourneyStages, { buildStageDetail } from '@/components/journey/JourneyStages';
+import JourneyNow from '@/components/journey/JourneyNow';
 import PathComparisonWorkspace from '@/components/journey/PathComparisonWorkspace';
 import PathSelectedConfirm from '@/components/journey/PathSelectedConfirm';
 import JourneyEmptyState from '@/components/journey/JourneyEmptyState';
+import CampusEventsPanel from '@/components/campus/CampusEventsPanel';
 import ContinuationGate from '@/components/journey/ContinuationGate';
 import { Sk } from '@/components/PageSkeleton';
 import { loadPilotAccess, CycleLimitError } from '@/lib/pilot-access';
@@ -92,19 +91,19 @@ export default function MyJourney() {
     // depend on data are standing in for anything.
     return (
       <main className="mx-auto max-w-4xl px-5 py-8 sm:px-8 sm:py-10">
-        <header className="mb-6">
-          <h1 className="font-heading text-3xl font-bold tracking-tight sm:text-4xl" style={{ color: 'var(--text-primary)' }}>
+        <header className="mb-7">
+          <h1 className="font-heading text-2xl font-bold tracking-tight sm:text-3xl" style={{ color: 'var(--text-primary)' }}>
             My Journey
           </h1>
           <div className="mt-2 flex h-6 items-center">
             <Sk h={13} r={5} w="72%" style={{ maxWidth: 440 }} />
           </div>
         </header>
-        <div className="space-y-5">
-          <Sk h={148} r={20} />
-          <Sk h={104} r={20} />
-          <Sk h={84} r={20} />
-          <Sk h={128} r={20} />
+        <div className="space-y-9">
+          <Sk h={232} r={22} />
+          <div className="space-y-4">
+            {[0, 1, 2, 3, 4, 5].map(i => <Sk key={i} h={30} r={8} w={i % 2 ? '58%' : '74%'} />)}
+          </div>
         </div>
       </main>
     );
@@ -116,15 +115,22 @@ export default function MyJourney() {
   const scrollToDecision = () =>
     document.getElementById('decision')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
+  const stageDetail = buildStageDetail({
+    counts,
+    currentPath,
+    nextExperiment,
+    experimentsDone: counts.experimentsDone,
+  });
+
   const shell = (children, sub) => (
     <main className="mx-auto max-w-4xl px-5 py-8 sm:px-8 sm:py-10">
-      <header className="mb-6">
-        <h1 className="font-heading text-3xl font-bold tracking-tight sm:text-4xl" style={{ color: 'var(--text-primary)' }}>
+      <header className="mb-7">
+        <h1 className="font-heading text-2xl font-bold tracking-tight sm:text-3xl" style={{ color: 'var(--text-primary)' }}>
           My Journey
         </h1>
         <p className="mt-2 text-sm leading-6" style={{ color: 'var(--text-secondary)' }}>{sub}</p>
       </header>
-      <div className="space-y-5">{children}</div>
+      <div className="space-y-9">{children}</div>
     </main>
   );
 
@@ -145,8 +151,8 @@ export default function MyJourney() {
     });
     return shell(
       <>
-        <JourneyStages stage={stage} />
         <ContinuationGate />
+        <JourneyStages stage={stage} detail={stageDetail} />
       </>,
       'Your first cycle is complete. Everything you produced stays in your Evidence Library.'
     );
@@ -161,7 +167,6 @@ export default function MyJourney() {
   if (!currentPath && !confirmed) {
     return shell(
       <>
-        <JourneyStages stage={stage} />
         <PathComparisonWorkspace
           paths={comparisonPaths}
           onSelect={handleSelect}
@@ -169,6 +174,7 @@ export default function MyJourney() {
           error={selectError}
           onRetry={() => setSelectError(null)}
         />
+        <JourneyStages stage={stage} detail={stageDetail} />
       </>,
       'Compare your three paths below, then choose the one you will test first.'
     );
@@ -189,23 +195,30 @@ export default function MyJourney() {
         />
       )}
 
-      <JourneyStatusHeader
+      <JourneyNow
         stage={stage}
         path={currentPath}
         experiment={nextExperiment}
         action={action}
         effort={effort}
+        onAnchorClick={scrollToDecision}
       />
 
-      <ContinueCard action={action} pathName={currentPath?.path_name} onAnchorClick={scrollToDecision} />
-
-      <JourneyStages stage={stage} />
-
-      {!nextExperiment && !experimentDone && <JourneyEmptyState variant="experiment" ctaTo={action.to} />}
+      {/* The "no experiment yet" case is not listed here: the panel above is
+          already showing that exact call to action, and two buttons pointing at
+          the same route is what made this page read as a menu. */}
       {experimentDone && counts.proof === 0 && <JourneyEmptyState variant="experiment_done" />}
       {data.cycle?.legacy_review && <JourneyEmptyState variant="legacy" />}
 
-      <JourneySnapshot counts={counts} />
+      {/* The only dated thing on this page, and the reason it sits directly
+          under the instruction rather than at the bottom: everything else here
+          describes a state — a stage, a count, a status — and none of it says
+          "Thursday". The top of the page is what to do; the spine below is the
+          record. It stays silent for a student with no college set or a
+          calendar we cannot read, so it costs nothing when it has nothing. */}
+      <CampusEventsPanel />
+
+      <JourneyStages stage={stage} detail={stageDetail} />
 
       <p className="pt-2 text-center text-xs" style={{ color: 'var(--text-muted)' }}>
         Working on something else? <Link to="/paths" className="font-semibold" style={{ color: 'var(--brand-navy-700)' }}>Compare all paths</Link>
@@ -213,6 +226,8 @@ export default function MyJourney() {
         <Link to="/experiments" className="font-semibold" style={{ color: 'var(--brand-navy-700)' }}>All missions</Link>
         {' · '}
         <Link to="/calendar" className="font-semibold" style={{ color: 'var(--brand-navy-700)' }}>Your week</Link>
+        {' · '}
+        <Link to="/campus" className="font-semibold" style={{ color: 'var(--brand-navy-700)' }}>Campus events</Link>
       </p>
     </>,
     currentPath
