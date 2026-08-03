@@ -486,8 +486,8 @@ describe('not asking twice', () => {
     expect(base44.integrations.Core.InvokeLLM).toHaveBeenCalledTimes(1);
   });
 
-  // Dropping a ranking the model failed to produce covers a failure the ranking
-  // RETURNED. One it threw never reaches that check: the rejected promise stays
+  // The two tests above cover a failure the ranking RETURNED. This is the other
+  // case: one it THREW never reaches that check, so the rejected promise stays
   // in the map and re-throws on every read until the TTL runs out.
   it('does not remember a ranking that threw', async () => {
     const events = [calendarEvent()];

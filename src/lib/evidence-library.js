@@ -9,6 +9,7 @@
  * from something the student typed or stored themselves — no employers, titles,
  * metrics, dates or skills are generated.
  */
+import { entityTime, localDayStart, localDayStartPlus } from '@/lib/dates';
 
 const live = (r) => r && r.deletion_status !== 'deleted' && r.deletion_status !== 'permanently_deleted';
 
@@ -112,8 +113,19 @@ export function filterEvidence(items, f) {
     if (f.skill !== 'all' && !i.skills.includes(f.skill)) return false;
     if (f.visibility !== 'all' && i.visibility !== f.visibility) return false;
     if (f.resume !== 'all' && i.resumeStatus !== f.resume) return false;
-    if (f.from && (!i.date || new Date(i.date) < new Date(f.from))) return false;
-    if (f.to && (!i.date || new Date(i.date) > new Date(`${f.to}T23:59:59`))) return false;
+    // From/To come from <input type="date">, so they are the student's own
+    // local calendar days: the range runs local midnight to local end-of-day.
+    // `i.date` is an entity timestamp, which is UTC with no `Z` on it — parsing
+    // it with `new Date()` shifted it hours forward and dropped work logged in
+    // the evening of the last day in the range.
+    if (f.from || f.to) {
+      const t = entityTime(i.date);
+      if (!Number.isFinite(t)) return false;
+      const from = localDayStart(f.from);
+      const to = localDayStartPlus(f.to, 1); // through the end of the To day
+      if (from && t < from.getTime()) return false;
+      if (to && t >= to.getTime()) return false;
+    }
     if (q && ![i.title, i.pathName, i.experimentTitle, i.missionTitle, ...(i.skills || [])].join(' ').toLowerCase().includes(q)) return false;
     return true;
   });

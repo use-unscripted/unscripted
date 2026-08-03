@@ -676,7 +676,8 @@ export function attachCampusEvent(guide, event) {
       ics_url: event.ics_url || '',
       ticket_url: event.ticket_url || '',
       has_register: Boolean(event.has_register),
-      is_free: event.is_free !== false,
+      // Carried through as-is, including null for "the calendar didn't say".
+      is_free: typeof event.is_free === 'boolean' ? event.is_free : null,
       departments: event.departments || [],
       source: 'campus_calendar',
     },

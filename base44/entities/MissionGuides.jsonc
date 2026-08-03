@@ -20,6 +20,9 @@
     "version_number": {
       "type": "number"
     },
+    "idempotency_key": {
+      "type": "string"
+    },
     "generation_prompt_context": {
       "type": "string"
     },

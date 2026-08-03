@@ -61,11 +61,18 @@ function cached(key, ttl, produce) {
   const entry = { at: Date.now(), value };
   cache.set(key, entry);
 
-  // A verdict we asked for and did not get is not an answer. `recommendCampusEvents`
-  // already drops a ranking the model failed to produce, but that only covers a
-  // failure the producer returned; one it THREW leaves a rejected promise sitting
-  // in the map, re-throwing on every read for the rest of the TTL. Nothing is
-  // memoised that did not resolve.
+  // There are two ways a ranking fails to be an answer, and they are handled in
+  // two different places. Do not collapse them:
+  //
+  //   it RETURNED a failure — the model call errored, or answered something we
+  //     could not read. `recommendCampusEvents` sees `outcome.failed` and drops
+  //     the key itself. That is the incumbent path and it stays where it is.
+  //   it THREW — nothing after the model call is wrapped, so anything that
+  //     raises leaves a REJECTED PROMISE in the map. `outcome.failed` is never
+  //     reached to clear it, and every later read re-throws the same stale
+  //     failure until the TTL runs out.
+  //
+  // This covers the second. Nothing is memoised that did not resolve.
   if (value && typeof value.then === 'function') {
     value.then(undefined, () => {
       if (cache.get(key) === entry) cache.delete(key);

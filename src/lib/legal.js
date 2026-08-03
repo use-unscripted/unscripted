@@ -31,6 +31,16 @@ export const CONTACT_EMAIL = 'useunscripted@gmail.com';
 /** Last substantive revision. Update whenever the terms actually change. */
 export const EFFECTIVE_DATE = 'July 31, 2026';
 
+/**
+ * Last amendment to the Privacy Policy specifically.
+ *
+ * Separate from EFFECTIVE_DATE because the two dates answer different
+ * questions and Section 16 promises the Last Updated date tracks amendments.
+ * Corrections to what the Policy describes move this; they don't restart the
+ * date the Policy took effect.
+ */
+export const PRIVACY_LAST_UPDATED = 'August 3, 2026';
+
 /** Minimum age to hold an account. 13–17 requires a parent or guardian's permission. */
 export const MIN_AGE = 13;
 

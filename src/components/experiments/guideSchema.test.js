@@ -495,7 +495,7 @@ describe('attachCampusEvent', () => {
       ics_url: '',
       ticket_url: '',
       has_register: false,
-      is_free: true,
+      is_free: null,
       departments: [],
       source: 'campus_calendar',
     });
@@ -504,6 +504,19 @@ describe('attachCampusEvent', () => {
   it('keeps a paid event paid', () => {
     const pinned = attachCampusEvent(validGuide(), { id: 7, is_free: false }).steps[0].campus_event;
     expect(pinned.is_free).toBe(false);
+  });
+
+  it('keeps a free event free', () => {
+    const pinned = attachCampusEvent(validGuide(), { id: 7, is_free: true }).steps[0].campus_event;
+    expect(pinned.is_free).toBe(true);
+  });
+
+  // Most school calendars carry no price at all, so this is the usual case and
+  // it must stay distinguishable from both of the above. Guessing either way
+  // puts a claim about money in front of a student that nobody made.
+  it('leaves an unstated price unknown rather than guessing free', () => {
+    const pinned = attachCampusEvent(validGuide(), { id: 7 }).steps[0].campus_event;
+    expect(pinned.is_free).toBeNull();
   });
 
   it('returns the guide untouched when there is nothing to pin to', () => {

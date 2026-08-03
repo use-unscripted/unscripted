@@ -22,7 +22,27 @@ const RISK_SCORE = {
 
 export function confScore(p) { return CONF_SCORE[norm(p.confidence_level)] ?? 3; }
 export function riskScore(p) { return RISK_SCORE[norm(p.risk_level)] ?? 3; }
-export function readinessScore(p) { return p.readiness_score ?? 50; }
+
+/**
+ * Ordering key for readiness. NOT a display value.
+ *
+ * readiness_score is 0–10 (PathResults renders it as n/10). Live rows run
+ * 0.6 to 9 and include fractional values, so this is a continuous score, not
+ * an integer band. It used to default to 50, a leftover from an assumed
+ * 0–100 scale, which put every unscored path above every scored one — the
+ * exact opposite of the intended "readiness desc" ordering.
+ *
+ * UNSCORED is -1 rather than 0 so that a path the model genuinely scored 0
+ * still outranks a path that was never scored at all. Those are different
+ * facts and the sort shouldn't conflate them.
+ *
+ * Nothing renders this number: PathResults reads the raw field and prints
+ * "Not scored" when it is missing. Keep it that way — a sentinel on screen
+ * would be a lie, which is why sorting and display stay separate here.
+ */
+export const UNSCORED_READINESS = -1;
+
+export function readinessScore(p) { return p.readiness_score ?? UNSCORED_READINESS; }
 
 // ── Sort comparators ──────────────────────────────────────────────────────────
 // All return negative / 0 / positive like Array.sort compareFn.
