@@ -16,6 +16,7 @@ import {
   eventSearchUrl,
   eventSourceHost,
   recommendCampusEvents,
+  resetCampusEventCache,
   schoolEventsSearchUrl,
   submitCalendarUrl,
   SUBMISSION_REJECTIONS,
@@ -53,6 +54,9 @@ const PROFILE = { college: 'Fairfield University', major: 'Finance', school_year
 
 afterEach(() => {
   vi.resetAllMocks();
+  // The feed and the ranking are both remembered between calls, so every test
+  // has to start from a cold one or it reads the test before it.
+  resetCampusEventCache();
 });
 
 describe('recommendCampusEvents', () => {
@@ -279,6 +283,123 @@ describe('fetchCampusEvents', () => {
       college: '',
       error: 'function timed out',
     });
+  });
+});
+
+// The picker lives in a modal a student opens, closes and opens again. Every
+// one of those mounts used to re-read the school's whole calendar and re-run a
+// paid model call to render what was already on screen.
+describe('not asking twice', () => {
+  it('reads the calendar once for repeated opens', async () => {
+    base44.functions.invoke.mockResolvedValue({ status: 'ok', events: [calendarEvent()] });
+
+    await fetchCampusEvents();
+    await fetchCampusEvents();
+    await fetchCampusEvents();
+
+    expect(base44.functions.invoke).toHaveBeenCalledTimes(1);
+  });
+
+  it('sends one request when two mounts race each other', async () => {
+    base44.functions.invoke.mockResolvedValue({ status: 'ok', events: [calendarEvent()] });
+
+    await Promise.all([fetchCampusEvents(), fetchCampusEvents()]);
+
+    expect(base44.functions.invoke).toHaveBeenCalledTimes(1);
+  });
+
+  it('asks again for a different window', async () => {
+    base44.functions.invoke.mockResolvedValue({ status: 'ok', events: [] });
+
+    await fetchCampusEvents({ days: 45, limit: 20 });
+    await fetchCampusEvents({ days: 30, limit: 20 });
+
+    expect(base44.functions.invoke).toHaveBeenCalledTimes(2);
+  });
+
+  // A school's server failing to answer is the one outcome worth re-asking
+  // about — the student is looking at a retry button.
+  it('does not remember a failed lookup', async () => {
+    base44.functions.invoke.mockRejectedValue(new Error('down'));
+    await fetchCampusEvents();
+
+    base44.functions.invoke.mockResolvedValue({ status: 'ok', events: [calendarEvent()] });
+    await expect(fetchCampusEvents()).resolves.toMatchObject({ status: 'ok' });
+
+    expect(base44.functions.invoke).toHaveBeenCalledTimes(2);
+  });
+
+  it('goes back to the school when the student asks it to retry', async () => {
+    base44.functions.invoke.mockResolvedValue({ status: 'ok', events: [calendarEvent()] });
+
+    await fetchCampusEvents();
+    await fetchCampusEvents({ refresh: true });
+
+    expect(base44.functions.invoke).toHaveBeenCalledTimes(2);
+  });
+
+  it('forgets the calendar once a student tells us where it is', async () => {
+    base44.functions.invoke.mockResolvedValue({ status: 'ok', events: [calendarEvent()] });
+    await fetchCampusEvents();
+
+    await submitCalendarUrl('https://fairfield.campusgroups.com');
+    await fetchCampusEvents();
+
+    // The read, the submission, and a read that no longer trusts the old answer.
+    expect(base44.functions.invoke).toHaveBeenCalledTimes(3);
+  });
+
+  it('ranks the same events for the same student once', async () => {
+    const events = [calendarEvent()];
+    base44.integrations.Core.InvokeLLM.mockResolvedValue({
+      recommendations: [{ event_id: '1', fit_reason: 'Alumni who do the job.' }],
+    });
+
+    await recommendCampusEvents(events, PROFILE);
+    await recommendCampusEvents(events, PROFILE);
+
+    expect(base44.integrations.Core.InvokeLLM).toHaveBeenCalledTimes(1);
+  });
+
+  it('ranks again when the events change', async () => {
+    base44.integrations.Core.InvokeLLM.mockResolvedValue({ recommendations: [] });
+
+    await recommendCampusEvents([calendarEvent()], PROFILE);
+    await recommendCampusEvents([calendarEvent({ id: '2' })], PROFILE);
+
+    expect(base44.integrations.Core.InvokeLLM).toHaveBeenCalledTimes(2);
+  });
+
+  it('ranks again when the student changes', async () => {
+    const events = [calendarEvent()];
+    base44.integrations.Core.InvokeLLM.mockResolvedValue({ recommendations: [] });
+
+    await recommendCampusEvents(events, PROFILE);
+    await recommendCampusEvents(events, { ...PROFILE, career_interests: 'Product design' });
+
+    expect(base44.integrations.Core.InvokeLLM).toHaveBeenCalledTimes(2);
+  });
+
+  it('ranks again when the path being tested changes', async () => {
+    const events = [calendarEvent()];
+    base44.integrations.Core.InvokeLLM.mockResolvedValue({ recommendations: [] });
+
+    await recommendCampusEvents(events, PROFILE, { pathName: 'Investment Banking' });
+    await recommendCampusEvents(events, PROFILE, { pathName: 'Product Management' });
+
+    expect(base44.integrations.Core.InvokeLLM).toHaveBeenCalledTimes(2);
+  });
+
+  it('a retry clears the ranking too, not just the calendar', async () => {
+    const events = [calendarEvent()];
+    base44.functions.invoke.mockResolvedValue({ status: 'ok', events });
+    base44.integrations.Core.InvokeLLM.mockResolvedValue({ recommendations: [] });
+
+    await recommendCampusEvents(events, PROFILE);
+    await fetchCampusEvents({ refresh: true });
+    await recommendCampusEvents(events, PROFILE);
+
+    expect(base44.integrations.Core.InvokeLLM).toHaveBeenCalledTimes(2);
   });
 });
 
