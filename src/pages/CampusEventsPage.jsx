@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Loader2, List, LayoutGrid, ChevronDown, RefreshCw } from 'lucide-react';
 import PageHeader from '@/components/PageHeader';
 import ScrollReveal from '@/components/ScrollReveal';
@@ -40,6 +40,25 @@ import { describeAge } from '@/lib/campus-store';
  * the list is the default below `sm` and the grid above it, and the toggle is
  * always there because the choice is a preference, not a capability.
  *
+ * The default keeps tracking the width as it changes, right up until the
+ * student presses the toggle. A window dragged narrower is the same situation
+ * as a narrow window, and it used to be handled differently only because the
+ * width was read once at mount and never again. Once they have chosen, the
+ * choice stands at every size: it is theirs, not ours.
+ *
+ * ## The grid measures itself rather than trusting a breakpoint
+ *
+ * A media query cannot answer this. The same 1100px window gives the calendar
+ * roughly 500px with the day panel beside it and roughly 1000px without, and
+ * what decides whether a square can hold a title is the square. So the section
+ * is measured and the density comes out of the arithmetic: seven columns, six
+ * gaps, and 72px as the width below which a title clamps to nothing useful.
+ *
+ * Under it, squares fall back to a number and a dot per event. That is a real
+ * month calendar at a size where the full one is unreadable, and it is why the
+ * squeeze between 1024px and about 1180px, where the two-column layout starts
+ * but the calendar is still narrow, stopped producing "Fall Wel…" in every box.
+ *
  * ## The first visit is slow and says so. No visit after it is.
  *
  * Reading a school's calendar takes as long as it takes: the feed has to be
@@ -63,6 +82,52 @@ export default function CampusEventsPage() {
   const [view, setView] = useState(() =>
     typeof window !== 'undefined' && window.matchMedia('(min-width: 640px)').matches ? 'grid' : 'list',
   );
+
+  // Follow the width until the student says otherwise, then never again.
+  const viewChosen = useRef(false);
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) return;
+    const wide = window.matchMedia('(min-width: 640px)');
+    const follow = e => { if (!viewChosen.current) setView(e.matches ? 'grid' : 'list'); };
+    wide.addEventListener('change', follow);
+    return () => wide.removeEventListener('change', follow);
+  }, []);
+
+  const chooseView = useCallback(next => { viewChosen.current = true; setView(next); }, []);
+
+  // What one day square would actually get: the section's inner width, minus
+  // the six 4px gaps between seven columns.
+  const [cellWidth, setCellWidth] = useState(0);
+  const gridBox = useRef(null);
+  const measure = useCallback(node => {
+    gridBox.current = node;
+    if (node) setCellWidth((node.clientWidth - 24) / 7);
+  }, []);
+
+  useEffect(() => {
+    const node = gridBox.current;
+    if (!node || typeof ResizeObserver === 'undefined') return;
+    const observer = new ResizeObserver(([entry]) => {
+      setCellWidth((entry.contentRect.width - 24) / 7);
+    });
+    observer.observe(node);
+    return () => observer.disconnect();
+    // The section only exists once there are events, so this has to re-run when
+    // the calendar appears rather than only on the first render of the page.
+  }, [loading, status, view]);
+
+  /** Titles need room. Under this a square can only honestly show that a day is busy. */
+  const compactGrid = cellWidth > 0 && cellWidth < 72;
+
+  // Below `lg` the day panel sits under the calendar, off screen. On a compact
+  // grid the square itself says nothing but "something is on", so a tap that
+  // appears to do nothing is the whole interaction failing.
+  const dayPanel = useRef(null);
+  useEffect(() => {
+    if (!selectedKey || !dayPanel.current) return;
+    if (typeof window === 'undefined' || window.innerWidth >= 1024) return;
+    dayPanel.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }, [selectedKey]);
 
   const eventsByDay = useMemo(() => groupEventsByDay(events), [events]);
   const pickIds = useMemo(() => new Set(picks.map(p => p.id)), [picks]);
@@ -109,7 +174,7 @@ export default function CampusEventsPage() {
         }
         action={
           status === 'ok' ? (
-            <ViewToggle view={view} onChange={setView} />
+            <ViewToggle view={view} onChange={chooseView} />
           ) : null
         }
       />
@@ -177,7 +242,7 @@ export default function CampusEventsPage() {
             style={{ border: '1px solid var(--border-light)' }}
           >
             {view === 'grid' ? (
-              <>
+              <div ref={measure}>
                 <CampusMonthGrid
                   month={month}
                   eventsByDay={eventsByDay}
@@ -186,18 +251,27 @@ export default function CampusEventsPage() {
                   onChangeMonth={next => { setMonth(next); setSelectedKey(''); }}
                   range={range}
                   pickIds={pickIds}
+                  compact={compactGrid}
                 />
                 {/*
                   Only says something when the grid can't. A count and a "tap a
                   day" instruction under a grid full of visible, tappable days
                   is telling the student what they are already looking at.
+
+                  A compact square is the exception: it shows that a day has
+                  something on it and cannot show what, so the way through has
+                  to be said out loud once.
                 */}
-                {monthEvents.length === 0 && (
+                {monthEvents.length === 0 ? (
                   <p className="mt-3 text-xs" style={{ color: 'var(--text-muted)' }}>
                     Nothing on this month.
                   </p>
-                )}
-              </>
+                ) : compactGrid ? (
+                  <p className="mt-3 text-xs" style={{ color: 'var(--text-muted)' }}>
+                    Tap a day to see what's on, or switch to List to read the whole month.
+                  </p>
+                ) : null}
+              </div>
             ) : (
               <MonthList
                 month={month}
@@ -212,6 +286,7 @@ export default function CampusEventsPage() {
 
           {/* The selected day, or what's next */}
           <ScrollReveal as="aside" delay={80} className="min-w-0">
+            <div ref={dayPanel} className="scroll-mt-4">
             <DayPanel
               selectedKey={selectedKey}
               selectedEvents={selectedEvents}
@@ -221,6 +296,7 @@ export default function CampusEventsPage() {
               college={college}
               onClear={() => setSelectedKey('')}
             />
+            </div>
           </ScrollReveal>
         </div>
       )}
