@@ -1,19 +1,25 @@
 /* Cabinet Grotesk (display/headings) + Switzer (body) from Fontshare, free for
-   commercial use. Geist Mono is the outlier register — wordmark and the
-   readiness scores only, nowhere else.
+   commercial use. Two faces, and that is the whole type system.
 
-   Replaced Josefin Sans + Inter as the site's type system. Inter is the most
-   recognisable generated-page body default there is; Josefin is a display face
-   with a very small x-height that was being asked to set form labels.
+   Replaced Josefin Sans + Inter. Inter is the most recognisable
+   generated-page body default there is; Josefin is a display face with a very
+   small x-height that was being asked to set form labels.
+
+   A Geist Mono import used to sit here, described as the register for the
+   wordmark and the readiness scores. It set neither: the wordmark is an image
+   and the scores are Cabinet Grotesk, and nothing in the app ever named the
+   face. It was a render-blocking font request for a face that never painted a
+   pixel, so it's gone. --font-mono below is the system stack and is what the
+   handful of genuinely monospaced spots use. If a mono display face is ever
+   actually wanted, import it AND point --font-mono at it in the same change.
 
    Playfair Display and Oswald below are NOT part of the type system and must
    not be used as such. They exist only for the university marquee, which sets
    fake school wordmarks in deliberately distinct silhouettes — an old-guard
    serif and an athletic condensed. They're simulated third-party marks, so
-   they sit outside the display/body/mono rule. Don't reach for them anywhere
-   else on the site. */
+   they sit outside the display/body rule. Don't reach for them anywhere else
+   on the site. */
 @import url('https://api.fontshare.com/v2/css?f[]=cabinet-grotesk@800,700,500,400&f[]=switzer@400,500,600,700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&family=Oswald:wght@400;500;600&family=Josefin+Sans:wght@600&display=swap');
 
 @tailwind base;
@@ -204,6 +210,18 @@
 @layer base {
   * {
     @apply border-border outline-ring/50;
+  }
+
+  /* Sideways-scroll guard. `clip`, never `hidden`: hidden turns the root into
+     a scroll container, which silently kills the landing nav's position:
+     sticky. clip crops without creating one, so sticky survives.
+
+     Nothing on the site overflows today — this is a rail so that the next
+     over-wide element shows up as a clipped edge in review instead of as a
+     horizontal scrollbar on somebody's phone. Vertical scroll is untouched. */
+  html,
+  body {
+    overflow-x: clip;
   }
 
   body {

@@ -10,21 +10,21 @@ const PATHS = [
     id: 'career',
     label: 'A traditional professional career',
     icon: Briefcase,
-    tagline: "Whether the day-to-day of the role — not the title — is something you'd still want five years in.",
+    tagline: "Whether the day-to-day of the role — not the title — is something you’d still want five years in.",
     missions: [
       'Interview three people who are two to five years into the role',
       'Sit in on one real work session or shadow a full day',
       'Rebuild one deliverable they actually produce each week',
     ],
     green: 'The unglamorous 80% of the work still holds your attention.',
-    red: "You're drawn to how the job sounds when you describe it to other people.",
+    red: "You’re drawn to how the job sounds when you describe it to other people.",
     evidence: 'three interview write-ups and one work sample you can hand a recruiter.',
   },
   {
     id: 'startup',
     label: 'Joining a startup',
     icon: Rocket,
-    tagline: "Whether you want the ambiguity and range, or you're mostly reacting to the story startups tell about themselves.",
+    tagline: "Whether you want the ambiguity and range, or you’re mostly reacting to the story startups tell about themselves.",
     missions: [
       'Map ten early-stage companies hiring near you or remote',
       'Interview two people who joined before the company had structure',
@@ -52,14 +52,14 @@ const PATHS = [
     id: 'brand',
     label: 'Building a personal brand',
     icon: Megaphone,
-    tagline: "Whether you'll keep publishing in the stretch where nobody is watching yet.",
+    tagline: "Whether you’ll keep publishing in the stretch where nobody is watching yet.",
     missions: [
       'Pick one audience and one specific promise to them',
       'Publish twelve pieces in thirty days on a single platform',
       'Turn three of those pieces into three real conversations',
     ],
     green: 'You have more to say in week four than you did in week one.',
-    red: "You're checking the metrics more often than you're making the work.",
+    red: "You’re checking the metrics more often than you’re making the work.",
     evidence: 'twelve published pieces and a record of what actually landed.',
   },
   {
@@ -87,7 +87,7 @@ const PATHS = [
       'Price the real cost: tuition, years, and income you forgo',
     ],
     green: 'Everyone doing the work you want needed the credential to get there.',
-    red: "You're applying because the next step is unclear, not because it's required.",
+    red: "You’re applying because the next step is unclear, not because it’s required.",
     evidence: 'a written cost-and-alternatives case you can revisit before any deposit is due.',
   },
   {
@@ -101,7 +101,7 @@ const PATHS = [
       'Own one small deliverable from start to finish',
     ],
     green: 'The work still matters to you on the days it is tedious.',
-    red: "You're more attached to the identity than to the outcome.",
+    red: "You’re more attached to the identity than to the outcome.",
     evidence: 'ten logged hours, a finished deliverable, and an honest read on the tradeoffs.',
   },
 ];
@@ -153,11 +153,14 @@ function PathCard({ path }) {
         ))}
       </ol>
 
+      {/* These three used to be bordered boxes, which made this a bordered
+          card holding three more bordered cards — three containment layers
+          where one does the job. The tinted fills already separate them from
+          the card, and they separate them by meaning (green / red / gold)
+          rather than by drawing another rectangle. Borders removed; don't
+          put them back. */}
       <div className="mt-6 grid gap-3 sm:grid-cols-2">
-        <div
-          className="rounded-[var(--r-control)] p-3.5"
-          style={{ background: 'rgba(22,163,74,0.06)', border: '1px solid rgba(22,163,74,0.20)' }}
-        >
+        <div className="rounded-[var(--r-control)] p-3.5" style={{ background: 'rgba(22,163,74,0.07)' }}>
           <div className="flex items-center gap-1.5">
             <Check size={13} strokeWidth={3} style={{ color: 'var(--success-700)' }} />
             <span className="text-[11px] font-bold uppercase tracking-[.12em]" style={{ color: 'var(--success-700)' }}>
@@ -166,14 +169,11 @@ function PathCard({ path }) {
           </div>
           <p className="mt-1.5 text-sm leading-6" style={{ color: 'var(--text-secondary)' }}>{path.green}</p>
         </div>
-        <div
-          className="rounded-[var(--r-control)] p-3.5"
-          style={{ background: 'rgba(220,38,38,0.05)', border: '1px solid rgba(220,38,38,0.18)' }}
-        >
+        <div className="rounded-[var(--r-control)] p-3.5" style={{ background: 'rgba(220,38,38,0.06)' }}>
           <div className="flex items-center gap-1.5">
             <AlertTriangle size={13} strokeWidth={2.5} style={{ color: 'var(--danger-700)' }} />
             <span className="text-[11px] font-bold uppercase tracking-[.12em]" style={{ color: 'var(--danger-700)' }}>
-              Signal it doesn't
+              Signal it doesn’t
             </span>
           </div>
           <p className="mt-1.5 text-sm leading-6" style={{ color: 'var(--text-secondary)' }}>{path.red}</p>
@@ -182,7 +182,7 @@ function PathCard({ path }) {
 
       <div
         className="mt-5 flex items-start gap-2.5 rounded-[var(--r-control)] px-4 py-3.5"
-        style={{ background: 'rgba(214,182,106,0.12)', border: '1px solid rgba(214,182,106,0.35)' }}
+        style={{ background: 'rgba(214,182,106,0.14)' }}
       >
         <FlaskConical size={15} className="mt-1 shrink-0" style={{ color: 'var(--brand-gold-600)' }} />
         <p className="text-sm leading-6" style={{ color: 'var(--text-primary)' }}>

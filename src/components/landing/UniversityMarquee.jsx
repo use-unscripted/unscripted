@@ -158,25 +158,52 @@ const SCHOOLS = [
 /* Flip to false for the one-ink version. */
 const TINTED = true;
 
-/* School colors were picked for a football helmet, not for 13px text on white.
-   Carolina blue is 1.9:1 and Tennessee orange 2.3:1 — invisible as words. Walk
-   the color toward black until it clears the 4.5:1 text minimum, which keeps
-   the hue (it still reads as Carolina blue) and makes it legible. */
-const contrast = (r, g, b) => {
+/* School colors were picked for a football helmet, not for 13px text. Carolina
+   blue is 1.9:1 and Tennessee orange 2.3:1 — invisible as words. Walk the color
+   toward black until it clears the 4.5:1 text minimum, which keeps the hue (it
+   still reads as Carolina blue) and makes it legible. */
+const luminance = (r, g, b) => {
   const lin = (c) => {
     const s = c / 255;
     return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
   };
-  const L = 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
-  return 1.05 / (L + 0.05);
+  return 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
 };
+
+/* The ground is the strip's own background, which is --page-surface — NOT
+   white. This used to hard-code white's 1.05 numerator, which was right only
+   for as long as the strip sat on #FFF. Paper is 0.955 luminance against
+   white's 1.0, so measuring against white overstates every ratio by about 4%
+   — enough for a color that actually reads 4.31 on paper to ship as a 4.5
+   pass. Read the real token so this can't silently rot the next time the
+   background moves; the literal is only a fallback if the variable is gone. */
+const PAPER_FALLBACK = '#FAFAF9';
+const hexToRgb = (hex) => [
+  parseInt(hex.slice(1, 3), 16),
+  parseInt(hex.slice(3, 5), 16),
+  parseInt(hex.slice(5, 7), 16),
+];
+
+let groundL = null;
+function ground() {
+  if (groundL !== null) return groundL;
+  let hex = PAPER_FALLBACK;
+  if (typeof document !== 'undefined') {
+    const v = getComputedStyle(document.documentElement)
+      .getPropertyValue('--page-surface')
+      .trim();
+    if (/^#[0-9a-f]{6}$/i.test(v)) hex = v;
+  }
+  groundL = luminance(...hexToRgb(hex));
+  return groundL;
+}
+
+const contrast = (r, g, b) => (ground() + 0.05) / (luminance(r, g, b) + 0.05);
 
 const inkCache = new Map();
 function ink(hex) {
   if (inkCache.has(hex)) return inkCache.get(hex);
-  let r = parseInt(hex.slice(1, 3), 16);
-  let g = parseInt(hex.slice(3, 5), 16);
-  let b = parseInt(hex.slice(5, 7), 16);
+  let [r, g, b] = hexToRgb(hex);
   /* Multiplicative, so hue and relative channel balance survive the darkening. */
   for (let i = 0; i < 40 && contrast(r, g, b) < 4.5; i++) {
     r *= 0.94; g *= 0.94; b *= 0.94;
@@ -186,9 +213,20 @@ function ink(hex) {
   return out;
 }
 
-const BASE_SPEED = 42;      // px/sec at rest
-const HOVER_FACTOR = 0.22;  // slow to ~22% while the pointer is over the row
-const EASE_RATE = 0.055;    // how quickly speed converges each frame
+const BASE_SPEED = 42;   // px/sec at rest
+const EASE_RATE = 0.055; // how quickly speed converges each frame
+
+/* This used to ease to 22% under the pointer rather than stopping, and that
+   was the only way to slow it at all. Two problems with that:
+
+   WCAG 2.2.2 wants a mechanism to pause, stop or hide anything that moves by
+   itself for more than five seconds. "Slower" is not "stopped", and a pointer
+   is not a mechanism — a phone and a keyboard both had nothing. The
+   reduced-motion branch below renders a static wall, but that only helps
+   people who already went and set the OS flag.
+
+   So: hovering now stops it outright, and there is a real button that anyone
+   can reach. Both drive the same target — 0 for stopped, 1 for running. */
 
 function Wordmark({ name, face, color }) {
   return (
@@ -237,6 +275,9 @@ export default function UniversityMarquee() {
   const [width, setWidth] = useState(0);
   const speed = useRef(1);
   const hovered = useRef(false);
+  /* State, not a ref: the button's own label has to re-render when this
+     flips, which is the whole point of it being a control. */
+  const [paused, setPaused] = useState(false);
 
   /* Measure one copy so the wrap point is exact regardless of font metrics.
      Fonts land after first paint, so remeasure when they do — otherwise the
@@ -258,8 +299,12 @@ export default function UniversityMarquee() {
        which would teleport the row. */
     const dt = Math.min(delta, 50) / 1000;
 
-    const target = hovered.current ? HOVER_FACTOR : 1;
+    const target = paused || hovered.current ? 0 : 1;
     speed.current += (target - speed.current) * EASE_RATE;
+    /* Converging on 0 asymptotically never quite reaches it, so the row keeps
+       creeping a fraction of a pixel a second forever. Snap the tail. */
+    if (target === 0 && speed.current < 0.004) speed.current = 0;
+    if (speed.current === 0) return;
 
     let next = x.get() - dt * BASE_SPEED * speed.current;
     if (next <= -width) next += width;
@@ -268,35 +313,60 @@ export default function UniversityMarquee() {
 
   return (
     <section
+      /* Paper, not pure white. A full-bleed #FFFFFF band is the one place the
+         page dropped out of its own warmer surface, and the two rules above
+         and below already do the separating. */
       className={`um-wall ${TINTED ? 'um-tint' : 'um-mono'} overflow-hidden py-6 border-y`}
-      style={{ borderColor: 'var(--border-light)', background: 'var(--background-primary)' }}
-      onMouseEnter={() => { hovered.current = true; }}
-      onMouseLeave={() => { hovered.current = false; }}
+      style={{ borderColor: 'var(--border-light)', background: 'var(--page-surface)' }}
     >
       {/* "schools", not "universities" — of the 57 real institutions, eight are
           colleges (two of those community colleges) and one is an institute,
           so "universities" was flatly wrong for a sixth of the list. 55 is the
           four-year count and a deliberate floor under the real 57; don't raise
-          it without re-deriving from the data. */}
-      <p
-        className="mb-4 text-center text-[13px]"
-        style={{ color: 'var(--text-secondary)' }}
-      >
-        Students from <CountUp to={55} style={{ fontVariantNumeric: 'tabular-nums' }} />+ schools
-      </p>
+          it without re-deriving from the data.
+
+          The control sits in this row rather than floating at the strip's
+          edge: at 320px an absolutely-positioned button lands on top of the
+          caption. Wrapping is fine, overlapping is not. */}
+      <div className="mb-4 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 px-6">
+        <p className="text-center text-[13px]" style={{ color: 'var(--text-secondary)' }}>
+          Students from <CountUp to={55} style={{ fontVariantNumeric: 'tabular-nums' }} />+ schools
+        </p>
+
+        {!reduce && (
+          <button
+            type="button"
+            onClick={() => setPaused((v) => !v)}
+            className="rounded-[var(--r-control)] px-2 py-0.5 text-[12px] font-semibold underline-offset-4 hover:underline"
+            style={{ color: 'var(--text-secondary)' }}
+          >
+            {paused ? 'Play' : 'Pause'}
+            <span className="sr-only"> the scrolling list of schools</span>
+          </button>
+        )}
+      </div>
 
       {reduce ? (
         <StaticWall />
       ) : (
-        <div className="relative w-full">
+        /* Hover-to-stop is scoped to the scrolling row itself, NOT the whole
+           section. It used to sit on the section, which also covered the
+           caption and the Pause/Play button — so pressing Play did nothing
+           visible, because the pointer resting on the button was still
+           holding the row stopped. The control looked broken. */
+        <div
+          className="relative w-full"
+          onMouseEnter={() => { hovered.current = true; }}
+          onMouseLeave={() => { hovered.current = false; }}
+        >
           {/* Edge fades */}
           <div
             className="pointer-events-none absolute inset-y-0 left-0 z-10 w-10 sm:w-24"
-            style={{ background: 'linear-gradient(to right, var(--background-primary), transparent)' }}
+            style={{ background: 'linear-gradient(to right, var(--page-surface), transparent)' }}
           />
           <div
             className="pointer-events-none absolute inset-y-0 right-0 z-10 w-10 sm:w-24"
-            style={{ background: 'linear-gradient(to left, var(--background-primary), transparent)' }}
+            style={{ background: 'linear-gradient(to left, var(--page-surface), transparent)' }}
           />
 
           <motion.div className="flex items-center" style={{ x, width: 'max-content', willChange: 'transform' }}>

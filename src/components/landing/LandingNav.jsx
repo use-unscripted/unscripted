@@ -12,8 +12,15 @@ import { useState } from 'react';
 import { LogoFull } from '@/components/UnscriptedLogo';
 import { EASE } from '@/components/motion';
 
+/* The gold underline used to be driven by the pointer alone, so tabbing
+   through the nav got the global focus ring and none of the nav's own signal.
+   Keyboard gets the same affordance as the mouse now — same state, two ways
+   in. Focus is tracked separately from hover so that moving the mouse away
+   from a link you tabbed to doesn't wipe the underline out from under you. */
 function NavLink({ children, to, href }) {
   const [hover, setHover] = useState(false);
+  const [focus, setFocus] = useState(false);
+  const active = hover || focus;
   const Cmp = to ? Link : 'a';
   const props = to ? { to } : { href };
 
@@ -21,9 +28,11 @@ function NavLink({ children, to, href }) {
     <Cmp
       {...props}
       className="relative text-sm font-semibold"
-      style={{ color: hover ? 'var(--text-primary)' : 'var(--text-secondary)' }}
+      style={{ color: active ? 'var(--text-primary)' : 'var(--text-secondary)' }}
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
+      onFocus={() => setFocus(true)}
+      onBlur={() => setFocus(false)}
     >
       {children}
       <motion.span
@@ -36,10 +45,10 @@ function NavLink({ children, to, href }) {
           height: 2,
           borderRadius: 2,
           background: 'var(--brand-gold-500)',
-          transformOrigin: hover ? 'left center' : 'right center',
+          transformOrigin: active ? 'left center' : 'right center',
         }}
         initial={{ scaleX: 0 }}
-        animate={{ scaleX: hover ? 1 : 0 }}
+        animate={{ scaleX: active ? 1 : 0 }}
         transition={{ duration: 0.36, ease: EASE }}
       />
     </Cmp>
