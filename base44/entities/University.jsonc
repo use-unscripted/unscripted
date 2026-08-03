@@ -42,6 +42,14 @@
         "livewhale",
         "trumba",
         "campuslabs",
+        // ical is the most common result of a student-submitted portal link,
+        // and wptribe/drupal are adapters added after this enum was written.
+        // A value missing here is written and then silently unusable:
+        // adapterFor() returns null, the cache check fails, and the school
+        // re-probes on every page load as if it had never resolved.
+        "ical",
+        "wptribe",
+        "drupal",
         "none"
       ],
       "default": "unknown"

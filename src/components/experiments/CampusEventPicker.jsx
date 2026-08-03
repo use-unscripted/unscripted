@@ -103,13 +103,31 @@ export default function CampusEventPicker({ profile, pathName, selected, onSelec
     return () => { cancelled = true; };
   }, [profileKey, pathName, reloadKey]);
 
-  /** A feed the student found for us: same shape, same rendering path. */
-  const adoptSubmission = useCallback((result) => {
+  /**
+   * A feed the student found for us: same shape, same rendering path.
+   *
+   * Including the ranking. The student who went and found their own portal did
+   * more work than anyone else here and was getting the least for it — a bare
+   * list of six events with no fit reason, no what-to-do-there and no
+   * questions, which is the entire product.
+   */
+  const adoptSubmission = useCallback(async (result) => {
     setCollege(result.college || '');
     setFeedEvents(result.events || []);
     setPicks([]);
-    setStatus(result.events?.length ? 'unranked' : 'no_feed');
-  }, []);
+
+    if (!result.events?.length) {
+      setStatus('no_feed');
+      return;
+    }
+
+    setStatus('unranked');
+    const recommended = await recommendCampusEvents(result.events, profile, { pathName });
+    if (recommended.length) {
+      setPicks(recommended);
+      setStatus('ok');
+    }
+  }, [profile, pathName]);
 
   if (loading) {
     return (
@@ -289,10 +307,14 @@ function NoCollegeState({ profile, disabled, onSaved }) {
     setSaving(true);
     setError('');
     try {
+      // The account record is the one that always counts: the backend reads
+      // the profile first and falls back to this, and a student who has no
+      // profile row yet would otherwise save a college nothing ever reads.
+      // Creating a profile row from this screen is not the fix — that just
+      // makes a second one.
+      await base44.auth.updateMe({ college });
       if (profile?.id) {
         await base44.entities.StudentProfile.update(profile.id, { college });
-      } else {
-        await base44.entities.StudentProfile.create({ college });
       }
       onSaved();
     } catch (err) {

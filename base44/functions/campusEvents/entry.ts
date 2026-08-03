@@ -207,12 +207,65 @@ interface Adapter {
   normalize(raw: any, feedUrl: string): NormalizedEvent;
 }
 
+// ── Redirects, when the URL came from the caller ────────────────────────────
+
+/**
+ * Answers "may we fetch this?" for one URL. Null means don't ask — follow
+ * redirects the way the rest of this function always has.
+ */
+type HopGuard = ((url: string) => boolean) | null;
+
+/** A redirect chain is still a chain of requests we chose to make. */
+const MAX_REDIRECT_HOPS = 5;
+
+/**
+ * fetch(), but a guarded URL is re-checked at every hop.
+ *
+ * `redirect: 'follow'` hands the destination to whoever answers, which is fine
+ * everywhere the URL is one we built ourselves. It is not fine for a URL a
+ * student pasted: checking only the first URL makes every rule in
+ * checkSubmittedUrl one-shot, and an open redirect on the school's own domain
+ * — .edu sites are full of them, every proxy login and share link is one —
+ * turns "the school's own site" into "anywhere", including hosts and ports the
+ * check refuses outright. The body then comes back to the student as a
+ * calendar, so it is not even blind.
+ *
+ * So for those, redirects are followed manually and every destination has to
+ * pass the same gate the pasted URL did.
+ */
+async function guardedFetch(
+  url: string,
+  init: RequestInit,
+  guard: HopGuard,
+): Promise<Response> {
+  if (!guard) return await fetch(url, { ...init, redirect: 'follow' });
+
+  let current = url;
+  for (let hop = 0; hop <= MAX_REDIRECT_HOPS; hop++) {
+    const res = await fetch(current, { ...init, redirect: 'manual' });
+    const location = res.headers.get('location');
+    if (res.status < 300 || res.status >= 400 || !location) return res;
+
+    await res.body?.cancel().catch(() => {});
+
+    let next: string;
+    try {
+      next = new URL(location, current).toString();
+    } catch (_) {
+      throw new Error('Calendar feed redirected somewhere unreadable');
+    }
+    if (!guard(next)) throw new Error('Calendar feed redirected off the school');
+    current = next;
+  }
+  throw new Error('Calendar feed redirected too many times');
+}
+
 /** GET a candidate URL and hand back parsed JSON, or null for anything else. */
-async function probeJson(url: string): Promise<unknown> {
-  const res = await fetch(url, {
+async function probeJson(url: string, guard: HopGuard = null): Promise<unknown> {
+  const res = await guardedFetch(url, {
     headers: { Accept: 'application/json' },
     signal: AbortSignal.timeout(PROBE_TIMEOUT_MS),
-  });
+  }, guard);
   // An unread body holds the connection open; these probes lose far more often
   // than they win, so the losers have to be closed explicitly.
   if (!res.ok || !(res.headers.get('content-type') || '').includes('json')) {
@@ -514,12 +567,12 @@ const TRUMBA_SLUG_PATTERNS = [
 async function fetchPage(
   url: string,
   maxChars: number,
+  guard: HopGuard = null,
 ): Promise<{ finalHost: string; finalUrl: string; html: string }> {
-  const res = await fetch(url, {
+  const res = await guardedFetch(url, {
     headers: { Accept: 'text/html,application/xhtml+xml,*/*', 'User-Agent': BROWSER_UA },
-    redirect: 'follow',
     signal: AbortSignal.timeout(PROBE_TIMEOUT_MS),
-  });
+  }, guard);
 
   // Where the request actually ended up, which is often not where it was sent.
   const finalUrl = res.url || url;
@@ -937,12 +990,12 @@ async function fetchIcsOnce(
   url: string,
   timeoutMs: number,
   headers: Record<string, string>,
+  guard: HopGuard = null,
 ): Promise<string> {
-  const res = await fetch(url, {
+  const res = await guardedFetch(url, {
     headers,
-    redirect: 'follow',
     signal: AbortSignal.timeout(timeoutMs),
-  });
+  }, guard);
   if (!res.ok || !res.body) {
     await res.body?.cancel().catch(() => {});
     return '';
@@ -978,7 +1031,7 @@ async function fetchIcsOnce(
  * requests are ordinary public GETs for a feed the school publishes to be
  * subscribed to.
  */
-async function fetchIcsText(url: string, timeoutMs: number): Promise<string> {
+async function fetchIcsText(url: string, timeoutMs: number, guard: HopGuard = null): Promise<string> {
   const attempts: Record<string, string>[] = [
     { Accept: 'text/calendar,text/plain,*/*' },
     { Accept: 'text/calendar,text/plain,*/*', 'User-Agent': BROWSER_UA },
@@ -986,7 +1039,7 @@ async function fetchIcsText(url: string, timeoutMs: number): Promise<string> {
   for (const headers of attempts) {
     let text = '';
     try {
-      text = await fetchIcsOnce(url, timeoutMs, headers);
+      text = await fetchIcsOnce(url, timeoutMs, headers, guard);
     } catch (_) {
       continue; // Unreachable or timed out under this identity; try the other.
     }
@@ -1094,10 +1147,10 @@ export function icsLinksFrom(html: string, domain: string, baseUrl = ''): string
 }
 
 /** First candidate that parses as a calendar with something still ahead. */
-async function firstValidIcs(candidates: string[]): Promise<string | null> {
+async function firstValidIcs(candidates: string[], guard: HopGuard = null): Promise<string | null> {
   const attempts = candidates.map(async (url) => {
     try {
-      return looksLikeIcal(await fetchIcsText(url, ICS_PROBE_TIMEOUT_MS));
+      return looksLikeIcal(await fetchIcsText(url, ICS_PROBE_TIMEOUT_MS, guard));
     } catch (_) {
       return false;
     }
@@ -1766,11 +1819,16 @@ export function checkSubmittedUrl(raw: string, allowedDomains: string[]): Submis
   if (parsed.port) return { ok: false, reason: 'blocked_port' };
 
   const host = stripWww(parsed.hostname.toLowerCase());
-  if (!isProbeableDomain(host)) return { ok: false, reason: 'bad_url' };
 
+  // Vendors first. isProbeableDomain only allows the TLDs a school's own site
+  // uses, and calendar products do not live on those — Presence is on .io — so
+  // checking it first silently killed the entire vendor allowlist and told a
+  // student who pasted their real portal that it was not a web address.
   if (onVendorHost(host)) {
     return { ok: true, url: parsed.toString(), host, domain: host };
   }
+
+  if (!isProbeableDomain(host)) return { ok: false, reason: 'bad_url' };
 
   const domain = allowedDomains
     .map(d => stripWww(String(d || '').toLowerCase().trim()))
@@ -1809,16 +1867,25 @@ export async function resolveSubmittedUrl(
   host: string,
   domain: string,
 ): Promise<{ platform: string; feedUrl: string } | null> {
+  // Every request on this path — including every redirect hop — has to pass
+  // the same gate the pasted URL did. Without this, checkSubmittedUrl is a
+  // check on one URL rather than on where we actually end up, and any open
+  // redirect on the school's own site reaches whatever it likes.
+  const guard: HopGuard = (candidate: string) => {
+    const check = checkSubmittedUrl(candidate, [domain]);
+    return check.ok;
+  };
+
   // 1. The URL is the feed. Someone who found their school's JSON endpoint or
   //    subscribe link has handed us the answer outright.
   try {
-    const payload = await probeJson(url);
+    const payload = await probeJson(url, guard);
     const hit = platformOfJson(payload, url);
     if (hit) return hit;
   } catch (_) { /* Not JSON, or unreachable. Try it as a calendar file. */ }
 
   try {
-    if (looksLikeIcal(await fetchIcsText(url, ICS_PROBE_TIMEOUT_MS))) {
+    if (looksLikeIcal(await fetchIcsText(url, ICS_PROBE_TIMEOUT_MS, guard))) {
       return { platform: 'ical', feedUrl: url };
     }
   } catch (_) { /* Not a calendar file either. Read it as a page. */ }
@@ -1842,13 +1909,13 @@ export async function resolveSubmittedUrl(
   //    actually paste, because it is the thing their school links "Events" to.
   let page: { finalHost: string; finalUrl: string; html: string };
   try {
-    page = await fetchPage(url, DISCOVERY_SCAN_BYTES);
+    page = await fetchPage(url, DISCOVERY_SCAN_BYTES, guard);
   } catch (_) {
     return null;
   }
 
   if (page.html) {
-    const ics = await firstValidIcs(icsLinksFrom(page.html, domain, page.finalUrl));
+    const ics = await firstValidIcs(icsLinksFrom(page.html, domain, page.finalUrl), guard);
     if (ics) return { platform: 'ical', feedUrl: ics };
 
     for (const slug of trumbaSlugsFrom(page.html).slice(0, TRUMBA_MAX_SLUGS)) {
@@ -1962,10 +2029,13 @@ async function submittedFeedFor(base44: any, college: string, userId: string) {
   // deno-lint-ignore no-explicit-any
   let rows: any[] = [];
   try {
+    // Scoped in the query, not after it. Filtering a global page of 200 in
+    // memory means that once 200 submissions exist, the earliest students to
+    // find us a feed quietly stop being served their own.
     rows = await base44.asServiceRole.entities.CampusFeedSubmission.filter(
-      { resolution: 'resolved' },
+      { resolution: 'resolved', submitted_by: userId, review_status: 'pending' },
       '-created_date',
-      200,
+      50,
     );
   } catch (err) {
     // Never costs a student their events — but say so, because "the entity is
@@ -1984,8 +2054,6 @@ async function submittedFeedFor(base44: any, college: string, userId: string) {
   // and turned down, which is a stronger signal than the student's own paste.
   const row = rows.find(r =>
     normalizeName(r.college) === key &&
-    r.submitted_by === userId &&
-    r.review_status === 'pending' &&
     r.resolved_feed_url &&
     adapterFor(r.resolved_platform)
   );
@@ -2133,7 +2201,13 @@ export function isAttendable(event: NormalizedEvent): boolean {
 // deno-lint-ignore no-explicit-any
 async function loadProfile(base44: any, user: any): Promise<any> {
   try {
-    const rows = await base44.entities.StudentProfile.filter({ user_id: user.id }, '-created_date', 1);
+    // created_by_id, not user_id. StudentProfile has no user_id field — 0 of
+    // 50 live rows carry one — and Base44 enforces the filter rather than
+    // ignoring it, so the old query matched nothing for everybody. Every
+    // student looked like a student with no profile: ranking ran with no
+    // interests, no major and no path, and the "tell us your school" state
+    // could never be satisfied.
+    const rows = await base44.entities.StudentProfile.filter({ created_by_id: user.id }, '-created_date', 1);
     return rows?.[0] || null;
   } catch (_) {
     return null;
@@ -2353,6 +2427,16 @@ async function handleReviewSubmission(base44: any, user: any, body: any): Promis
     row = null;
   }
   if (!row) return Response.json({ error: 'No such submission' }, { status: 404 });
+
+  // Already decided. Without this, a rejected row can be flipped to approved
+  // from the tab that hides it, and one mis-click promotes a calendar someone
+  // already looked at and turned down to an entire school.
+  if (row.review_status !== 'pending') {
+    return Response.json(
+      { error: `That submission was already ${row.review_status}.` },
+      { status: 409 },
+    );
+  }
 
   if (decision === 'approved' && !(row.resolved_feed_url && adapterFor(row.resolved_platform))) {
     return Response.json(
