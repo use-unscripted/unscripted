@@ -444,7 +444,7 @@ async function rankCampusEvents(events, profile, pathName) {
  * Greenwich — so the student is shown the wrong day for the one date they did
  * not choose themselves.
  */
-function parseEventStart(value) {
+export function parseEventStart(value) {
   if (typeof value !== 'string' || !value.trim()) return null;
 
   const dateOnly = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
