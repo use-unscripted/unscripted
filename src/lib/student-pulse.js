@@ -50,6 +50,12 @@ const text = (v) => (typeof v === 'string' && v.trim() ? v.trim() : '');
 const UNSENT_STATUSES = ['not_sent', 'planning'];
 /** Somebody wrote back. */
 const REPLIED_STATUSES = ['responded', 'call_scheduled', 'completed'];
+/**
+ * Written to, still nothing back. `no_response` and `follow_up_needed` are the
+ * two the student sets by hand once they notice the silence, so they are the
+ * clearest possible signal that a nudge is wanted, not a reason to skip one.
+ */
+const AWAITING_REPLY_STATUSES = ['sent', 'no_response', 'follow_up_needed'];
 
 /**
  * Whole days between two instants, clamped at 0. A future created_date is a
@@ -80,11 +86,19 @@ function iso(value) {
 
 /**
  * The moment a mission was finished. `completed_at` is written once, at the
- * moment of completion, and never moves. `created_date` is the fallback for
- * rows completed before that field started being written. `updated_date` is
- * deliberately not consulted anywhere in this file.
+ * moment of completion, and never moves, so it is the only field here that can
+ * date a mission. There is deliberately no fallback: `created_date` is when the
+ * row appeared, `updated_date` is when anything touched it, and the 2026-08-01
+ * backfill flipped every mission in the database to a new status inside one
+ * second. A mission that says completed and carries no completed_at is a claim,
+ * not evidence, so it counts in `claimed` and in `gap` and nowhere else.
  */
-const missionDoneAt = (m) => m.completed_at || m.created_date;
+const missionDoneAt = (m) => m.completed_at;
+
+/** Completed, and able to say when. Both halves are required. */
+const missionCompleted = (m) => m.status === 'completed'
+  && Number.isFinite(entityTime(missionDoneAt(m)));
+
 const proofDoneAt = (p) => p.completed_at || p.created_date;
 const contactDoneAt = (c) => c.last_contacted_date || c.date_contacted || c.created_date;
 const eventAt = (e) => e.occurred_at || e.created_date;
@@ -107,6 +121,34 @@ const sent = (c) => !!text(c.date_contacted)
   || (!!text(c.response_status) && !UNSENT_STATUSES.includes(c.response_status));
 
 const replied = (c) => REPLIED_STATUSES.includes(c.response_status);
+
+/**
+ * The experiments belonging to one PathRecommendations row.
+ *
+ * The join is by row id, and only by row id. `Experiments.path_id` and
+ * `Experiments.path_recommendation_id` are both written with the
+ * PathRecommendations row's `id` (path-selection.js writes the first,
+ * path-generator.js writes the second). `PathRecommendations.path_id` is a
+ * different thing entirely: a slug the model invented inside the generation
+ * payload. Comparing an experiment's `path_id` against a recommendation's
+ * `path_id` matches nothing, ever, which reads as "you picked a path and never
+ * set anything up" for a student who did both.
+ *
+ * The name match is kept only for rows old enough to carry neither id. A row
+ * that has an id belongs to whatever that id says, even when the names differ:
+ * the generator tags experiments with the recommendation's generated name while
+ * intake wrote a generic bucket like "Marketing / brand", so a mismatch there is
+ * expected and is not evidence of anything.
+ */
+function experimentsUnderPath(exps, rec) {
+  const recId = text(rec.id);
+  const name = text(rec.path_name);
+  return exps.filter((e) => {
+    if (recId && (e.path_id === recId || e.path_recommendation_id === recId)) return true;
+    if (name && !text(e.path_id) && !text(e.path_recommendation_id) && e.path_name === name) return true;
+    return false;
+  });
+}
 
 /**
  * Reads one student's whole history and says where they are.
@@ -141,7 +183,7 @@ export function readPulse(input = {}) {
   // PilotEvent has no deletion_status. Nothing ever deletes one.
   const liveEvents = rows(events);
 
-  const doneMissions = liveMissions.filter((m) => m.status === 'completed');
+  const doneMissions = liveMissions.filter(missionCompleted);
   const sentOutreach = liveOutreach.filter(sent);
   const repliedOutreach = liveOutreach.filter(replied);
 
@@ -169,11 +211,15 @@ export function readPulse(input = {}) {
   const gap = {
     experimentsWithoutGuide: liveExps.filter((e) => guidesFor(e.id).length === 0).length,
     experimentsWithoutProof: liveExps.filter((e) => proofFor(e.id).length === 0).length,
-    missionsNeverCompleted: liveMissions.filter((m) => m.status !== 'completed').length,
+    // Skipped is a decision, not a gap. A student who looked at a mission and
+    // dropped it on purpose has done the thing this product is for, so counting
+    // it here would inflate the one number the whole file exists to report.
+    missionsNeverCompleted: liveMissions.filter(
+      (m) => m.status !== 'skipped' && !missionCompleted(m),
+    ).length,
   };
 
-  // Every timestamp that counts as a student having done something. Ordered so
-  // that a tie on the same instant resolves to the strongest kind.
+  // Every timestamp that counts as a student having done something.
   const marks = [];
   const mark = (kind, value) => {
     const t = entityTime(value);
@@ -186,13 +232,13 @@ export function readPulse(input = {}) {
   liveGuides.forEach((g) => mark('guide', g.created_date));
   liveEvents.forEach((e) => mark('event', eventAt(e)));
 
-  const KIND_RANK = { proof: 6, mission: 5, outreach: 4, reflection: 3, guide: 2, event: 1 };
-  let latest = null;
-  for (const m of marks) {
-    if (!latest || m.t > latest.t || (m.t === latest.t && KIND_RANK[m.kind] > KIND_RANK[latest.kind])) {
-      latest = m;
-    }
-  }
+  // Oldest first, and on an exact tie the weakest kind first, so the last entry
+  // is the newest and strongest thing the student did. Ties are common: a guide
+  // and the PilotEvent that records asking for it are written in the same
+  // millisecond, and "asking for steps" is a worse answer to "what did they last
+  // do" than anything else standing beside it.
+  marks.sort((a, b) => (a.t - b.t) || (KIND_RANK[a.kind] - KIND_RANK[b.kind]));
+  const latest = marks.length ? marks[marks.length - 1] : null;
 
   const lastEvidenceAt = latest ? new Date(latest.t).toISOString() : null;
   const lastEvidenceKind = latest ? latest.kind : null;
@@ -237,6 +283,11 @@ export function readPulse(input = {}) {
   };
 }
 
+// How much a piece of evidence is worth when two of them land on the same
+// instant. Proof beats a finished mission beats a contact, and a PilotEvent row
+// is the weakest thing here because clicking is not doing.
+const KIND_RANK = { proof: 6, mission: 5, outreach: 4, reflection: 3, guide: 2, event: 1 };
+
 // Base severities, nine apart, in the order the kinds are listed in the design.
 // A stall gains at most 8 points for sitting there, so age sharpens a stall but
 // never lets it jump a tier.
@@ -270,6 +321,11 @@ function findStalls(ctx) {
   } = ctx;
 
   const out = [];
+  // Without a usable `now` nothing here can say how long anything has sat, and a
+  // stall with no age is not a stall. Every detector below already checks this;
+  // the two path ones used to slip through and fire anyway.
+  if (!hasNow) return out;
+
   const add = (kind, { subjectId = null, subjectType, label, since, days }) => {
     const d = Number.isFinite(days) ? Math.max(0, Math.floor(days)) : 0;
     out.push({
@@ -302,10 +358,7 @@ function findStalls(ctx) {
   // A path was picked and nothing was ever set up under it.
   if (chosenPath) {
     const name = text(chosenPath.path_name);
-    const under = liveExps.filter(
-      (e) => (chosenPath.path_id && e.path_id === chosenPath.path_id)
-        || (name && e.path_name === name),
-    );
+    const under = experimentsUnderPath(liveExps, chosenPath);
     if (under.length === 0) {
       const since = chosenPath.started_at || chosenPath.created_date || null;
       add('path_without_experiment', {
@@ -320,13 +373,17 @@ function findStalls(ctx) {
     }
   }
 
-  const openExps = liveExps.filter((e) => e.status !== 'completed' && e.status !== 'skipped');
+  // `draft` is the Experiments default, so a row that exists because somebody
+  // started filling a form in is a draft. Nagging a student about steps for
+  // something they have not finished creating is the wrong end of the problem.
+  const IGNORED_EXP_STATUSES = ['completed', 'skipped', 'draft'];
+  const openExps = liveExps.filter((e) => !IGNORED_EXP_STATUSES.includes(e.status));
 
   // An experiment nobody ever generated steps for. This is the 252-of-265 case.
   for (const e of openExps) {
     if (guidesFor(e.id).length > 0) continue;
     const days = daysBetween(e.created_date, nowMs);
-    if (!hasNow || days === null || days <= 3) continue;
+    if (days === null || days <= 3) continue;
     const title = text(e.title);
     add('experiment_without_guide', {
       subjectId: e.id,
@@ -339,12 +396,23 @@ function findStalls(ctx) {
     });
   }
 
-  // Steps exist and nothing came of them.
+  // Steps exist and nothing came of them. One stall per experiment, not one per
+  // guide: regenerating leaves four guide rows on one experiment, and the
+  // student is stuck once, not four times. The oldest live guide wins, because
+  // that is how long they have actually been sitting on this.
+  const ignoredGuides = new Map();
   for (const g of liveGuides) {
-    const expId = g.experiment_id;
+    const expId = text(g.experiment_id);
     if (doneMissionsFor(expId).length > 0 || proofFor(expId).length > 0) continue;
     const days = daysBetween(g.created_date, nowMs);
-    if (!hasNow || days === null || days <= 5) continue;
+    if (days === null || days <= 5) continue;
+    // A guide with no experiment behind it belongs to nothing, so it cannot
+    // share a bucket with another one.
+    const key = expId || `orphan:${g.id}`;
+    const held = ignoredGuides.get(key);
+    if (!held || days > held.days) ignoredGuides.set(key, { g, expId, days });
+  }
+  for (const { g, expId, days } of ignoredGuides.values()) {
     const title = text(g.guide_title);
     add('guide_never_acted_on', {
       subjectId: expId || null,
@@ -361,7 +429,7 @@ function findStalls(ctx) {
   for (const m of liveMissions) {
     if (m.status !== 'planned' || m.completed_at) continue;
     const days = daysBetween(m.created_date, nowMs);
-    if (!hasNow || days === null || days <= 7) continue;
+    if (days === null || days <= 7) continue;
     const title = text(m.title);
     add('mission_planned_stale', {
       subjectId: m.id,
@@ -378,7 +446,7 @@ function findStalls(ctx) {
     const name = text(c.name) || 'someone';
     if (!sent(c)) {
       const days = daysBetween(c.created_date, nowMs);
-      if (!hasNow || days === null || days <= 5) continue;
+      if (days === null || days <= 5) continue;
       add('outreach_never_sent', {
         subjectId: c.id,
         subjectType: 'outreach',
@@ -388,12 +456,10 @@ function findStalls(ctx) {
       });
       continue;
     }
-    if (c.response_status !== 'sent') continue;
+    if (!AWAITING_REPLY_STATUSES.includes(c.response_status)) continue;
     const sinceContact = daysBetween(c.date_contacted || c.created_date, nowMs);
     const followupDue = Number.isFinite(entityTime(c.followup_date))
-      && Number.isFinite(nowMs)
       && entityTime(c.followup_date) <= nowMs;
-    if (!hasNow) continue;
     if (!followupDue && (sinceContact === null || sinceContact <= 7)) continue;
     add('outreach_no_followup', {
       subjectId: c.id,
@@ -409,7 +475,7 @@ function findStalls(ctx) {
     if (e.status !== 'in_progress' || proofFor(e.id).length > 0) continue;
     const since = inProgressSince(e);
     const days = daysBetween(since, nowMs);
-    if (!hasNow || days === null || days <= 10) continue;
+    if (days === null || days <= 10) continue;
     const title = text(e.title);
     add('experiment_no_proof', {
       subjectId: e.id,
@@ -428,7 +494,7 @@ function findStalls(ctx) {
     .map((e) => ({ e, days: daysBetween(inProgressSince(e), nowMs) }))
     .filter((x) => x.days !== null && x.days > 7)
     .sort((a, b) => b.days - a.days)[0];
-  if (hasNow && runningLong) {
+  if (runningLong) {
     let newestRefl = null;
     for (const r of liveRefl) {
       const t = entityTime(r.created_date);
@@ -453,7 +519,7 @@ function findStalls(ctx) {
   const neverAny = lastEvidenceAt === null;
   const quietTooLong = daysSinceEvidence !== null && daysSinceEvidence > 14;
   const silentSinceSignup = neverAny && daysSinceSignup !== null && daysSinceSignup > 3;
-  if (hasNow && (quietTooLong || silentSinceSignup)) {
+  if (quietTooLong || silentSinceSignup) {
     const days = quietTooLong ? daysSinceEvidence : daysSinceSignup;
     add('dormant_account', {
       subjectId: user?.id || null,
@@ -542,10 +608,13 @@ export function summarizePulse(pulse) {
   const gap = pulse.gap || {};
   const out = [];
 
+  // "Signed up 0 days ago" is the kind of sentence that tells a reader a machine
+  // wrote it, and day 1 is exactly when these get read.
   const signup = pulse.daysSinceSignup;
-  out.push(Number.isFinite(signup)
-    ? `Signed up ${plural(signup, 'day')} ago and ${state}.`
-    : `This student ${state}.`);
+  if (!Number.isFinite(signup)) out.push(`This student ${state}.`);
+  else if (signup === 0) out.push(`Signed up today and ${state}.`);
+  else if (signup === 1) out.push(`Signed up yesterday and ${state}.`);
+  else out.push(`Signed up ${plural(signup, 'day')} ago and ${state}.`);
 
   const done = [];
   if (num(ev.proof)) done.push(plural(num(ev.proof), 'piece') + ' of proof');

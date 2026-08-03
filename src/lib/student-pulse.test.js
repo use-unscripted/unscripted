@@ -14,12 +14,15 @@ const naive = (n) => days(n).replace('Z', '000');
 const user = (over = {}) => ({ id: 'u1', email: 'x@y.edu', full_name: 'Sam', created_date: SIGNUP, ...over });
 const profile = (over = {}) => ({ id: 'sp1', name: 'Sam', college: 'Fairfield', major: 'Econ', created_date: SIGNUP, ...over });
 
+// PathRecommendations.path_id is a slug the model wrote inside the generation
+// payload. It is not the row id and nothing joins on it. An experiment points
+// back at the row id, in either of two fields.
 const path = (over = {}) => ({
   id: 'p1', path_id: 'catalog-1', path_name: 'Product analyst',
   status: 'exploring', is_primary_focus: false, created_date: SIGNUP, ...over,
 });
 const experiment = (over = {}) => ({
-  id: 'e1', title: 'Shadow a product analyst', path_id: 'catalog-1', path_name: 'Product analyst',
+  id: 'e1', title: 'Shadow a product analyst', path_id: 'p1', path_name: 'Product analyst',
   status: 'planned', deletion_status: 'active', created_date: SIGNUP, ...over,
 });
 const guide = (over = {}) => ({
@@ -488,7 +491,7 @@ describe('readPulse: rows written by a model can be any shape', () => {
       user: user(),
       paths: [null, 'nope', path()],
       experiments: [undefined, experiment({ created_date: null }), { id: 'e9' }],
-      missions: [null, mission({ completed_at: 'yesterday', status: 'completed' })],
+      missions: [null, mission({ completed_at: 'yesterday', status: 'completed' }), mission({ id: 'm2', status: 'completed', completed_at: days(12) })],
       guides: [0, guide({ created_date: undefined })],
       proof: [proofRow({ completed_at: {}, created_date: 'soon' })],
       reflections: [[], reflection({ created_date: 12345 })],
@@ -497,6 +500,7 @@ describe('readPulse: rows written by a model can be any shape', () => {
     });
     expect(pulse.claimed.paths).toBe(1);
     expect(pulse.claimed.experiments).toBe(2);
+    // Only the one whose completed_at can be read. 'yesterday' cannot be.
     expect(pulse.evidence.missionsCompleted).toBe(1);
     expect(Number.isFinite(pulse.evidence.proof)).toBe(true);
     expect(pulse.stalls.every((s) => Number.isFinite(s.severity))).toBe(true);
@@ -542,9 +546,251 @@ describe('summarizePulse', () => {
     }
   });
 
+  it('does not tell an operator somebody signed up 0 days ago', () => {
+    const sameDay = summarizePulse(readPulse({
+      now: SIGNUP, user: user(), paths: [path()], experiments: [experiment()],
+    }));
+    expect(sameDay).toContain('Signed up today');
+    expect(sameDay).not.toMatch(/0 days? ago/);
+
+    const nextDay = summarizePulse(readPulse({
+      now: days(1), user: user(), paths: [path()], experiments: [experiment()],
+    }));
+    expect(nextDay).toContain('Signed up yesterday');
+    expect(nextDay).not.toMatch(/1 days? ago/);
+  });
+
   it('says something rather than nothing when handed junk', () => {
     expect(summarizePulse(null)).toBe('There is nothing to read yet.');
     expect(typeof summarizePulse({})).toBe('string');
+  });
+});
+
+describe('readPulse: status counts never leak into evidence', () => {
+  it('keeps every evidence number to things that happened, across live experiments in every status', () => {
+    const pulse = readPulse({
+      now: NOW, user: user(),
+      experiments: [
+        experiment({ id: 'e1', status: 'draft' }),
+        experiment({ id: 'e2', status: 'planned' }),
+        experiment({ id: 'e3', status: 'in_progress' }),
+        experiment({ id: 'e4', status: 'completed' }),
+        experiment({ id: 'e5', status: 'skipped' }),
+      ],
+      missions: [
+        mission({ id: 'm1', status: 'planned' }),
+        mission({ id: 'm2', status: 'in_progress' }),
+        mission({ id: 'm3', status: 'skipped' }),
+        mission({ id: 'm4', status: 'completed', completed_at: days(16) }),
+      ],
+      outreach: [contact({ response_status: 'not_sent' })],
+      proof: [proofRow({ experiment_id: 'e3', completed_at: days(17) })],
+    });
+    expect(pulse.evidence).toEqual({
+      proof: 1, missionsCompleted: 1, outreachSent: 0, outreachResponded: 0, reflections: 0, guides: 0,
+    });
+    // Same fixture, and the status side is busy. The two buckets are separate.
+    expect(pulse.claimed).toEqual({
+      paths: 0, experiments: 5, experimentsInProgress: 1, experimentsCompleted: 1, missionsPlanned: 1,
+    });
+  });
+
+  it('reports a real gap rather than a comfortable zero', () => {
+    const pulse = readPulse({
+      now: NOW, user: user(),
+      experiments: [experiment({ id: 'e1' }), experiment({ id: 'e2' }), experiment({ id: 'e3' })],
+      guides: [guide({ experiment_id: 'e1' })],
+      proof: [proofRow({ experiment_id: 'e2', completed_at: days(10) })],
+      missions: [
+        mission({ id: 'm1', status: 'planned' }),
+        mission({ id: 'm2', status: 'skipped' }),
+      ],
+    });
+    expect(pulse.gap).toEqual({
+      experimentsWithoutGuide: 2,
+      experimentsWithoutProof: 2,
+      // The skipped one was a decision, so it is not a gap.
+      missionsNeverCompleted: 1,
+    });
+  });
+});
+
+describe('readPulse: a completed mission has to say when', () => {
+  it('treats a status flipped by the backfill as a claim and never as evidence', () => {
+    const pulse = readPulse({
+      now: NOW, user: user(),
+      experiments: [experiment()],
+      guides: [guide({ created_date: days(0) })],
+      missions: [mission({ status: 'completed', completed_at: null, updated_date: days(19), created_date: days(1) })],
+    });
+    expect(pulse.evidence.missionsCompleted).toBe(0);
+    expect(pulse.gap.missionsNeverCompleted).toBe(1);
+    // The guide is the only real thing here, so it has to be the last sign of life.
+    expect(pulse.lastEvidenceKind).toBe('guide');
+    // And the empty completion cannot be used to say the steps were run.
+    expect(kinds(pulse)).toContain('guide_never_acted_on');
+  });
+
+  it('dates a mission from completed_at even when the row was created much later', () => {
+    const pulse = readPulse({
+      now: NOW, user: user(),
+      missions: [mission({ status: 'completed', completed_at: days(6), created_date: days(19) })],
+    });
+    expect(pulse.evidence.missionsCompleted).toBe(1);
+    expect(pulse.daysSinceEvidence).toBe(14);
+  });
+});
+
+describe('readPulse: an experiment is joined to a path by row id', () => {
+  it('matches on path_id holding the recommendation row id, with names that disagree', () => {
+    const pulse = readPulse({
+      now: NOW, user: user(),
+      paths: [path({ id: 'rec_1', path_id: 'pth_model_slug', path_name: 'Digital Brand Strategist', is_primary_focus: true })],
+      experiments: [experiment({ id: 'x1', path_id: 'rec_1', path_name: 'Marketing / brand' })],
+    });
+    expect(kinds(pulse)).not.toContain('path_without_experiment');
+  });
+
+  it('matches on path_recommendation_id too, which is what the generator writes', () => {
+    const pulse = readPulse({
+      now: NOW, user: user(),
+      paths: [path({ id: 'rec_1', path_id: 'pth_model_slug', path_name: 'Digital Brand Strategist', is_primary_focus: true })],
+      experiments: [experiment({ id: 'x1', path_id: undefined, path_recommendation_id: 'rec_1', path_name: 'Marketing / brand' })],
+    });
+    expect(kinds(pulse)).not.toContain('path_without_experiment');
+  });
+
+  it('falls back to the name for an old row that carries neither id', () => {
+    const pulse = readPulse({
+      now: NOW, user: user(),
+      paths: [path({ is_primary_focus: true })],
+      experiments: [experiment({ path_id: undefined, path_recommendation_id: undefined, path_name: 'Product analyst' })],
+    });
+    expect(kinds(pulse)).not.toContain('path_without_experiment');
+  });
+
+  it('does not let the name fallback claim an experiment that belongs to another path', () => {
+    const pulse = readPulse({
+      now: NOW, user: user(),
+      paths: [path({ id: 'rec_1', path_name: 'Digital Brand Strategist', is_primary_focus: true })],
+      experiments: [experiment({ path_id: 'rec_2', path_recommendation_id: undefined, path_name: 'Digital Brand Strategist' })],
+    });
+    expect(kinds(pulse)).toContain('path_without_experiment');
+  });
+
+  it('does not match a recommendation slug against an experiment that happens to carry it', () => {
+    const pulse = readPulse({
+      now: NOW, user: user(),
+      paths: [path({ id: 'rec_1', path_id: 'catalog-1', path_name: 'Digital Brand Strategist', is_primary_focus: true })],
+      experiments: [experiment({ path_id: 'catalog-1', path_name: 'Marketing / brand' })],
+    });
+    expect(kinds(pulse)).toContain('path_without_experiment');
+  });
+});
+
+describe('readPulse: the day each stall waits for', () => {
+  it('gives a planned mission 7 days and flags it on the 8th', () => {
+    const at7 = readPulse({ now: days(7), user: user(), missions: [mission({ created_date: days(0) })] });
+    const at8 = readPulse({ now: days(8), user: user(), missions: [mission({ created_date: days(0) })] });
+    expect(kinds(at7)).not.toContain('mission_planned_stale');
+    expect(kinds(at8)).toContain('mission_planned_stale');
+  });
+
+  it('gives an unused guide 5 days and flags it on the 6th', () => {
+    const fixture = (now) => readPulse({
+      now, user: user(), experiments: [experiment()], guides: [guide({ created_date: days(0) })],
+    });
+    expect(kinds(fixture(days(5)))).not.toContain('guide_never_acted_on');
+    expect(kinds(fixture(days(6)))).toContain('guide_never_acted_on');
+  });
+
+  it('gives a sent email 7 days of silence and asks for a nudge on the 8th', () => {
+    const fixture = (now) => readPulse({
+      now, user: user(),
+      outreach: [contact({ response_status: 'sent', date_contacted: days(0) })],
+    });
+    expect(kinds(fixture(days(7)))).not.toContain('outreach_no_followup');
+    expect(kinds(fixture(days(8)))).toContain('outreach_no_followup');
+  });
+});
+
+describe('readPulse: a tie between two pieces of evidence', () => {
+  it('reports the strongest kind when several land on the same instant', () => {
+    const pulse = readPulse({
+      now: NOW, user: user(),
+      proof: [proofRow({ completed_at: days(10), created_date: days(10) })],
+      guides: [guide({ created_date: days(10) })],
+      events: [event({ occurred_at: days(10) })],
+    });
+    expect(pulse.lastEvidenceKind).toBe('proof');
+
+    const noProof = readPulse({
+      now: NOW, user: user(),
+      missions: [mission({ status: 'completed', completed_at: days(10) })],
+      guides: [guide({ created_date: days(10) })],
+      events: [event({ occurred_at: days(10) })],
+    });
+    expect(noProof.lastEvidenceKind).toBe('mission');
+  });
+});
+
+describe('readPulse: stalls that were firing when they should not', () => {
+  it('chases a contact who was written to and has gone quiet, whatever the student marked it', () => {
+    for (const response_status of ['sent', 'follow_up_needed', 'no_response']) {
+      const pulse = readPulse({
+        now: days(20), user: user(),
+        outreach: [contact({ response_status, date_contacted: days(0) })],
+      });
+      expect(kinds(pulse)).toContain('outreach_no_followup');
+    }
+    for (const response_status of ['responded', 'call_scheduled', 'completed']) {
+      const pulse = readPulse({
+        now: days(20), user: user(),
+        outreach: [contact({ response_status, date_contacted: days(0) })],
+      });
+      expect(kinds(pulse)).not.toContain('outreach_no_followup');
+    }
+  });
+
+  it('leaves a half created experiment alone, because draft is what a new row is', () => {
+    const draft = readPulse({ now: NOW, user: user(), experiments: [experiment({ status: 'draft', created_date: days(0) })] });
+    expect(kinds(draft)).not.toContain('experiment_without_guide');
+    const planned = readPulse({ now: NOW, user: user(), experiments: [experiment({ status: 'planned', created_date: days(0) })] });
+    expect(kinds(planned)).toContain('experiment_without_guide');
+  });
+
+  it('says one experiment is stuck once, however many guides were generated for it', () => {
+    const pulse = readPulse({
+      now: NOW, user: user(),
+      experiments: [experiment()],
+      guides: [
+        guide({ id: 'g1', version_number: 1, created_date: days(0) }),
+        guide({ id: 'g2', version_number: 2, created_date: days(2) }),
+        guide({ id: 'g3', version_number: 3, created_date: days(4) }),
+      ],
+    });
+    const ignored = pulse.stalls.filter((s) => s.kind === 'guide_never_acted_on');
+    expect(ignored).toHaveLength(1);
+    // Dated from the first time they asked, not the last.
+    expect(ignored[0].days).toBe(20);
+    expect(ignored[0].subjectId).toBe('e1');
+  });
+
+  it('clears a guide stall when the experiment has proof, not only when it has a finished mission', () => {
+    const pulse = readPulse({
+      now: NOW, user: user(),
+      experiments: [experiment()],
+      guides: [guide({ created_date: days(0) })],
+      proof: [proofRow({ experiment_id: 'e1', completed_at: days(10) })],
+    });
+    expect(kinds(pulse)).not.toContain('guide_never_acted_on');
+  });
+
+  it('reports no stalls at all when now cannot be read, including the path ones', () => {
+    const unchosen = readPulse({ now: 'not a date', user: user(), paths: [path(), path({ id: 'p2' })] });
+    expect(unchosen.stalls).toEqual([]);
+    const chosen = readPulse({ now: 'not a date', user: user(), paths: [path({ is_primary_focus: true })] });
+    expect(chosen.stalls).toEqual([]);
   });
 });
 
