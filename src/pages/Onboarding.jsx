@@ -31,7 +31,17 @@ import { ProgressBar, OptionRow, GuidedStyles, footerCls } from '@/components/gu
 import { saveDraft, loadDraft } from '@/lib/guest-draft';
 import { trackFunnel, trackFunnelOnce } from '@/lib/funnel';
 
-const PATH_OPTIONS = [
+/**
+ * The path questions are a plain text box. A grid of fifteen options fills the
+ * screen, reads as a menu of the only acceptable answers, and quietly tells a
+ * student that whatever they were actually thinking of is wrong. The examples
+ * live in the placeholder instead, typed and erased one after another, so the
+ * box demonstrates the kind of answer it wants without ever constraining it.
+ *
+ * KNOWN_PATHS is not shown to anyone. It exists so the funnel event can still
+ * report a bucket rather than a student's free text.
+ */
+const KNOWN_PATHS = [
   'Investment banking / finance',
   'Management consulting',
   'Tech / software engineering',
@@ -48,6 +58,13 @@ const PATH_OPTIONS = [
   'Creative industries (film, design, music)',
   'Government / policy',
 ];
+
+const bucketPath = (value) => {
+  const typed = (value || '').trim().toLowerCase();
+  if (!typed) return 'none';
+  const hit = KNOWN_PATHS.find(p => p.toLowerCase().includes(typed) || typed.includes(p.toLowerCase().split(' /')[0]));
+  return hit || 'other';
+};
 
 const SCHOOL_YEARS = ['Freshman', 'Sophomore', 'Junior', 'Senior', 'Grad student'];
 
@@ -79,8 +96,49 @@ const VISION_THEMES = [
 
 const asOptions = (values) => values.map(v => ({ value: v, label: v }));
 
+/**
+ * Types an example out, holds it, deletes it, moves to the next one — the
+ * placeholder is the demonstration.
+ *
+ * Runs only while `active`, which the caller drops the moment the field has
+ * text or the cursor is in it: a placeholder that keeps moving while somebody
+ * is trying to type in the box is the version of this that people hate. It
+ * also stops entirely under prefers-reduced-motion, where a single static
+ * example is shown instead.
+ */
+function useTypedPlaceholder(examples, active) {
+  const [text, setText] = useState('');
+
+  useEffect(() => {
+    if (!active) return undefined;
+    let word = 0;
+    let chars = 0;
+    let deleting = false;
+    let timer;
+
+    const tick = () => {
+      const current = examples[word % examples.length];
+      chars += deleting ? -1 : 1;
+      setText(current.slice(0, chars));
+
+      let delay = deleting ? 26 : 58;
+      if (!deleting && chars >= current.length) { deleting = true; delay = 1500; }
+      else if (deleting && chars <= 0) { deleting = false; word += 1; delay = 300; }
+      timer = setTimeout(tick, delay);
+    };
+
+    timer = setTimeout(tick, 450);
+    return () => clearTimeout(timer);
+  }, [examples, active]);
+
+  return text;
+}
+
+const prefersReducedMotion = () =>
+  typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+
 /* One question per screen. `kind` drives the control:
-   paths     — the path list as chips, pick one, plus a box for your own
+   paths     — one text box; the examples type themselves in the placeholder
    choice    — tap exactly one (auto-advances)
    text      — chips that fill in a text answer, plus your own words
    sliders   — the five priority scores, together, because they are comparative
@@ -97,25 +155,51 @@ const STEPS = [
     required: true,
     question: 'Which path do you want to test first?',
     hint: 'You are not committing to it — you are choosing what to put to the test.',
+    examples: [
+      'Investment banking',
+      'Product design',
+      'Sports analytics',
+      'Medicine',
+      'Starting my own thing',
+      'Climate policy',
+    ],
   },
   {
     key: 'comparison_path',
     kind: 'paths',
     question: 'Want to weigh it against something?',
     hint: 'We will include this as one of your three recommended paths, so you can compare them directly.',
-    excludeFrom: ['primary_path'],
+    examples: [
+      'Management consulting',
+      'Grad school',
+      'Working at a startup',
+      'Something creative',
+    ],
   },
   {
     key: 'pressured_path',
     kind: 'paths',
     question: 'Which path do you feel the most pressure to pursue?',
     hint: 'From family, peers, or the people around you. Naming it lets us tell it apart from what you actually want.',
+    examples: [
+      'Law school',
+      'The one my parents want',
+      'Whatever everyone recruits for',
+      'Medicine',
+    ],
   },
   {
     key: 'curious_path',
     kind: 'paths',
     question: 'Which path are you privately curious about?',
     hint: 'The one you would explore if nobody was watching. This is what your contrarian recommendation is built from.',
+    examples: [
+      'Writing',
+      'Running a restaurant',
+      'Game design',
+      'Teaching',
+      'Something I have never told anyone',
+    ],
   },
   {
     key: 'available_hours_per_week',
@@ -206,6 +290,42 @@ function Chip({ label, selected, onClick }) {
     >
       {label}
     </button>
+  );
+}
+
+/**
+ * The whole control for a path question: one box, and examples that type
+ * themselves into the placeholder until the student starts answering.
+ *
+ * Rendered with a key per question so the animation restarts on each one
+ * rather than carrying the previous question's half-typed word across.
+ */
+function PathField({ step, value, onChange }) {
+  const [focused, setFocused] = useState(false);
+  const [reduced] = useState(prefersReducedMotion);
+  const animating = !reduced && !focused && !value;
+  const typed = useTypedPlaceholder(step.examples, animating);
+
+  return (
+    <label className="block">
+      <span className="sr-only">{step.question}</span>
+      <input
+        autoComplete="off"
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
+        // Once the cursor is in the box the examples stop moving and settle on
+        // one, so the hint is still there but nothing is animating under a
+        // student who is mid-sentence.
+        placeholder={animating ? `${typed}▌` : step.examples[0]}
+        className="w-full rounded-[14px] border px-4 py-4 text-lg outline-none transition focus:border-[color:var(--brand-navy-900)]"
+        style={{ borderColor: 'var(--ink-200)', background: 'var(--background-secondary)' }}
+      />
+      <span className="mt-2 block text-xs" style={{ color: 'var(--ink-400)' }}>
+        Anything you can name. It does not have to be a job title.
+      </span>
+    </label>
   );
 }
 
@@ -347,7 +467,7 @@ export default function Onboarding() {
     // the names the existing dashboards already read.
     if (step.key === 'primary_path') {
       trackFunnel('paths_selected', {
-        primary_path: PATH_OPTIONS.includes(data.primary_path) ? data.primary_path : 'other',
+        primary_path: bucketPath(data.primary_path),
         has_comparison: !!data.comparison_path,
       });
     }
@@ -474,26 +594,7 @@ export default function Onboarding() {
 
   const renderStep = () => {
     if (step.kind === 'paths') {
-      const taken = (step.excludeFrom || []).map(k => data[k]).filter(Boolean);
-      const options = PATH_OPTIONS.filter(p => !taken.includes(p));
-      const custom = data[step.key] && !PATH_OPTIONS.includes(data[step.key]) ? data[step.key] : '';
-      return (
-        <>
-          <div className="flex flex-wrap gap-2">
-            {options.map(p => (
-              <Chip key={p} label={p} selected={data[step.key] === p}
-                onClick={() => chooseOne(step.key, data[step.key] === p ? '' : p)} />
-            ))}
-          </div>
-          <label className="mt-5 block">
-            <span className="mb-1.5 block text-xs font-semibold" style={{ color: 'var(--text-secondary)' }}>
-              Not on the list? Describe it.
-            </span>
-            <input value={custom} placeholder="e.g. Sports analytics, climate policy"
-              onChange={e => set(step.key, e.target.value)} className={inputCls} style={inputStyle} />
-          </label>
-        </>
-      );
+      return <PathField key={step.key} step={step} value={data[step.key] || ''} onChange={v => set(step.key, v)} />;
     }
 
     if (step.kind === 'choice') {
@@ -637,7 +738,10 @@ export default function Onboarding() {
         {step.hint}
         {!step.required && <span className="ml-1 font-semibold" style={{ color: 'var(--ink-400)' }}>Optional.</span>}
       </p>
-      <div className="mt-5 min-h-[240px]">{renderStep()}</div>
+      {/* A floor, not a fixed height: it stops the footer jumping between a
+          one-box question and a five-slider one, and centring means the sparse
+          steps do not sit in a pile of dead space above it. */}
+      <div className="mt-5 flex min-h-[240px] flex-col justify-center">{renderStep()}</div>
     </div>,
     <div className={footerCls}>
       <div className="flex items-center gap-3">
