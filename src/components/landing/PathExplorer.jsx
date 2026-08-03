@@ -112,7 +112,12 @@ function PathCard({ path }) {
   const Icon = path.icon;
   return (
     <div
-      className="rounded-[var(--r-surface)] bg-white p-6 sm:p-8"
+      /* Tighter top padding at lg is deliberate and load-bearing: on the
+         two-column desktop layout the card's icon has to sit level with the
+         middle of the selected tab beside it, and the tab is a shorter box.
+         32px top pushed the icon 21px below that line. Below lg the card is
+         an accordion panel with nothing to align to, so it keeps p-6. */
+      className="rounded-[var(--r-surface)] bg-white p-6 sm:p-8 lg:pt-3"
       style={{ border: '1px solid var(--border-light)', boxShadow: '0 18px 44px rgba(16,24,40,0.07)' }}
     >
       <div className="flex items-start gap-4">
