@@ -1,15 +1,21 @@
 /**
  * The presentation pieces a guided, one-question-at-a-time flow is built from.
  *
- * These are copies of what the outreach survey uses
- * (src/components/outreach/OutreachPlanModal.jsx). Outreach still has its own;
- * porting it onto these is a separate change. Keep the two in step by hand until
- * then — if you change a token here, change it there.
+ * One copy, shared by every guided flow — the outreach survey
+ * (src/components/outreach/OutreachPlanModal.jsx) and anything else that asks
+ * one question at a time. Change a token here and every flow moves together;
+ * that is the point of the file.
  *
  * Presentation only. No step state, no navigation, no keyboard handling: the
  * flow owns those, because that is where they differ.
  */
 import { Check } from 'lucide-react';
+
+// A guided panel drops its own bottom padding so this bar can stick to the
+// panel's edge — the primary action stays reachable however long the list is.
+export const footerCls =
+  'sticky bottom-0 z-10 -mx-6 mt-6 rounded-b-[24px] border-t border-[#EEF2F6] bg-white px-6 pb-6 pt-4 sm:-mx-8 sm:px-8';
+
 
 export function ProgressBar({ value }) {
   return (
