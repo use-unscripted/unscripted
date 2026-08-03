@@ -193,13 +193,13 @@ function PathCard({ path }) {
   );
 }
 
-const PathButton = forwardRef(function PathButton({ path, active, rotateChevron = false, ...rest }, ref) {
+const PathButton = forwardRef(function PathButton({ path, active, rotateChevron = false, fill = false, ...rest }, ref) {
   const Icon = path.icon;
   return (
     <button
       ref={ref}
       type="button"
-      className="group relative flex w-full items-center gap-3 rounded-[var(--r-control)] px-4 py-3.5 text-left transition-all duration-200 hover:-translate-y-px"
+      className={`group relative flex w-full items-center gap-3 rounded-[var(--r-control)] px-4 py-3.5 text-left transition-all duration-200 hover:-translate-y-px${fill ? ' flex-1' : ''}`}
       style={{
         background: active ? 'var(--brand-navy-900)' : '#FFFFFF',
         border: `1px solid ${active ? 'var(--brand-navy-900)' : 'var(--border-light)'}`,
@@ -256,6 +256,10 @@ export default function PathExplorer() {
     <div>
       {/* Desktop — vertical tab rail + persistent detail card */}
       <div className="hidden gap-8 lg:grid" style={{ gridTemplateColumns: 'minmax(0,340px) minmax(0,1fr)' }}>
+        {/* The rail already stretches to the detail card's height; the buttons
+            didn't, so the last one stopped ~48px short of the card's bottom
+            edge. `fill` spreads that slack across all seven so both columns end
+            on the same line. */}
         <div
           role="tablist"
           aria-orientation="vertical"
@@ -267,6 +271,7 @@ export default function PathExplorer() {
               key={p.id}
               path={p}
               active={i === selected}
+              fill
               role="tab"
               id={`path-tab-${p.id}`}
               aria-selected={i === selected}
