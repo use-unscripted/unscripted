@@ -72,7 +72,19 @@
     --border-light: #DCE3EA;
     --text-primary: #1E293B;
     --text-secondary: #526274;
-    --text-muted: #718096;
+    /* Was #718096, which is 4.02:1 on white — under the 4.5:1 text minimum,
+       and this token is used as body copy app-wide. Darkened in place rather
+       than split into a text/decorative pair: same hue and saturation
+       (hsl 215°, 15%), lightness 52% → 43%.
+
+       Measured: 5.43:1 on #FFFFFF, 5.20:1 on the #FAFAF9 page background,
+       4.82:1 on the --background-tertiary chips it sits on in the network
+       pages. Any replacement has to clear 4.5:1 on all three.
+
+       It is now much closer to --text-secondary (6.25:1) than it used to be,
+       so the two read as a smaller step apart. That is the cost of the
+       one-token fix and it was chosen deliberately. */
+    --text-muted: #5D6B7E;
     --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
