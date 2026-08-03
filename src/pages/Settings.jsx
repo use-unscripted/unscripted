@@ -66,8 +66,9 @@ export default function Settings() {
       setRegenDone(true);
       setNewSetId(paths?.[0]?.path_set_id || '');
     } catch (err) {
-      // Stage only — never the student's own words.
-      console.error('[settings] path regeneration failed', err?.message || err);
+      // Stage only — never the student's own words, and never the raw error,
+      // whose server detail can quote the request that carried them.
+      console.error(`[settings] path regeneration failed at stage=${err?.stage || 'unknown'}`);
       setRegenError("We couldn't generate new paths just now. Your saved context is safe — try again in a moment.");
     } finally {
       setRegenerating(false);
