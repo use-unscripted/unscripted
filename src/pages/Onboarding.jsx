@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { LogoWordmark } from '@/components/UnscriptedLogo';
 import { saveDraft, loadDraft } from '@/lib/guest-draft';
+import { trackFunnel, trackFunnelOnce } from '@/lib/funnel';
 
 const STEPS = [
   {
@@ -290,6 +291,10 @@ export default function Onboarding() {
       if (available_hours_per_week) setHours(available_hours_per_week);
       if (current_step != null && current_step < STEPS.length) setStep(current_step);
     }
+    trackFunnelOnce('intake_started', 'intake_started', {
+      resumed: !!draft,
+      resumed_at_step: draft?.current_step ?? 0,
+    });
   }, []);
 
   const persist = (newData, newStep, newHours) => {
@@ -325,9 +330,14 @@ export default function Onboarding() {
     const missing = (currentStep.fields || [])
       .filter(f => f.required && !String(data[f.name] || '').trim())
       .map(f => f.name);
-    if (missing.length) { setErrors(missing); return; }
+    if (missing.length) {
+      setErrors(missing);
+      trackFunnel('intake_step_blocked', { step_index: step + 1, step_label: currentStep.label, missing_count: missing.length });
+      return;
+    }
     setErrors([]);
     persist(data, step + 1, hours);
+    trackFunnel('intake_step_completed', { step_index: step + 1, step_label: currentStep.label });
     if (!isLast) {
       setStep(step + 1);
     } else {

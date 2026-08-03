@@ -9,6 +9,14 @@
 import { Link } from 'react-router-dom';
 import { PRODUCT, CONTACT_EMAIL } from '@/lib/legal';
 
+/* Hover is a darkening plus an underline, nothing more. The outline colour used
+   to be set inline, which pulled these links into the solid-navy-button rule in
+   index.css and hung a drop shadow behind the word on hover. */
+const LINK_CLASS =
+  'rounded text-sm font-semibold underline-offset-4 decoration-1 ' +
+  'text-[color:var(--text-secondary)] hover:text-[color:var(--text-primary)] hover:underline ' +
+  'focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[color:var(--brand-navy-900)]';
+
 const LINKS = [
   { to: '/about', label: 'About' },
   { to: '/contact', label: 'Contact' },
@@ -25,20 +33,11 @@ export default function SiteFooter() {
       <div className="mx-auto flex max-w-7xl flex-col items-start gap-6">
         <nav aria-label="Footer" className="flex flex-wrap items-center gap-x-7 gap-y-3">
           {LINKS.map(({ to, label }) => (
-            <Link
-              key={to}
-              to={to}
-              className="rounded text-sm font-semibold underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-4"
-              style={{ color: 'var(--text-secondary)', outlineColor: 'var(--brand-navy-900)' }}
-            >
+            <Link key={to} to={to} className={LINK_CLASS}>
               {label}
             </Link>
           ))}
-          <a
-            href={`mailto:${CONTACT_EMAIL}`}
-            className="rounded text-sm font-semibold underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-4"
-            style={{ color: 'var(--text-secondary)', outlineColor: 'var(--brand-navy-900)' }}
-          >
+          <a href={`mailto:${CONTACT_EMAIL}`} className={LINK_CLASS}>
             {CONTACT_EMAIL}
           </a>
         </nav>

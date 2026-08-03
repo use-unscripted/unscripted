@@ -13,6 +13,7 @@ import { toast } from "@/components/ui/use-toast";
 import PasswordField from "@/components/PasswordField";
 import PasswordChecklist from "@/components/PasswordChecklist";
 import { validatePassword, isPasswordValid } from "@/lib/password-validation";
+import { trackFunnel } from "@/lib/funnel";
 
 /* This screen is reached from more than one place, and it used to introduce
    itself as a path test no matter which. Someone who clicked "See a full
@@ -80,6 +81,9 @@ export default function Register() {
     setLoading(true);
     try {
       await base44.auth.register({ email, password });
+      // Email/password accepted and a code is on its way. No address is ever
+      // sent with the event — only the fact that a visitor got this far.
+      trackFunnel('register_code_sent', { method: 'password' });
       setShowOtp(true);
       // Clear password from state after successful registration step
       setPassword("");
@@ -106,6 +110,7 @@ export default function Register() {
       if (result?.access_token) {
         base44.auth.setToken(result.access_token);
       }
+      trackFunnel('account_created', { method: 'password' });
       await redirectAfterAuth();
     } catch (err) {
       setError(err.message || "Invalid verification code. Please try again.");
@@ -125,6 +130,9 @@ export default function Register() {
   };
 
   const handleGoogle = () => {
+    // Fired before the redirect leaves the page. Whether the account was
+    // actually created shows up as account_created on the way back.
+    trackFunnel('register_provider_started', { method: 'google' });
     base44.auth.loginWithProvider("google", "/post-auth");
   };
 

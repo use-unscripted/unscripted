@@ -379,22 +379,27 @@
 /* ── Global modal entrance (any fixed overlay with a white rounded panel) ── */
 /* Applied automatically via CSS attribute selectors for zero-JS coverage    */
 
-/* Solid primary buttons (navy bg) */
-button[style*="brand-navy"],
-a[style*="brand-navy"] {
+/* Solid primary buttons (navy bg).
+   Matched on the *background* declaration, not the bare token: the earlier
+   [style*="brand-navy"] also caught links that merely named the token for a
+   text colour or a focus ring, so plain footer/legal links grew a navy drop
+   shadow on hover — a floating grey box around the words. */
+button[style*="background: var(--brand-navy"],
+a[style*="background: var(--brand-navy"] {
   transition:
     background var(--dur-fast) var(--ease-out),
     box-shadow var(--dur-base) var(--ease-out),
     opacity    var(--dur-fast) var(--ease-out);
 }
-button[style*="brand-navy"]:hover,
-a[style*="brand-navy"]:hover {
+button[style*="background: var(--brand-navy"]:hover,
+a[style*="background: var(--brand-navy"]:hover {
   box-shadow: 0 6px 20px rgba(31, 58, 95, 0.28);
 }
 /* Press stays — a button depressing under the finger is real feedback, not
-   decoration. Short and linear, no overshoot. */
-button[style*="brand-navy"]:active,
-a[style*="brand-navy"]:active {
+   decoration. Short and linear, no overshoot. Matched on the *background*
+   declaration for the same reason as the hover rule above. */
+button[style*="background: var(--brand-navy"]:active,
+a[style*="background: var(--brand-navy"]:active {
   transform: scale(0.98);
   transition: transform 80ms var(--ease-out);
 }

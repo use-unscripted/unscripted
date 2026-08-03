@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { ArrowRight, ArrowLeft, Clock, Target, Zap, FileText, X, Pencil, Check } from 'lucide-react';
 import { LogoWordmark } from '@/components/UnscriptedLogo';
 import { loadDraft, saveDraft } from '@/lib/guest-draft';
+import { trackFunnel, trackFunnelOnce } from '@/lib/funnel';
 import { base44 } from '@/api/base44Client';
 
 export default function OnboardingReview() {
@@ -29,7 +30,14 @@ export default function OnboardingReview() {
           // Authenticated but not finished — go claim
           nav('/claim-onboarding', { replace: true });
         }
+        return;
       }
+      // Signed out and actually looking at the wall. This is the denominator
+      // for the drop-off: everything after it is a visitor who did not leave.
+      trackFunnelOnce('wall_reached', 'wall_reached', {
+        has_comparison: !!d.comparison_path,
+        has_notes: !!(d.personal_notes || d.long_term_ambitions || d.responsibilities_constraints || d.things_to_avoid || d.priorities_for_recommendations),
+      });
     }).finally(() => setChecking(false));
   }, []);
 
@@ -89,6 +97,7 @@ export default function OnboardingReview() {
   const handleCreateAccount = () => {
     // Ensure draft is persisted before navigating away
     saveDraft({ ...draft });
+    trackFunnel('wall_signup_clicked');
     nav('/register');
   };
 
@@ -97,7 +106,7 @@ export default function OnboardingReview() {
       <div className="mx-auto max-w-2xl">
         <div className="mb-10 flex items-center justify-between">
           <LogoWordmark />
-          <Link to="/login" className="text-sm font-semibold text-[color:var(--ink-500)] hover:text-[color:var(--surface-dark-900)] transition">Log in</Link>
+          <Link to="/login" onClick={() => trackFunnel('wall_login_clicked', { placement: 'header' })} className="text-sm font-semibold text-[color:var(--ink-500)] hover:text-[color:var(--surface-dark-900)] transition">Log in</Link>
         </div>
 
         {/* Completion badge */}
@@ -265,13 +274,14 @@ export default function OnboardingReview() {
           </button>
           <p className="mt-4 text-sm text-[color:var(--ink-400)]">
             Already have an account?{' '}
-            <Link to="/login" className="font-semibold underline" style={{ color: 'var(--brand-navy-900)' }}>Log in</Link>
+            <Link to="/login" onClick={() => trackFunnel('wall_login_clicked', { placement: 'cta' })} className="font-semibold underline" style={{ color: 'var(--brand-navy-900)' }}>Log in</Link>
           </p>
         </div>
 
         <div className="mt-6 flex justify-center">
-          <button onClick={() => nav('/paths-intake')}
+          <button onClick={() => { trackFunnel('wall_edit_paths_clicked'); nav('/paths-intake'); }}
             className="flex items-center gap-2 text-sm font-semibold text-[color:var(--ink-500)] hover:text-[color:var(--surface-dark-900)] transition">
+
             <ArrowLeft size={14} /> Edit my path selection
           </button>
         </div>
