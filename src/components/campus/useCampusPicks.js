@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { recommendCampusEvents } from '@/lib/campus-events';
+import { readCampusRanking, writeCampusRanking } from '@/lib/campus-store';
 
 /**
  * The two or three events on this student's campus actually worth their time,
@@ -13,7 +14,7 @@ import { recommendCampusEvents } from '@/lib/campus-events';
  * The calendar was showing the same student the same events with no opinion
  * about any of them, which is a listings page, not a recommendation.
  *
- * ## Ranked once, reused everywhere
+ * ## Ranked once, reused everywhere, and remembered between visits
  *
  * A model call per surface per visit would put seconds and a cost on the
  * dashboard, which has to render immediately. The cache below is keyed on what
@@ -21,11 +22,25 @@ import { recommendCampusEvents } from '@/lib/campus-events';
  * were handed — so the calendar page and the dashboard section share one call,
  * and navigating between them costs nothing.
  *
- * Module-level, so it lives as long as the tab and dies with it. A stale
- * ranking is not a risk worth persisting against: the feed window moves daily,
- * which changes the key anyway.
+ * It is written to the device as well as held in memory. The stored feed comes
+ * back on the next visit with the same event ids in it, which means the same
+ * key, which means the recommendation the student read yesterday is on screen
+ * before the network is touched. Only a genuinely different set of events costs
+ * another model call.
+ *
+ * ## The previous answer stays up while a new one is worked out
+ *
+ * When the background refresh changes the feed, the key changes with it. The
+ * last ranking keeps rendering until the new one lands, because it describes
+ * events that are still on the calendar and blanking it would take the only
+ * opinion on the page away for a few seconds. Picks for events that dropped off
+ * the feed fall out on their own: every surface renders picks by matching them
+ * against the events it is showing.
  */
 const cache = new Map();
+
+/** Keys we have already looked for on disk, hit or miss. */
+const hydrated = new Set();
 
 /** What the ranking depends on. Anything else changing must not re-run it. */
 function cacheKey(events, profile, pathName) {
@@ -40,9 +55,34 @@ function cacheKey(events, profile, pathName) {
   ].join('|');
 }
 
-export default function useCampusPicks(events, profile, { pathName = '' } = {}) {
-  const ready = Array.isArray(events) && events.length > 0;
-  const key = ready ? cacheKey(events, profile, pathName) : '';
+/** The answer for this key, from memory or from the last visit. */
+function lookup(key) {
+  if (!key) return null;
+  if (cache.has(key)) return cache.get(key);
+
+  if (!hydrated.has(key)) {
+    hydrated.add(key);
+    const stored = readCampusRanking(key);
+    if (stored) {
+      cache.set(key, stored);
+      return stored;
+    }
+  }
+  return null;
+}
+
+/**
+ * `ready` is the caller saying the profile has been looked for.
+ *
+ * It is not optional plumbing. The key below is built out of profile fields, so
+ * asking before the profile has arrived ranks against an empty student, under a
+ * key nothing will ever match again, and pays for a model call to do it. Stored
+ * events render on the first frame now, which is well before any profile read
+ * can finish, so this happened on every single visit until it was passed.
+ */
+export default function useCampusPicks(events, profile, { pathName = '', ready = true } = {}) {
+  const havePool = Array.isArray(events) && events.length > 0;
+  const key = havePool && ready ? cacheKey(events, profile, pathName) : '';
 
   const [resolved, setResolved] = useState({ key: '', picks: [] });
 
@@ -56,9 +96,17 @@ export default function useCampusPicks(events, profile, { pathName = '' } = {}) 
     was supposed to prevent. Deriving it means the very first render that has
     events already knows a ranking is owed.
   */
-  const cached = key && cache.has(key) ? cache.get(key) : null;
-  const picks = cached || (resolved.key === key ? resolved.picks : []);
-  const loading = Boolean(key) && !cached && resolved.key !== key;
+  const cached = lookup(key);
+  const answered = key ? (cached || (resolved.key === key ? resolved.picks : null)) : null;
+  // Events with no ranking yet is a ranking owed, whether the wait is the model
+  // or the profile read in front of it.
+  const loading = havePool && !answered;
+
+  // What was on screen a moment ago, kept so a re-rank never empties the page.
+  const previous = useRef([]);
+  if (answered) previous.current = answered;
+
+  const picks = answered || previous.current;
 
   useEffect(() => {
     if (!key || cache.has(key)) return;
@@ -71,6 +119,11 @@ export default function useCampusPicks(events, profile, { pathName = '' } = {}) 
       const ranked = await recommendCampusEvents(events, profile, { pathName });
       if (cancelled) return;
       cache.set(key, ranked);
+      // Only a real answer is worth keeping for a fortnight. An empty ranking
+      // is either "none of these fit" or a model call that failed, and those
+      // two are indistinguishable from here — storing the second would leave a
+      // student with no recommendations for two weeks over one bad request.
+      if (ranked.length) writeCampusRanking(key, ranked);
       setResolved({ key, picks: ranked });
     })();
 

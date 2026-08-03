@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Loader2, List, LayoutGrid, ChevronDown } from 'lucide-react';
+import { Loader2, List, LayoutGrid, ChevronDown, RefreshCw } from 'lucide-react';
 import PageHeader from '@/components/PageHeader';
 import ScrollReveal from '@/components/ScrollReveal';
 import CampusMonthGrid from '@/components/campus/CampusMonthGrid';
@@ -21,6 +21,7 @@ import {
   eventDayKey,
 } from '@/lib/calendar-grid';
 import { parseEventStart } from '@/lib/campus-events';
+import { describeAge } from '@/lib/campus-store';
 
 /**
  * Everything real happening on the student's campus, on a calendar.
@@ -38,10 +39,21 @@ import { parseEventStart } from '@/lib/campus-events';
  * number and nothing else — the titles are what make a square worth tapping. So
  * the list is the default below `sm` and the grid above it, and the toggle is
  * always there because the choice is a preference, not a capability.
+ *
+ * ## The first visit is slow and says so. No visit after it is.
+ *
+ * Reading a school's calendar takes as long as it takes: the feed has to be
+ * resolved, fetched whole, and expanded. On a first visit there is nothing to
+ * put on screen while that runs, so the wait gets named instead of being left
+ * as a spinner that reads as broken. Every visit after it opens on the calendar
+ * we stored last time, dated to today, with the refresh running behind it.
+ * Nothing is ever blanked out to make room for an update.
  */
 export default function CampusEventsPage() {
-  const { loading, status, college, events, profile, retry, adopt } = useCampusEvents({ days: 60, limit: 40 });
-  const { picks, loading: ranking } = useCampusPicks(events, profile);
+  const {
+    loading, refreshing, cachedAt, status, college, events, profile, profileReady, retry, adopt,
+  } = useCampusEvents({ days: 60, limit: 40 });
+  const { picks, loading: ranking } = useCampusPicks(events, profile, { ready: profileReady });
 
   const [month, setMonth] = useState(() => {
     const now = new Date();
@@ -102,14 +114,43 @@ export default function CampusEventsPage() {
         }
       />
 
+      {/*
+        The only slow state left, and it happens once.
+
+        Your school's calendar has to be found and read end to end before there
+        is anything to put in a square, which takes the better part of a minute
+        on some schools. A bare spinner for that long reads as a page that broke,
+        so it says what is happening and that it is a one-time cost. After this
+        the calendar is stored and the wait never comes back.
+      */}
       {loading && (
         <div
-          className="flex items-center gap-2 rounded-[20px] bg-white px-5 py-6 text-sm"
-          style={{ border: '1px solid var(--border-light)', color: 'var(--text-muted)' }}
+          className="rounded-[20px] bg-white px-5 py-6 text-sm"
+          style={{ border: '1px solid var(--border-light)' }}
         >
-          <Loader2 size={16} className="animate-spin" aria-hidden="true" />
-          Checking your campus calendar…
+          <p className="flex items-center gap-2 font-semibold" style={{ color: 'var(--text-primary)' }}>
+            <Loader2 size={16} className="animate-spin" aria-hidden="true" />
+            Reading {college || 'your school'}'s calendar
+          </p>
+          <p className="mt-2 max-w-md leading-6" style={{ color: 'var(--text-muted)' }}>
+            The first load takes a while. We read your school's whole calendar and match it to
+            what you're testing. After this it opens straight away.
+          </p>
         </div>
+      )}
+
+      {/*
+        A refresh behind events that are already up.
+
+        Quiet on purpose: the calendar underneath is real and still worth
+        reading, and the only thing a student needs to know is that a newer one
+        is on the way.
+      */}
+      {!loading && refreshing && events.length > 0 && (
+        <p className="mb-4 flex items-center gap-2 text-xs" style={{ color: 'var(--text-muted)' }}>
+          <RefreshCw size={12} className="animate-spin" aria-hidden="true" />
+          <FreshnessNote at={cachedAt} />
+        </p>
       )}
 
       {!loading && status !== 'ok' && (
@@ -185,6 +226,19 @@ export default function CampusEventsPage() {
       )}
     </main>
   );
+}
+
+/**
+ * How old the calendar on screen is, while a newer one is being fetched.
+ *
+ * Says nothing about age when there is nothing to say. A calendar read a minute
+ * ago being called a minute old is noise, and the student is looking at the same
+ * events either way.
+ */
+function FreshnessNote({ at }) {
+  const age = describeAge(at);
+  if (!age || age === 'just now') return <>Checking for new events.</>;
+  return <>Checking for new events. This is what your school had {age}.</>;
 }
 
 function ViewToggle({ view, onChange }) {
@@ -371,7 +425,7 @@ function DayPanel({ selectedKey, selectedEvents, upcoming, picks, ranking, colle
       </div>
 
       {/*
-        Held until the ranking lands.
+        Held until the first ranking lands, and only the first.
 
         The feed answers in a few hundred milliseconds and the ranking is a
         model call behind it, so rendering as soon as the events arrive meant
@@ -379,8 +433,15 @@ function DayPanel({ selectedKey, selectedEvents, upcoming, picks, ranking, colle
         recommendations a second later. Waiting costs a moment on one column;
         the calendar beside it is already up and usable. Showing the wrong
         answer first and correcting it is the worse trade.
+
+        Once there is a ranking, a later one never takes it off the screen.
+        The background refresh changes the event list, which asks for a fresh
+        ranking, and going back to a skeleton for that would mean the student
+        loses the one piece of advice on the page every time we check the
+        calendar. Yesterday's recommendation describes an event that is still
+        on the calendar, so it stands until it is replaced.
       */}
-      {ranking && pool.length > 0 ? (
+      {ranking && picks.length === 0 && pool.length > 0 ? (
         <PanelSkeleton />
       ) : pool.length === 0 ? (
         <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Nothing on this day.</p>
