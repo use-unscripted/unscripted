@@ -209,12 +209,12 @@ describe('the plan is internally consistent', () => {
     });
     const history = [
       pending('old', 'u000', at(-9)),       // past the window
-      pending('edge', 'u001', at(-7)),      // exactly on it, so not yet
+      pending('edge', 'u001', at(-7)),      // a week old, which is where a weekly cron finds it
       pending('fresh', 'u002', at(-1)),     // well inside it
     ];
     const plan = planPass({ users, rowsByUser, history, now: NOW, passNumber: 2, limit: 25 });
-    expect(plan.toExpire).toEqual(['old']);
-    expect(plan.counts.expired).toBe(1);
+    expect(plan.toExpire).toEqual(['old', 'edge']);
+    expect(plan.counts.expired).toBe(2);
   });
 
   it('expires rows for students this pass is not going to write to', () => {

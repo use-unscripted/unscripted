@@ -13,9 +13,10 @@ const NOW = new Date(BASE).toISOString();
 /** An instant `d` days after the anchor. Negative goes backwards. */
 const at = (d) => new Date(BASE + d * DAY).toISOString();
 
-// The ten kinds student-pulse can emit. If stage 1 grows an eleventh, the
+// The eleven kinds student-pulse can emit. If stage 1 grows a twelfth, the
 // ladder integrity test below is what will catch the missing copy.
 const STALL_KINDS = [
+  'all_paths_ruled_out',
   'no_path_selected',
   'path_without_experiment',
   'experiment_without_guide',
@@ -83,11 +84,22 @@ const stuckInput = {
   ],
 };
 
+// Every path closed out on purpose, and nothing left open underneath them.
+const ruledOutInput = {
+  now: NOW,
+  user: pulseUser,
+  paths: [
+    { id: 'p1', path_name: 'Product analyst', status: 'deprioritized', created_date: at(-40), generated_at: at(-40) },
+    { id: 'p2', path_name: 'Ops analyst', status: 'deprioritized', created_date: at(-40), generated_at: at(-40) },
+  ],
+};
+
 const REAL_STALLS = {};
 for (const stall of [
   ...readPulse(noPickInput).stalls,
   ...readPulse(emptyPathInput).stalls,
   ...readPulse(stuckInput).stalls,
+  ...readPulse(ruledOutInput).stalls,
 ]) {
   if (!REAL_STALLS[stall.kind]) REAL_STALLS[stall.kind] = stall;
 }
@@ -402,21 +414,64 @@ describe('expireStale', () => {
   it('takes the pending rows past the window and nothing else', () => {
     const history = [
       row({ id: 'past', status: 'pending', delivered_at: at(-(PENDING_EXPIRY_DAYS + 1)) }),
-      // Exactly on the window. Not expired yet: the pass does not run at the
-      // same minute every week and a rung is too expensive to lose to rounding.
+      // Exactly on the window, which is where a weekly cron puts every row it
+      // reads. This has to expire, or the pass writes nothing and the student
+      // hears from us every other week. See PASS_BOUNDARY_GRACE_HOURS.
       row({ id: 'boundary', status: 'pending', delivered_at: at(-PENDING_EXPIRY_DAYS) }),
+      // Half a day inside the boundary. Still has time to be answered.
+      row({ id: 'nearly', status: 'pending', delivered_at: at(-(PENDING_EXPIRY_DAYS - 0.75)) }),
       row({ id: 'fresh', status: 'pending', delivered_at: at(-2) }),
       row({ id: 'answered', status: 'declined', delivered_at: at(-40) }),
       row({ id: 'deleted', status: 'pending', delivered_at: at(-40), deletion_status: 'deleted' }),
       row({ id: 'undateable', status: 'pending', delivered_at: null, generated_at: null, created_date: null }),
     ];
-    expect(expireStale(history, NOW)).toEqual(['past']);
+    expect(expireStale(history, NOW)).toEqual(['past', 'boundary']);
   });
 
   it('returns nothing without a usable clock, and survives junk', () => {
     expect(expireStale([row({ status: 'pending', delivered_at: at(-40) })], 'not a date')).toEqual([]);
     expect(expireStale(null, NOW)).toEqual([]);
     expect(expireStale([null, 'x', 7], NOW)).toEqual([]);
+  });
+});
+
+describe('the cadence a weekly cron actually produces', () => {
+  // The whole engine run as the scheduled job runs it: expire, decide, write,
+  // seven days later do it again. Everything else in this file hands `chooseAsk`
+  // a history somebody wrote by hand, which is exactly how a stack can be right
+  // in every unit and still talk to a student every other week.
+  const runWeeks = (weeks) => {
+    const pulse = pulseWith([stallFor('experiment_without_guide')]);
+    const sent = [];
+    let history = [];
+    for (let week = 0; week < weeks; week += 1) {
+      const now = new Date(BASE + week * 7 * DAY).toISOString();
+      const expired = new Set(expireStale(history, now));
+      history = history.map((r) => (expired.has(r.id) ? { ...r, status: 'expired' } : r));
+      if (shouldSkipPass({ pulse, history, now, userId: 'u1' })) continue;
+      const ask = chooseAsk({
+        pulse, history, now, userId: 'u1', passNumber: week + 1,
+      });
+      if (!ask) continue;
+      // The job writes the row a beat after the pass starts, which is the
+      // detail a flat seven day window gets wrong.
+      history.push({
+        ...ask,
+        id: `n${history.length + 1}`,
+        delivered_at: new Date(BASE + week * 7 * DAY + 90000).toISOString(),
+      });
+      sent.push({ week, rung: ask.rung });
+    }
+    return sent;
+  };
+
+  it('sends on consecutive weeks, one rung down each time', () => {
+    expect(runWeeks(6)).toEqual([
+      { week: 0, rung: 0 },
+      { week: 1, rung: 1 },
+      { week: 2, rung: 2 },
+      { week: 3, rung: 3 },
+    ]);
   });
 });
 
@@ -565,15 +620,44 @@ describe('copy integrity', () => {
     expect(filled.body.startsWith('Your experiment has no steps')).toBe(true);
   });
 
-  it('shortens a very long subject instead of overrunning the title', () => {
+  it('says the generic noun rather than half a name when the name will not fit', () => {
+    const long = 'Interview someone working in Institutional Portfolio Management (Fidelity/Vanguard)';
     const filled = fillRung(
       LADDERS.reflection_overdue[0],
-      stallFor('reflection_overdue', {
-        subjectName: 'Write a full market map of every mid market vendor in the northeast',
-      }),
+      stallFor('reflection_overdue', { subjectName: long }),
     );
     expect(filled.title.length).toBeLessThanOrEqual(MAX_TITLE_CHARS);
-    expect(filled.title.startsWith('Write down what')).toBe(true);
+    expect(filled.title).toBe('Write down what your experiment is teaching you');
+    // The name is not in the title at all, whole or in part, and the body still
+    // has every word of it. A cut off title in a subject line was the defect.
+    expect(filled.title).not.toContain('…');
+    expect(filled.body).toContain(long);
+  });
+
+  it('never puts a cut off name in any title, on any rung, at any length', () => {
+    const lengths = [8, 30, 45, 60, 90, 140];
+    for (const { kind, r } of allRungs) {
+      for (const size of lengths) {
+        const name = 'Interview someone working in institutional portfolio management'
+          .slice(0, size).padEnd(size, 'x');
+        const filled = fillRung(r, stallFor(kind, { subjectName: name, pathName: name }));
+        expect(filled.title.length, `${kind} @${size}: ${filled.title}`).toBeLessThanOrEqual(MAX_TITLE_CHARS);
+        expect(filled.title.includes('…'), `${kind} @${size}: ${filled.title}`).toBe(false);
+      }
+    }
+  });
+
+  it('gives two different subjects two different titles on every rung', () => {
+    // The ladder restarts at the top whenever the subject changes, so a title
+    // that never names its subject is sent word for word twice: the second and
+    // sixth emails a student got had the same subject line, which reads as us
+    // forgetting. Naming the subject is what keeps them apart.
+    for (const { kind, r } of allRungs) {
+      if (kind === 'dormant_account' || kind === 'no_path_selected' || kind === 'all_paths_ruled_out') continue;
+      const first = fillRung(r, stallFor(kind, { subjectName: 'Shadow a product analyst', pathName: 'Product analyst' }));
+      const second = fillRung(r, stallFor(kind, { subjectName: 'Sit in on a sprint review', pathName: 'Ops analyst' }));
+      expect(first.title, `${kind}: ${first.title}`).not.toBe(second.title);
+    }
   });
 
   it('sends every action somewhere the app actually has', () => {

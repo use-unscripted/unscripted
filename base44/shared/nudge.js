@@ -28,6 +28,7 @@ import { fillRung, ladderFor } from './nudge-ladder.js';
 import { isOptedOut } from './nudge-response.js';
 
 const DAY = 86400000;
+const HOUR = 3600000;
 
 /**
  * How long a sent nudge waits for an answer before it counts as ignored.
@@ -44,6 +45,25 @@ export const PENDING_EXPIRY_DAYS = 7;
 export const ACCEPTANCE_WINDOW_DAYS = 7;
 
 /**
+ * How far in front of those two windows the boundary actually sits.
+ *
+ * Both windows are a week, the cron is a week, and a row written by one pass is
+ * always a little younger than a week when the next pass reads it: the job
+ * writes the row some seconds after the pass starts, and the next run does not
+ * begin at the same second. Compared against a flat seven days, that row is not
+ * expired yet and it is still blocking, so the pass says nothing and the
+ * student hears from us again a fortnight later. Measured: a weekly cron
+ * produced four emails across thirteen weeks, alternating.
+ *
+ * Half a day in front of the window puts every real weekly pass on the far side
+ * of the boundary while still leaving an ask most of a week to be answered. The
+ * cost is that a pass run early by hand, inside that half day, expires an ask
+ * that had hours left. A student who lets six and a half days go by has ignored
+ * it, so that is the cheaper side to be wrong on.
+ */
+export const PASS_BOUNDARY_GRACE_HOURS = 12;
+
+/**
  * Hard cap on asks per stall kind between successes. The ladders are shorter
  * than this, so it only bites when a ladder is edited after rows already exist.
  * It is here so that lengthening a ladder can never turn into an endless drip.
@@ -57,8 +77,9 @@ export const RETIRE_AFTER_ASKS = 6;
  */
 export const SILENCE_LIMIT_ASKS = 7;
 
-const PENDING_EXPIRY_MS = PENDING_EXPIRY_DAYS * DAY;
-const ACCEPTANCE_WINDOW_MS = ACCEPTANCE_WINDOW_DAYS * DAY;
+const GRACE_MS = PASS_BOUNDARY_GRACE_HOURS * HOUR;
+const PENDING_EXPIRY_MS = PENDING_EXPIRY_DAYS * DAY - GRACE_MS;
+const ACCEPTANCE_WINDOW_MS = ACCEPTANCE_WINDOW_DAYS * DAY - GRACE_MS;
 
 const SUBJECT_TYPES = ['experiment', 'mission', 'outreach', 'path', 'account'];
 
@@ -241,9 +262,10 @@ export function isRetired(stallKind, history, now) {
 /**
  * The pending nudges that have waited long enough to count as ignored.
  *
- * A row sitting exactly on the window is not expired yet. The pass does not run
- * at the same minute every week, and costing somebody a rung over a rounding
- * boundary is a bad trade.
+ * The boundary sits half a day in front of the window rather than on it, so
+ * that a pass running a week after the one that wrote the row is always past
+ * it. See PASS_BOUNDARY_GRACE_HOURS: on the window itself, a weekly cron talks
+ * to a student every other week.
  *
  * @param {object[]} history prior StudentNudge rows
  * @param {Date|string|number} now
