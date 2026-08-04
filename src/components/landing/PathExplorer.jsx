@@ -17,7 +17,7 @@ const PATHS = [
       'Rebuild one deliverable they actually produce each week',
     ],
     green: 'The unglamorous 80% of the work still holds your attention.',
-    red: "You’re drawn to how the job sounds when you describe it to other people.",
+    red: 'Talking about the work is more interesting to you than doing it.',
     evidence: 'three interview write-ups and one work sample you can hand a recruiter.',
   },
   {
