@@ -548,7 +548,7 @@ export default function Onboarding() {
   const ctaLabel = !step?.required && emptyNow ? 'Skip' : 'Continue';
 
   const shell = (children, footer) => (
-    <main className="min-h-screen px-5 py-10" style={{ background: 'var(--page-surface)' }}>
+    <main className="min-h-[100svh] px-5 py-10" style={{ background: 'var(--page-surface)' }}>
       <div ref={topRef} className="mx-auto max-w-2xl">
         <GuidedStyles />
         <div className="mb-8 flex items-center justify-between">

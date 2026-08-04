@@ -102,7 +102,7 @@ export default function OnboardingReview() {
   };
 
   return (
-    <main className="min-h-screen px-5 py-10" style={{ background: 'var(--page-surface)' }}>
+    <main className="min-h-[100svh] px-5 py-10" style={{ background: 'var(--page-surface)' }}>
       <div className="mx-auto max-w-2xl">
         <div className="mb-10 flex items-center justify-between">
           <LogoWordmark />

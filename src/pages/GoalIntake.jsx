@@ -124,7 +124,7 @@ export default function GoalIntake() {
   const setGoalsForTab = tab === 'annual' ? setAnnualGoals : tab === 'monthly' ? setMonthlyGoals : setWeeklyGoals;
 
   return (
-    <main className="min-h-screen px-5 py-10" style={{ background: 'var(--page-surface)' }}>
+    <main className="min-h-[100svh] px-5 py-10" style={{ background: 'var(--page-surface)' }}>
       <div className="mx-auto max-w-4xl">
         <div className="mb-8 flex items-center justify-between">
           <LogoWordmark />

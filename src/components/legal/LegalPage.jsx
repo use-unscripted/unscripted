@@ -27,7 +27,7 @@ import { CONTACT_EMAIL } from '@/lib/legal';
 
 export function LegalPage({ title, effective, updated, notice, lede, contents, children }) {
   return (
-    <div className="min-h-screen" style={{ background: 'var(--page-surface)' }}>
+    <div className="min-h-[100svh]" style={{ background: 'var(--page-surface)' }}>
       <header className="border-b" style={{ borderColor: 'var(--border-light)' }}>
         <div className="mx-auto flex max-w-3xl items-center justify-between gap-4 px-6 py-5">
           <Link to="/" className="rounded focus-visible:outline-2 focus-visible:outline-offset-4" style={{ outlineColor: 'var(--brand-navy-900)' }}>

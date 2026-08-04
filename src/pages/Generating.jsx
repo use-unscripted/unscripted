@@ -46,7 +46,7 @@ export default function Generating() {
 
   if (error) {
     return (
-      <main className="grid min-h-screen place-items-center px-6 text-center text-white" style={{ background: 'var(--surface-dark-700)' }}>
+      <main className="grid min-h-[100svh] place-items-center px-6 text-center text-white" style={{ background: 'var(--surface-dark-700)' }}>
         <div className="max-w-md">
           <div className="mx-auto mb-6 flex h-14 w-14 items-center justify-center rounded-full"           style={{ background: 'rgba(31,58,95,0.25)', border: '1px solid rgba(31,58,95,0.4)' }}>
             <AlertTriangle size={24} aria-hidden="true" />
@@ -73,7 +73,7 @@ export default function Generating() {
   }
 
   return (
-    <main className="grid min-h-screen place-items-center px-6 text-center text-white" style={{ background: 'var(--surface-dark-700)' }}>
+    <main className="grid min-h-[100svh] place-items-center px-6 text-center text-white" style={{ background: 'var(--surface-dark-700)' }}>
       <div>
         <div className="mx-auto flex items-center justify-center h-16 w-16 animate-pulse">
           <CompassIcon size={56} />

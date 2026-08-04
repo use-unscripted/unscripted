@@ -31,7 +31,7 @@ export default class AppErrorBoundary extends Component {
     if (!this.state.hasError) return this.props.children;
 
     return (
-      <main className="grid min-h-screen place-items-center px-6 text-center">
+      <main className="grid min-h-[100svh] place-items-center px-6 text-center">
         <div className="max-w-md">
           <h1 className="font-heading text-2xl font-bold text-[color:var(--surface-dark-900)]">
             This page could not be displayed.
