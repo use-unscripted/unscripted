@@ -430,7 +430,7 @@ function SurveyStep({ pathName, survey, setSurvey, index, setIndex, onGenerate, 
           <button onClick={next} disabled={!answered}
             className="flex flex-1 items-center justify-center gap-2 rounded-[10px] py-3 text-sm font-semibold text-white disabled:opacity-40"
             style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}>
-            {step.optional && !((survey[step.key] || '').toString().trim()) ? 'Skip' : 'Continue'}
+            Continue
             <ChevronRight size={15} />
           </button>
         </div>
