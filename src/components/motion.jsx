@@ -22,6 +22,20 @@ export const EASE = [0.16, 1, 0.3, 1];
    card on the site. Genuine physical interactions can use --ease-overshoot
    from index.css. */
 
+/* Copy easing: ease-out cubic.
+
+   EASE is an expo curve, ~87% arrived at 30% of its duration. That reads
+   beautifully on a word rising out of a clip mask, where the eye tracks a
+   short, fast, decisive travel. It reads badly on a paragraph fading in,
+   because opacity snaps to nearly-there in ~200ms and then spends the rest of
+   the duration creeping the last few percent. The block appears to pop, then
+   hang, which is the single biggest reason the old hero felt off.
+
+   Cubic is ~87% arrived at 50%, so the movement is actually visible for most
+   of its duration and a fade glides instead of snapping. Use it for anything
+   whose entrance is carried by opacity rather than by travel. */
+export const EASE_COPY = [0.33, 1, 0.68, 1];
+
 /* ── Reveal ────────────────────────────────────────────────────────────────
    Drop-in replacement for the existing ScrollReveal. Same props, but driven
    by framer-motion's viewport detection instead of a hand-rolled observer,
@@ -36,6 +50,9 @@ export function Reveal({
   as = 'div',
   amount = 0.15,
   duration = 0.75,
+  /* Defaults to EASE so every existing caller is untouched. Pass EASE_COPY
+     for blocks whose entrance is mostly a fade (see the note above it). */
+  ease = EASE,
 }) {
   const reduce = useReducedMotion();
   const Tag = motion[as] ?? motion.div;
@@ -52,7 +69,7 @@ export function Reveal({
       initial={{ opacity: 0, y }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, amount }}
-      transition={{ duration, ease: EASE, delay: delay / 1000 }}
+      transition={{ duration, ease, delay: delay / 1000 }}
     >
       {children}
     </Tag>
@@ -161,7 +178,7 @@ export function WordReveal({
 /* ── UnderlineDraw ─────────────────────────────────────────────────────────
    Gold rule that wipes in under an emphasised phrase.
    ──────────────────────────────────────────────────────────────────────── */
-export function UnderlineDraw({ delay = 0.6, height = 4, color = 'var(--brand-gold-500)' }) {
+export function UnderlineDraw({ delay = 0.6, height = 4, duration = 0.7, color = 'var(--brand-gold-500)' }) {
   const reduce = useReducedMotion();
   return (
     <motion.span
@@ -180,7 +197,7 @@ export function UnderlineDraw({ delay = 0.6, height = 4, color = 'var(--brand-go
       initial={reduce ? { scaleX: 1 } : { scaleX: 0 }}
       whileInView={{ scaleX: 1 }}
       viewport={{ once: true, amount: 0.4 }}
-      transition={reduce ? { duration: 0 } : { duration: 0.7, ease: EASE, delay }}
+      transition={reduce ? { duration: 0 } : { duration, ease: EASE, delay }}
     />
   );
 }

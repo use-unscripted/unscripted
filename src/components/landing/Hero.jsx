@@ -19,7 +19,7 @@ import { motion, useScroll, useSpring, useTransform, useReducedMotion } from 'fr
 import UniversityMarquee from '@/components/landing/UniversityMarquee';
 import HeroBackdrop from '@/components/landing/HeroBackdrop';
 import PathPreview from '@/components/landing/PathPreview';
-import { Reveal, WordReveal, UnderlineDraw, EASE } from '@/components/motion';
+import { Reveal, WordReveal, UnderlineDraw, EASE, EASE_COPY } from '@/components/motion';
 
 /* Numbering earns its place here: the rail below fills in order and the four
    steps are a real sequence, so 01–04 is carrying information rather than
@@ -270,20 +270,51 @@ export default function Hero() {
                visibly bigger at the same font-size. */
             style={{ color: 'var(--text-primary)', fontSize: 'clamp(2.5rem, 5vw + 0.5rem, 3.75rem)' }}
           >
-            <WordReveal text="Don’t guess your next path." delay={0.05} />{' '}
+            <WordReveal text="Don’t guess your next path." delay={0.05} duration={0.85} />{' '}
             <span className="relative inline-block">
-              <WordReveal text="Test it." delay={0.34} />
-              <UnderlineDraw delay={0.72} height={5} />
+              {/* 0.325, not 0.34. The headline is one seven-word sentence
+                  that happens to be split across two WordReveals so the
+                  second half can carry an underline. The word cadence has to
+                  run straight through the seam: 0.05 + (5 x 0.055) = 0.325 is
+                  exactly where the sixth word falls. */}
+              <WordReveal text="Test it." delay={0.325} duration={0.85} />
+              {/* Was 0.72, which put the rule mid-wipe underneath a word that
+                  was itself still rising, at the same time as the paragraph
+                  and buttons were arriving. Now it starts as “it.” lands and
+                  finishes before anything below it moves, so it reads as the
+                  headline's full stop rather than one more thing happening at
+                  once. */}
+              <UnderlineDraw delay={0.58} duration={0.62} height={5} />
             </span>
           </h1>
 
-          <Reveal delay={620} y={16}>
+          {/* Timing below the headline.
+
+              The old numbers had the paragraph at 620ms and both CTAs at
+              740ms, while the last headline word was still settling and the
+              gold rule was still drawing. Measured on the page: four separate
+              gestures in flight at t=775ms, in two different motion languages
+              (mask rise vs. fade). Worse, the paragraph finished arriving
+              *before* the headline's underline did, so the fold resolved out
+              of reading order.
+
+              Now it's four beats: headline, rule, paragraph, actions. Each
+              starts as the one before it lands, so neighbours dovetail
+              instead of stacking. Busiest moment is three, and those three
+              are the copy beats cascading in one shared language, which reads
+              as a stagger rather than a pile-up.
+
+              EASE_COPY on everything that fades. Details on the curve are in
+              motion.jsx; short version, the brand expo curve snaps a fade to
+              nearly-there in 200ms and then hangs, which is exactly the
+              “pops in, then does nothing” feeling. */}
+          <Reveal delay={700} y={14} duration={0.72} ease={EASE_COPY}>
             <p className="mt-6 max-w-[52ch] text-lg leading-8 font-body" style={{ color: 'var(--text-secondary)' }}>
               Pick a career you’re weighing up. You get 30 days of real assignments: who to email, what to say, what to bring back. By the end you’ll know whether it fits, because you’ll have tried it.
             </p>
           </Reveal>
 
-          <Reveal delay={740} y={16}>
+          <Reveal delay={820} y={14} duration={0.72} ease={EASE_COPY}>
             <div className="mt-9 flex flex-wrap items-center gap-3">
               <Link
                 to="/onboarding"
@@ -313,6 +344,13 @@ export default function Hero() {
                 See how it works
               </a>
             </div>
+          </Reveal>
+
+          {/* Split out of the button block. It used to share one Reveal with
+              the two CTAs, so the buttons and the log-in line landed as a
+              single slab. It's the quietest text in the fold and it can come
+              in behind them. */}
+          <Reveal delay={920} y={10} duration={0.62} ease={EASE_COPY}>
             <p className="mt-4 text-sm" style={{ color: 'var(--text-secondary)' }}>
               Already have an account?{' '}
               <Link to="/login" className="font-semibold underline" style={{ color: 'var(--brand-navy-700)' }}>
