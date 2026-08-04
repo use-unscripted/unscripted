@@ -505,6 +505,25 @@ const GENERIC_SUBJECT = {
 };
 
 /**
+ * The subject types whose name is a title rather than a name, so it goes in
+ * quotes.
+ *
+ * An experiment or a mission is titled with a whole sentence: "Complete a
+ * virtual simulation", "Email two analysts". Dropped bare into a sentence of
+ * ours it runs the two together, and the subject line of a real email came out
+ * as `Get the steps for Complete a virtual simulation`. Quotes fix that and
+ * cost nothing anywhere else.
+ *
+ * A contact and a path are the other way round. "Ada Reyes" and "Product
+ * analyst" are names, and quoting a person's name reads as scare quotes, so
+ * they stay bare. student-pulse draws the same line in its own labels.
+ *
+ * Curly quotes on purpose. They are the house exception, they are correct
+ * typography, and they read as nothing on screen.
+ */
+const QUOTED_SUBJECT_TYPES = ['experiment', 'mission'];
+
+/**
  * Pulling the subject's name back out of a stall label.
  *
  * This is the fallback, not the path. A stall carries `subjectName`: the raw
@@ -534,7 +553,7 @@ function subjectFor(stall) {
   const type = GENERIC_SUBJECT[s.subjectType] ? s.subjectType : 'account';
 
   const given = str(s.subjectName) || str(s.subject);
-  if (given) return { text: given, quoted: false };
+  if (given) return { text: given, quoted: QUOTED_SUBJECT_TYPES.includes(type) };
 
   const label = str(s.label);
   for (const pattern of LABEL_PATTERNS) {
