@@ -462,12 +462,13 @@ describe('the last rung of no_path_selected promises only what happens', () => {
 });
 
 describe('what the page says once the writes have been attempted', () => {
-  const ruleOut = (saved) => describeOutcome({
+  const ruleOut = (saved, wroteText = true) => describeOutcome({
     choice: 'accepted',
     actionKind: 'rule_out',
     target: '/experiments',
     ruleOutPlanned: true,
     ruleOutSaved: saved,
+    wroteText,
   });
 
   it('says it is closed out only when the subject write actually landed', () => {
@@ -486,13 +487,31 @@ describe('what the page says once the writes have been attempted', () => {
     expect(out.line).toContain('We saved what you wrote');
   });
 
+  it('does not claim it saved words on a rule out that was pressed with an empty box', () => {
+    // The text box on a rule out is optional, so "we saved what you wrote" is a
+    // claim about something that may not exist. Both branches have to hold.
+    const failed = ruleOut(false, false);
+    expect(failed.line).toBe('That did not go through: it is still on your list.');
+    expect(failed.line).not.toContain('what you wrote');
+    const saved = ruleOut(true, false);
+    expect(saved.line).toBe('Closed out. It is off your list.');
+    expect(saved.line).not.toContain('what you wrote');
+    // And with words in the box it still says so.
+    expect(ruleOut(true, true).line).toContain('what you wrote is saved with it');
+  });
+
   it('tells the truth about the emails when the opt out did not save', () => {
     const on = describeOutcome({ choice: 'accepted', actionKind: 'rule_out', optOutPlanned: true, optOutSaved: true });
     expect(on.line).toContain('These are off now');
-    const off = describeOutcome({ choice: 'accepted', actionKind: 'rule_out', optOutPlanned: true, optOutSaved: false });
+    const off = describeOutcome({ choice: 'accepted', actionKind: 'rule_out', optOutPlanned: true, optOutSaved: false, wroteText: true });
     expect(off.line).toBe('We saved what you wrote, but the emails are still on.');
     expect(off.to).toBe('/settings');
     expect(off.cta).toBe('Open settings');
+    // Nobody has to type anything to ask us to stop, so the empty case is the
+    // common one and it must not claim words were kept.
+    const bare = describeOutcome({ choice: 'accepted', actionKind: 'rule_out', optOutPlanned: true, optOutSaved: false });
+    expect(bare.line).toBe('That did not go through: the emails are still on.');
+    expect(bare.line).not.toContain('what you wrote');
   });
 
   it('sends an accepted action rung straight to the thing, with a link left behind', () => {
@@ -529,6 +548,35 @@ describe('what the page says once the writes have been attempted', () => {
     expect(internalRoute('/paths')).toBe('/paths');
     expect(internalRoute('//evil.example.com')).toBe('');
     expect(internalRoute('https://evil.example.com')).toBe('');
+  });
+
+  it('refuses the shapes that only look internal until a url parser reads them', () => {
+    // A backslash opens an authority exactly like a slash does, and tab, newline
+    // and carriage return are stripped before parsing, so each of these resolves
+    // to a different host. Every one is asserted against real url resolution
+    // below rather than against a hand written expectation.
+    const attacks = [
+      '/\\evil.example.com',
+      '/\\\\evil.example.com',
+      '/\\/evil.example.com',
+      '/\t/evil.example.com',
+      '/\n/evil.example.com',
+      '/\r/evil.example.com',
+      '/\t\\evil.example.com',
+      '/\t\t/evil.example.com',
+      '/\\\tevil.example.com',
+      ' /\\evil.example.com',
+    ];
+    const base = 'https://useunscripted.base44.app/answer';
+    for (const target of attacks) {
+      expect(new URL(target, base).host, JSON.stringify(target)).toBe('evil.example.com');
+      expect(internalRoute(target), JSON.stringify(target)).toBe('');
+      const out = describeOutcome({ choice: 'accepted', actionKind: 'send_outreach', target });
+      expect(out.goTo, JSON.stringify(target)).toBe('');
+    }
+    // Same origin routes with odd but harmless characters still work.
+    expect(internalRoute('/experiment?experimentId=a%09b')).toBe('/experiment?experimentId=a%09b');
+    expect(internalRoute('/paths?q=a b')).toBe('/paths?q=a b');
   });
 
   it('has a plain sentence for a declined and an answered ask, and for nonsense', () => {

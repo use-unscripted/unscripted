@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import PageHeader from '@/components/PageHeader';
@@ -39,11 +39,22 @@ export default function Settings() {
   // written by other students between one visit and the next were enough to
   // push a real opt out off the end and draw the button as though the emails
   // were still on.
+  // Reads are numbered so a slow one cannot overwrite a newer one. The mount read
+  // and the read that follows a button press can be in flight together, and if the
+  // mount read lands last it carries a snapshot taken before the press: the server
+  // is right, the emails really are off, and the button says otherwise until a
+  // reload. Every write also merges through the functional form, so nothing this
+  // session did can be lost to a read that has not caught up.
+  const optOutRead = useRef(0);
+  const optOutWrites = useRef([]);
   const loadOptOuts = useCallback(async (userId, known = []) => {
     if (!userId) return;
+    if (known.length) optOutWrites.current = mergeOptOutRows(optOutWrites.current, known);
+    const ticket = ++optOutRead.current;
     try {
       const rows = await base44.entities.NudgeOptOut.filter({ user_id: userId }, '-created_date', 100);
-      setOptOutRows(mergeOptOutRows(rows, known));
+      if (ticket !== optOutRead.current) return;
+      setOptOutRows(mergeOptOutRows(rows, optOutWrites.current));
     } catch (err) {
       console.error('[settings] could not read the email setting:', err?.message || 'unknown');
       // A failed read must not undo what the student just did on this screen.

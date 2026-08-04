@@ -77,12 +77,21 @@ export function isSoftDeleted(row) {
  * An in app route, or ''.
  *
  * A rung's target is written in nudge-ladder.js and is never student input, but
- * the page that reads this sends a student straight there on a tap, so it is
- * one edit away from being a phishing hop. The check costs one line.
+ * the page that reads this sends a student straight there on a tap, so it is one
+ * edit away from being a phishing hop.
+ *
+ * Rejecting only '//' is not enough, and an earlier version of this said it was.
+ * URL parsing treats a backslash exactly like a forward slash in the authority
+ * position, and it strips tab, newline and carriage return before parsing at all,
+ * so '/\evil.com' and '/<tab>/evil.com' both resolve to https://evil.com. Every
+ * second character that can open an authority has to go, and so does any
+ * character that vanishes on the way in.
  */
 export function internalRoute(value) {
   const route = str(value);
-  if (!route.startsWith('/') || route.startsWith('//')) return '';
+  if (!route.startsWith('/')) return '';
+  if (route[1] === '/' || route[1] === '\\') return '';
+  if (/[\t\n\r]/.test(route)) return '';
   return route;
 }
 
@@ -434,11 +443,16 @@ export function describeOutcome(input = {}) {
     ruleOutSaved = false,
     optOutPlanned = false,
     optOutSaved = false,
+    wroteText = false,
   } = input || {};
 
   const route = internalRoute(target);
   const home = { to: ANSWER_HOME, cta: 'Go to My Journey' };
   const settings = { to: SETTINGS_ROUTE, cta: 'Open settings' };
+  // The text box is optional on a rule out, so "we saved what you wrote" is a
+  // claim about something that may not exist. Half the point of this screen is
+  // that it stops telling students things that did not happen.
+  const kept = wroteText ? 'We saved what you wrote, but ' : 'That did not go through: ';
 
   // Telling us to stop is the one thing on this page a student will check, so a
   // create that did not land has to say so and hand them the control that works.
@@ -451,7 +465,7 @@ export function describeOutcome(input = {}) {
         goTo: '',
       }
       : {
-        line: 'We saved what you wrote, but the emails are still on.',
+        line: `${kept}the emails are still on.`,
         body: 'Turning them off did not save. You can do it in your settings.',
         ...settings,
         goTo: '',
@@ -461,14 +475,16 @@ export function describeOutcome(input = {}) {
   if (ruleOutPlanned) {
     return ruleOutSaved
       ? {
-        line: 'Closed out. It is off your list, and what you wrote is saved with it.',
+        line: wroteText
+          ? 'Closed out. It is off your list, and what you wrote is saved with it.'
+          : 'Closed out. It is off your list.',
         body: '',
         to: route || ANSWER_HOME,
         cta: route ? 'Open it' : 'Go to My Journey',
         goTo: '',
       }
       : {
-        line: 'We saved what you wrote, but it is still on your list.',
+        line: `${kept}it is still on your list.`,
         body: 'Closing it out did not save. Nothing else on your account changed, and you can close it yourself when you want to.',
         to: route || ANSWER_HOME,
         cta: route ? 'Open it' : 'Go to My Journey',

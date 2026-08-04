@@ -32,7 +32,7 @@ import { useAuth } from '@/lib/AuthContext';
 import { Sk } from '@/components/PageSkeleton';
 import { LogoFull } from '@/components/UnscriptedLogo';
 import {
-  describeAsk, planResponse, describeOutcome, internalRoute, isSoftDeleted, ANSWER_HOME,
+  describeAsk, planResponse, describeOutcome, internalRoute, isSoftDeleted, isOptedOut, ANSWER_HOME,
 } from '@/lib/nudge-response';
 
 /** Where a student goes when there is nothing else to send them to. */
@@ -254,10 +254,16 @@ function AnswerNudgeInner() {
             return false;
           });
       }
+      // A create that resolves is not the same as an opt out that counts. The
+      // weekly pass decides whether to email by running isOptedOut over the
+      // rows, and that check requires the creator and the subject to be the same
+      // person. So the row we just wrote is put through the same function rather
+      // than trusting the promise: if it would not stop an email, we do not tell
+      // a student their emails are off.
       let optOutSaved = false;
       if (plan.optOut) {
         optOutSaved = await base44.entities.NudgeOptOut.create(plan.optOut)
-          .then(() => true)
+          .then((row) => isOptedOut([{ ...plan.optOut, ...(row || {}) }], nudge.user_id))
           .catch((err) => {
             console.error('[answer] could not record the opt out:', err?.message || 'unknown');
             return false;
@@ -272,6 +278,7 @@ function AnswerNudgeInner() {
         ruleOutSaved,
         optOutPlanned: !!plan.optOut,
         optOutSaved,
+        wroteText: !!String(reply || '').trim(),
       });
       // Set first, navigate second. If the route is gone or the navigation does
       // not happen, they are left on a screen that still tells them what
