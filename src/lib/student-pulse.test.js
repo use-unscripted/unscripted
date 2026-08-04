@@ -329,6 +329,48 @@ describe('readPulse: the stall list', () => {
     expect(worstAfter).toBeLessThan(worstBefore);
   });
 
+  it('notices when every path has been ruled out and there is nothing else open', () => {
+    const pulse = readPulse({
+      now: NOW,
+      user: user(),
+      paths: [
+        path({ id: 'p1', status: 'deprioritized' }),
+        path({ id: 'p2', path_name: 'Ops analyst', status: 'deprioritized' }),
+      ],
+    });
+    expect(kinds(pulse)).toContain('all_paths_ruled_out');
+    const stall = pulse.stalls.find((s) => s.kind === 'all_paths_ruled_out');
+    expect(stall.label).toBe('You ruled out all 2 of your paths and there is nothing else open.');
+    expect(stall.subjectType).toBe('account');
+    // It has to beat "gone quiet", which is what this account used to get: an
+    // email telling them to pick the plan back up, when there is no plan left.
+    const dormant = pulse.stalls.find((s) => s.kind === 'dormant_account');
+    if (dormant) expect(stall.severity).toBeGreaterThan(dormant.severity);
+  });
+
+  it('says nothing about a ruled out set while a path or an experiment is still open', () => {
+    const stillPicking = readPulse({
+      now: NOW,
+      user: user(),
+      paths: [path({ id: 'p1', status: 'deprioritized' }), path({ id: 'p2', status: 'exploring' })],
+    });
+    expect(kinds(stillPicking)).not.toContain('all_paths_ruled_out');
+
+    const stillWorking = readPulse({
+      now: NOW,
+      user: user(),
+      paths: [path({ id: 'p1', status: 'deprioritized' })],
+      experiments: [experiment({ status: 'planned' })],
+    });
+    expect(kinds(stillWorking)).not.toContain('all_paths_ruled_out');
+
+    // Archived is filing, not deciding. On its own it is not a student saying no.
+    const filed = readPulse({
+      now: NOW, user: user(), paths: [path({ id: 'p1', status: 'archived' })],
+    });
+    expect(kinds(filed)).not.toContain('all_paths_ruled_out');
+  });
+
   it('still asks the student to pick when other paths are genuinely left', () => {
     const pulse = readPulse({
       now: NOW,

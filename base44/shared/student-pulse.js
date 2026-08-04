@@ -293,8 +293,13 @@ export function readPulse(input = {}) {
     || livePaths.find((p) => p.status === 'active')
     || null;
 
+  // Paths the student decided against on purpose, which is the one thing this
+  // product exists to collect and the one state nothing downstream could see.
+  // Kept separate from `livePaths`, which has them filtered out by design.
+  const ruledOutPaths = rows(paths).filter((p) => p.status === 'deprioritized');
+
   const stalls = findStalls({
-    nowMs, hasNow, user, chosenPath, livePaths, liveExps, liveMissions, liveGuides,
+    nowMs, hasNow, user, chosenPath, livePaths, ruledOutPaths, liveExps, liveMissions, liveGuides,
     liveProof, liveRefl, liveOutreach, guidesFor, proofFor, doneMissionsFor,
     lastEvidenceAt, daysSinceEvidence, daysSinceSignup,
   });
@@ -328,15 +333,26 @@ const KIND_RANK = { proof: 6, mission: 5, outreach: 4, reflection: 3, guide: 2, 
 // A stall gains at most 8 points for sitting there, so age sharpens a stall but
 // never lets it jump a tier.
 const BASE_SEVERITY = {
-  no_path_selected: 90,
-  path_without_experiment: 81,
-  experiment_without_guide: 72,
-  guide_never_acted_on: 63,
-  mission_planned_stale: 54,
-  outreach_never_sent: 45,
-  outreach_no_followup: 36,
-  experiment_no_proof: 27,
-  reflection_overdue: 18,
+  no_path_selected: 99,
+  path_without_experiment: 90,
+  experiment_without_guide: 81,
+  guide_never_acted_on: 72,
+  mission_planned_stale: 63,
+  outreach_never_sent: 54,
+  outreach_no_followup: 45,
+  experiment_no_proof: 36,
+  reflection_overdue: 27,
+  // Second from bottom on purpose, above only "gone quiet".
+  //
+  // It reads like the most urgent thing here and it is not. It is what is left
+  // when a student has closed everything down, so it has to sit under every
+  // stall about work they still have open, and it has to sit under whatever it
+  // replaces: ruling a path out is the student answering us, and answering us
+  // may never produce a louder email than the one before it. Ranked above
+  // no_path_selected, a one path account that closed its path out would get a
+  // more insistent email for having done the decisive thing. There is a test on
+  // exactly that.
+  all_paths_ruled_out: 18,
   dormant_account: 9,
 };
 
@@ -351,7 +367,7 @@ const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
 
 function findStalls(ctx) {
   const {
-    nowMs, hasNow, user, chosenPath, livePaths, liveExps, liveMissions, liveGuides,
+    nowMs, hasNow, user, chosenPath, livePaths, ruledOutPaths, liveExps, liveMissions, liveGuides,
     liveRefl, liveOutreach, guidesFor, proofFor, doneMissionsFor,
     lastEvidenceAt, daysSinceEvidence, daysSinceSignup,
   } = ctx;
@@ -422,6 +438,39 @@ function findStalls(ctx) {
   // something they have not finished creating is the wrong end of the problem.
   const IGNORED_EXP_STATUSES = ['completed', 'skipped', 'draft'];
   const openExps = liveExps.filter((e) => !IGNORED_EXP_STATUSES.includes(e.status));
+
+  // Every path they were given is behind them, at least one because they said
+  // so, and there is nothing else in front of them.
+  //
+  // Before this existed the account fell through to `dormant_account`, whose
+  // first ask is "pick this back up, and if the plan you made no longer fits,
+  // change it rather than starting over." There is no plan left to change. A
+  // student who ruled out all three did the most decisive thing this product
+  // asks for and got told off for going quiet, which is the worst email in the
+  // set landing on the best behaviour in the set.
+  //
+  // Gated on having no open experiment as well, because a live experiment under
+  // a path they have since dropped is still real work with a real next step,
+  // and this stall outranks everything.
+  const rulesOut = rows(ruledOutPaths);
+  if (livePaths.length === 0 && rulesOut.length > 0 && openExps.length === 0) {
+    let newest = null;
+    for (const p of rulesOut) {
+      const t = entityTime(p.generated_at || p.created_date);
+      if (Number.isFinite(t) && (newest === null || t > newest)) newest = t;
+    }
+    const since = newest === null ? null : new Date(newest).toISOString();
+    add('all_paths_ruled_out', {
+      subjectId: user?.id || null,
+      subjectName: '',
+      subjectType: 'account',
+      label: rulesOut.length === 1
+        ? 'You ruled out the one path you had and there is nothing else open.'
+        : `You ruled out all ${rulesOut.length} of your paths and there is nothing else open.`,
+      since,
+      days: daysBetween(since, nowMs),
+    });
+  }
 
   // An experiment nobody ever generated steps for. This is the 252-of-265 case.
   for (const e of openExps) {

@@ -28,15 +28,19 @@
  *   `now` is taken as a parameter so a caller does not have to know that, and
  *   so a later version can use it without changing every call site.
  *
- * ## `text` is the email today. `html` is not sent to anybody yet.
+ * ## `html` is the email. `text` is what a client that refuses it falls back to.
  *
- * Base44's SendEmail takes `{to, subject, body, from_name}`, and `body` is
- * plain text. So `text` is the entire thing a student sees, and `html` goes
- * nowhere: the backend function renders it, throws it away, and never has an
- * argument to put it in. It is kept, and tested, because the copy and the
- * escaping should already be right on the day the send path can carry one, and
- * because rebuilding it later against a live sender is how a bug reaches an
- * inbox. If you are changing what a student reads today, change `text`.
+ * Base44's SendEmail types `body` as plain text and offers no html argument,
+ * and an earlier version of this file read that as proof html could never be
+ * sent, so it shipped a wall of unformatted text with a raw url in the middle.
+ * The integration renders html in that field anyway. Confirmed by sending all
+ * seven rungs to a real inbox on 2026-08-04: wordmark, gold button, footer
+ * link, dark mode. Do not trust that integration's types about what it will
+ * carry. Send yourself one.
+ *
+ * Both bodies are still built and both are still tested, because the send path
+ * takes either: `format: 'text'` sends the plain one, which is a real email in
+ * its own right and is the fallback if a client ever chokes on the html.
  *
  * ## The two bodies say the same thing and print links differently
  *
@@ -212,6 +216,7 @@ const LINK_LABELS = {
   write_reflection: 'Write it down',
   pick_path: 'Compare the paths',
   start_experiment: 'Set it up',
+  refresh_paths: 'Open your settings',
 };
 const DEFAULT_LINK_LABEL = 'Open it';
 
@@ -328,8 +333,8 @@ function firstNameOf(user) {
  * answer page can open on the right question. The backend function creates the
  * row first and passes the id here.
  *
- * The returned `html` is not sent anywhere today. See the note at the top of
- * the file: `text` is the email.
+ * Both bodies come back filled. The send path takes `html` unless a caller
+ * asks for the plain one. See the note at the top of the file.
  *
  * @param {{ask: object, user?: object|null, appOrigin?: string, now?: any,
  *   nudgeId?: string}} input
@@ -377,7 +382,7 @@ export function renderNudgeEmail(input = {}) {
   textParts.push(`${STOP_SENTENCE} ${settingsUrl}`);
   const text = plainDashes(textParts.join('\n\n'));
 
-  // The HTML body. NOTHING SENDS IT YET. See the note at the top of the file.
+  // The HTML body, which is the one that goes out.
   const html = plainDashes(renderHtml({
     greeting, body, question: wantsAnswer ? question : '', linkLabel,
     actionHref: safeHref(origin, actionUrl), settingsHref: safeHref(origin, settingsUrl),

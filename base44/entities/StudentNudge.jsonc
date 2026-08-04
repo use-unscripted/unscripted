@@ -63,6 +63,11 @@
         "write_reflection",
         "pick_path",
         "start_experiment",
+        // Send them to settings to ask for a fresh set of paths. Only the
+        // all_paths_ruled_out ladder uses it, and it is a separate value rather
+        // than reusing pick_path because there is no path left to pick and the
+        // email's button reads off this field.
+        "refresh_paths",
         "answer_question",
         "rule_out"
       ]
@@ -161,10 +166,11 @@
   // letting them would let anyone forge a row that claims we asked something we
   // did not.
   //
-  // State: proposed. No StudentNudge row exists yet and nothing writes one, so
-  // these rules have never been exercised by a student account against the live
-  // API. They match the shape of rules that are live on other entities; that is
-  // not the same as verified. Read one back as a real student before saying so.
+  // State: verified, 2026-08-03, signed in as the real non-admin test student
+  // rather than from an admin session, which cannot answer this question. Rows
+  // were seeded, read back, answered and deleted. A student sees only their own
+  // ask, cannot read or rewrite anybody else's, cannot author one at all, and
+  // can answer their own. The table is back to zero rows in prod and in dev.
   "rls": {
     "create": {
       "user_condition": {
