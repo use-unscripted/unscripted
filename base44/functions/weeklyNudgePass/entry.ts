@@ -7,17 +7,26 @@
  * this week, and emails it to them. Most of those students are 19 years old and
  * at a university we are trying to sell to. An email cannot be unsent.
  *
- * So it is built to be physically incapable of writing to anyone except one
- * address until a person changes it on purpose.
+ * So until a person changes it on purpose, one address is the only one this
+ * writes to, and that covers both halves of writing: no email, and no
+ * StudentNudge row either.
+ *
+ * The row half matters as much as the email half. A row is the record of an ask
+ * that was made, so one written for a student we did not write to invents an
+ * ask they never saw: it sits pending, expires a week later, and the ladder
+ * reads that expiry as them ignoring us and drops them a rung. Six of those
+ * retire the whole stall kind for them. The only thing this function touches
+ * for everybody is marking already delivered asks as expired, which is
+ * bookkeeping on rows that already exist.
  *
  * SEND_MODE, one line below, has three legal values:
  *
  *   'off'        Nothing is written and nothing is sent, ever. The pass is
  *                computed and reported and that is all.
  *   'allowlist'  The current setting. Every student is read, planned and
- *                reported exactly as they would be in a real run, and the send
- *                is skipped for everybody whose address is not in ALLOWLIST.
- *                Their line in the response says `suppressed`.
+ *                reported exactly as they would be in a real run. Anybody whose
+ *                address is not in ALLOWLIST gets no mail and no row, and their
+ *                line in the response says `suppressed`.
  *   'all'        Sends to every student the pass picked. Requires the request
  *                to also pass confirm: 'SEND-TO-ALL-STUDENTS'.
  *
@@ -25,6 +34,11 @@
  * dryRun: false AND a confirm string from LIVE_CONFIRMATIONS. A request with no
  * body is a dry run. The scheduled workflow passes dryRun: true, so the job as
  * scheduled computes, logs, and sends nothing.
+ *
+ * A run whose entity reads did not all come back whole sends nothing either. It
+ * still reports, and names the entity, under `failed_reads` and
+ * `truncated_reads`. A missing entity reads exactly like a student who has done
+ * nothing, which is the ask we would then send them.
  *
  * THE ONE LINE CHANGE THAT TURNS SENDING ON:
  *
@@ -39,8 +53,11 @@
  * dryRun: false, confirm: 'SEND-FOR-REAL' }.
  */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.38';
-import { planPass, groupRowsByUser, DEFAULT_PASS_LIMIT } from '../../../src/lib/nudge-pass.js';
-import { renderNudgeEmail } from '../../../src/lib/nudge-email.js';
+// base44/shared is the only directory outside this one that ships with the
+// function, so everything imported here lives there. src/lib holds a one line
+// re-export of each file for the frontend and the tests.
+import { planPass, groupRowsByUser, DEFAULT_PASS_LIMIT } from '../../shared/nudge-pass.js';
+import { renderNudgeEmail } from '../../shared/nudge-email.js';
 
 /** 'off' | 'allowlist' | 'all'. See the block above before changing it. */
 const SEND_MODE = 'allowlist';
@@ -64,7 +81,14 @@ const CONFIRM_ALL = 'SEND-TO-ALL-STUDENTS';
 /** Where the links in the email point. */
 const APP_ORIGIN = 'https://useunscripted.base44.app';
 
-/** How many rows to pull per entity. Comfortably above the live row counts. */
+/**
+ * How many rows to pull per entity, in one page.
+ *
+ * Comfortably above every live row count today: the largest entity holds a few
+ * hundred rows. There is no second page fetched, so a read that comes back with
+ * a full page is assumed to be partial and the run refuses to send. Raising
+ * this is the wrong fix past a certain size; paging is.
+ */
 const PAGE = 2000;
 
 /**
@@ -126,7 +150,7 @@ export async function handleRequest(req: Request): Promise<Response> {
     const dryRun = body.dryRun !== false;
     const confirm = str(body.confirm);
     const onlyUserId = str(body.onlyUserId);
-    const writing = !dryRun && LIVE_CONFIRMATIONS.includes(confirm) && SEND_MODE !== 'off';
+    const requestedWrite = !dryRun && LIVE_CONFIRMATIONS.includes(confirm) && SEND_MODE !== 'off';
 
     const requested = Number.isFinite(body.limit) ? Math.floor(body.limit) : DEFAULT_PASS_LIMIT;
     const limit = Math.max(0, Math.min(MAX_SENDS_PER_RUN, requested));
@@ -142,11 +166,28 @@ export async function handleRequest(req: Request): Promise<Response> {
     // why StudentNudge reads and updates on `data.user_id`: every row created
     // here has the service actor as its creator, not the student, so a
     // creator-scoped rule would hide a student's own nudge from them.
+
+    // Both of these are the reasons a pass cannot be trusted. A read that threw
+    // returns an empty array, and an empty array reads exactly like a student
+    // who has done nothing, which is the ask we would then send them. A read
+    // that filled its page has an unknown number of rows behind it. Either way
+    // the counts below are wrong, so they are named in the response and a live
+    // run refuses to start.
+    const failedReads: string[] = [];
+    const truncatedReads: string[] = [];
+
     const load = async (entity: string) => {
       try {
-        return await base44.asServiceRole.entities[entity].list('-created_date', PAGE);
+        const page = await base44.asServiceRole.entities[entity].list('-created_date', PAGE);
+        const list = Array.isArray(page) ? page : [];
+        if (list.length >= PAGE) {
+          console.error(`weeklyNudgePass: ${entity} filled a page of ${PAGE}, so this read is partial`);
+          truncatedReads.push(entity);
+        }
+        return list;
       } catch (err) {
         console.error(`weeklyNudgePass: failed to read ${entity}:`, err?.message);
+        failedReads.push(entity);
         return [];
       }
     };
@@ -156,6 +197,12 @@ export async function handleRequest(req: Request): Promise<Response> {
 
     const lists: Record<string, any[]> = {};
     for (const [key, entity] of SOURCES) lists[key] = await load(entity);
+
+    // A dry run on a partial read is still worth reading, as long as it says so.
+    // A live one is not: it would email the wrong ask to the wrong people and
+    // leave a row behind that costs them a rung.
+    const readComplete = failedReads.length === 0 && truncatedReads.length === 0;
+    const writing = requestedWrite && readComplete;
 
     const rowsByUser = groupRowsByUser(users, lists);
 
@@ -172,6 +219,22 @@ export async function handleRequest(req: Request): Promise<Response> {
     }
 
     const plan = planPass({ users, rowsByUser, history: lists.nudges, now, passNumber, limit });
+
+    // The cap, checked against what the planner actually returned rather than
+    // against the number it was handed. planPass applies `limit` itself, so
+    // this only fires if that stops being true, and if it stops being true the
+    // right answer is to send nothing and have somebody look at it. Trimming
+    // quietly would mean a planner bug ships as a slightly shorter mailing.
+    if (plan.toEmail.length > limit) {
+      console.error(
+        `weeklyNudgePass: the planner returned ${plan.toEmail.length} sends against a cap of ${limit}`,
+      );
+      return Response.json({
+        error: 'the planner returned more sends than the cap allows, so nothing was sent',
+        planned: plan.toEmail.length,
+        send_cap: limit,
+      }, { status: 500 });
+    }
 
     const lines: any[] = [];
     for (const s of plan.skipped) lines.push({ userId: s.userId, decision: 'skipped', reason: s.reason });
@@ -210,10 +273,21 @@ export async function handleRequest(req: Request): Promise<Response> {
         }
       }
 
-      let sends = 0;
       for (let i = 0; i < plan.toEmail.length; i += 1) {
         const { userId, email, ask } = plan.toEmail[i];
         const line = askedLines[i];
+
+        // Suppressed means nothing happens to this student, row included. The
+        // check has to come first for that to be true. Behind it: a pending row
+        // for an ask we never sent expires on its own, and `rungFor` reads that
+        // expiry as the student ignoring us, so it drops them a rung. Six of
+        // those retire the stall kind for them permanently, and none of it was
+        // ever in front of them.
+        if (!mayEmail(email, confirm)) {
+          suppressed += 1;
+          if (line) line.delivery = 'suppressed';
+          continue;
+        }
 
         let rowId = '';
         try {
@@ -227,33 +301,27 @@ export async function handleRequest(req: Request): Promise<Response> {
           continue;
         }
 
-        if (!mayEmail(email, confirm)) {
-          suppressed += 1;
-          if (line) line.delivery = 'suppressed';
-          continue;
-        }
-        // The cap again, at the last possible moment. Everything above it could
-        // be wrong and this would still hold.
-        if (sends >= MAX_SENDS_PER_RUN) {
-          suppressed += 1;
-          if (line) line.delivery = 'suppressed';
-          continue;
-        }
-
         // Every send stands on its own. One bad address must not take the rest
         // of the pass down with it.
         try {
           const rendered = renderNudgeEmail({
-            ask, user: (users.find((u) => str(u?.id) === userId) || null), appOrigin: APP_ORIGIN, now,
+            ask,
+            user: (users.find((u) => str(u?.id) === userId) || null),
+            appOrigin: APP_ORIGIN,
+            now,
+            // So the answer page opens on this question rather than guessing.
+            nudgeId: rowId,
           });
-          // SendEmail carries plain text only. The HTML body is rendered and
-          // tested alongside it for the day the send path can take one.
+          // `rendered.html` IS NOT SENT AND CANNOT BE. SendEmail takes
+          // {to, subject, body, from_name}, `body` is plain text, and there is
+          // no argument an HTML body could go in. It is rendered and tested so
+          // the copy and the escaping are already right on the day the send
+          // path can carry one. `rendered.text` is the entire email.
           await base44.asServiceRole.integrations.Core.SendEmail({
             to: email,
             subject: rendered.subject,
             body: rendered.text,
           });
-          sends += 1;
           emailed += 1;
           if (line) line.delivery = 'emailed';
           if (rowId) {
@@ -275,7 +343,17 @@ export async function handleRequest(req: Request): Promise<Response> {
     }
 
     return Response.json({
-      success: true,
+      // False the moment any entity read is in doubt. A pass computed on a
+      // partial read still reports, because the report is how somebody finds
+      // out, but it does not get to call itself a success.
+      success: readComplete,
+      read_complete: readComplete,
+      failed_reads: failedReads,
+      truncated_reads: truncatedReads,
+      refused_to_send: requestedWrite && !writing
+        ? `an entity read was incomplete (${[...failedReads, ...truncatedReads].join(', ')}), `
+          + 'so no row was written and no email was sent'
+        : '',
       run_at: now,
       mode: SEND_MODE,
       dry_run: !writing,

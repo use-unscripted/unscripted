@@ -138,10 +138,24 @@ describe('the way out is on every single one', () => {
     for (const { kind, rung, ask } of EVERY_ASK) {
       const { text, html } = render(ask);
       const where = `${kind}.r${rung}`;
-      expect(text.includes('reply with the word stop'), where).toBe(true);
-      expect(html.includes('reply with the word stop'), where).toBe(true);
+      expect(text.includes('To stop these emails, turn them off in your settings:'), where).toBe(true);
+      expect(html.includes('To stop these emails, turn them off in your settings:'), where).toBe(true);
       expect(text.includes(`${ORIGIN}/settings`), where).toBe(true);
       expect(html.includes(`${ORIGIN}/settings`), where).toBe(true);
+    }
+  });
+
+  it('never asks anybody to reply, because nothing reads replies', () => {
+    // SendEmail has no reply_to, nothing in this repo reads inbound mail, and
+    // the sending address is not known to reach a person. Any wording that
+    // points a student at their reply button is a promise we cannot keep.
+    for (const { kind, rung, ask } of EVERY_ASK) {
+      const { subject, text, html } = render(ask);
+      const where = `${kind}.r${rung}`;
+      for (const body of [subject, text, html]) {
+        expect(/repl(y|ies|ying)/i.test(body), where).toBe(false);
+        expect(/write back|email us|get back to us|respond to this/i.test(body), where).toBe(false);
+      }
     }
   });
 
@@ -161,18 +175,31 @@ describe('the way out is on every single one', () => {
 describe('a rung that wants a sentence back', () => {
   const oneLine = askFor('experiment_without_guide', 2);
 
-  it('asks for a reply and prints the question on its own line', () => {
+  it('prints the question on its own line and links to the page that takes it', () => {
     const { text } = render(oneLine);
-    expect(text).toContain('Reply to this email with one sentence.');
     expect(text.split('\n\n')).toContain(oneLine.question);
+    expect(text).toContain('Answer in one sentence:');
+    expect(text).toContain(`${ORIGIN}/answer`);
   });
 
-  it('shows no button and no link to the app', () => {
+  it('puts the row id on the link so the page opens on the right question', () => {
+    const { text, html } = render(oneLine, { nudgeId: 'nudge-42' });
+    expect(text).toContain(`${ORIGIN}/answer?nudgeId=nudge-42`);
+    expect(html).toContain(`href="${ORIGIN}/answer?nudgeId=nudge-42"`);
+  });
+
+  it('falls back to the bare route when there is no row id', () => {
+    const { text } = render(oneLine);
+    expect(text).toContain(`${ORIGIN}/answer\n`);
+    expect(text).not.toContain('nudgeId=');
+  });
+
+  it('does not send them to the to-do screen instead', () => {
     const { text, html } = render(oneLine);
     expect(html).not.toContain('<a href="https://useunscripted.base44.app/experiment');
-    // The settings link in the closing line is the only anchor allowed here.
-    expect((html.match(/<a /g) || []).length).toBe(1);
     expect(text).not.toContain('/experiment?');
+    // The answer link and the settings link, and nothing else.
+    expect((html.match(/<a /g) || []).length).toBe(2);
   });
 
   it('does the same on a rule out rung, which also wants words back', () => {
@@ -180,10 +207,17 @@ describe('a rung that wants a sentence back', () => {
     expect(ruleOut.action_kind).toBe('rule_out');
     // This rung carries a target as well as a question. The question wins.
     expect(ruleOut.action_target.length).toBeGreaterThan(0);
-    const { text, html } = render(ruleOut);
-    expect(text).toContain('Reply to this email with one sentence.');
+    const { text } = render(ruleOut, { nudgeId: 'n7' });
     expect(text).toContain(ruleOut.question);
-    expect((html.match(/<a /g) || []).length).toBe(1);
+    expect(text).toContain(`${ORIGIN}/answer?nudgeId=n7`);
+    expect(text).not.toContain(`${ORIGIN}${ruleOut.action_target}`);
+  });
+
+  it('escapes a row id rather than letting it build its own url', () => {
+    const { text, html } = render(oneLine, { nudgeId: 'a b&c"d' });
+    expect(text).toContain(`${ORIGIN}/answer?nudgeId=a%20b%26c%22d`);
+    expect(html).toContain('nudgeId=a%20b%26c%22d');
+    expect(html).not.toContain('nudgeId=a b&c"d');
   });
 });
 
@@ -208,8 +242,10 @@ describe('a rung that wants a click', () => {
     }
   });
 
-  it('does not ask for a reply as well', () => {
-    expect(render(linked).text).not.toContain('Reply to this email');
+  it('sends them to the thing itself, not to the answer page', () => {
+    const { text } = render(linked, { nudgeId: 'n1' });
+    expect(text).not.toContain('/answer');
+    expect(text).toContain('Generate the steps:');
   });
 });
 
@@ -324,11 +360,15 @@ describe('nothing in the email came from outside the ask', () => {
     const { subject, text } = renderNudgeEmail({ ask, user, appOrigin: ORIGIN, now: NOW });
     expect(subject).toBe(ask.ask_title);
     expect(text).toContain(ask.ask_body);
-    expect(text).toContain('reply with the word stop');
+    expect(text).toContain('To stop these emails, turn them off in your settings:');
   });
 });
 
-describe('the html body is safe to open anywhere', () => {
+// NOTHING SENDS THE HTML BODY. SendEmail takes plain text only, so the backend
+// function renders `html` and drops it. These tests keep the escaping and the
+// dark mode handling honest for the day a provider can carry one. None of them
+// covers anything a student receives today: that is `text`, above.
+describe('the html body, which is not sent to anybody today', () => {
   const { html } = render(askFor('experiment_without_guide', 0));
 
   it('loads nothing from anywhere', () => {
