@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import PageHeader from '@/components/PageHeader';
@@ -6,7 +6,7 @@ import { Trash2, RefreshCw, CheckCircle, ArrowRight } from 'lucide-react';
 import Field from '@/components/onboarding/Field';
 import ICSExportPanel from '@/components/calendar/ICSExportPanel';
 import { generatePathTest } from '@/lib/path-generator';
-import { buildOptOut, optBackInPatch, isOptedOut } from '@/lib/nudge-response';
+import { buildOptOut, optBackInPatch, isOptedOut, mergeOptOutRows } from '@/lib/nudge-response';
 
 const textareaCls = 'mt-1 w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] px-4 py-3 text-sm text-[color:var(--surface-dark-900)] placeholder-[color:var(--ink-400)] outline-none focus:border-[color:var(--brand-navy-700)] resize-none';
 
@@ -33,17 +33,33 @@ export default function Settings() {
   const [optOutRows, setOptOutRows] = useState([]);
   const [emailBusy, setEmailBusy] = useState(false);
 
+  // Every nudge email ends with a line telling students to turn these off here,
+  // so this read is what makes that sentence true. It asks for this student's
+  // rows rather than the newest 20 of everything: on the list call, twenty rows
+  // written by other students between one visit and the next were enough to
+  // push a real opt out off the end and draw the button as though the emails
+  // were still on.
+  const loadOptOuts = useCallback(async (userId, known = []) => {
+    if (!userId) return;
+    try {
+      const rows = await base44.entities.NudgeOptOut.filter({ user_id: userId }, '-created_date', 100);
+      setOptOutRows(mergeOptOutRows(rows, known));
+    } catch (err) {
+      console.error('[settings] could not read the email setting:', err?.message || 'unknown');
+      // A failed read must not undo what the student just did on this screen.
+      if (known.length) setOptOutRows(rows => mergeOptOutRows(rows, known));
+    }
+  }, []);
+
   useEffect(() => {
-    base44.auth.me().then(setUser);
+    base44.auth.me().then(u => {
+      setUser(u || {});
+      loadOptOuts(u?.id);
+    });
     base44.entities.StudentProfile.list('-created_date', 1).then(rows => {
       if (rows[0]) { setProfile(rows[0]); setNotes({ personal_notes: rows[0].personal_notes || '', long_term_ambitions: rows[0].long_term_ambitions || '', responsibilities_constraints: rows[0].responsibilities_constraints || '', things_to_avoid: rows[0].things_to_avoid || '', priorities_for_recommendations: rows[0].priorities_for_recommendations || '' }); }
     });
-    // Every nudge email ends with a line telling students to turn these off
-    // here, so this read is what makes that sentence true.
-    base44.entities.NudgeOptOut.list('-created_date', 20)
-      .then(rows => setOptOutRows(Array.isArray(rows) ? rows : []))
-      .catch(() => setOptOutRows([]));
-  }, []);
+  }, [loadOptOuts]);
 
   const emailsOff = isOptedOut(optOutRows, user?.id);
 
@@ -54,7 +70,21 @@ export default function Settings() {
       const row = await base44.entities.NudgeOptOut.create(
         buildOptOut({ userId: user.id, source: 'settings', now: new Date() })
       );
-      setOptOutRows(rows => [row, ...rows]);
+      // created_by_id is stamped by the server, and isOptedOut requires it to
+      // equal user_id, so a response that came back without it would leave the
+      // button still reading "Stop these emails" right after the student
+      // pressed it. This is their own row, created in their own session, so
+      // filling the creator in locally states what the server just did rather
+      // than making a claim about anybody else.
+      // A row with no id could never be turned back on, so it is not worth
+      // holding on to. If the create came back with nothing useful the refetch
+      // below is the only source, which is the honest outcome anyway.
+      const seen = row && typeof row === 'object' && row.id
+        ? { ...row, created_by_id: row.created_by_id || user.id }
+        : null;
+      const known = seen ? [seen] : [];
+      if (seen) setOptOutRows(rows => mergeOptOutRows(rows, known));
+      await loadOptOuts(user.id, known);
     } catch (err) {
       console.error('[settings] could not turn the emails off:', err?.message || 'unknown');
     } finally {
@@ -68,7 +98,7 @@ export default function Settings() {
     if (emailBusy) return;
     setEmailBusy(true);
     const patch = optBackInPatch(new Date());
-    const live = optOutRows.filter(r => r && r.user_id === user?.id
+    const live = optOutRows.filter(r => r && r.id && r.user_id === user?.id
       && r.deletion_status !== 'deleted' && r.deletion_status !== 'permanently_deleted');
     try {
       for (const row of live) {
@@ -76,7 +106,9 @@ export default function Settings() {
         // watching a button does not benefit from parallelism here.
         await base44.entities.NudgeOptOut.update(row.id, patch);
       }
-      setOptOutRows(rows => rows.map(r => (live.some(l => l.id === r.id) ? { ...r, ...patch } : r)));
+      const turnedOff = live.map(r => ({ ...r, ...patch }));
+      setOptOutRows(rows => mergeOptOutRows(rows, turnedOff));
+      await loadOptOuts(user?.id, turnedOff);
     } catch (err) {
       console.error('[settings] could not turn the emails back on:', err?.message || 'unknown');
     } finally {

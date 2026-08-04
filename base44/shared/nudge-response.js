@@ -52,9 +52,39 @@ export const RESPONSE_FIELDS = ['status', 'responded_at', 'decline_reason', 'rep
 /** The three things a student can do with an ask. */
 export const CHOICES = ['accepted', 'declined', 'answered'];
 
+/** Where a student goes when there is nothing better to send them to. */
+export const ANSWER_HOME = '/journey';
+
+/** The one screen that can turn the emails off. */
+export const SETTINGS_ROUTE = '/settings';
+
 const str = (v) => (typeof v === 'string' && v.trim() ? v.trim() : '');
 
 const isDeleted = (r) => r.deletion_status === 'deleted' || r.deletion_status === 'permanently_deleted';
+
+/**
+ * Is this row soft deleted, for any row of any shape.
+ *
+ * Exported so the page and this file answer it the same way. A removed ask that
+ * still renders is a student typing a sentence into a box that will refuse it.
+ */
+export function isSoftDeleted(row) {
+  if (!row || typeof row !== 'object') return false;
+  return isDeleted(row);
+}
+
+/**
+ * An in app route, or ''.
+ *
+ * A rung's target is written in nudge-ladder.js and is never student input, but
+ * the page that reads this sends a student straight there on a tap, so it is
+ * one edit away from being a phishing hop. The check costs one line.
+ */
+export function internalRoute(value) {
+  const route = str(value);
+  if (!route.startsWith('/') || route.startsWith('//')) return '';
+  return route;
+}
 
 /** Trims and caps a free text field, so one paste cannot fill a row. */
 function boundedText(value, max) {
@@ -335,6 +365,32 @@ export function isOptedOut(optOutRows, userId) {
   });
 }
 
+/**
+ * The opt out rows a page should believe, given a fresh read and the rows it
+ * wrote itself a moment ago.
+ *
+ * A read taken straight after a write can come back without that write in it,
+ * in either direction, which would flip the settings control to the wrong state
+ * for a second and then back. So what this session wrote wins over what the
+ * read says about the same row, and a row the read has not caught up with at
+ * all is kept rather than dropped.
+ *
+ * @param {object[]} fetched rows from the server
+ * @param {object[]} [known] rows this session created or patched
+ * @returns {object[]}
+ */
+export function mergeOptOutRows(fetched, known = []) {
+  const rows = (Array.isArray(fetched) ? fetched : []).filter((r) => r && typeof r === 'object');
+  const mine = (Array.isArray(known) ? known : []).filter((r) => r && typeof r === 'object');
+  const sameRow = (a, b) => !!str(a.id) && str(a.id) === str(b.id);
+  const patched = rows.map((row) => {
+    const own = mine.find((k) => sameRow(k, row));
+    return own ? { ...row, ...own } : row;
+  });
+  const missing = mine.filter((k) => !patched.some((row) => sameRow(row, k)));
+  return [...missing, ...patched];
+}
+
 /** An ISO string from whatever the caller had, falling back to right now. */
 function toISO(now) {
   if (now instanceof Date && !Number.isNaN(now.getTime())) return now.toISOString();
@@ -345,6 +401,121 @@ function toISO(now) {
     if (Number.isFinite(ms)) return new Date(ms).toISOString();
   }
   return new Date(0).toISOString();
+}
+
+/**
+ * What to say once the writes have been attempted, and where to send them.
+ *
+ * This is here rather than in the page because it is the one piece of that
+ * screen a test can actually reach, and because it got the most important thing
+ * wrong: the page used to print "Closed out. It is off your list" off the back
+ * of the plan rather than the result, so a student whose subject row refused the
+ * write was told their experiment had been closed when it had not. The nudge row
+ * write and the subject row write succeed independently, and each pairing needs
+ * its own honest sentence.
+ *
+ * `goTo` is the route to send them to straight away, and it is only ever set for
+ * an accepted action rung with a real target. A question and a rule out both
+ * have their whole content on this screen, so neither navigates. `to` and `cta`
+ * are the visible link, which is what a student sees when `goTo` is empty or the
+ * navigation does not happen.
+ *
+ * @param {{choice: string, actionKind?: string, target?: string,
+ *   ruleOutPlanned?: boolean, ruleOutSaved?: boolean,
+ *   optOutPlanned?: boolean, optOutSaved?: boolean}} input
+ * @returns {{line: string, body: string, to: string, cta: string, goTo: string}}
+ */
+export function describeOutcome(input = {}) {
+  const {
+    choice,
+    actionKind,
+    target,
+    ruleOutPlanned = false,
+    ruleOutSaved = false,
+    optOutPlanned = false,
+    optOutSaved = false,
+  } = input || {};
+
+  const route = internalRoute(target);
+  const home = { to: ANSWER_HOME, cta: 'Go to My Journey' };
+  const settings = { to: SETTINGS_ROUTE, cta: 'Open settings' };
+
+  // Telling us to stop is the one thing on this page a student will check, so a
+  // create that did not land has to say so and hand them the control that works.
+  if (optOutPlanned) {
+    return optOutSaved
+      ? {
+        line: 'These are off now. Your account stays where it is, and you can turn them back on in your settings.',
+        body: '',
+        ...settings,
+        goTo: '',
+      }
+      : {
+        line: 'We saved what you wrote, but the emails are still on.',
+        body: 'Turning them off did not save. You can do it in your settings.',
+        ...settings,
+        goTo: '',
+      };
+  }
+
+  if (ruleOutPlanned) {
+    return ruleOutSaved
+      ? {
+        line: 'Closed out. It is off your list, and what you wrote is saved with it.',
+        body: '',
+        to: route || ANSWER_HOME,
+        cta: route ? 'Open it' : 'Go to My Journey',
+        goTo: '',
+      }
+      : {
+        line: 'We saved what you wrote, but it is still on your list.',
+        body: 'Closing it out did not save. Nothing else on your account changed, and you can close it yourself when you want to.',
+        to: route || ANSWER_HOME,
+        cta: route ? 'Open it' : 'Go to My Journey',
+        goTo: '',
+      };
+  }
+
+  if (choice === 'answered') {
+    return {
+      line: 'Thanks. That is on your account, and it decides what we send you next.',
+      body: '',
+      ...home,
+      goTo: '',
+    };
+  }
+
+  if (choice === 'declined') {
+    return {
+      line: 'Noted. The next one we send will be smaller.',
+      body: '',
+      ...home,
+      goTo: '',
+    };
+  }
+
+  if (choice === 'accepted') {
+    // A question and a rule out are answered here, so there is nowhere to send
+    // them. Everything else is an ask to go and do a thing on another screen,
+    // and saying yes from an email should be one tap, not two.
+    const isAction = actionKind !== 'answer_question' && actionKind !== 'rule_out' && !!str(actionKind);
+    if (isAction && route) {
+      return {
+        line: 'Good. Taking you there now.', body: '', to: route, cta: 'Open it', goTo: route,
+      };
+    }
+    return {
+      line: 'Good. That is your one thing this week.',
+      body: '',
+      to: route || ANSWER_HOME,
+      cta: route ? 'Open it' : 'Go to My Journey',
+      goTo: '',
+    };
+  }
+
+  return {
+    line: 'Saved. Thanks.', body: '', ...home, goTo: '',
+  };
 }
 
 /**

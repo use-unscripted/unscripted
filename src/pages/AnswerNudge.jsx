@@ -26,14 +26,17 @@
  *    boundary is the net under that.
  */
 import { Component, useCallback, useEffect, useMemo, useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/lib/AuthContext';
 import { Sk } from '@/components/PageSkeleton';
-import { describeAsk, planResponse } from '@/lib/nudge-response';
+import { LogoFull } from '@/components/UnscriptedLogo';
+import {
+  describeAsk, planResponse, describeOutcome, internalRoute, isSoftDeleted, ANSWER_HOME,
+} from '@/lib/nudge-response';
 
 /** Where a student goes when there is nothing else to send them to. */
-const HOME = '/journey';
+const HOME = ANSWER_HOME;
 
 /** The entity behind each subject type, and the field its name lives in. */
 const SUBJECTS = {
@@ -45,20 +48,17 @@ const SUBJECTS = {
 
 const text = (v) => (typeof v === 'string' ? v.trim() : '');
 
-/**
- * An in-app route, or ''. A rung's target is written in nudge-ladder.js and is
- * never student input, but this page is one redirect away from being a phishing
- * hop and the check costs one line.
- */
-function internalRoute(value) {
-  const route = text(value);
-  if (!route.startsWith('/') || route.startsWith('//')) return '';
-  return route;
-}
-
 function Shell({ children }) {
   return (
     <main className="mx-auto max-w-xl px-5 py-10 sm:px-8">
+      {/* The one screen a student reaches straight from a cold email, outside
+          the app shell, with no nav and no signed in furniture around it. The
+          same wordmark the login screen uses is the whole of what makes it
+          recognisably us, and without it this is an unbranded card asking
+          somebody to press a button. */}
+      <div className="mb-7 flex justify-center">
+        <LogoFull height={36} />
+      </div>
       <div className="space-y-5">{children}</div>
     </main>
   );
@@ -133,8 +133,11 @@ function AnswerNudgeInner() {
 
   const { isAuthenticated, authChecked, navigateToLogin } = useAuth();
 
+  const navigate = useNavigate();
+
   const [loading, setLoading] = useState(true);
   const [loadFailed, setLoadFailed] = useState(false);
+  const [removed, setRemoved] = useState(false);
   const [me, setMe] = useState(null);
   const [nudge, setNudge] = useState(null);
   const [subject, setSubject] = useState(null);
@@ -157,23 +160,33 @@ function AnswerNudgeInner() {
   const load = useCallback(async () => {
     setLoading(true);
     setLoadFailed(false);
+    setRemoved(false);
     try {
       const user = await base44.auth.me();
       setMe(user || null);
 
       let row = null;
+      let gone = false;
       if (nudgeId) {
         row = await base44.entities.StudentNudge.get(nudgeId).catch(() => null);
+        // A direct get returns a soft deleted row like any other, and the page
+        // used to draw it in full: the student read the ask, typed a sentence,
+        // pressed send, and only then got told it had been removed. It is a
+        // dead end, so it says so before they type anything, and it does not
+        // quietly swap in a different question either.
+        if (row && isSoftDeleted(row)) {
+          row = null;
+          gone = true;
+        }
       }
-      if (!row) {
+      setRemoved(gone);
+      if (!row && !gone) {
         // A mail client can mangle a query string, and a student who clicked
         // through deserves the question anyway. Newest open ask wins.
         const open = await base44.entities.StudentNudge
           .filter({ status: 'pending' }, '-generated_at', 20)
           .catch(() => []);
-        const live = (Array.isArray(open) ? open : []).filter(
-          (r) => r && r.deletion_status !== 'deleted' && r.deletion_status !== 'permanently_deleted',
-        );
+        const live = (Array.isArray(open) ? open : []).filter((r) => r && !isSoftDeleted(r));
         row = live[0] || null;
       }
       setNudge(row);
@@ -226,26 +239,52 @@ function AnswerNudgeInner() {
     try {
       await base44.entities.StudentNudge.update(nudge.id, plan.nudgeUpdate);
 
-      // The rest is best effort on purpose. The answer is saved by the line
-      // above, and a student who has said "close this out" should not be told
-      // it failed because a second row would not update.
+      // The second write is still best effort, because the answer is saved by
+      // the line above and a student should not be told the whole thing failed
+      // when their words are safe. What is not allowed is the page claiming the
+      // thing was closed when the write refused, which is what it used to do:
+      // the outcome is read off what landed, not off what was planned.
+      let ruleOutSaved = false;
       if (plan.ruleOut) {
-        await base44.entities[plan.ruleOut.entity]
+        ruleOutSaved = await base44.entities[plan.ruleOut.entity]
           .update(plan.ruleOut.id, plan.ruleOut.patch)
-          .catch((err) => console.error('[answer] could not close the subject:', err?.message || 'unknown'));
+          .then(() => true)
+          .catch((err) => {
+            console.error('[answer] could not close the subject:', err?.message || 'unknown');
+            return false;
+          });
       }
+      let optOutSaved = false;
       if (plan.optOut) {
-        await base44.entities.NudgeOptOut.create(plan.optOut)
-          .catch((err) => console.error('[answer] could not record the opt out:', err?.message || 'unknown'));
+        optOutSaved = await base44.entities.NudgeOptOut.create(plan.optOut)
+          .then(() => true)
+          .catch((err) => {
+            console.error('[answer] could not record the opt out:', err?.message || 'unknown');
+            return false;
+          });
       }
-      setDone({ choice, optedOut: !!plan.optOut, ruledOut: !!plan.ruleOut });
+
+      const outcome = describeOutcome({
+        choice,
+        actionKind: ask?.action_kind,
+        target: ask?.target,
+        ruleOutPlanned: !!plan.ruleOut,
+        ruleOutSaved,
+        optOutPlanned: !!plan.optOut,
+        optOutSaved,
+      });
+      // Set first, navigate second. If the route is gone or the navigation does
+      // not happen, they are left on a screen that still tells them what
+      // happened and still has a link to the thing.
+      setDone(outcome);
+      if (outcome.goTo) navigate(outcome.goTo);
     } catch (err) {
       console.error('[answer] save failed:', err?.message || 'unknown');
       setProblem('We could not save that just now. Try once more.');
     } finally {
       setSaving(false);
     }
-  }, [nudge, saving, reply, declineReason, subject]);
+  }, [nudge, saving, reply, declineReason, subject, ask, navigate]);
 
   // The order matters. Until the auth check comes back we do not know whether
   // they are signed in, and telling a signed in student to sign in for half a
@@ -299,6 +338,15 @@ function AnswerNudgeInner() {
     );
   }
 
+  if (removed) {
+    return (
+      <Notice
+        title="That question was removed."
+        body="There is nothing to answer here, and nothing on your account changed."
+      />
+    );
+  }
+
   if (!nudge) {
     return (
       <Notice
@@ -345,23 +393,7 @@ function AnswerNudgeInner() {
   }
 
   if (done) {
-    const target = internalRoute(ask?.target);
-    let line = 'Saved. Thanks.';
-    if (done.optedOut) {
-      line = 'These are off now. Your account stays where it is, and you can turn them back on in your settings.';
-    } else if (done.ruledOut) {
-      line = 'Closed out. It is off your list, and what you wrote is saved with it.';
-    } else if (done.choice === 'answered') {
-      line = 'Thanks. That is on your account, and it decides what we send you next.';
-    } else if (done.choice === 'declined') {
-      line = 'Noted. The next one we send will be smaller.';
-    } else if (done.choice === 'accepted') {
-      line = 'Good. Here is the thing you said yes to.';
-    }
-
-    const to = done.optedOut ? '/settings' : (target || HOME);
-    const cta = done.optedOut ? 'Open settings' : (target ? 'Open it' : 'Go to My Journey');
-    return <Notice title={line} to={to} cta={cta} />;
+    return <Notice title={done.line} body={done.body} to={done.to} cta={done.cta} />;
   }
 
   const isQuestion = ask.action_kind === 'answer_question';

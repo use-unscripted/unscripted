@@ -15,7 +15,8 @@ import { shouldSkipPass } from '@/lib/nudge';
 import { uiStatusOf, storedStatusOf } from '@/lib/linkedin';
 import {
   describeAsk, planResponse, isOptedOut, buildOptOut, optBackInPatch,
-  RESPONSE_FIELDS, rungForKey,
+  RESPONSE_FIELDS, rungForKey, describeOutcome, internalRoute, isSoftDeleted,
+  mergeOptOutRows, ANSWER_HOME,
 } from '@/lib/nudge-response';
 
 const NOW = '2026-08-03T15:00:00.000Z';
@@ -457,6 +458,161 @@ describe('the last rung of no_path_selected promises only what happens', () => {
     expect(plan.ruleOut).toBe(null);
     expect(plan.optOut).toBe(null);
     expect(plan.nudgeUpdate.reply_text).toBe('They are all finance and I want none of it.');
+  });
+});
+
+describe('what the page says once the writes have been attempted', () => {
+  const ruleOut = (saved) => describeOutcome({
+    choice: 'accepted',
+    actionKind: 'rule_out',
+    target: '/experiments',
+    ruleOutPlanned: true,
+    ruleOutSaved: saved,
+  });
+
+  it('says it is closed out only when the subject write actually landed', () => {
+    expect(ruleOut(true).line).toBe('Closed out. It is off your list, and what you wrote is saved with it.');
+  });
+
+  it('does not claim a thing was closed when the write refused', () => {
+    // The whole point of this function. The page used to read the plan rather
+    // than the result, so a student whose experiment row refused the update was
+    // told it was off their list while it sat there unchanged.
+    const out = ruleOut(false);
+    expect(out.line).toBe('We saved what you wrote, but it is still on your list.');
+    expect(out.body).toContain('did not save');
+    expect(out.line).not.toContain('Closed out');
+    // Their words really were saved, so the wording must not read as a failure.
+    expect(out.line).toContain('We saved what you wrote');
+  });
+
+  it('tells the truth about the emails when the opt out did not save', () => {
+    const on = describeOutcome({ choice: 'accepted', actionKind: 'rule_out', optOutPlanned: true, optOutSaved: true });
+    expect(on.line).toContain('These are off now');
+    const off = describeOutcome({ choice: 'accepted', actionKind: 'rule_out', optOutPlanned: true, optOutSaved: false });
+    expect(off.line).toBe('We saved what you wrote, but the emails are still on.');
+    expect(off.to).toBe('/settings');
+    expect(off.cta).toBe('Open settings');
+  });
+
+  it('sends an accepted action rung straight to the thing, with a link left behind', () => {
+    const out = describeOutcome({ choice: 'accepted', actionKind: 'generate_guide', target: '/experiment?experimentId=e1' });
+    expect(out.goTo).toBe('/experiment?experimentId=e1');
+    // The fallback is what a student sees if the navigation does not happen.
+    expect(out.to).toBe('/experiment?experimentId=e1');
+    expect(out.cta).toBe('Open it');
+  });
+
+  it('never navigates away from a question or a rule out', () => {
+    // Both put their whole content on this screen, so leaving it is losing it.
+    for (const actionKind of ['answer_question', 'rule_out']) {
+      for (const choice of ['accepted', 'answered', 'declined']) {
+        const out = describeOutcome({ choice, actionKind, target: '/experiments' });
+        expect(out.goTo, `${actionKind}.${choice}`).toBe('');
+      }
+    }
+  });
+
+  it('goes nowhere when the rung has no target, and still offers a way out', () => {
+    const out = describeOutcome({ choice: 'accepted', actionKind: 'log_proof', target: '' });
+    expect(out.goTo).toBe('');
+    expect(out.to).toBe(ANSWER_HOME);
+    expect(out.cta).toBe('Go to My Journey');
+  });
+
+  it('refuses to send a student off this site', () => {
+    for (const target of ['//evil.example.com', 'https://evil.example.com', 'javascript:alert(1)', '', null, 7]) {
+      const out = describeOutcome({ choice: 'accepted', actionKind: 'send_outreach', target });
+      expect(out.goTo, String(target)).toBe('');
+      expect(out.to, String(target)).toBe(ANSWER_HOME);
+    }
+    expect(internalRoute('/paths')).toBe('/paths');
+    expect(internalRoute('//evil.example.com')).toBe('');
+    expect(internalRoute('https://evil.example.com')).toBe('');
+  });
+
+  it('has a plain sentence for a declined and an answered ask, and for nonsense', () => {
+    expect(describeOutcome({ choice: 'declined' }).line).toBe('Noted. The next one we send will be smaller.');
+    expect(describeOutcome({ choice: 'answered' }).line).toContain('That is on your account');
+    expect(describeOutcome({}).line).toBe('Saved. Thanks.');
+    expect(describeOutcome().line).toBe('Saved. Thanks.');
+  });
+
+  it('writes every sentence without a dash we ban', () => {
+    const shapes = [
+      { choice: 'accepted', actionKind: 'rule_out', ruleOutPlanned: true, ruleOutSaved: true },
+      { choice: 'accepted', actionKind: 'rule_out', ruleOutPlanned: true, ruleOutSaved: false },
+      { choice: 'accepted', actionKind: 'rule_out', optOutPlanned: true, optOutSaved: true },
+      { choice: 'accepted', actionKind: 'rule_out', optOutPlanned: true, optOutSaved: false },
+      { choice: 'accepted', actionKind: 'open_guide', target: '/journey' },
+      { choice: 'accepted', actionKind: 'open_guide', target: '' },
+      { choice: 'declined' }, { choice: 'answered' }, {},
+    ];
+    for (const shape of shapes) {
+      const out = describeOutcome(shape);
+      expect(/[—–]/.test(`${out.line} ${out.body} ${out.cta}`), out.line).toBe(false);
+    }
+  });
+});
+
+describe('a removed ask is a dead end before a student types, not after', () => {
+  it('knows a soft deleted row when it sees one', () => {
+    expect(isSoftDeleted({ deletion_status: 'deleted' })).toBe(true);
+    expect(isSoftDeleted({ deletion_status: 'permanently_deleted' })).toBe(true);
+    expect(isSoftDeleted({ deletion_status: 'active' })).toBe(false);
+    expect(isSoftDeleted({})).toBe(false);
+    for (const bad of [null, undefined, 7, 'row']) expect(isSoftDeleted(bad)).toBe(false);
+  });
+
+  it('agrees with the answer planner, which refuses the same row', () => {
+    // The page reads it on load and the planner reads it on send. Before this,
+    // only the planner did, so the student got the whole ask, typed a sentence,
+    // pressed send, and then read "This ask has been removed."
+    const row = rowFor('experiment_without_guide', 0, { deletion_status: 'deleted' });
+    expect(isSoftDeleted(row)).toBe(true);
+    expect(planResponse({ nudge: row, choice: 'declined', now: NOW }).nudgeUpdate).toBe(null);
+  });
+});
+
+describe('the opt out rows a settings page should believe', () => {
+  const live = { id: 'o1', user_id: 'student-1', created_by_id: 'student-1', deletion_status: 'active' };
+
+  it('keeps a row the server has not caught up with yet', () => {
+    // The read straight after the create can come back without it, and the
+    // control would say the emails are still on a second after the student
+    // turned them off.
+    expect(isOptedOut(mergeOptOutRows([], [live]), 'student-1')).toBe(true);
+  });
+
+  it('lets this session win over a stale read of the same row', () => {
+    const off = { ...live, ...optBackInPatch(NOW) };
+    const merged = mergeOptOutRows([live], [off]);
+    expect(merged).toHaveLength(1);
+    expect(isOptedOut(merged, 'student-1')).toBe(false);
+  });
+
+  it('keeps everything the read returned that this session did not touch', () => {
+    const other = { id: 'o2', user_id: 'student-1', created_by_id: 'student-1', deletion_status: 'active' };
+    const merged = mergeOptOutRows([other], [{ ...live, deletion_status: 'deleted' }]);
+    expect(merged.map(r => r.id).sort()).toEqual(['o1', 'o2']);
+    expect(isOptedOut(merged, 'student-1')).toBe(true);
+  });
+
+  it('survives anything either side hands it', () => {
+    expect(mergeOptOutRows(null)).toEqual([]);
+    expect(mergeOptOutRows(undefined, null)).toEqual([]);
+    expect(mergeOptOutRows([null, 7, 'x'], [null])).toEqual([]);
+    expect(mergeOptOutRows([live])).toEqual([live]);
+  });
+
+  it('sees the row the settings page builds the moment the button is pressed', () => {
+    // buildOptOut leaves created_by_id to the server, and isOptedOut requires
+    // it, so the page fills its own id in on the row it just created. Without
+    // that the button reads "Stop these emails" straight after it was pressed.
+    const built = buildOptOut({ userId: 'student-1', source: 'settings', now: NOW });
+    expect(isOptedOut([built], 'student-1')).toBe(false);
+    const seen = { ...built, id: 'o9', created_by_id: 'student-1' };
+    expect(isOptedOut(mergeOptOutRows([], [seen]), 'student-1')).toBe(true);
   });
 });
 
