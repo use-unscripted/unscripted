@@ -36,6 +36,52 @@ export const EASE = [0.16, 1, 0.3, 1];
    whose entrance is carried by opacity rather than by travel. */
 export const EASE_COPY = [0.33, 1, 0.68, 1];
 
+/* ── The reveal trigger ────────────────────────────────────────────────────
+   Read this before changing any viewport threshold in this file.
+
+   framer-motion's `amount` (and a raw IntersectionObserver `threshold`) is a
+   fraction of THE ELEMENT'S OWN box, not a fraction of the viewport. Ask for
+   15% of a block that is taller than about 6.5x the viewport and the bar can
+   never be cleared: the trigger never fires and the block stays parked at
+   opacity 0, hidden by the exact animation that exists to show it. That is
+   the same failure the WordReveal note below describes, arriving by a
+   different door.
+
+   The version of this that shipped was in useScrollReveal, the older hand
+   rolled observer, and it emptied the campus events screen on a phone while
+   looking fine on a desktop, where a taller viewport cleared the bar. That
+   hook is fixed the same way, and the reasoning is written out there. This
+   file had the same trap waiting for the first tall child anyone passed it.
+
+   So the primary trigger is height independent: fire once ANY part of the
+   element has climbed REVEAL_MARGIN into the viewport. Any element taller
+   than the viewport reaches that, because it ends up covering the whole
+   screen at some scroll position.
+
+   The one case that leaves is a SHORT element at the very bottom of the
+   document, which may never climb past the bottom margin because there is
+   nothing below it to scroll. REVEAL_FILLED covers that: an element shorter
+   than the viewport can always be shown almost in full. Between the two, no
+   element of any height on any viewport can end up permanently invisible.
+
+   REVEAL_MARGIN is a percentage rather than pixels so it is always smaller
+   than the viewport it is measured against, on a 568px phone as well as a
+   desktop. REVEAL_FILLED is 0.9 rather than 1 because browsers round
+   intersection ratios against the device pixel ratio and an exact 1.0 can be
+   missed.
+   ──────────────────────────────────────────────────────────────────────── */
+const REVEAL_MARGIN = '0px 0px -12% 0px';
+const REVEAL_FILLED = 0.9;
+
+function useRevealed(ref, amount) {
+  const entered = useInView(ref, { once: true, amount: 'some', margin: REVEAL_MARGIN });
+  const filled = useInView(ref, {
+    once: true,
+    amount: typeof amount === 'number' ? Math.min(amount, REVEAL_FILLED) : REVEAL_FILLED,
+  });
+  return entered || filled;
+}
+
 /* ── Reveal ────────────────────────────────────────────────────────────────
    Drop-in replacement for the existing ScrollReveal. Same props, but driven
    by framer-motion's viewport detection instead of a hand-rolled observer,
@@ -48,13 +94,20 @@ export function Reveal({
   className = '',
   style,
   as = 'div',
-  amount = 0.15,
+  /* Still here for a caller that genuinely wants a percentage of the block,
+     but it can now only pull a reveal EARLIER than the height independent
+     trigger, never hold one back. See the note above: a percentage of the
+     element is the thing that strands tall blocks, so nothing a caller passes
+     is allowed to be the only way in. */
+  amount,
   duration = 0.75,
   /* Defaults to EASE so every existing caller is untouched. Pass EASE_COPY
      for blocks whose entrance is mostly a fade (see the note above it). */
   ease = EASE,
 }) {
   const reduce = useReducedMotion();
+  const ref = useRef(null);
+  const shown = useRevealed(ref, amount);
   const Tag = motion[as] ?? motion.div;
 
   if (reduce) {
@@ -64,11 +117,11 @@ export function Reveal({
 
   return (
     <Tag
+      ref={ref}
       className={className}
       style={style}
       initial={{ opacity: 0, y }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, amount }}
+      animate={shown ? { opacity: 1, y: 0 } : { opacity: 0, y }}
       transition={{ duration, ease, delay: delay / 1000 }}
     >
       {children}
