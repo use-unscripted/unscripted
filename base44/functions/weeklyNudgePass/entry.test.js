@@ -450,24 +450,36 @@ describe('all mode', () => {
     expect(json.counts.suppressed).toBe(6);
   });
 
-  it('sends to everybody once both halves are given', async () => {
+  it('still reaches only the one allowed address, with both halves given', async () => {
+    // This test used to assert the opposite, and the behaviour changed on
+    // purpose. The recipient decision moved out to base44/shared/nudge-send.js
+    // and is consulted before the mode is looked at, so 'all' mode plus every
+    // confirmation is no longer a way to mail a student. Turning that back on
+    // means editing that file too.
     const { json, store } = await call(
       { dryRun: false, confirm: 'SEND-TO-ALL-STUDENTS' },
       { ...asAll, entities: fixture(6) },
     );
-    expect(store.sent).toHaveLength(6);
-    expect(json.counts.emailed).toBe(6);
-    expect(new Set(store.sent.map((m) => m.to)).size).toBe(6);
+    expect(json.mode).toBe('all');
+    expect(json.dry_run).toBe(false);
+    expect(store.sent.map((m) => m.to)).toEqual([ALLOWED]);
+    expect(json.counts.emailed).toBe(1);
+    expect(json.counts.suppressed).toBe(5);
+    // And no row for anybody we did not write to.
+    expect(store.created).toHaveLength(1);
   });
 
-  it('stops at the per run cap however many students qualify', async () => {
+  it('still caps the run at 25 however many students qualify', async () => {
     const { json, store } = await call(
       { dryRun: false, confirm: 'SEND-TO-ALL-STUDENTS' },
       { ...asAll, entities: fixture(82) },
     );
     expect(json.counts.users).toBe(82);
-    expect(store.sent).toHaveLength(25);
     expect(json.send_cap).toBe(25);
+    // The cap bounds the plan, which is what stops a planner bug fanning out.
+    // Of those 25, one address is allowed to receive anything.
+    expect(json.counts.emailed + json.counts.suppressed).toBe(25);
+    expect(store.sent.map((m) => m.to)).toEqual([ALLOWED]);
   });
 
   it('will not let a caller raise the cap', async () => {
@@ -476,32 +488,39 @@ describe('all mode', () => {
       { ...asAll, entities: fixture(82) },
     );
     expect(json.send_cap).toBe(25);
-    expect(store.sent).toHaveLength(25);
+    expect(json.counts.emailed + json.counts.suppressed).toBe(25);
+    expect(store.sent.map((m) => m.to)).toEqual([ALLOWED]);
   });
 
   it('lets a caller lower it', async () => {
-    const { store } = await call(
+    const { json, store } = await call(
       { dryRun: false, confirm: 'SEND-TO-ALL-STUDENTS', limit: 3 },
       { ...asAll, entities: fixture(82) },
     );
-    expect(store.sent).toHaveLength(3);
+    expect(json.send_cap).toBe(3);
+    expect(json.counts.emailed + json.counts.suppressed).toBe(3);
+    expect(store.sent.map((m) => m.to)).toEqual([ALLOWED]);
   });
 
-  it('carries on when one address blows up', async () => {
+  it('carries on when a send blows up', async () => {
+    // Only one address can be written to now, so the bounced address has to be
+    // that one. The property under test is unchanged: a throwing send is
+    // reported and does not abort the run.
     const { json, store } = await call(
       { dryRun: false, confirm: 'SEND-TO-ALL-STUDENTS' },
       {
         ...asAll,
         entities: fixture(4),
         onSend: async ({ to }) => {
-          if (to === 'u002@student.fairfield.edu') throw new Error('550 mailbox unavailable');
+          if (to === ALLOWED) throw new Error('550 mailbox unavailable');
         },
       },
     );
-    expect(store.sent).toHaveLength(3);
-    expect(json.counts.emailed).toBe(3);
+    expect(store.sent).toHaveLength(0);
+    expect(json.counts.emailed).toBe(0);
     expect(json.counts.failed).toBe(1);
-    expect(json.students.find((l) => l.userId === 'u002').delivery).toBe('failed');
+    expect(json.students.find((l) => l.userId === 'u000').delivery).toBe('failed');
+    expect(json.counts.suppressed).toBe(3);
     expect(json.success).toBe(true);
   });
 });
@@ -541,10 +560,10 @@ describe('a student who turned these emails off', () => {
       { dryRun: false, confirm: 'SEND-TO-ALL-STUDENTS' },
       { sendMode: 'all', entities },
     );
-    expect(store.sent.map((m) => m.to).sort()).toEqual([
-      'drew.lynch1@student.fairfield.edu', 'u002@student.fairfield.edu',
-    ]);
-    expect(json.counts.emailed).toBe(2);
+    // u001 and u003 opted out. u002 is suppressed by the recipient list rather
+    // than by an opt out, so the only address left is the allowed one.
+    expect(store.sent.map((m) => m.to)).toEqual([ALLOWED]);
+    expect(json.counts.emailed).toBe(1);
     expect(json.students.filter((l) => l.reason === 'the student turned these emails off')).toHaveLength(2);
   });
 

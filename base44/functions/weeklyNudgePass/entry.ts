@@ -27,8 +27,24 @@
  *                reported exactly as they would be in a real run. Anybody whose
  *                address is not in ALLOWLIST gets no mail and no row, and their
  *                line in the response says `suppressed`.
- *   'all'        Sends to every student the pass picked. Requires the request
- *                to also pass confirm: 'SEND-TO-ALL-STUDENTS'.
+ *   'all'        Was "sends to every student the pass picked". It no longer
+ *                does anything, and is kept only so the mode is not silently
+ *                redefined under somebody who remembers what it used to mean.
+ *                See below.
+ *
+ * NOTHING IN THIS FILE CAN MAIL A STUDENT, IN ANY MODE, WITH ANY ARGUMENTS.
+ * The recipient decision was moved out to base44/shared/nudge-send.js, which
+ * holds one address and is consulted before the mode is even looked at. Flipping
+ * SEND_MODE to 'all' and passing every confirmation now sends exactly one email,
+ * to that one address, and reports every other student as suppressed.
+ *
+ * That was deliberate: this file's own gate only protected mail that went
+ * through this file, and a preview script that called the send integration
+ * directly bypassed it completely. The check now lives on the shortest path
+ * anybody takes to send one of these.
+ *
+ * To actually mail students, both files have to change, and one of them is a
+ * list of real people's addresses. That is the intended amount of friction.
  *
  * On top of that, no send of any kind happens unless the request passes BOTH
  * dryRun: false AND a confirm string from LIVE_CONFIRMATIONS. A request with no
@@ -46,13 +62,15 @@
  * `truncated_reads`. A missing entity reads exactly like a student who has done
  * nothing, which is the ask we would then send them.
  *
- * THE ONE LINE CHANGE THAT TURNS SENDING ON:
+ * WHAT IT TAKES TO TURN SENDING ON, WHICH IS NO LONGER ONE LINE:
  *
- *     const SEND_MODE = 'allowlist';   ->   const SEND_MODE = 'all';
+ *   1. Add the students to ALLOWED_RECIPIENTS in base44/shared/nudge-send.js.
+ *   2. const SEND_MODE = 'allowlist';   ->   const SEND_MODE = 'all';
+ *   3. The caller passes { dryRun: false, confirm: 'SEND-TO-ALL-STUDENTS' }.
+ *   4. The scheduled workflow stops passing dryRun: true.
  *
- * and then the caller has to pass { dryRun: false, confirm: 'SEND-TO-ALL-STUDENTS' }.
- * Changing the line alone still sends nothing. Both halves are needed on
- * purpose. MAX_SENDS_PER_RUN caps how far a mistake can get either way.
+ * Any three of those without the fourth sends nothing. MAX_SENDS_PER_RUN caps
+ * how far a mistake can get even with all four.
  *
  * To watch a real email arrive without touching anyone else, leave SEND_MODE
  * where it is and call it with { onlyUserId: '<the allowlisted student>',
@@ -65,6 +83,7 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.38';
 import { planPass, groupRowsByUser, DEFAULT_PASS_LIMIT } from '../../shared/nudge-pass.js';
 import { renderNudgeEmail } from '../../shared/nudge-email.js';
 import { isOptedOut } from '../../shared/nudge-response.js';
+import { assertAllowedRecipient, isAllowedRecipient } from '../../shared/nudge-send.js';
 
 /** 'off' | 'allowlist' | 'all'. See the block above before changing it. */
 const SEND_MODE = 'allowlist';
@@ -122,10 +141,21 @@ const SOURCES: Array<[string, string]> = [
 
 const str = (v) => (typeof v === 'string' && v.trim() ? v.trim() : '');
 
-/** May this address be written to, given the mode and the confirmation. */
+/**
+ * May this address be written to, given the mode and the confirmation.
+ *
+ * The shared list is checked FIRST and outranks the mode. 'all' mode used to
+ * mean "mail every student once both halves are given"; it does not any more.
+ * Nothing in this file can put one of these in a student's inbox, whatever is
+ * passed to it, because the decision does not live in this file.
+ *
+ * Turning that back on is two edits in two files, one of which is a list of
+ * real people's addresses. That is the intended amount of friction.
+ */
 function mayEmail(address: string, confirm: string): boolean {
   const to = str(address).toLowerCase();
   if (!to) return false;
+  if (!isAllowedRecipient(to)) return false;
   if (SEND_MODE === 'allowlist') return ALLOWLIST.includes(to);
   if (SEND_MODE === 'all') return confirm === CONFIRM_ALL;
   // 'off', and anything somebody typed that is not one of the three.
@@ -350,6 +380,12 @@ export async function handleRequest(req: Request): Promise<Response> {
           // no argument an HTML body could go in. It is rendered and tested so
           // the copy and the escaping are already right on the day the send
           // path can carry one. `rendered.text` is the entire email.
+          // Second, independent lock, and it throws rather than returning a
+          // flag. mayEmail above is this function's own gate; this one lives
+          // next to the renderer and guards every path anybody takes to send
+          // one of these, including a one off script that never goes near this
+          // file. Both have to be loosened before a student receives anything.
+          assertAllowedRecipient(email);
           await base44.asServiceRole.integrations.Core.SendEmail({
             to: email,
             subject: rendered.subject,
