@@ -649,7 +649,7 @@ ${PLAIN_PROSE_RULES}${correction}`,
     // was a spinner centred on an empty page, so the step rail that tells the
     // student how long this takes arrived last instead of first.
     return (
-      <main className="min-h-screen px-5 py-10" style={{ background: 'var(--page-surface)' }}>
+      <main className="min-h-[100svh] px-5 py-10" style={{ background: 'var(--page-surface)' }}>
         <div className="mx-auto max-w-2xl">
           <div className="mb-8 flex items-center justify-between">
             <LogoWordmark />
@@ -686,7 +686,7 @@ ${PLAIN_PROSE_RULES}${correction}`,
 
   if (loadError) {
     return (
-      <main className="min-h-screen px-5 py-10 flex items-center justify-center" style={{ background: 'var(--page-surface)' }}>
+      <main className="min-h-[100svh] px-5 py-10 flex items-center justify-center" style={{ background: 'var(--page-surface)' }}>
         <div className="max-w-md text-center space-y-4">
           <AlertCircle className="mx-auto text-red-500" size={40} />
           <h2 className="font-heading text-xl font-bold text-[color:var(--surface-dark-900)]">{loadError}</h2>
@@ -703,7 +703,7 @@ ${PLAIN_PROSE_RULES}${correction}`,
   const progressStep = step === 'pick' ? 1 : step === 'custom' ? 2 : step === 'generating' ? 3 : 4;
 
   return (
-    <main className="min-h-screen px-5 py-10" style={{ background: 'var(--page-surface)' }}>
+    <main className="min-h-[100svh] px-5 py-10" style={{ background: 'var(--page-surface)' }}>
       {duplicate && (
         <DuplicateModal
           existing={duplicate}

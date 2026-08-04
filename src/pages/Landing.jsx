@@ -42,7 +42,7 @@ export default function Landing() {
 
   if (!authChecked) {
     return (
-      <div className="grid min-h-screen place-items-center" style={{ background: 'var(--page-surface)' }}>
+      <div className="grid min-h-[100svh] place-items-center" style={{ background: 'var(--page-surface)' }}>
         <div className="flex flex-col items-center gap-4">
           <CompassIcon size={32} className="animate-pulse" />
           <div
@@ -59,7 +59,7 @@ export default function Landing() {
       {/* The scroll-progress bar that used to sit here was decoration: a
           marketing page isn't a long-form article, and the reader has a
           scrollbar. Removed. */}
-      <div className="min-h-screen" style={{ background: 'var(--page-surface)' }}>
+      <div className="min-h-[100svh]" style={{ background: 'var(--page-surface)' }}>
         <LandingNav />
         <Hero />
         <LandingSections />
