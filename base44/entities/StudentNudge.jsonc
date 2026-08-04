@@ -1,0 +1,213 @@
+{
+  // One row per proposal we made to one student. This is the ledger, not the
+  // message: what was asked, which rung of the ladder it came from, and what
+  // came back. The next pass reads these rows to decide what to ask next, so a
+  // row is worth more after it is refused than before it is sent.
+  "name": "StudentNudge",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string"
+    },
+    "pass_number": {
+      "type": "number"
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "stall_kind": {
+      "type": "string"
+    },
+    "subject_type": {
+      "type": "string",
+      "enum": [
+        "experiment",
+        "mission",
+        "outreach",
+        "path",
+        "account"
+      ]
+    },
+    "subject_id": {
+      "type": "string"
+    },
+    "rung": {
+      "type": "number"
+    },
+    "rung_key": {
+      "type": "string"
+    },
+    "size": {
+      "type": "string",
+      "enum": [
+        "large",
+        "medium",
+        "small",
+        "one_line"
+      ]
+    },
+    "ask_title": {
+      "type": "string"
+    },
+    "ask_body": {
+      "type": "string"
+    },
+    "action_kind": {
+      "type": "string",
+      "enum": [
+        "generate_guide",
+        "open_guide",
+        "send_outreach",
+        "log_proof",
+        "write_reflection",
+        "pick_path",
+        "start_experiment",
+        // Send them to settings to ask for a fresh set of paths. Only the
+        // all_paths_ruled_out ladder uses it, and it is a separate value rather
+        // than reusing pick_path because there is no path left to pick and the
+        // email's button reads off this field.
+        "refresh_paths",
+        "answer_question",
+        "rule_out"
+      ]
+    },
+    "action_target": {
+      "type": "string"
+    },
+    "question": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "accepted",
+        "declined",
+        "completed",
+        "expired",
+        "superseded"
+      ],
+      "default": "pending"
+    },
+    "responded_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "decline_reason": {
+      "type": "string"
+    },
+    "reply_text": {
+      "type": "string"
+    },
+    "reply_became_proof_id": {
+      "type": "string"
+    },
+    "evidence_seen_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "delivered_channel": {
+      "type": "string",
+      "enum": [
+        "email",
+        "in_app",
+        "none"
+      ],
+      "default": "none"
+    },
+    "delivered_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "pulse_summary": {
+      "type": "string"
+    },
+    "deletion_status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "deleted",
+        "permanently_deleted"
+      ],
+      "default": "active"
+    },
+    "deleted_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "purge_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "user_id",
+    "stall_kind",
+    "status"
+  ],
+  // `read` and `update` key off the row's own `user_id`, not `created_by_id`,
+  // because the intended writer is a scheduled backend job rather than the
+  // student: a creator-scoped rule would hide every student's nudges from the
+  // student they were written for and leave nobody able to accept or decline.
+  //
+  // A property is addressed as `data.<field>`. A bare `"user_id"` matches
+  // nothing, which fails silently and looks exactly like apathy: the student
+  // reads zero of their own nudges and can neither accept nor decline one.
+  // `created_by_id` is a system field and is the one key that stays bare.
+  // NetworkNotification and BlockedUser are the live examples of both forms.
+  //
+  // Do not "fix" this back to creator scoping. Creator scoping is enforced here
+  // even for role admin (measured 2026-08-03: an admin account read 1 of 72
+  // StudentProfiles), and `asServiceRole` acts as admin rather than bypassing
+  // the rules, so neither would rescue a student's access to their own row.
+  //
+  // `create` and `delete` stay admin only. A student never authors a nudge, and
+  // letting them would let anyone forge a row that claims we asked something we
+  // did not.
+  //
+  // State: verified, 2026-08-03, signed in as the real non-admin test student
+  // rather than from an admin session, which cannot answer this question. Rows
+  // were seeded, read back, answered and deleted. A student sees only their own
+  // ask, cannot read or rewrite anybody else's, cannot author one at all, and
+  // can answer their own. The table is back to zero rows in prod and in dev.
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": {
+      "$or": [
+        {
+          "data.user_id": "{{user.id}}"
+        },
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "data.user_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

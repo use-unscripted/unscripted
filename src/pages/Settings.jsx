@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import PageHeader from '@/components/PageHeader';
@@ -6,6 +6,7 @@ import { Trash2, RefreshCw, CheckCircle, ArrowRight } from 'lucide-react';
 import Field from '@/components/onboarding/Field';
 import ICSExportPanel from '@/components/calendar/ICSExportPanel';
 import { generatePathTest } from '@/lib/path-generator';
+import { buildOptOut, optBackInPatch, isOptedOut, mergeOptOutRows } from '@/lib/nudge-response';
 import { clearCampusStore } from '@/lib/campus-store';
 
 const textareaCls = 'mt-1 w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] px-4 py-3 text-sm text-[color:var(--surface-dark-900)] placeholder-[color:var(--ink-400)] outline-none focus:border-[color:var(--brand-navy-700)] resize-none';
@@ -30,13 +31,102 @@ export default function Settings() {
   const [regenDone, setRegenDone] = useState(false);
   const [regenError, setRegenError] = useState('');
   const [newSetId, setNewSetId] = useState('');
+  const [optOutRows, setOptOutRows] = useState([]);
+  const [emailBusy, setEmailBusy] = useState(false);
+
+  // Every nudge email ends with a line telling students to turn these off here,
+  // so this read is what makes that sentence true. It asks for this student's
+  // rows rather than the newest 20 of everything: on the list call, twenty rows
+  // written by other students between one visit and the next were enough to
+  // push a real opt out off the end and draw the button as though the emails
+  // were still on.
+  // Reads are numbered so a slow one cannot overwrite a newer one. The mount read
+  // and the read that follows a button press can be in flight together, and if the
+  // mount read lands last it carries a snapshot taken before the press: the server
+  // is right, the emails really are off, and the button says otherwise until a
+  // reload. Every write also merges through the functional form, so nothing this
+  // session did can be lost to a read that has not caught up.
+  const optOutRead = useRef(0);
+  const optOutWrites = useRef([]);
+  const loadOptOuts = useCallback(async (userId, known = []) => {
+    if (!userId) return;
+    if (known.length) optOutWrites.current = mergeOptOutRows(optOutWrites.current, known);
+    const ticket = ++optOutRead.current;
+    try {
+      const rows = await base44.entities.NudgeOptOut.filter({ user_id: userId }, '-created_date', 100);
+      if (ticket !== optOutRead.current) return;
+      setOptOutRows(mergeOptOutRows(rows, optOutWrites.current));
+    } catch (err) {
+      console.error('[settings] could not read the email setting:', err?.message || 'unknown');
+      // A failed read must not undo what the student just did on this screen.
+      if (known.length) setOptOutRows(rows => mergeOptOutRows(rows, known));
+    }
+  }, []);
 
   useEffect(() => {
-    base44.auth.me().then(setUser);
+    base44.auth.me().then(u => {
+      setUser(u || {});
+      loadOptOuts(u?.id);
+    });
     base44.entities.StudentProfile.list('-created_date', 1).then(rows => {
       if (rows[0]) { setProfile(rows[0]); setNotes({ personal_notes: rows[0].personal_notes || '', long_term_ambitions: rows[0].long_term_ambitions || '', responsibilities_constraints: rows[0].responsibilities_constraints || '', things_to_avoid: rows[0].things_to_avoid || '', priorities_for_recommendations: rows[0].priorities_for_recommendations || '' }); }
     });
-  }, []);
+  }, [loadOptOuts]);
+
+  const emailsOff = isOptedOut(optOutRows, user?.id);
+
+  const stopEmails = async () => {
+    if (!user?.id || emailBusy) return;
+    setEmailBusy(true);
+    try {
+      const row = await base44.entities.NudgeOptOut.create(
+        buildOptOut({ userId: user.id, source: 'settings', now: new Date() })
+      );
+      // created_by_id is stamped by the server, and isOptedOut requires it to
+      // equal user_id, so a response that came back without it would leave the
+      // button still reading "Stop these emails" right after the student
+      // pressed it. This is their own row, created in their own session, so
+      // filling the creator in locally states what the server just did rather
+      // than making a claim about anybody else.
+      // A row with no id could never be turned back on, so it is not worth
+      // holding on to. If the create came back with nothing useful the refetch
+      // below is the only source, which is the honest outcome anyway.
+      const seen = row && typeof row === 'object' && row.id
+        ? { ...row, created_by_id: row.created_by_id || user.id }
+        : null;
+      const known = seen ? [seen] : [];
+      if (seen) setOptOutRows(rows => mergeOptOutRows(rows, known));
+      await loadOptOuts(user.id, known);
+    } catch (err) {
+      console.error('[settings] could not turn the emails off:', err?.message || 'unknown');
+    } finally {
+      setEmailBusy(false);
+    }
+  };
+
+  // Turning them back on soft deletes the row rather than removing it, which is
+  // what the rest of this app does and keeps "off in March, on in April".
+  const startEmails = async () => {
+    if (emailBusy) return;
+    setEmailBusy(true);
+    const patch = optBackInPatch(new Date());
+    const live = optOutRows.filter(r => r && r.id && r.user_id === user?.id
+      && r.deletion_status !== 'deleted' && r.deletion_status !== 'permanently_deleted');
+    try {
+      for (const row of live) {
+        // Sequential on purpose: there is normally one row, and a student
+        // watching a button does not benefit from parallelism here.
+        await base44.entities.NudgeOptOut.update(row.id, patch);
+      }
+      const turnedOff = live.map(r => ({ ...r, ...patch }));
+      setOptOutRows(rows => mergeOptOutRows(rows, turnedOff));
+      await loadOptOuts(user?.id, turnedOff);
+    } catch (err) {
+      console.error('[settings] could not turn the emails back on:', err?.message || 'unknown');
+    } finally {
+      setEmailBusy(false);
+    }
+  };
 
   const change = e => setUser({ ...user, [e.target.name]: e.target.value });
   const changeNote = e => setNotes(n => ({ ...n, [e.target.name]: e.target.value }));
@@ -170,6 +260,27 @@ export default function Settings() {
         <p className="text-sm text-[color:var(--ink-700)]">Download .ics files to add your Unscripted schedule to Google Calendar, Apple Calendar, Outlook, or any standard calendar app.</p>
       </div>
       <ICSExportPanel showHeading={false} />
+
+      <div className="mt-10 mb-3">
+        <h2 className="font-heading text-xl font-bold text-[color:var(--surface-dark-900)] mb-1">Emails from us</h2>
+        <p className="text-sm text-[color:var(--ink-700)]">At most one email a week, with one thing to do or one question to answer. Turning them off does not change anything else on your account.</p>
+      </div>
+      <section className="rounded-[24px] border border-[color:var(--ink-200)] bg-white p-7 shadow-sm">
+        {emailsOff ? (
+          <>
+            <p className="text-sm font-semibold text-[color:var(--surface-dark-900)] mb-4">These emails are off.</p>
+            <button onClick={startEmails} disabled={emailBusy}
+              className="rounded-[10px] border border-[color:var(--ink-200)] px-5 py-3 text-sm font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)] transition disabled:opacity-60">
+              Start sending them again
+            </button>
+          </>
+        ) : (
+          <button onClick={stopEmails} disabled={emailBusy || !user?.id}
+            className="rounded-[10px] border border-[color:var(--ink-200)] px-5 py-3 text-sm font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)] transition disabled:opacity-60">
+            Stop these emails
+          </button>
+        )}
+      </section>
 
       <div className="mt-10">
         <h2 className="font-heading text-xl font-bold text-[color:var(--surface-dark-900)] mb-1">Recently deleted</h2>

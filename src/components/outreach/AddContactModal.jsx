@@ -18,7 +18,7 @@ const STATUS_OPTIONS = [
   ['not_sent','Not contacted'],['planning','Planning outreach'],['sent','Contacted'],
   ['follow_up_needed','Follow-up needed'],['call_scheduled','Meeting scheduled'],
   ['responded','Conversation completed'],['no_response','No response'],
-  ['completed','Closed'],['other','Other'],
+  ['completed','Closed'],['closed','Closed out'],['other','Other'],
 ];
 
 const EXP_STATUS_LABELS = { draft:'Draft', planned:'Planned', in_progress:'In Progress', completed:'Completed', skipped:'Skipped' };
@@ -190,7 +190,10 @@ export default function AddContactModal({ contact, onClose, onSaved }) {
       // Measurement: whether outreach was attempted, and whether it turned into
       // a real conversation. Ids and status only — never the notes.
       const links = { cycle_id: payload.cycle_id, path_id: payload.path_id, experiment_id: selectedExpId, mission_id: selectedMissionId || undefined };
-      if (!['not_sent', 'planning'].includes(payload.response_status)) {
+      // 'closed' is in this list because a contact the student closed out was,
+      // by definition, one they decided not to write to. Counting it as an
+      // attempt would inflate the one measurement we quote to buyers.
+      if (!['not_sent', 'planning', 'closed'].includes(payload.response_status)) {
         await trackPilotEvent('outreach_attempted', { ...links, dedupe_key: saved.id });
       }
       if (['responded', 'completed'].includes(payload.response_status)) {

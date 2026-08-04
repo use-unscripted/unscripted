@@ -6,7 +6,7 @@
 import { useState } from 'react';
 import { ExternalLink, ShieldCheck, Search, Plus } from 'lucide-react';
 import { outreachLink, OUTREACH_STATUSES, uiStatusOf } from '@/lib/linkedin';
-import { saveMissionOutreach, setOutreachStatus } from '@/lib/mission-outreach';
+import { saveMissionOutreach, setOutreachStatus, setOutreachNotes } from '@/lib/mission-outreach';
 
 function StatusRow({ contact, onChange }) {
   const current = uiStatusOf(contact.response_status);
@@ -128,7 +128,7 @@ export default function MissionOutreachPanel({ mission, experiment, path, contac
             key={c.id}
             contact={c}
             onStatus={async (s) => { await setOutreachStatus(c, s); await onChanged(); }}
-            onNotes={async (notes) => { if (notes !== (c.notes || '')) { await setOutreachStatus({ ...c, notes }, uiStatusOf(c.response_status)); await onChanged(); } }}
+            onNotes={async (notes) => { if (notes !== (c.notes || '')) { await setOutreachNotes(c, notes); await onChanged(); } }}
           />
         ))}
         {contacts.length === 0 && !adding && (

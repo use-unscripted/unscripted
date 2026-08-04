@@ -1,5 +1,5 @@
 /**
- * The real file is base44/shared/dates.js.
+ * The real file is base44/shared/nudge-pass.js.
  *
  * A backend function upload carries its own directory plus base44/shared/ and
  * nothing else, so anything a Deno function imports has to live there. This
@@ -7,4 +7,4 @@
  * src/lib on purpose: a test file in base44/shared would be uploaded with
  * every backend function, campusEvents and the purge job included.
  */
-export * from '../../base44/shared/dates.js';
+export * from '../../base44/shared/nudge-pass.js';

@@ -57,6 +57,7 @@ import ResumeBuilder from '@/pages/ResumeBuilder';
 import RecentlyDeleted from '@/pages/RecentlyDeleted';
 import GuideDetailPage from '@/pages/GuideDetailPage';
 import PilotDashboard from '@/pages/PilotDashboard';
+import AnswerNudge from '@/pages/AnswerNudge';
 import AdminCampusFeeds from '@/pages/AdminCampusFeeds';
 import AdminAiFailures from '@/pages/AdminAiFailures';
 
@@ -88,6 +89,14 @@ const AuthenticatedApp = () => {
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/post-auth" element={<PostAuth />} />
+      {/* Answering a nudge email. Registered outside ProtectedRoute on purpose:
+          that wrapper sends a signed out visitor to /login and loses the nudge
+          id in the process, and this link arrives by email weeks after it was
+          sent, often on a phone where the session has gone. The page does its
+          own auth check and hands a signed out student to the SDK's login with
+          this URL as the return address, which is the mechanism the rest of the
+          app already uses. It renders nothing about the ask until it has one. */}
+      <Route path="/answer" element={<AnswerNudge />} />
       {/* Public company + policy pages — reachable signed out, and from the footer */}
       <Route path="/about" element={<About />} />
       <Route path="/contact" element={<Contact />} />
