@@ -30,41 +30,10 @@ import { LogoWordmark } from '@/components/UnscriptedLogo';
 import { ProgressBar, OptionRow, GuidedStyles, footerCls } from '@/components/guided/GuidedPieces';
 import { saveDraft, loadDraft, clearDraft } from '@/lib/guest-draft';
 import { trackFunnel, trackFunnelOnce } from '@/lib/funnel';
-
-/**
- * The path questions are a plain text box. A grid of fifteen options fills the
- * screen, reads as a menu of the only acceptable answers, and quietly tells a
- * student that whatever they were actually thinking of is wrong. The examples
- * live in the placeholder instead, typed and erased one after another, so the
- * box demonstrates the kind of answer it wants without ever constraining it.
- *
- * KNOWN_PATHS is not shown to anyone. It exists so the funnel event can still
- * report a bucket rather than a student's free text.
- */
-const KNOWN_PATHS = [
-  'Investment banking / finance',
-  'Management consulting',
-  'Tech / software engineering',
-  'Venture capital / private equity',
-  'Startup operations or founding',
-  'Medicine / healthcare',
-  'Law',
-  'Graduate school / academia',
-  'Marketing / brand',
-  'Personal brand / content',
-  'Freelancing / consulting',
-  'Real estate / investing',
-  'Nonprofit / mission-driven work',
-  'Creative industries (film, design, music)',
-  'Government / policy',
-];
-
-const bucketPath = (value) => {
-  const typed = (value || '').trim().toLowerCase();
-  if (!typed) return 'none';
-  const hit = KNOWN_PATHS.find(p => p.toLowerCase().includes(typed) || typed.includes(p.toLowerCase().split(' /')[0]));
-  return hit || 'other';
-};
+// The path questions are a plain text box, so the funnel event reports a
+// bucket rather than what a student typed. See the module for why that list
+// is never shown to anyone.
+import { bucketPath } from '@/lib/intake-bucket';
 
 const SCHOOL_YEARS = ['Freshman', 'Sophomore', 'Junior', 'Senior', 'Grad student'];
 
@@ -377,6 +346,7 @@ export default function Onboarding() {
   const [error, setError] = useState('');
   const [resumed, setResumed] = useState(false);
   const advanceRef = useRef(null);
+  const clearedRef = useRef(null);
   const topRef = useRef(null);
   const headingRef = useRef(null);
 
@@ -451,11 +421,34 @@ export default function Onboarding() {
     setIndex(next);
   }, []);
 
+  /**
+   * Report a question as cleared, at most once in a row.
+   *
+   * Tapping an answer and pressing Enter before the auto-advance fires are two
+   * routes into the same event for one answer, and counting both would inflate
+   * the step the student is standing on.
+   */
+  const reportStepCleared = (i) => {
+    if (clearedRef.current === i || !STEPS[i]) return;
+    clearedRef.current = i;
+    trackFunnel('intake_step_completed', { step_index: i + 1, step_label: STEPS[i].key });
+  };
+
   // Tapping the one answer a question wants should move you on by itself.
   const chooseOne = (key, value) => {
     set(key, value);
     clearTimeout(advanceRef.current);
-    advanceRef.current = setTimeout(() => { setDir('fwd'); setIndex(i => Math.min(i + 1, REVIEW)); }, 230);
+    advanceRef.current = setTimeout(() => {
+      // Auto-advance has to report the question cleared and save the new
+      // position, the same as pressing Continue does. It did neither. The only
+      // auto-advancing question is the hours one, so on the funnel the step
+      // everybody passes read as the step nobody passes, and closing the tab
+      // there dropped you back onto a question you had already answered.
+      reportStepCleared(index);
+      persist({ ...data, [key]: value }, index + 1);
+      setDir('fwd');
+      setIndex(i => Math.min(i + 1, REVIEW));
+    }, 230);
   };
 
   const toggleInList = (key, value) => {
@@ -494,7 +487,7 @@ export default function Onboarding() {
     }
     setError('');
     persist(data, index + 1);
-    trackFunnel('intake_step_completed', { step_index: index + 1, step_label: step.key });
+    reportStepCleared(index);
     // The path choice is still the funnel's hinge, so it keeps reporting under
     // the names the existing dashboards already read.
     if (step.key === 'primary_path') {
@@ -514,7 +507,13 @@ export default function Onboarding() {
 
   const finish = () => {
     persist(data, REVIEW);
-    trackFunnelOnce('paths_intake_reached', 'paths_intake_reached');
+    // Stamped with the version of the flow that sent it. The name comes from
+    // the old intake, where path selection was the last step, so this fired
+    // once a visitor had answered everything. Path selection is the first four
+    // questions now and the equivalent moment is here, at the end. Same
+    // meaning, different position in the flow, and nothing in the event said
+    // so until this.
+    trackFunnelOnce('paths_intake_reached', 'paths_intake_reached', { intake_version: 2 });
     nav('/onboarding-review');
   };
 

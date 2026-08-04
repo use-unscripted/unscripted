@@ -59,9 +59,12 @@ export default function Generating() {
               style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}>
               <RefreshCw size={15} /> Retry
             </button>
-            <button onClick={() => nav('/paths-intake')}
+            {/* Anyone who gets here has an account and saved answers. The old
+                way out was the signed-out intake, which ends at the account
+                wall and drops them back on My Journey anyway. */}
+            <button onClick={() => nav('/journey')}
               className="flex items-center gap-2 text-sm font-semibold text-[color:var(--ink-400)] hover:text-white transition">
-              <ArrowLeft size={14} /> Back to path selection
+              <ArrowLeft size={14} /> Back to My Journey
             </button>
           </div>
         </div>
