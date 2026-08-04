@@ -25,6 +25,7 @@
 import { entityTime } from './dates.js';
 import { summarizePulse } from './student-pulse.js';
 import { fillRung, ladderFor } from './nudge-ladder.js';
+import { isOptedOut } from './nudge-response.js';
 
 const DAY = 86400000;
 
@@ -323,16 +324,31 @@ function toldUsToStop(history) {
 /**
  * Should this pass write nothing at all for this student.
  *
- * @param {{pulse: object, history?: object[], now: any, user?: object|string, userId?: string}} input
+ * `optOuts` and `optedOut` are both optional and both additive: a caller that
+ * passes neither gets exactly the behaviour this function had before opting out
+ * existed. `optOuts` is the raw NudgeOptOut rows, `optedOut` is the answer when
+ * the caller has already worked it out for the whole population.
+ *
+ * @param {{pulse: object, history?: object[], now: any, user?: object|string,
+ *   userId?: string, optOuts?: object[], optedOut?: boolean}} input
  * @returns {string|null} null to proceed, otherwise a short reason for the log
  */
 export function shouldSkipPass(input = {}) {
-  const { pulse, history, now, user = null, userId } = input || {};
+  const {
+    pulse, history, now, user = null, userId, optOuts, optedOut,
+  } = input || {};
   const rowsAll = liveRows(history);
   const nowMs = entityTime(now);
 
   if (accountLooksGone(user)) return 'the account is deleted';
-  if (!resolveUserId({ userId, user, history: rowsAll })) return 'no account id to write a nudge for';
+  const uid = resolveUserId({ userId, user, history: rowsAll });
+  if (!uid) return 'no account id to write a nudge for';
+
+  // Checked before anything else about their records, because this is the one
+  // skip reason that is a promise rather than a judgement. Every email we send
+  // ends with a sentence saying they can turn these off, and this is the line
+  // that makes that sentence true.
+  if (optedOut === true || isOptedOut(optOuts, uid)) return 'the student turned these emails off';
   if (!pulse || typeof pulse !== 'object') return 'no pulse to read';
   if (!Number.isFinite(nowMs)) return 'no usable clock for this pass';
 

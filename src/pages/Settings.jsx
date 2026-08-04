@@ -6,6 +6,7 @@ import { Trash2, RefreshCw, CheckCircle, ArrowRight } from 'lucide-react';
 import Field from '@/components/onboarding/Field';
 import ICSExportPanel from '@/components/calendar/ICSExportPanel';
 import { generatePathTest } from '@/lib/path-generator';
+import { buildOptOut, optBackInPatch, isOptedOut } from '@/lib/nudge-response';
 
 const textareaCls = 'mt-1 w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] px-4 py-3 text-sm text-[color:var(--surface-dark-900)] placeholder-[color:var(--ink-400)] outline-none focus:border-[color:var(--brand-navy-700)] resize-none';
 
@@ -29,13 +30,59 @@ export default function Settings() {
   const [regenDone, setRegenDone] = useState(false);
   const [regenError, setRegenError] = useState('');
   const [newSetId, setNewSetId] = useState('');
+  const [optOutRows, setOptOutRows] = useState([]);
+  const [emailBusy, setEmailBusy] = useState(false);
 
   useEffect(() => {
     base44.auth.me().then(setUser);
     base44.entities.StudentProfile.list('-created_date', 1).then(rows => {
       if (rows[0]) { setProfile(rows[0]); setNotes({ personal_notes: rows[0].personal_notes || '', long_term_ambitions: rows[0].long_term_ambitions || '', responsibilities_constraints: rows[0].responsibilities_constraints || '', things_to_avoid: rows[0].things_to_avoid || '', priorities_for_recommendations: rows[0].priorities_for_recommendations || '' }); }
     });
+    // Every nudge email ends with a line telling students to turn these off
+    // here, so this read is what makes that sentence true.
+    base44.entities.NudgeOptOut.list('-created_date', 20)
+      .then(rows => setOptOutRows(Array.isArray(rows) ? rows : []))
+      .catch(() => setOptOutRows([]));
   }, []);
+
+  const emailsOff = isOptedOut(optOutRows, user?.id);
+
+  const stopEmails = async () => {
+    if (!user?.id || emailBusy) return;
+    setEmailBusy(true);
+    try {
+      const row = await base44.entities.NudgeOptOut.create(
+        buildOptOut({ userId: user.id, source: 'settings', now: new Date() })
+      );
+      setOptOutRows(rows => [row, ...rows]);
+    } catch (err) {
+      console.error('[settings] could not turn the emails off:', err?.message || 'unknown');
+    } finally {
+      setEmailBusy(false);
+    }
+  };
+
+  // Turning them back on soft deletes the row rather than removing it, which is
+  // what the rest of this app does and keeps "off in March, on in April".
+  const startEmails = async () => {
+    if (emailBusy) return;
+    setEmailBusy(true);
+    const patch = optBackInPatch(new Date());
+    const live = optOutRows.filter(r => r && r.user_id === user?.id
+      && r.deletion_status !== 'deleted' && r.deletion_status !== 'permanently_deleted');
+    try {
+      for (const row of live) {
+        // Sequential on purpose: there is normally one row, and a student
+        // watching a button does not benefit from parallelism here.
+        await base44.entities.NudgeOptOut.update(row.id, patch);
+      }
+      setOptOutRows(rows => rows.map(r => (live.some(l => l.id === r.id) ? { ...r, ...patch } : r)));
+    } catch (err) {
+      console.error('[settings] could not turn the emails back on:', err?.message || 'unknown');
+    } finally {
+      setEmailBusy(false);
+    }
+  };
 
   const change = e => setUser({ ...user, [e.target.name]: e.target.value });
   const changeNote = e => setNotes(n => ({ ...n, [e.target.name]: e.target.value }));
@@ -169,6 +216,27 @@ export default function Settings() {
         <p className="text-sm text-[color:var(--ink-700)]">Download .ics files to add your Unscripted schedule to Google Calendar, Apple Calendar, Outlook, or any standard calendar app.</p>
       </div>
       <ICSExportPanel showHeading={false} />
+
+      <div className="mt-10 mb-3">
+        <h2 className="font-heading text-xl font-bold text-[color:var(--surface-dark-900)] mb-1">Emails from us</h2>
+        <p className="text-sm text-[color:var(--ink-700)]">At most one email a week, with one thing to do or one question to answer. Turning them off does not change anything else on your account.</p>
+      </div>
+      <section className="rounded-[24px] border border-[color:var(--ink-200)] bg-white p-7 shadow-sm">
+        {emailsOff ? (
+          <>
+            <p className="text-sm font-semibold text-[color:var(--surface-dark-900)] mb-4">These emails are off.</p>
+            <button onClick={startEmails} disabled={emailBusy}
+              className="rounded-[10px] border border-[color:var(--ink-200)] px-5 py-3 text-sm font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)] transition disabled:opacity-60">
+              Start sending them again
+            </button>
+          </>
+        ) : (
+          <button onClick={stopEmails} disabled={emailBusy || !user?.id}
+            className="rounded-[10px] border border-[color:var(--ink-200)] px-5 py-3 text-sm font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)] transition disabled:opacity-60">
+            Stop these emails
+          </button>
+        )}
+      </section>
 
       <div className="mt-10">
         <h2 className="font-heading text-xl font-bold text-[color:var(--surface-dark-900)] mb-1">Recently deleted</h2>

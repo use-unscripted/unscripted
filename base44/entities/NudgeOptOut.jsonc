@@ -1,0 +1,139 @@
+{
+  // One row per student who has told us to stop emailing them. Every nudge
+  // email ends with "To stop these emails, turn them off in your settings", so
+  // this entity is the thing that makes that sentence true.
+  //
+  // It is its own entity rather than a field on User or StudentProfile on
+  // purpose. User.jsonc already disagrees with the live rows (it declares
+  // `onboarding_complete` while every line of code reads `onboarding_completed`,
+  // and live rows carry fields the schema does not declare), so a sync could
+  // strip real data off accounts. StudentProfile is wrong too: 10 of 86
+  // accounts have no profile row at all, and an opt out that cannot be recorded
+  // is an opt out we did not honour.
+  //
+  // Opting back in soft deletes the row rather than removing it. This repo soft
+  // deletes everywhere, and "they turned it off in March and back on in April"
+  // is worth keeping.
+  "name": "NudgeOptOut",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string"
+    },
+    "opted_out_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "reason": {
+      "type": "string"
+    },
+    "source": {
+      "type": "string",
+      "enum": [
+        "settings",
+        "answer_page",
+        "email_link",
+        "admin"
+      ],
+      "default": "settings"
+    },
+    "deletion_status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "deleted",
+        "permanently_deleted"
+      ],
+      "default": "active"
+    },
+    "deleted_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "purge_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "user_id"
+  ],
+  // A property is addressed as `data.<field>`. A bare `"user_id"` matches
+  // nothing, fails silently, and looks exactly like a student who never opted
+  // out. `created_by_id` is a system field and is the one key that stays bare.
+  // StudentNudge, NetworkNotification and BlockedUser are the live examples of
+  // both forms.
+  //
+  // `create` is keyed on `created_by_id` rather than on `data.user_id` because
+  // this is the one rule a student has to be able to satisfy while the row does
+  // not exist yet, and creator scoping is the form this app is known to enforce
+  // (PilotEvent, ContinuationInterest and NetworkNotification all create this
+  // way). Admin is in the list so the scheduled job and a support request can
+  // both record one.
+  //
+  // That leaves one hole worth naming: nothing at this layer stops a student
+  // creating a row carrying somebody else's `user_id`, which would silence our
+  // emails to that person. `isOptedOut` in base44/shared/nudge-response.js
+  // closes it by refusing any row whose `created_by_id` is present and is not
+  // the same account as `user_id`, unless it says `source: "admin"`. Do not
+  // drop that check on the grounds that the rules below look tight.
+  //
+  // `read` and `update` key off `user_id` as well as `created_by_id` so a row
+  // an admin recorded on a student's behalf is still theirs to read and to turn
+  // back on. `delete` stays admin only: opting back in is a soft delete, which
+  // is an update.
+  //
+  // State: proposed. No NudgeOptOut row exists yet, so these rules have never
+  // been exercised by a real student account against the live API. They match
+  // the shape of rules that are live on other entities. That is not the same as
+  // verified, so read one back as a real student before saying it is.
+  "rls": {
+    "create": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "read": {
+      "$or": [
+        {
+          "data.user_id": "{{user.id}}"
+        },
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "data.user_id": "{{user.id}}"
+        },
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

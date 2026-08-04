@@ -35,6 +35,12 @@
  * body is a dry run. The scheduled workflow passes dryRun: true, so the job as
  * scheduled computes, logs, and sends nothing.
  *
+ * A student with a live NudgeOptOut row gets nothing in any mode, including
+ * 'all' with every confirmation given. That is checked twice, once in the
+ * planner and once again at the send, because it is the only rule here that is
+ * a promise we printed at the bottom of an email rather than a judgement we
+ * made.
+ *
  * A run whose entity reads did not all come back whole sends nothing either. It
  * still reports, and names the entity, under `failed_reads` and
  * `truncated_reads`. A missing entity reads exactly like a student who has done
@@ -58,6 +64,7 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.38';
 // re-export of each file for the frontend and the tests.
 import { planPass, groupRowsByUser, DEFAULT_PASS_LIMIT } from '../../shared/nudge-pass.js';
 import { renderNudgeEmail } from '../../shared/nudge-email.js';
+import { isOptedOut } from '../../shared/nudge-response.js';
 
 /** 'off' | 'allowlist' | 'all'. See the block above before changing it. */
 const SEND_MODE = 'allowlist';
@@ -107,6 +114,10 @@ const SOURCES: Array<[string, string]> = [
   ['outreach', 'OutreachContacts'],
   ['events', 'PilotEvent'],
   ['nudges', 'StudentNudge'],
+  // Every email we send ends with a sentence promising these can be turned
+  // off. This is the table that makes it true, so a failed read of it is a
+  // failed read like any other and stops the run from sending.
+  ['optOuts', 'NudgeOptOut'],
 ];
 
 const str = (v) => (typeof v === 'string' && v.trim() ? v.trim() : '');
@@ -218,7 +229,18 @@ export async function handleRequest(req: Request): Promise<Response> {
       passNumber = highest + 1;
     }
 
-    const plan = planPass({ users, rowsByUser, history: lists.nudges, now, passNumber, limit });
+    const plan = planPass({
+      users, rowsByUser, history: lists.nudges, now, passNumber, limit, optOuts: lists.optOuts,
+    });
+
+    // The planner already drops these students, so this set exists only to be
+    // checked again at the send. An opt out is a promise, and a promise that
+    // depends on one caller remembering to pass one argument is not one.
+    const optedOut = new Set<string>();
+    for (const user of users) {
+      const id = str(user?.id);
+      if (id && isOptedOut(lists.optOuts, id)) optedOut.add(id);
+    }
 
     // The cap, checked against what the planner actually returned rather than
     // against the number it was handed. planPass applies `limit` itself, so
@@ -244,6 +266,7 @@ export async function handleRequest(req: Request): Promise<Response> {
     let created = 0;
     let emailed = 0;
     let suppressed = 0;
+    let refusedOptOut = 0;
     let failed = 0;
 
     // Held by reference so the send loop below can fill in what happened
@@ -276,6 +299,16 @@ export async function handleRequest(req: Request): Promise<Response> {
       for (let i = 0; i < plan.toEmail.length; i += 1) {
         const { userId, email, ask } = plan.toEmail[i];
         const line = askedLines[i];
+
+        // The second half of the opt out check. The planner will not put an
+        // opted out student in this list, so reaching here means the planner
+        // changed or the rows were not handed to it, and either way the answer
+        // is the same: write nothing, send nothing.
+        if (optedOut.has(userId)) {
+          refusedOptOut += 1;
+          if (line) line.delivery = 'opted_out';
+          continue;
+        }
 
         // Suppressed means nothing happens to this student, row included. The
         // check has to come first for that to be true. Behind it: a pending row
@@ -366,6 +399,7 @@ export async function handleRequest(req: Request): Promise<Response> {
         rows_created: created,
         emailed,
         suppressed,
+        refused_opted_out: refusedOptOut,
         failed,
       },
       students: lines,

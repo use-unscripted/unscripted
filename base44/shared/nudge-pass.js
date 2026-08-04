@@ -13,6 +13,7 @@
 import { entityTime } from './dates.js';
 import { readPulse, summarizePulse } from './student-pulse.js';
 import { chooseAsk, expireStale, shouldSkipPass } from './nudge.js';
+import { isOptedOut } from './nudge-response.js';
 
 /**
  * How many students one pass may write to.
@@ -158,13 +159,17 @@ const emptyPlan = (passNumber, generatedAt, users, reason) => ({
 /**
  * Everything one pass would do, as data, with nothing done.
  *
+ * `optOuts` is the whole NudgeOptOut table. It is optional and additive: a
+ * caller that leaves it out gets exactly the plan this function made before
+ * opting out existed.
+ *
  * @param {{users: object[], rowsByUser: object, history?: object[]|object,
- *   now: any, passNumber?: number, limit?: number}} input
+ *   now: any, passNumber?: number, limit?: number, optOuts?: object[]}} input
  * @returns {object} PassPlan
  */
 export function planPass(input = {}) {
   const {
-    users, rowsByUser = {}, history, now, passNumber, limit,
+    users, rowsByUser = {}, history, now, passNumber, limit, optOuts,
   } = input || {};
 
   const people = rows(users);
@@ -209,6 +214,15 @@ export function planPass(input = {}) {
       continue;
     }
 
+    // Before the pulse is even read. Working out what to ask somebody who has
+    // told us to stop is wasted, and the only thing that could come of it is a
+    // bug that sends it.
+    const optedOut = isOptedOut(optOuts, userId);
+    if (optedOut) {
+      skipped.push({ userId, reason: 'the student turned these emails off' });
+      continue;
+    }
+
     const pulse = readPulse({
       now,
       user,
@@ -223,7 +237,9 @@ export function planPass(input = {}) {
       events: bucket.events,
     });
 
-    const reason = shouldSkipPass({ pulse, history: seen, now, user, userId });
+    const reason = shouldSkipPass({
+      pulse, history: seen, now, user, userId, optedOut,
+    });
     if (reason) {
       skipped.push({ userId, reason });
       continue;

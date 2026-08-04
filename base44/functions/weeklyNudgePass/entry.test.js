@@ -506,6 +506,115 @@ describe('all mode', () => {
   });
 });
 
+describe('a student who turned these emails off', () => {
+  const live = { dryRun: false, confirm: 'SEND-FOR-REAL' };
+
+  /** The row the settings page and the answer page both write. */
+  const optOut = (userId) => ({
+    id: `opt-${userId}`,
+    user_id: userId,
+    created_by_id: userId,
+    opted_out_at: at(-2),
+    source: 'settings',
+    deletion_status: 'active',
+  });
+
+  it('gets no email and no row on a fully confirmed live run', () => {
+    // u000 is the one address this function is allowed to write to, so if the
+    // opt out did not hold, this is the student it would reach.
+    const entities = fixture(6);
+    entities.NudgeOptOut = [optOut('u000')];
+    return call(live, { entities }).then(({ json, store }) => {
+      expect(json.dry_run).toBe(false);
+      expect(store.sent).toEqual([]);
+      expect(store.created).toEqual([]);
+      const line = json.students.find((l) => l.userId === 'u000');
+      expect(line.decision).toBe('skipped');
+      expect(line.reason).toBe('the student turned these emails off');
+    });
+  });
+
+  it('gets nothing in all mode either, with every confirmation given', async () => {
+    const entities = fixture(4);
+    entities.NudgeOptOut = [optOut('u001'), optOut('u003')];
+    const { json, store } = await call(
+      { dryRun: false, confirm: 'SEND-TO-ALL-STUDENTS' },
+      { sendMode: 'all', entities },
+    );
+    expect(store.sent.map((m) => m.to).sort()).toEqual([
+      'drew.lynch1@student.fairfield.edu', 'u002@student.fairfield.edu',
+    ]);
+    expect(json.counts.emailed).toBe(2);
+    expect(json.students.filter((l) => l.reason === 'the student turned these emails off')).toHaveLength(2);
+  });
+
+  it('is checked again at the send, not only in the planner', async () => {
+    // The planner will not hand an opted out student to the send loop, so the
+    // only way to reach the second check is to replace the planner. An opt out
+    // is a promise we printed in an email, and a promise that rests on one
+    // caller remembering one argument is not one.
+    const entities = fixture(2);
+    entities.NudgeOptOut = [optOut('u000')];
+    const { json, store } = await call(live, {
+      entities,
+      plan: () => ({
+        passNumber: 1,
+        generatedAt: new Date().toISOString(),
+        toExpire: [],
+        toCreate: [],
+        toEmail: [{
+          userId: 'u000',
+          email: ALLOWED,
+          ask: { user_id: 'u000', ask_title: 'x', ask_body: 'y', size: 'large', action_kind: 'generate_guide' },
+        }],
+        skipped: [],
+        silent: [],
+        counts: { users: 2, asked: 1, skipped: 0, silent: 0, expired: 0 },
+      }),
+    });
+    expect(store.sent).toEqual([]);
+    expect(store.created).toEqual([]);
+    expect(json.counts.refused_opted_out).toBe(1);
+    expect(json.students.find((l) => l.userId === 'u000').delivery).toBe('opted_out');
+  });
+
+  it('carries on writing to everybody who did not opt out', async () => {
+    const entities = fixture(6);
+    entities.NudgeOptOut = [optOut('u004')];
+    const { json, store } = await call(live, { entities });
+    expect(store.sent).toHaveLength(1);
+    expect(store.sent[0].to).toBe(ALLOWED);
+    expect(json.counts.asked).toBe(5);
+  });
+
+  it('ignores an opt out that was turned back off again', async () => {
+    const entities = fixture(2);
+    entities.NudgeOptOut = [{ ...optOut('u000'), deletion_status: 'deleted', deleted_at: at(-1) }];
+    const { store } = await call(live, { entities });
+    expect(store.sent).toHaveLength(1);
+    expect(store.sent[0].to).toBe(ALLOWED);
+  });
+
+  it('ignores a row one student wrote about another', async () => {
+    const entities = fixture(2);
+    entities.NudgeOptOut = [{ ...optOut('u000'), created_by_id: 'u001' }];
+    const { store } = await call(live, { entities });
+    expect(store.sent).toHaveLength(1);
+  });
+
+  it('refuses to send at all when the opt out table would not load', async () => {
+    // A failed read of this table looks exactly like nobody having opted out,
+    // which is the one misreading that emails somebody who told us to stop.
+    const { json, store } = await call(live, {
+      entities: fixture(4), failReads: ['NudgeOptOut'],
+    });
+    expect(json.failed_reads).toEqual(['NudgeOptOut']);
+    expect(json.read_complete).toBe(false);
+    expect(store.sent).toEqual([]);
+    expect(store.created).toEqual([]);
+  });
+});
+
 describe('off mode', () => {
   it('writes and sends nothing even on a fully confirmed live request', async () => {
     const { json, store } = await call(
