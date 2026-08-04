@@ -69,6 +69,8 @@ describe('recommendCampusEvents', () => {
       recommendations: [
         {
           event_id: '1',
+          connection_evidence: 'alumni analysts on the first two years at a desk',
+          connection: 'direct',
           fit_reason: 'Three of the panelists do the job you are testing.',
           what_to_do: ['Arrive early', 'Ask the organiser who to meet'],
           questions_to_ask: ['What does your week actually look like?'],
@@ -83,6 +85,8 @@ describe('recommendCampusEvents', () => {
       {
         ...event,
         guidance: {
+          connection: 'direct',
+          connection_evidence: 'alumni analysts on the first two years at a desk',
           fit_reason: 'Three of the panelists do the job you are testing.',
           what_to_do: ['Arrive early', 'Ask the organiser who to meet'],
           questions_to_ask: ['What does your week actually look like?'],
@@ -106,6 +110,7 @@ describe('recommendCampusEvents', () => {
           room: '101',
           url: 'https://example.com/not-real',
           has_register: false,
+          connection: 'direct',
           fit_reason: 'Good fit.',
         },
       ],
@@ -124,10 +129,10 @@ describe('recommendCampusEvents', () => {
   it('drops an event_id that was never sent to the model', async () => {
     base44.integrations.Core.InvokeLLM.mockResolvedValue({
       recommendations: [
-        { event_id: '1', fit_reason: 'Real.' },
-        { event_id: '999', fit_reason: 'Invented out of thin air.' },
-        { event_id: '', fit_reason: 'No id at all.' },
-        { fit_reason: 'No id key at all.' },
+        { event_id: '1', connection: 'direct', fit_reason: 'Real.' },
+        { event_id: '999', connection: 'direct', fit_reason: 'Invented out of thin air.' },
+        { event_id: '', connection: 'direct', fit_reason: 'No id at all.' },
+        { connection: 'direct', fit_reason: 'No id key at all.' },
         null,
       ],
     });
@@ -140,8 +145,8 @@ describe('recommendCampusEvents', () => {
   it('collapses a duplicated event_id to one pick', async () => {
     base44.integrations.Core.InvokeLLM.mockResolvedValue({
       recommendations: [
-        { event_id: '1', fit_reason: 'First.' },
-        { event_id: '1', fit_reason: 'Same event again.' },
+        { event_id: '1', connection: 'direct', fit_reason: 'First.' },
+        { event_id: '1', connection: 'direct', fit_reason: 'Same event again.' },
       ],
     });
 
@@ -153,7 +158,7 @@ describe('recommendCampusEvents', () => {
 
   it('matches ids across types, so a numeric id still joins', async () => {
     base44.integrations.Core.InvokeLLM.mockResolvedValue({
-      recommendations: [{ event_id: 7, fit_reason: 'Real.' }],
+      recommendations: [{ event_id: 7, connection: 'direct', fit_reason: 'Real.' }],
     });
 
     const picks = await recommendCampusEvents([calendarEvent({ id: 7 })], PROFILE);
@@ -161,10 +166,128 @@ describe('recommendCampusEvents', () => {
     expect(picks).toHaveLength(1);
   });
 
+  /*
+    The relevance floor.
+
+    A student testing investment banking was led with a talk on wartime
+    diplomacy, under a heading saying it was worth their time, with a sentence
+    underneath explaining why. Nothing was checking relevance: the model was
+    asked for the best of a campus calendar and returned the best of a campus
+    calendar, and the prompt required a reason, so it wrote one. The label is
+    the check, and only two of its three values are a recommendation.
+  */
+  describe('the relevance floor', () => {
+    it('drops an event the model itself called general', async () => {
+      const events = [calendarEvent({ id: '1' }), calendarEvent({ id: '2', title: 'Open VISIONS Forum' })];
+      base44.integrations.Core.InvokeLLM.mockResolvedValue({
+        recommendations: [
+          { event_id: '2', connection: 'general', fit_reason: 'An important speaker you cannot hear anywhere else.' },
+          { event_id: '1', connection: 'direct', fit_reason: 'Analysts who do the job will be there.' },
+        ],
+      });
+
+      const picks = await recommendCampusEvents(events, PROFILE);
+
+      expect(picks.map(p => p.id)).toEqual(['1']);
+    });
+
+    // Unlabelled is not vetted. Passing it through is the old behaviour, and
+    // the old behaviour is the bug.
+    it('drops an event with no readable label', async () => {
+      const events = ['1', '2', '3', '4'].map(id => calendarEvent({ id }));
+      base44.integrations.Core.InvokeLLM.mockResolvedValue({
+        recommendations: [
+          { event_id: '1', fit_reason: 'No label at all.' },
+          { event_id: '2', connection: '', fit_reason: 'Empty label.' },
+          { event_id: '3', connection: ['direct'], fit_reason: 'Not even a string.' },
+          { event_id: '4', connection: 'adjacent', fit_reason: 'Builds a skill they asked for.' },
+        ],
+      });
+
+      const picks = await recommendCampusEvents(events, PROFILE);
+
+      expect(picks.map(p => p.id)).toEqual(['4']);
+    });
+
+    it('reads the label whatever case and spacing it arrives in', async () => {
+      base44.integrations.Core.InvokeLLM.mockResolvedValue({
+        recommendations: [{ event_id: '1', connection: ' Direct ', fit_reason: 'Fits.' }],
+      });
+
+      const picks = await recommendCampusEvents([calendarEvent()], PROFILE);
+
+      expect(picks.map(p => p.guidance.connection)).toEqual(['direct']);
+    });
+
+    /*
+      Every surface takes the first pick it can use, so this ordering IS the
+      recommendation. The model's own order is not reliably strength of fit.
+    */
+    it('leads with a direct fit over an adjacent one', async () => {
+      const events = ['1', '2', '3'].map(id => calendarEvent({ id }));
+      base44.integrations.Core.InvokeLLM.mockResolvedValue({
+        recommendations: [
+          { event_id: '1', connection: 'adjacent', fit_reason: 'Adjacent, and listed first.' },
+          { event_id: '2', connection: 'direct', fit_reason: 'Direct.' },
+          { event_id: '3', connection: 'adjacent', fit_reason: 'Adjacent, listed last.' },
+        ],
+      });
+
+      const picks = await recommendCampusEvents(events, PROFILE);
+
+      // Direct first, then the two adjacent ones in the order they arrived.
+      expect(picks.map(p => p.id)).toEqual(['2', '1', '3']);
+    });
+
+    // An honest empty answer. This is the outcome the floor exists to make
+    // possible, and it is worth remembering for as long as any other verdict.
+    it('recommends nothing when everything on the calendar is general', async () => {
+      base44.integrations.Core.InvokeLLM.mockResolvedValue({
+        recommendations: [
+          { event_id: '1', connection: 'general', fit_reason: 'Interesting for anyone.' },
+        ],
+      });
+
+      await expect(recommendCampusEvents([calendarEvent()], PROFILE)).resolves.toEqual([]);
+
+      await recommendCampusEvents([calendarEvent()], PROFILE);
+      expect(base44.integrations.Core.InvokeLLM).toHaveBeenCalledTimes(1);
+    });
+
+    /*
+      The one empty answer that is NOT a verdict.
+
+      A model that skipped the label entirely has not judged anything, and
+      caching that would leave this student with no recommendations for half an
+      hour over one bad generation. It has to be asked again.
+    */
+    it('asks again when the model ignored the label entirely', async () => {
+      base44.integrations.Core.InvokeLLM.mockResolvedValue({
+        recommendations: [{ event_id: '1', fit_reason: 'No label anywhere in the response.' }],
+      });
+
+      await expect(recommendCampusEvents([calendarEvent()], PROFILE)).resolves.toEqual([]);
+
+      await recommendCampusEvents([calendarEvent()], PROFILE);
+      expect(base44.integrations.Core.InvokeLLM).toHaveBeenCalledTimes(2);
+    });
+
+    // A model that judged everything and found nothing sends an empty list. It
+    // has not ignored anything, so this must stay a verdict.
+    it('treats an empty list as a verdict, not a skipped label', async () => {
+      base44.integrations.Core.InvokeLLM.mockResolvedValue({ recommendations: [] });
+
+      await expect(recommendCampusEvents([calendarEvent()], PROFILE)).resolves.toEqual([]);
+
+      await recommendCampusEvents([calendarEvent()], PROFILE);
+      expect(base44.integrations.Core.InvokeLLM).toHaveBeenCalledTimes(1);
+    });
+  });
+
   it('returns at most three', async () => {
     const events = ['1', '2', '3', '4', '5'].map(id => calendarEvent({ id }));
     base44.integrations.Core.InvokeLLM.mockResolvedValue({
-      recommendations: events.map(e => ({ event_id: e.id, fit_reason: 'Fits.' })),
+      recommendations: events.map(e => ({ event_id: e.id, connection: 'direct', fit_reason: 'Fits.' })),
     });
 
     const picks = await recommendCampusEvents(events, PROFILE);
@@ -174,12 +297,14 @@ describe('recommendCampusEvents', () => {
 
   it('defaults missing guidance sub-fields instead of leaving them undefined', async () => {
     base44.integrations.Core.InvokeLLM.mockResolvedValue({
-      recommendations: [{ event_id: '1' }],
+      recommendations: [{ event_id: '1', connection: 'direct' }],
     });
 
     const [pick] = await recommendCampusEvents([calendarEvent()], PROFILE);
 
     expect(pick.guidance).toEqual({
+      connection: 'direct',
+      connection_evidence: '',
       fit_reason: '',
       what_to_do: [],
       questions_to_ask: [],
@@ -189,7 +314,7 @@ describe('recommendCampusEvents', () => {
 
   it('drops empty strings out of the guidance lists', async () => {
     base44.integrations.Core.InvokeLLM.mockResolvedValue({
-      recommendations: [{ event_id: '1', what_to_do: ['Arrive early', '', null], questions_to_ask: [''] }],
+      recommendations: [{ event_id: '1', connection: 'direct', what_to_do: ['Arrive early', '', null], questions_to_ask: [''] }],
     });
 
     const [pick] = await recommendCampusEvents([calendarEvent()], PROFILE);
@@ -229,6 +354,7 @@ describe('recommendCampusEvents', () => {
     base44.integrations.Core.InvokeLLM.mockResolvedValue({
       recommendations: [{
         event_id: '1',
+        connection: 'direct',
         fit_reason: 'Alumni who do the job.',
         what_to_do: 'Get there ten minutes early.',
         questions_to_ask: { first: 'What does your Tuesday look like?' },
@@ -411,7 +537,7 @@ describe('not asking twice', () => {
   it('ranks the same events for the same student once', async () => {
     const events = [calendarEvent()];
     base44.integrations.Core.InvokeLLM.mockResolvedValue({
-      recommendations: [{ event_id: '1', fit_reason: 'Alumni who do the job.' }],
+      recommendations: [{ event_id: '1', connection: 'direct', fit_reason: 'Alumni who do the job.' }],
     });
 
     await recommendCampusEvents(events, PROFILE);
@@ -457,7 +583,7 @@ describe('not asking twice', () => {
     await expect(recommendCampusEvents(events, PROFILE)).resolves.toEqual([]);
 
     base44.integrations.Core.InvokeLLM.mockResolvedValue({
-      recommendations: [{ event_id: '1', fit_reason: 'Alumni who do the job.' }],
+      recommendations: [{ event_id: '1', connection: 'direct', fit_reason: 'Alumni who do the job.' }],
     });
     const picks = await recommendCampusEvents(events, PROFILE);
 
@@ -691,7 +817,7 @@ describe('recommendCampusEvents: model-dependent response shape', () => {
 
   it('reads the nested shape a Claude model returns', async () => {
     base44.integrations.Core.InvokeLLM.mockResolvedValue({
-      response: { recommendations: [{ event_id: '1', fit_reason: 'yes' }] },
+      response: { recommendations: [{ event_id: '1', connection: 'direct', fit_reason: 'yes' }] },
     });
     const picks = await recommendCampusEvents(events, {});
     expect(picks).toHaveLength(1);
@@ -700,7 +826,7 @@ describe('recommendCampusEvents: model-dependent response shape', () => {
 
   it('still reads the bare shape the default and Gemini return', async () => {
     base44.integrations.Core.InvokeLLM.mockResolvedValue({
-      recommendations: [{ event_id: '1', fit_reason: 'yes' }],
+      recommendations: [{ event_id: '1', connection: 'direct', fit_reason: 'yes' }],
     });
     expect(await recommendCampusEvents(events, {})).toHaveLength(1);
   });
@@ -714,7 +840,7 @@ describe('recommendCampusEvents: model-dependent response shape', () => {
 
   it('does not mistake a non-object response field for the payload', async () => {
     base44.integrations.Core.InvokeLLM.mockResolvedValue({
-      recommendations: [{ event_id: '1', fit_reason: 'yes' }],
+      recommendations: [{ event_id: '1', connection: 'direct', fit_reason: 'yes' }],
       response: 'some string',
     });
     expect(await recommendCampusEvents(events, {})).toHaveLength(1);

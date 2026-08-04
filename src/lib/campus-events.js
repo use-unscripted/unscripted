@@ -13,6 +13,27 @@
  * The model never authors an event. Recommendations are joined back to the feed
  * by id and anything it invents is dropped on the floor, so the worst a bad
  * model response can do is recommend nothing.
+ *
+ * ## Nothing was checking that a recommendation was relevant
+ *
+ * The ranking asked the model to pick what was worth a student's time and let it
+ * return zero, and it essentially never did. A campus calendar is mostly staff
+ * trainings, arts lectures and info sessions; asked for the best of that set, a
+ * model picks the best of that set. Then the prompt required a sentence saying
+ * why, so it wrote one. A student testing investment banking was led with a talk
+ * on wartime diplomacy under a heading that said "worth your time", with a
+ * paragraph explaining why it secretly was.
+ *
+ * So relevance is now a label the model has to commit to per event, against
+ * definitions written down below, and only two of the three get through. The
+ * floor is enforced here rather than asked for in prose, because "return fewer,
+ * even zero" was already in the prompt and is exactly the instruction a model
+ * talks itself out of one event at a time.
+ *
+ * An empty ranking is a normal outcome of this, not a failure. Every surface
+ * already falls back to plain chronological events with no reason attached, and
+ * a student reading "nothing this month connects to what you are testing" is
+ * being told something true.
  */
 
 import { base44 } from '@/api/base44Client';
@@ -117,6 +138,23 @@ function forModel(event) {
   };
 }
 
+/**
+ * The labels that clear the floor, best first.
+ *
+ * Anything else the model writes here, including "general" and including the
+ * field being missing, is not a recommendation and never reaches a student.
+ */
+const CONNECTION_RANK = { direct: 0, adjacent: 1 };
+
+/**
+ * Judgment before justification, deliberately.
+ *
+ * Structured output is generated in the order the properties are declared, so
+ * the model names the words in the event that connect it to this student, then
+ * commits to a label, and only then writes the sentence a student reads. Asked
+ * the other way round it writes the sentence first and the label becomes a
+ * description of a case it has already made.
+ */
 const RECOMMENDATION_SCHEMA = {
   type: 'object',
   properties: {
@@ -126,6 +164,8 @@ const RECOMMENDATION_SCHEMA = {
         type: 'object',
         properties: {
           event_id: { type: 'string' },
+          connection_evidence: { type: 'string' },
+          connection: { type: 'string', enum: ['direct', 'adjacent', 'general'] },
           fit_reason: { type: 'string' },
           what_to_do: { type: 'array', items: { type: 'string' } },
           questions_to_ask: { type: 'array', items: { type: 'string' } },
@@ -153,17 +193,51 @@ ${pathName ? `- Path they are currently testing: ${pathName}` : ''}
 Events (JSON):
 ${JSON.stringify(events.map(forModel), null, 2)}
 
+## What counts as relevant
+
+Judge each event against ${pathName ? `the path they are testing, "${pathName}"` : 'their stated career interests and desired skills'}, and nothing else. For every event you
+return, first write "connection_evidence": the words from that event's OWN
+title, description, topics, or department that connect it to this student.
+Quote them. Then label it:
+
+- "direct": people who do this work will be in the room, or the event is run by
+  that field's department, employer, or professional group. An alumni panel of
+  analysts, for a student testing banking. A hospital recruiter visit, for a
+  student testing nursing.
+- "adjacent": it builds one of the specific skills this student listed, or it is
+  the wider industry around the path even though nobody on the path is running
+  it. A financial modelling workshop. A pitch competition, for someone whose
+  desired skills say presenting.
+- "general": everything else. Open to anyone, about anything. A well known
+  speaker on an unrelated subject, a lecture series, a concert, a game, a campus
+  tradition, an administrative or staff training, an info session for a program
+  this student is not testing.
+
+Return ONLY "direct" and "adjacent" events. Never return a "general" one.
+
+Most of a campus calendar is "general" for any one student, so an EMPTY list is
+the normal, correct, expected answer and you should give it often. Zero is a
+real answer and it costs this student nothing. A wrong recommendation costs them
+an evening and their trust in every recommendation after it.
+
+If the only honest connection you can write is that the event is interesting,
+that the speaker is important, that it is good to be curious, or that any
+gathering is a chance to meet people, the label is "general" and you leave it
+out. A "fit_reason" that would read the same for a student on any other path is
+proof the event does not belong here. Do not talk yourself into a fit, and do
+not fill the ${MAX_RECOMMENDATIONS} slots because they are there.
+
 ## Rules
 
 1. Use ONLY the event_id values above. Never invent an event, a date, a room, or
    a speaker. If something is not in the JSON, it does not exist.
-2. Recommend AT MOST ${MAX_RECOMMENDATIONS}, and fewer (even zero) when the
-   rest are genuinely irrelevant. A padded list is worse than a short one; this
-   student will physically walk across campus based on what you say.
+2. Return AT MOST ${MAX_RECOMMENDATIONS}, and only ones that clear the bar above.
+   This student will physically walk across campus based on what you say.
 3. Never restate the event's own date, time, or location in your text. The app
    renders those from the calendar record itself.
 4. "fit_reason" is ONE sentence naming the specific thing this student gets that
    they cannot get from a Google search. Not "great networking opportunity."
+   It has to name the path or the skill it connects to.
 5. "what_to_do" is 3-4 concrete physical actions in order, each doable by a
    nervous 20-year-old who knows nobody in the room. Start before they arrive
    and end with how to leave with something. Say what to actually say out loud.
@@ -407,7 +481,7 @@ async function rankCampusEvents(events, profile, pathName) {
 
   const byId = new Map(events.map(e => [String(e.id), e]));
   const seen = new Set();
-  const picks = [];
+  const kept = [];
 
   // Anything other than a list is as much a bad response as a hallucinated id.
   // The picker awaits this inside an effect with no catch, so throwing here
@@ -416,6 +490,11 @@ async function rankCampusEvents(events, profile, pathName) {
   const malformed = !Array.isArray(payload?.recommendations);
   const recommendations = malformed ? [] : payload.recommendations;
 
+  // How many events came back carrying a label we recognise, kept or dropped. A
+  // response where NONE do is a model that ignored the floor, not one that
+  // applied it strictly, and those two must not both read as "nothing fits".
+  let labelled = 0;
+
   for (const rec of recommendations) {
     const id = String(rec?.event_id || '');
     const event = byId.get(id);
@@ -423,32 +502,70 @@ async function rankCampusEvents(events, profile, pathName) {
     if (!event || seen.has(id)) continue;
     seen.add(id);
 
-    picks.push({
-      ...event,
-      guidance: {
-        fit_reason: text(rec.fit_reason),
-        what_to_do: textList(rec.what_to_do),
-        questions_to_ask: textList(rec.questions_to_ask),
-        proof_to_capture: text(rec.proof_to_capture),
+    const connection = text(rec?.connection).trim().toLowerCase();
+    const rank = CONNECTION_RANK[connection];
+    if (rank !== undefined || connection === 'general') labelled += 1;
+
+    // The floor. "general" is the model's own word for "a fine event for
+    // anybody", which is the one thing this section must never lead with. A
+    // missing or unreadable label does not pass either: unlabelled is not
+    // vetted, and treating it as vetted is precisely the old behaviour.
+    if (rank === undefined) continue;
+
+    kept.push({
+      rank,
+      pick: {
+        ...event,
+        guidance: {
+          connection,
+          connection_evidence: text(rec.connection_evidence),
+          fit_reason: text(rec.fit_reason),
+          what_to_do: textList(rec.what_to_do),
+          questions_to_ask: textList(rec.questions_to_ask),
+          proof_to_capture: text(rec.proof_to_capture),
+        },
       },
     });
-
-    if (picks.length >= MAX_RECOMMENDATIONS) break;
   }
 
+  /*
+    A direct fit outranks an adjacent one, whatever order they arrived in.
+
+    Every surface takes the first pick it can use: the dashboard leads with a
+    single event, and the picker anchors a whole guide to the one a student taps
+    first. So this ordering is the recommendation, and the order the model
+    happened to write them in is not reliably strength of fit. Ties keep that
+    order, which is its own ranking within a tier.
+  */
+  kept.sort((a, b) => a.rank - b.rank);
+  const picks = kept.slice(0, MAX_RECOMMENDATIONS).map(k => k.pick);
+
+  /*
+    Two outcomes that both arrive as an empty list and mean opposite things.
+
+      "none of these fit" — labels came back and they were all general. A real
+        verdict, and the answer this floor exists to make possible. Worth
+        remembering for the half hour the cache holds it.
+      the model skipped the labels — nothing carrying the field at all. That is
+        a response we could not read, the same as a malformed one, and caching
+        it would leave this student unranked for half an hour over one bad
+        generation.
+  */
+  const ignoredTheFloor = recommendations.length > 0 && labelled === 0;
+
   // A response we could not read is a failure, not a verdict of "nothing fits".
-  if (malformed) {
+  if (malformed || ignoredTheFloor) {
     // A malformed ranking is indistinguishable from "your campus has nothing on"
     // from the student's side, which is the outage this file already shipped
     // once. It needs a row precisely because nobody would report it.
     reportAiFailure('campus_event_ranking', {
       stage: 'validate',
-      codes: ['recommendations_not_array'],
+      codes: [malformed ? 'recommendations_not_array' : 'connection_label_missing'],
       model: 'claude_sonnet_4_6',
     });
   }
 
-  return { picks, failed: malformed };
+  return { picks, failed: malformed || ignoredTheFloor };
 }
 
 // ── Display helpers ─────────────────────────────────────────────────────────
