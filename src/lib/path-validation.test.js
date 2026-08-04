@@ -1,5 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import { validatePathSet, normalizeMissionStep, READINESS_MAX } from './path-validation';
+import {
+  validatePathSet, normalizeMissionStep, READINESS_MAX,
+  pathRecSchema, experimentSchema, missionStepSchema,
+} from './path-validation';
 
 /** A recommendation that passes everything, so each test can break one thing. */
 function rec(overrides = {}) {
@@ -373,5 +376,52 @@ describe('normalizeMissionStep', () => {
 
   it('falls back to the title when a description is missing', () => {
     expect(normalizeMissionStep({ title: 'Send the email' }, 0).description).toBe('Send the email');
+  });
+});
+
+describe('the request schema and the validator cannot drift apart', () => {
+  // The regression this catches: someone adds a field to the schema the model
+  // is asked for, forgets the validator, and the field is silently dropped on
+  // every save with a green test suite.
+  const validatedRecKeys = () => {
+    const v = validatePathSet(payload());
+    return Object.keys(v.data.path_recommendations[0]).sort();
+  };
+
+  const validatedExpKeys = () => {
+    const v = validatePathSet(payload());
+    return Object.keys(v.data.experiments[0]).sort();
+  };
+
+  it('every field asked for in a recommendation survives validation', () => {
+    expect(validatedRecKeys()).toEqual(Object.keys(pathRecSchema.properties).sort());
+  });
+
+  it('every field asked for in an experiment survives validation', () => {
+    expect(validatedExpKeys()).toEqual(Object.keys(experimentSchema.properties).sort());
+  });
+
+  it('every field asked for in a mission step survives normalisation', () => {
+    const step = normalizeMissionStep({ title: 'X' }, 0);
+    expect(Object.keys(step).sort()).toEqual(Object.keys(missionStepSchema.properties).sort());
+  });
+
+  it('bounds the readiness score in the schema, not only in the validator', () => {
+    expect(pathRecSchema.properties.readiness_score.minimum).toBe(0);
+    expect(pathRecSchema.properties.readiness_score.maximum).toBe(READINESS_MAX);
+  });
+});
+
+describe('validatePathSet — experiment hours are bounded', () => {
+  it('drops an implausible hour count rather than saving it', () => {
+    const v = validatePathSet(payload({ experiments: [exp({ estimated_hours: 400 })] }));
+    expect(v.ok).toBe(true);
+    expect(v.data.experiments[0]).not.toHaveProperty('estimated_hours');
+    expect(v.warnings.join(' ')).toMatch(/estimated_hours/);
+  });
+
+  it('keeps a plausible hour count', () => {
+    const v = validatePathSet(payload({ experiments: [exp({ estimated_hours: 10 })] }));
+    expect(v.data.experiments[0].estimated_hours).toBe(10);
   });
 });
