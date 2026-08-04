@@ -49,6 +49,13 @@ export const ACCEPTANCE_WINDOW_DAYS = 7;
  */
 export const RETIRE_AFTER_ASKS = 6;
 
+/**
+ * How many asks a student can be sent, with not one answer of any kind ever,
+ * before we stop writing to them for good. A student who declines gets three
+ * emails, so a student who says nothing cannot be allowed to get forty.
+ */
+export const SILENCE_LIMIT_ASKS = 7;
+
 const PENDING_EXPIRY_MS = PENDING_EXPIRY_DAYS * DAY;
 const ACCEPTANCE_WINDOW_MS = ACCEPTANCE_WINDOW_DAYS * DAY;
 
@@ -77,12 +84,21 @@ function ageMs(value, nowMs) {
   return nowMs - t;
 }
 
-/** Oldest first. Rows that cannot be dated keep their original order. */
+/**
+ * Oldest first, with a row we cannot date treated as the newest thing here.
+ *
+ * The comment used to say these rows keep their original order and the code
+ * sorted them to the front, which is the one reading that is certainly wrong:
+ * the last row in the sort is the one the rung decision is made against, so an
+ * undateable row sorted to the front hides itself and hands the decision to an
+ * older row. Rows are written one per pass and appended, so an undateable row
+ * is the most recent one we know of. Sorting it last says that.
+ */
 function byTimeAsc(a, b) {
   const ta = entityTime(askedAt(a));
   const tb = entityTime(askedAt(b));
-  const ka = Number.isFinite(ta) ? ta : -Infinity;
-  const kb = Number.isFinite(tb) ? tb : -Infinity;
+  const ka = Number.isFinite(ta) ? ta : Infinity;
+  const kb = Number.isFinite(tb) ? tb : Infinity;
   if (ka === kb) return 0;
   return ka < kb ? -1 : 1;
 }
@@ -112,11 +128,19 @@ function rungIndex(row, ladder) {
  * Did this row tell us the ask was too big.
  *
  * A decline says so. An expiry says so, because not answering and saying no are
- * the same signal here. And an acceptance that produced nothing inside the
- * window says so loudest of all.
+ * the same signal here. A pending row that has outlived its window says the
+ * same thing and is read that way here rather than waiting for something else
+ * to write `expired` on it first: an ignored ask has to cost a rung on its own,
+ * or a student who answers nothing gets the same email six times. Marking the
+ * row is then a tidy-up, not the thing the ladder depends on. And an acceptance
+ * that produced nothing inside the window says so loudest of all.
  */
 function dropsARung(row, nowMs) {
   if (row.status === 'declined' || row.status === 'expired') return true;
+  if (row.status === 'pending') {
+    const age = ageMs(askedAt(row), nowMs);
+    return age !== null && age > PENDING_EXPIRY_MS;
+  }
   if (row.status !== 'accepted') return false;
   if (str(row.evidence_seen_at)) return false;
   const age = ageMs(answeredAt(row), nowMs);
@@ -158,9 +182,11 @@ function blocksNewAsk(row, nowMs) {
  * @param {string} stallKind the `kind` from a readPulse stall
  * @param {object[]} history prior StudentNudge rows, any kinds, any shape
  * @param {Date|string|number} [now]
+ * @param {string} [subjectId] the row the next ask is about. Left out, the
+ *   answer covers the kind as a whole, which is what `isRetired` wants.
  * @returns {number|null}
  */
-export function rungFor(stallKind, history, now) {
+export function rungFor(stallKind, history, now, subjectId) {
   const ladder = ladderFor(stallKind);
   if (!ladder.length) return null;
   const nowMs = entityTime(now);
@@ -177,15 +203,30 @@ export function rungFor(stallKind, history, now) {
     if (row.status === 'completed' || str(row.evidence_seen_at)) lastWin = i;
   });
   const open = mine.slice(lastWin + 1);
-  if (open.length === 0) return 0;
+  // The cap is on the kind as a whole and is checked before the subject is,
+  // because a student with 31 guideless experiments would otherwise hear about
+  // nothing else for the rest of the year: a fresh subject starts a fresh
+  // ladder, and fresh ladders never run out.
   if (open.length >= RETIRE_AFTER_ASKS) return null;
+
+  // Which rung, though, is per subject. 72 of the 73 students with a guideless
+  // experiment have two or more of them, so "you have ignored this three times,
+  // shall we rule it out" lands on an experiment nobody was ever asked about:
+  // they act on the first one, it drops out of the pulse, and the next row
+  // inherits three refusals it had nothing to do with. A caller that does not
+  // name a subject still gets the whole-kind read.
+  const scoped = subjectId === undefined
+    ? open
+    : open.filter((row) => str(row.subject_id) === str(subjectId));
+
+  if (scoped.length === 0) return 0;
 
   // The highest rung reached, not the last one recorded, so a stale or repaired
   // row can never walk a student back up to an ask they already refused.
   let highest = 0;
-  for (const row of open) highest = Math.max(highest, rungIndex(row, ladder));
+  for (const row of scoped) highest = Math.max(highest, rungIndex(row, ladder));
 
-  const latest = open[open.length - 1];
+  const latest = scoped[scoped.length - 1];
   const next = dropsARung(latest, nowMs) ? highest + 1 : highest;
   if (next >= ladder.length) return null;
   return next;
@@ -243,6 +284,20 @@ function accountLooksGone(user) {
  * raised with them. One kind refused at the bottom is a verdict on that kind.
  * Every kind refused at the bottom is a verdict on us.
  */
+/** The statuses that only exist because the student did something with an ask. */
+const ANSWERED_STATUSES = ['accepted', 'declined', 'completed'];
+
+/**
+ * Has this student ever answered anything, in any way. A reply, a yes, a no, or
+ * evidence the pulse tied back to an ask all count. Silence is the only thing
+ * that does not.
+ */
+function everAnswered(history) {
+  return history.some((row) => ANSWERED_STATUSES.includes(row.status)
+    || !!str(row.reply_text)
+    || !!str(row.evidence_seen_at));
+}
+
 function toldUsToStop(history) {
   const kinds = new Set();
   const silenced = new Set();
@@ -281,10 +336,20 @@ export function shouldSkipPass(input = {}) {
   if (!pulse || typeof pulse !== 'object') return 'no pulse to read';
   if (!Number.isFinite(nowMs)) return 'no usable clock for this pass';
 
-  const open = rowsAll.find((row) => row.status === 'pending' && blocksNewAsk(row, nowMs));
+  // One open proposal at a time, whatever its status. An accepted ask inside
+  // its week is as open as an unanswered one: they said yes and have not done
+  // it yet, and a second ask on a different kind on top of that is the engine
+  // talking over itself.
+  const open = rowsAll.find((row) => blocksNewAsk(row, nowMs));
   if (open) return 'an ask from an earlier pass is still open';
 
   if (toldUsToStop(rowsAll)) return 'the student has asked us to stop';
+
+  // Nobody home. Everything we sent went unanswered, so stop for good rather
+  // than keep a one sided correspondence going for another eight months.
+  if (rowsAll.length >= SILENCE_LIMIT_ASKS && !everAnswered(rowsAll)) {
+    return 'this student has never answered anything we sent';
+  }
 
   const stalls = Array.isArray(pulse.stalls) ? pulse.stalls : [];
   if (pulse.state === 'working' && stalls.length === 0) return 'the student is working and nothing is stalled';
@@ -327,7 +392,8 @@ export function chooseAsk(input = {}) {
     const mine = rowsAll.filter((row) => row.stall_kind === kind);
     if (mine.some((row) => blocksNewAsk(row, nowMs))) continue;
 
-    const index = rungFor(kind, mine, now);
+    const subjectId = str(stall.subjectId);
+    const index = rungFor(kind, mine, now, subjectId);
     if (index === null) continue;
 
     const filled = fillRung(ladder[index], stall, pulse);
@@ -339,7 +405,7 @@ export function chooseAsk(input = {}) {
       generated_at: new Date(nowMs).toISOString(),
       stall_kind: kind,
       subject_type: subjectType,
-      subject_id: str(stall.subjectId),
+      subject_id: subjectId,
       rung: index,
       rung_key: filled.key,
       size: filled.size,

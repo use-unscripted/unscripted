@@ -306,7 +306,7 @@ export const LADDERS = {
       size: 'one_line',
       action_kind: 'rule_out',
       title: 'Drop {subject} from the list',
-      body: 'If writing to {subject} is not going to happen, drop the contact. Cold '
+      body: 'If writing to {subject} is not going to happen, drop them from your list. Cold '
         + 'outreach is not the only way to test a path and it is a bad fit for plenty of '
         + 'people. Say so and we will suggest a different way in.',
       question: 'Why is writing to {subject} not going to happen?',
@@ -324,13 +324,17 @@ export const LADDERS = {
         + 'practice. Two sentences on top of the original, sent today.',
       target: R.outreach,
     },
+    // Nothing here goes to a human. The rung above already asks for that, and a
+    // second rung that also ends with a message being sent is the same ask in a
+    // shorter jacket, which is what every other ladder here avoids.
     {
       key: 'outreach_no_followup.r1',
       size: 'small',
       action_kind: 'send_outreach',
-      title: 'One minute: forward the original',
-      body: 'One minute. Forward your original note to {subject} with one line on top '
-        + 'saying you are still interested and happy to work around their schedule.',
+      title: 'Two minutes: write it and stop there',
+      body: 'Two minutes. Write the two lines you would send {subject} and save the draft. '
+        + 'Do not send it today. Writing it is the part that takes effort, and you can send '
+        + 'it any day this week.',
       target: R.outreach,
     },
     {
@@ -485,28 +489,31 @@ const str = (v) => (typeof v === 'string' && v.trim() ? v.trim() : '');
 
 /**
  * What to call the thing a stall is about, when the stall does not say.
- * Generic, but written so a sentence built around it still reads.
+ *
+ * Generic, but every one of these has to read in every sentence of every
+ * ladder, which rules out anything that repeats a verb the copy already uses.
+ * "the person you saved" was one of these and it produced "You saved the person
+ * you saved and never sent anything." "the path you picked" produced "You
+ * picked the path you picked." Read the ladders before changing one of these.
  */
 const GENERIC_SUBJECT = {
   experiment: 'your experiment',
   mission: 'that mission',
-  outreach: 'the person you saved',
-  path: 'the path you picked',
+  outreach: 'this contact',
+  path: 'this path',
   account: 'your account',
 };
 
 /**
  * Pulling the subject's name back out of a stall label.
  *
- * A Stall carries `subjectId` and a written `label`, and no name field, so the
- * name has to come from the label. These patterns mirror the sentences
- * student-pulse writes today. If that wording changes these stop matching and
- * the copy falls back to the generic noun above, which is the right failure: a
- * slightly vaguer email, not a broken one.
- *
- * The real fix is for a stall to carry the name. `subjectName` is read first for
- * exactly that reason, so a caller that already has the rows in hand (the
- * weekly pass does) can set it and skip all of this.
+ * This is the fallback, not the path. A stall carries `subjectName`: the raw
+ * title or name student-pulse had in hand when it wrote the label. Reading a
+ * name back out of a finished sentence is guesswork, and it guesses wrong on
+ * exactly the inputs a model writes: an experiment titled Ask "why" five times
+ * came back as "Ask", and a contact saved as Robert "Bob" Chen came back as
+ * "Bob". Titles are free text, so these patterns are kept only for callers
+ * holding stalls built before `subjectName` existed.
  */
 const LABEL_PATTERNS = [
   /[“"]([^“”"]+)[”"]/,
@@ -515,8 +522,12 @@ const LABEL_PATTERNS = [
   /^You wrote to (.+?) and have not heard back/,
 ];
 
-/** Names student-pulse writes when it has no name. Worse than the generic noun. */
-const PLACEHOLDER_NAMES = ['someone', 'a mission', 'an experiment'];
+/**
+ * Names student-pulse writes when it has no name. Worse than the generic noun,
+ * because they read as a real name once they are lifted back out of a sentence:
+ * "Close out a path" is a sentence about nothing.
+ */
+const PLACEHOLDER_NAMES = ['someone', 'a mission', 'an experiment', 'a path'];
 
 function subjectFor(stall) {
   const s = stall && typeof stall === 'object' ? stall : {};

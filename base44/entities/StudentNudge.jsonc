@@ -141,10 +141,16 @@
     "stall_kind",
     "status"
   ],
-  // `read` and `update` key off `user_id`, not `created_by_id`, because a
-  // scheduled backend job writes these rows: `created_by_id` is the service
-  // actor, so a creator-scoped rule would hide every student's nudges from the
+  // `read` and `update` key off the row's own `user_id`, not `created_by_id`,
+  // because the intended writer is a scheduled backend job rather than the
+  // student: a creator-scoped rule would hide every student's nudges from the
   // student they were written for and leave nobody able to accept or decline.
+  //
+  // A property is addressed as `data.<field>`. A bare `"user_id"` matches
+  // nothing, which fails silently and looks exactly like apathy: the student
+  // reads zero of their own nudges and can neither accept nor decline one.
+  // `created_by_id` is a system field and is the one key that stays bare.
+  // NetworkNotification and BlockedUser are the live examples of both forms.
   //
   // Do not "fix" this back to creator scoping. Creator scoping is enforced here
   // even for role admin (measured 2026-08-03: an admin account read 1 of 72
@@ -154,6 +160,11 @@
   // `create` and `delete` stay admin only. A student never authors a nudge, and
   // letting them would let anyone forge a row that claims we asked something we
   // did not.
+  //
+  // State: proposed. No StudentNudge row exists yet and nothing writes one, so
+  // these rules have never been exercised by a student account against the live
+  // API. They match the shape of rules that are live on other entities; that is
+  // not the same as verified. Read one back as a real student before saying so.
   "rls": {
     "create": {
       "user_condition": {
@@ -163,7 +174,7 @@
     "read": {
       "$or": [
         {
-          "user_id": "{{user.id}}"
+          "data.user_id": "{{user.id}}"
         },
         {
           "created_by_id": "{{user.id}}"
@@ -178,7 +189,7 @@
     "update": {
       "$or": [
         {
-          "user_id": "{{user.id}}"
+          "data.user_id": "{{user.id}}"
         },
         {
           "user_condition": {

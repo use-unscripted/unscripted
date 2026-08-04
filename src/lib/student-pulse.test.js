@@ -406,6 +406,46 @@ describe('readPulse: the stall list', () => {
     expect(pulse.stalls.every((s) => s.days >= 0 && Number.isInteger(s.days))).toBe(true);
   });
 
+  // The label is a sentence for a person to read. `subjectName` is the raw
+  // title or name that went into it, kept separately because anything reading a
+  // name back out of a finished sentence gets it wrong on the first title with
+  // a quote in it, and these names go out in email.
+  it('carries the raw subject name beside the label it wrote', () => {
+    const pulse = readPulse({
+      now: LATER, user: user(),
+      paths: [path({ is_primary_focus: true })],
+      experiments: [experiment({ title: 'Ask "why" five times', created_date: days(0) })],
+      guides: [guide({ experiment_id: 'e2', created_date: days(0) })],
+      missions: [mission({ created_date: days(0) })],
+      outreach: [contact({ created_date: days(0) })],
+    });
+    const byKind = Object.fromEntries(pulse.stalls.map((s) => [s.kind, s]));
+
+    expect(byKind.experiment_without_guide.subjectName).toBe('Ask "why" five times');
+    expect(byKind.guide_never_acted_on.subjectName).toBe('How to shadow an analyst');
+    expect(byKind.mission_planned_stale.subjectName).toBe('Email two analysts');
+    expect(byKind.outreach_never_sent.subjectName).toBe('Ada Reyes');
+    // Nothing to name here: the subject is the account itself.
+    expect(byKind.dormant_account.subjectName).toBe('');
+    for (const s of pulse.stalls) expect(typeof s.subjectName, s.kind).toBe('string');
+  });
+
+  it('leaves the subject name empty rather than inventing one, on every kind', () => {
+    const pulse = readPulse({
+      now: LATER, user: user(),
+      paths: [path({ is_primary_focus: true, path_name: '' })],
+      experiments: [experiment({ title: '', created_date: days(0), path_id: 'nothing' })],
+      missions: [mission({ title: '', created_date: days(0) })],
+      outreach: [contact({ name: '', created_date: days(0) })],
+    });
+    for (const s of pulse.stalls) {
+      expect(s.subjectName, s.kind).toBe('');
+      expect(s.label, s.kind).toBeTruthy();
+    }
+    expect(kinds(pulse)).toContain('path_without_experiment');
+    expect(kinds(pulse)).toContain('outreach_never_sent');
+  });
+
   it('writes every stall label in words a student would use', () => {
     const pulse = readPulse({
       now: LATER, user: user(),

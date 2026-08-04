@@ -326,12 +326,18 @@ function findStalls(ctx) {
   // the two path ones used to slip through and fire anyway.
   if (!hasNow) return out;
 
-  const add = (kind, { subjectId = null, subjectType, label, since, days }) => {
+  // `subjectName` is the raw thing the stall is about: an experiment title, a
+  // contact's name, a path name, exactly as the student typed or the model
+  // wrote it. It is carried separately from `label` because anything reading a
+  // name back out of a written sentence gets it wrong the moment the title has
+  // a quote in it, and these names end up in a student's inbox.
+  const add = (kind, { subjectId = null, subjectName = '', subjectType, label, since, days }) => {
     const d = Number.isFinite(days) ? Math.max(0, Math.floor(days)) : 0;
     out.push({
       kind,
       severity: severityFor(kind, d),
       subjectId: subjectId || null,
+      subjectName: text(subjectName),
       subjectType,
       label,
       sinceISO: iso(since),
@@ -349,6 +355,7 @@ function findStalls(ctx) {
     const since = newest === null ? null : new Date(newest).toISOString();
     add('no_path_selected', {
       subjectType: 'path',
+      subjectName: '',
       label: 'You have paths to compare, and you have not picked one to test yet.',
       since,
       days: daysBetween(since, nowMs),
@@ -363,6 +370,7 @@ function findStalls(ctx) {
       const since = chosenPath.started_at || chosenPath.created_date || null;
       add('path_without_experiment', {
         subjectId: chosenPath.id,
+        subjectName: name,
         subjectType: 'path',
         label: name
           ? `You picked ${name} and there is still no experiment under it.`
@@ -387,6 +395,7 @@ function findStalls(ctx) {
     const title = text(e.title);
     add('experiment_without_guide', {
       subjectId: e.id,
+      subjectName: title,
       subjectType: 'experiment',
       label: title
         ? `${quote(title)} has no steps yet, so there is nothing to start on.`
@@ -416,6 +425,7 @@ function findStalls(ctx) {
     const title = text(g.guide_title);
     add('guide_never_acted_on', {
       subjectId: expId || null,
+      subjectName: title,
       subjectType: 'experiment',
       label: title
         ? `You asked for the steps to ${quote(title)} ${plural(days, 'day')} ago and have not run any of them.`
@@ -433,6 +443,7 @@ function findStalls(ctx) {
     const title = text(m.title);
     add('mission_planned_stale', {
       subjectId: m.id,
+      subjectName: title,
       subjectType: 'mission',
       label: title
         ? `${quote(title)} has been on your list for ${plural(days, 'day')} and has not been started.`
@@ -443,12 +454,17 @@ function findStalls(ctx) {
   }
 
   for (const c of liveOutreach) {
-    const name = text(c.name) || 'someone';
+    // The written name is what the label needs, the raw one is what the copy
+    // needs. A contact row with no name at all is common, and "someone" reads
+    // as a name once it is lifted back out of a sentence.
+    const rawName = text(c.name);
+    const name = rawName || 'someone';
     if (!sent(c)) {
       const days = daysBetween(c.created_date, nowMs);
       if (days === null || days <= 5) continue;
       add('outreach_never_sent', {
         subjectId: c.id,
+        subjectName: rawName,
         subjectType: 'outreach',
         label: `You saved ${name} ${plural(days, 'day')} ago and never sent anything.`,
         since: c.created_date,
@@ -463,6 +479,7 @@ function findStalls(ctx) {
     if (!followupDue && (sinceContact === null || sinceContact <= 7)) continue;
     add('outreach_no_followup', {
       subjectId: c.id,
+      subjectName: rawName,
       subjectType: 'outreach',
       label: `You wrote to ${name} and have not heard back. A short nudge is normal here.`,
       since: c.followup_date || c.date_contacted || c.created_date,
@@ -479,6 +496,7 @@ function findStalls(ctx) {
     const title = text(e.title);
     add('experiment_no_proof', {
       subjectId: e.id,
+      subjectName: title,
       subjectType: 'experiment',
       label: title
         ? `${quote(title)} has been open for ${plural(days, 'day')} with nothing logged against it.`
@@ -505,6 +523,7 @@ function findStalls(ctx) {
       const title = text(runningLong.e.title);
       add('reflection_overdue', {
         subjectId: runningLong.e.id,
+        subjectName: title,
         subjectType: 'experiment',
         label: title
           ? `You have not written down what ${quote(title)} is teaching you.`
@@ -523,6 +542,7 @@ function findStalls(ctx) {
     const days = quietTooLong ? daysSinceEvidence : daysSinceSignup;
     add('dormant_account', {
       subjectId: user?.id || null,
+      subjectName: '',
       subjectType: 'account',
       label: neverAny
         ? `You signed up ${plural(num(days), 'day')} ago and nothing has happened since.`
