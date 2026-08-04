@@ -73,15 +73,17 @@ export function assertAllowedRecipient(address) {
  * `renderNudgeEmail` from nudge-email.js, passed in rather than imported so
  * this file has no dependency of its own and can be read in one sitting.
  */
-export async function sendNudgeEmail({ client, render, to, ask, user, appOrigin, now, format = 'text' }) {
+export async function sendNudgeEmail({ client, render, to, ask, user, appOrigin, now, format = 'html' }) {
   assertAllowedRecipient(to);
   const mail = render({ ask, user, appOrigin, now });
-  // The send integration takes {to, subject, body, from_name} and `body` is
-  // documented as plain text. Whether it renders html anyway is not something
-  // the types answer, so `format` exists to try it against a real inbox without
-  // committing the whole product to an untested assumption. Leave the default
-  // at 'text' until somebody has confirmed a real client rendered the html one,
-  // because the failure mode is a student receiving a page of raw tags.
+  // The send integration types `body` as plain text and offers no html field,
+  // so for a while nothing sent the html half and students would have received
+  // a wall of unformatted text. It turns out the integration renders html in
+  // `body` regardless: verified 2026-08-04 by sending all seven rungs to a real
+  // inbox and looking at them. Wordmark, button and footer link all arrived.
+  //
+  // `format: 'text'` still sends the plain version, which is a real email in its
+  // own right and is what to fall back to if a client ever chokes on the html.
   await client.integrations.Core.SendEmail({
     to,
     subject: mail.subject,

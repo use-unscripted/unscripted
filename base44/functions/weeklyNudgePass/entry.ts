@@ -375,21 +375,23 @@ export async function handleRequest(req: Request): Promise<Response> {
             // So the answer page opens on this question rather than guessing.
             nudgeId: rowId,
           });
-          // `rendered.html` IS NOT SENT AND CANNOT BE. SendEmail takes
-          // {to, subject, body, from_name}, `body` is plain text, and there is
-          // no argument an HTML body could go in. It is rendered and tested so
-          // the copy and the escaping are already right on the day the send
-          // path can carry one. `rendered.text` is the entire email.
           // Second, independent lock, and it throws rather than returning a
           // flag. mayEmail above is this function's own gate; this one lives
           // next to the renderer and guards every path anybody takes to send
           // one of these, including a one off script that never goes near this
           // file. Both have to be loosened before a student receives anything.
           assertAllowedRecipient(email);
+          // `rendered.html` is what goes out. SendEmail types `body` as plain
+          // text and has no html argument, and an earlier version of this file
+          // concluded from that that html could never be sent. It renders html
+          // in `body` anyway: verified 2026-08-04 against a real inbox, all
+          // seven rungs, wordmark and button and footer link all arriving.
+          // `rendered.text` is still built, still tested, and is the fallback
+          // if a client ever chokes on the markup.
           await base44.asServiceRole.integrations.Core.SendEmail({
             to: email,
             subject: rendered.subject,
-            body: rendered.text,
+            body: rendered.html,
           });
           emailed += 1;
           if (line) line.delivery = 'emailed';

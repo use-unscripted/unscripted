@@ -337,11 +337,16 @@ describe('allowlist mode, on a live run', () => {
   it('sends a real subject and a real body, not a placeholder', async () => {
     const { store } = await call(live, { entities: fixture(2) });
     const [mail] = store.sent;
+    // `body` carries the html email. The integration types it as plain text and
+    // has no html field, but it renders html anyway (verified against a real
+    // inbox 2026-08-04), so these assert the html shape rather than the plain one.
     expect(mail.subject).toContain('Get the steps for');
-    expect(mail.body.startsWith('Hi Student,')).toBe(true);
-    expect(mail.body).toContain('https://useunscripted.base44.app/experiment?experimentId=eu000');
-    expect(mail.body).toContain('To stop these emails, turn them off in your settings:');
-    expect(mail.body).toContain('https://useunscripted.base44.app/settings');
+    expect(mail.body).toContain('Hi Student,');
+    expect(mail.body).toContain('href="https://useunscripted.base44.app/experiment?experimentId=eu000"');
+    expect(mail.body).toContain('To stop these emails, turn them off in your');
+    expect(mail.body).toContain('href="https://useunscripted.base44.app/settings"');
+    // The long url is a destination, never words on the page.
+    expect(mail.body).not.toContain('>https://useunscripted.base44.app/experiment');
   });
 
   it('asks nobody to reply, because nothing reads replies', async () => {
@@ -375,8 +380,8 @@ describe('allowlist mode, on a live run', () => {
     const [row] = store.created;
     expect(row.data.size).toBe('one_line');
     expect(mail.body).toContain(row.data.question);
-    expect(mail.body).toContain('Answer in one sentence:');
-    expect(mail.body).toContain('https://useunscripted.base44.app/answer?nudgeId=created-1');
+    expect(mail.body).toContain('Answer in one sentence');
+    expect(mail.body).toContain('href="https://useunscripted.base44.app/answer?nudgeId=created-1"');
   });
 
   it('writes a nudge row only for the student it actually emailed', async () => {

@@ -69,13 +69,21 @@ describe('sending one', () => {
     expect(sent).toHaveLength(1);
     expect(sent[0].to).toBe(OK);
     expect(sent[0].subject).toBe('A subject');
-    expect(sent[0].body).toBe('A body');
+    expect(sent[0].body).toBe('<p>A body</p>');
   });
 
-  it('does not send the html body, which the integration cannot carry', async () => {
+  it('sends the html body, because the integration turned out to render it', async () => {
+    // Verified against a real inbox on 2026-08-04. The types say body is plain
+    // text and offer no html field, which is why this went unsent for a while.
     const sent = [];
     await sendNudgeEmail({ client: clientWith(sent), render, to: OK, ask: {}, user: {}, appOrigin: 'https://x', now: new Date(0) });
-    expect(JSON.stringify(sent[0])).not.toContain('<p>');
+    expect(sent[0].body).toBe('<p>A body</p>');
+  });
+
+  it('still sends the plain version when a caller asks for it', async () => {
+    const sent = [];
+    await sendNudgeEmail({ client: clientWith(sent), render, to: OK, ask: {}, user: {}, appOrigin: 'https://x', now: new Date(0), format: 'text' });
+    expect(sent[0].body).toBe('A body');
   });
 
   it('refuses every other address, and does not render or send anything first', async () => {
