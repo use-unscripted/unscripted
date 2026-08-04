@@ -112,9 +112,9 @@ export default function ICSExportPanel({ showHeading = true }) {
             </div>
             <div className="flex items-center gap-2 flex-wrap">
               <input type="date" value={weekStart} onChange={e => setWeekStart(e.target.value)}
-                className="rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-3 py-2 text-xs outline-none focus:border-[color:var(--brand-navy-900)]" />
+                className="rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-3 py-2 text-base md:text-xs outline-none focus:border-[color:var(--brand-navy-900)]" />
               <button onClick={downloadWeek} disabled={downloading === 'week'}
-                className="flex items-center gap-1.5 rounded-[10px] px-4 py-2 text-xs font-semibold text-white disabled:opacity-60"
+                className="touch-target flex items-center gap-1.5 rounded-[10px] px-4 py-2 text-xs font-semibold text-white disabled:opacity-60"
                 style={{ background: 'var(--brand-navy-900)' }}>
                 <Download size={12} />
                 {downloading === 'week' ? 'Exporting…' : 'Download'}
@@ -136,7 +136,7 @@ export default function ICSExportPanel({ showHeading = true }) {
               </div>
             </div>
             <button onClick={downloadMissions} disabled={downloading === 'missions'}
-              className="flex items-center gap-1.5 rounded-[10px] px-4 py-2 text-xs font-semibold text-white disabled:opacity-60"
+              className="touch-target flex items-center gap-1.5 rounded-[10px] px-4 py-2 text-xs font-semibold text-white disabled:opacity-60"
               style={{ background: 'var(--brand-navy-900)' }}>
               <Download size={12} />
               {downloading === 'missions' ? 'Exporting…' : 'Download'}

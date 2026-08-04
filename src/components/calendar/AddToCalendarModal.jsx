@@ -22,7 +22,7 @@ const TIMEZONES = [
   'Australia/Sydney', 'UTC',
 ];
 
-const inputCls = 'w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-3 py-2.5 text-sm outline-none focus:border-[color:var(--brand-navy-900)]';
+const inputCls = 'w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-3 py-2.5 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]';
 
 export default function AddToCalendarModal({ item, itemType, onClose }) {
   // itemType: 'mission' | 'task' | 'outreach' | 'experiment'

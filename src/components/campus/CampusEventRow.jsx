@@ -52,8 +52,8 @@ function ListingLinks({ event, college, size = 'sm' }) {
   const pad = size === 'sm' ? 'px-2.5 py-1.5 text-[11px]' : 'px-4 py-2 text-xs';
   const iconSize = size === 'sm' ? 11 : 13;
 
-  const secondary = `inline-flex items-center gap-1.5 rounded-lg border font-bold transition hover:bg-white ${pad}`;
-  const primary = `inline-flex items-center gap-1.5 rounded-lg font-bold text-white transition hover:-translate-y-px ${pad}`;
+  const secondary = `touch-target inline-flex items-center gap-1.5 rounded-lg border font-bold transition hover:bg-white ${pad}`;
+  const primary = `touch-target inline-flex items-center gap-1.5 rounded-lg font-bold text-white transition hover:-translate-y-px ${pad}`;
 
   return (
     <div className="mt-2 flex flex-wrap items-center gap-1.5">
@@ -185,7 +185,7 @@ export function CompactEvent({ event, college, timeOnly = false, showCountdown =
             type="button"
             onClick={() => setOpen(o => !o)}
             aria-expanded={open}
-            className="min-w-0 flex-1 text-left"
+            className="touch-target min-w-0 flex-1 text-left"
           >
             <p className="text-sm font-semibold leading-snug" style={{ color: 'var(--text-primary)' }}>
               {event.title}
@@ -215,6 +215,7 @@ export function CompactEvent({ event, college, timeOnly = false, showCountdown =
               onClick={() => setOpen(o => !o)}
               aria-expanded={open}
               aria-label={open ? 'Hide details' : 'Show details'}
+              className="touch-icon"
             >
               <ChevronDown
                 size={14}

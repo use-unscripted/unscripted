@@ -5,7 +5,7 @@ import { unwrapLLM, PLAIN_PROSE_RULES } from '@/lib/llm';
 import { toText, toTextList } from '@/lib/ai-validation';
 import { reportAiFailure } from '@/lib/ai-failures';
 
-const inputCls = 'w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-sm text-[color:var(--surface-dark-900)] placeholder-[color:var(--ink-400)] outline-none focus:border-[color:var(--brand-navy-900)] resize-none';
+const inputCls = 'w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-base md:text-sm text-[color:var(--surface-dark-900)] placeholder-[color:var(--ink-400)] outline-none focus:border-[color:var(--brand-navy-900)] resize-none';
 
 const SURVEY_QUESTIONS = [
   { name: 'since_last_exploration', label: 'What have you done since you last explored this path?', placeholder: 'Classes, projects, conversations, internships, etc.' },

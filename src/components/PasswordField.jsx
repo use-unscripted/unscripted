@@ -27,7 +27,9 @@ export default function PasswordField({ id, label, value, onChange, autoFocus, p
       <button
         type="button"
         onClick={() => setVisible(v => !v)}
-        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+        // The glyph stays pinned where it is. Only the tap area grows, and only
+        // on a touch screen, so a thumb has something to land on.
+        className="touch-target-square absolute right-3 top-1/2 flex -translate-y-1/2 items-center justify-end text-muted-foreground transition-colors hover:text-foreground"
         aria-label={visible ? "Hide password" : "Show password"}
         tabIndex={0}
       >

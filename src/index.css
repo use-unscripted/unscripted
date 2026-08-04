@@ -315,6 +315,60 @@
   transition: transform 80ms var(--ease-out);
 }
 
+/* ── Touch targets ──────────────────────────────────────────────────────── */
+/* Apple's floor is 44x44pt. A thumb is not a cursor, so these only fire where
+   the pointer is coarse and a mouse keeps the density the site has now.
+   Pointer type is the signal, never viewport width: a narrow desktop window is
+   still a mouse, and a wide tablet is still a thumb. */
+@media (pointer: coarse) {
+  /* A standalone control that is already wide enough. Raise its height only. */
+  .touch-target {
+    min-height: 44px;
+  }
+
+  /* A square icon button that draws its own box (border, background). */
+  .touch-target-square {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* A bare glyph sitting in a line of text. The icon keeps the size it is and
+     only the tap area grows; the negative margin hands the extra space back to
+     the layout, so the line it sits on keeps the height it has now. */
+  .touch-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    min-height: 44px;
+    margin: -14px -17px;
+  }
+}
+
+/* ── Native <select> on a touch screen ──────────────────────────────────── */
+/* iOS throws away padding, height and border radius on a select and draws its
+   own grey chrome instead, so a filter bar that is styled everywhere else came
+   out 24px tall and looking unbuilt. Clearing the native appearance is what
+   makes the styling stick, and it also removes the platform arrow, so the
+   wrapper draws one back. A mouse keeps the control it has now: the arrow
+   below is hidden and nothing about the desktop bar changes.
+   The element stays a real select either way. The iOS wheel picker is the
+   better control on a phone; the problem was only ever how it was drawn. */
+.field-select-chevron {
+  display: none;
+}
+@media (pointer: coarse) {
+  .field-select {
+    appearance: none;
+    -webkit-appearance: none;
+    min-height: 44px;
+    padding-right: 2.25rem;
+  }
+  .field-select-chevron {
+    display: block;
+  }
+}
+
 /* ── My Journey: the one instruction, and the cycle spine ────────────────── */
 /* Gold on navy is the only place gold carries text weight — a single primary
    button, never body copy. Navy-900 on gold-500 measures 5.9:1. */

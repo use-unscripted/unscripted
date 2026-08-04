@@ -9,7 +9,7 @@ import { generatePathTest } from '@/lib/path-generator';
 import { buildOptOut, optBackInPatch, isOptedOut, mergeOptOutRows } from '@/lib/nudge-response';
 import { clearCampusStore } from '@/lib/campus-store';
 
-const textareaCls = 'mt-1 w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] px-4 py-3 text-sm text-[color:var(--surface-dark-900)] placeholder-[color:var(--ink-400)] outline-none focus:border-[color:var(--brand-navy-700)] resize-none';
+const textareaCls = 'mt-1 w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] px-4 py-3 text-base md:text-sm text-[color:var(--surface-dark-900)] placeholder-[color:var(--ink-400)] outline-none focus:border-[color:var(--brand-navy-700)] resize-none';
 
 const NOTES_FIELDS = [
   { name: 'personal_notes', label: 'Personal notes and context', placeholder: 'Anything about your situation or background that should personalize your recommendations...', maxLength: 3000 },
@@ -188,7 +188,7 @@ export default function Settings() {
         </button>
         <button
           onClick={() => { clearCampusStore(); base44.auth.logout('/'); }}
-          className="text-sm font-semibold text-[color:var(--ink-500)] hover:text-[color:var(--surface-dark-900)] transition sm:col-span-2"
+          className="touch-target text-sm font-semibold text-[color:var(--ink-500)] hover:text-[color:var(--surface-dark-900)] transition sm:col-span-2"
         >
           Log out
         </button>

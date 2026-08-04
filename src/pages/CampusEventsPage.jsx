@@ -336,7 +336,7 @@ function ViewToggle({ view, onChange }) {
           type="button"
           onClick={() => onChange(value)}
           aria-pressed={view === value}
-          className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition"
+          className="touch-target inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition"
           style={
             view === value
               ? { background: 'var(--background-primary)', color: 'var(--brand-navy-900)', boxShadow: '0 1px 2px rgba(5,8,22,0.08)' }
@@ -368,7 +368,7 @@ function MonthList({ month, events, college, picks, range, onChangeMonth }) {
             type="button"
             onClick={() => onChangeMonth(new Date(month.getFullYear(), month.getMonth() - 1, 1))}
             disabled={range && month.getTime() <= range.first.getTime()}
-            className="rounded-lg border px-2.5 py-1 text-xs font-bold transition disabled:opacity-30"
+            className="touch-target rounded-lg border px-2.5 py-1 text-xs font-bold transition disabled:opacity-30"
             style={{ borderColor: 'var(--border-light)', color: 'var(--brand-navy-700)' }}
           >
             Earlier
@@ -377,7 +377,7 @@ function MonthList({ month, events, college, picks, range, onChangeMonth }) {
             type="button"
             onClick={() => onChangeMonth(new Date(month.getFullYear(), month.getMonth() + 1, 1))}
             disabled={range && month.getTime() >= range.last.getTime()}
-            className="rounded-lg border px-2.5 py-1 text-xs font-bold transition disabled:opacity-30"
+            className="touch-target rounded-lg border px-2.5 py-1 text-xs font-bold transition disabled:opacity-30"
             style={{ borderColor: 'var(--border-light)', color: 'var(--brand-navy-700)' }}
           >
             Later

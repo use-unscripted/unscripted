@@ -69,7 +69,7 @@ function ContactCard({ contact, onStatus, onNotes }) {
         defaultValue={contact.notes || ''}
         onBlur={e => onNotes(e.target.value)}
         placeholder="Notes from the conversation…"
-        className="mt-3 w-full rounded-[8px] border px-2.5 py-2 text-xs outline-none"
+        className="mt-3 w-full rounded-[8px] border px-2.5 py-2 text-base md:text-xs outline-none"
         style={{ borderColor: 'var(--border-light)', background: 'var(--background-secondary)' }}
       />
     </div>

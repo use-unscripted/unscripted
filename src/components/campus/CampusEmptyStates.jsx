@@ -126,7 +126,7 @@ export function NoCollegeState({ profile, disabled, onSaved, className }) {
           disabled={disabled || saving}
           placeholder="Fairfield University"
           autoComplete="organization"
-          className="min-w-0 flex-1 rounded-lg border bg-white px-3 py-2 text-sm outline-none transition focus:border-[#1F3A5F] disabled:opacity-60"
+          className="min-w-0 flex-1 rounded-lg border bg-white px-3 py-2 text-base md:text-sm outline-none transition focus:border-[#1F3A5F] disabled:opacity-60"
           style={{ borderColor: '#E2E8F0' }}
         />
         <button
@@ -231,7 +231,7 @@ export function NoFeedState({ college, disabled, onResolved, className }) {
           placeholder="yourschool.campusgroups.com"
           aria-invalid={problem ? 'true' : undefined}
           aria-describedby={problem ? 'campus-feed-problem' : 'campus-feed-hint'}
-          className="min-w-0 flex-1 rounded-lg border bg-white px-3 py-2 text-sm outline-none transition focus:border-[#1F3A5F] disabled:opacity-60"
+          className="min-w-0 flex-1 rounded-lg border bg-white px-3 py-2 text-base md:text-sm outline-none transition focus:border-[#1F3A5F] disabled:opacity-60"
           style={{ borderColor: problem ? '#B91C1C' : '#E2E8F0' }}
         />
         <button

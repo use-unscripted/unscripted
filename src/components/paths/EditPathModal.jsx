@@ -2,7 +2,7 @@ import { useState, useRef } from 'react';
 import { X, Loader2, Trash2 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 
-const inputCls = 'w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-sm text-[color:var(--surface-dark-900)] placeholder-[color:var(--ink-400)] outline-none focus:border-[color:var(--brand-navy-900)]';
+const inputCls = 'w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-base md:text-sm text-[color:var(--surface-dark-900)] placeholder-[color:var(--ink-400)] outline-none focus:border-[color:var(--brand-navy-900)]';
 
 export default function EditPathModal({ path, onClose, onSaved, onDeleted }) {
   const submittingRef = useRef(false);
@@ -78,27 +78,27 @@ export default function EditPathModal({ path, onClose, onSaved, onDeleted }) {
           <div>
             <label className="block text-sm font-semibold text-[color:var(--ink-700)] mb-1.5">Goals for this path</label>
             <textarea rows={2} name="goals" value={form.goals} onChange={ch} placeholder="What do you want to learn or prove?"
-              className="w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-sm outline-none focus:border-[color:var(--brand-navy-900)] resize-none placeholder-[color:var(--ink-400)]" />
+              className="w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)] resize-none placeholder-[color:var(--ink-400)]" />
           </div>
           <div>
             <label className="block text-sm font-semibold text-[color:var(--ink-700)] mb-1.5">Why it fits you</label>
             <textarea rows={2} name="why_it_fits" value={form.why_it_fits} onChange={ch} placeholder="Your strengths, interests, or alignment..."
-              className="w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-sm outline-none focus:border-[color:var(--brand-navy-900)] resize-none placeholder-[color:var(--ink-400)]" />
+              className="w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)] resize-none placeholder-[color:var(--ink-400)]" />
           </div>
           <div>
             <label className="block text-sm font-semibold text-[color:var(--ink-700)] mb-1.5">Why it may not fit</label>
             <textarea rows={2} name="why_it_may_not_fit" value={form.why_it_may_not_fit} onChange={ch} placeholder="Honest concerns or potential mismatches..."
-              className="w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-sm outline-none focus:border-[color:var(--brand-navy-900)] resize-none placeholder-[color:var(--ink-400)]" />
+              className="w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)] resize-none placeholder-[color:var(--ink-400)]" />
           </div>
           <div>
             <label className="block text-sm font-semibold text-[color:var(--ink-700)] mb-1.5">Lifestyle implications</label>
             <textarea rows={2} name="lifestyle_implications" value={form.lifestyle_implications} onChange={ch} placeholder="Work hours, income, location, autonomy..."
-              className="w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-sm outline-none focus:border-[color:var(--brand-navy-900)] resize-none placeholder-[color:var(--ink-400)]" />
+              className="w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)] resize-none placeholder-[color:var(--ink-400)]" />
           </div>
           <div>
             <label className="block text-sm font-semibold text-[color:var(--ink-700)] mb-1.5">Notes</label>
             <textarea rows={2} name="notes" value={form.notes} onChange={ch} placeholder="Anything else to track..."
-              className="w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-sm outline-none focus:border-[color:var(--brand-navy-900)] resize-none placeholder-[color:var(--ink-400)]" />
+              className="w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)] resize-none placeholder-[color:var(--ink-400)]" />
           </div>
           <div className="grid gap-4 sm:grid-cols-3">
             <div>

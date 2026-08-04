@@ -10,7 +10,7 @@ const STATUS_OPTIONS = [
   { value: 'skipped', label: 'Skipped' },
 ];
 
-const inputCls = 'w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-sm outline-none focus:border-[color:var(--brand-navy-900)]';
+const inputCls = 'w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]';
 
 export default function AddMissionModal({ experiment, onClose, onSaved }) {
   const [data, setData] = useState({
