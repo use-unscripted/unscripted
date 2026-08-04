@@ -251,7 +251,7 @@ const SECTIONS = [
 const sectionFor = (i) => (SECTIONS.find(sn => i < sn.until) || SECTIONS[SECTIONS.length - 1]).label;
 
 const inputCls =
-  'w-full rounded-[10px] border px-3 py-2.5 text-sm outline-none transition focus:border-[color:var(--brand-navy-900)]';
+  'w-full rounded-[10px] border px-3 py-2.5 text-base md:text-sm outline-none transition focus:border-[color:var(--brand-navy-900)]';
 const inputStyle = { borderColor: 'var(--border-light)', background: 'var(--background-secondary)' };
 
 // A pill for the chip grids: paths, vision themes, school year, graduation year.
@@ -827,7 +827,7 @@ export default function Onboarding() {
           times to find that out. */}
       {index > 0 && index < STEPS.length - 1 && (
         <button onClick={() => go(STEPS.length - 1, 'fwd')}
-          className="mt-2.5 block w-full text-center text-xs font-semibold"
+          className="touch-target mt-2.5 flex w-full items-center justify-center text-center text-xs font-semibold"
           style={{ color: 'var(--text-secondary)' }}>
           Skip the rest of the optional questions
         </button>

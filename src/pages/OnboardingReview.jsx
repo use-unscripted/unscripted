@@ -267,7 +267,7 @@ export default function OnboardingReview() {
                 {f.label}
                 <textarea rows={3} value={notesForm[f.name]} maxLength={f.maxLength}
                   onChange={e => setNotesForm(n => ({ ...n, [f.name]: e.target.value }))}
-                  className="mt-1 w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] px-4 py-3 text-sm font-normal text-[color:var(--surface-dark-900)] placeholder-[color:var(--ink-400)] outline-none focus:border-[color:var(--brand-navy-900)]" />
+                  className="mt-1 w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] px-4 py-3 text-base md:text-sm font-normal text-[color:var(--surface-dark-900)] placeholder-[color:var(--ink-400)] outline-none focus:border-[color:var(--brand-navy-900)]" />
               </label>
             ))}
             <div className="flex gap-3">

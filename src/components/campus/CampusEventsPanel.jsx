@@ -192,7 +192,7 @@ function Section({ delay, college, linkToAll, children }) {
           )}
         </div>
         {linkToAll && (
-          <Link to="/campus" className="shrink-0 text-xs font-semibold" style={{ color: 'var(--brand-navy-700)' }}>
+          <Link to="/campus" className="touch-target inline-flex shrink-0 items-center text-xs font-semibold" style={{ color: 'var(--brand-navy-700)' }}>
             Full calendar →
           </Link>
         )}

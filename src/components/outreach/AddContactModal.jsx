@@ -4,7 +4,7 @@ import { base44 } from '@/api/base44Client';
 import { linksForExperiment } from '@/lib/career-cycle';
 import { trackPilotEvent } from '@/lib/pilot-metrics';
 
-const inputCls = 'w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-2.5 text-sm outline-none focus:border-[color:var(--brand-navy-900)]';
+const inputCls = 'w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-2.5 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]';
 
 const CONTACT_TYPES = [
   ['informational_interview','Informational Interview'],['networking','Networking Contact'],

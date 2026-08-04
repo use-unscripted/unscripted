@@ -12,7 +12,8 @@ export default function AuthLayout({ title, subtitle, footer, backTo, backLabel 
         {backTo && (
           <Link
             to={backTo}
-            className="mb-6 inline-flex items-center gap-1.5 text-sm font-semibold hover:underline"
+            // The only exit on the page, so it has to be a target a thumb can hit.
+            className="touch-target mb-6 inline-flex items-center gap-1.5 text-sm font-semibold hover:underline"
             style={{ color: 'var(--brand-navy-700)' }}
           >
             <ArrowLeft size={16} aria-hidden="true" />

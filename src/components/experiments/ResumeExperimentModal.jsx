@@ -102,12 +102,12 @@ export default function ResumeExperimentModal({ exp, missions = [], onClose, onR
             <label className="block">
               <span className="text-sm font-semibold text-[color:var(--ink-700)] block mb-1">Revised deadline</span>
               <input type="date" value={newDeadline} onChange={e => setNewDeadline(e.target.value)}
-                className="w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-2.5 text-sm outline-none focus:border-[color:var(--brand-navy-900)]" />
+                className="w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-2.5 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]" />
             </label>
             <label className="block">
               <span className="text-sm font-semibold text-[color:var(--ink-700)] block mb-1">Updated weekly hours</span>
               <input type="number" value={newHours} onChange={e => setNewHours(e.target.value)} min={1} max={40}
-                className="w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-2.5 text-sm outline-none focus:border-[color:var(--brand-navy-900)]" />
+                className="w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-2.5 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]" />
             </label>
           </div>
         )}
@@ -121,7 +121,7 @@ export default function ResumeExperimentModal({ exp, missions = [], onClose, onR
             value={notes}
             onChange={e => setNotes(e.target.value)}
             placeholder="New skills, updated goals, different availability..."
-            className="w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-sm outline-none focus:border-[color:var(--brand-navy-900)] resize-none"
+            className="w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)] resize-none"
           />
         </label>
 

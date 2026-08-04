@@ -159,7 +159,7 @@ function ContactCard({ c, experimentsMap, missionsMap, onEdit, onStatusChange, o
       {/* Status selector */}
       <div className="mb-3">
         <select value={c.response_status} onChange={e => onStatusChange(c.id, e.target.value)}
-          className="rounded-lg border border-[color:var(--ink-200)] px-2.5 py-1.5 text-xs outline-none"
+          className="rounded-lg border border-[color:var(--ink-200)] px-2.5 py-1.5 text-base md:text-xs outline-none"
           style={{ background: s.bg, color: s.text }}>
           {ALL_STATUS_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
         </select>
@@ -378,17 +378,17 @@ export default function OutreachTracker() {
           <Mail size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[color:var(--ink-400)]" />
           <input value={search} onChange={e => setSearch(e.target.value)}
             placeholder="Search by name, company, email, experiment…"
-            className="w-full rounded-xl border border-[color:var(--ink-200)] bg-white pl-9 pr-4 py-2.5 text-sm outline-none focus:border-[color:var(--brand-navy-900)]" />
+            className="w-full rounded-xl border border-[color:var(--ink-200)] bg-white pl-9 pr-4 py-2.5 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]" />
         </div>
         {experiments.length > 0 && (
           <select value={filterExp} onChange={e => setFilterExp(e.target.value)}
-            className="rounded-xl border border-[color:var(--ink-200)] bg-white px-3 py-2.5 text-sm outline-none focus:border-[color:var(--brand-navy-900)]">
+            className="rounded-xl border border-[color:var(--ink-200)] bg-white px-3 py-2.5 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]">
             <option value="all">All experiments</option>
             {experiments.map(exp => <option key={exp.id} value={exp.id}>{exp.title}</option>)}
           </select>
         )}
         <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)}
-          className="rounded-xl border border-[color:var(--ink-200)] bg-white px-3 py-2.5 text-sm outline-none focus:border-[color:var(--brand-navy-900)]">
+          className="rounded-xl border border-[color:var(--ink-200)] bg-white px-3 py-2.5 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]">
           <option value="all">All statuses</option>
           {ALL_STATUS_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
         </select>

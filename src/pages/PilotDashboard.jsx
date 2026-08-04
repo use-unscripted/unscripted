@@ -14,7 +14,7 @@ import PilotStat from '@/components/pilot/PilotStat';
 import { loadPilotAccess } from '@/lib/pilot-access';
 import { loadPilotReport } from '@/lib/pilot-report';
 
-const selCls = 'rounded-[10px] border bg-white px-3 py-2 text-sm';
+const selCls = 'rounded-[10px] border bg-white px-3 py-2 text-base md:text-sm';
 
 export default function PilotDashboard() {
   const [access, setAccess] = useState(null);

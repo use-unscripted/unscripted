@@ -92,7 +92,7 @@ export default function CompleteMissionModal({ mission, experiment, path, onClos
               <input
                 value={title}
                 onChange={e => setTitle(e.target.value)}
-                className="mt-1 w-full rounded-[10px] border px-3 py-2.5 text-sm outline-none"
+                className="mt-1 w-full rounded-[10px] border px-3 py-2.5 text-base md:text-sm outline-none"
                 style={{ borderColor: 'var(--border-light)', background: 'var(--background-secondary)' }}
               />
             </label>
@@ -103,7 +103,7 @@ export default function CompleteMissionModal({ mission, experiment, path, onClos
                 value={url}
                 onChange={e => setUrl(e.target.value)}
                 placeholder="https://"
-                className="mt-1 w-full rounded-[10px] border px-3 py-2.5 text-sm outline-none"
+                className="mt-1 w-full rounded-[10px] border px-3 py-2.5 text-base md:text-sm outline-none"
                 style={{ borderColor: 'var(--border-light)', background: 'var(--background-secondary)' }}
               />
             </label>
@@ -130,7 +130,7 @@ export default function CompleteMissionModal({ mission, experiment, path, onClos
                 rows={3}
                 value={description}
                 onChange={e => setDescription(e.target.value)}
-                className="mt-1 w-full rounded-[10px] border px-3 py-2.5 text-sm outline-none"
+                className="mt-1 w-full rounded-[10px] border px-3 py-2.5 text-base md:text-sm outline-none"
                 style={{ borderColor: 'var(--border-light)', background: 'var(--background-secondary)' }}
               />
             </label>

@@ -72,7 +72,7 @@ export default function EvidenceLibrary() {
           <div className="mb-5 flex gap-2">
             {[['all', 'All evidence', Library], ['cycles', 'By career cycle', Layers]].map(([key, label, Icon]) => (
               <button key={key} onClick={() => setView(key)}
-                className="ui-press flex items-center gap-1.5 rounded-[10px] px-4 py-2.5 text-sm font-bold"
+                className="touch-target ui-press flex items-center gap-1.5 rounded-[10px] px-4 py-2.5 text-sm font-bold"
                 style={key === view
                   ? { background: 'var(--brand-navy-900)', color: '#fff' }
                   : { background: 'var(--background-tertiary)', color: 'var(--text-secondary)' }}>

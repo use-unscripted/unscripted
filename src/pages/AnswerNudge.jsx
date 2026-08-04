@@ -447,7 +447,7 @@ function AnswerNudgeInner() {
               onChange={(e) => setReply(e.target.value)}
               maxLength={2000}
               placeholder={isRuleOut ? 'One sentence, if you want to say.' : 'One sentence is enough.'}
-              className="w-full resize-none rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] px-4 py-3 text-sm text-[color:var(--surface-dark-900)] placeholder-[color:var(--ink-400)] outline-none focus:border-[color:var(--brand-navy-700)]"
+              className="w-full resize-none rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] px-4 py-3 text-base md:text-sm text-[color:var(--surface-dark-900)] placeholder-[color:var(--ink-400)] outline-none focus:border-[color:var(--brand-navy-700)]"
             />
           </label>
         )}
@@ -542,7 +542,7 @@ function AnswerNudgeInner() {
                 onChange={(e) => setDeclineReason(e.target.value)}
                 maxLength={2000}
                 placeholder="It changes what we ask you next."
-                className="mt-1 w-full resize-none rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] px-4 py-3 text-sm text-[color:var(--surface-dark-900)] placeholder-[color:var(--ink-400)] outline-none focus:border-[color:var(--brand-navy-700)]"
+                className="mt-1 w-full resize-none rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] px-4 py-3 text-base md:text-sm text-[color:var(--surface-dark-900)] placeholder-[color:var(--ink-400)] outline-none focus:border-[color:var(--brand-navy-700)]"
               />
             </label>
             <button

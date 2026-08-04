@@ -449,7 +449,7 @@ export default function ResumeBuilder() {
         description="An output of evidence you completed and approved. Import approved work, then edit, version, and export."
         action={
           <button onClick={() => setShowTemplates(true)}
-            className="flex items-center gap-2 rounded-[10px] px-5 py-2.5 text-sm font-semibold text-white shrink-0"
+            className="touch-target flex items-center gap-2 rounded-[10px] px-5 py-2.5 text-sm font-semibold text-white shrink-0"
             style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}>
             <Plus size={16} /> New Resume
           </button>
@@ -496,7 +496,7 @@ export default function ResumeBuilder() {
               <p className="text-sm font-semibold text-[color:var(--surface-dark-900)]">No resume selected</p>
               <p className="text-xs text-[color:var(--ink-500)] mt-1">Select a resume from the left or create a new one.</p>
               <button onClick={() => setShowTemplates(true)}
-                className="mt-4 rounded-[10px] px-5 py-2.5 text-sm font-semibold text-white" style={{ background: 'var(--brand-navy-900)' }}>
+                className="touch-target mt-4 rounded-[10px] px-5 py-2.5 text-sm font-semibold text-white" style={{ background: 'var(--brand-navy-900)' }}>
                 New Resume
               </button>
             </div>
@@ -507,12 +507,12 @@ export default function ResumeBuilder() {
             <div className="flex flex-wrap items-center gap-2 mb-5">
               {/* Resume name */}
               <input value={draft.resume_name || ''} onChange={e => setDraft(d => ({ ...d, resume_name: e.target.value }))}
-                className="rounded-xl border border-[color:var(--ink-200)] px-3 py-2 text-sm font-semibold text-[color:var(--surface-dark-900)] outline-none focus:border-[color:var(--brand-navy-900)] min-w-[180px]" />
+                className="rounded-xl border border-[color:var(--ink-200)] px-3 py-2 text-base md:text-sm font-semibold text-[color:var(--surface-dark-900)] outline-none focus:border-[color:var(--brand-navy-900)] min-w-[180px]" />
 
               {/* Target role */}
               <input value={draft.target_role || ''} onChange={e => setDraft(d => ({ ...d, target_role: e.target.value }))}
                 placeholder="Target role (optional)"
-                className="rounded-xl border border-[color:var(--ink-200)] px-3 py-2 text-sm text-[color:var(--ink-700)] outline-none focus:border-[color:var(--brand-navy-900)] min-w-[160px]" />
+                className="rounded-xl border border-[color:var(--ink-200)] px-3 py-2 text-base md:text-sm text-[color:var(--ink-700)] outline-none focus:border-[color:var(--brand-navy-900)] min-w-[160px]" />
 
               <div className="ml-auto flex items-center gap-2 flex-wrap">
                 {/* View toggle */}
@@ -552,7 +552,7 @@ export default function ResumeBuilder() {
               <p className="text-xs font-semibold text-[color:var(--ink-700)] shrink-0">Save version:</p>
               <input value={versionNote} onChange={e => setVersionNote(e.target.value)}
                 placeholder="Optional note (e.g. 'IB version')"
-                className="flex-1 text-xs outline-none text-[color:var(--ink-700)] placeholder-[color:var(--ink-400)]" />
+                className="flex-1 text-base md:text-xs outline-none text-[color:var(--ink-700)] placeholder-[color:var(--ink-400)]" />
               <button onClick={saveVersion} disabled={savingVersion}
                 className="shrink-0 rounded-lg px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-50"
                 style={{ background: 'var(--brand-navy-900)' }}>

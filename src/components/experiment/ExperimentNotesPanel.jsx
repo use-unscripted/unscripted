@@ -31,7 +31,7 @@ export default function ExperimentNotesPanel({ experiment }) {
         onChange={e => { setValue(e.target.value); setState('idle'); }}
         onBlur={save}
         placeholder="Anything you want to remember about this experiment…"
-        className="mt-3 w-full rounded-[10px] border px-3 py-2.5 text-sm outline-none"
+        className="mt-3 w-full rounded-[10px] border px-3 py-2.5 text-base md:text-sm outline-none"
         style={{ borderColor: 'var(--border-light)', background: 'var(--background-secondary)' }}
       />
     </section>
