@@ -70,9 +70,9 @@ import { describeAge } from '@/lib/campus-store';
  */
 export default function CampusEventsPage() {
   const {
-    loading, refreshing, cachedAt, status, college, events, profile, profileReady, retry, adopt,
+    loading, refreshing, cachedAt, status, college, events, profile, pathName, rankingReady, retry, adopt,
   } = useCampusEvents({ days: 60, limit: 40 });
-  const { picks, loading: ranking } = useCampusPicks(events, profile, { ready: profileReady });
+  const { picks, loading: ranking } = useCampusPicks(events, profile, { pathName, ready: rankingReady });
 
   const [month, setMonth] = useState(() => {
     const now = new Date();

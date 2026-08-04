@@ -43,8 +43,8 @@ import { upcomingEvents, eventDayKey, dayKey } from '@/lib/calendar-grid';
  * grey apology among live content is worse than one less section.
  */
 export default function CampusEventsPanel({ delay = 0 }) {
-  const { loading, status, college, events, profile, profileReady, adopt } = useCampusEvents({ days: 60, limit: 40 });
-  const { picks, loading: ranking } = useCampusPicks(events, profile, { ready: profileReady });
+  const { loading, status, college, events, profile, pathName, rankingReady, adopt } = useCampusEvents({ days: 60, limit: 40 });
+  const { picks, loading: ranking } = useCampusPicks(events, profile, { pathName, ready: rankingReady });
 
   // Everything still to come, soonest first.
   const upcoming = useMemo(() => upcomingEvents(events, { limit: 40 }), [events]);
@@ -133,11 +133,35 @@ export default function CampusEventsPanel({ delay = 0 }) {
       <div className="space-y-2">
         {lead && <RecommendedEvent event={lead} college={college} />}
 
+        {/*
+          Nothing cleared the relevance floor, and the student is owed the
+          reason.
+
+          Without this the section degrades to a heading and three dated lines,
+          which is a listings page: the student cannot tell whether we looked
+          and found nothing or whether the app simply has no opinion about
+          them. It used to be a rare state and now it is the common one, since
+          most of a campus calendar is general to any one student.
+
+          Only said when we know what it failed to match. A student with no
+          chosen path gets the bare list, because "nothing lines up with"
+          needs something to name.
+        */}
+        {!lead && rest.length > 0 && pathName && (
+          <p className="pb-1 text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+            Nothing on the calendar lines up with {pathName}. These are happening anyway.
+          </p>
+        )}
+
         {rest.length > 0 && (
           <>
-            <p className="pt-1 text-xs font-bold uppercase tracking-[.12em]" style={{ color: 'var(--text-muted)' }}>
-              {lead ? 'Also on' : 'Next up'}
-            </p>
+            {/* The sentence above already introduces the list, so the label
+                would be the third thing in a row saying "here are events". */}
+            {(lead || !pathName) && (
+              <p className="pt-1 text-xs font-bold uppercase tracking-[.12em]" style={{ color: 'var(--text-muted)' }}>
+                {lead ? 'Also on' : 'Next up'}
+              </p>
+            )}
             {rest.map(event => (
               <CompactEvent key={event.id} event={event} college={college} showCountdown />
             ))}

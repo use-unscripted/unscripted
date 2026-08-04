@@ -233,7 +233,7 @@ export default function CampusEventPicker({ profile, pathName, selected, onSelec
       <p className="mb-3 mt-0.5 text-xs text-[color:var(--ink-500)]">
         {unranked
           ? <>Nothing on {college || 'your campus'}&apos;s calendar lines up with this experiment.
-              These are happening anyway, and a date you didn&apos;t set still beats one you did.</>
+              These are happening anyway.</>
           : <>Happening at {college}. Pick one and it becomes your first step, with a date you
               didn&apos;t have to invent.</>}
       </p>
