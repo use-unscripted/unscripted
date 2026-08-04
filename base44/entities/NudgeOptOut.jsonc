@@ -71,17 +71,32 @@
   // way). Admin is in the list so the scheduled job and a support request can
   // both record one.
   //
-  // That leaves one hole worth naming: nothing at this layer stops a student
-  // creating a row carrying somebody else's `user_id`, which would silence our
-  // emails to that person. `isOptedOut` in base44/shared/nudge-response.js
-  // closes it by refusing any row whose `created_by_id` is present and is not
-  // the same account as `user_id`, unless it says `source: "admin"`. Do not
-  // drop that check on the grounds that the rules below look tight.
+  // That leaves one hole worth naming, and naming accurately: **the create rule
+  // below does not stop a student writing a row that carries somebody else's
+  // `user_id`.** The server fills `created_by_id` in for whoever is signed in,
+  // so the rule is satisfied for every signed in student no matter what is in
+  // `data`. Victim ids are not secret either: NetworkProfile, Follow and User
+  // all declare `read: null`. Left there, any student can silence our emails to
+  // any other student.
   //
-  // `read` and `update` key off `user_id` as well as `created_by_id` so a row
-  // an admin recorded on a student's behalf is still theirs to read and to turn
-  // back on. `delete` stays admin only: opting back in is a soft delete, which
-  // is an update.
+  // What actually closes it is `isOptedOut` in
+  // base44/shared/nudge-response.js, which counts a row only when
+  // `created_by_id` equals `user_id`. There is no exemption. `source` is a
+  // field on the row a student writes, so `source: "admin"` is the attack and
+  // not the exception, and a row with no `created_by_id` at all does not count
+  // either. Do not reintroduce either exemption on the grounds that the rules
+  // below look tight, and do not add a field level check here: Base44 has no
+  // field level RLS, which is the whole reason the check lives in code.
+  //
+  // `admin` stays in the `source` enum because it is a label, not a
+  // permission. Nothing today writes it. If an admin ever needs to record an
+  // opt out on a student's behalf, resolve `created_by_id` against the loaded
+  // `User` rows and require `role === "admin"` there, where the answer comes
+  // from a table a student cannot write.
+  //
+  // `read` and `update` key off `user_id` as well as `created_by_id` so a
+  // student can always read and turn off whatever names them. `delete` stays
+  // admin only: opting back in is a soft delete, which is an update.
   //
   // State: proposed. No NudgeOptOut row exists yet, so these rules have never
   // been exercised by a real student account against the live API. They match

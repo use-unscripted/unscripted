@@ -40,6 +40,10 @@ const R = {
   outreach: '/evidence?tab=outreach',
   proof: '/evidence?tab=proof',
   reflect: '/evidence?tab=reflect',
+  // The only place a student can get a new set of paths built. Saving personal
+  // context there is what offers it. Any rung whose copy mentions a new set has
+  // to point here, because this is the whole of what we can actually do.
+  settings: '/settings',
 };
 
 /**
@@ -90,15 +94,22 @@ export const LADDERS = {
       target: '',
     },
     {
+      // This rung used to say "we will throw the set out and build a new one
+      // from what you tell us." Nothing anywhere read a reply and built
+      // anything, so it was a promise in writing that we did not keep, to
+      // students at a university we are selling to. What is true is that
+      // settings will build a new set from personal context, and that is what
+      // it now says and where it now points.
       key: 'no_path_selected.r3',
       size: 'one_line',
       action_kind: 'rule_out',
       title: 'Say these are the wrong paths',
-      body: 'If none of these is close, say so and we will throw the set out and build a '
-        + 'new one from what you tell us. Wrong paths are worth finding out about early, '
-        + 'and nothing on your account is lost by saying it.',
+      body: 'If none of these is close, say what is wrong with them. We read these, and it '
+        + 'changes what we ask you next. To get a different set, open your settings, update '
+        + 'your personal context, and ask for fresh paths: that is what a new set is built '
+        + 'from. Nothing on your account is lost either way.',
       question: 'What is wrong with these paths?',
-      target: R.paths,
+      target: R.settings,
     },
   ],
 

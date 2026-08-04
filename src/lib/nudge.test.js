@@ -577,7 +577,10 @@ describe('copy integrity', () => {
   });
 
   it('sends every action somewhere the app actually has', () => {
-    const KNOWN = ['', '/paths', '/experiments', '/experiments/new', '/journey', '/evidence', '/experiment'];
+    // '/settings' is here because it is the only place in the app that can
+    // actually build a student a new set of paths, which is what
+    // no_path_selected's last rung now points at instead of promising it.
+    const KNOWN = ['', '/paths', '/experiments', '/experiments/new', '/journey', '/evidence', '/experiment', '/settings'];
     for (const { kind, r } of allRungs) {
       const { target } = fillRung(r, stallFor(kind));
       const base = target.split('?')[0];

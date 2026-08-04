@@ -68,6 +68,21 @@ export function saveMissionOutreach({ mission, experiment, path, contact }) {
   });
 }
 
+/**
+ * Notes change from inside the mission, and nothing else.
+ *
+ * This used to go through setOutreachStatus with the contact's current status
+ * read back out of the row, which did two wrong things at once: it never wrote
+ * the notes, because that function only ever patches the status, and it wrote
+ * the status back through a round trip that did not survive every stored value.
+ * A contact the student had closed out came back as 'not_sent'.
+ */
+export function setOutreachNotes(contact, notes) {
+  return onceInFlight(`outreach-notes:${contact.id}`, () => (
+    base44.entities.OutreachContacts.update(contact.id, { notes })
+  ));
+}
+
 /** Status change from inside the mission. */
 export function setOutreachStatus(contact, uiStatus) {
   return onceInFlight(`outreach-status:${contact.id}:${uiStatus}`, () => {

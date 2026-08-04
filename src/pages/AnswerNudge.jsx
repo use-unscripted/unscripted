@@ -8,13 +8,14 @@
  *
  * Three things here are deliberate and are easy to undo by accident.
  *
- * 1. **The words on screen come from the ladder, not from the row.** A student
- *    can update their own StudentNudge row, Base44 has no field level rules,
- *    and `user_id` is one of the fields they could rewrite. Rendering the
- *    stored `ask_title` would let one student put their own text in front of
- *    another under our name. `describeAsk` resolves the copy from `rung_key`,
- *    and the only case where stored text is shown is a rung the ladder no
- *    longer has, which the page labels as their own words.
+ * 1. **The words on screen come from the ladder and from nowhere else.** A
+ *    student can update their own StudentNudge row, Base44 has no field level
+ *    rules, and `user_id` and `rung_key` are both fields they could rewrite.
+ *    `describeAsk` resolves the copy from `rung_key`, and when it cannot, this
+ *    page shows no stored string at all. Anything softer than that is the whole
+ *    attack: blank the key, write what you like into `ask_title`, point the row
+ *    at somebody else, and we print it to them as a heading in our type on our
+ *    domain, next to a line saying we sent it.
  * 2. **The subject's name is read off the student's own record**, through their
  *    own session, not off the nudge row. That is what lets the copy say the
  *    real experiment title without trusting anything in the row.
@@ -330,6 +331,19 @@ function AnswerNudgeInner() {
     );
   }
 
+  // The rung this row names is not one we have, so there is nothing we can
+  // honestly put on the screen. The strings left on the row are the ones a
+  // student could have written, and this page renders them at heading size on
+  // our domain, so they are not shown at all. See rule 1 at the top.
+  if (!done && ask && !ask.rungKnown) {
+    return (
+      <Notice
+        title="This question is not one we ask any more."
+        body="It was sent a while ago and we have changed what we ask since. There is nothing you need to do with it, and nothing on your account has changed."
+      />
+    );
+  }
+
   if (done) {
     const target = internalRoute(ask?.target);
     let line = 'Saved. Thanks.';
@@ -373,12 +387,6 @@ function AnswerNudgeInner() {
           <h1 className="font-heading text-2xl font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>
             {ask.title}
           </h1>
-        )}
-
-        {ask.source === 'stored' && (
-          <p className="mt-3 text-xs" style={{ color: 'var(--text-muted)' }}>
-            This ask is an old one, so it is shown here exactly as it was written at the time.
-          </p>
         )}
 
         {ask.body && (

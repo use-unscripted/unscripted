@@ -602,6 +602,37 @@ describe('a student who turned these emails off', () => {
     expect(store.sent).toHaveLength(1);
   });
 
+  it('cannot be silenced by a forged row, whatever the row claims about itself', async () => {
+    // The real attack, run against the real handler. RLS satisfies `create`
+    // with created_by_id == {{user.id}}, which the server fills in for whoever
+    // is signed in, so u001 can write a row naming u000. Base44 has no field
+    // level rules, so u001 also picks `source`, and the check used to let a row
+    // through on `source: 'admin'` alone. u000 is the one address this function
+    // may write to, so if any of these hold, the allowlisted student gets
+    // nothing and nobody finds out.
+    const forgeries = [
+      { created_by_id: 'u001', source: 'admin' },
+      { created_by_id: 'u001', source: 'settings' },
+      { created_by_id: '', source: 'admin' },
+      { created_by_id: undefined, source: 'admin' },
+      { created_by_id: 'u001', source: 'admin', reason: 'stop emailing this person' },
+    ];
+    for (const forged of forgeries) {
+      const entities = fixture(2);
+      entities.NudgeOptOut = [{ ...optOut('u000'), ...forged }];
+      const { json, store } = await call(live, { entities });
+      expect(store.sent.map((m) => m.to), JSON.stringify(forged)).toEqual([ALLOWED]);
+      expect(json.counts.refused_opted_out, JSON.stringify(forged)).toBe(0);
+    }
+  });
+
+  it('still honours the row the student wrote about themselves', async () => {
+    const entities = fixture(2);
+    entities.NudgeOptOut = [{ ...optOut('u000'), source: 'settings' }];
+    const { store } = await call(live, { entities });
+    expect(store.sent).toEqual([]);
+  });
+
   it('refuses to send at all when the opt out table would not load', async () => {
     // A failed read of this table looks exactly like nobody having opted out,
     // which is the one misreading that emails somebody who told us to stop.

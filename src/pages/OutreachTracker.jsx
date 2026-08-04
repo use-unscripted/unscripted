@@ -19,8 +19,35 @@ const ALL_STATUS_OPTIONS = [
   { value: 'responded', label: 'Completed', bg: 'var(--success-50)', text: 'var(--success-700)' },
   { value: 'no_response', label: 'No response', bg: 'var(--ink-100)', text: 'var(--ink-500)' },
   { value: 'completed', label: 'Closed', bg: 'var(--success-50)', text: 'var(--success-700)' },
+  // Deciding not to pursue somebody is a result, not a gap, so it gets its own
+  // row rather than falling through to the first option and reading as "Not
+  // contacted". Missing from this list, a closed contact was invisible here,
+  // could not be set, and could not be filtered for.
+  { value: 'closed', label: 'Closed out', bg: 'var(--ink-100)', text: 'var(--ink-700)' },
   { value: 'other', label: 'Other', bg: 'var(--ink-100)', text: 'var(--ink-700)' },
 ];
+
+/**
+ * The contact is finished with, one way or another. A follow up cannot be
+ * overdue on somebody the student has closed out on purpose.
+ */
+const SETTLED_STATUSES = ['completed', 'responded', 'closed'];
+
+/**
+ * How to draw a status. An unknown stored value keeps its own name rather than
+ * borrowing the first option's, because a row silently displaying as something
+ * it is not is how the closed status went unnoticed in the first place.
+ */
+function statusStyle(stored) {
+  const known = ALL_STATUS_OPTIONS.find(x => x.value === stored);
+  if (known) return known;
+  return {
+    value: stored || 'not_sent',
+    label: String(stored || 'Not contacted').replace(/_/g, ' '),
+    bg: 'var(--ink-100)',
+    text: 'var(--ink-700)',
+  };
+}
 
 const CONTACT_TYPE_LABELS = {
   informational_interview: 'Info Interview', networking: 'Networking', mentor: 'Mentor',
@@ -39,8 +66,8 @@ function ContactCard({ c, experimentsMap, missionsMap, onEdit, onStatusChange, o
   const [confirmDelete, setConfirmDelete] = useState(false);
   const exp = c.experiment_id ? experimentsMap[c.experiment_id] : null;
   const mission = c.mission_id ? missionsMap[c.mission_id] : null;
-  const s = ALL_STATUS_OPTIONS.find(x => x.value === c.response_status) || ALL_STATUS_OPTIONS[0];
-  const isOverdue = c.followup_date && new Date(c.followup_date) < new Date() && !['completed','responded'].includes(c.response_status);
+  const s = statusStyle(c.response_status);
+  const isOverdue = c.followup_date && new Date(c.followup_date) < new Date() && !SETTLED_STATUSES.includes(c.response_status);
   // Contact URLs are typed by the student. Bare domains still get https://,
   // but anything that isn't http(s) after that is dropped rather than linked.
   const profileHref = safeExternalUrl(c.profile_url) || safeExternalUrl('https://' + (c.profile_url || ''));
@@ -243,7 +270,7 @@ export default function OutreachTracker() {
   const selectedPath = selectedPathId === 'all' ? null : paths.find(p => p.id === selectedPathId);
   const pathExps = selectedPath ? experiments.filter(e => e.path_name === selectedPath.path_name) : experiments;
 
-  const overdue = contacts.filter(c => c.followup_date && new Date(c.followup_date) < new Date() && !['completed','responded'].includes(c.response_status));
+  const overdue = contacts.filter(c => c.followup_date && new Date(c.followup_date) < new Date() && !SETTLED_STATUSES.includes(c.response_status));
 
   // Filtered contacts
   const filtered = contacts.filter(c => {

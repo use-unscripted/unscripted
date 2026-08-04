@@ -304,6 +304,64 @@ describe('readPulse: the stall list', () => {
     expect(kinds(focus)).toContain('path_without_experiment');
   });
 
+  it('stops asking about a path the student deliberately ruled out', () => {
+    // The one path account, which is the case that got worse rather than
+    // better. Before: a picked path with nothing under it, path_without_
+    // experiment at severity 88. The student says "yes, close this out", which
+    // writes status deprioritized and clears the focus flag. If deprioritized
+    // still counted as live, chosenPath went undefined, no_path_selected fired
+    // at 97, and the next email told them to pick from a set of one they had
+    // just rejected. Answering us has to make the asks quieter, never louder.
+    const before = readPulse({
+      now: NOW, user: user(), paths: [path({ is_primary_focus: true, status: 'active' })],
+    });
+    expect(kinds(before)).toContain('path_without_experiment');
+
+    const after = readPulse({
+      now: NOW, user: user(), paths: [path({ is_primary_focus: false, status: 'deprioritized' })],
+    });
+    expect(kinds(after)).not.toContain('no_path_selected');
+    expect(kinds(after)).not.toContain('path_without_experiment');
+    expect(after.claimed.paths).toBe(0);
+    // And nothing that is left may be more insistent than what it replaced.
+    const worstBefore = before.topStall ? before.topStall.severity : 0;
+    const worstAfter = after.topStall ? after.topStall.severity : 0;
+    expect(worstAfter).toBeLessThan(worstBefore);
+  });
+
+  it('still asks the student to pick when other paths are genuinely left', () => {
+    const pulse = readPulse({
+      now: NOW,
+      user: user(),
+      paths: [
+        path({ status: 'deprioritized' }),
+        path({ id: 'p2', path_name: 'UX research' }),
+      ],
+    });
+    expect(kinds(pulse)).toContain('no_path_selected');
+    expect(pulse.claimed.paths).toBe(1);
+  });
+
+  it('treats a contact closed out on purpose as neither a gap nor evidence', () => {
+    // 'closed' is what a rule out writes on an outreach ask. Counting it in
+    // outreachSent would report a student as having written to somebody they
+    // told us they would not write to, and that total is the number this file
+    // exists to keep honest.
+    const pulse = readPulse({
+      now: NOW, user: user(), outreach: [contact({ response_status: 'closed' })],
+    });
+    expect(pulse.evidence.outreachSent).toBe(0);
+    expect(kinds(pulse)).not.toContain('outreach_never_sent');
+    expect(kinds(pulse)).not.toContain('outreach_no_followup');
+    // A contact who really was written to and then closed still counts.
+    const written = readPulse({
+      now: NOW,
+      user: user(),
+      outreach: [contact({ response_status: 'closed', date_contacted: '2026-07-15' })],
+    });
+    expect(written.evidence.outreachSent).toBe(1);
+  });
+
   it('does not call a path empty when an experiment sits under it', () => {
     const pulse = readPulse({
       now: NOW, user: user(),

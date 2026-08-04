@@ -37,8 +37,27 @@ const isLive = (r) => !!r && typeof r === 'object'
 /** Guides carry the deletion twice: `deletion_status` and their own status enum. */
 const isLiveGuide = (g) => isLive(g) && g.status !== 'deleted';
 
-/** Paths (PathRecommendations rows) have no deletion_status, only an archive status. */
-const isLivePath = (p) => isLive(p) && p.status !== 'archived';
+/**
+ * Paths (PathRecommendations rows) have no deletion_status, only a status enum.
+ *
+ * Two of its values mean the path is behind the student rather than in front of
+ * them, and both have to be out of this list or the nudges get worse the moment
+ * somebody makes a decision. `archived` is filing. `deprioritized` is the
+ * student saying "not this one", which is the answer this whole product is
+ * built to collect, and it is what a rule out writes.
+ *
+ * Leaving `deprioritized` in here is not a small miss. A one path account that
+ * rules its path out keeps a live path with nothing focused, so `chosenPath`
+ * goes undefined and `no_path_selected` fires at severity 97 where
+ * `path_without_experiment` had been sitting at 88. The student says "yes,
+ * close this out" and the next email is more insistent than the last one and
+ * tells them to pick from a set of one they have just rejected.
+ *
+ * `src/pages/ExperimentsPage.jsx` and `path-sort-filter.js` already read these
+ * two together. This file was the outlier.
+ */
+const PATH_DECIDED_STATUSES = ['archived', 'deprioritized'];
+const isLivePath = (p) => isLive(p) && !PATH_DECIDED_STATUSES.includes(p.status);
 
 const rows = (v) => (Array.isArray(v) ? v.filter((r) => !!r && typeof r === 'object') : []);
 
@@ -56,6 +75,19 @@ const REPLIED_STATUSES = ['responded', 'call_scheduled', 'completed'];
  * clearest possible signal that a nudge is wanted, not a reason to skip one.
  */
 const AWAITING_REPLY_STATUSES = ['sent', 'no_response', 'follow_up_needed'];
+/**
+ * The student closed this contact out on purpose. It is neither a gap nor
+ * evidence, and it is what a rule out on an outreach ask writes.
+ *
+ * It has to be named separately from UNSENT_STATUSES, which mean "not written
+ * to yet". A contact closed cold was never written to, so counting it in
+ * `outreachSent` would report a student as having written to somebody they
+ * explicitly told us they would not write to, and `outreachSent` is part of the
+ * evidence total this whole file exists to keep honest. `sent` checks
+ * `date_contacted` first, so a contact who really was written to and then
+ * closed still counts.
+ */
+const SETTLED_STATUSES = ['closed'];
 
 /**
  * Whole days between two instants, clamped at 0. A future created_date is a
@@ -117,8 +149,12 @@ function inProgressSince(exp) {
   return exp.resumed_at || exp.created_date || null;
 }
 
+const settled = (c) => SETTLED_STATUSES.includes(c.response_status);
+
 const sent = (c) => !!text(c.date_contacted)
-  || (!!text(c.response_status) && !UNSENT_STATUSES.includes(c.response_status));
+  || (!!text(c.response_status)
+    && !UNSENT_STATUSES.includes(c.response_status)
+    && !settled(c));
 
 const replied = (c) => REPLIED_STATUSES.includes(c.response_status);
 
@@ -459,6 +495,10 @@ function findStalls(ctx) {
     // as a name once it is lifted back out of a sentence.
     const rawName = text(c.name);
     const name = rawName || 'someone';
+    // Closed out on purpose. Asking again about somebody the student has
+    // already decided against is the same mistake as nagging about a path they
+    // ruled out, and it is the one this product cannot afford to make.
+    if (settled(c)) continue;
     if (!sent(c)) {
       const days = daysBetween(c.created_date, nowMs);
       if (days === null || days <= 5) continue;

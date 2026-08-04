@@ -12,6 +12,7 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { LADDERS } from '@/lib/nudge-ladder';
 import { shouldSkipPass } from '@/lib/nudge';
+import { uiStatusOf, storedStatusOf } from '@/lib/linkedin';
 import {
   describeAsk, planResponse, isOptedOut, buildOptOut, optBackInPatch,
   RESPONSE_FIELDS, rungForKey,
@@ -103,25 +104,56 @@ describe('describeAsk resolves the copy from the ladder', () => {
     expect(withoutName.title).not.toContain('whatever was stored');
   });
 
-  it('degrades to the stored copy when the rung is gone, and says so', () => {
+  it('shows nothing at all when the rung key resolves to nothing', () => {
+    // The whole attack in one row. `rung_key` is a field on a row the student
+    // can update, so "fall back to the stored strings" is a way of asking to be
+    // given strings. Blank the key, write the phishing text, point the row at
+    // somebody else, and the old code printed it to them as an h1.
     const row = rowFor('experiment_without_guide', 0, {
-      rung_key: 'experiment_without_guide.r99',
-      ask_title: 'An ask from a ladder that no longer exists',
-      ask_body: 'The body it was sent with.',
+      rung_key: '',
+      ask_title: 'Unscripted needs you to confirm your password',
+      ask_body: 'Reply with your login at attacker@example.com to keep your account.',
+      question: 'What is your password?',
+      action_kind: 'rule_out',
+      subject_id: 'a-row-the-attacker-picked',
+      subject_type: 'experiment',
     });
     const ask = describeAsk(row);
-    expect(ask.source).toBe('stored');
     expect(ask.rungKnown).toBe(false);
-    expect(ask.title).toBe('An ask from a ladder that no longer exists');
-    // And it offers nowhere to go, because the target came off the ladder too.
+    expect(ask.source).toBe('unknown');
+    // Not "does not contain the bad words": no strings at all, so there is
+    // nothing for a future edit to leak through.
+    expect(ask.title).toBe('');
+    expect(ask.body).toBe('');
+    expect(ask.question).toBe('');
     expect(ask.target).toBe('');
+    // And nothing a click could aim a write at.
+    expect(ask.action_kind).toBe('');
+    expect(ask.subjectId).toBe('');
+    expect(ask.subjectType).toBe('');
+    expect(ask.closes).toBe(false);
+  });
+
+  it('gives an unresolved row no way to write against a chosen subject', () => {
+    const forged = rowFor('experiment_without_guide', 0, {
+      rung_key: 'experiment_without_guide.r99',
+      action_kind: 'rule_out',
+      subject_type: 'experiment',
+      subject_id: 'somebody-elses-experiment',
+    });
+    for (const choice of ['accepted', 'answered', 'declined']) {
+      const plan = planResponse({ nudge: forged, choice, replyText: 'yes', now: NOW });
+      expect(plan.ruleOut, choice).toBe(null);
+      expect(plan.optOut, choice).toBe(null);
+    }
   });
 
   it('does not throw on a row that is barely a row', () => {
     for (const bad of [null, undefined, 42, 'nudge', {}, { rung_key: 7, ask_title: {} }]) {
       expect(() => describeAsk(bad)).not.toThrow();
     }
-    expect(describeAsk({}).source).toBe('none');
+    expect(describeAsk({}).source).toBe('unknown');
+    expect(describeAsk({}).title).toBe('');
   });
 
   it('has no rung anywhere that claims a reply is evidence', () => {
@@ -309,7 +341,11 @@ describe('ruling something out, against the enums the entities really declare', 
 });
 
 describe('isOptedOut', () => {
-  const row = (extra = {}) => ({ user_id: 'student-1', deletion_status: 'active', ...extra });
+  // The creator is what the server stamps on a row a student created about
+  // themselves, and it is the only thing here a student cannot choose.
+  const row = (extra = {}) => ({
+    user_id: 'student-1', created_by_id: 'student-1', deletion_status: 'active', ...extra,
+  });
 
   it('sees a live opt out and ignores a soft deleted one', () => {
     expect(isOptedOut([row()], 'student-1')).toBe(true);
@@ -325,17 +361,29 @@ describe('isOptedOut', () => {
     expect(isOptedOut([row()], '')).toBe(false);
   });
 
-  it('refuses a row one student wrote about another', () => {
-    // Nothing in RLS stops a student creating a row naming somebody else, which
-    // would silence our emails to that person. This is the check that does.
+  it('refuses every row a student could write about another student', () => {
+    // RLS satisfies `create` with created_by_id == {{user.id}}, which the
+    // server fills in for everybody, so any signed in student can write a row
+    // naming any other student and silence our emails to them. Victim ids are
+    // not secret. This check is the only thing standing in the way, so every
+    // shape of the forgery is pinned here.
     expect(isOptedOut([row({ created_by_id: 'student-9' })], 'student-1')).toBe(false);
+    // `source` is a field on the row the attacker writes, so it can never be
+    // the thing that grants an exemption.
+    expect(isOptedOut([row({ created_by_id: 'student-9', source: 'admin' })], 'student-1')).toBe(false);
+    // And a row with no creator at all is a row we cannot attribute. The old
+    // check short circuited on the empty string and honoured it.
+    expect(isOptedOut([row({ created_by_id: '' })], 'student-1')).toBe(false);
+    expect(isOptedOut([row({ created_by_id: undefined })], 'student-1')).toBe(false);
+    expect(isOptedOut([{ user_id: 'student-1', deletion_status: 'active' }], 'student-1')).toBe(false);
+    // Their own row still works, which is the whole point of the entity.
     expect(isOptedOut([row({ created_by_id: 'student-1' })], 'student-1')).toBe(true);
-    // Unless an admin recorded it on their behalf, which says so.
-    expect(isOptedOut([row({ created_by_id: 'admin-1', source: 'admin' })], 'student-1')).toBe(true);
   });
 
   it('sees the row the settings page builds, and stops seeing it after opting back in', () => {
-    const created = buildOptOut({ userId: 'student-1', source: 'settings', now: NOW });
+    // buildOptOut does not set created_by_id, because the server does. The
+    // stamped row is what comes back and what gets read on the next pass.
+    const created = { ...buildOptOut({ userId: 'student-1', source: 'settings', now: NOW }), created_by_id: 'student-1' };
     expect(isOptedOut([created], 'student-1')).toBe(true);
     const off = { ...created, ...optBackInPatch(NOW) };
     expect(isOptedOut([off], 'student-1')).toBe(false);
@@ -346,6 +394,69 @@ describe('isOptedOut', () => {
     const sources = entityEnum('NudgeOptOut', 'source');
     expect(sources).toContain(buildOptOut({ userId: 'u', source: 'nonsense' }).source);
     expect(sources).toContain(buildOptOut({ userId: 'u', source: 'answer_page' }).source);
+  });
+});
+
+describe('the closed status a rule out writes survives being looked at', () => {
+  it('round trips through the outreach status map instead of reverting', () => {
+    // uiStatusOf('closed') used to fall through to 'planned', so anything that
+    // wrote the status back put 'not_sent' over a decision the student made.
+    // Editing a note inside a mission did exactly that.
+    expect(uiStatusOf('closed')).toBe('closed');
+    expect(storedStatusOf('closed')).toBe('closed');
+    expect(storedStatusOf(uiStatusOf('closed'))).toBe('closed');
+    // And the value the rule out actually writes is the one that round trips.
+    const plan = planResponse({
+      nudge: rowFor('outreach_never_sent', 3), choice: 'accepted', now: NOW,
+    });
+    expect(storedStatusOf(uiStatusOf(plan.ruleOut.patch.response_status)))
+      .toBe(plan.ruleOut.patch.response_status);
+  });
+
+  it('is a status the tracker can draw, set and filter for', () => {
+    // Read off disk rather than restated, because the failure this guards is a
+    // page whose option list and the stored value drifted apart: a closed
+    // contact rendered as "Not contacted" and there was no option to set it.
+    const page = readFileSync(
+      fileURLToPath(new URL('../pages/OutreachTracker.jsx', import.meta.url)),
+      'utf8',
+    );
+    expect(page).toMatch(/value:\s*'closed'/);
+    // The old fallback pinned an unknown stored value to the first option,
+    // which is what made a real decision read as "Not contacted".
+    expect(page).not.toContain('|| ALL_STATUS_OPTIONS[0]');
+  });
+});
+
+describe('the last rung of no_path_selected promises only what happens', () => {
+  const rung = LADDERS.no_path_selected[3];
+
+  it('does not say we will build a new set from the reply, because nothing does', () => {
+    // The copy used to say "we will throw the set out and build a new one from
+    // what you tell us". No code anywhere read a reply and built anything.
+    const copy = `${rung.title} ${rung.body} ${rung.question}`.toLowerCase();
+    expect(copy).not.toContain('we will throw');
+    expect(copy).not.toMatch(/we will (build|make|generate|create)/);
+    // What is true is that settings builds one from personal context, and that
+    // is where it now sends them.
+    expect(rung.target).toBe('/settings');
+    expect(rung.body).toContain('personal context');
+  });
+
+  it('closes nothing, so the page cannot offer to close something', () => {
+    // This stall carries no subject id, so there is no path row to rule out.
+    const ask = describeAsk(rowFor('no_path_selected', 3, { subject_id: '' }));
+    expect(ask.action_kind).toBe('rule_out');
+    expect(ask.closes).toBe(false);
+    const plan = planResponse({
+      nudge: rowFor('no_path_selected', 3, { subject_id: '' }),
+      choice: 'answered',
+      replyText: 'They are all finance and I want none of it.',
+      now: NOW,
+    });
+    expect(plan.ruleOut).toBe(null);
+    expect(plan.optOut).toBe(null);
+    expect(plan.nudgeUpdate.reply_text).toBe('They are all finance and I want none of it.');
   });
 });
 

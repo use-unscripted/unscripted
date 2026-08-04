@@ -9,16 +9,18 @@
  * Three rules are load bearing and are written down rather than left in the
  * code, because each of them is a thing somebody would reasonably undo.
  *
- * 1. **The copy on screen comes from the ladder, not from the row.** Row level
- *    update on StudentNudge is keyed on `data.user_id`, Base44 has no field
- *    level rules, and a student can therefore rewrite every field of their own
- *    nudge row, `user_id` included. If this file rendered the stored
- *    `ask_title` and `ask_body`, a student could edit those two fields, move
- *    the row onto somebody else's `user_id`, and have us print their text to
- *    another student under our name. So `rung_key` is resolved through LADDERS,
- *    and the stored strings are used only when the key no longer exists, which
- *    happens for real when a ladder is edited after rows were written. That
- *    case is flagged in the return so the page can render it plainly.
+ * 1. **The copy on screen comes from the ladder, and from nowhere else.** Row
+ *    level update on StudentNudge is keyed on `data.user_id`, Base44 has no
+ *    field level rules, and a student can therefore rewrite every field of
+ *    their own nudge row, `user_id` included. `rung_key` is one of those
+ *    fields, so "fall back to the stored strings when the key is unknown" is
+ *    not a fallback at all: blank the key, write what you like into
+ *    `ask_title`, move the row onto somebody else's `user_id`, and we print it
+ *    to them as a heading in our type on our domain. An earlier version of this
+ *    file did exactly that. So an unresolved `rung_key` now yields **no strings
+ *    at all**, and the page says plainly that the question is gone. A ladder
+ *    edited after rows exist is a real case and it costs those students one
+ *    unanswerable ask, which is the cheap half of this trade.
  *
  * 2. **A reply never becomes a ProofOfWork row.** That entity holds exactly one
  *    row, it belongs to a founder, and its count is a number we quote to
@@ -109,60 +111,77 @@ function stallFromRow(row, names = {}) {
 }
 
 /**
+ * Nothing to show, because the rung this row names is not one we have.
+ *
+ * Every string is empty on purpose. The only strings left on an unresolved row
+ * are the ones a student could have written, and the page that renders this
+ * puts a heading in our type on our domain in front of whoever the row's
+ * `user_id` points at. `closes` is false and both subject fields are blank so
+ * that a click on such a row cannot aim a write at a row id somebody chose.
+ */
+const NOTHING_TO_ASK = {
+  title: '',
+  body: '',
+  question: '',
+  action_kind: '',
+  size: '',
+  target: '',
+  source: 'unknown',
+  rungKnown: false,
+  closes: false,
+  yieldsProof: false,
+  stallKind: '',
+  subjectType: '',
+  subjectId: '',
+};
+
+/**
+ * Will answering yes to this ask actually close something.
+ *
+ * The page asks so it can stop offering "yes, close it out" on an ask where
+ * nothing would be closed, and `planResponse` agrees with it by construction
+ * rather than by both of them reading the same fields the same way.
+ */
+function closesSomething(actionKind, subjectType, subjectId) {
+  if (actionKind !== 'rule_out') return false;
+  if (subjectType === 'account') return true;
+  return !!RULE_OUT[subjectType] && !!str(subjectId);
+}
+
+/**
  * What to put on screen for one stored nudge row.
  *
  * @param {object} nudgeRow the StudentNudge row
  * @param {{subjectName?: string, pathName?: string}} [names] read from the
  *   student's own subject record, never from the nudge row
  * @returns {{title: string, body: string, question: string, action_kind: string,
- *   size: string, target: string, source: 'ladder'|'stored'|'none',
- *   rungKnown: boolean, yieldsProof: boolean, stallKind: string,
- *   subjectType: string, subjectId: string}}
+ *   size: string, target: string, source: 'ladder'|'unknown',
+ *   rungKnown: boolean, closes: boolean, yieldsProof: boolean,
+ *   stallKind: string, subjectType: string, subjectId: string}}
  */
 export function describeAsk(nudgeRow, names = {}) {
   const row = nudgeRow && typeof nudgeRow === 'object' ? nudgeRow : {};
-  const stallKind = str(row.stall_kind);
-  const subjectType = str(row.subject_type) || 'account';
-  const subjectId = str(row.subject_id);
 
   const rung = rungForKey(row.rung_key);
-  if (rung) {
-    const filled = fillRung(rung, stallFromRow(row, names), null);
-    return {
-      title: filled.title,
-      body: filled.body,
-      question: filled.question,
-      action_kind: filled.action_kind,
-      size: filled.size,
-      target: filled.target,
-      source: 'ladder',
-      rungKnown: true,
-      yieldsProof: rung.yieldsProof === true,
-      stallKind,
-      subjectType,
-      subjectId,
-    };
-  }
+  // No rung, no ask. See rule 1 at the top of this file before softening this
+  // into "show the stored strings when we cannot resolve the key".
+  if (!rung) return { ...NOTHING_TO_ASK };
 
-  // The ladder no longer has this rung. The stored strings are all that is
-  // left, and they are the ones a student could have rewritten, so the caller
-  // is told where the words came from and shows them plainly rather than as
-  // something we are saying.
-  const title = boundedText(row.ask_title, 200);
-  const body = boundedText(row.ask_body, 2000);
-  const question = boundedText(row.question, 500);
-  const hasCopy = !!(title || body || question);
+  const subjectType = str(row.subject_type) || 'account';
+  const subjectId = str(row.subject_id);
+  const filled = fillRung(rung, stallFromRow(row, names), null);
   return {
-    title,
-    body,
-    question,
-    action_kind: str(row.action_kind) || 'answer_question',
-    size: str(row.size) || 'one_line',
-    target: '',
-    source: hasCopy ? 'stored' : 'none',
-    rungKnown: false,
-    yieldsProof: false,
-    stallKind,
+    title: filled.title,
+    body: filled.body,
+    question: filled.question,
+    action_kind: filled.action_kind,
+    size: filled.size,
+    target: filled.target,
+    source: 'ladder',
+    rungKnown: true,
+    closes: closesSomething(filled.action_kind, subjectType, subjectId),
+    yieldsProof: rung.yieldsProof === true,
+    stallKind: str(row.stall_kind),
     subjectType,
     subjectId,
   };
@@ -285,12 +304,19 @@ export function optBackInPatch(now) {
  * Soft deleted rows do not count: deleting the row is how opting back in is
  * recorded.
  *
- * The `created_by_id` check is the one thing here that is not obvious. RLS on
- * this entity lets a student create a row, and nothing at that layer stops the
- * row naming somebody else, which would quietly silence our emails to another
- * student. A row a student wrote about themselves has `created_by_id` equal to
- * their own id, so a row where the two disagree is either forged or was written
- * by an admin on somebody's behalf, and the second case says so in `source`.
+ * **`created_by_id` must equal `user_id`, with no exception.** RLS on this
+ * entity satisfies `create` with `created_by_id == {{user.id}}`, which the
+ * server fills in for whoever is signed in, so any student can create a row
+ * naming any other student's `user_id` and silence our emails to them. Victim
+ * ids are not secret: NetworkProfile, Follow and User all read openly.
+ *
+ * An earlier version of this check let a row through when `created_by_id` and
+ * `user_id` disagreed as long as the row said `source: 'admin'`, and let a row
+ * with no `created_by_id` at all through by short circuiting on the empty
+ * string. Both are fields on a row a student writes, so both were the attack
+ * rather than the defence. There is no admin exemption here now: if one is ever
+ * genuinely needed, resolve `created_by_id` against the loaded `User` rows and
+ * require `role === 'admin'` there. Never trust `source`.
  *
  * @param {object[]} optOutRows NudgeOptOut rows, any shape
  * @param {string} userId
@@ -303,9 +329,9 @@ export function isOptedOut(optOutRows, userId) {
     if (!row || typeof row !== 'object') return false;
     if (isDeleted(row)) return false;
     if (str(row.user_id) !== uid) return false;
-    const creator = str(row.created_by_id);
-    if (creator && creator !== uid && str(row.source) !== 'admin') return false;
-    return true;
+    // A missing creator is a row we cannot attribute, which is not the same as
+    // a row the student wrote. It does not count.
+    return str(row.created_by_id) === uid;
   });
 }
 
@@ -364,6 +390,11 @@ export function planResponse(input = {}) {
   const reply = boundedText(replyText, MAX_REPLY_CHARS);
   const reason = boundedText(declineReason, MAX_REPLY_CHARS);
   const isRuleOut = ask.action_kind === 'rule_out';
+  // `closes` is the narrower of the two and is what every write below keys on.
+  // It is false for an ask whose rung we could not resolve, which is the case
+  // where `action_kind` and `subject_id` are strings a student may have typed,
+  // and false for a rule out with nothing on the other end of it.
+  const willClose = ask.closes === true;
 
   // Only ever the response fields. Never `user_id`, never the copy, never
   // `evidence_seen_at`: that one is the pulse's word that the student really
@@ -394,12 +425,12 @@ export function planResponse(input = {}) {
       nudgeUpdate,
       // A rule out rung answered in words is still a rule out. The sentence is
       // the reason, and it is the most valuable thing on the page.
-      ruleOut: isRuleOut
+      ruleOut: willClose
         ? ruleOutFor({
           subjectType: ask.subjectType, subjectId: ask.subjectId, reason: reply, nowISO, subject,
         })
         : null,
-      optOut: isRuleOut && ask.subjectType === 'account'
+      optOut: willClose && ask.subjectType === 'account'
         ? buildOptOut({
           userId: row.user_id, source: 'answer_page', reason: reply, now: nowISO,
         })
@@ -421,12 +452,12 @@ export function planResponse(input = {}) {
   nudgeUpdate.reply_text = reply;
   return {
     nudgeUpdate,
-    ruleOut: isRuleOut
+    ruleOut: willClose
       ? ruleOutFor({
         subjectType: ask.subjectType, subjectId: ask.subjectId, reason: reply, nowISO, subject,
       })
       : null,
-    optOut: isRuleOut && ask.subjectType === 'account'
+    optOut: willClose && ask.subjectType === 'account'
       ? buildOptOut({
         userId: row.user_id, source: 'answer_page', reason: reply, now: nowISO,
       })
