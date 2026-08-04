@@ -28,8 +28,22 @@
 /** Sizes from largest ask to smallest. A ladder never goes back up this list. */
 export const RUNG_SIZES = ['large', 'medium', 'small', 'one_line'];
 
-/** Longest an `ask_title` may be, filled. The entity says under 60. */
-export const MAX_TITLE_CHARS = 59;
+/**
+ * Longest an `ask_title` may be, filled.
+ *
+ * Nothing enforces this but us: `ask_title` on StudentNudge is a plain string
+ * with no length on it, live and in the entity file. An earlier version of this
+ * line said the entity capped it under 60 and it never did. What the number is
+ * really for is the inbox, where the title is the subject line, so 78 is the
+ * long standing ceiling for one.
+ *
+ * It was 59, and that was measured wrong rather than chosen: against the real
+ * rows, 195 of 265 experiment titles and 201 of 261 path names overflowed the
+ * longer headlines, so an ellipsis in the subject line was the normal case
+ * rather than the exception. At 78 the same rungs overflow 31 and 32 times, and
+ * what happens then is below.
+ */
+export const MAX_TITLE_CHARS = 78;
 
 /** Routes, kept in one place so a rename in App.jsx is one edit here. */
 const R = {
@@ -113,6 +127,50 @@ export const LADDERS = {
     },
   ],
 
+  // Every path decided against, nothing open, and the student was the one who
+  // decided. Three rungs, not four, for the same reason the dormant ladder is
+  // short: there is one honest thing to offer and one way out, and a graded set
+  // of options for somebody who has already answered is padding.
+  //
+  // What this may not do is promise a new set arrives on its own. Nothing reads
+  // a reply and builds anything. What is true, and what r0 says, is that
+  // settings takes updated personal context and offers to build a fresh set off
+  // it, which is a button a student presses themselves. The same promise was
+  // written into `no_path_selected.r3` once, was not kept, and was taken back
+  // out. Do not put it back here.
+  all_paths_ruled_out: [
+    {
+      key: 'all_paths_ruled_out.r0',
+      size: 'large',
+      action_kind: 'refresh_paths',
+      title: 'Get a new set of paths built',
+      body: 'You went through the paths we gave you and none of them was it. That is a '
+        + 'result, and it is worth more than testing one you never believed in. Open your '
+        + 'settings, update your personal context with what you now know you want, and ask '
+        + 'for fresh paths.',
+      target: R.settings,
+    },
+    {
+      key: 'all_paths_ruled_out.r1',
+      size: 'one_line',
+      action_kind: 'answer_question',
+      title: 'One sentence on what was missing',
+      body: 'One sentence back. We read these, and it changes what we ask you next.',
+      question: 'What was missing from the paths we gave you?',
+      target: '',
+    },
+    {
+      key: 'all_paths_ruled_out.r2',
+      size: 'one_line',
+      action_kind: 'rule_out',
+      title: 'Say the word and we will stop',
+      body: 'If none of this is what you want right now, say so and we will stop sending '
+        + 'these. Your account stays where it is and you can come back to it whenever.',
+      question: 'Do you want us to stop for now?',
+      target: R.journey,
+    },
+  ],
+
   path_without_experiment: [
     {
       key: 'path_without_experiment.r0',
@@ -128,7 +186,7 @@ export const LADDERS = {
       key: 'path_without_experiment.r1',
       size: 'small',
       action_kind: 'start_experiment',
-      title: 'Five minutes: name one experiment',
+      title: 'Five minutes: name one experiment for {path}',
       body: 'Five minutes. Open the setup, write the title of the thing you would test '
         + 'about {path}, and leave the rest blank. Once it has a name you can come back to '
         + 'it. Right now there is nothing to come back to.',
@@ -172,7 +230,7 @@ export const LADDERS = {
       key: 'experiment_without_guide.r1',
       size: 'medium',
       action_kind: 'generate_guide',
-      title: 'Five minutes: read the steps',
+      title: 'Five minutes: read the steps for {subject}',
       body: 'Five minutes. Generate the steps for {subject} and read them. You do not have '
         + 'to do anything after that. Reading step one is how you find out whether this is '
         + 'the experiment you actually want.',
@@ -182,7 +240,7 @@ export const LADDERS = {
       key: 'experiment_without_guide.r2',
       size: 'one_line',
       action_kind: 'answer_question',
-      title: 'One sentence on what is in the way',
+      title: 'One sentence on what is in the way of {subject}',
       body: 'One sentence back. Nobody else reads it, and it decides what we send you next.',
       question: 'What is in the way of starting {subject}?',
       target: '',
@@ -215,7 +273,7 @@ export const LADDERS = {
       key: 'guide_never_acted_on.r1',
       size: 'medium',
       action_kind: 'open_guide',
-      title: 'Twenty minutes on step one',
+      title: 'Twenty minutes on step one of {subject}',
       body: 'Twenty minutes, then stop, finished or not. Open {subject} and work on the '
         + 'first step until the twenty minutes are up. Stopping on time is part of the ask.',
       target: expRoute,
@@ -224,7 +282,7 @@ export const LADDERS = {
       key: 'guide_never_acted_on.r2',
       size: 'one_line',
       action_kind: 'answer_question',
-      title: 'One sentence on which step is stuck',
+      title: 'One sentence on which step of {subject} is stuck',
       body: 'One sentence back. We will use it to change what the steps ask of you.',
       question: 'Which step of {subject} is the one you keep not doing?',
       target: '',
@@ -297,7 +355,7 @@ export const LADDERS = {
       key: 'outreach_never_sent.r1',
       size: 'small',
       action_kind: 'send_outreach',
-      title: 'Two minutes: read the draft',
+      title: 'Two minutes: read the draft to {subject}',
       body: 'Two minutes. Open the draft for {subject} and read it. If a line does not '
         + 'sound like you, rewrite that line. You do not have to send it today.',
       target: R.outreach,
@@ -306,7 +364,7 @@ export const LADDERS = {
       key: 'outreach_never_sent.r2',
       size: 'one_line',
       action_kind: 'answer_question',
-      title: 'One sentence on what stops the send',
+      title: 'One sentence on what stops the note to {subject}',
       body: 'One sentence back. If the draft is the problem we will rewrite it. If the '
         + 'person is the problem we will find you someone else to write to.',
       question: 'What stops you from sending the note to {subject}?',
@@ -342,7 +400,7 @@ export const LADDERS = {
       key: 'outreach_no_followup.r1',
       size: 'small',
       action_kind: 'send_outreach',
-      title: 'Two minutes: write it and stop there',
+      title: 'Two minutes: write the follow up to {subject}',
       body: 'Two minutes. Write the two lines you would send {subject} and save the draft. '
         + 'Do not send it today. Writing it is the part that takes effort, and you can send '
         + 'it any day this week.',
@@ -352,7 +410,7 @@ export const LADDERS = {
       key: 'outreach_no_followup.r2',
       size: 'one_line',
       action_kind: 'answer_question',
-      title: 'One sentence: chase or leave it',
+      title: 'One sentence: chase {subject} or leave it',
       body: 'One sentence back and we will stop asking about this one either way.',
       question: 'Do you want to write to {subject} again, or leave it there?',
       target: '',
@@ -384,7 +442,7 @@ export const LADDERS = {
       key: 'experiment_no_proof.r1',
       size: 'small',
       action_kind: 'log_proof',
-      title: 'Five minutes: log the rough version',
+      title: 'Five minutes: log the rough version of {subject}',
       body: 'Five minutes. Upload the roughest thing you have from {subject}, or a '
         + 'screenshot of it, and write two sentences about what it is. Nobody sees it '
         + 'unless you make it public.',
@@ -394,7 +452,7 @@ export const LADDERS = {
       key: 'experiment_no_proof.r2',
       size: 'one_line',
       action_kind: 'answer_question',
-      title: 'One sentence on what you have done',
+      title: 'One sentence on what you have done on {subject}',
       body: 'One sentence back. If the answer is nothing yet, say that. It is still a '
         + 'useful answer.',
       question: 'What have you actually done on {subject} so far?',
@@ -428,7 +486,7 @@ export const LADDERS = {
       key: 'reflection_overdue.r1',
       size: 'small',
       action_kind: 'write_reflection',
-      title: 'Five minutes: one paragraph',
+      title: 'Five minutes: one paragraph on {subject}',
       body: 'Five minutes. One paragraph on what surprised you about {subject}. Skip the '
         + 'rest of the prompts.',
       target: R.reflect,
@@ -562,9 +620,10 @@ const PLACEHOLDER_NAMES = ['someone', 'a mission', 'an experiment', 'a path'];
 function subjectFor(stall) {
   const s = stall && typeof stall === 'object' ? stall : {};
   const type = GENERIC_SUBJECT[s.subjectType] ? s.subjectType : 'account';
+  const generic = GENERIC_SUBJECT[type];
 
   const given = str(s.subjectName) || str(s.subject);
-  if (given) return { text: given, quoted: QUOTED_SUBJECT_TYPES.includes(type) };
+  if (given) return { text: given, quoted: QUOTED_SUBJECT_TYPES.includes(type), generic };
 
   const label = str(s.label);
   for (const pattern of LABEL_PATTERNS) {
@@ -573,18 +632,21 @@ function subjectFor(stall) {
     if (!found || PLACEHOLDER_NAMES.includes(found.toLowerCase())) continue;
     // A quoted title is a title and reads better kept in its quotes. A name
     // lifted out of running prose is a name and does not.
-    return { text: found, quoted: pattern === LABEL_PATTERNS[0] };
+    return { text: found, quoted: pattern === LABEL_PATTERNS[0], generic };
   }
-  return { text: GENERIC_SUBJECT[type], quoted: false };
+  return { text: generic, quoted: false, generic };
 }
 
 function pathFor(stall, subject) {
   const s = stall && typeof stall === 'object' ? stall : {};
   const given = str(s.pathName);
-  if (given) return { text: given, quoted: false };
+  if (given) return { text: given, quoted: false, generic: GENERIC_SUBJECT.path };
   if (s.subjectType === 'path') return subject;
-  return { text: GENERIC_SUBJECT.path, quoted: false };
+  return { text: GENERIC_SUBJECT.path, quoted: false, generic: GENERIC_SUBJECT.path };
 }
+
+/** The same subject with its name swapped for the noun its type reads as. */
+const asGeneric = (subject) => ({ text: subject.generic, quoted: false, generic: subject.generic });
 
 /** Shortens a string to `max` characters, keeping whole words where it can. */
 function clip(value, max) {
@@ -616,18 +678,30 @@ function substitute(template, subjectText, pathText) {
 }
 
 /**
- * A title has a hard length limit and a name can be any length, so the name is
- * shortened until the finished title fits rather than the title being chopped
- * mid word.
+ * A title has a length limit and a name can be any length, so a name that does
+ * not fit is replaced by the noun its type reads as, whole.
+ *
+ * Not shortened. This used to shrink the name in steps and then chop it, which
+ * put an ellipsis in the middle of a student's own experiment title in the
+ * subject line of the email, while the body two lines down printed the same
+ * title in full. A subject line is the one string in this product a student
+ * sees before deciding whether we are worth reading, and a name cut off mid
+ * word is the clearest possible sign nobody looked at it.
+ *
+ * The generic nouns are built for this: the comment on GENERIC_SUBJECT is that
+ * each one has to read correctly in every sentence of every ladder, which is
+ * exactly the guarantee this needs. So "Call “Interview someone working in
+ * Commercial Real Estate Acquisitions” done" becomes "Call your experiment
+ * done", and the name is still in the body.
  */
 function fillTitle(template, subject, path) {
   const full = substitute(template, render(subject), render(path));
   if (full.length <= MAX_TITLE_CHARS) return full;
-  for (let budget = 36; budget >= 8; budget -= 4) {
-    const tighter = substitute(template, render(subject, budget), render(path, budget));
-    if (tighter.length <= MAX_TITLE_CHARS) return tighter;
-  }
-  return clip(substitute(template, render(subject, 8), render(path, 8)), MAX_TITLE_CHARS);
+  const generic = substitute(template, render(asGeneric(subject)), render(asGeneric(path)));
+  if (generic.length <= MAX_TITLE_CHARS) return generic;
+  // Only reachable if a rung's own fixed words run past the limit on their own,
+  // which a test in nudge.test.js holds them under.
+  return clip(generic, MAX_TITLE_CHARS);
 }
 
 /**
