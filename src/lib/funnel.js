@@ -22,7 +22,13 @@
  *   intake_started            opened the intake (resumed: true if a draft existed)
  *   intake_step_completed     cleared a step (step_index, step_label)
  *   intake_step_blocked       hit validation and could not continue
- *   paths_intake_reached      got to path selection
+ *   paths_intake_reached      answered every question and reached the review
+ *                             screen. Named for the old intake, where path
+ *                             selection was the final step; it is the first
+ *                             four questions now, so the name says "reached
+ *                             path selection" and the event means "finished
+ *                             the intake". Carries intake_version, which is
+ *                             how a dashboard tells the two shapes apart.
  *   paths_selected            picked a path and moved on
  *   wall_reached              ── THE DENOMINATOR ── saw the account wall, signed out
  *   wall_signup_clicked       took the wall's main CTA

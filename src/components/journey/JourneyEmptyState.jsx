@@ -16,7 +16,10 @@ const STATES = {
     Icon: Sparkles,
     title: 'Your paths haven’t been generated yet',
     body: 'Your onboarding answers are saved. Generate your three paths to start comparing them.',
-    cta: { label: 'Generate my paths', to: '/paths-intake' },
+    // Straight to generation. Their answers are already saved, so sending them
+    // through the signed-out intake ended at the account wall, which bounces a
+    // student who already has an account back here with nothing generated.
+    cta: { label: 'Generate my paths', to: '/generating' },
   },
   path: {
     Icon: ListChecks,

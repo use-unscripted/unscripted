@@ -2,7 +2,11 @@ import { base44 } from '@/api/base44Client';
 import { loadOwnedPaths, authoritativeSet, loadOnboardingSubmission } from '@/lib/path-set';
 import { trackPilotEvent } from '@/lib/pilot-metrics';
 import { unwrapLLM, PLAIN_PROSE_RULES } from '@/lib/llm';
-import { validatePathSet, READINESS_MIN, READINESS_MAX } from '@/lib/path-validation';
+import {
+  validatePathSet, pathRecSchema, experimentSchema, str,
+  READINESS_MIN, READINESS_MAX,
+} from '@/lib/path-validation';
+import { logAiFailure } from '@/lib/ai-failures';
 
 /**
  * The stage a generation reached before it failed.
@@ -44,65 +48,20 @@ export class PathGenerationError extends Error {
  * here. A generated path name is built from the student's own answers about
  * their life; it is not console material.
  */
-function logStage(stage, codes = []) {
+function logStage(stage, codes = [], extra = {}) {
   console.error(`[path-gen] failed at stage=${stage}${codes.length ? ` codes=${codes.join(',')}` : ''}`);
+  // Fire and forget. Recording a failure must never add a second failure.
+  logAiFailure('path_generation', { stage, codes, model: 'gemini_3_1_pro', ...extra });
 }
 
 /** How many times the model is asked, including the guided retry. */
 const MAX_ATTEMPTS = 2;
 
-const str = { type: 'string' };
-const strArr = { type: 'array', items: { type: 'string' } };
-
-const missionStepSchema = {
-  type: 'object',
-  properties: {
-    order: { type: 'number' },
-    title: { type: 'string' },
-    description: { type: 'string' },
-    estimated_minutes: { type: 'number' },
-    status: { type: 'string' },
-    proof_required: { type: 'string' },
-  }
-};
-
-const pathRecSchema = {
-  type: 'object',
-  properties: {
-    path_name: str,
-    fit_reason: str,
-    concern: str,
-    lifestyle_implications: str,
-    main_tradeoffs: str,
-    // Bounded here as well as in the validator. The schema is the cheap ask —
-    // it costs a retry only when the model ignores it — and 261 live rows were
-    // written before anything stated the scale at all.
-    readiness_score: { type: 'number', minimum: READINESS_MIN, maximum: READINESS_MAX },
-    confidence_level: { type: 'string', enum: ['low', 'medium', 'high'] },
-    risk_level: { type: 'string', enum: ['low', 'medium', 'high'] },
-    current_gaps: strArr,
-    first_experiment: str,
-    path_fit_signals: strArr,
-  }
-};
-
-const experimentSchema = {
-  type: 'object',
-  properties: {
-    title: str,
-    objective: str,
-    why_recommended: str,
-    expected_learning: str,
-    estimated_hours: { type: 'number' },
-    deliverable: str,
-    completion_criteria: str,
-    proof_required: str,
-    mission_steps: { type: 'array', items: missionStepSchema },
-    reflection_questions: strArr,
-    common_mistakes: strArr,
-    alternative_version: str,
-  }
-};
+/**
+ * Cap on problems carried into a retry prompt, a log line, or an analytics
+ * event. Without it a pathological response makes all three unbounded.
+ */
+const MAX_REPORTED_PROBLEMS = 8;
 
 /**
  * Generates the student's path set.
@@ -167,6 +126,8 @@ Student profile:
 - Year: ${profile.school_year || user.school_year || 'Unknown'}
 - Primary path to test: ${primaryPath}
 - Comparison path: ${comparisonPath || 'none specified'}
+- Path they feel most pressure to pursue: ${profile.pressured_paths || 'Not specified'}
+- Path they are privately curious about: ${profile.secret_paths || 'Not specified'}
 - Future vision (5-10 years): ${profile.desired_lifestyle || 'Not specified'}${profile.vision_timeframe ? ` (timeframe: ${profile.vision_timeframe.replace('_', ' ')})` : ''}${Array.isArray(profile.vision_themes) && profile.vision_themes.length ? ` [themes: ${profile.vision_themes.join(', ')}]` : ''}
 - Biggest blocker: ${profile.biggest_blocker || 'Not specified'}
 - Fixed commitments: ${profile.commitments || 'Not specified'}
@@ -181,6 +142,11 @@ TASK: Generate exactly 3 path recommendations:
 3. Contrarian option (challenges their default assumptions)
 
 All three are required, all three must have a distinct path_name, and each needs a fit_reason.
+
+The pressured path and the privately curious path are the two answers that make
+the contrarian recommendation worth reading. Where a student named both, the
+contrarian option should engage with the gap between them rather than ignore it.
+Where they named neither, treat this as a normal contrarian pick.
 
 "readiness_score" is on a ${READINESS_MIN}-${READINESS_MAX} scale, where ${READINESS_MAX} means the student could credibly pursue this path today and ${READINESS_MIN} means they are starting from nothing. It is not a fraction and not a percentage. A student who is roughly half-ready scores 5, never 0.5.
 
@@ -223,6 +189,7 @@ ${PLAIN_PROSE_RULES}`;
   // point of validating before the first `create` rather than after it.
   let validation = null;
   let correction = '';
+  const rejectedCodes = [];
 
   for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
     let raw;
@@ -246,21 +213,43 @@ ${PLAIN_PROSE_RULES}`;
     if (import.meta.env?.DEV && validation.warnings.length) {
       console.warn('[path-gen] repaired:', validation.warnings);
     }
-    if (validation.ok) break;
+    if (validation.ok) {
+      if (attempt > 0) {
+        // The student never saw this. It is still the model drifting, and this
+        // is the highest-volume generation in the app, so without this row the
+        // "recovered on retry" signal would be blind exactly where it matters.
+        logAiFailure('path_generation', {
+          stage: STAGES.VALIDATE,
+          codes: rejectedCodes,
+          attempts: attempt + 1,
+          recovered: true,
+          model: 'gemini_3_1_pro',
+        });
+      }
+      break;
+    }
 
+    rejectedCodes.push(...validation.codes);
+
+    // Capped. Nothing bounds how many problems one response can have, and an
+    // uncapped list would put the whole of a bad response back into the retry
+    // prompt. The first few are what a retry actually needs.
     correction = `\n\nYour previous attempt was rejected for these reasons:\n${validation.errors
+      .slice(0, MAX_REPORTED_PROBLEMS)
       .map(e => `- ${e}`)
       .join('\n')}\nFix every one of them.`;
   }
 
   if (!validation.ok) {
-    // Only the codes are logged. The prose reasons can quote generated text,
-    // which is derived from what the student told us about their life.
-    logStage(STAGES.VALIDATE, validation.codes);
+    // Only the codes are logged, and only the first few. The prose reasons can
+    // quote generated text, which is derived from what the student told us
+    // about their life.
+    const codes = [...new Set([...rejectedCodes, ...validation.codes])].slice(0, MAX_REPORTED_PROBLEMS);
+    logStage(STAGES.VALIDATE, codes, { attempts: MAX_ATTEMPTS, recovered: false });
     throw new PathGenerationError(
-      'Your results came back incomplete. Your answers are saved. Please try again.',
+      'Your results came back incomplete. Your answers are saved, please try again.',
       STAGES.VALIDATE,
-      { codes: validation.codes }
+      { codes }
     );
   }
 

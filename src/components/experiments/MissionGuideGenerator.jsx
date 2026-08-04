@@ -3,6 +3,16 @@ import { X, Loader2, Wand2, AlertCircle } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { unwrapLLM } from '@/lib/llm';
 import { buildGuidePrompt, GUIDE_JSON_SCHEMA, validateGuide, attachCampusEvent } from './guideSchema';
+import { logAiFailure } from '@/lib/ai-failures';
+
+/**
+ * The guide validator returns prose reasons, which quote generated text. The
+ * failure log only ever holds slugs, so reasons are reduced to a count here
+ * rather than passed through.
+ */
+function guideFailureCodes(errors = []) {
+  return errors.length ? [`guide_rejected_${Math.min(errors.length, 9)}`] : ['guide_rejected'];
+}
 import { createGuideOnce, newIdempotencyKey } from './guideIdempotency';
 import CampusEventPicker from './CampusEventPicker';
 import CampusEventCard from './CampusEventCard';
@@ -138,7 +148,17 @@ export default function MissionGuideGenerator({ experiment, existingGuides = [],
         if (import.meta.env?.DEV && validation.warnings.length) {
           console.warn('[MissionGuide] repaired:', validation.warnings);
         }
-        if (validation.ok) break;
+        if (validation.ok) {
+          if (attempt > 0) {
+            // The student never saw this one. It is still the model drifting.
+            logAiFailure('mission_guide', {
+              stage: 'validate', codes: guideFailureCodes(validation.errors),
+              attempts: attempt + 1, recovered: true, model: 'gemini_3_1_pro',
+              experiment_id: experiment?.id,
+            });
+          }
+          break;
+        }
 
         if (attempt === 0) {
           promptContext = buildPrompt(
@@ -150,6 +170,11 @@ export default function MissionGuideGenerator({ experiment, existingGuides = [],
       }
 
       if (!validation.ok) {
+        logAiFailure('mission_guide', {
+          stage: 'validate', codes: guideFailureCodes(validation.errors),
+          attempts: 2, recovered: false, model: 'gemini_3_1_pro',
+          experiment_id: experiment?.id,
+        });
         throw new Error(validation.errors[0] || 'Generation failed. Please try again.');
       }
 

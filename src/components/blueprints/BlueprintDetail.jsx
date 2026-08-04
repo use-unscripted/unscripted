@@ -40,7 +40,7 @@ const Skeleton = () => (
   </div>
 );
 
-export default function BlueprintDetail({ bp, detail, loading, onBack }) {
+export default function BlueprintDetail({ bp, detail, loading, error, onBack }) {
   return (
     <main className="mx-auto max-w-6xl px-5 py-10 sm:px-8">
       <button
@@ -58,6 +58,13 @@ export default function BlueprintDetail({ bp, detail, loading, onBack }) {
       </div>
 
       {loading && <Skeleton />}
+
+      {!loading && error && (
+        <div className="rounded-[16px] px-5 py-4 text-sm"
+          style={{ background: 'var(--warning-50)', border: '1px solid var(--warning-700)', color: 'var(--warning-700)' }}>
+          {error}
+        </div>
+      )}
 
       {detail && (
         <div className="grid gap-4 md:grid-cols-2">

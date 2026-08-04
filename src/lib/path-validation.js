@@ -35,29 +35,23 @@
  * console output.
  */
 
-/** Readiness is a 0–10 scale. Stated in the prompt, bounded in both schemas. */
+import { isPlainObject, describeShape, toBoundedNumber, LEVELS } from '@/lib/ai-validation';
+
+/** Readiness is a 0-10 scale. Stated in the prompt, bounded in both schemas. */
 export const READINESS_MIN = 0;
 export const READINESS_MAX = 10;
 
-export const LEVELS = ['low', 'medium', 'high'];
+export { LEVELS };
 
 const REQUIRED_REC_COUNT = 3;
+
+/** The prompt asks for 8 to 12 hours per experiment. This is the outer bound. */
+const MAX_EXPERIMENT_HOURS = 60;
 
 /** How many experiments the prompt asks for. Fewer is a warning, not a failure. */
 const EXPECTED_EXPERIMENT_COUNT = 3;
 
 const DEFAULT_STEP_MINUTES = 30;
-
-function isPlainObject(value) {
-  return !!value && typeof value === 'object' && !Array.isArray(value);
-}
-
-/** Describe a malformed item by shape only — never by content. */
-function describeShape(value) {
-  if (value === null) return 'null';
-  if (Array.isArray(value)) return 'an array';
-  return `a ${typeof value}`;
-}
 
 function cleanString(value) {
   return typeof value === 'string' ? value.trim() : '';
@@ -76,6 +70,66 @@ function toNumber(value) {
   }
   return null;
 }
+
+
+// ---- Request schema -------------------------------------------------------
+//
+// The schema the model is asked for lives next to the validator that checks
+// what comes back, so the two cannot drift apart unnoticed. A test asserts
+// they declare exactly the same fields.
+
+export const str = { type: 'string' };
+const strArr = { type: 'array', items: { type: 'string' } };
+
+export const missionStepSchema = {
+  type: 'object',
+  properties: {
+    order: { type: 'number' },
+    title: { type: 'string' },
+    description: { type: 'string' },
+    estimated_minutes: { type: 'number' },
+    status: { type: 'string' },
+    proof_required: { type: 'string' },
+  }
+};
+
+export const pathRecSchema = {
+  type: 'object',
+  properties: {
+    path_name: str,
+    fit_reason: str,
+    concern: str,
+    lifestyle_implications: str,
+    main_tradeoffs: str,
+    // Bounded here as well as in the validator. The schema is the cheap ask —
+    // it costs a retry only when the model ignores it — and 261 live rows were
+    // written before anything stated the scale at all.
+    readiness_score: { type: 'number', minimum: READINESS_MIN, maximum: READINESS_MAX },
+    confidence_level: { type: 'string', enum: ['low', 'medium', 'high'] },
+    risk_level: { type: 'string', enum: ['low', 'medium', 'high'] },
+    current_gaps: strArr,
+    first_experiment: str,
+    path_fit_signals: strArr,
+  }
+};
+
+export const experimentSchema = {
+  type: 'object',
+  properties: {
+    title: str,
+    objective: str,
+    why_recommended: str,
+    expected_learning: str,
+    estimated_hours: { type: 'number' },
+    deliverable: str,
+    completion_criteria: str,
+    proof_required: str,
+    mission_steps: { type: 'array', items: missionStepSchema },
+    reflection_questions: strArr,
+    common_mistakes: strArr,
+    alternative_version: str,
+  }
+};
 
 /**
  * Normalise one mission step.
@@ -206,9 +260,12 @@ function validateExperiment(exp, index, ctx) {
     ctx.warn(`${label}: one or more mission steps arrived as plain text and were converted to step objects.`);
   }
 
-  const hours = toNumber(exp.estimated_hours);
+  // A 30 day experiment claiming 400 hours against a student who told us they
+  // have 8 a week is the model ignoring the brief. Left unset rather than
+  // clamped, so the screen shows no estimate instead of a made-up one.
+  const hours = toBoundedNumber(exp.estimated_hours, 0, MAX_EXPERIMENT_HOURS);
   if (hours === null) {
-    ctx.warn(`${label}: no usable estimated_hours; left unset.`);
+    ctx.warn(`${label}: no usable estimated_hours within 0 to ${MAX_EXPERIMENT_HOURS}; left unset.`);
   }
 
   return {

@@ -453,6 +453,7 @@ export default function PathComparison() {
   const [outreachPlanTarget, setOutreachPlanTarget] = useState(null);
 
   const [assessingIds, setAssessingIds] = useState(new Set());
+  const [assessError, setAssessError] = useState('');
   const [sortBy, setSortByState] = useState(initSort);
   const [filters, setFiltersState] = useState(initFilters);
   const [search, setSearch] = useState('');
@@ -554,9 +555,17 @@ export default function PathComparison() {
 
   const handleAutoAssess = async (path) => {
     setAssessingIds(prev => new Set([...prev, path.id]));
+    setAssessError('');
     try {
       await autoAssessPathRisk(path);
       load();
+    } catch (e) {
+      // Without this the spinner just stopped and nothing changed, which reads
+      // as the button doing nothing.
+      console.error(`[paths] auto-assess failed (${e?.name || 'error'})`);
+      setAssessError(e?.name === 'RiskAssessmentError'
+        ? 'That assessment came back in a form we could not use, so nothing was changed. Try it again.'
+        : 'We could not assess that path just now. Nothing was changed.');
     } finally {
       setAssessingIds(prev => { const next = new Set(prev); next.delete(path.id); return next; });
     }
@@ -607,6 +616,14 @@ export default function PathComparison() {
           </button>
         }
       />
+
+      {assessError && (
+        <div className="mb-4 flex items-start justify-between gap-3 rounded-xl px-4 py-3 text-sm"
+          style={{ background: 'var(--warning-50)', border: '1px solid var(--warning-700)', color: 'var(--warning-700)' }}>
+          <span>{assessError}</span>
+          <button onClick={() => setAssessError('')} className="shrink-0 font-semibold underline">Dismiss</button>
+        </div>
+      )}
 
       {loading ? (
         <>

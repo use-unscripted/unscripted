@@ -9,6 +9,7 @@ import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import ScrollToTop from './components/ScrollToTop';
 import { Navigate } from 'react-router-dom';
 import ProtectedRoute from '@/components/ProtectedRoute';
+import AppErrorBoundary from '@/components/AppErrorBoundary';
 
 // Pages
 import Landing from '@/pages/Landing';
@@ -57,6 +58,7 @@ import RecentlyDeleted from '@/pages/RecentlyDeleted';
 import GuideDetailPage from '@/pages/GuideDetailPage';
 import PilotDashboard from '@/pages/PilotDashboard';
 import AdminCampusFeeds from '@/pages/AdminCampusFeeds';
+import AdminAiFailures from '@/pages/AdminAiFailures';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError } = useAuth();
@@ -134,6 +136,8 @@ const AuthenticatedApp = () => {
           <Route path="/pilot" element={<PilotDashboard />} />
           {/* Team-only. The page checks the role, and so does the function behind it. */}
           <Route path="/admin/campus-feeds" element={<AdminCampusFeeds />} />
+          {/* Team-only. The page checks the role, and so does the entity's RLS. */}
+          <Route path="/admin/ai-failures" element={<AdminAiFailures />} />
 
         </Route>
       </Route>
@@ -144,15 +148,19 @@ const AuthenticatedApp = () => {
 
 function App() {
   return (
-    <AuthProvider>
-      <QueryClientProvider client={queryClientInstance}>
-        <Router>
-          <ScrollToTop />
-          <AuthenticatedApp />
-        </Router>
-        <Toaster />
-      </QueryClientProvider>
-    </AuthProvider>
+    // Outermost on purpose. A throw anywhere below it lands on a page with a
+    // message and a way out, instead of unmounting the tree to a white screen.
+    <AppErrorBoundary>
+      <AuthProvider>
+        <QueryClientProvider client={queryClientInstance}>
+          <Router>
+            <ScrollToTop />
+            <AuthenticatedApp />
+          </Router>
+          <Toaster />
+        </QueryClientProvider>
+      </AuthProvider>
+    </AppErrorBoundary>
   )
 }
 

@@ -291,7 +291,11 @@ async function guardedFetch(
 }
 
 /** GET a candidate URL and hand back parsed JSON, or null for anything else. */
-async function probeJson(url: string, guard: HopGuard = null): Promise<unknown> {
+async function probeJson(
+  url: string,
+  guard: HopGuard = null,
+  extraHeaders: Record<string, string> = {},
+): Promise<unknown> {
   // Two budgets, because a probe is answering two different questions and only
   // the first one is a guess.
   //
@@ -310,7 +314,7 @@ async function probeJson(url: string, guard: HopGuard = null): Promise<unknown> 
   let timer = setTimeout(() => controller.abort(), PROBE_TIMEOUT_MS);
   try {
     const res = await guardedFetch(url, {
-      headers: { Accept: 'application/json' },
+      headers: { Accept: 'application/json', ...extraHeaders },
       signal: controller.signal,
     }, guard);
     // An unread body holds the connection open; these probes lose far more often
@@ -338,6 +342,7 @@ async function probeJson(url: string, guard: HopGuard = null): Promise<unknown> 
 async function firstValidUrl(
   candidates: string[],
   isValid: (payload: unknown) => boolean,
+  extraHeaders: Record<string, string> = {},
 ): Promise<string | null> {
   // Every request starts now, but they are read back in preference order, so
   // the first candidate answering in 40ms returns in 40ms instead of waiting
@@ -345,7 +350,7 @@ async function firstValidUrl(
   // probes are already caught, so nothing is left unhandled.
   const attempts = candidates.map(async (url) => {
     try {
-      return isValid(await probeJson(url));
+      return isValid(await probeJson(url, null, extraHeaders));
     } catch (_) {
       return false; // Unreachable, timed out, or not JSON.
     }
@@ -1970,7 +1975,12 @@ const ICS_PATHS = ['/events.ics', '/calendar.ics', '/webcal', '/ical', '/events/
  * rather than run calendar software, and its public .ics is a fixed, readable
  * shape.
  */
-const ICS_VENDOR_HOSTS = ['calendar.google.com'];
+/**
+ * Hosts that are calendars in their own right, so a school linking one is
+ * naming its own calendar rather than sending us somewhere else. Both are
+ * reached only by deriving a feed URL from a link the school itself published.
+ */
+const ICS_VENDOR_HOSTS = ['calendar.google.com', 'calendarwiz.com'];
 
 /**
  * RFC 5545 line folding: a line starting with a space or tab continues the one
@@ -2515,6 +2525,21 @@ function collectVevents(text: string): IcsRecord[] {
 }
 
 /**
+ * A calendar telling us about itself, rather than about an event.
+ *
+ * Deliberately narrow. This drops real rows out of a student's calendar, so it
+ * matches the vendor notices actually observed and nothing that merely reads
+ * like a warning — a genuine campus event can quite reasonably be titled
+ * "Warning signs of burnout".
+ */
+export function isFeedStatusNotice(summary: string): boolean {
+  const text = String(summary || '').trim().toLowerCase();
+  return text === 'warning: ical feeds disabled' ||
+    text === 'warning: ical feed disabled' ||
+    text === 'ical feeds are disabled';
+}
+
+/**
  * Every VEVENT in a calendar, minus the ones we cannot date honestly.
  *
  * A repeating event contributes its next `seriesDates` real dates; a rule we
@@ -2551,6 +2576,14 @@ export function parseIcsEvents(
     const props = record.props;
     const start = icsDate(props.DTSTART || '');
     if (!start) continue;
+
+    // Some calendars answer a disabled export with a well-formed VEVENT whose
+    // only job is to say the export is disabled. Randolph Community College's
+    // CalendarWiz returns exactly one event, today, titled "Warning: iCal feeds
+    // disabled" — so the feed parses, validates, and puts a fake event in front
+    // of a student. A status message dressed as an event is worse than an empty
+    // calendar, because nothing downstream can tell it is not real.
+    if (isFeedStatusNotice(props.SUMMARY || '')) continue;
 
     // A cancelled event is the one thing worse than no event: the student goes.
     // Every other adapter already drops these — Localist by `is_canceled`,
@@ -2729,6 +2762,28 @@ export function googleCalendarIcsFrom(embedUrl: string): string {
   }
 }
 
+/**
+ * CalendarWiz embeds an iframe keyed by a slug, and publishes that same
+ * calendar as plain iCal. Arkansas State Beebe's holds 297 future events, and
+ * the slug — the only unknown — is stated on the school's own events page.
+ *
+ * The capitalisation is not a style choice. `CalendarWiz_iCal.php` is the only
+ * spelling that answers; the all-lowercase path 404s.
+ */
+export function calendarWizIcsFrom(embedUrl: string): string {
+  try {
+    const url = new URL(embedUrl);
+    if (stripWww(url.hostname.toLowerCase()) !== 'calendarwiz.com') return '';
+    const slug = url.searchParams.get('crd');
+    // The slug goes into a URL we then fetch, so it is checked rather than
+    // trusted: this string came off a page we do not control.
+    if (!slug || !/^[A-Za-z0-9_-]{1,64}$/.test(slug)) return '';
+    return `https://www.calendarwiz.com/CalendarWiz_iCal.php?crd=${slug}`;
+  } catch (_) {
+    return '';
+  }
+}
+
 /** Is this .ics URL one the school itself is entitled to point us at? */
 export function isAllowedIcsUrl(url: string, domain: string): boolean {
   let parsed: URL;
@@ -2792,6 +2847,16 @@ export function icsLinksFrom(html: string, domain: string, baseUrl = ''): string
 
   for (const match of html.matchAll(/["'](https?:\/\/calendar\.google\.com\/calendar\/embed\?[^"'<>]+)["']/gi)) {
     const ics = googleCalendarIcsFrom(decodeEntities(match[1]));
+    if (ics && !found.includes(ics)) {
+      found.push(ics);
+      if (found.length >= 8) return found;
+    }
+  }
+
+  // Same shape of trick for CalendarWiz: the page embeds the viewer, and the
+  // viewer's slug is also the key to a plain iCal export.
+  for (const match of html.matchAll(/["'](https?:\/\/(?:www\.)?calendarwiz\.com\/[^"'<>]*crd=[^"'<>]+)["']/gi)) {
+    const ics = calendarWizIcsFrom(decodeEntities(match[1]));
     if (ics && !found.includes(ics)) {
       found.push(ics);
       if (found.length >= 8) return found;
@@ -2871,12 +2936,32 @@ const icalAdapter: Adapter = {
 
 const TRIBE_PATH = '/wp-json/tribe/events/v1/events';
 
+/**
+ * The plugin answered in its own shape, whether or not this window holds
+ * anything.
+ *
+ * Kept apart from `looksLikeTribe` because the two questions are asked at
+ * different moments and only one of them is about coverage. Probing has to
+ * insist on a real event — an empty feed is a miss, deliberately. Fetching does
+ * not: by then the school is already known to run the plugin, and a date window
+ * with nothing in it is an ordinary quiet fortnight, not a broken feed.
+ *
+ * Conflating them cost a real school. Connors State publishes one future event;
+ * the probe found it, then the windowed fetch came back `{"events":[]}` and
+ * threw, so the school read as broken rather than as quiet.
+ */
+export function isTribeShape(payload: unknown): boolean {
+  if (!payload || typeof payload !== 'object') return false;
+  return Array.isArray((payload as Record<string, unknown>).events);
+}
+
 /** Events with a real start_date, not merely a 200 from some other plugin. */
 export function looksLikeTribe(payload: unknown): boolean {
-  if (!payload || typeof payload !== 'object') return false;
-  const events = (payload as Record<string, unknown>).events;
-  if (!Array.isArray(events) || !events.length) return false;
-  const first = events[0];
+  if (!isTribeShape(payload)) return false;
+  const events = (payload as Record<string, unknown>).events as unknown[];
+  if (!events.length) return false;
+  // deno-lint-ignore no-explicit-any
+  const first = events[0] as any;
   return Boolean(
     first && typeof first === 'object' &&
     typeof first.title === 'string' &&
@@ -2906,7 +2991,7 @@ async function fetchTribe(feedUrl: string, days: number) {
   });
   if (!res.ok) throw new Error(`Calendar feed returned ${res.status}`);
   const body = await res.json();
-  if (!looksLikeTribe(body)) throw new Error('Calendar feed returned an unexpected shape');
+  if (!isTribeShape(body)) throw new Error('Calendar feed returned an unexpected shape');
   // deno-lint-ignore no-explicit-any
   return (body.events as any[]).filter(e => e && withinWindow(tribeDate(e.start_date), days));
 }
