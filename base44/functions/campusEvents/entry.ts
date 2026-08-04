@@ -25,8 +25,26 @@
  * the JSON and checks its shape; a 200, a redirect, and a reachable host prove
  * nothing on their own.
  *
- * A school on none of the four returns zero events. That is the correct
- * outcome, not a gap to paper over with scraping.
+ * A school on none of them used to return zero events, and this file used to
+ * say that was the correct outcome rather than a gap to paper over with
+ * scraping. That has been reversed deliberately, on evidence, and the reasoning
+ * matters more than the conclusion.
+ *
+ * The objection to scraping was never that reading a page is beneath us. It was
+ * that a scraped event might be invented, and an invented event sends a student
+ * to an empty building. That objection is answered by proof rather than by
+ * abstinence: every event read off a page is checked back against that page's
+ * own text, and nothing is stored whose title and date are not both found
+ * there. Measured over 178 schools, 598 of 598 titles came back word for word.
+ *
+ * What changed the answer is that "no feed" turned out to describe most of the
+ * schools we cannot read. A fingerprint of all 1,124 of them says there is no
+ * adapter left worth writing, so refusing to read pages was not holding a line
+ * on quality. It was declining to serve about a third of US colleges.
+ *
+ * See the `scraped` adapter below. It never renders a page and never calls a
+ * model at request time: a scheduled job does that offline and stores the
+ * result, and the adapter only reads it.
  */
 
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.38';
@@ -231,8 +249,13 @@ interface Adapter {
   // `seriesDates` is how many dates one repeating event contributes. Only iCal
   // carries repeat rules — every other platform's feed hands us dated instances
   // already — so the rest of the adapters take it and have nothing to do.
+  //
+  // `store` is the same shape of argument for the one adapter that reads rows
+  // instead of making a request. Every other adapter ignores it, and the
+  // scraped one returns nothing without it rather than throwing, so a caller
+  // that does not pass it degrades to "this school has no events".
   // deno-lint-ignore no-explicit-any
-  fetch(feedUrl: string, days: number, seriesDates?: number): Promise<any[]>;
+  fetch(feedUrl: string, days: number, seriesDates?: number, store?: any): Promise<any[]>;
   // deno-lint-ignore no-explicit-any
   normalize(raw: any, feedUrl: string): NormalizedEvent;
 }
@@ -3213,6 +3236,196 @@ const drupalAdapter: Adapter = {
   normalize: normalizeDrupal,
 };
 
+// ── Schools that publish no feed at all ─────────────────────────────────────
+
+/**
+ * Events a browser read off a school's own events page.
+ *
+ * Every adapter above this one reads a machine-readable calendar. A fingerprint
+ * of all 1,124 schools we could not read says most of them publish no such
+ * calendar in any form, and that there is no adapter left worth writing. What
+ * plenty of them do publish is an events page a person can read.
+ *
+ * So those pages are rendered in a real browser and read by the model, offline
+ * and on a schedule. This adapter is only the read side. It never renders and
+ * never calls a model: it looks up rows somebody else already wrote, which is
+ * what keeps a browser out of a student's page load.
+ *
+ * Two rules hold this honest and neither is optional:
+ *
+ * 1. Nothing is stored unless its date was found in the page's own text. The
+ *    model is perfectly willing to invent a date for a month-grid calendar,
+ *    where the day numbers carry no month anywhere near them. One school
+ *    produced 132 events that way, every title real and every date made up.
+ * 2. A stale row is not served. These do not refresh themselves, and a row
+ *    nobody has touched in three weeks is mostly events that have happened.
+ */
+export const SCRAPED_MAX_AGE_DAYS = 21;
+
+/** What the read side of the store has to provide. Kept tiny on purpose. */
+interface ScrapedStore {
+  // deno-lint-ignore no-explicit-any
+  byUrl(sourceUrl: string): Promise<any>;
+  // deno-lint-ignore no-explicit-any
+  byDomain?(domain: string): Promise<any>;
+}
+
+/**
+ * Does one of this school's candidate domains have scraped events waiting?
+ *
+ * Asked only after every real feed has failed to probe. The offline job writes
+ * rows for schools nobody here attends yet, so this is what connects "we read
+ * that school's page months ago" to "a student from it just signed up", without
+ * having created a University row for all of them in advance.
+ *
+ * A row with no events, or no source URL, is not a feed. Both would cache a
+ * school as resolved and then serve it nothing forever, which is worse than
+ * leaving it unresolved: an unresolved school gets probed again.
+ */
+export async function scrapedFeedFor(
+  store: ScrapedStore | null | undefined,
+  domains: string[],
+): Promise<{ platform: string; feedUrl: string } | null> {
+  if (!store?.byDomain) return null;
+  for (const domain of domains) {
+    // deno-lint-ignore no-explicit-any
+    let row: any = null;
+    try {
+      row = await store.byDomain(domain);
+    } catch (_) {
+      continue;
+    }
+    if (!row || !scrapedIsFresh(row)) continue;
+    if (!row.source_url) continue;
+    if (!Array.isArray(row.events) || !row.events.length) continue;
+    return { platform: 'scraped', feedUrl: String(row.source_url) };
+  }
+  return null;
+}
+
+/**
+ * Is this row recent enough to show a student?
+ *
+ * An undated row counts as stale. A row written before this field existed has
+ * no way to prove it is current, and guessing in its favour is how a student
+ * gets shown last term's calendar.
+ */
+// deno-lint-ignore no-explicit-any
+export function scrapedIsFresh(row: any, now = Date.now()): boolean {
+  const at = new Date(row?.refreshed_at || '').getTime();
+  if (!Number.isFinite(at)) return false;
+  return now - at < SCRAPED_MAX_AGE_DAYS * 86400000;
+}
+
+/**
+ * One stored event in the shape everything downstream expects.
+ *
+ * The wall clock is emitted with no offset, the same as every other adapter
+ * here. A page saying 6pm means 6pm to the student reading it, and stamping a
+ * zone onto it is how an event moves by five hours on somebody's screen.
+ */
+// deno-lint-ignore no-explicit-any
+export function normalizeScraped(raw: any, feedUrl: string): NormalizedEvent {
+  const date = String(raw?.start_date || '').trim();
+  const start = String(raw?.start_time || '').trim();
+  const end = String(raw?.end_time || '').trim();
+  const endDate = String(raw?.end_date || '').trim();
+  return {
+    ...emptyEvent(),
+    // Stable across refreshes, so the same event does not read as a new one
+    // every time the job runs.
+    id: `scraped:${feedUrl}:${date}:${String(raw?.title || '').slice(0, 80)}`,
+    title: String(raw?.title || '').trim(),
+    description: String(raw?.description || '').replace(/\s+/g, ' ').trim().slice(0, 600),
+    url: String(raw?.url || '').trim(),
+    start: date && start ? `${date}T${start}:00` : date,
+    end: endDate && end
+      ? `${endDate}T${end}:00`
+      : end && date
+      ? `${date}T${end}:00`
+      : endDate,
+    // No clock on the page means the page did not say, not midnight.
+    all_day: Boolean(date) && !start,
+    location: String(raw?.location || '').trim(),
+  };
+}
+
+/**
+ * Read a school's events out of the store.
+ *
+ * Every other adapter's fetch makes a request. This one deliberately does not:
+ * the work happened offline, and the only thing left is a lookup.
+ */
+async function fetchScraped(
+  feedUrl: string,
+  days: number,
+  _seriesDates?: number,
+  store?: ScrapedStore,
+  // deno-lint-ignore no-explicit-any
+): Promise<any[]> {
+  if (!store) return [];
+  // deno-lint-ignore no-explicit-any
+  let row: any = null;
+  try {
+    row = await store.byUrl(feedUrl);
+  } catch (_) {
+    return [];
+  }
+  if (!row || !scrapedIsFresh(row)) return [];
+  const events = Array.isArray(row.events) ? row.events : [];
+  return events.filter(
+    // deno-lint-ignore no-explicit-any
+    (e: any) => e?.start_date && withinWindow(String(e.start_date), days),
+  );
+}
+
+/**
+ * A scraped school is never discovered by probing. The offline job decides it,
+ * so there is nothing for a request-time probe to find and claiming otherwise
+ * would put every school through a probe that cannot succeed.
+ */
+function probeScraped(_domain: string): Promise<string | null> {
+  return Promise.resolve(null);
+}
+
+const scrapedAdapter: Adapter = {
+  name: 'scraped',
+  probe: probeScraped,
+  fetch: fetchScraped,
+  normalize: normalizeScraped,
+};
+
+/**
+ * The store, backed by the entity the offline job writes.
+ *
+ * Built per request because the client is. A school with no row, or a lookup
+ * that fails, reads as "no events" rather than an error: the student's calendar
+ * is not the place to surface that a scheduled job has not run.
+ */
+// deno-lint-ignore no-explicit-any
+function scrapedStore(base44: any): ScrapedStore {
+  return {
+    async byUrl(sourceUrl: string) {
+      try {
+        const rows = await base44.asServiceRole.entities.CampusScrapedEvents
+          .filter({ source_url: sourceUrl }, '-refreshed_at', 1);
+        return rows?.[0] || null;
+      } catch (_) {
+        return null;
+      }
+    },
+    async byDomain(domain: string) {
+      try {
+        const rows = await base44.asServiceRole.entities.CampusScrapedEvents
+          .filter({ domain }, '-refreshed_at', 1);
+        return rows?.[0] || null;
+      } catch (_) {
+        return null;
+      }
+    },
+  };
+}
+
 // ── Adapter registry ────────────────────────────────────────────────────────
 
 /**
@@ -3245,6 +3458,9 @@ const ADAPTERS: Adapter[] = [
   trumbaAdapter,
   drupalAdapter,
   icalAdapter,
+  // Last, and never reached by probing. A school only lands here because every
+  // real feed above failed and the offline job found events on its page.
+  scrapedAdapter,
 ];
 
 export function adapterFor(platform: string): Adapter | null {
@@ -3931,10 +4147,12 @@ export async function fetchEvents(
   feedUrl: string,
   days: number,
   seriesDates?: number,
+  // deno-lint-ignore no-explicit-any
+  store?: any,
 ): Promise<NormalizedEvent[]> {
   const adapter = adapterFor(platform);
   if (!adapter) throw new Error(`Unsupported calendar platform "${platform}"`);
-  const raw = await adapter.fetch(feedUrl, days, seriesDates);
+  const raw = await adapter.fetch(feedUrl, days, seriesDates, store);
   // deno-lint-ignore no-explicit-any
   return raw.map((event: any) => adapter.normalize(event, feedUrl)).filter(e => e.title);
 }
@@ -4097,6 +4315,13 @@ async function resolveFeed(base44: any, college: string, userId = '') {
   }
   if (!feed && candidates.length) {
     feed = await probeCalendar(candidates[0]);
+  }
+
+  // Last, and only after every real feed has failed to answer. A school with a
+  // machine-readable calendar should always get that calendar: it carries
+  // categories, organizers and registration links that a read page does not.
+  if (!feed) {
+    feed = await scrapedFeedFor(scrapedStore(base44), candidates);
   }
 
   const patch = {
@@ -4454,7 +4679,16 @@ async function handleCheckFeeds(base44: any, user: any): Promise<Response> {
     let error = '';
     let count = 0;
     try {
-      const events = (await fetchEvents(row.events_platform, row.events_feed_url, DEFAULT_DAYS))
+      // The store goes in here too, or every scraped school reports as a broken
+      // feed on the health page and someone goes looking for a fault that is
+      // this call not being given what it needs to read one.
+      const events = (await fetchEvents(
+        row.events_platform,
+        row.events_feed_url,
+        DEFAULT_DAYS,
+        undefined,
+        scrapedStore(base44),
+      ))
         .filter(isAttendable)
         .filter(e => stillUpcoming(e.start, e.end, e.all_day, asked));
       count = events.length;
@@ -4765,7 +4999,13 @@ Deno.serve(async (req) => {
 
     let normalized: NormalizedEvent[];
     try {
-      normalized = await fetchEvents(feed.platform, feed.feedUrl, days, seriesDates);
+      normalized = await fetchEvents(
+        feed.platform,
+        feed.feedUrl,
+        days,
+        seriesDates,
+        scrapedStore(base44),
+      );
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Calendar feed unavailable';
       // Awaited, not fired and forgotten: this runtime can tear the request

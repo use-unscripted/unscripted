@@ -63,7 +63,14 @@ function loadEntry() {
   return import(pathToFileURL(out).href);
 }
 
-const { parseIcsEvents, fetchEvents, isAttendable, stillUpcoming } = await loadEntry();
+const {
+  parseIcsEvents,
+  fetchEvents,
+  isAttendable,
+  stillUpcoming,
+  scrapedFeedFor,
+  SCRAPED_MAX_AGE_DAYS,
+} = await loadEntry();
 
 const ENTRY_SOURCE = readFileSync(fileURLToPath(new URL('./entry.ts', import.meta.url)), 'utf8');
 
@@ -337,6 +344,43 @@ describe('there is only one upcoming-window rule', () => {
   it('routes both request-time gates through the shared window', () => {
     const calls = ENTRY_SOURCE.match(/\bstillUpcoming\(/g) || [];
     expect(calls.length).toBeGreaterThanOrEqual(3); // 1 definition + 2 gates
+  });
+});
+
+// Schools that publish no feed at all. The external suite covers the adapter in
+// full; these are the two properties that must never regress silently, because
+// both fail in the direction of showing a student something wrong rather than
+// showing them nothing.
+describe('events read off a school page', () => {
+  const PAGE = 'https://www.malone.edu/events/';
+
+  const row = (events, refreshedDaysAgo = 0) => ({
+    source_url: PAGE,
+    refreshed_at: new Date(Date.now() - refreshedDaysAgo * 86400000).toISOString(),
+    events,
+  });
+  const store = rows => ({
+    byUrl: url => Promise.resolve(rows[url] ?? null),
+    byDomain: d => Promise.resolve(rows[d] ?? null),
+  });
+
+  it('serves a stored event with the wall clock the page published', async () => {
+    const events = await fetchEvents('scraped', PAGE, 45, undefined, store({
+      [PAGE]: row([{ title: 'Larks Got Talent', start_date: '2026-08-22', start_time: '18:00' }]),
+    }));
+    expect(events).toHaveLength(1);
+    expect(events[0].start).toBe('2026-08-22T18:00:00');
+    expect(events[0].is_free).toBe(null);
+  });
+
+  it('refuses a row nobody has refreshed, rather than serving last term', async () => {
+    const stale = store({ [PAGE]: row([{ title: 'Gone', start_date: '2026-08-22' }], SCRAPED_MAX_AGE_DAYS + 1) });
+    expect(await fetchEvents('scraped', PAGE, 45, undefined, stale)).toEqual([]);
+    expect(await scrapedFeedFor(stale, ['malone.edu'])).toBe(null);
+  });
+
+  it('returns nothing when no store is passed, instead of throwing', async () => {
+    expect(await fetchEvents('scraped', PAGE, 45)).toEqual([]);
   });
 });
 

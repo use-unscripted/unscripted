@@ -54,6 +54,11 @@
         "moderncampus",
         "presence",
         "ems",
+        // Not a platform: the school publishes no feed at all, and its events
+        // were read off its own events page by a scheduled offline job. The
+        // feed URL below is that page, and it is also the key into
+        // CampusScrapedEvents. Never written by a probe.
+        "scraped",
         "none"
       ],
       "default": "unknown"

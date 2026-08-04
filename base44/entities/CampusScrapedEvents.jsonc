@@ -1,0 +1,123 @@
+{
+  // Events a browser read off a school's own events page, for the schools that
+  // publish no machine-readable calendar anywhere.
+  //
+  // Every other calendar in this app is fetched live from a feed. These cannot
+  // be: reading the page needs a real browser and a model call, which is a
+  // scheduled job, not something a student's page load can wait on. So the job
+  // runs offline and writes here, and campusEvents reads this the way it reads
+  // any other feed.
+  //
+  // ONE ROW PER SCHOOL, keyed by `source_url`. The refresh replaces the whole
+  // row rather than appending, because a school's calendar is a current state
+  // and not a history. Nothing here is worth keeping once it is superseded.
+  //
+  // A row is only as good as its last refresh, so `refreshed_at` is what the
+  // function checks before serving anything. A row nobody has touched in three
+  // weeks is mostly events that have already happened, and showing those is
+  // worse than showing none.
+  "name": "CampusScrapedEvents",
+  "type": "object",
+  "properties": {
+    "source_url": {
+      // The events page these came off, and the key the function looks up. It
+      // is the same value stored in University.events_feed_url for this school,
+      // which is what ties the two together without a second lookup.
+      "type": "string"
+    },
+    "domain": {
+      // The school's registrable domain. Only for humans reading the table.
+      "type": "string"
+    },
+    "canonical_name": {
+      "type": "string"
+    },
+    "refreshed_at": {
+      // When the offline job last replaced this row. The function refuses to
+      // serve a row without one: a row that cannot prove it is current is
+      // treated as stale, because guessing in its favour shows a student last
+      // term's calendar.
+      "type": "string",
+      "format": "date-time"
+    },
+    "event_count": {
+      "type": "number",
+      "default": 0
+    },
+    "events": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "title": {
+            // Copied off the page word for word. Not rewritten, not tidied.
+            // The check that this pipeline is honest is that every title can
+            // be found in the page's own text, and editing them here would
+            // quietly destroy the only evidence we have.
+            "type": "string"
+          },
+          "start_date": {
+            // YYYY-MM-DD. Nothing is written here unless this date was found
+            // in the page's text. A month-grid calendar shows bare day numbers
+            // with the month nowhere near them, and the model will fill one in
+            // rather than decline: one school produced 132 events that way,
+            // every title real and every date invented.
+            "type": "string"
+          },
+          "end_date": {
+            // Only for an event that genuinely spans days.
+            "type": "string"
+          },
+          "start_time": {
+            // "HH:MM", 24 hour, and a wall clock with no zone. 6pm on the
+            // school's page is 6pm to the student reading it. Same rule as
+            // every other adapter here.
+            "type": "string"
+          },
+          "end_time": {
+            "type": "string"
+          },
+          "location": {
+            "type": "string"
+          },
+          "url": {
+            // Only a link that was actually on the page. The model returned
+            // one URL cut off mid-word, which would have sent a student to a
+            // 404, so anything not in the page's own link list is dropped
+            // before it gets here.
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "title",
+          "start_date"
+        ]
+      }
+    },
+    "run_note": {
+      // How this row was produced, for whoever is looking at a wrong event six
+      // months from now: which model read the page and what the run was.
+      "type": "string"
+    }
+  },
+  "required": [
+    "source_url"
+  ],
+  // Admin on all four, meaning "nobody but the backend function", matching
+  // CampusFeedSubmission. Students read these through campusEvents and never
+  // touch the entity.
+  //
+  // Write access is the one that matters. A row here is what an entire school
+  // is shown as its campus calendar, so a student able to create or update one
+  // could put arbitrary text and arbitrary links in front of everyone at their
+  // school. That is a wider blast radius than anything else students can reach.
+  "rls": {
+    "create": { "user_condition": { "role": "admin" } },
+    "read": { "user_condition": { "role": "admin" } },
+    "update": { "user_condition": { "role": "admin" } },
+    "delete": { "user_condition": { "role": "admin" } }
+  }
+}
