@@ -428,7 +428,7 @@ export default function ProofOfWorkPage() {
           </select>
         )}
         <select value={filterVis} onChange={e => setFilterVis(e.target.value)}
-          className="rounded-xl border border-[color:var(--ink-200)] bg-white px-3 py-2.5 text-sm outline-none focus:border-[color:var(--brand-navy-900)]">
+          className="rounded-xl border border-[color:var(--ink-200)] bg-white px-3 py-2.5 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]">
           <option value="all">All visibility</option>
           <option value="private">Private</option>
           <option value="public">Public</option>
