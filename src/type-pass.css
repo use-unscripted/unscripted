@@ -1,0 +1,176 @@
+/* ─────────────────────────────────────────────────────────────────────────
+   The signed-in app's type scale.
+
+   Nothing here is a new look. Same two faces, same colour ramp, same brand
+   tokens as the marketing pages. It only fixes how they are used on the
+   screens behind the login, which is where the quality gap actually is.
+
+   ## What was wrong
+
+   Measured across the signed-in pages before this existed:
+
+     text-xs (12px) is the most-used size on almost every screen.
+       Missions: 43 uses of 12px against 30 of 14px. The campus panel sets its
+       event descriptions at 12px and its source line at 11px. 12px is a
+       caption size and it was carrying body copy.
+
+     The page column changes width per screen. My Journey is 896px, Missions
+       is 1024px, other screens run from 672px to 1152px. Moving between two
+       screens resizes the app under you, which is the single loudest tell
+       that a set of pages was assembled rather than designed.
+
+     Steps between levels are too small to read as levels. On a mission card
+       the title is 16px bold and its description is 16px regular, then the
+       metadata drops straight to 12px. One indistinguishable pair, then a
+       cliff.
+
+     Body copy has no measure and tight leading. Landing-page prose is 16px
+       at 1.75 line-height inside a ~34ch column; the same sentence inside the
+       app is 14px at 1.5 running the full width of the card.
+
+   ## The scale
+
+   Seven steps, each a real step from the one below it, and 13px is the
+   floor: nothing smaller than that is allowed to carry words.
+
+   Page      32 / 38px   700   -0.022em    the screen's name
+   Section   19px        700   -0.01em     a group of things
+   Card      17px        700   -0.01em     one thing's name
+   Lead      16px        400   1.6         the sentence under a title
+   Body      15px        400   1.6         everything else someone reads
+   Meta      13px        500   1.45        counts, dates, statuses, hints
+   Eyebrow   11px        700   uppercase   the label above a section
+
+   Sizes are in rem so a student who has set a larger default text size in
+   their browser gets one.
+
+   ## Where this sits in the cascade, and why it matters
+
+   Imported at the top of index.css, so these rules are emitted BEFORE
+   Tailwind's utilities. A tp- class and a Tailwind text-* class are both
+   single-class selectors, so on an element carrying both, the Tailwind one
+   wins. That is not a preference, it is the only place CSS allows an @import.
+
+   The consequence: writing `class="tp-meta text-xs"` silently renders at 12px
+   and defeats the whole pass. So deleting the size class a tp- class replaces
+   is load-bearing, not tidiness. Do not paper over it with !important here.
+   ───────────────────────────────────────────────────────────────────────── */
+
+:root {
+  /* One measure for every signed-in screen. Wide enough for a two-column
+     mission card, narrow enough that a paragraph inside it does not run past
+     a comfortable line. */
+  --app-measure: 60rem;   /* 960px */
+  /* Prose never runs the full width of a wide card. */
+  --prose-measure: 68ch;
+}
+
+.app-page {
+  width: 100%;
+  max-width: var(--app-measure);
+  margin-inline: auto;
+  padding: 2rem 1.25rem 4rem;
+}
+@media (min-width: 640px) {
+  .app-page { padding: 2.5rem 2rem 5rem; }
+}
+
+/* Section rhythm. One value between major sections, and it is bigger than the
+   spacing inside them, which is what makes a page read as a few groups
+   rather than a list of everything. */
+.app-stack > * + * { margin-top: 2.5rem; }
+@media (min-width: 640px) {
+  .app-stack > * + * { margin-top: 3rem; }
+}
+
+/* ── The scale ───────────────────────────────────────────────────────────── */
+.tp-page {
+  font-family: var(--font-heading);
+  font-size: 2rem;
+  line-height: 1.12;
+  font-weight: 700;
+  letter-spacing: -0.022em;
+}
+@media (min-width: 640px) {
+  .tp-page { font-size: 2.375rem; }
+}
+
+.tp-section {
+  font-family: var(--font-heading);
+  font-size: 1.1875rem;
+  line-height: 1.3;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.tp-card {
+  font-family: var(--font-heading);
+  font-size: 1.0625rem;
+  line-height: 1.35;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.tp-lead {
+  font-size: 1rem;
+  line-height: 1.6;
+  max-width: var(--prose-measure);
+}
+
+.tp-body {
+  font-size: 0.9375rem;
+  line-height: 1.6;
+}
+
+/* Prose that is genuinely a paragraph gets a measure. Anything that only
+   happens to be a <p>, a status or a count, does not. */
+.tp-prose {
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  max-width: var(--prose-measure);
+}
+
+.tp-meta {
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  font-weight: 500;
+}
+
+.tp-eyebrow {
+  font-family: var(--font-heading);
+  font-size: 0.6875rem;
+  line-height: 1.2;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+}
+
+/* ── The hero panel on My Journey ────────────────────────────────────────── */
+/* The one instruction on the screen, so it gets the one display size in the
+   app. It was 2rem, the same as a page title, which left the screen with two
+   things claiming to be the most important. */
+.tp-hero {
+  font-family: var(--font-heading);
+  font-size: 1.75rem;
+  line-height: 1.14;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+@media (min-width: 640px) {
+  .tp-hero { font-size: 2.25rem; }
+}
+
+/* ── Cards ───────────────────────────────────────────────────────────────── */
+/* Padding was 20px on a card holding a 17px title, a paragraph and a metadata
+   row. The interior needs to breathe more than the gap between cards does,
+   which is the opposite of how it was set. */
+.tp-card-body { padding: 1.5rem; }
+@media (min-width: 640px) {
+  .tp-card-body { padding: 1.75rem; }
+}
+
+/* An empty state is a note, not a section. The paused-experiments box was
+   64px of vertical padding and a dashed border sitting above the actual
+   content, which gave the thing that is not there more weight than the three
+   things that are. */
+.tp-empty-note { padding: 1.25rem 1.5rem; }

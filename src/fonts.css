@@ -1,0 +1,82 @@
+/* Cabinet Grotesk and Switzer, served from our own /fonts rather than fetched
+   from api.fontshare.com on every load.
+
+   Why: api.fontshare.com is not reliable. Measured 2026-08-05, the app's exact
+   two-family request returned HTTP 500 on roughly one call in four, and a
+   single-family request failed at about the same rate, so it is the stylesheet
+   endpoint flaking rather than anything about our URL. The font FILES on
+   cdn.fontshare.com were fine throughout. With font-display: swap, a visitor
+   who loses that roll never gets the @font-face rules at all and reads the
+   whole site in a system sans.
+
+   font-display is swap here: if a file is slow the words show up in the
+   fallback first and reflow when the real face lands, which beats a beat of
+   nothing on a student's phone.
+
+   Regenerating: fetch the Fontshare stylesheet the app used to import, pull the
+   woff2 url out of each @font-face, and save it under public/fonts as
+   family-weight.woff2. */
+
+@font-face {
+  font-family: 'Cabinet Grotesk';
+  src: url('/fonts/cabinet-grotesk-400.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Cabinet Grotesk';
+  src: url('/fonts/cabinet-grotesk-500.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Cabinet Grotesk';
+  src: url('/fonts/cabinet-grotesk-700.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Cabinet Grotesk';
+  src: url('/fonts/cabinet-grotesk-800.woff2') format('woff2');
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Switzer';
+  src: url('/fonts/switzer-400.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Switzer';
+  src: url('/fonts/switzer-500.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Switzer';
+  src: url('/fonts/switzer-600.woff2') format('woff2');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Switzer';
+  src: url('/fonts/switzer-700.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}

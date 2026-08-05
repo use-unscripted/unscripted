@@ -39,9 +39,12 @@ export function Sk({ h = 12, w = '100%', r = 8, className = '', style = {} }) {
 }
 
 /**
- * The PageHeader footprint, to the pixel-ish: optional eyebrow, a 3xl/4xl
+ * The PageHeader footprint, to the pixel-ish: optional eyebrow, the tp-page
  * heading, an optional description line, and an optional right-hand action
  * button that sits inline on desktop and stacks on mobile.
+ *
+ * Every number here is read off PageHeader. If that component's margins or
+ * type sizes move, these move with it, or the page jumps when data lands.
  */
 export function SkHeader({
   eyebrow = false,
@@ -53,23 +56,25 @@ export function SkHeader({
   titleWidth = '62%',
 }) {
   return (
-    <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-      <div className="w-full">
+    <div className="mb-10 flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
+      <div className="w-full min-w-0">
         {/* Each block sits inside a box the exact height of the real line it
-            stands in for — eyebrow 16px, title 36/40px, description 24px a
-            line — so the header never resizes when the words turn up. */}
+            stands in for, so the header never resizes when the words turn up.
+            The boxes are the type scale's line boxes: tp-eyebrow is 11px at
+            1.2 (13px), tp-page is 32px at 1.12 (36px) and 38px at 1.12 above
+            640 (43px), tp-lead is 16px at 1.6 (26px a line). */}
         {eyebrow && (
-          <div className="mb-2 flex h-4 items-center">
+          <div className="mb-2.5 flex h-[13px] items-center">
             <Sk h={10} w={118} r={3} />
           </div>
         )}
-        <div className="flex h-9 items-center sm:h-10">
+        <div className="flex h-9 items-center sm:h-[43px]">
           <Sk h={30} w={titleWidth} r={8} style={{ maxWidth: 520 }} />
         </div>
         {description && (
-          <div className="mt-2" style={{ maxWidth: 640 }}>
+          <div className="mt-3" style={{ maxWidth: 640 }}>
             {Array.from({ length: descriptionLines }).map((_, i) => (
-              <div key={i} className="flex h-6 items-center">
+              <div key={i} className="flex h-[26px] items-center">
                 <Sk h={13} r={5} w={i === descriptionLines - 1 ? '54%' : '94%'} />
               </div>
             ))}
