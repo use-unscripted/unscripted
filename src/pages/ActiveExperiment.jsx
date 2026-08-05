@@ -1,5 +1,5 @@
 /**
- * The active experiment workspace — the one container for everything a student
+ * The active experiment workspace: the one container for everything a student
  * does while testing a path: overview, mission guide, missions, the outreach
  * each mission requires, notes, evidence, reflection status and decision status.
  */
@@ -79,7 +79,7 @@ export default function ActiveExperiment() {
     // version used py-10 where the real page uses py-8 on mobile, so the whole
     // screen slid up 8px the moment it loaded.
     return (
-      <main className="mx-auto max-w-3xl px-5 py-8 sm:px-8 sm:py-10">
+      <main className="app-page">
         <div className="space-y-5">
           <Sk h={140} r={20} />
           <Sk h={188} r={20} />
@@ -91,7 +91,7 @@ export default function ActiveExperiment() {
 
   if (!state.experiment) {
     return (
-      <main className="mx-auto max-w-3xl px-5 py-10 sm:px-8">
+      <main className="app-page">
         <JourneyEmptyState variant="experiment" />
       </main>
     );
@@ -102,7 +102,7 @@ export default function ActiveExperiment() {
   const activeGuide = guides.find(g => g.is_active);
 
   return (
-    <main className="mx-auto max-w-3xl px-5 py-8 sm:px-8 sm:py-10">
+    <main className="app-page">
       {completing && (
         <CompleteMissionModal
           mission={completing}
@@ -131,10 +131,10 @@ export default function ActiveExperiment() {
       <div className="space-y-5">
         {justDone && (
           <section className="rounded-[16px] p-5" role="status" style={{ background: 'var(--success-50)', border: '1px solid #BBF7D0' }}>
-            <p className="flex items-center gap-2 text-sm font-bold" style={{ color: '#14532D' }}>
+            <p className="tp-body flex items-center gap-2 font-bold" style={{ color: '#14532D' }}>
               <CheckCircle2 size={16} /> Evidence attached to this mission{justDone.reused ? ' (already recorded)' : ''}.
             </p>
-            <p className="mt-1 text-sm" style={{ color: '#166534' }}>
+            <p className="tp-body mt-1" style={{ color: '#166534' }}>
               {justDone.experimentCompleted
                 ? 'Every mission is done. Next: reflect on what this told you.'
                 : nextMission
@@ -144,12 +144,12 @@ export default function ActiveExperiment() {
             <div className="mt-3 flex flex-wrap gap-3">
               {(justDone.experimentCompleted || !nextMission) && (
                 <Link to="/evidence?tab=reflect"
-                  className="ui-press inline-flex items-center rounded-[10px] px-5 text-sm font-bold text-white"
+                  className="ui-press tp-body inline-flex items-center rounded-[10px] px-5 font-bold text-white"
                   style={{ background: 'var(--brand-navy-900)', minHeight: '48px' }}>
                   Reflect on this experiment
                 </Link>
               )}
-              <button onClick={() => setJustDone(null)} className="text-sm font-semibold" style={{ color: '#166534' }}>
+              <button onClick={() => setJustDone(null)} className="tp-body font-semibold" style={{ color: '#166534' }}>
                 Stay here
               </button>
             </div>
@@ -160,15 +160,15 @@ export default function ActiveExperiment() {
 
         <section className="rounded-[16px] bg-white p-5" style={{ border: '1px solid var(--border-light)' }}>
           <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-            <h3 className="font-heading flex items-center gap-1.5 text-base font-bold" style={{ color: 'var(--text-primary)' }}>
+            <h3 className="tp-card flex items-center gap-1.5" style={{ color: 'var(--text-primary)' }}>
               <Wand2 size={14} style={{ color: 'var(--brand-navy-700)' }} /> Mission Guide
               {activeGuide && (
-                <span className="rounded-full px-2 py-0.5 text-[10px] font-bold" style={{ background: 'var(--success-50)', color: 'var(--success-700)' }}>
+                <span className="tp-meta rounded-full px-2 py-0.5 font-bold" style={{ background: 'var(--success-50)', color: 'var(--success-700)' }}>
                   v{activeGuide.version_number}
                 </span>
               )}
             </h3>
-            <button onClick={() => setShowGuideGen(true)} className="text-xs font-bold" style={{ color: 'var(--brand-navy-700)' }}>
+            <button onClick={() => setShowGuideGen(true)} className="tp-meta font-bold" style={{ color: 'var(--brand-navy-700)' }}>
               {guides.length ? 'Generate another' : 'Generate a guide'}
             </button>
           </div>
@@ -182,7 +182,7 @@ export default function ActiveExperiment() {
               onGenerateAnother={() => setShowGuideGen(true)}
             />
           ) : (
-            <p className="text-xs italic" style={{ color: 'var(--text-muted)' }}>
+            <p className="tp-meta italic" style={{ color: 'var(--text-muted)' }}>
               No guide yet. Generate one for step-by-step instructions.
             </p>
           )}
@@ -190,18 +190,18 @@ export default function ActiveExperiment() {
 
         <section>
           <div className="mb-3 flex items-center justify-between gap-2">
-            <h3 className="font-heading text-base font-bold" style={{ color: 'var(--text-primary)' }}>
+            <h3 className="tp-section" style={{ color: 'var(--text-primary)' }}>
               Missions {missions.length ? `(${missions.length})` : ''}
             </h3>
             <button onClick={() => setShowAddMission(true)}
-              className="inline-flex items-center gap-1.5 text-xs font-bold" style={{ color: 'var(--brand-navy-700)' }}>
+              className="tp-meta inline-flex items-center gap-1.5 font-bold" style={{ color: 'var(--brand-navy-700)' }}>
               <Plus size={13} /> Add mission
             </button>
           </div>
           {missions.length === 0 ? (
             <div className="rounded-[14px] bg-white p-6 text-center" style={{ border: '1px dashed var(--border-light)' }}>
-              <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>No missions yet</p>
-              <p className="mt-1 text-xs" style={{ color: 'var(--text-muted)' }}>
+              <p className="tp-body font-semibold" style={{ color: 'var(--text-primary)' }}>No missions yet</p>
+              <p className="tp-meta mt-1" style={{ color: 'var(--text-muted)' }}>
                 Generate a mission guide, or add the first mission yourself.
               </p>
             </div>
@@ -227,7 +227,7 @@ export default function ActiveExperiment() {
 
         <ExperimentStatusPanel proofs={proofs} reflections={reflections} cycle={cycle} />
 
-        <p className="pt-1 text-center text-xs" style={{ color: 'var(--text-muted)' }}>
+        <p className="tp-meta pt-1 text-center" style={{ color: 'var(--text-muted)' }}>
           <Link to="/journey" className="font-semibold" style={{ color: 'var(--brand-navy-700)' }}>Back to My Journey</Link>
           {' · '}
           <Link to="/experiments" className="font-semibold" style={{ color: 'var(--brand-navy-700)' }}>All experiments</Link>

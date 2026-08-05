@@ -32,24 +32,24 @@ const BROWSE_LIMIT = 6;
  *
  * About one student in four attends a school whose calendar we cannot read, and
  * every one of them used to get the same grey sentence. That sentence was
- * accurate and completely useless — it named a dead end and offered no way out
+ * accurate and completely useless. It named a dead end and offered no way out
  * of it, in a modal the student opened wanting to start something.
  *
  * So each way this comes up empty now ends in something the student can do, and
  * they are different things because the situations are:
  *
- *   no college     they never told us their school — so ask, right here, rather
+ *   no college     they never told us their school, so ask, right here, rather
  *                  than sending them to Settings and losing the guide they came
  *                  to make
- *   no feed        we cannot find their school's calendar — so let them tell us
+ *   no feed        we cannot find their school's calendar, so let them tell us
  *                  where it is, which is knowledge they have and we don't
  *   nothing ranked the calendar works and is full of real events, the model just
- *                  judged none of them relevant — so show the events. We are
+ *                  judged none of them relevant, so show the events. We are
  *                  holding twenty real dated things happening on their campus,
  *                  and saying "nothing matches" while sitting on those is the
  *                  worst version of this screen
  *   empty feed     the calendar is real but has nothing upcoming at all
- *   feed error     the school's server didn't answer — so offer to try again
+ *   feed error     the school's server didn't answer, so offer to try again
  *
  * None of them is a failure the student has to resolve, and every one keeps the
  * skip button in reach.
@@ -58,7 +58,7 @@ export default function CampusEventPicker({ profile, pathName, selected, onSelec
   const [loading, setLoading] = useState(true);
   // Two very different waits wear one `loading` flag. Reading the calendar is a
   // second or two; ranking those events is a model call that measured ~22s.
-  // A shimmer is right for the first and a lie for the second — it promises
+  // A shimmer is right for the first and a lie for the second: it promises
   // content is a moment away and then keeps promising it for half a minute.
   const [phase, setPhase] = useState('feed'); // 'feed' | 'ranking'
   const [status, setStatus] = useState('');
@@ -77,7 +77,7 @@ export default function CampusEventPicker({ profile, pathName, selected, onSelec
   const servedReload = useRef(0);
 
   // A profile object is rebuilt on every parent render, so depending on it
-  // directly would re-run this effect forever — and each run costs a feed fetch
+  // directly would re-run this effect forever, and each run costs a feed fetch
   // and a model call. The fields the lookup actually reads are what matter.
   const profileKey = [
     profile?.id, profile?.college, profile?.major,
@@ -120,7 +120,7 @@ export default function CampusEventPicker({ profile, pathName, selected, onSelec
         setLoading(false);
       } catch {
         // Neither call is meant to throw, and this component early-returns its
-        // spinner while `loading` is true — so anything that does throw leaves
+        // spinner while `loading` is true, so anything that does throw leaves
         // the student on it with no retry and no skip. An unexpected failure
         // has to land on a screen that has a way off it.
         if (cancelled) return;
@@ -137,7 +137,7 @@ export default function CampusEventPicker({ profile, pathName, selected, onSelec
    * A feed the student found for us: same shape, same rendering path.
    *
    * Including the ranking. The student who went and found their own portal did
-   * more work than anyone else here and was getting the least for it — a bare
+   * more work than anyone else here and was getting the least for it: a bare
    * list of six events with no fit reason, no what-to-do-there and no
    * questions, which is the entire product.
    */
@@ -192,10 +192,10 @@ export default function CampusEventPicker({ profile, pathName, selected, onSelec
             aria-live="polite"
           >
             <Sparkles size={20} style={{ color: 'var(--brand-navy-700)' }} aria-hidden="true" />
-            <p className="mt-3 text-sm font-bold text-[color:var(--ink-700)]">
+            <p className="tp-body mt-3 font-bold text-[color:var(--ink-700)]">
               Working through {college ? `${college}'s` : 'your campus'} calendar
             </p>
-            <p className="mt-1.5 max-w-xs text-xs leading-relaxed text-[color:var(--ink-500)]">
+            <p className="tp-meta mt-1.5 max-w-xs text-[color:var(--ink-500)]">
               {feedEvents.length} events are coming up. Finding the ones that actually fit
               this experiment takes about twenty seconds.
             </p>
@@ -226,11 +226,11 @@ export default function CampusEventPicker({ profile, pathName, selected, onSelec
 
   return (
     <div className="mb-5">
-      <p className="flex items-center gap-1.5 text-sm font-semibold text-[color:var(--ink-700)]">
+      <p className="tp-body flex items-center gap-1.5 font-semibold text-[color:var(--ink-700)]">
         <Sparkles size={14} style={{ color: 'var(--brand-gold-500, var(--brand-gold-500))' }} aria-hidden="true" />
         {unranked ? 'Nothing matched, but these are real' : 'Anchor this to something real'}
       </p>
-      <p className="mb-3 mt-0.5 text-xs text-[color:var(--ink-500)]">
+      <p className="tp-meta mb-3 mt-0.5 text-[color:var(--ink-500)]">
         {unranked
           ? <>Nothing on {college || 'your campus'}&apos;s calendar lines up with this experiment.
               These are happening anyway, and a date you didn&apos;t set still beats one you did.</>
@@ -256,12 +256,12 @@ export default function CampusEventPicker({ profile, pathName, selected, onSelec
               >
                 <CampusEventCard event={event} college={college} compact />
                 {event.guidance?.fit_reason && (
-                  <p className="px-1 pb-0.5 pt-2 text-xs leading-relaxed text-[color:var(--ink-700)]">
+                  <p className="tp-meta px-1 pb-0.5 pt-2 text-[color:var(--ink-700)]">
                     {event.guidance.fit_reason}
                   </p>
                 )}
                 <span
-                  className="mt-1.5 flex items-center gap-1.5 px-1 pb-1 text-xs font-bold"
+                  className="tp-meta mt-1.5 flex items-center gap-1.5 px-1 pb-1 font-bold"
                   style={{ color: isSelected ? 'var(--brand-navy-700)' : 'var(--ink-500)' }}
                 >
                   {isSelected ? <><Check size={13} aria-hidden="true" /> Anchoring your guide to this</> : 'Use this event'}
@@ -270,19 +270,19 @@ export default function CampusEventPicker({ profile, pathName, selected, onSelec
 
               {isSelected && event.guidance?.what_to_do?.length > 0 && (
                 <div className="mt-1.5 rounded-xl border border-[color:var(--ink-200)] bg-white px-3 py-2.5">
-                  <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wide text-[color:var(--ink-500)]">
+                  <p className="tp-eyebrow mb-1.5 text-[color:var(--ink-500)]">
                     What to do there
                   </p>
                   <ol className="space-y-1.5">
                     {event.guidance.what_to_do.map((action, i) => (
-                      <li key={i} className="flex gap-2 text-xs leading-relaxed text-[color:var(--ink-700)]">
+                      <li key={i} className="tp-body flex gap-2 text-[color:var(--ink-700)]">
                         <span className="shrink-0 pt-px font-bold tabular-nums text-[color:var(--ink-500)]">{i + 1}.</span>
                         <span>{action}</span>
                       </li>
                     ))}
                   </ol>
                   {event.guidance.questions_to_ask?.length > 0 && (
-                    <p className="mt-2 border-t border-dashed border-[color:var(--ink-200)] pt-2 text-xs text-[color:var(--ink-500)]">
+                    <p className="tp-meta mt-2 border-t border-dashed border-[color:var(--ink-200)] pt-2 text-[color:var(--ink-500)]">
                       Your questions get written into the guide.
                     </p>
                   )}
@@ -298,7 +298,7 @@ export default function CampusEventPicker({ profile, pathName, selected, onSelec
         onClick={() => onSelect(null)}
         disabled={disabled}
         aria-pressed={!selected}
-        className="mt-2 w-full rounded-xl border px-4 py-2.5 text-left text-xs font-semibold transition disabled:opacity-60"
+        className="tp-meta mt-2 w-full rounded-xl border px-4 py-3 text-left font-semibold transition disabled:opacity-60"
         style={{
           borderColor: !selected ? 'var(--brand-navy-700)' : 'var(--ink-200)',
           color: !selected ? 'var(--brand-navy-700)' : 'var(--ink-500)',
@@ -319,7 +319,7 @@ export default function CampusEventPicker({ profile, pathName, selected, onSelec
  *
  * Every one of these is a panel with a heading, one honest sentence, and
  * something to do. Keeping the shape identical is what stops an empty state
- * reading as an error — it is the same slot the events would have filled.
+ * reading as an error. It is the same slot the events would have filled.
  */
 function EmptyPanel({ icon: Icon, title, children }) {
   return (
@@ -327,7 +327,7 @@ function EmptyPanel({ icon: Icon, title, children }) {
       className="mb-5 overflow-hidden rounded-xl border px-4 py-3.5"
       style={{ borderColor: 'var(--ink-200)', background: 'var(--ink-50)' }}
     >
-      <p className="flex items-center gap-1.5 text-sm font-semibold text-[color:var(--ink-700)]">
+      <p className="tp-body flex items-center gap-1.5 font-semibold text-[color:var(--ink-700)]">
         <Icon size={14} className="shrink-0" style={{ color: 'var(--brand-gold-500, var(--brand-gold-500))' }} aria-hidden="true" />
         {title}
       </p>
@@ -340,7 +340,7 @@ function EmptyPanel({ icon: Icon, title, children }) {
  * The always-available way out, in every state where we have no calendar.
  *
  * Aligned to the top rather than the centre because these labels carry a
- * school's full name and wrap to two lines on a phone — centring leaves the
+ * school's full name and wrap to two lines on a phone, and centring leaves the
  * icon floating in the gap beside nothing.
  */
 function SearchYourSchoolLink({ college, label, looking }) {
@@ -351,7 +351,7 @@ function SearchYourSchoolLink({ college, label, looking }) {
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className="mt-2.5 inline-flex items-start gap-1.5 text-xs font-semibold transition hover:underline"
+      className="tp-meta mt-2.5 inline-flex items-start gap-1.5 font-semibold transition hover:underline"
       style={{ color: 'var(--brand-navy-700)' }}
     >
       <Search size={12} className="mt-0.5 shrink-0" aria-hidden="true" />
@@ -382,7 +382,7 @@ function NoCollegeState({ profile, disabled, onSaved }) {
       // The account record is the one that always counts: the backend reads
       // the profile first and falls back to this, and a student who has no
       // profile row yet would otherwise save a college nothing ever reads.
-      // Creating a profile row from this screen is not the fix — that just
+      // Creating a profile row from this screen is not the fix: that just
       // makes a second one.
       await base44.auth.updateMe({ college });
       if (profile?.id) {
@@ -397,7 +397,7 @@ function NoCollegeState({ profile, disabled, onSaved }) {
 
   return (
     <EmptyPanel icon={School} title="Which school do you go to?">
-      <p className="mt-1 text-xs leading-relaxed text-[color:var(--ink-500)]">
+      <p className="tp-meta mt-1 text-[color:var(--ink-500)]">
         Tell us and we&apos;ll pull real events off your campus calendar, so the first step of
         your guide has a date somebody else already set.
       </p>
@@ -422,7 +422,7 @@ function NoCollegeState({ profile, disabled, onSaved }) {
         <button
           type="submit"
           disabled={disabled || saving || !value.trim()}
-          className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg px-3.5 py-2 text-xs font-bold text-white transition disabled:opacity-50"
+          className="tp-meta inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg px-3.5 py-2.5 font-bold text-white transition disabled:opacity-50"
           style={{ background: 'var(--brand-navy-700)' }}
         >
           {saving
@@ -433,11 +433,11 @@ function NoCollegeState({ profile, disabled, onSaved }) {
       </form>
 
       {error && (
-        <p className="mt-2 flex items-center gap-1.5 text-xs text-[color:var(--danger-700)]" role="alert">
+        <p className="tp-meta mt-2 flex items-center gap-1.5 text-[color:var(--danger-700)]" role="alert">
           <AlertCircle size={12} aria-hidden="true" /> {error}
         </p>
       )}
-      <p className="mt-2 text-xs text-[color:var(--ink-400)]">
+      <p className="tp-meta mt-2 text-[color:var(--ink-400)]">
         Saves to your profile. You can skip this and build the guide without an event.
       </p>
     </EmptyPanel>
@@ -447,7 +447,7 @@ function NoCollegeState({ profile, disabled, onSaved }) {
 /**
  * Their school has no calendar we can find.
  *
- * This is the big one — roughly a quarter of our students — and the only state
+ * This is the big one (roughly a quarter of our students) and the only state
  * where the student knows something we don't.
  *
  * ## Ask for the club portal, not the events page
@@ -460,7 +460,7 @@ function NoCollegeState({ profile, disabled, onSaved }) {
  *
  * Every hit came from the portal and every miss from the calendar page. WPI's
  * 163 events are on myWPI, James Madison's 221 on BeInvolved, South Florida's
- * 947 on BullsConnect — and Columbia, which blocks our requests at Cloudflare
+ * 947 on BullsConnect. Columbia, which blocks our requests at Cloudflare
  * outright, still answers on its schools' CampusGroups portals.
  *
  * So the wording here is load-bearing, not decoration. "Paste your school's
@@ -469,7 +469,7 @@ function NoCollegeState({ profile, disabled, onSaved }) {
  *
  * The promise is kept honestly. If the link resolves, their events appear on
  * this screen immediately. It does not silently become the feed for everyone
- * else at their school — that is a review, not a side effect of one paste.
+ * else at their school: that is a review, not a side effect of one paste.
  */
 function NoFeedState({ college, disabled, onResolved }) {
   const [value, setValue] = useState('');
@@ -503,7 +503,7 @@ function NoFeedState({ college, disabled, onResolved }) {
 
   return (
     <EmptyPanel icon={CalendarSearch} title={`No calendar we can read for ${college || 'your school'}`}>
-      <p className="mt-1 text-xs leading-relaxed text-[color:var(--ink-500)]">
+      <p className="tp-meta mt-1 text-[color:var(--ink-500)]">
         Your school&apos;s main events page usually isn&apos;t one we can read, but your{' '}
         <strong className="font-semibold text-[color:var(--ink-700)]">club portal</strong> normally is. It&apos;s
         where clubs post their own events, and it&apos;s where the career ones actually live.
@@ -527,7 +527,7 @@ function NoFeedState({ college, disabled, onResolved }) {
         <button
           type="submit"
           disabled={disabled || trying || !value.trim()}
-          className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg px-3.5 py-2 text-xs font-bold text-white transition disabled:opacity-50"
+          className="tp-meta inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg px-3.5 py-2.5 font-bold text-white transition disabled:opacity-50"
           style={{ background: 'var(--brand-navy-700)' }}
         >
           {trying
@@ -538,12 +538,12 @@ function NoFeedState({ college, disabled, onResolved }) {
       </form>
 
       {problem ? (
-        <p id="campus-feed-problem" role="alert" className="mt-2 flex items-start gap-1.5 text-xs leading-relaxed text-[color:var(--danger-700)]">
+        <p id="campus-feed-problem" role="alert" className="tp-meta mt-2 flex items-start gap-1.5 text-[color:var(--danger-700)]">
           <AlertCircle size={12} className="mt-0.5 shrink-0" aria-hidden="true" />
           {problem}
         </p>
       ) : (
-        <p id="campus-feed-hint" className="mt-2 text-xs text-[color:var(--ink-400)]">
+        <p id="campus-feed-hint" className="tp-meta mt-2 text-[color:var(--ink-400)]">
           Engage, CampusGroups, Presence, BeInvolved: whatever yours calls &ldquo;get
           involved.&rdquo; Log in there and copy the address.
         </p>
@@ -561,7 +561,7 @@ function NoFeedState({ college, disabled, onResolved }) {
         that is a better reason to spend thirty seconds than helping us.
       */}
       <p
-        className="mt-2.5 border-t border-dashed pt-2.5 text-xs leading-relaxed text-[color:var(--ink-500)]"
+        className="tp-meta mt-2.5 border-t border-dashed pt-2.5 text-[color:var(--ink-500)]"
         style={{ borderColor: 'var(--ink-200)' }}
       >
         If it works you&apos;ll see your events here straight away. We check it ourselves before
@@ -576,7 +576,7 @@ function NoFeedState({ college, disabled, onResolved }) {
  *
  * The one failure the backend cannot see. A feed can resolve, read cleanly and
  * return a hundred genuinely real events that belong to the library, the
- * athletics department, or a different campus of the same system — every check
+ * athletics department, or a different campus of the same system. Every check
  * we have passes, and nothing downstream can tell. The student looking at it
  * can tell in a second.
  *
@@ -587,7 +587,7 @@ function NoFeedState({ college, disabled, onResolved }) {
  * Nothing changes for this student when they press it. Acting on one report by
  * pulling a school's calendar would hand any single student a switch over
  * everyone else's, so it goes to the same review queue every other school-wide
- * change goes through — and the copy says so rather than implying a fix.
+ * change goes through, and the copy says so rather than implying a fix.
  */
 function WrongCalendarButton({ college }) {
   const [state, setState] = useState('idle');
@@ -595,7 +595,7 @@ function WrongCalendarButton({ college }) {
 
   if (state === 'sent') {
     return (
-      <p className="mt-3 text-xs text-[color:var(--ink-500)]">
+      <p className="tp-meta mt-3 text-[color:var(--ink-500)]">
         Thanks. We&apos;ll look at {college || 'your school'}&apos;s calendar.
       </p>
     );
@@ -606,7 +606,7 @@ function WrongCalendarButton({ college }) {
       <button
         type="button"
         onClick={() => setState('asking')}
-        className="mt-3 text-xs font-semibold underline decoration-dotted underline-offset-2 transition hover:no-underline"
+        className="tp-meta mt-3 py-1 font-semibold underline decoration-dotted underline-offset-2 transition hover:no-underline"
         style={{ color: 'var(--ink-500)' }}
       >
         These aren&apos;t {college ? `${college}'s` : 'my school’s'} events
@@ -624,7 +624,7 @@ function WrongCalendarButton({ college }) {
 
   return (
     <div className="mt-3 rounded-xl border px-3 py-2.5" style={{ borderColor: 'var(--ink-200)' }}>
-      <label htmlFor="wrong-calendar-note" className="text-xs font-semibold text-[color:var(--ink-700)]">
+      <label htmlFor="wrong-calendar-note" className="tp-meta font-semibold text-[color:var(--ink-700)]">
         What&apos;s wrong with it? Optional.
       </label>
       <input
@@ -634,7 +634,7 @@ function WrongCalendarButton({ college }) {
         onChange={e => setNote(e.target.value)}
         placeholder="e.g. this is the law school's calendar"
         maxLength={200}
-        className="mt-1.5 w-full rounded-lg border px-2.5 py-1.5 text-xs"
+        className="mt-1.5 w-full rounded-lg border px-2.5 py-2 text-sm"
         style={{ borderColor: 'var(--ink-200)' }}
       />
       <div className="mt-2 flex flex-wrap items-center gap-2">
@@ -642,7 +642,7 @@ function WrongCalendarButton({ college }) {
           type="button"
           onClick={send}
           disabled={state === 'sending'}
-          className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold text-white transition disabled:opacity-50"
+          className="tp-meta inline-flex items-center gap-1.5 rounded-lg px-3 py-2 font-bold text-white transition disabled:opacity-50"
           style={{ background: 'var(--brand-navy-700)' }}
         >
           {state === 'sending' && <Loader2 size={12} className="animate-spin" aria-hidden="true" />}
@@ -651,23 +651,23 @@ function WrongCalendarButton({ college }) {
         <button
           type="button"
           onClick={() => setState('idle')}
-          className="text-xs font-semibold text-[color:var(--ink-500)] transition hover:underline"
+          className="tp-meta font-semibold text-[color:var(--ink-500)] transition hover:underline"
         >
           Never mind
         </button>
         {state === 'failed' && (
-          <span className="text-xs" style={{ color: 'var(--danger-700)' }}>That didn&apos;t send. Try again in a moment.</span>
+          <span className="tp-meta" style={{ color: 'var(--danger-700)' }}>That didn&apos;t send. Try again in a moment.</span>
         )}
       </div>
     </div>
   );
 }
 
-/** The calendar is real and reachable — there is just nothing on it. */
+/** The calendar is real and reachable, there is just nothing on it. */
 function EmptyCalendarState({ college }) {
   return (
     <EmptyPanel icon={CalendarSearch} title="Nothing on your campus calendar right now">
-      <p className="mt-1 text-xs leading-relaxed text-[color:var(--ink-500)]">
+      <p className="tp-meta mt-1 text-[color:var(--ink-500)]">
         We can read {college || 'your school'}&apos;s calendar and it has nothing posted for the
         next six weeks. That usually means a break. Worth checking again in a week.
       </p>
@@ -683,7 +683,7 @@ function EmptyCalendarState({ college }) {
 function FeedErrorState({ college, disabled, onRetry }) {
   return (
     <EmptyPanel icon={RotateCw} title="Your campus calendar didn't answer">
-      <p className="mt-1 text-xs leading-relaxed text-[color:var(--ink-500)]">
+      <p className="tp-meta mt-1 text-[color:var(--ink-500)]">
         {college || 'Your school'}&apos;s calendar didn&apos;t respond just now. That&apos;s on their
         end and it usually passes.
       </p>
@@ -692,7 +692,7 @@ function FeedErrorState({ college, disabled, onRetry }) {
           type="button"
           onClick={onRetry}
           disabled={disabled}
-          className="inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-bold transition hover:bg-white disabled:opacity-50"
+          className="tp-meta inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 font-bold transition hover:bg-white disabled:opacity-50"
           style={{ borderColor: 'rgba(31,58,95,0.3)', color: 'var(--brand-navy-700)' }}
         >
           <RotateCw size={12} aria-hidden="true" /> Try again

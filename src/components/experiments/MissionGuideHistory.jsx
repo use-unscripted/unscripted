@@ -24,22 +24,22 @@ function GuideInlinePreview({ guide }) {
     <div className="border-t border-[color:var(--ink-200)] bg-white px-4 pt-3 pb-4 space-y-3">
       {guide.objective && (
         <div>
-          <p className="text-[10px] font-bold uppercase tracking-wide text-[color:var(--ink-400)] mb-0.5">Objective</p>
-          <p className="text-xs text-[color:var(--ink-700)] leading-relaxed">{guide.objective}</p>
+          <p className="tp-eyebrow text-[color:var(--ink-400)] mb-0.5">Objective</p>
+          <p className="tp-body text-[color:var(--ink-700)]">{guide.objective}</p>
         </div>
       )}
       {guide.steps?.length > 0 && (
         <div>
-          <p className="text-[10px] font-bold uppercase tracking-wide text-[color:var(--ink-400)] mb-1.5">Steps ({guide.steps.length})</p>
+          <p className="tp-eyebrow text-[color:var(--ink-400)] mb-1.5">Steps ({guide.steps.length})</p>
           <ol className="space-y-2">
             {guide.steps.map((s, i) => (
-              <li key={i} className="flex gap-2.5 text-xs">
-                <span className="shrink-0 w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold text-white mt-0.5"
+              <li key={i} className="tp-body flex gap-2.5">
+                <span className="tp-meta shrink-0 w-5 h-5 rounded-full flex items-center justify-center font-bold text-white mt-0.5"
                   style={{ background: 'var(--brand-navy-900)' }}>{i + 1}</span>
                 <div>
                   {s.title && <p className="font-semibold text-[color:var(--surface-dark-900)]">{s.title}</p>}
-                  {s.description && <p className="text-[color:var(--ink-500)] mt-0.5">{s.description}</p>}
-                  {s.estimated_time && <p className="text-[color:var(--ink-400)] mt-0.5 flex items-center gap-0.5"><Clock size={9} />{s.estimated_time}</p>}
+                  {s.description && <p className="tp-meta text-[color:var(--ink-500)] mt-0.5">{s.description}</p>}
+                  {s.estimated_time && <p className="tp-meta text-[color:var(--ink-400)] mt-0.5 flex items-center gap-0.5"><Clock size={9} />{s.estimated_time}</p>}
                 </div>
               </li>
             ))}
@@ -48,22 +48,22 @@ function GuideInlinePreview({ guide }) {
       )}
       {guide.deliverable && (
         <div className="rounded-lg p-2.5" style={{ background: 'var(--ink-100)', border: '1px solid rgba(31,58,95,0.15)' }}>
-          <p className="text-[10px] font-bold uppercase tracking-wide mb-0.5" style={{ color: 'var(--brand-navy-700)' }}>Deliverable</p>
-          <p className="text-xs text-[color:var(--ink-700)]">{guide.deliverable}</p>
+          <p className="tp-eyebrow mb-0.5" style={{ color: 'var(--brand-navy-700)' }}>Deliverable</p>
+          <p className="tp-body text-[color:var(--ink-700)]">{guide.deliverable}</p>
         </div>
       )}
       {guide.proof_requirement && (
         <div>
-          <p className="text-[10px] font-bold uppercase tracking-wide text-[color:var(--ink-400)] mb-0.5">Proof Required</p>
-          <p className="text-xs text-[color:var(--ink-700)]">{guide.proof_requirement}</p>
+          <p className="tp-eyebrow text-[color:var(--ink-400)] mb-0.5">Proof Required</p>
+          <p className="tp-body text-[color:var(--ink-700)]">{guide.proof_requirement}</p>
         </div>
       )}
       {guide.reflection_questions?.length > 0 && (
         <div>
-          <p className="text-[10px] font-bold uppercase tracking-wide text-[color:var(--ink-400)] mb-1">Reflection Questions</p>
+          <p className="tp-eyebrow text-[color:var(--ink-400)] mb-1">Reflection Questions</p>
           <ul className="space-y-1">
             {guide.reflection_questions.map((q, i) => (
-              <li key={i} className="text-xs text-[color:var(--ink-700)] flex gap-1.5">
+              <li key={i} className="tp-body text-[color:var(--ink-700)] flex gap-1.5">
                 <span style={{ color: 'var(--brand-navy-900)' }}>·</span><span>{q}</span>
               </li>
             ))}
@@ -86,15 +86,15 @@ function GuideCompareModal({ guideA, guideB, onClose }) {
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" style={{ background: 'rgba(5,8,22,0.5)' }}>
       <div className="w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-[24px] bg-white p-6 sm:p-8">
         <div className="flex items-center justify-between mb-5">
-          <h2 className="font-heading text-xl font-bold text-[color:var(--surface-dark-900)]">Compare Guides</h2>
+          <h2 className="tp-section text-[color:var(--surface-dark-900)]">Compare Guides</h2>
           <button onClick={onClose}><X size={20} className="text-[color:var(--ink-500)]" /></button>
         </div>
         <div className="grid grid-cols-2 gap-4 mb-4">
           {[guideA, guideB].map((g, i) => (
             <div key={i} className="rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] p-3">
-              <p className="text-xs font-bold uppercase tracking-wide text-[color:var(--ink-500)]">Version {g.version_number}</p>
-              <p className="font-semibold text-[color:var(--surface-dark-900)] text-sm mt-0.5">{g.guide_title}</p>
-              {g.is_active && <span className="text-xs font-bold text-green-700 bg-green-50 rounded-full px-2 py-0.5 mt-1 inline-block">Active</span>}
+              <p className="tp-eyebrow text-[color:var(--ink-500)]">Version {g.version_number}</p>
+              <p className="tp-card text-[color:var(--surface-dark-900)] mt-0.5">{g.guide_title}</p>
+              {g.is_active && <span className="tp-meta font-bold text-green-700 bg-green-50 rounded-full px-2 py-0.5 mt-1 inline-block">Active</span>}
             </div>
           ))}
         </div>
@@ -102,13 +102,13 @@ function GuideCompareModal({ guideA, guideB, onClose }) {
           const differ = f.keyA !== f.keyB;
           return (
             <div key={f.label} className="mb-4">
-              <p className="text-xs font-bold uppercase tracking-wide text-[color:var(--ink-500)] mb-2 flex items-center gap-2">
+              <p className="tp-eyebrow text-[color:var(--ink-500)] mb-2 flex items-center gap-2">
                 {f.label}
-                {differ && <span className="rounded-full px-2 py-0.5 text-[10px] font-bold" style={{ background: 'var(--warning-50)', color: 'var(--warning-700)' }}>Different</span>}
+                {differ && <span className="tp-meta rounded-full px-2 py-0.5 font-bold" style={{ background: 'var(--warning-50)', color: 'var(--warning-700)' }}>Different</span>}
               </p>
               <div className="grid grid-cols-2 gap-4">
                 {[f.keyA, f.keyB].map((val, i) => (
-                  <div key={i} className="rounded-xl p-3 text-sm text-[color:var(--ink-700)]"
+                  <div key={i} className="tp-body rounded-xl p-3 text-[color:var(--ink-700)]"
                     style={{ background: differ ? (i === 0 ? '#FFF7ED' : 'var(--success-50)') : 'var(--ink-50)', border: '1px solid var(--ink-200)' }}>
                     {val || <span className="text-[color:var(--ink-400)] italic">Not specified</span>}
                   </div>
@@ -118,20 +118,20 @@ function GuideCompareModal({ guideA, guideB, onClose }) {
           );
         })}
         <div className="mb-4">
-          <p className="text-xs font-bold uppercase tracking-wide text-[color:var(--ink-500)] mb-2 flex items-center gap-2">
+          <p className="tp-eyebrow text-[color:var(--ink-500)] mb-2 flex items-center gap-2">
             Steps
             {(guideA.steps?.length !== guideB.steps?.length) && (
-              <span className="rounded-full px-2 py-0.5 text-[10px] font-bold" style={{ background: 'var(--warning-50)', color: 'var(--warning-700)' }}>Different count</span>
+              <span className="tp-meta rounded-full px-2 py-0.5 font-bold" style={{ background: 'var(--warning-50)', color: 'var(--warning-700)' }}>Different count</span>
             )}
           </p>
           <div className="grid grid-cols-2 gap-4">
             {[guideA, guideB].map((g, gi) => (
               <div key={gi} className="space-y-2">
-                <p className="text-xs text-[color:var(--ink-400)]">{g.steps?.length || 0} steps</p>
+                <p className="tp-meta text-[color:var(--ink-400)]">{g.steps?.length || 0} steps</p>
                 {(g.steps || []).map((s, i) => (
-                  <div key={i} className="rounded-lg border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] px-3 py-2 text-xs text-[color:var(--ink-700)]">
+                  <div key={i} className="tp-body rounded-lg border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] px-3 py-2 text-[color:var(--ink-700)]">
                     <span className="font-semibold">{i + 1}. {s.title || (typeof s === 'string' ? s : JSON.stringify(s))}</span>
-                    {s.description && <p className="text-[color:var(--ink-500)] mt-0.5">{s.description}</p>}
+                    {s.description && <p className="tp-meta text-[color:var(--ink-500)] mt-0.5">{s.description}</p>}
                   </div>
                 ))}
               </div>
@@ -139,17 +139,17 @@ function GuideCompareModal({ guideA, guideB, onClose }) {
           </div>
         </div>
         <div className="mb-4">
-          <p className="text-xs font-bold uppercase tracking-wide text-[color:var(--ink-500)] mb-2">Reflection Questions</p>
+          <p className="tp-eyebrow text-[color:var(--ink-500)] mb-2">Reflection Questions</p>
           <div className="grid grid-cols-2 gap-4">
             {[guideA, guideB].map((g, gi) => (
-              <ul key={gi} className="space-y-1 text-xs text-[color:var(--ink-700)]">
+              <ul key={gi} className="tp-body space-y-1 text-[color:var(--ink-700)]">
                 {(g.reflection_questions || []).map((q, i) => <li key={i}>· {q}</li>)}
                 {(!g.reflection_questions?.length) && <li className="text-[color:var(--ink-400)] italic">None</li>}
               </ul>
             ))}
           </div>
         </div>
-        <button onClick={onClose} className="w-full rounded-[10px] border border-[color:var(--ink-200)] py-2.5 text-sm font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)]">Close</button>
+        <button onClick={onClose} className="tp-body w-full rounded-[10px] border border-[color:var(--ink-200)] py-2.5 font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)]">Close</button>
       </div>
     </div>
   );
@@ -175,11 +175,11 @@ function RenameRow({ guide, onRenamed, onCancel }) {
         className="flex-1 rounded-lg border border-[color:var(--ink-200)] bg-white px-3 py-1.5 text-sm outline-none focus:border-[color:var(--brand-navy-900)]"
       />
       <button onClick={handleSave} disabled={saving || !title.trim()}
-        className="rounded-lg px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-60"
+        className="tp-meta rounded-lg px-3 py-2 font-semibold text-white disabled:opacity-60"
         style={{ background: 'var(--brand-navy-900)' }}>
         {saving ? 'Saving…' : 'Save'}
       </button>
-      <button onClick={onCancel} className="rounded-lg border border-[color:var(--ink-200)] px-3 py-1.5 text-xs font-semibold text-[color:var(--ink-700)] hover:bg-white">Cancel</button>
+      <button onClick={onCancel} className="tp-meta rounded-lg border border-[color:var(--ink-200)] px-3 py-2 font-semibold text-[color:var(--ink-700)] hover:bg-white">Cancel</button>
     </div>
   );
 }
@@ -187,12 +187,12 @@ function RenameRow({ guide, onRenamed, onCancel }) {
 /**
  * MissionGuideHistory
  * Props:
- *   guides          – MissionGuides[] for this experiment
- *   onSetActive     – (guide) => void
- *   onDeleted       – (guideId) => void
- *   onDuplicated    – (newGuide) => void
- *   onRenamed       – (updatedGuide) => void  (optional)
- *   onGenerateAnother – () => void  (optional)
+ *   guides: MissionGuides[] for this experiment
+ *   onSetActive: (guide) => void
+ *   onDeleted: (guideId) => void
+ *   onDuplicated: (newGuide) => void
+ *   onRenamed: (updatedGuide) => void  (optional)
+ *   onGenerateAnother: () => void  (optional)
  */
 export default function MissionGuideHistory({ guides = [], onSetActive, onDeleted, onDuplicated, onRenamed, onGenerateAnother }) {
   const navigate = useNavigate();
@@ -278,7 +278,7 @@ export default function MissionGuideHistory({ guides = [], onSetActive, onDelete
 
       {/* Compare toolbar */}
       {compareIds.length > 0 && (
-        <div className="flex items-center gap-3 rounded-xl bg-blue-50 border border-blue-100 px-4 py-2.5 text-xs">
+        <div className="tp-meta flex items-center gap-3 rounded-xl bg-blue-50 border border-blue-100 px-4 py-2.5">
           <span className="text-blue-700 font-semibold">
             {compareIds.length === 1 ? 'Select one more guide to compare' : 'Ready to compare'}
           </span>
@@ -311,17 +311,17 @@ export default function MissionGuideHistory({ guides = [], onSetActive, onDelete
             <div className="flex items-center gap-3 px-4 py-3">
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-xs font-bold text-[color:var(--ink-400)]">v{guide.version_number}</span>
-                  <span className="rounded-full px-2 py-0.5 text-[10px] font-bold" style={{ background: cfg.bg, color: cfg.text }}>{cfg.label}</span>
+                  <span className="tp-meta font-bold text-[color:var(--ink-400)]">v{guide.version_number}</span>
+                  <span className="tp-meta rounded-full px-2 py-0.5 font-bold" style={{ background: cfg.bg, color: cfg.text }}>{cfg.label}</span>
                   {guide.is_active && <CheckCircle2 size={12} className="text-green-600 shrink-0" />}
-                  <span className="text-sm font-semibold text-[color:var(--surface-dark-900)] truncate">{guide.guide_title}</span>
+                  <span className="tp-card text-[color:var(--surface-dark-900)] truncate">{guide.guide_title}</span>
                 </div>
-                <div className="flex flex-wrap gap-2 mt-0.5 text-xs text-[color:var(--ink-400)]">
+                <div className="tp-meta flex flex-wrap gap-2 mt-0.5 text-[color:var(--ink-400)]">
                   <span>{fmtDate(guide.created_date)}</span>
                   {guide.estimated_time && <span>· {guide.estimated_time}</span>}
                   <span>· {guide.steps?.length || 0} steps</span>
                 </div>
-                {guide.objective && <p className="text-xs text-[color:var(--ink-500)] mt-0.5 line-clamp-1">{guide.objective}</p>}
+                {guide.objective && <p className="tp-meta text-[color:var(--ink-500)] mt-0.5 line-clamp-1">{guide.objective}</p>}
               </div>
               <div className="flex items-center gap-1 shrink-0">
                 <button
@@ -353,16 +353,16 @@ export default function MissionGuideHistory({ guides = [], onSetActive, onDelete
             {/* Actions row */}
             {isOpen && (
               <div className="border-t border-[color:var(--ink-200)] bg-[color:var(--ink-50)] px-4 py-3 flex flex-wrap gap-2">
-                {/* Open Guide — navigates to exact record by ID */}
+                {/* Open Guide: navigates to exact record by ID */}
                 <button
                   onClick={() => navigate(`/guide?id=${guide.id}`)}
-                  className="flex items-center gap-1.5 rounded-lg border border-[color:var(--ink-200)] px-3 py-1.5 text-xs font-semibold text-[color:var(--ink-700)] hover:bg-white transition">
+                  className="tp-meta flex items-center gap-1.5 rounded-lg border border-[color:var(--ink-200)] px-3 py-2 font-semibold text-[color:var(--ink-700)] hover:bg-white transition">
                   <ExternalLink size={12} /> Open Guide
                 </button>
 
                 <button
                   onClick={() => setPreviewId(isPreviewing ? null : guide.id)}
-                  className="flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold transition"
+                  className="tp-meta flex items-center gap-1.5 rounded-lg border px-3 py-2 font-semibold transition"
                   style={isPreviewing
                     ? { borderColor: 'var(--brand-navy-900)', background: 'var(--ink-100)', color: 'var(--brand-navy-900)' }
                     : { borderColor: 'var(--ink-200)', background: 'white', color: 'var(--ink-700)' }}>
@@ -370,7 +370,7 @@ export default function MissionGuideHistory({ guides = [], onSetActive, onDelete
                 </button>
 
                 <button onClick={() => toggleCompare(guide.id)}
-                  className="flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold transition"
+                  className="tp-meta flex items-center gap-1.5 rounded-lg border px-3 py-2 font-semibold transition"
                   style={isSelected
                     ? { borderColor: '#93C5FD', background: 'var(--info-50)', color: 'var(--info-700)' }
                     : { borderColor: 'var(--ink-200)', background: 'white', color: 'var(--ink-700)' }}>
@@ -379,25 +379,25 @@ export default function MissionGuideHistory({ guides = [], onSetActive, onDelete
 
                 {!guide.is_active && (
                   <button onClick={() => handleSetActive(guide)} disabled={actionLoading === guide.id + '_active'}
-                    className="flex items-center gap-1.5 rounded-lg border border-[color:var(--ink-200)] px-3 py-1.5 text-xs font-semibold text-[color:var(--ink-700)] hover:bg-white transition disabled:opacity-60">
+                    className="tp-meta flex items-center gap-1.5 rounded-lg border border-[color:var(--ink-200)] px-3 py-2 font-semibold text-[color:var(--ink-700)] hover:bg-white transition disabled:opacity-60">
                     {actionLoading === guide.id + '_active' ? <Loader2 size={12} className="animate-spin" /> : <Star size={12} />}
                     Set as Active
                   </button>
                 )}
 
                 <button onClick={() => setRenameId(isRenaming ? null : guide.id)}
-                  className="flex items-center gap-1.5 rounded-lg border border-[color:var(--ink-200)] px-3 py-1.5 text-xs font-semibold text-[color:var(--ink-700)] hover:bg-white transition">
+                  className="tp-meta flex items-center gap-1.5 rounded-lg border border-[color:var(--ink-200)] px-3 py-2 font-semibold text-[color:var(--ink-700)] hover:bg-white transition">
                   <Pencil size={12} /> Rename
                 </button>
 
                 <button onClick={() => handleDuplicate(guide)} disabled={actionLoading === guide.id + '_dup'}
-                  className="flex items-center gap-1.5 rounded-lg border border-[color:var(--ink-200)] px-3 py-1.5 text-xs font-semibold text-[color:var(--ink-700)] hover:bg-white transition disabled:opacity-60">
+                  className="tp-meta flex items-center gap-1.5 rounded-lg border border-[color:var(--ink-200)] px-3 py-2 font-semibold text-[color:var(--ink-700)] hover:bg-white transition disabled:opacity-60">
                   {actionLoading === guide.id + '_dup' ? <Loader2 size={12} className="animate-spin" /> : <Copy size={12} />}
                   Duplicate
                 </button>
 
                 <button onClick={() => handleDelete(guide)} disabled={actionLoading === guide.id + '_delete'}
-                  className="flex items-center gap-1.5 rounded-lg border border-red-100 px-3 py-1.5 text-xs font-semibold text-red-400 hover:text-red-600 hover:border-red-200 transition disabled:opacity-60">
+                  className="tp-meta flex items-center gap-1.5 rounded-lg border border-red-100 px-3 py-2 font-semibold text-red-400 hover:text-red-600 hover:border-red-200 transition disabled:opacity-60">
                   {actionLoading === guide.id + '_delete' ? <Loader2 size={12} className="animate-spin" /> : <Trash2 size={12} />}
                   Delete
                 </button>
@@ -411,7 +411,7 @@ export default function MissionGuideHistory({ guides = [], onSetActive, onDelete
       {onGenerateAnother && (
         <button
           onClick={onGenerateAnother}
-          className="w-full rounded-xl border border-dashed border-[color:var(--ink-200)] py-2.5 text-xs font-semibold text-[color:var(--ink-500)] hover:border-[color:var(--brand-navy-900)] hover:text-[color:var(--brand-navy-900)] transition mt-1">
+          className="tp-meta w-full rounded-xl border border-dashed border-[color:var(--ink-200)] py-3 font-semibold text-[color:var(--ink-500)] hover:border-[color:var(--brand-navy-900)] hover:text-[color:var(--brand-navy-900)] transition mt-1">
           + Generate Another Mission Guide
         </button>
       )}

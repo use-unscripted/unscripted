@@ -1,5 +1,5 @@
 /**
- * AddProofFlow — one guided flow for logging proof of work, asked one question
+ * AddProofFlow: one guided flow for logging proof of work, asked one question
  * at a time.
  *
  * Backs both entry points:
@@ -24,7 +24,7 @@ const bigInputCls = 'w-full rounded-2xl border border-[color:var(--ink-200)] bg-
 
 // footerCls comes from GuidedPieces. The panel below drops its own bottom
 // padding (pb-0) so that bar can stick to the panel's edge, and its -mx values
-// cancel these px values exactly — keep the two in step by changing the shared
+// cancel these px values exactly, so keep the two in step by changing the shared
 // one, not by re-declaring it here.
 
 const VIDEO_EXTS = new Set(['mp4','webm','mov','avi','mkv','m4v','wmv','ogv','3gp','3g2']);
@@ -85,11 +85,11 @@ function FileDropZone({ file, uploadState, onSelect, onRemove }) {
             {vid ? <Film size={18} style={{ color: 'var(--brand-navy-700)' }} /> : <FileText size={18} style={{ color: 'var(--brand-navy-700)' }} />}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-[color:var(--surface-dark-900)] truncate">{file.name}</p>
-            <p className="text-xs text-[color:var(--ink-500)]">{fmtSize(file.size)} · {getExt(file.name).toUpperCase()}</p>
+            <p className="tp-body font-semibold text-[color:var(--surface-dark-900)] truncate">{file.name}</p>
+            <p className="tp-meta text-[color:var(--ink-500)]">{fmtSize(file.size)} · {getExt(file.name).toUpperCase()}</p>
             {uploadState === 'uploading' && (
               <div className="mt-2">
-                <div className="flex items-center gap-2 text-xs" style={{ color: 'var(--brand-navy-700)' }}>
+                <div className="tp-meta flex items-center gap-2" style={{ color: 'var(--brand-navy-700)' }}>
                   <Loader2 size={12} className="animate-spin" /> Uploading...
                 </div>
                 <div className="mt-1.5 h-1.5 w-full rounded-full bg-[color:var(--ink-200)] overflow-hidden">
@@ -97,8 +97,8 @@ function FileDropZone({ file, uploadState, onSelect, onRemove }) {
                 </div>
               </div>
             )}
-            {uploadState === 'done' && <div className="mt-1 flex items-center gap-1 text-xs text-green-600"><CheckCircle size={12} /> Uploaded</div>}
-            {uploadState === 'error' && <div className="mt-1 flex items-center gap-1 text-xs text-red-600"><AlertCircle size={12} /> Upload failed</div>}
+            {uploadState === 'done' && <div className="tp-meta mt-1 flex items-center gap-1 text-green-600"><CheckCircle size={12} /> Uploaded</div>}
+            {uploadState === 'error' && <div className="tp-meta mt-1 flex items-center gap-1 text-red-600"><AlertCircle size={12} /> Upload failed</div>}
           </div>
           {uploadState !== 'uploading' && (
             <button onClick={onRemove} aria-label="Remove file" className="shrink-0 text-[color:var(--ink-400)] hover:text-red-500 transition">
@@ -121,15 +121,15 @@ function FileDropZone({ file, uploadState, onSelect, onRemove }) {
         accept=".pdf,.doc,.docx,.ppt,.pptx,.txt,.html,.png,.jpg,.jpeg,.webp,.svg,.csv,.xls,.xlsx,.json,.mp3,.wav,.mp4,.webm,.mov,.avi,.mkv,.m4v,.wmv,.ogv,.3gp,.3g2"
         className="hidden" onChange={e => { if (e.target.files[0]) onSelect(e.target.files[0]); }} />
       <Upload size={22} className="mx-auto mb-2 text-[color:var(--ink-400)]" />
-      <p className="text-sm font-semibold text-[color:var(--ink-700)]">Click or drag a file here</p>
-      <p className="mt-1 text-xs text-[color:var(--ink-400)]">Videos up to 100 MB · All other files up to 50 MB</p>
-      <p className="mt-0.5 text-xs text-[color:var(--ink-400)]">PDF, DOC, PPT, XLS, image, video, audio</p>
+      <p className="tp-body font-semibold text-[color:var(--ink-700)]">Click or drag a file here</p>
+      <p className="tp-meta mt-1 text-[color:var(--ink-400)]">Videos up to 100 MB · All other files up to 50 MB</p>
+      <p className="tp-meta mt-0.5 text-[color:var(--ink-400)]">PDF, DOC, PPT, XLS, image, video, audio</p>
     </div>
   );
 }
 
 // The ways to answer "show it". Any one of them counts, and a student can add
-// more than one — a deck plus a note about how the pitch went is better
+// more than one. A deck plus a note about how the pitch went is better
 // evidence, not a conflict.
 const PROOF_SOURCES = [
   { value: 'file', label: 'Upload a file', desc: 'A doc, deck, screenshot, or recording' },
@@ -199,7 +199,7 @@ export default function AddProofFlow({ onClose, onSaved, preselectedMission, pre
   //
   // Changing step unmounts whatever had focus, which drops it to <body> and
   // sends the next Tab into the page behind the overlay. Move it to the new
-  // question — unless the step already autofocused a field of its own.
+  // question, unless the step already autofocused a field of its own.
   useEffect(() => {
     rootRef.current?.closest('[data-modal-scroll]')?.scrollTo({ top: 0, behavior: 'smooth' });
     const active = document.activeElement;
@@ -258,7 +258,7 @@ export default function AddProofFlow({ onClose, onSaved, preselectedMission, pre
   };
 
   // Any number of these can be open at once. Unchecking one never erases what
-  // was typed — the gate and the payload both read "checked AND filled", so the
+  // was typed: the gate and the payload both read "checked AND filled", so the
   // screen and the rule still agree.
   const toggleSource = (value) => {
     setSources(prev => {
@@ -345,7 +345,7 @@ export default function AddProofFlow({ onClose, onSaved, preselectedMission, pre
       const user = await base44.auth.me();
 
       // The experiment comes from the prop when we were handed one. Only the
-      // entry point that fetched a list checks membership of that list — the
+      // entry point that fetched a list checks membership of that list, and the
       // mission entry point never had one and must not start needing one.
       const exp = preselectedExperiment || experiments.find(e => e.id === selectedExpId);
       if (!preselectedExperiment && !exp) {
@@ -435,7 +435,7 @@ export default function AddProofFlow({ onClose, onSaved, preselectedMission, pre
       if (e.isComposing || e.keyCode === 229) return;
       const typing = ['INPUT', 'TEXTAREA'].includes(e.target?.tagName);
       // Escape only discards an empty form. Once there is work in here, closing
-      // has to be deliberate — Cancel and the X still do it.
+      // has to be deliberate. Cancel and the X still do it.
       if (e.key === 'Escape') { if (!isDirty) requestClose(); return; }
       if (e.key === 'Enter' && !e.shiftKey) {
         if (typing && e.target.tagName === 'TEXTAREA') return;
@@ -455,7 +455,7 @@ export default function AddProofFlow({ onClose, onSaved, preselectedMission, pre
   });
 
   // ── Header context ───────────────────────────────────────────────────────────
-  const chipCls = 'truncate rounded-full px-2.5 py-1 text-[11px] font-bold';
+  const chipCls = 'tp-meta truncate rounded-full px-2.5 py-1 font-bold';
   const chip = preselectedMission ? (
     <div className="flex min-w-0 flex-wrap items-center gap-1.5">
       <span className={chipCls} style={{ background: 'var(--ink-100)', color: 'var(--brand-navy-900)' }}>{preselectedMission.title}</span>
@@ -469,7 +469,7 @@ export default function AddProofFlow({ onClose, onSaved, preselectedMission, pre
 
   const backButton = (
     <button onClick={back} disabled={saving}
-      className="flex items-center gap-1 rounded-[10px] border px-4 py-3 text-sm font-semibold disabled:opacity-50"
+      className="tp-body flex items-center gap-1 rounded-[10px] border px-4 py-3 font-semibold disabled:opacity-50"
       style={{ borderColor: 'var(--ink-200)', color: 'var(--text-primary)' }}>
       <ChevronLeft size={15} /> Back
     </button>
@@ -477,7 +477,7 @@ export default function AddProofFlow({ onClose, onSaved, preselectedMission, pre
 
   const cancelButton = (
     <button onClick={requestClose} disabled={saving}
-      className="rounded-[10px] border px-4 py-3 text-sm font-semibold disabled:opacity-50"
+      className="tp-body rounded-[10px] border px-4 py-3 font-semibold disabled:opacity-50"
       style={{ borderColor: 'var(--ink-200)', color: 'var(--text-primary)' }}>
       Cancel
     </button>
@@ -485,7 +485,7 @@ export default function AddProofFlow({ onClose, onSaved, preselectedMission, pre
 
   const continueButton = (enabled) => (
     <button onClick={next} disabled={!enabled}
-      className="flex flex-1 items-center justify-center gap-2 rounded-[10px] py-3 text-sm font-semibold text-white disabled:opacity-40"
+      className="tp-body flex flex-1 items-center justify-center gap-2 rounded-[10px] py-3 font-semibold text-white disabled:opacity-40"
       style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}>
       Continue <ChevronRight size={15} />
     </button>
@@ -498,11 +498,11 @@ export default function AddProofFlow({ onClose, onSaved, preselectedMission, pre
     question = 'Which experiment is this for?';
     hint = 'Whatever you did, it belongs to one of these.';
     body = loadingExperiments ? (
-      <div className="py-10 text-center text-sm" style={{ color: 'var(--text-secondary)' }}>
+      <div className="tp-body py-10 text-center" style={{ color: 'var(--text-secondary)' }}>
         <Loader2 size={20} className="animate-spin mx-auto mb-2" />Loading your experiments…
       </div>
     ) : noExperiments ? (
-      <div className="rounded-2xl border px-4 py-5 text-sm" style={{ borderColor: 'var(--ink-200)', background: 'var(--ink-50)', color: 'var(--text-secondary)' }}>
+      <div className="tp-body rounded-2xl border px-4 py-5" style={{ borderColor: 'var(--ink-200)', background: 'var(--ink-50)', color: 'var(--text-secondary)' }}>
         No experiments found. Create one first, then come back and log what you did.
       </div>
     ) : (
@@ -523,7 +523,7 @@ export default function AddProofFlow({ onClose, onSaved, preselectedMission, pre
         {cancelButton}
         {noExperiments ? (
           <button onClick={requestClose}
-            className="flex flex-1 items-center justify-center gap-2 rounded-[10px] py-3 text-sm font-semibold text-white"
+            className="tp-body flex flex-1 items-center justify-center gap-2 rounded-[10px] py-3 font-semibold text-white"
             style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}>
             Close
           </button>
@@ -544,7 +544,7 @@ export default function AddProofFlow({ onClose, onSaved, preselectedMission, pre
           className={bigInputCls}
         />
         {selectedExp?.path_name && (
-          <p className="mt-3 text-xs" style={{ color: 'var(--text-secondary)' }}>
+          <p className="tp-meta mt-3" style={{ color: 'var(--text-secondary)' }}>
             Filed under <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>{selectedExp.path_name}</span>
           </p>
         )}
@@ -572,14 +572,14 @@ export default function AddProofFlow({ onClose, onSaved, preselectedMission, pre
                   <div className="anim-slide-up mt-2">
                     <FileDropZone file={file} uploadState={uploadState} onSelect={handleFileSelect} onRemove={handleRemoveFile} />
                     {fileError && (
-                      <p className="mt-2 text-xs text-red-600 flex items-start gap-1.5" role="alert">
+                      <p className="tp-meta mt-2 text-red-600 flex items-start gap-1.5" role="alert">
                         <AlertCircle size={13} className="shrink-0 mt-0.5" />{fileError}
                       </p>
                     )}
                     {uploadState === 'error' && (
                       <div className="mt-2 flex items-center gap-2">
-                        <p className="text-xs text-red-600">Upload failed.</p>
-                        <button onClick={() => { setUploadState('idle'); setUploadedUrl(''); skipFileRef.current = false; }} className="text-xs underline flex items-center gap-1" style={{ color: 'var(--brand-navy-700)' }}>
+                        <p className="tp-meta text-red-600">Upload failed.</p>
+                        <button onClick={() => { setUploadState('idle'); setUploadedUrl(''); skipFileRef.current = false; }} className="tp-meta underline flex items-center gap-1" style={{ color: 'var(--brand-navy-700)' }}>
                           <RefreshCw size={11} /> Retry
                         </button>
                       </div>
@@ -592,7 +592,7 @@ export default function AddProofFlow({ onClose, onSaved, preselectedMission, pre
                     <input name="external_url" value={data.external_url} onChange={ch}
                       placeholder="https://…" className={inputCls} autoFocus />
                     {urlInvalid && (
-                      <p className="mt-2 flex items-center gap-1.5 text-xs text-red-600" role="alert">
+                      <p className="tp-meta mt-2 flex items-center gap-1.5 text-red-600" role="alert">
                         <AlertCircle size={13} className="shrink-0" />That does not look like a full link. Include https://
                       </p>
                     )}
@@ -603,7 +603,7 @@ export default function AddProofFlow({ onClose, onSaved, preselectedMission, pre
                   <div className="anim-slide-up mt-2">
                     <textarea name="completion_note" rows={4} value={data.completion_note} onChange={ch}
                       placeholder="Who did you talk to, what happened, what did you find out?" className={inputCls} autoFocus />
-                    <p className="mt-1.5 text-xs" style={{ color: hasNote ? '#16A34A' : 'var(--text-secondary)' }}>
+                    <p className="tp-meta mt-1.5" style={{ color: hasNote ? '#16A34A' : 'var(--text-secondary)' }}>
                       {noteCounter}
                     </p>
                   </div>
@@ -620,7 +620,7 @@ export default function AddProofFlow({ onClose, onSaved, preselectedMission, pre
           className="mt-5 flex w-full items-center justify-between rounded-2xl border px-4 py-3 text-left"
           style={{ borderColor: 'var(--ink-200)', background: 'var(--brand-white)' }}
         >
-          <span className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
+          <span className="tp-body font-semibold" style={{ color: 'var(--text-primary)' }}>
             Add more detail <span className="font-normal" style={{ color: 'var(--text-secondary)' }}>· optional</span>
           </span>
           <ChevronDown size={16} style={{ color: 'var(--ink-400)', transform: detailOpen ? 'rotate(180deg)' : 'none', transition: 'transform var(--dur-fast) var(--ease-out)' }} />
@@ -630,7 +630,7 @@ export default function AddProofFlow({ onClose, onSaved, preselectedMission, pre
           <div className="anim-slide-up mt-2 space-y-4 rounded-2xl border p-4" style={{ borderColor: 'var(--ink-200)', background: '#FAFBFC' }}>
             {!preselectedMission && expMissions.length > 0 && (
               <label className="block">
-                <span className="mb-1 block text-xs font-semibold" style={{ color: 'var(--text-secondary)' }}>Mission</span>
+                <span className="tp-meta mb-1 block font-semibold" style={{ color: 'var(--text-secondary)' }}>Mission</span>
                 <select value={selectedMissionId} onChange={e => setSelectedMissionId(e.target.value)} className={inputCls}>
                   <option value="">No specific mission (overall experiment)</option>
                   {expMissions.map(m => <option key={m.id} value={m.id}>{m.title}</option>)}
@@ -640,31 +640,31 @@ export default function AddProofFlow({ onClose, onSaved, preselectedMission, pre
 
             <div className="grid gap-4 sm:grid-cols-2">
               <label className="block">
-                <span className="mb-1 block text-xs font-semibold" style={{ color: 'var(--text-secondary)' }}>Proof type</span>
+                <span className="tp-meta mb-1 block font-semibold" style={{ color: 'var(--text-secondary)' }}>Proof type</span>
                 <select name="category" value={data.category} onChange={ch} className={inputCls}>
                   {CATEGORIES.map(([val, label]) => <option key={val} value={val}>{label}</option>)}
                 </select>
               </label>
               <label className="block">
-                <span className="mb-1 block text-xs font-semibold" style={{ color: 'var(--text-secondary)' }}>Date completed</span>
+                <span className="tp-meta mb-1 block font-semibold" style={{ color: 'var(--text-secondary)' }}>Date completed</span>
                 <input type="date" name="completed_at" value={data.completed_at} onChange={ch} className={inputCls} />
               </label>
             </div>
 
             <label className="block">
-              <span className="mb-1 block text-xs font-semibold" style={{ color: 'var(--text-secondary)' }}>Description</span>
+              <span className="tp-meta mb-1 block font-semibold" style={{ color: 'var(--text-secondary)' }}>Description</span>
               <textarea rows={2} name="description" value={data.description} onChange={ch}
                 placeholder="What is this and what does it show?" className={inputCls} />
             </label>
 
             <label className="block">
-              <span className="mb-1 block text-xs font-semibold" style={{ color: 'var(--text-secondary)' }}>Skills demonstrated</span>
+              <span className="tp-meta mb-1 block font-semibold" style={{ color: 'var(--text-secondary)' }}>Skills demonstrated</span>
               <input name="skills_demonstrated" value={data.skills_demonstrated} onChange={ch}
                 placeholder="Financial modeling, writing, Python…" className={inputCls} />
             </label>
 
             <label className="block">
-              <span className="mb-1 block text-xs font-semibold" style={{ color: 'var(--text-secondary)' }}>Visibility</span>
+              <span className="tp-meta mb-1 block font-semibold" style={{ color: 'var(--text-secondary)' }}>Visibility</span>
               <select name="visibility" value={data.visibility} onChange={ch} className={inputCls}>
                 <option value="private">Private (only visible to me)</option>
                 <option value="public">Public (shareable)</option>
@@ -679,7 +679,7 @@ export default function AddProofFlow({ onClose, onSaved, preselectedMission, pre
         <div className="flex items-center gap-3">
           {index > 0 ? backButton : cancelButton}
           <button onClick={handleSave} disabled={!canSave}
-            className="flex flex-1 items-center justify-center gap-2 rounded-[10px] py-3 text-sm font-semibold text-white transition disabled:opacity-40"
+            className="tp-body flex flex-1 items-center justify-center gap-2 rounded-[10px] py-3 font-semibold text-white transition disabled:opacity-40"
             style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}>
             {saving && uploadState === 'uploading'
               ? <><Loader2 size={15} className="animate-spin" />Uploading…</>
@@ -689,7 +689,7 @@ export default function AddProofFlow({ onClose, onSaved, preselectedMission, pre
           </button>
         </div>
         {blockedReason && (
-          <p className="mt-2.5 flex w-full items-center justify-center gap-1.5 text-center text-xs font-semibold"
+          <p className="tp-meta mt-2.5 flex w-full items-center justify-center gap-1.5 text-center font-semibold"
             style={{ color: fileBlocked || urlInvalid ? '#DC2626' : 'var(--text-secondary)' }}>
             {(fileBlocked || urlInvalid) && <AlertCircle size={13} className="shrink-0" />}
             {blockedReason}
@@ -716,7 +716,7 @@ export default function AddProofFlow({ onClose, onSaved, preselectedMission, pre
             <div className="mb-3 flex items-center justify-between gap-3">
               {chip}
               <div className="flex items-center gap-3">
-                <span className="whitespace-nowrap text-[11px] font-semibold" style={{ color: 'var(--text-secondary)' }}>
+                <span className="tp-meta whitespace-nowrap font-semibold" style={{ color: 'var(--text-secondary)' }}>
                   {index + 1} of {steps.length}
                 </span>
                 <button onClick={requestClose} disabled={saving} aria-label="Close"
@@ -732,17 +732,17 @@ export default function AddProofFlow({ onClose, onSaved, preselectedMission, pre
             <h2 ref={headingRef} tabIndex={-1} className="font-heading text-[26px] font-bold leading-tight outline-none" style={{ color: 'var(--surface-dark-900)' }}>
               {question}
             </h2>
-            {hint && <p className="mt-1.5 text-sm" style={{ color: 'var(--text-secondary)' }}>{hint}</p>}
+            {hint && <p className="tp-lead mt-1.5" style={{ color: 'var(--text-secondary)' }}>{hint}</p>}
 
             <div className="mt-5 min-h-[220px]">
               {error && (
-                <div className="mb-4 rounded-xl bg-red-50 p-3 text-sm text-red-700" role="alert">
+                <div className="tp-body mb-4 rounded-xl bg-red-50 p-3 text-red-700" role="alert">
                   <div className="flex items-start gap-2">
                     <AlertCircle size={14} className="mt-0.5 shrink-0" />{error}
                   </div>
                   {uploadState === 'error' && (hasUrl || hasNote) && !saving && (
                     <button onClick={saveWithoutFile}
-                      className="mt-2 rounded-lg border border-red-200 bg-white px-3 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-50">
+                      className="tp-meta mt-2 rounded-lg border border-red-200 bg-white px-3 py-2 font-semibold text-red-700 hover:bg-red-50">
                       Save without the file
                     </button>
                   )}
