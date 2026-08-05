@@ -1,0 +1,129 @@
+/* ─────────────────────────────────────────────────────────────────────────
+   The signed-in app's type scale: the half a caller is allowed to override.
+
+   Nothing here is a new look. Same two faces, same colour ramp, same brand
+   tokens as the marketing pages. It only fixes how they are used on the
+   screens behind the login, which is where the quality gap actually was.
+
+   ## What was wrong, measured before this existed
+
+     12px was effectively the app's body size. Roughly 900 uses of text-xs and
+     smaller across 36 pages and 73 components. The missions screen used it 43
+     times against 30 uses of 14px; the campus panel set event descriptions at
+     12px and its source line at 11px. 12px is a caption size and it was
+     carrying body copy, button labels, form hints and link text.
+
+     The page column changed width per screen: seven different wrappers in use,
+     576px to 1152px. Moving between two screens resized the app under you,
+     which is the single loudest tell that a set of pages was assembled rather
+     than designed.
+
+     The steps between levels were too small to read as levels. A mission card
+     had a 16px bold title above a 16px regular description, then metadata
+     dropping straight to 12px. One indistinguishable pair, then a cliff.
+
+   ## Why this file is split from type-pass.css
+
+   This one loads from index.css, BEFORE @tailwind utilities. That position is
+   the whole design and it does two jobs at once.
+
+   These are class rules, so they beat Tailwind's preflight, which resets
+   heading weight with `h1,h2,… { font-weight: inherit }`. An earlier attempt
+   put weight inside :where() for zero specificity and the preflight's element
+   selector beat it, so every page title in the app rendered at body weight.
+   That was caught in a browser, never by a build.
+
+   And they sit earlier in the source than the utilities, so `font-semibold` on
+   a form label or `normal-case` on a countdown still wins. 522 lines across 65
+   files depend on being able to do that.
+
+   Size and line-height are NOT here. They are the contract, they have to beat
+   a stray `text-xs`, and they live in type-pass.css which loads last. Put a
+   size in this file and the 13px floor quietly reopens. Put a weight in that
+   one and you take away every caller's override. The split is the point.
+
+   Sizes are in rem so a student who has set a larger default text size in
+   their browser gets one.
+   ───────────────────────────────────────────────────────────────────────── */
+
+:root {
+  /* One measure for every signed-in screen. Wide enough for a two-column
+     mission card, narrow enough that a paragraph inside it does not run past
+     a comfortable line. */
+  --app-measure: 60rem;   /* 960px */
+  /* Prose never runs the full width of a wide card. */
+  --prose-measure: 68ch;
+}
+
+/* ── Page furniture ──────────────────────────────────────────────────────── */
+.app-page {
+  width: 100%;
+  max-width: var(--app-measure);
+  margin-inline: auto;
+  padding: 2rem 1.25rem 4rem;
+}
+@media (min-width: 640px) {
+  .app-page { padding: 2.5rem 2rem 5rem; }
+}
+
+/* Section rhythm. One value between major sections, bigger than the spacing
+   inside them, which is what makes a page read as a few groups rather than a
+   list of everything. */
+.app-stack > * + * { margin-top: 2.5rem; }
+@media (min-width: 640px) {
+  .app-stack > * + * { margin-top: 3rem; }
+}
+
+/* Card padding. The interior needs to breathe more than the gap between cards
+   does, which is the opposite of how it was set. */
+.tp-card-body { padding: 1.5rem; }
+@media (min-width: 640px) {
+  .tp-card-body { padding: 1.75rem; }
+}
+
+/* An empty state is a note, not a section. The paused-experiments box was 64px
+   of vertical padding sitting above the real content, which gave the thing that
+   is not there more weight than the three things that are. */
+.tp-empty-note { padding: 1.25rem 1.5rem; }
+
+/* ── The scale's defaults ────────────────────────────────────────────────── */
+.tp-page {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  letter-spacing: -0.022em;
+}
+
+.tp-section {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.tp-card {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+/* The one instruction on a screen: bigger than a section heading, smaller than
+   the page's own name, so the two do not both claim to be the title. */
+.tp-hero {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.tp-lead { max-width: var(--prose-measure); }
+
+/* Prose that is genuinely a paragraph gets a measure. Anything that only
+   happens to be a <p>, a status or a count, does not. */
+.tp-prose { max-width: var(--prose-measure); }
+
+.tp-meta { font-weight: 500; }
+
+.tp-eyebrow {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+}

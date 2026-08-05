@@ -26,6 +26,7 @@
    cdn.fontshare.com were fine. With font-display: swap, a visitor who loses
    that roll reads the whole site in a system sans. */
 @import './fonts.css';
+@import './type-pass-defaults.css';
 
 
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&family=Oswald:wght@400;500;600&family=Josefin+Sans:wght@600&display=swap');

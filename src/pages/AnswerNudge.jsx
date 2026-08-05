@@ -433,7 +433,7 @@ function AnswerNudgeInner() {
             :where(), which has no specificity, so an h1 loses the 700 and
             renders at body weight without this. */}
         {ask.title && (
-          <h1 className="tp-page font-bold" style={{ color: 'var(--text-primary)' }}>
+          <h1 className="tp-page" style={{ color: 'var(--text-primary)' }}>
             {ask.title}
           </h1>
         )}
