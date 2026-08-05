@@ -294,6 +294,7 @@ export default function CampusEventsPage() {
               picks={picks}
               ranking={ranking}
               college={college}
+              pathName={pathName}
               onClear={() => setSelectedKey('')}
             />
             </div>
@@ -469,9 +470,11 @@ function PanelSkeleton({ college }) {
  *
  * The remainder is folded, never dropped. These are real dated things happening
  * on their campus, and hiding them outright to look decisive would be lying
- * about what is on.
+ * about what is on. That is the difference between this panel and the dashboard
+ * one, which drops the remainder entirely: this page's job is showing what
+ * exists, and the dashboard's job is saying what to do next.
  */
-function DayPanel({ selectedKey, selectedEvents, upcoming, picks, ranking, college, onClear }) {
+function DayPanel({ selectedKey, selectedEvents, upcoming, picks, ranking, college, pathName, onClear }) {
   const [showRest, setShowRest] = useState(false);
 
   const pickIds = useMemo(() => new Set(picks.map(p => p.id)), [picks]);
@@ -540,7 +543,19 @@ function DayPanel({ selectedKey, selectedEvents, upcoming, picks, ranking, colle
         calendar. Yesterday's recommendation describes an event that is still
         on the calendar, so it stands until it is replaced.
       */}
-      {ranking && picks.length === 0 && pool.length > 0 ? (
+      {/*
+        Coming up waits on the recommendation, not on the ranking having any
+        answer at all.
+
+        A re-rank keeps yesterday's picks on screen while the new one is worked
+        out, so `picks` is non-empty during it. When yesterday's event has
+        already happened there is nothing recommended in it, and keying the wait
+        on `picks` would let the panel announce that nothing lines up while it
+        was still deciding. A selected day is left on the original rule: the
+        student asked about that day, and covering its real events with a
+        skeleton during a background refresh answers nothing.
+      */}
+      {ranking && pool.length > 0 && (selectedKey ? picks.length === 0 : recommended.length === 0) ? (
         <PanelSkeleton college={college} />
       ) : pool.length === 0 ? (
         <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Nothing on this day.</p>
@@ -556,11 +571,31 @@ function DayPanel({ selectedKey, selectedEvents, upcoming, picks, ranking, colle
           ))}
 
           {/*
-            The toggle only appears when there is something recommended above
-            it. With nothing picked out, folding the only events we have behind
-            a count would hide the entire panel behind a click.
+            Nothing cleared the relevance floor, and the student is owed the
+            reason before a list of things that are not for them.
+
+            This page is a calendar, so the events stay reachable: the month
+            grid beside it shows every one, and the fold below opens them. What
+            changed is that they are no longer the panel's answer. A student
+            testing operations management was being shown a staff vendor
+            training and a children's storytime as though we meant it.
           */}
-          {restShown.length > 0 && recommended.length > 0 && !showRest ? (
+          {recommended.length === 0 && !selectedKey && restShown.length > 0 && (
+            <p className="pb-1 text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+              {pathName
+                ? `Nothing coming up lines up with ${pathName}.`
+                : 'Nothing coming up matches your interests.'}
+            </p>
+          )}
+
+          {/*
+            The fold needs something above it to be "more" than. On a selected
+            day with nothing recommended that is still the bare list, because
+            the student asked about that day and hiding its events behind a
+            click answers a different question. In Coming up it is the sentence
+            above, which is why that view now folds either way.
+          */}
+          {restShown.length > 0 && (recommended.length > 0 || !selectedKey) && !showRest ? (
             <button
               type="button"
               onClick={() => setShowRest(true)}
@@ -568,7 +603,9 @@ function DayPanel({ selectedKey, selectedEvents, upcoming, picks, ranking, colle
               style={{ borderColor: 'var(--border-light)', color: 'var(--text-secondary)' }}
             >
               <ChevronDown size={13} aria-hidden="true" />
-              {restShown.length} more {selectedKey ? 'on this day' : 'coming up'}
+              {recommended.length > 0
+                ? `${restShown.length} more ${selectedKey ? 'on this day' : 'coming up'}`
+                : 'See what’s on anyway'}
             </button>
           ) : (
             restShown.map(event => (

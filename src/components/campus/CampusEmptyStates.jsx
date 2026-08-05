@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 import {
   Loader2, CalendarSearch, Link2, Search,
   RotateCw, School, ArrowRight, AlertCircle,
@@ -290,6 +291,49 @@ export function EmptyCalendarState({ college, className }) {
         next six weeks. That usually means a break. Worth checking again in a week.
       </p>
       <SearchYourSchoolLink college={college} label="Check the school's page yourself" />
+    </EmptyPanel>
+  );
+}
+
+/**
+ * The calendar is full and none of it is for this student.
+ *
+ * ## Why this is a state and not a fallback list
+ *
+ * This is the common outcome, not the rare one. Most of a campus calendar is
+ * general to any one student: staff trainings, alumni outings, Mass, a
+ * children's storytime at the campus bookstore. The section used to say that
+ * nothing lined up and then print those three anyway, under "these are
+ * happening anyway", which put a bookstore storytime on the dashboard of a
+ * student testing operations management. Drew read his own account and asked
+ * why it was there, which is the correct reaction and the reason this exists.
+ *
+ * A recommendation surface that fills its slots when it has no recommendation
+ * teaches a student that the slots are furniture. One honest sentence keeps
+ * every future gold card worth reading.
+ *
+ * Nothing is hidden. The events are one link away on the full calendar, which
+ * is the screen whose job is showing what exists.
+ */
+export function NothingRelevantState({ college, pathName, className }) {
+  return (
+    <EmptyPanel
+      icon={CalendarSearch}
+      title={pathName ? `Nothing here fits ${pathName}` : 'Nothing here matches your interests'}
+      className={className}
+    >
+      <p className="mt-1 text-xs leading-relaxed text-[#64748B]">
+        We read {college || 'your school'}&apos;s calendar for the next two months. Nothing on it
+        is worth crossing campus for. When your school posts something that is, it turns up here.
+      </p>
+      <Link
+        to="/campus"
+        className="mt-2.5 inline-flex items-center gap-1.5 text-xs font-semibold transition hover:underline"
+        style={{ color: 'var(--brand-navy-700)' }}
+      >
+        <CalendarSearch size={12} className="shrink-0" aria-hidden="true" />
+        See what&apos;s on anyway
+      </Link>
     </EmptyPanel>
   );
 }
