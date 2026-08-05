@@ -4,7 +4,7 @@
  * each mission requires, notes, evidence, reflection status and decision status.
  */
 import { useCallback, useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { getActiveCycle } from '@/lib/career-cycle';
 import { CheckCircle2, Plus, Wand2 } from 'lucide-react';
@@ -23,6 +23,7 @@ const OPEN = ['draft', 'planned', 'in_progress'];
 const alive = (rows) => (Array.isArray(rows) ? rows : []).filter(r => r.deletion_status !== 'deleted');
 
 export default function ActiveExperiment() {
+  const navigate = useNavigate();
   const [state, setState] = useState(null);
   const [completing, setCompleting] = useState(null);
   const [justDone, setJustDone] = useState(null);
@@ -99,7 +100,10 @@ export default function ActiveExperiment() {
 
   const { experiment, path, missions, guides, proofs, reflections, contacts, cycle } = state;
   const nextMission = missions.find(m => !['completed', 'skipped'].includes(m.status));
-  const activeGuide = guides.find(g => g.is_active);
+  // The one to open. A guide saved as a draft is still the only guide a student
+  // has, so falling back to the newest keeps the card from disappearing.
+  const openGuide = guides.find(g => g.is_active) || guides[0];
+  const firstStepTitle = openGuide?.steps?.find(s => s?.title)?.title || '';
 
   return (
     <main className="app-page">
@@ -116,7 +120,18 @@ export default function ActiveExperiment() {
         <MissionGuideGenerator
           experiment={experiment}
           existingGuides={guides}
-          onGenerated={async () => { setShowGuideGen(false); await load(); }}
+          // A guide the student just waited forty seconds for should open, not
+          // land as a collapsed row in a version list they then have to go
+          // find. The one case we don't hijack is a student who already had a
+          // guide and deliberately chose to keep that one active.
+          onGenerated={async (saved, makeActive) => {
+            setShowGuideGen(false);
+            if (saved?.id && (makeActive || !guides.length)) {
+              navigate(`/guide?id=${saved.id}`);
+              return;
+            }
+            await load();
+          }}
           onClose={() => setShowGuideGen(false)}
         />
       )}
@@ -158,35 +173,92 @@ export default function ActiveExperiment() {
 
         <ExperimentOverview experiment={experiment} path={path} missions={missions} />
 
-        <section className="rounded-[16px] bg-white p-5" style={{ border: '1px solid var(--border-light)' }}>
-          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-            <h3 className="tp-section flex items-center gap-1.5" style={{ color: 'var(--text-primary)' }}>
+        {/* With no guide, this is the only thing on the page worth doing, so it
+            is sized like it. The old version put it behind a 13px text link
+            beside a heading, which is why 253 of 266 experiments never got one. */}
+        {!guides.length ? (
+          <section
+            className="rounded-[20px] bg-white p-5 sm:p-6"
+            style={{ border: '1px solid var(--brand-gold-500)', boxShadow: '0 10px 30px rgba(31,58,95,0.08)' }}
+          >
+            <p className="tp-eyebrow" style={{ color: 'var(--brand-gold-700)' }}>Next step</p>
+            <h2 className="tp-hero mt-2 flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
+              <Wand2 size={22} style={{ color: 'var(--brand-navy-700)' }} /> Get your mission guide
+            </h2>
+            <p className="tp-lead mt-2" style={{ color: 'var(--text-secondary)' }}>
+              Right now this experiment is a title and a goal. The guide turns it into the actual
+              moves: who to contact first, the email to send them, and what to keep as proof you
+              did it.
+            </p>
+            <button
+              onClick={() => setShowGuideGen(true)}
+              className="ui-press tp-body mt-4 inline-flex w-full items-center justify-center gap-2 rounded-[10px] px-6 font-bold text-white sm:w-auto"
+              style={{ background: 'var(--brand-navy-900)', minHeight: '48px' }}
+            >
+              <Wand2 size={16} /> Generate my mission guide
+            </button>
+            <p className="tp-meta mt-2" style={{ color: 'var(--text-muted)' }}>
+              Takes about forty seconds. If the first one isn't right, generate another.
+            </p>
+          </section>
+        ) : (
+          <section className="rounded-[16px] bg-white p-5" style={{ border: '1px solid var(--border-light)' }}>
+            <h3 className="tp-section mb-3 flex items-center gap-1.5" style={{ color: 'var(--text-primary)' }}>
               <Wand2 size={14} style={{ color: 'var(--brand-navy-700)' }} /> Mission Guide
-              {activeGuide && (
+              {openGuide && (
                 <span className="tp-meta rounded-full px-2 py-0.5 font-bold" style={{ background: 'var(--success-50)', color: 'var(--success-700)' }}>
-                  v{activeGuide.version_number}
+                  v{openGuide.version_number}
                 </span>
               )}
             </h3>
-            <button onClick={() => setShowGuideGen(true)} className="tp-meta font-bold" style={{ color: 'var(--brand-navy-700)' }}>
-              {guides.length ? 'Generate another' : 'Generate a guide'}
-            </button>
-          </div>
-          {guides.length ? (
-            <MissionGuideHistory
-              guides={guides}
-              onSetActive={load}
-              onDeleted={load}
-              onDuplicated={load}
-              onRenamed={load}
-              onGenerateAnother={() => setShowGuideGen(true)}
-            />
-          ) : (
-            <p className="tp-meta italic" style={{ color: 'var(--text-muted)' }}>
-              No guide yet. Generate one for step-by-step instructions.
-            </p>
-          )}
-        </section>
+
+            {/* The guide itself, one click away and showing its first move, so
+                the section reads as something to open rather than a file list. */}
+            {openGuide && (
+              <div className="rounded-[14px] p-4" style={{ background: 'var(--background-tertiary)', border: '1px solid var(--border-light)' }}>
+                <p className="tp-card" style={{ color: 'var(--text-primary)' }}>{openGuide.guide_title}</p>
+                <p className="tp-meta mt-0.5" style={{ color: 'var(--text-muted)' }}>
+                  {openGuide.steps?.length || 0} steps{openGuide.estimated_time ? ` · ${openGuide.estimated_time}` : ''}
+                </p>
+                {firstStepTitle && (
+                  <p className="tp-body mt-2" style={{ color: 'var(--text-secondary)' }}>
+                    <span className="font-bold" style={{ color: 'var(--brand-gold-700)' }}>Start here: </span>
+                    {firstStepTitle}
+                  </p>
+                )}
+                <Link
+                  to={`/guide?id=${openGuide.id}`}
+                  className="ui-press tp-body mt-3 inline-flex w-full items-center justify-center rounded-[10px] px-5 font-bold text-white sm:w-auto"
+                  style={{ background: 'var(--brand-navy-900)', minHeight: '48px' }}
+                >
+                  Open my guide
+                </Link>
+              </div>
+            )}
+
+            {guides.length > 1 ? (
+              <div className="mt-4">
+                <p className="tp-eyebrow mb-2" style={{ color: 'var(--text-muted)' }}>All versions</p>
+                <MissionGuideHistory
+                  guides={guides}
+                  onSetActive={load}
+                  onDeleted={load}
+                  onDuplicated={load}
+                  onRenamed={load}
+                  onGenerateAnother={() => setShowGuideGen(true)}
+                />
+              </div>
+            ) : (
+              <button
+                onClick={() => setShowGuideGen(true)}
+                className="tp-meta mt-3 w-full rounded-xl border border-dashed py-2.5 font-semibold transition"
+                style={{ borderColor: 'var(--border-light)', color: 'var(--text-muted)' }}
+              >
+                Generate another guide
+              </button>
+            )}
+          </section>
+        )}
 
         <section>
           <div className="mb-3 flex items-center justify-between gap-2">
@@ -202,7 +274,9 @@ export default function ActiveExperiment() {
             <div className="rounded-[14px] bg-white p-6 text-center" style={{ border: '1px dashed var(--border-light)' }}>
               <p className="tp-body font-semibold" style={{ color: 'var(--text-primary)' }}>No missions yet</p>
               <p className="tp-meta mt-1" style={{ color: 'var(--text-muted)' }}>
-                Generate a mission guide, or add the first mission yourself.
+                {guides.length
+                  ? 'Your guide has the steps. Add a mission here for anything you want to track separately.'
+                  : 'Start with the mission guide above, or add the first mission yourself.'}
               </p>
             </div>
           ) : (

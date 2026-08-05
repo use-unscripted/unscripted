@@ -111,15 +111,20 @@ export default function GuideDetailPage() {
   }
 
   const cfg = STATUS_CFG[guide.status] || STATUS_CFG.draft;
+  const firstStepTitle = guide.steps?.find(s => s?.title)?.title || '';
+  const backToExperiment = guide.experiment_id
+    ? `/experiment?experimentId=${guide.experiment_id}`
+    : '/experiments';
 
   return (
     <main className="app-page">
-      {/* Back */}
+      {/* Back — to the experiment this guide belongs to, which is where the
+          student came from and where the rest of their work lives. */}
       <button
-        onClick={() => navigate('/experiments')}
+        onClick={() => navigate(backToExperiment)}
         className="tp-body flex items-center gap-2 font-semibold text-[color:var(--ink-500)] hover:text-[color:var(--ink-700)] mb-7 transition"
       >
-        <ArrowLeft size={16} /> Back to Missions
+        <ArrowLeft size={16} /> Back to my experiment
       </button>
 
       {/* Header */}
@@ -248,6 +253,38 @@ export default function GuideDetailPage() {
           </ul>
         </section>
       )}
+
+      {/* The page used to end on the last reflection question, which left a
+          student who had just read the whole guide with nothing to press. */}
+      <section
+        className="mt-9 rounded-[20px] bg-white p-5 sm:p-6"
+        style={{ border: '1px solid var(--brand-gold-500)', boxShadow: '0 10px 30px rgba(31,58,95,0.08)' }}
+      >
+        <p className="tp-eyebrow" style={{ color: 'var(--brand-gold-700)' }}>Next step</p>
+        <h2 className="tp-hero mt-2 text-[color:var(--surface-dark-900)]">
+          {firstStepTitle ? `Do step 1: ${firstStepTitle}` : 'Go and do step 1'}
+        </h2>
+        <p className="tp-lead mt-2 text-[color:var(--ink-700)]">
+          This is the part that happens off the screen. Work through the steps in order, then come
+          back and log what happened while you still remember the details.
+        </p>
+        <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+          <button
+            onClick={() => navigate('/evidence?tab=proof')}
+            className="ui-press tp-body inline-flex items-center justify-center rounded-[10px] px-6 font-bold text-white"
+            style={{ background: 'var(--brand-navy-900)', minHeight: '48px' }}
+          >
+            Log what I did
+          </button>
+          <button
+            onClick={() => navigate(backToExperiment)}
+            className="ui-press tp-body inline-flex items-center justify-center rounded-[10px] border px-6 font-bold"
+            style={{ borderColor: 'var(--ink-200)', color: 'var(--ink-700)', minHeight: '48px' }}
+          >
+            Back to my experiment
+          </button>
+        </div>
+      </section>
     </main>
   );
 }
