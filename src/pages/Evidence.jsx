@@ -42,7 +42,7 @@ export default function Evidence() {
                 type="button"
                 onClick={() => select(key)}
                 aria-current={isActive ? 'page' : undefined}
-                className="ui-press tp-meta flex flex-1 items-center justify-center gap-1.5 rounded-[10px] px-3.5 font-bold sm:flex-none sm:px-5"
+                className="ui-press tp-body flex flex-1 items-center justify-center gap-1.5 rounded-[10px] px-3.5 font-bold sm:flex-none sm:px-5"
                 style={
                   isActive
                     ? { background: 'var(--brand-navy-900)', color: '#fff', minHeight: '44px' }

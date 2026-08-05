@@ -49,7 +49,6 @@ export default function EvidenceLibrary() {
       {reviewItem && <ResumeApprovalModal item={reviewItem} onClose={() => setReviewItem(null)} onSaved={reviewedSaved} />}
 
       <PageHeader
-        eyebrow="Evidence library"
         title="What you have actually done."
         description="Every piece of proof from your career experiments, in one place."
       />

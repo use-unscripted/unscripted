@@ -338,7 +338,7 @@ function EducationCFEditor({ entries, onChange }) {
             <input value={e.coursework || ''} onChange={ev => set('coursework', ev.target.value)}
               placeholder="Financial Modeling, Valuation, Corporate Finance, Investment Analysis"
               className="w-full rounded-lg border border-[color:var(--ink-200)] px-2.5 py-1.5 tp-meta outline-none focus:border-[color:var(--brand-navy-900)]" />
-            <p className="text-[9px] text-[color:var(--ink-400)] mt-0.5">Separate courses with commas</p>
+            <p className="tp-meta text-[color:var(--ink-400)] mt-0.5">Separate courses with commas</p>
           </div>
           {/* Honors */}
           <div>
@@ -346,7 +346,7 @@ function EducationCFEditor({ entries, onChange }) {
             <input value={e.honors || ''} onChange={ev => set('honors', ev.target.value)}
               placeholder="Dean's List All Semesters, Merit Scholarship"
               className="w-full rounded-lg border border-[color:var(--ink-200)] px-2.5 py-1.5 tp-meta outline-none focus:border-[color:var(--brand-navy-900)]" />
-            <p className="text-[9px] text-[color:var(--ink-400)] mt-0.5">Education-specific honors only. Broader awards go in the Awards section.</p>
+            <p className="tp-meta text-[color:var(--ink-400)] mt-0.5">Education-specific honors only. Broader awards go in the Awards section.</p>
           </div>
         </div>
       </div>
@@ -498,7 +498,7 @@ function SkillsGroupedEditor({ groups, onChange }) {
           </div>
         </div>
       ))}
-      <p className="text-[9px] text-[color:var(--ink-400)]">Category names are fixed for professional consistency.</p>
+      <p className="tp-meta text-[color:var(--ink-400)]">Category names are fixed for professional consistency.</p>
     </div>
   );
 }

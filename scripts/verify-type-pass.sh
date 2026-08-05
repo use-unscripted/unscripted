@@ -19,7 +19,7 @@ echo "=== source ==="
 #                           in that file, it was measured and reverted
 #   components/landing      the reference standard this pass is reaching for,
 #                           deliberately untouched so it cannot regress
-BELOW=$(grep -rE 'text-xs\b|text-\[1[012]px\]|text-\[0\.[0-6][0-9]*rem\]' src \
+BELOW=$(grep -rE 'text-xs\b|text-\[([0-9]|1[012])px\]|text-\[0\.[0-6][0-9]*rem\]' src \
   --include='*.jsx' --include='*.js' \
   | grep -v '^src/pages/admin/' \
   | grep -v '^src/components/admin/' \
@@ -33,7 +33,7 @@ BELOW=$(grep -rE 'text-xs\b|text-\[1[012]px\]|text-\[0\.[0-6][0-9]*rem\]' src \
   | grep -v '^src/components/landing/' \
   | wc -l | tr -d ' ')
 check "no text below the 13px floor" "$BELOW"
-[ "$BELOW" -gt 0 ] && grep -rE 'text-xs\b|text-\[1[012]px\]' src --include='*.jsx' \
+[ "$BELOW" -gt 0 ] && grep -rE 'text-xs\b|text-\[([0-9]|1[012])px\]' src --include='*.jsx' \
   | grep -v '/admin/' | grep -v 'PilotDashboard\|AdminCampusFeeds\|AdminAiFailures\|ResumePreview' \
   | grep -v '/ui/\|/pilot/\|/landing/\|CampusMonthGrid' | cut -d: -f1 | sort | uniq -c | sort -rn | head -10
 

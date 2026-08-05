@@ -97,7 +97,7 @@ export default function BlueprintDetail({ bp, detail, loading, error, onBack }) 
           </Section>
           <div className="md:col-span-2">
             <Section label="30-day starter plan">
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mt-2">
+              <div className="grid gap-4 sm:grid-cols-2 mt-2">
                 {detail.thirty_day_plan?.map((week, i) => (
                   <div key={i} className="rounded-xl p-4" style={{ background: 'var(--ink-50)', border: '1px solid var(--ink-200)' }}>
                     <p className="tp-meta font-bold text-[color:var(--info-600)]">{week.week}</p>

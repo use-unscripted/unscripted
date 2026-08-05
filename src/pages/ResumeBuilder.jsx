@@ -61,7 +61,7 @@ function TemplatePicker({ onSelect, onCancel }) {
             <button key={t.id} onClick={() => onSelect(t)}
               className={`rounded-[16px] border-2 p-4 text-left hover:border-[color:var(--brand-navy-900)] transition group relative ${t.isDefault ? 'border-[color:var(--brand-navy-900)]' : 'border-[color:var(--ink-200)]'}`}>
               {t.isDefault && (
-                <span className="tp-eyebrow absolute -top-2 left-3 rounded-full px-2.5 py-1 text-white"
+                <span className="tp-meta absolute -top-2 left-3 rounded-full px-2.5 py-1 text-white"
                   style={{ background: 'var(--brand-navy-900)' }}>Recommended</span>
               )}
               <div className="w-full h-16 rounded-lg mb-2 flex items-center justify-center"
@@ -462,7 +462,7 @@ export default function ResumeBuilder() {
       <div className="flex gap-6 min-h-[70vh]">
         {/* Left: Resume list */}
         <aside className="w-56 shrink-0 hidden md:block">
-          <p className="tp-eyebrow mb-3 text-[color:var(--ink-400)]">My Resumes</p>
+          <p className="tp-meta mb-3 text-[color:var(--ink-400)]">My Resumes</p>
           {loading ? (
             <SkCards count={3} h={62} gap={8} r={14} />
           ) : resumes.length === 0 ? (
@@ -575,7 +575,7 @@ export default function ResumeBuilder() {
                 </div>
                 {/* Live mini-preview */}
                 <div className="hidden xl:block w-[380px] shrink-0">
-                  <p className="tp-eyebrow mb-2 text-[color:var(--ink-400)]">Live Preview</p>
+                  <p className="tp-meta mb-2 text-[color:var(--ink-400)]">Live Preview</p>
                   <div className="rounded-[16px] border border-[color:var(--ink-200)] overflow-hidden" style={{ transform: 'scale(0.45)', transformOrigin: 'top left', width: '816px', height: '1056px', pointerEvents: 'none' }}>
                     <ResumePreview resume={draft} />
                   </div>
