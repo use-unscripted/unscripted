@@ -16,7 +16,7 @@ export default function PageHeader({ eyebrow, title, description, action }) {
           <p className="tp-eyebrow mb-2.5" style={{ color: 'var(--brand-navy-700)' }}>{eyebrow}</p>
         )}
         <h1 className="tp-page" style={{ color: 'var(--text-primary)' }}>{title}</h1>
-        {description && <p className="tp-lead mt-3 max-w-[48ch]" style={{ color: 'var(--text-secondary)' }}>{description}</p>}
+        {description && <p className="tp-lead mt-3" style={{ color: 'var(--text-secondary)', maxWidth: '48ch' }}>{description}</p>}
       </div>
       {/* Guarded, unlike the harness version: an unconditional wrapper is still
           a flex item when there is no action, and gap-5 would then add 20px of

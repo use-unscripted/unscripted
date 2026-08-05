@@ -27,13 +27,6 @@
    that roll reads the whole site in a system sans. */
 @import './fonts.css';
 
-/* The app-wide type scale. This wants to sit AFTER @tailwind utilities so a
-   tp- class beats a Tailwind text-* class at equal specificity, but it cannot:
-   CSS only allows @import at the top of a file, and postcss drops one placed
-   any lower, so the rules never reach the bundle at all. It lives here
-   instead, which means Tailwind's utilities win. Removing the size class a
-   tp- class replaces is therefore required, not just tidy. See type-pass.css. */
-@import './type-pass.css';
 
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&family=Oswald:wght@400;500;600&family=Josefin+Sans:wght@600&display=swap');
 

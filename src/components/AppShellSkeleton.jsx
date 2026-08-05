@@ -48,7 +48,7 @@ export default function AppShellSkeleton() {
       </aside>
 
       <main className="pb-24 lg:ml-60 lg:pb-0">
-        <div className="mx-auto max-w-5xl px-5 py-10 sm:px-8">
+        <div className="app-page">
           <SkHeader />
           <SkCards count={3} h={152} r={20} />
         </div>

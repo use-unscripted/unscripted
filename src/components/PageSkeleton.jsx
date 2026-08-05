@@ -163,9 +163,16 @@ export function SkStats({ count = 4, h = 92, r = 16 }) {
  * lands. Same `<main>` wrapper the real page uses, so the content box is
  * already the right width and inset before anything arrives.
  */
-export function PageSkeleton({ maxWidth = '5xl', children, ...header }) {
+/**
+ * `maxWidth` is now an opt-out, not the normal path. Every student screen runs
+ * the one app column, so the skeleton has to as well: painting a 1152px
+ * skeleton in front of a 960px page is the width lurch this component exists to
+ * prevent. It stays only for the admin console, which is outside the type pass
+ * and still sets its own widths.
+ */
+export function PageSkeleton({ maxWidth, children, ...header }) {
   return (
-    <main className={`mx-auto ${MAX_W[maxWidth] || MAX_W['5xl']} px-5 py-10 sm:px-8`}>
+    <main className={maxWidth ? `mx-auto ${MAX_W[maxWidth] || MAX_W['5xl']} px-5 py-10 sm:px-8` : 'app-page'}>
       <SkHeader {...header} />
       {children}
     </main>

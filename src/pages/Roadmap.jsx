@@ -21,7 +21,7 @@ export default function Roadmap() {
 
   if (!loaded) {
     return (
-      <PageSkeleton maxWidth="6xl" eyebrow action actionWidth={172}>
+      <PageSkeleton eyebrow action actionWidth={172}>
         <SkCards count={3} h={196} gap={20} r={24} />
       </PageSkeleton>
     );
