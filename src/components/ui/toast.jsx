@@ -3,19 +3,18 @@ import { cva } from "class-variance-authority";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const ToastProvider = React.forwardRef(({ ...props }, ref) => (
-  <div
-    ref={ref}
-    className="fixed inset-x-0 top-0 z-[100] flex max-h-[100svh] w-full flex-col-reverse p-4 sm:inset-x-auto sm:bottom-0 sm:right-0 sm:top-auto sm:flex-col md:max-w-[420px]"
-    {...props}
-  />
-));
+// A wrapper, not a viewport. It renders no box of its own, so it cannot sit
+// over the page. ToastViewport below is the single container the toasts live in.
+const ToastProvider = ({ children }) => <>{children}</>;
 ToastProvider.displayName = "ToastProvider";
 
+// pointer-events-none so an empty viewport never swallows taps aimed at the
+// page underneath it. Each toast carries pointer-events-auto (see
+// toastVariants) so a real toast and its close button stay tappable.
 const ToastViewport = React.forwardRef(({ ...props }, ref) => (
   <div
     ref={ref}
-    className="fixed inset-x-0 top-0 z-[100] flex max-h-[100svh] w-full flex-col-reverse p-4 sm:inset-x-auto sm:bottom-0 sm:right-0 sm:top-auto sm:flex-col md:max-w-[420px]"
+    className="pointer-events-none fixed inset-x-0 top-0 z-[100] flex max-h-[100svh] w-full flex-col-reverse p-4 sm:inset-x-auto sm:bottom-0 sm:right-0 sm:top-auto sm:flex-col md:max-w-[420px]"
     {...props}
   />
 ));
