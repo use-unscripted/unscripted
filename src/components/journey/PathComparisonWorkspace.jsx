@@ -11,10 +11,10 @@ import { trackPilotEvent } from '@/lib/pilot-metrics';
 function Cell({ label, value }) {
   return (
     <div className="border-t pt-3" style={{ borderColor: 'var(--border-light)' }}>
-      <p className="text-[11px] font-bold uppercase tracking-[.1em]" style={{ color: 'var(--brand-navy-700)' }}>
+      <p className="tp-eyebrow" style={{ color: 'var(--brand-navy-700)' }}>
         {label}
       </p>
-      <p className="mt-1 text-sm leading-6" style={{ color: value ? 'var(--text-secondary)' : 'var(--text-muted)' }}>
+      <p className="tp-body mt-1.5" style={{ color: value ? 'var(--text-secondary)' : 'var(--text-muted)' }}>
         {value || 'Not enough information yet.'}
       </p>
     </div>
@@ -28,10 +28,10 @@ function PathColumn({ path, busy, busyId, onSelect }) {
       style={{ border: '1px solid var(--border-light)' }}
     >
       <header>
-        <h3 className="font-heading text-lg font-bold leading-6" style={{ color: 'var(--text-primary)' }}>
+        <h3 className="tp-card" style={{ color: 'var(--text-primary)' }}>
           {path.path_name}
         </h3>
-        <p className="mt-1 text-xs font-semibold" style={{ color: 'var(--text-muted)' }}>
+        <p className="tp-meta mt-1.5 font-semibold" style={{ color: 'var(--text-muted)' }}>
           {[path.path_category, RISK_LABEL[path.risk_level]].filter(Boolean).join(' · ')}
         </p>
       </header>
@@ -74,10 +74,10 @@ export default function PathComparisonWorkspace({ paths, onSelect, busyId, error
 
   return (
     <section className="rounded-[20px] p-5 sm:p-6" style={{ background: 'var(--background-secondary)', border: '1px solid var(--border-light)' }}>
-      <h2 className="font-heading text-xl font-bold" style={{ color: 'var(--text-primary)' }}>
+      <h2 className="tp-section" style={{ color: 'var(--text-primary)' }}>
         Compare your three paths
       </h2>
-      <p className="mt-1 text-sm leading-6" style={{ color: 'var(--text-secondary)' }}>
+      <p className="tp-prose mt-2" style={{ color: 'var(--text-secondary)' }}>
         Same questions asked of each one. None of these is a guaranteed fit. You pick the one worth
         testing first, and the test tells you the rest.
       </p>
@@ -86,11 +86,11 @@ export default function PathComparisonWorkspace({ paths, onSelect, busyId, error
         <div className="mt-4 flex items-start gap-3 rounded-[12px] p-4" style={{ background: 'var(--danger-50)', border: '1px solid #FECACA' }}>
           <AlertTriangle size={16} className="mt-0.5 shrink-0" style={{ color: 'var(--danger-700)' }} />
           <div>
-            <p className="text-sm font-bold" style={{ color: '#991B1B' }}>We couldn't set that path up.</p>
-            <p className="mt-1 text-sm" style={{ color: 'var(--danger-700)' }}>
+            <p className="tp-body font-bold" style={{ color: '#991B1B' }}>We couldn't set that path up.</p>
+            <p className="tp-body mt-1.5" style={{ color: 'var(--danger-700)' }}>
               Your answers and your choice are safe. Nothing was half-created. Try again.
             </p>
-            <button type="button" onClick={onRetry} className="mt-2 inline-flex items-center gap-1.5 text-sm font-bold" style={{ color: '#991B1B' }}>
+            <button type="button" onClick={onRetry} className="tp-body mt-2.5 inline-flex items-center gap-1.5 font-bold" style={{ color: '#991B1B' }}>
               <RefreshCw size={13} /> Try again
             </button>
           </div>
@@ -104,7 +104,7 @@ export default function PathComparisonWorkspace({ paths, onSelect, busyId, error
             key={p.id}
             type="button"
             onClick={() => { setMobileIdx(i); setSeen(prev => new Set(prev).add(i)); }}
-            className="flex-1 truncate rounded-[10px] px-2 py-2 text-xs font-bold"
+            className="tp-meta flex-1 truncate rounded-[10px] px-2 py-2.5 font-bold"
             style={i === mobileIdx
               ? { background: 'var(--brand-navy-900)', color: '#fff' }
               : { background: '#fff', color: 'var(--text-secondary)', border: '1px solid var(--border-light)' }}

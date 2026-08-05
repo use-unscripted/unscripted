@@ -164,7 +164,7 @@ export default function CampusEventsPage() {
   );
 
   return (
-    <main className="mx-auto max-w-5xl px-5 py-10 sm:px-8">
+    <main className="app-page">
       <PageHeader
         title="On your campus"
         description={
@@ -190,14 +190,14 @@ export default function CampusEventsPage() {
       */}
       {loading && (
         <div
-          className="rounded-[20px] bg-white px-5 py-6 text-sm"
+          className="rounded-[20px] bg-white px-5 py-6"
           style={{ border: '1px solid var(--border-light)' }}
         >
-          <p className="flex items-center gap-2 font-semibold" style={{ color: 'var(--text-primary)' }}>
+          <p className="tp-body flex items-center gap-2 font-semibold" style={{ color: 'var(--text-primary)' }}>
             <Loader2 size={16} className="animate-spin" aria-hidden="true" />
             Reading {college || 'your school'}'s calendar
           </p>
-          <p className="mt-2 max-w-md leading-6" style={{ color: 'var(--text-muted)' }}>
+          <p className="tp-prose mt-2.5" style={{ color: 'var(--text-muted)' }}>
             The first load takes a while. We read your school's whole calendar and match it to
             what you're testing. After this it opens straight away.
           </p>
@@ -212,7 +212,7 @@ export default function CampusEventsPage() {
         is on the way.
       */}
       {!loading && refreshing && events.length > 0 && (
-        <p className="mb-4 flex items-center gap-2 text-xs" style={{ color: 'var(--text-muted)' }}>
+        <p className="tp-meta mb-4 flex items-center gap-2" style={{ color: 'var(--text-muted)' }}>
           <RefreshCw size={12} className="animate-spin" aria-hidden="true" />
           <FreshnessNote at={cachedAt} />
         </p>
@@ -263,11 +263,11 @@ export default function CampusEventsPage() {
                   to be said out loud once.
                 */}
                 {monthEvents.length === 0 ? (
-                  <p className="mt-3 text-xs" style={{ color: 'var(--text-muted)' }}>
+                  <p className="tp-meta mt-3" style={{ color: 'var(--text-muted)' }}>
                     Nothing on this month.
                   </p>
                 ) : compactGrid ? (
-                  <p className="mt-3 text-xs" style={{ color: 'var(--text-muted)' }}>
+                  <p className="tp-meta mt-3" style={{ color: 'var(--text-muted)' }}>
                     Tap a day to see what's on, or switch to List to read the whole month.
                   </p>
                 ) : null}
@@ -336,7 +336,7 @@ function ViewToggle({ view, onChange }) {
           type="button"
           onClick={() => onChange(value)}
           aria-pressed={view === value}
-          className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition"
+          className="tp-meta inline-flex items-center gap-1.5 rounded-lg px-3.5 py-2 font-bold transition"
           style={
             view === value
               ? { background: 'var(--background-primary)', color: 'var(--brand-navy-900)', boxShadow: '0 1px 2px rgba(5,8,22,0.08)' }
@@ -359,8 +359,8 @@ function MonthList({ month, events, college, picks, range, onChangeMonth }) {
 
   return (
     <div>
-      <div className="mb-3 flex items-center justify-between gap-2">
-        <h3 className="font-heading text-base font-bold" style={{ color: 'var(--text-primary)' }}>
+      <div className="mb-4 flex items-center justify-between gap-2">
+        <h3 className="tp-section" style={{ color: 'var(--text-primary)' }}>
           {monthLabel(month)}
         </h3>
         <div className="flex items-center gap-1">
@@ -368,7 +368,7 @@ function MonthList({ month, events, college, picks, range, onChangeMonth }) {
             type="button"
             onClick={() => onChangeMonth(new Date(month.getFullYear(), month.getMonth() - 1, 1))}
             disabled={range && month.getTime() <= range.first.getTime()}
-            className="rounded-lg border px-2.5 py-1 text-xs font-bold transition disabled:opacity-30"
+            className="tp-meta rounded-lg border px-3 py-1.5 font-bold transition disabled:opacity-30"
             style={{ borderColor: 'var(--border-light)', color: 'var(--brand-navy-700)' }}
           >
             Earlier
@@ -377,7 +377,7 @@ function MonthList({ month, events, college, picks, range, onChangeMonth }) {
             type="button"
             onClick={() => onChangeMonth(new Date(month.getFullYear(), month.getMonth() + 1, 1))}
             disabled={range && month.getTime() >= range.last.getTime()}
-            className="rounded-lg border px-2.5 py-1 text-xs font-bold transition disabled:opacity-30"
+            className="tp-meta rounded-lg border px-3 py-1.5 font-bold transition disabled:opacity-30"
             style={{ borderColor: 'var(--border-light)', color: 'var(--brand-navy-700)' }}
           >
             Later
@@ -386,15 +386,15 @@ function MonthList({ month, events, college, picks, range, onChangeMonth }) {
       </div>
 
       {days.length === 0 ? (
-        <p className="rounded-xl border border-dashed px-4 py-6 text-center text-sm"
+        <p className="tp-body tp-empty-note rounded-xl border border-dashed text-center"
           style={{ borderColor: 'var(--border-light)', color: 'var(--text-muted)' }}>
           Nothing on this month.
         </p>
       ) : (
-        <div className="space-y-5">
+        <div className="space-y-6">
           {days.map(key => (
             <div key={key}>
-              <p className="mb-2 text-xs font-bold uppercase tracking-wide" style={{ color: 'var(--text-muted)' }}>
+              <p className="tp-eyebrow mb-2.5" style={{ color: 'var(--text-muted)' }}>
                 {new Date(`${key}T12:00:00`).toLocaleDateString(undefined, {
                   weekday: 'long', month: 'long', day: 'numeric',
                 })}
@@ -484,15 +484,15 @@ function DayPanel({ selectedKey, selectedEvents, upcoming, picks, ranking, colle
 
   return (
     <div className="rounded-[20px] bg-white p-5" style={{ border: '1px solid var(--border-light)' }}>
-      <div className="mb-3 flex items-start justify-between gap-3">
-        <h2 className="font-heading text-lg font-bold" style={{ color: 'var(--text-primary)' }}>
+      <div className="mb-4 flex items-start justify-between gap-3">
+        <h2 className="tp-section" style={{ color: 'var(--text-primary)' }}>
           {heading}
         </h2>
         {selectedKey && (
           <button
             type="button"
             onClick={onClear}
-            className="shrink-0 text-xs font-semibold transition hover:underline"
+            className="tp-meta shrink-0 font-semibold transition hover:underline"
             style={{ color: 'var(--brand-navy-700)' }}
           >
             Clear
@@ -520,7 +520,7 @@ function DayPanel({ selectedKey, selectedEvents, upcoming, picks, ranking, colle
       {ranking && picks.length === 0 && pool.length > 0 ? (
         <PanelSkeleton />
       ) : pool.length === 0 ? (
-        <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Nothing on this day.</p>
+        <p className="tp-body" style={{ color: 'var(--text-muted)' }}>Nothing on this day.</p>
       ) : (
         <div className="space-y-2">
           {recommended.map(event => (
@@ -541,7 +541,7 @@ function DayPanel({ selectedKey, selectedEvents, upcoming, picks, ranking, colle
             <button
               type="button"
               onClick={() => setShowRest(true)}
-              className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed py-2 text-xs font-semibold transition hover:bg-[var(--background-secondary)]"
+              className="tp-meta flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed py-2.5 font-semibold transition hover:bg-[var(--background-secondary)]"
               style={{ borderColor: 'var(--border-light)', color: 'var(--text-secondary)' }}
             >
               <ChevronDown size={13} aria-hidden="true" />

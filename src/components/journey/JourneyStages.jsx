@@ -87,7 +87,7 @@ export default function JourneyStages({ stage, detail }) {
   return (
     <section aria-label="Your journey so far">
       <h2
-        className="font-heading text-xs font-bold uppercase tracking-[.16em]"
+        className="tp-eyebrow"
         style={{ color: 'var(--text-muted)' }}
       >
         Your cycle
@@ -95,7 +95,7 @@ export default function JourneyStages({ stage, detail }) {
 
       {/* Same measure as the instruction panel above, so the two elements read
           as one column rather than a panel with a wide list under it. */}
-      <ol className="mt-4 max-w-2xl">
+      <ol className="mt-5">
         {STAGES.map((s, i) => {
           const state = i < activeIdx ? 'done' : i === activeIdx ? 'current' : 'todo';
           const d = detail?.[s.key];
@@ -107,13 +107,13 @@ export default function JourneyStages({ stage, detail }) {
           const body = (
             <div className="flex min-w-0 flex-1 flex-col gap-0.5 sm:flex-row sm:items-baseline sm:gap-5">
               <p
-                className="font-heading shrink-0 text-sm font-bold sm:w-[104px]"
+                className="tp-card shrink-0 sm:w-[120px]"
                 style={{ color: state === 'todo' ? 'var(--text-muted)' : 'var(--text-primary)' }}
               >
                 {s.label}
               </p>
               <p
-                className="min-w-0 flex-1 text-sm leading-6"
+                className="tp-body min-w-0 flex-1"
                 style={{
                   color: state === 'current' ? 'var(--brand-navy-700)' : 'var(--text-secondary)',
                   fontWeight: state === 'current' ? 600 : 400,
@@ -152,11 +152,11 @@ export default function JourneyStages({ stage, detail }) {
               </span>
 
               {to ? (
-                <Link to={to} className="journey-stage-row -mx-2 flex min-w-0 flex-1 rounded-[10px] px-2 py-3">
+                <Link to={to} className="journey-stage-row -mx-3 flex min-w-0 flex-1 rounded-[12px] px-3 py-3.5">
                   {body}
                 </Link>
               ) : (
-                <div className="-mx-2 flex min-w-0 flex-1 px-2 py-3">{body}</div>
+                <div className="-mx-3 flex min-w-0 flex-1 px-3 py-3.5">{body}</div>
               )}
             </li>
           );

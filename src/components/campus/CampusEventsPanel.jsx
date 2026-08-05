@@ -94,7 +94,7 @@ export default function CampusEventsPanel({ delay = 0 }) {
   if (cold) {
     return (
       <Section delay={delay}>
-        <div className="flex items-center gap-2 text-sm" style={{ color: 'var(--text-muted)' }}>
+        <div className="tp-body flex items-center gap-2" style={{ color: 'var(--text-muted)' }}>
           <Loader2 size={15} className="animate-spin" aria-hidden="true" />
           {loading ? 'Reading your school’s calendar. The first load takes a while.' : 'Checking your campus calendar…'}
         </div>
@@ -135,7 +135,7 @@ export default function CampusEventsPanel({ delay = 0 }) {
 
         {rest.length > 0 && (
           <>
-            <p className="pt-1 text-xs font-bold uppercase tracking-[.12em]" style={{ color: 'var(--text-muted)' }}>
+            <p className="tp-eyebrow pt-3 pb-1" style={{ color: 'var(--text-muted)' }}>
               {lead ? 'Also on' : 'Next up'}
             </p>
             {rest.map(event => (
@@ -155,25 +155,25 @@ export default function CampusEventsPanel({ delay = 0 }) {
  */
 function Section({ delay, college, linkToAll, children }) {
   return (
-    <ScrollReveal as="section" delay={delay} aria-label="Events on your campus" className="max-w-2xl">
+    <ScrollReveal as="section" delay={delay} aria-label="Events on your campus" className="">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <h2 className="font-heading text-xs font-bold uppercase tracking-[.16em]" style={{ color: 'var(--text-muted)' }}>
+          <h2 className="tp-eyebrow" style={{ color: 'var(--text-muted)' }}>
             On your campus
           </h2>
           {college && (
-            <p className="mt-1 truncate text-sm" style={{ color: 'var(--text-secondary)' }}>
+            <p className="tp-body mt-1.5 truncate" style={{ color: 'var(--text-secondary)' }}>
               {college}
             </p>
           )}
         </div>
         {linkToAll && (
-          <Link to="/campus" className="shrink-0 text-xs font-semibold" style={{ color: 'var(--brand-navy-700)' }}>
+          <Link to="/campus" className="tp-meta shrink-0 font-semibold" style={{ color: 'var(--brand-navy-700)' }}>
             Full calendar →
           </Link>
         )}
       </div>
-      <div className="mt-4">{children}</div>
+      <div className="mt-5">{children}</div>
     </ScrollReveal>
   );
 }

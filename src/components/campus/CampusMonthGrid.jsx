@@ -61,7 +61,7 @@ export default function CampusMonthGrid({
       {/* Month header */}
       <div className="mb-3 flex items-center justify-between gap-2">
         <h3
-          className={`font-heading font-bold ${compact ? 'text-sm' : 'text-base'}`}
+          className="tp-card"
           style={{ color: 'var(--text-primary)' }}
           aria-live="polite"
         >
@@ -90,7 +90,7 @@ export default function CampusMonthGrid({
           <div
             key={label}
             aria-hidden="true"
-            className="pb-1 text-center text-[10px] font-bold uppercase tracking-wide"
+            className="tp-eyebrow pb-1.5 text-center"
             style={{ color: 'var(--text-muted)' }}
           >
             {/*
@@ -172,7 +172,7 @@ function DayCell({ day, events, pickIds, selected, onSelect, compact }) {
 
   // 44px, not the 36 this started at. A compact square is a touch target on a
   // phone, and it is the only way into a day when the titles are not on it.
-  const base = compact ? 'h-11 text-xs' : 'min-h-[86px] text-sm';
+  const base = compact ? 'h-11' : 'min-h-[86px]';
   const numberTone = !inMonth
     ? 'var(--text-muted)'
     : isToday
@@ -263,7 +263,7 @@ function DayCell({ day, events, pickIds, selected, onSelect, compact }) {
                   // No `block` here: line-clamp needs display:-webkit-box, and a
                   // display utility alongside it silently wins, which un-clamps
                   // the title and lets a long one grow the row to six lines.
-                  className="border-l-2 pl-1 text-[10px] leading-[1.25] line-clamp-2"
+                  className="tp-meta border-l-2 pl-1 line-clamp-2"
                   style={{
                     borderColor: picked ? 'var(--brand-gold-500)' : 'var(--border-light)',
                     color: picked ? 'var(--brand-navy-900)' : 'var(--text-secondary)',
@@ -277,7 +277,7 @@ function DayCell({ day, events, pickIds, selected, onSelect, compact }) {
             })}
             {count > 2 && (
               <span
-                className="block text-[10px] font-bold"
+                className="tp-meta block font-bold"
                 style={{ color: hiddenPick ? 'var(--brand-gold-700)' : 'var(--text-muted)' }}
               >
                 +{count - 2} more
@@ -291,13 +291,11 @@ function DayCell({ day, events, pickIds, selected, onSelect, compact }) {
 }
 
 /** Today's number gets the gold disc — the one square a student looks for first. */
-function DayNumber({ value, tone, isToday, compact }) {
+function DayNumber({ value, tone, isToday }) {
   if (isToday) {
     return (
       <span
-        className={`grid place-items-center rounded-full font-bold tabular-nums ${
-          compact ? 'h-4 w-4 text-[10px]' : 'h-5 w-5 text-xs'
-        }`}
+        className="tp-meta grid h-5 w-5 place-items-center rounded-full font-bold tabular-nums"
         style={{ background: 'var(--brand-gold-500)', color: 'var(--brand-navy-900)' }}
       >
         {value}
@@ -307,7 +305,7 @@ function DayNumber({ value, tone, isToday, compact }) {
 
   return (
     <span
-      className={`block font-semibold tabular-nums ${compact ? 'text-[11px]' : 'text-xs'}`}
+      className="tp-meta block font-semibold tabular-nums"
       style={{ color: tone }}
     >
       {value}
