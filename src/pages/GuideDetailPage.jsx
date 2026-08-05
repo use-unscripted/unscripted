@@ -78,18 +78,18 @@ export default function GuideDetailPage() {
     // Back link · badge row · guide title · meta · steps — the real page's
     // shape, so the guide fills the frame rather than replacing a spinner.
     return (
-      <main className="mx-auto max-w-3xl px-5 py-10 sm:px-8">
-        <Sk h={14} w={150} r={5} className="mb-6" />
+      <main className="app-page">
+        <Sk h={15} w={150} r={5} className="mb-6" />
         <div className="mb-6">
           <div className="mb-2 flex flex-wrap gap-2">
             <Sk h={22} w={78} r={999} />
             <Sk h={22} w={64} r={999} />
           </div>
-          <div className="flex h-9 items-center"><Sk h={30} w="76%" r={8} /></div>
-          <div className="mt-2 flex h-4 flex-wrap items-center gap-4">
-            <Sk h={11} w={130} r={4} />
-            <Sk h={11} w={70} r={4} />
-            <Sk h={11} w={54} r={4} />
+          <div className="flex h-11 items-center"><Sk h={34} w="76%" r={8} /></div>
+          <div className="mt-3 flex h-5 flex-wrap items-center gap-4">
+            <Sk h={13} w={130} r={4} />
+            <Sk h={13} w={70} r={4} />
+            <Sk h={13} w={54} r={4} />
           </div>
         </div>
         <Sk h={42} w={196} r={10} className="mb-6" />
@@ -101,9 +101,9 @@ export default function GuideDetailPage() {
 
   if (error || !guide) {
     return (
-      <div className="mx-auto max-w-2xl px-5 py-16 text-center">
-        <p className="text-[color:var(--ink-500)] mb-4">{error || 'Guide not found.'}</p>
-        <button onClick={() => navigate('/experiments')} className="text-sm font-semibold text-[var(--brand-navy-900)] underline">
+      <div className="app-page text-center">
+        <p className="tp-lead mx-auto mb-5 text-[color:var(--ink-500)]">{error || 'Guide not found.'}</p>
+        <button onClick={() => navigate('/experiments')} className="tp-body font-semibold text-[var(--brand-navy-900)] underline">
           Back to Missions
         </button>
       </div>
@@ -113,30 +113,30 @@ export default function GuideDetailPage() {
   const cfg = STATUS_CFG[guide.status] || STATUS_CFG.draft;
 
   return (
-    <main className="mx-auto max-w-3xl px-5 py-10 sm:px-8">
+    <main className="app-page">
       {/* Back */}
       <button
         onClick={() => navigate('/experiments')}
-        className="flex items-center gap-2 text-sm font-semibold text-[color:var(--ink-500)] hover:text-[color:var(--ink-700)] mb-6 transition"
+        className="tp-body flex items-center gap-2 font-semibold text-[color:var(--ink-500)] hover:text-[color:var(--ink-700)] mb-7 transition"
       >
-        <ArrowLeft size={15} /> Back to Missions
+        <ArrowLeft size={16} /> Back to Missions
       </button>
 
       {/* Header */}
-      <div className="mb-6">
-        <div className="flex flex-wrap items-center gap-2 mb-2">
-          <span className="text-xs font-bold text-[color:var(--ink-400)]">Version {guide.version_number}</span>
-          <span className="rounded-full px-2.5 py-1 text-xs font-bold" style={{ background: cfg.bg, color: cfg.text }}>{cfg.label}</span>
+      <div className="mb-8">
+        <div className="flex flex-wrap items-center gap-2 mb-3">
+          <span className="tp-meta font-bold text-[color:var(--ink-400)]">Version {guide.version_number}</span>
+          <span className="tp-meta rounded-full px-2.5 py-1 font-bold" style={{ background: cfg.bg, color: cfg.text }}>{cfg.label}</span>
           {guide.is_active && (
-            <span className="flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold" style={{ background: 'var(--success-50)', color: 'var(--success-700)' }}>
-              <CheckCircle2 size={11} /> Active Guide
+            <span className="tp-meta flex items-center gap-1 rounded-full px-2.5 py-1 font-bold" style={{ background: 'var(--success-50)', color: 'var(--success-700)' }}>
+              <CheckCircle2 size={13} /> Active Guide
             </span>
           )}
         </div>
-        <h1 className="font-heading text-3xl font-bold text-[color:var(--surface-dark-900)]">{guide.guide_title}</h1>
-        <div className="flex flex-wrap gap-4 mt-2 text-xs text-[color:var(--ink-400)]">
+        <h1 className="tp-page text-[color:var(--surface-dark-900)]">{guide.guide_title}</h1>
+        <div className="tp-meta flex flex-wrap gap-4 mt-3 text-[color:var(--ink-400)]">
           <span>Generated {fmtDate(guide.created_date)}</span>
-          {guide.estimated_time && <span className="flex items-center gap-1"><Clock size={11} /> {guide.estimated_time}</span>}
+          {guide.estimated_time && <span className="flex items-center gap-1"><Clock size={13} /> {guide.estimated_time}</span>}
           <span>{guide.steps?.length || 0} steps</span>
         </div>
       </div>
@@ -146,26 +146,26 @@ export default function GuideDetailPage() {
         <button
           onClick={handleSetActive}
           disabled={settingActive}
-          className="mb-6 flex items-center gap-2 rounded-[10px] border border-[color:var(--ink-200)] px-4 py-2.5 text-sm font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)] transition disabled:opacity-60"
+          className="tp-body mb-8 flex items-center gap-2 rounded-[10px] border border-[color:var(--ink-200)] px-5 py-3 font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)] transition disabled:opacity-60"
         >
-          {settingActive ? <Loader2 size={14} className="animate-spin" /> : <Star size={14} />}
+          {settingActive ? <Loader2 size={15} className="animate-spin" /> : <Star size={15} />}
           Set as Active Guide
         </button>
       )}
 
       {/* Objective */}
       {guide.objective && (
-        <section className="mb-6">
-          <p className="text-xs font-bold uppercase tracking-wide text-[color:var(--ink-500)] mb-2">Objective</p>
-          <p className="text-sm text-[color:var(--ink-700)] leading-relaxed">{guide.objective}</p>
+        <section className="mb-8">
+          <p className="tp-eyebrow text-[color:var(--ink-500)] mb-2">Objective</p>
+          <p className="tp-prose text-[color:var(--ink-700)]">{guide.objective}</p>
         </section>
       )}
 
       {/* Steps */}
       {guide.steps?.length > 0 && (
-        <section className="mb-6">
-          <p className="text-xs font-bold uppercase tracking-wide text-[color:var(--ink-500)] mb-3">Steps</p>
-          <ol className="space-y-5">
+        <section className="mb-8">
+          <p className="tp-eyebrow text-[color:var(--ink-500)] mb-4">Steps</p>
+          <ol className="space-y-7">
             {guide.steps.map((s, i) => {
               // Older guides carry estimated_time as free text; newer ones a number.
               const time = s.estimated_minutes ? `${s.estimated_minutes} min` : s.estimated_time;
@@ -173,18 +173,18 @@ export default function GuideDetailPage() {
               return (
                 <li key={i} className="flex gap-4">
                   <span
-                    className="shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold text-white mt-0.5"
+                    className="tp-meta shrink-0 w-7 h-7 rounded-full flex items-center justify-center font-bold text-white mt-0.5"
                     style={{ background: 'var(--brand-navy-900)' }}
                   >{i + 1}</span>
                   <div className="flex-1 min-w-0">
                     {isFirstRep && (
-                      <p className="text-[10px] font-bold uppercase tracking-wide mb-0.5" style={{ color: '#7A5B12' }}>
+                      <p className="tp-eyebrow mb-1" style={{ color: '#7A5B12' }}>
                         Start here
                       </p>
                     )}
-                    {s.title && <p className="font-semibold text-[color:var(--surface-dark-900)] text-sm">{s.title}</p>}
-                    {s.description && <p className="text-sm text-[color:var(--ink-500)] mt-0.5 leading-relaxed">{s.description}</p>}
-                    {time && <p className="text-xs text-[color:var(--ink-400)] mt-1 flex items-center gap-1"><Clock size={10} /> {time}</p>}
+                    {s.title && <p className="tp-card text-[color:var(--surface-dark-900)]">{s.title}</p>}
+                    {s.description && <p className="tp-prose text-[color:var(--ink-500)] mt-1.5">{s.description}</p>}
+                    {time && <p className="tp-meta text-[color:var(--ink-400)] mt-2 flex items-center gap-1"><Clock size={13} /> {time}</p>}
 
                     {s.campus_event && (
                       <div className="mt-3">
@@ -195,7 +195,7 @@ export default function GuideDetailPage() {
                     <StepArtifact artifact={s.artifact} profile={profile} />
 
                     {(s.done_when || s.proof_capture) && (
-                      <dl className="mt-2 space-y-1 text-xs">
+                      <dl className="tp-meta mt-3 space-y-1">
                         {s.done_when && (
                           <div className="flex gap-1.5">
                             <dt className="shrink-0 font-bold text-[color:var(--ink-500)]">Done when</dt>
@@ -220,27 +220,27 @@ export default function GuideDetailPage() {
 
       {/* Deliverable */}
       {guide.deliverable && (
-        <section className="mb-4 rounded-xl p-4" style={{ background: 'var(--ink-100)', border: '1px solid rgba(31,58,95,0.15)' }}>
-          <p className="text-xs font-bold uppercase tracking-wide mb-1" style={{ color: 'var(--brand-navy-900)' }}>Deliverable</p>
-          <p className="text-sm text-[color:var(--ink-700)]">{guide.deliverable}</p>
+        <section className="mb-5 rounded-xl p-5" style={{ background: 'var(--ink-100)', border: '1px solid rgba(31,58,95,0.15)' }}>
+          <p className="tp-eyebrow mb-2" style={{ color: 'var(--brand-navy-900)' }}>Deliverable</p>
+          <p className="tp-prose text-[color:var(--ink-700)]">{guide.deliverable}</p>
         </section>
       )}
 
       {/* Proof required */}
       {guide.proof_requirement && (
-        <section className="mb-4 rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] p-4">
-          <p className="text-xs font-bold uppercase tracking-wide text-[color:var(--ink-500)] mb-1">Proof Required</p>
-          <p className="text-sm text-[color:var(--ink-700)]">{guide.proof_requirement}</p>
+        <section className="mb-5 rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] p-5">
+          <p className="tp-eyebrow text-[color:var(--ink-500)] mb-2">Proof Required</p>
+          <p className="tp-prose text-[color:var(--ink-700)]">{guide.proof_requirement}</p>
         </section>
       )}
 
       {/* Reflection questions */}
       {guide.reflection_questions?.length > 0 && (
-        <section className="mb-4">
-          <p className="text-xs font-bold uppercase tracking-wide text-[color:var(--ink-500)] mb-2">Reflection Questions</p>
-          <ul className="space-y-2">
+        <section className="mb-5">
+          <p className="tp-eyebrow text-[color:var(--ink-500)] mb-3">Reflection Questions</p>
+          <ul className="space-y-2.5">
             {guide.reflection_questions.map((q, i) => (
-              <li key={i} className="flex gap-2 text-sm text-[color:var(--ink-700)]">
+              <li key={i} className="tp-body flex gap-2 text-[color:var(--ink-700)]">
                 <span className="shrink-0 font-bold" style={{ color: 'var(--brand-navy-900)' }}>·</span>
                 <span>{q}</span>
               </li>

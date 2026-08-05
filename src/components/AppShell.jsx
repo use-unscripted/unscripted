@@ -116,7 +116,7 @@ export default function AppShell() {
           )}
         </nav>
 
-        <p className="rounded-xl p-3 text-xs leading-5 text-[color:var(--ink-400)] mt-4" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
+        <p className="tp-meta rounded-xl p-3.5 text-[color:var(--ink-400)] mt-4" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
           Write your unscripted path.
         </p>
         {/* The stored calendar goes with the session. It is public listings
@@ -138,7 +138,7 @@ export default function AppShell() {
         {NAV.map(([to, , shortLabel, Icon]) => (
           <NavLink key={to} to={to}
             className={({ isActive }) =>
-              `nav-link flex flex-1 flex-col items-center justify-center gap-1 py-2.5 text-[11px] font-semibold ${isActive ? '' : 'text-[color:var(--ink-400)]'}`
+              `nav-link tp-meta flex flex-1 flex-col items-center justify-center gap-1 py-2.5 font-semibold ${isActive ? '' : 'text-[color:var(--ink-400)]'}`
             }
             style={({ isActive }) => ({ minHeight: '56px', ...(isActive ? { color: 'var(--brand-navy-900)' } : {}) })}>
             <Icon size={20} />

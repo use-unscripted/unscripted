@@ -85,16 +85,16 @@ export default function ICSExportPanel({ showHeading = true }) {
         <>
           <div className="flex items-center gap-2 mb-1">
             <Calendar size={16} style={{ color: 'var(--brand-navy-900)' }} />
-            <h3 className="font-heading font-bold text-[color:var(--surface-dark-900)]">Export to calendar</h3>
+            <h3 className="tp-section text-[color:var(--surface-dark-900)]">Export to calendar</h3>
           </div>
-          <p className="text-xs text-[color:var(--ink-500)] mb-5">
+          <p className="tp-prose text-[color:var(--ink-500)] mt-2 mb-6">
             Download .ics files compatible with Google Calendar, Apple Calendar, Outlook, and any standard calendar app.
           </p>
         </>
       )}
 
       {error && (
-        <div className="mb-4 rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-xs text-red-700">{error}</div>
+        <div className="tp-meta mb-4 rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-red-700">{error}</div>
       )}
 
       <div className="space-y-3">
@@ -106,17 +106,17 @@ export default function ICSExportPanel({ showHeading = true }) {
                 <FileDown size={16} style={{ color: 'var(--brand-navy-900)' }} />
               </div>
               <div>
-                <p className="text-sm font-semibold text-[color:var(--surface-dark-900)]">Export one week</p>
-                <p className="text-xs text-[color:var(--ink-500)]">All calendar tasks for the selected week</p>
+                <p className="tp-card text-[color:var(--surface-dark-900)]">Export one week</p>
+                <p className="tp-meta mt-1 text-[color:var(--ink-500)]">All calendar tasks for the selected week</p>
               </div>
             </div>
             <div className="flex items-center gap-2 flex-wrap">
               <input type="date" value={weekStart} onChange={e => setWeekStart(e.target.value)}
-                className="rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-3 py-2 text-xs outline-none focus:border-[color:var(--brand-navy-900)]" />
+                className="rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-3 py-2 text-sm outline-none focus:border-[color:var(--brand-navy-900)]" />
               <button onClick={downloadWeek} disabled={downloading === 'week'}
-                className="flex items-center gap-1.5 rounded-[10px] px-4 py-2 text-xs font-semibold text-white disabled:opacity-60"
+                className="tp-meta flex items-center gap-1.5 rounded-[10px] px-4 py-2.5 font-semibold text-white disabled:opacity-60"
                 style={{ background: 'var(--brand-navy-900)' }}>
-                <Download size={12} />
+                <Download size={14} />
                 {downloading === 'week' ? 'Exporting…' : 'Download'}
               </button>
             </div>
@@ -131,21 +131,21 @@ export default function ICSExportPanel({ showHeading = true }) {
                 <ListTodo size={16} style={{ color: 'var(--brand-navy-900)' }} />
               </div>
               <div>
-                <p className="text-sm font-semibold text-[color:var(--surface-dark-900)]">Export all active missions</p>
-                <p className="text-xs text-[color:var(--ink-500)]">Missions with deadlines, as all-day calendar events</p>
+                <p className="tp-card text-[color:var(--surface-dark-900)]">Export all active missions</p>
+                <p className="tp-meta mt-1 text-[color:var(--ink-500)]">Missions with deadlines, as all-day calendar events</p>
               </div>
             </div>
             <button onClick={downloadMissions} disabled={downloading === 'missions'}
-              className="flex items-center gap-1.5 rounded-[10px] px-4 py-2 text-xs font-semibold text-white disabled:opacity-60"
+              className="tp-meta flex items-center gap-1.5 rounded-[10px] px-4 py-2.5 font-semibold text-white disabled:opacity-60"
               style={{ background: 'var(--brand-navy-900)' }}>
-              <Download size={12} />
+              <Download size={14} />
               {downloading === 'missions' ? 'Exporting…' : 'Download'}
             </button>
           </div>
         </div>
       </div>
 
-      <p className="mt-4 text-[10px] text-[color:var(--ink-400)]">
+      <p className="tp-meta mt-5 text-[color:var(--ink-400)]">
         To add a single event to your calendar, use the "Add to Calendar" button on any mission, task, or outreach contact.
       </p>
     </div>

@@ -41,7 +41,7 @@ export default function ResourceHub() {
   const filtered = filter === 'all' ? resources : resources.filter(r => r.category === filter);
 
   return (
-    <main className="mx-auto max-w-6xl px-5 py-10 sm:px-8">
+    <main className="app-page">
       <PageHeader
         title="The right tool for each path."
         description="Unscripted points you at specialized resources rather than replacing them, so you can pick the right one at the right time."
@@ -53,7 +53,7 @@ export default function ResourceHub() {
       <div className="mb-8 flex flex-wrap content-start items-start gap-2" style={{ minHeight: 96 }}>
         {categories.map(c => (
           <button key={c} onClick={() => setFilter(c)}
-            className="rounded-full px-4 py-1.5 text-xs font-semibold transition border"
+            className="tp-meta rounded-full px-4 py-2 font-semibold transition border"
             style={filter === c ? { background: 'var(--brand-navy-900)', color: '#fff', borderColor: 'var(--brand-navy-900)' } : { background: 'white', color: 'var(--ink-700)', borderColor: 'var(--ink-200)' }}>
             {c === 'all' ? 'All categories' : CATEGORY_LABELS[c] || c}
           </button>
@@ -76,31 +76,31 @@ export default function ResourceHub() {
               <div key={r.id || i} className={`rounded-[20px] border bg-white p-5 flex flex-col ${r.featured ? 'border-[rgba(31,58,95,0.35)]' : 'border-[color:var(--ink-200)]'}`}>
                 <div className="flex items-start justify-between gap-3 mb-3">
                   <div>
-                    {r.featured && <div className="flex items-center gap-1 text-xs font-bold mb-1" style={{ color: 'var(--brand-navy-900)' }}><Star size={11} /> Featured</div>}
-                    <h3 className="font-heading font-bold text-[color:var(--surface-dark-900)]">{r.name}</h3>
-                    <span className="text-xs" style={{ color: 'var(--ink-500)' }}>{CATEGORY_LABELS[r.category] || r.category}</span>
+                    {r.featured && <div className="tp-meta flex items-center gap-1 font-bold mb-1" style={{ color: 'var(--brand-navy-900)' }}><Star size={13} /> Featured</div>}
+                    <h3 className="tp-card text-[color:var(--surface-dark-900)]">{r.name}</h3>
+                    <span className="tp-meta" style={{ color: 'var(--ink-500)' }}>{CATEGORY_LABELS[r.category] || r.category}</span>
                   </div>
-                  <span className="shrink-0 rounded-full px-2.5 py-1 text-xs font-bold" style={{ background: ps.bg, color: ps.text }}>
+                  <span className="tp-meta shrink-0 rounded-full px-2.5 py-1 font-bold" style={{ background: ps.bg, color: ps.text }}>
                     {r.price_type === 'free' ? 'Free' : r.price_type === 'freemium' ? 'Freemium' : r.estimated_cost || 'Paid'}
                   </span>
                 </div>
-                <p className="text-sm text-[color:var(--ink-700)] leading-6 flex-1">{r.description}</p>
+                <p className="tp-body mt-2 text-[color:var(--ink-700)] flex-1">{r.description}</p>
                 {r.recommendation_reason && (
-                  <div className="mt-3 rounded-xl p-3" style={{ background: 'var(--ink-100)', border: '1px solid rgba(31,58,95,0.15)' }}>
-                    <p className="text-xs font-semibold mb-1" style={{ color: 'var(--brand-navy-900)' }}>Why Unscripted recommends it</p>
-                    <p className="text-xs text-[color:var(--ink-700)]">{r.recommendation_reason}</p>
+                  <div className="mt-4 rounded-xl p-4" style={{ background: 'var(--ink-100)', border: '1px solid rgba(31,58,95,0.15)' }}>
+                    <p className="tp-meta font-bold mb-1" style={{ color: 'var(--brand-navy-900)' }}>Why Unscripted recommends it</p>
+                    <p className="tp-meta text-[color:var(--ink-700)]">{r.recommendation_reason}</p>
                   </div>
                 )}
                 {r.limitations?.[0] && (
-                  <p className="mt-2 text-xs text-[color:var(--ink-500)]"><strong>Note:</strong> {Array.isArray(r.limitations) ? r.limitations[0] : r.limitations}</p>
+                  <p className="tp-meta mt-3 text-[color:var(--ink-500)]"><strong>Note:</strong> {Array.isArray(r.limitations) ? r.limitations[0] : r.limitations}</p>
                 )}
                 <div className="mt-4 flex items-center justify-between">
-                  {r.last_reviewed && <span className="text-xs text-[color:var(--ink-400)]">Reviewed {new Date(r.last_reviewed).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}</span>}
+                  {r.last_reviewed && <span className="tp-meta text-[color:var(--ink-400)]">Reviewed {new Date(r.last_reviewed).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}</span>}
                   {r.external_url && (
                     <a href={r.external_url} target="_blank" rel="noopener noreferrer"
-                      className="flex items-center gap-1.5 rounded-[10px] px-3 py-1.5 text-xs font-semibold text-white transition hover:-translate-y-px"
+                      className="tp-meta flex items-center gap-1.5 rounded-[10px] px-3.5 py-2 font-semibold text-white transition hover:-translate-y-px"
                       style={{ background: 'var(--brand-navy-900)' }}>
-                      Visit <ExternalLink size={11} />
+                      Visit <ExternalLink size={13} />
                     </a>
                   )}
                 </div>
@@ -112,8 +112,8 @@ export default function ResourceHub() {
       </div>
 
       <div className="mt-10 rounded-[20px] p-5" style={{ background: 'var(--ink-100)', border: '1px solid var(--ink-200)' }}>
-        <p className="text-xs font-bold uppercase tracking-wide text-[color:var(--ink-500)] mb-1">Coming later</p>
-        <p className="text-sm text-[color:var(--ink-700)]">Live labor-market data, Apollo and Hunter integrations, campus-specific resource directories, and an affiliate marketplace are planned for future releases.</p>
+        <p className="tp-eyebrow text-[color:var(--ink-500)] mb-2">Coming later</p>
+        <p className="tp-prose text-[color:var(--ink-700)]">Live labor-market data, Apollo and Hunter integrations, campus-specific resource directories, and an affiliate marketplace are planned for future releases.</p>
       </div>
     </main>
   );

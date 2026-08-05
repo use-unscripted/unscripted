@@ -123,12 +123,12 @@ ${PLAIN_PROSE_RULES}${correction}`,
   }
 
   return (
-    <main className="mx-auto max-w-6xl px-5 py-10 sm:px-8">
+    <main className="app-page">
       <PageHeader
         title="Study the path. Build your own."
         description="Real strategies extracted from high-agency students, creators, and founders. Pick a path, understand the playbook, and take the first step."
       />
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {BLUEPRINTS.map(bp => (
           <BlueprintCard key={bp.id} bp={bp} onClick={() => openBlueprint(bp)} />
         ))}

@@ -36,7 +36,7 @@ export default function About() {
           {LOOP.map(([step, detail], i) => (
             <div key={step} className="flex gap-4">
               <span
-                className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold"
+                className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-sm font-bold"
                 style={{ background: 'var(--brand-navy-900)', color: '#fff' }}
                 aria-hidden="true"
               >

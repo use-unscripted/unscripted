@@ -167,7 +167,7 @@ export default function Settings() {
   };
 
   return (
-    <main className="mx-auto max-w-3xl px-5 py-10 sm:px-8">
+    <main className="app-page">
       <PageHeader
         title="Keep your context current."
         description="Your direction can change. Update the facts that shape future roadmaps."
@@ -188,29 +188,29 @@ export default function Settings() {
         </button>
         <button
           onClick={() => { clearCampusStore(); base44.auth.logout('/'); }}
-          className="text-sm font-semibold text-[color:var(--ink-500)] hover:text-[color:var(--surface-dark-900)] transition sm:col-span-2"
+          className="tp-body font-semibold text-[color:var(--ink-500)] hover:text-[color:var(--surface-dark-900)] transition sm:col-span-2"
         >
           Log out
         </button>
       </section>
 
       <div className="mb-3 mt-10">
-        <h2 className="font-heading text-xl font-bold text-[color:var(--surface-dark-900)] mb-1">Personal context</h2>
-        <p className="text-sm text-[color:var(--ink-700)] mb-5">Add context, ambitions, constraints, or priorities that personalize your path recommendations. Changes influence future recommendations but do not rewrite past ones.</p>
+        <h2 className="tp-section text-[color:var(--surface-dark-900)] mb-1.5">Personal context</h2>
+        <p className="tp-prose text-[color:var(--ink-700)] mb-5">Add context, ambitions, constraints, or priorities that personalize your path recommendations. Changes influence future recommendations but do not rewrite past ones.</p>
       </div>
       <section className="mb-10 rounded-[24px] border border-[color:var(--ink-200)] bg-white p-7 shadow-sm space-y-5">
         {NOTES_FIELDS.map(f => (
-          <label key={f.name} className="block text-sm font-semibold text-[color:var(--ink-700)]">
+          <label key={f.name} className="tp-body block font-semibold text-[color:var(--ink-700)]">
             {f.label}
-            <span className="ml-2 text-xs font-normal text-[color:var(--ink-400)]">Optional</span>
+            <span className="tp-meta ml-2 inline font-normal text-[color:var(--ink-400)]">Optional</span>
             <textarea rows={3} name={f.name} value={notes[f.name] || ''} onChange={changeNote}
               placeholder={f.placeholder} maxLength={f.maxLength} className={textareaCls} />
             {f.maxLength && (notes[f.name] || '').length > 0 && (
-              <span className="block text-right text-xs text-[color:var(--ink-400)] mt-0.5">{(notes[f.name] || '').length}/{f.maxLength}</span>
+              <span className="tp-meta block text-right text-[color:var(--ink-400)] mt-1">{(notes[f.name] || '').length}/{f.maxLength}</span>
             )}
           </label>
         ))}
-        <p className="rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] px-4 py-3 text-xs text-[color:var(--ink-500)]">
+        <p className="tp-meta rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] px-4 py-3.5 text-[color:var(--ink-500)]">
           Your notes are private to your account and are used only to personalize your Unscripted experience.
         </p>
         <button onClick={saveNotes} disabled={!profile}
@@ -221,21 +221,21 @@ export default function Settings() {
 
         {showRegenPrompt && !regenDone && (
           <div className="rounded-[16px] border border-[color:var(--brand-navy-700)] bg-[color:var(--ink-100)] p-5">
-            <p className="text-sm font-bold text-[color:var(--brand-navy-900)] mb-1">Want to refresh your recommended paths?</p>
-            <p className="text-xs text-[color:var(--ink-700)] mb-4">Your personal context has been updated. Unscripted can generate new path recommendations tailored to your updated preferences. For example, if you now want to focus only on law-related roles.</p>
+            <p className="tp-card text-[color:var(--brand-navy-900)] mb-1.5">Want to refresh your recommended paths?</p>
+            <p className="tp-prose text-[color:var(--ink-700)] mb-5">Your personal context has been updated. Unscripted can generate new path recommendations tailored to your updated preferences. For example, if you now want to focus only on law-related roles.</p>
             <div className="flex flex-wrap gap-2">
               <button onClick={handleRegenerate} disabled={regenerating}
-                className="flex items-center gap-2 rounded-[10px] px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-60 transition"
+                className="tp-body flex items-center gap-2 rounded-[10px] px-5 py-3 font-semibold text-white disabled:opacity-60 transition"
                 style={{ background: 'var(--brand-navy-900)' }}>
-                <RefreshCw size={14} className={regenerating ? 'animate-spin' : ''} />
+                <RefreshCw size={15} className={regenerating ? 'animate-spin' : ''} />
                 {regenerating ? 'Generating new paths…' : 'Yes, refresh my paths'}
               </button>
               <button onClick={() => setShowRegenPrompt(false)} disabled={regenerating}
-                className="rounded-[10px] border border-[color:var(--ink-200)] px-5 py-2.5 text-sm font-semibold text-[color:var(--ink-700)] hover:bg-white transition">
+                className="tp-body rounded-[10px] border border-[color:var(--ink-200)] px-5 py-3 font-semibold text-[color:var(--ink-700)] hover:bg-white transition">
                 No, keep existing paths
               </button>
             </div>
-            {regenError && <p className="mt-3 text-xs font-semibold text-red-600" role="alert">{regenError}</p>}
+            {regenError && <p className="tp-meta mt-3 font-semibold text-red-600" role="alert">{regenError}</p>}
           </div>
         )}
 
@@ -243,12 +243,12 @@ export default function Settings() {
           <div className="rounded-[16px] border border-green-200 bg-green-50 p-5 flex items-start gap-3">
             <CheckCircle size={18} className="text-green-600 shrink-0 mt-0.5" />
             <div>
-              <p className="text-sm font-bold text-green-800">New paths generated!</p>
-              <p className="text-xs text-green-700 mt-0.5">Your updated preferences have been applied and new recommendations have been added to your paths.</p>
+              <p className="tp-card text-green-800">New paths generated!</p>
+              <p className="tp-prose text-green-700 mt-1.5">Your updated preferences have been applied and new recommendations have been added to your paths.</p>
               {/* Newest first, so the set that was just generated is at the top
                   of the page rather than below the older recommendations. */}
-              <Link to="/paths?sort=newest" className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-green-800 underline">
-                View new paths <ArrowRight size={12} />
+              <Link to="/paths?sort=newest" className="tp-meta mt-3 inline-flex items-center gap-1 font-semibold text-green-800 underline">
+                View new paths <ArrowRight size={14} />
               </Link>
             </div>
           </div>
@@ -256,38 +256,38 @@ export default function Settings() {
       </section>
 
       <div className="mb-3">
-        <h2 className="font-heading text-xl font-bold text-[color:var(--surface-dark-900)] mb-1">Export to calendar</h2>
-        <p className="text-sm text-[color:var(--ink-700)]">Download .ics files to add your Unscripted schedule to Google Calendar, Apple Calendar, Outlook, or any standard calendar app.</p>
+        <h2 className="tp-section text-[color:var(--surface-dark-900)] mb-1.5">Export to calendar</h2>
+        <p className="tp-prose text-[color:var(--ink-700)]">Download .ics files to add your Unscripted schedule to Google Calendar, Apple Calendar, Outlook, or any standard calendar app.</p>
       </div>
       <ICSExportPanel showHeading={false} />
 
       <div className="mt-10 mb-3">
-        <h2 className="font-heading text-xl font-bold text-[color:var(--surface-dark-900)] mb-1">Emails from us</h2>
-        <p className="text-sm text-[color:var(--ink-700)]">At most one email a week, with one thing to do or one question to answer. Turning them off does not change anything else on your account.</p>
+        <h2 className="tp-section text-[color:var(--surface-dark-900)] mb-1.5">Emails from us</h2>
+        <p className="tp-prose text-[color:var(--ink-700)]">At most one email a week, with one thing to do or one question to answer. Turning them off does not change anything else on your account.</p>
       </div>
       <section className="rounded-[24px] border border-[color:var(--ink-200)] bg-white p-7 shadow-sm">
         {emailsOff ? (
           <>
-            <p className="text-sm font-semibold text-[color:var(--surface-dark-900)] mb-4">These emails are off.</p>
+            <p className="tp-body font-semibold text-[color:var(--surface-dark-900)] mb-4">These emails are off.</p>
             <button onClick={startEmails} disabled={emailBusy}
-              className="rounded-[10px] border border-[color:var(--ink-200)] px-5 py-3 text-sm font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)] transition disabled:opacity-60">
+              className="tp-body rounded-[10px] border border-[color:var(--ink-200)] px-5 py-3 font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)] transition disabled:opacity-60">
               Start sending them again
             </button>
           </>
         ) : (
           <button onClick={stopEmails} disabled={emailBusy || !user?.id}
-            className="rounded-[10px] border border-[color:var(--ink-200)] px-5 py-3 text-sm font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)] transition disabled:opacity-60">
+            className="tp-body rounded-[10px] border border-[color:var(--ink-200)] px-5 py-3 font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)] transition disabled:opacity-60">
             Stop these emails
           </button>
         )}
       </section>
 
       <div className="mt-10">
-        <h2 className="font-heading text-xl font-bold text-[color:var(--surface-dark-900)] mb-1">Recently deleted</h2>
-        <p className="text-sm text-[color:var(--ink-700)] mb-4">Mission Guides, contacts, reflections, and proof of work you've deleted are kept for 30 days before permanent removal.</p>
+        <h2 className="tp-section text-[color:var(--surface-dark-900)] mb-1.5">Recently deleted</h2>
+        <p className="tp-prose text-[color:var(--ink-700)] mb-4">Mission Guides, contacts, reflections, and proof of work you've deleted are kept for 30 days before permanent removal.</p>
         <Link to="/recently-deleted"
-          className="inline-flex items-center gap-2 rounded-[10px] border border-[color:var(--ink-200)] px-5 py-3 text-sm font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)] transition">
-          <Trash2 size={15} /> View Recently Deleted
+          className="tp-body inline-flex items-center gap-2 rounded-[10px] border border-[color:var(--ink-200)] px-5 py-3 font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)] transition">
+          <Trash2 size={16} /> View Recently Deleted
         </Link>
       </div>
     </main>
