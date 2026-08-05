@@ -16,8 +16,8 @@ const fmt = (v) => (v ? new Date(v).toLocaleDateString('en-US', { month: 'short'
 function Line({ label, value }) {
   return (
     <div className="flex items-baseline justify-between gap-3 border-t py-2 first:border-t-0" style={{ borderColor: 'var(--border-light)' }}>
-      <span className="text-xs font-semibold" style={{ color: 'var(--text-muted)' }}>{label}</span>
-      <span className="text-sm font-bold text-right" style={{ color: 'var(--text-primary)' }}>{value}</span>
+      <span className="tp-meta font-semibold" style={{ color: 'var(--text-muted)' }}>{label}</span>
+      <span className="tp-body text-right font-bold" style={{ color: 'var(--text-primary)' }}>{value}</span>
     </div>
   );
 }
@@ -33,11 +33,11 @@ export default function CycleSummary({ ctx, reflection, decision, closedCycle })
 
   return (
     <section className="rounded-[20px] bg-white p-5 sm:p-6" style={{ border: '1px solid var(--border-light)' }}>
-      <h2 className="font-heading text-lg font-bold" style={{ color: 'var(--text-primary)' }}>Cycle summary</h2>
+      <h2 className="tp-section" style={{ color: 'var(--text-primary)' }}>Cycle summary</h2>
 
       <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1">
         {chain.map((step, i) => (
-          <span key={i} className="flex items-center gap-2 text-xs font-bold" style={{ color: 'var(--brand-navy-700)' }}>
+          <span key={i} className="tp-meta flex items-center gap-2 font-bold" style={{ color: 'var(--brand-navy-700)' }}>
             {step}
             {i < chain.length - 1 && <ArrowRight size={11} style={{ color: 'var(--text-muted)' }} />}
           </span>
@@ -56,8 +56,8 @@ export default function CycleSummary({ ctx, reflection, decision, closedCycle })
 
       {d && (
         <div className="mt-4 rounded-[14px] p-4" style={{ background: 'var(--background-secondary)', border: '1px solid var(--border-light)' }}>
-          <p className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>Next: {d.next}</p>
-          <p className="mt-1 text-xs" style={{ color: 'var(--text-muted)' }}>
+          <p className="tp-body font-bold" style={{ color: 'var(--text-primary)' }}>Next: {d.next}</p>
+          <p className="tp-meta mt-1.5" style={{ color: 'var(--text-muted)' }}>
             Your next cycle starts from what you just learned: clarity, path and records all carried over.
           </p>
           <div className="mt-3 flex flex-wrap gap-3">
@@ -75,7 +75,7 @@ export default function CycleSummary({ ctx, reflection, decision, closedCycle })
         </div>
       )}
 
-      <p className="mt-4 text-center text-xs" style={{ color: 'var(--text-muted)' }}>
+      <p className="tp-meta mt-5 text-center" style={{ color: 'var(--text-muted)' }}>
         Everything from this cycle stays in{' '}
         <Link to="/evidence?tab=proof" className="font-semibold" style={{ color: 'var(--brand-navy-700)' }}>your history</Link>.
       </p>

@@ -10,17 +10,17 @@ export default function ExperimentOverview({ experiment, path, missions }) {
 
   return (
     <section className="rounded-[20px] bg-white p-5 sm:p-6" style={{ border: '1px solid var(--border-light)' }}>
-      <p className="text-xs font-bold uppercase tracking-[.12em]" style={{ color: 'var(--brand-navy-700)' }}>
+      <p className="tp-eyebrow" style={{ color: 'var(--brand-navy-700)' }}>
         Active experiment{path?.path_name ? ` · ${path.path_name}` : ''}
       </p>
-      <h1 className="font-heading mt-2 text-2xl font-bold sm:text-3xl" style={{ color: 'var(--text-primary)' }}>
+      <h1 className="tp-page mt-3" style={{ color: 'var(--text-primary)' }}>
         {experiment.title}
       </h1>
       {experiment.objective && (
-        <p className="mt-2 text-sm leading-6" style={{ color: 'var(--text-secondary)' }}>{experiment.objective}</p>
+        <p className="tp-lead mt-3" style={{ color: 'var(--text-secondary)' }}>{experiment.objective}</p>
       )}
 
-      <div className="mt-4 flex flex-wrap items-center gap-4 text-xs" style={{ color: 'var(--text-muted)' }}>
+      <div className="tp-meta mt-5 flex flex-wrap items-center gap-5" style={{ color: 'var(--text-muted)' }}>
         {experiment.estimated_hours && <span className="flex items-center gap-1"><Clock size={12} /> ~{experiment.estimated_hours}h</span>}
         <span className="flex items-center gap-1"><Target size={12} /> {done}/{missions.length} missions complete</span>
         {experiment.deadline && <span>Due {new Date(experiment.deadline).toLocaleDateString()}</span>}
@@ -32,8 +32,8 @@ export default function ExperimentOverview({ experiment, path, missions }) {
 
       {experiment.expected_learning && (
         <div className="mt-4 border-t pt-4" style={{ borderColor: 'var(--border-light)' }}>
-          <p className="text-[11px] font-bold uppercase tracking-[.1em]" style={{ color: 'var(--text-muted)' }}>What this should teach you</p>
-          <p className="mt-1 text-sm leading-6" style={{ color: 'var(--text-secondary)' }}>{experiment.expected_learning}</p>
+          <p className="tp-eyebrow" style={{ color: 'var(--text-muted)' }}>What this should teach you</p>
+          <p className="tp-body mt-1.5" style={{ color: 'var(--text-secondary)' }}>{experiment.expected_learning}</p>
         </div>
       )}
     </section>

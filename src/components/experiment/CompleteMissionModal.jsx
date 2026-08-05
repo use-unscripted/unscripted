@@ -1,5 +1,5 @@
 /**
- * "What demonstrates that you completed this?" — the only way a mission is
+ * "What demonstrates that you completed this?" is the only way a mission is
  * marked complete, so proof is never an afterthought on a separate page.
  * The upload happens once and is held in state, so a retry after a failure
  * never uploads the same file twice.
@@ -61,10 +61,10 @@ export default function CompleteMissionModal({ mission, experiment, path, onClos
       <div className="anim-modal max-h-[92vh] w-full overflow-y-auto rounded-t-[20px] bg-white p-6 sm:max-w-lg sm:rounded-[20px]">
         <div className="mb-4 flex items-start justify-between gap-3">
           <div>
-            <h3 className="font-heading text-lg font-bold" style={{ color: 'var(--text-primary)' }}>
+            <h3 className="tp-section" style={{ color: 'var(--text-primary)' }}>
               What demonstrates that you completed this?
             </h3>
-            <p className="mt-1 text-sm" style={{ color: 'var(--text-secondary)' }}>{mission.title}</p>
+            <p className="tp-lead mt-1.5" style={{ color: 'var(--text-secondary)' }}>{mission.title}</p>
           </div>
           <button onClick={onClose} aria-label="Close"><X size={18} style={{ color: 'var(--text-muted)' }} /></button>
         </div>
@@ -75,7 +75,7 @@ export default function CompleteMissionModal({ mission, experiment, path, onClos
               key={t.key}
               type="button"
               onClick={() => setType(t.key)}
-              className="rounded-[10px] px-3 py-2 text-xs font-bold"
+              className="tp-meta rounded-[10px] px-3 py-2.5 font-bold"
               style={type === t.key
                 ? { background: 'var(--brand-navy-900)', color: '#fff' }
                 : { background: 'var(--background-secondary)', color: 'var(--text-primary)', border: '1px solid var(--border-light)' }}
@@ -88,7 +88,7 @@ export default function CompleteMissionModal({ mission, experiment, path, onClos
         {type && (
           <div className="mt-4 space-y-3">
             <label className="block">
-              <span className="text-xs font-bold uppercase tracking-[.1em]" style={{ color: 'var(--text-muted)' }}>Title</span>
+              <span className="tp-eyebrow" style={{ color: 'var(--text-muted)' }}>Title</span>
               <input
                 value={title}
                 onChange={e => setTitle(e.target.value)}
@@ -98,7 +98,7 @@ export default function CompleteMissionModal({ mission, experiment, path, onClos
             </label>
 
             <label className="block">
-              <span className="text-xs font-bold uppercase tracking-[.1em]" style={{ color: 'var(--text-muted)' }}>Link (optional)</span>
+              <span className="tp-eyebrow" style={{ color: 'var(--text-muted)' }}>Link (optional)</span>
               <input
                 value={url}
                 onChange={e => setUrl(e.target.value)}
@@ -109,7 +109,7 @@ export default function CompleteMissionModal({ mission, experiment, path, onClos
             </label>
 
             <div>
-              <span className="text-xs font-bold uppercase tracking-[.1em]" style={{ color: 'var(--text-muted)' }}>File (optional)</span>
+              <span className="tp-eyebrow" style={{ color: 'var(--text-muted)' }}>File (optional)</span>
               <input ref={inputRef} type="file" onChange={pickFile} className="hidden" />
               <button
                 type="button"
@@ -125,7 +125,7 @@ export default function CompleteMissionModal({ mission, experiment, path, onClos
             </div>
 
             <label className="block">
-              <span className="text-xs font-bold uppercase tracking-[.1em]" style={{ color: 'var(--text-muted)' }}>What did you produce or learn?</span>
+              <span className="tp-eyebrow" style={{ color: 'var(--text-muted)' }}>What did you produce or learn?</span>
               <textarea
                 rows={3}
                 value={description}
@@ -140,7 +140,7 @@ export default function CompleteMissionModal({ mission, experiment, path, onClos
         {error && (
           <div className="mt-4 flex items-start gap-2 rounded-[10px] p-3" style={{ background: 'var(--danger-50)', border: '1px solid #FECACA' }}>
             <AlertTriangle size={14} className="mt-0.5 shrink-0" style={{ color: 'var(--danger-700)' }} />
-            <p className="text-sm" style={{ color: '#991B1B' }}>{error}</p>
+            <p className="tp-body" style={{ color: '#991B1B' }}>{error}</p>
           </div>
         )}
 

@@ -31,10 +31,10 @@ export default function PageNotFound({}) {
                     
                     {/* Main Message */}
                     <div className="space-y-3">
-                        <h2 className="text-2xl font-medium text-[color:var(--ink-900)]">
+                        <h2 className="tp-page text-[color:var(--ink-900)]">
                             Page Not Found
                         </h2>
-                        <p className="text-[color:var(--ink-600)] leading-relaxed">
+                        <p className="tp-lead mx-auto text-[color:var(--ink-600)]">
                             The page <span className="font-medium text-[color:var(--ink-700)]">"{pageName}"</span> could not be found in this application.
                         </p>
                     </div>
@@ -47,8 +47,8 @@ export default function PageNotFound({}) {
                                     <div className="w-2 h-2 rounded-full bg-orange-400"></div>
                                 </div>
                                 <div className="text-left space-y-1">
-                                    <p className="text-sm font-medium text-[color:var(--ink-700)]">Admin Note</p>
-                                    <p className="text-sm text-[color:var(--ink-600)] leading-relaxed">
+                                    <p className="tp-body font-bold text-[color:var(--ink-700)]">Admin Note</p>
+                                    <p className="tp-body text-[color:var(--ink-600)]">
                                         This could mean that the AI hasn't implemented this page yet. Ask it to implement it in the chat.
                                     </p>
                                 </div>

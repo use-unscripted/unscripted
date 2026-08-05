@@ -56,7 +56,7 @@ function Tooltip({ text }) {
           <span className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
           <span
           role="tooltip"
-          className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 z-50 w-60 rounded-xl border border-[color:var(--ink-200)] bg-white p-3 text-[11px] leading-relaxed text-[color:var(--ink-700)] shadow-xl">
+          className="tp-meta absolute left-1/2 -translate-x-1/2 bottom-full mb-2 z-50 w-64 rounded-xl border border-[color:var(--ink-200)] bg-white p-3 text-[color:var(--ink-700)] shadow-xl">
           
             {text}
             <button
@@ -106,7 +106,7 @@ function Badge({ cfg, Icon, ariaLabel, tooltipText, showBar = false }) {
     <span
       role="img"
       aria-label={ariaLabel}
-      className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold border"
+      className="tp-meta inline-flex items-center gap-1 rounded-full px-3 py-1 font-bold border"
       style={{ background: cfg.bg, color: cfg.text, borderColor: cfg.border }}>
       
       <Icon size={11} aria-hidden="true" />
@@ -141,14 +141,14 @@ export function RiskNotAssessed({ onAssess, onAutoAssess, assessing }) {
     <span
       role="img"
       aria-label="Risk not yet assessed"
-      className="relative inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold border border-[color:var(--ink-200)] text-[color:var(--ink-400)] bg-[color:var(--ink-50)]">
+      className="tp-meta relative inline-flex items-center gap-1 rounded-full px-3 py-1 font-semibold border border-[color:var(--ink-200)] text-[color:var(--ink-400)] bg-[color:var(--ink-50)]">
       <AlertTriangle size={11} aria-hidden="true" />
       {assessing ? 'Assessing…' : 'Risk not assessed'}
       {!assessing && onAutoAssess && (
         <button
           type="button"
           onClick={(e) => { e.stopPropagation(); onAutoAssess(); }}
-          className="ml-1 font-bold hover:underline text-[10px]"
+          className="tp-meta ml-1 font-bold hover:underline"
           style={{ color: 'var(--brand-navy-900)' }}>
           Auto-assess
         </button>
@@ -157,7 +157,7 @@ export function RiskNotAssessed({ onAssess, onAutoAssess, assessing }) {
         <button
           type="button"
           onClick={(e) => { e.stopPropagation(); onAssess(); }}
-          className="font-bold hover:underline text-[10px] text-[color:var(--ink-500)]">
+          className="tp-meta font-bold hover:underline text-[color:var(--ink-500)]">
           or edit
         </button>
       )}

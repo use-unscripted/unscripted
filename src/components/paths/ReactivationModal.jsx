@@ -165,19 +165,19 @@ ${PLAIN_PROSE_RULES}`,
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(5,8,22,0.6)' }}>
       <div className="w-full max-w-2xl max-h-[92vh] overflow-y-auto rounded-[24px] bg-white p-6 sm:p-8">
         <div className="flex items-center justify-between mb-1">
-          <h2 className="font-heading text-xl font-bold text-[color:var(--surface-dark-900)]">
+          <h2 className="tp-section text-[color:var(--surface-dark-900)]">
             {step === 'survey' ? 'Reactivation Survey' : 'Updated Plan'}
           </h2>
           <button onClick={onClose} disabled={saving} aria-label="Close"><X size={20} className="text-[color:var(--ink-500)]" /></button>
         </div>
-        <p className="text-sm text-[color:var(--ink-500)] mb-1">
+        <p className="tp-lead text-[color:var(--ink-500)] mb-1">
           {step === 'survey'
             ? `You're returning to: ${path.path_name}. Answer these questions to get an updated plan.`
             : 'Here\'s your updated plan based on where you are now.'}
         </p>
 
         {error && (
-          <div className="mb-4 mt-2 p-3 rounded-xl bg-red-50 border border-red-100 text-sm text-red-700">{error}</div>
+          <div className="tp-body mb-4 mt-2 p-3 rounded-xl bg-red-50 border border-red-100 text-red-700">{error}</div>
         )}
 
         {step === 'survey' && (
@@ -204,8 +204,8 @@ ${PLAIN_PROSE_RULES}`,
                       ? { borderColor: 'var(--brand-navy-900)', background: 'var(--ink-100)' }
                       : { borderColor: 'var(--ink-200)', background: 'white' }}
                   >
-                    <p className="text-sm font-semibold" style={{ color: form.continue_old_or_new === opt.val ? 'var(--brand-navy-900)' : 'var(--surface-dark-900)' }}>{opt.label}</p>
-                    <p className="text-xs text-[color:var(--ink-500)] mt-0.5">{opt.desc}</p>
+                    <p className="tp-body font-semibold" style={{ color: form.continue_old_or_new === opt.val ? 'var(--brand-navy-900)' : 'var(--surface-dark-900)' }}>{opt.label}</p>
+                    <p className="tp-meta text-[color:var(--ink-500)] mt-1">{opt.desc}</p>
                   </button>
                 ))}
               </div>
@@ -227,14 +227,14 @@ ${PLAIN_PROSE_RULES}`,
           <div className="space-y-5 mt-5">
             {generatedPlan && (
               <div className="rounded-[20px] p-5" style={{ background: 'var(--surface-dark-700)', border: '1px solid rgba(31,58,95,0.4)' }}>
-                <p className="text-xs font-bold uppercase tracking-wide mb-3" style={{ color: 'var(--brand-gold-500)' }}>Your Updated Plan</p>
-                <pre className="text-sm text-[color:var(--ink-300)] whitespace-pre-wrap font-body leading-6">{generatedPlan}</pre>
+                <p className="tp-eyebrow mb-3" style={{ color: 'var(--brand-gold-500)' }}>Your Updated Plan</p>
+                <pre className="tp-body text-[color:var(--ink-300)] whitespace-pre-wrap font-body">{generatedPlan}</pre>
               </div>
             )}
 
             <div className="rounded-[20px] border border-[color:var(--ink-200)] bg-white p-5">
-              <p className="text-sm font-semibold text-[color:var(--surface-dark-900)] mb-3">Make this your Primary Focus?</p>
-              <p className="text-xs text-[color:var(--ink-500)] mb-4">Your Primary Focus path gets the highest visibility on the dashboard. You can change this at any time.</p>
+              <p className="tp-body font-semibold text-[color:var(--surface-dark-900)] mb-3">Make this your Primary Focus?</p>
+              <p className="tp-meta text-[color:var(--ink-500)] mb-4">Your Primary Focus path gets the highest visibility on the dashboard. You can change this at any time.</p>
               <div className="flex gap-3">
                 <button
                   onClick={() => setMakePrimary(true)}

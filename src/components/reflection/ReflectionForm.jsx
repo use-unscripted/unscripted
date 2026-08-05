@@ -80,7 +80,7 @@ export default function ReflectionForm({ ctx, onSaved, onSubmit }) {
     setError('');
     try {
       const saved = await onSubmit(answers);
-      // Numbers and ids only — none of the nine answers leaves the student's own
+      // Numbers and ids only. None of the nine answers leaves the student's own
       // records.
       await trackPilotEvent('reflection_completed', {
         experiment_id: experimentId,
@@ -99,10 +99,10 @@ export default function ReflectionForm({ ctx, onSaved, onSubmit }) {
 
   return (
     <section className="rounded-[20px] bg-white p-5 sm:p-6" style={{ border: '1px solid var(--border-light)' }}>
-      <h2 className="font-heading text-lg font-bold" style={{ color: 'var(--text-primary)' }}>
+      <h2 className="tp-section" style={{ color: 'var(--text-primary)' }}>
         {ctx.existing ? 'Your reflection' : 'What did this experiment tell you?'}
       </h2>
-      <p className="mt-1 text-sm" style={{ color: 'var(--text-secondary)' }}>
+      <p className="tp-lead mt-2" style={{ color: 'var(--text-secondary)' }}>
         {ctx.existing
           ? 'Editing updates the reflection you already saved. It never adds a second one.'
           : 'Nine questions. The first, your interest and your clarity score are required; the rest help you decide.'}
@@ -114,7 +114,7 @@ export default function ReflectionForm({ ctx, onSaved, onSubmit }) {
             <span className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>
               {i + 1}. {q.label}{!q.required && <span className="font-normal" style={{ color: 'var(--text-muted)' }}> · optional</span>}
             </span>
-            {q.hint && <span className="mt-0.5 block text-xs" style={{ color: 'var(--text-muted)' }}>{q.hint}</span>}
+            {q.hint && <span className="tp-meta mt-1 block" style={{ color: 'var(--text-muted)' }}>{q.hint}</span>}
             <textarea
               rows={q.rows}
               value={answers[q.key]}
@@ -143,7 +143,7 @@ export default function ReflectionForm({ ctx, onSaved, onSubmit }) {
                     : { background: 'var(--background-secondary)', border: '1px solid var(--border-light)', color: 'var(--text-primary)', minHeight: '48px' }}
                 >
                   <span className="block text-sm font-bold">{o.label}</span>
-                  <span className="mt-0.5 block text-xs" style={{ color: on ? 'rgba(255,255,255,.75)' : 'var(--text-muted)' }}>{o.desc}</span>
+                  <span className="tp-meta mt-1 block" style={{ color: on ? 'rgba(255,255,255,.75)' : 'var(--text-muted)' }}>{o.desc}</span>
                 </button>
               );
             })}
@@ -173,7 +173,7 @@ export default function ReflectionForm({ ctx, onSaved, onSubmit }) {
           <p className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>
             9. What is your current career-clarity score?
           </p>
-          <p className="mt-0.5 text-xs" style={{ color: 'var(--text-muted)' }}>
+          <p className="tp-meta mt-1" style={{ color: 'var(--text-muted)' }}>
             1 = no idea, 10 = completely clear.
             {ctx.baselineClarity != null && ` You started this cycle at ${ctx.baselineClarity}.`}
           </p>
@@ -214,7 +214,7 @@ export default function ReflectionForm({ ctx, onSaved, onSubmit }) {
           : <><Save size={15} /> {ctx.existing ? 'Save and continue to my decision' : 'Save reflection and decide'}</>}
       </button>
       {blocked && !error && (
-        <p className="mt-2 text-center text-xs font-semibold" style={{ color: 'var(--text-secondary)' }}>{blocked}</p>
+        <p className="tp-meta mt-2 text-center font-semibold" style={{ color: 'var(--text-secondary)' }}>{blocked}</p>
       )}
     </section>
   );

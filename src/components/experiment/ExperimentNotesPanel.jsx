@@ -20,8 +20,8 @@ export default function ExperimentNotesPanel({ experiment }) {
   return (
     <section className="rounded-[16px] bg-white p-5" style={{ border: '1px solid var(--border-light)' }}>
       <div className="flex items-center justify-between">
-        <h3 className="font-heading text-base font-bold" style={{ color: 'var(--text-primary)' }}>Notes</h3>
-        <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
+        <h3 className="tp-card" style={{ color: 'var(--text-primary)' }}>Notes</h3>
+        <span className="tp-meta" style={{ color: 'var(--text-muted)' }}>
           {state === 'saving' ? 'Saving…' : state === 'saved' ? 'Saved' : ''}
         </span>
       </div>

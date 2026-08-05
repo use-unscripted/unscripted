@@ -74,8 +74,8 @@ export default function DecisionStep({ ctx, reflection, onDecided }) {
 
   return (
     <section id="decision" className="rounded-[20px] bg-white p-5 sm:p-6" style={{ border: '1px solid var(--border-light)' }}>
-      <h2 className="font-heading text-lg font-bold" style={{ color: 'var(--text-primary)' }}>One decision closes this cycle</h2>
-      <p className="mt-1 text-sm leading-6" style={{ color: 'var(--text-secondary)' }}>
+      <h2 className="tp-section" style={{ color: 'var(--text-primary)' }}>One decision closes this cycle</h2>
+      <p className="tp-lead mt-2" style={{ color: 'var(--text-secondary)' }}>
         You tested {ctx.path?.path_name || ctx.experiment.path_name || 'this path'} and wrote it up. All three answers are progress. Nothing you built goes away.
       </p>
 
@@ -96,10 +96,10 @@ export default function DecisionStep({ ctx, reflection, onDecided }) {
             style={{ background: 'var(--background-secondary)', border: '1px solid var(--border-light)', minHeight: '48px' }}
           >
             <Icon size={16} style={{ color: 'var(--brand-navy-700)' }} />
-            <p className="mt-2 text-sm font-bold" style={{ color: 'var(--text-primary)' }}>
+            <p className="tp-card mt-2.5" style={{ color: 'var(--text-primary)' }}>
               {busy === key ? 'Saving…' : label}
             </p>
-            <p className="mt-0.5 text-xs leading-5" style={{ color: 'var(--text-muted)' }}>{sub}</p>
+            <p className="tp-meta mt-1.5" style={{ color: 'var(--text-muted)' }}>{sub}</p>
           </button>
         ))}
       </div>

@@ -29,17 +29,17 @@ export default function TaskRow({ task, onToggle }) {
           {task.completed && <Check size={12} className="text-white" />}
         </span>
         <div>
-          <p className={`text-sm font-semibold ${task.completed ? 'line-through text-[color:var(--ink-400)]' : 'text-[color:var(--surface-dark-900)]'}`}>
+          <p className={`tp-body font-semibold ${task.completed ? 'line-through text-[color:var(--ink-400)]' : 'text-[color:var(--surface-dark-900)]'}`}>
             {task.task_title}
           </p>
           <div className="mt-2 flex items-center gap-2">
             <span
-              className="rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide"
+              className="tp-eyebrow rounded-full px-2.5 py-1"
               style={{ background: style.bg, color: style.text }}
             >
               {task.task_type}
             </span>
-            {task.time && <span className="text-xs text-[color:var(--ink-400)]">{task.time}</span>}
+            {task.time && <span className="tp-meta text-[color:var(--ink-400)]">{task.time}</span>}
           </div>
         </div>
       </div>

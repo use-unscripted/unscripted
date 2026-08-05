@@ -159,10 +159,10 @@ ${PLAIN_PROSE_RULES}`,
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(5,8,22,0.6)' }}>
         <div className="w-full max-w-lg rounded-[24px] bg-white p-6 sm:p-8">
           <div className="flex items-center justify-between mb-2">
-            <h2 className="font-heading text-xl font-bold text-[color:var(--surface-dark-900)]">Create Another Path</h2>
+            <h2 className="tp-section text-[color:var(--surface-dark-900)]">Create Another Path</h2>
             <button onClick={onClose}><X size={20} className="text-[color:var(--ink-500)]" /></button>
           </div>
-          <p className="text-sm text-[color:var(--ink-500)] mb-6">How would you like to add this path?</p>
+          <p className="tp-lead text-[color:var(--ink-500)] mb-6">How would you like to add this path?</p>
           <div className="space-y-3">
             {[
               { id: 'survey', label: 'Short path-specific survey', desc: 'Answer 4 questions, AI generates the path profile' },
@@ -172,8 +172,8 @@ ${PLAIN_PROSE_RULES}`,
               <button key={opt.id} onClick={() => { setMode(opt.id); setStep(1); }}
                 className="w-full flex items-center justify-between rounded-[16px] border border-[color:var(--ink-200)] bg-white p-4 text-left transition hover:border-[color:var(--brand-navy-900)] hover:bg-[color:var(--ink-100)] group">
                 <div>
-                  <p className="text-sm font-bold text-[color:var(--surface-dark-900)] group-hover:text-[color:var(--brand-navy-900)]">{opt.label}</p>
-                  <p className="text-xs text-[color:var(--ink-500)] mt-0.5">{opt.desc}</p>
+                  <p className="tp-body font-bold text-[color:var(--surface-dark-900)] group-hover:text-[color:var(--brand-navy-900)]">{opt.label}</p>
+                  <p className="tp-meta text-[color:var(--ink-500)] mt-1">{opt.desc}</p>
                 </div>
                 <ChevronRight size={16} className="text-[color:var(--ink-400)] group-hover:text-[color:var(--brand-navy-900)]" />
               </button>
@@ -190,18 +190,18 @@ ${PLAIN_PROSE_RULES}`,
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(5,8,22,0.6)' }}>
         <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-[24px] bg-white p-6 sm:p-8">
           <div className="flex items-center justify-between mb-1">
-            <h2 className="font-heading text-xl font-bold text-[color:var(--surface-dark-900)]">Prior Recommendations</h2>
+            <h2 className="tp-section text-[color:var(--surface-dark-900)]">Prior Recommendations</h2>
             <button onClick={onClose}><X size={20} className="text-[color:var(--ink-500)]" /></button>
           </div>
-          <p className="text-sm text-[color:var(--ink-500)] mb-5">Select a recommendation to activate as a new active path.</p>
-          {error && <div className="mb-3 p-3 rounded-xl bg-red-50 text-sm text-red-700">{error}</div>}
+          <p className="tp-lead text-[color:var(--ink-500)] mb-5">Select a recommendation to activate as a new active path.</p>
+          {error && <div className="tp-body mb-3 p-3 rounded-xl bg-red-50 text-red-700">{error}</div>}
           <div className="space-y-3">
             {unactivatedRecs.map(rec => (
               <button key={rec.id} onClick={() => handleSelectRec(rec)} disabled={saving}
                 className="w-full rounded-[16px] border border-[color:var(--ink-200)] p-4 text-left transition hover:border-[color:var(--brand-navy-900)] hover:bg-[color:var(--ink-100)] disabled:opacity-60">
-                <p className="text-sm font-bold text-[color:var(--surface-dark-900)]">{rec.path_name}</p>
-                <p className="text-xs text-[color:var(--ink-500)] mt-1 line-clamp-2">{rec.fit_reason}</p>
-                <span className="mt-2 inline-block rounded-full px-2 py-0.5 text-[10px] font-bold" style={{ background: 'var(--ink-100)', color: 'var(--ink-500)' }}>{rec.status}</span>
+                <p className="tp-body font-bold text-[color:var(--surface-dark-900)]">{rec.path_name}</p>
+                <p className="tp-meta text-[color:var(--ink-500)] mt-1 line-clamp-2">{rec.fit_reason}</p>
+                <span className="tp-meta mt-2 inline-block rounded-full px-2.5 py-1 font-bold" style={{ background: 'var(--ink-100)', color: 'var(--ink-500)' }}>{rec.status}</span>
               </button>
             ))}
           </div>
@@ -215,18 +215,18 @@ ${PLAIN_PROSE_RULES}`,
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(5,8,22,0.6)' }}>
       <div className="w-full max-w-2xl max-h-[92vh] overflow-y-auto rounded-[24px] bg-white p-6 sm:p-8">
         <div className="flex items-center justify-between mb-1">
-          <h2 className="font-heading text-xl font-bold text-[color:var(--surface-dark-900)]">
+          <h2 className="tp-section text-[color:var(--surface-dark-900)]">
             {mode === 'survey' && step === 1 ? 'Quick Path Survey' : 'Path Details'}
           </h2>
           <button onClick={onClose}><X size={20} className="text-[color:var(--ink-500)]" /></button>
         </div>
-        <p className="text-sm text-[color:var(--ink-500)] mb-5">
+        <p className="tp-lead text-[color:var(--ink-500)] mb-5">
           {mode === 'survey' && step === 1
             ? 'Answer 4 quick questions and AI will generate your path profile.'
             : 'Review and edit the path details before saving.'}
         </p>
 
-        {error && <div className="mb-4 p-3 rounded-xl bg-red-50 border border-red-100 text-sm text-red-700">{error}</div>}
+        {error && <div className="tp-body mb-4 p-3 rounded-xl bg-red-50 border border-red-100 text-red-700">{error}</div>}
 
         {mode === 'survey' && step === 1 ? (
           <div className="space-y-4">
