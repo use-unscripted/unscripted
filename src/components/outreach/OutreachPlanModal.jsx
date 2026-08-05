@@ -1,15 +1,15 @@
 /**
  * OutreachPlanModal
  * A multi-step flow:
- *  1. Survey — a guided, one-question-at-a-time wizard (tap an answer or write your own)
- *  2. Generate — AI produces outreach experiments, archetypes, and public contact suggestions
- *  3. Results — user can save contacts, create missions, or dismiss suggestions
+ *  1. Survey: a guided, one-question-at-a-time wizard (tap an answer or write your own)
+ *  2. Generate: AI produces outreach experiments, archetypes, and public contact suggestions
+ *  3. Results: user can save contacts, create missions, or dismiss suggestions
  *
  * Props:
- *   path        — PathRecommendation object (required)
- *   experiment  — Experiments object (optional, pre-selects context)
- *   onClose     — () => void
- *   onContactSaved — (contact) => void  (called after saving any contact)
+ *   path           PathRecommendation object (required)
+ *   experiment     Experiments object (optional, pre-selects context)
+ *   onClose        () => void
+ *   onContactSaved (contact) => void  (called after saving any contact)
  */
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { X, Loader2, Users, Beaker, User, ExternalLink, CheckCircle, ChevronRight, ChevronLeft, AlertTriangle, BookOpen, Save, Target, Pencil, Sparkles } from 'lucide-react';
@@ -44,9 +44,9 @@ const composeWhatToLearn = (s) =>
   [...(s.what_to_learn_tags || []), (s.what_to_learn || '').trim()].filter(Boolean).join('; ');
 
 /* One question per screen. `kind` drives the control:
-   multi  — tap any number of suggested answers, plus a free-text box
-   choice — tap exactly one (auto-advances)
-   text   — type your own, with taps that fill it in for you
+   multi:  tap any number of suggested answers, plus a free-text box
+   choice: tap exactly one (auto-advances)
+   text:   type your own, with taps that fill it in for you
 
    Keep every list to three or four. More than that and people stall
    reading options instead of answering.                                */
@@ -250,12 +250,12 @@ function SurveyStep({ pathName, survey, setSurvey, index, setIndex, onGenerate, 
   const header = (
     <div className="mb-6">
       <div className="mb-3 flex items-center justify-between gap-3">
-        <span className="truncate rounded-full px-2.5 py-1 text-[11px] font-bold"
+        <span className="tp-meta truncate rounded-full px-2.5 py-1 font-bold"
           style={{ background: 'var(--ink-100)', color: 'var(--brand-navy-900)' }}>
           {pathName}
         </span>
         <div className="flex items-center gap-3">
-          <span className="whitespace-nowrap text-[11px] font-semibold" style={{ color: 'var(--text-secondary)' }}>
+          <span className="tp-meta whitespace-nowrap font-semibold" style={{ color: 'var(--text-secondary)' }}>
             {reviewing ? 'Review' : `${index + 1} of ${STEPS.length}`}
           </span>
           <button onClick={onClose} aria-label="Close" className="rounded-lg p-0.5" style={{ color: 'var(--ink-500)' }}>
@@ -276,7 +276,7 @@ function SurveyStep({ pathName, survey, setSurvey, index, setIndex, onGenerate, 
           <h2 className="font-heading text-[26px] font-bold leading-tight" style={{ color: 'var(--surface-dark-900)' }}>
             That’s everything.
           </h2>
-          <p className="mt-1.5 text-sm" style={{ color: 'var(--text-secondary)' }}>
+          <p className="tp-lead mt-2" style={{ color: 'var(--text-secondary)' }}>
             Tap any answer to change it.
           </p>
 
@@ -292,10 +292,10 @@ function SurveyStep({ pathName, survey, setSurvey, index, setIndex, onGenerate, 
                   className="opt-row flex w-full items-start gap-3 rounded-xl border px-3.5 py-2.5 text-left"
                   style={{ animationDelay: `${i * 30}ms`, borderColor: 'var(--ink-200)', background: 'var(--brand-white)' }}>
                   <span className="min-w-0 flex-1">
-                    <span className="block text-[11px] font-semibold uppercase tracking-wide" style={{ color: 'var(--text-secondary)' }}>
+                    <span className="tp-eyebrow block" style={{ color: 'var(--text-secondary)' }}>
                       {s.question}
                     </span>
-                    <span className="mt-0.5 block text-sm font-semibold" style={{ color: value ? 'var(--text-primary)' : 'var(--text-secondary)' }}>
+                    <span className="tp-body mt-1 block font-semibold" style={{ color: value ? 'var(--text-primary)' : 'var(--text-secondary)' }}>
                       {value || 'No preference'}
                     </span>
                   </span>
@@ -306,8 +306,8 @@ function SurveyStep({ pathName, survey, setSurvey, index, setIndex, onGenerate, 
           </div>
 
           <div className="mt-5 rounded-2xl border p-4" style={{ borderColor: 'var(--ink-200)', background: '#FAFBFC' }}>
-            <p className="text-xs font-semibold" style={{ color: 'var(--text-primary)' }}>Also suggest real people to contact?</p>
-            <p className="mt-0.5 text-xs" style={{ color: 'var(--text-secondary)' }}>
+            <p className="tp-body font-semibold" style={{ color: 'var(--text-primary)' }}>Also suggest real people to contact?</p>
+            <p className="tp-meta mt-1" style={{ color: 'var(--text-secondary)' }}>
               Public figures in this field. You’ll still need to verify each one.
             </p>
             <div className="mt-3 space-y-2">
@@ -323,7 +323,7 @@ function SurveyStep({ pathName, survey, setSurvey, index, setIndex, onGenerate, 
           </div>
 
           {error && (
-            <div className="mt-4 flex items-center gap-2 rounded-xl bg-red-50 p-3 text-sm text-red-700" role="alert">
+            <div className="tp-body mt-4 flex items-center gap-2 rounded-xl bg-red-50 p-3 text-red-700" role="alert">
               <AlertTriangle size={14} />{error}
             </div>
           )}
@@ -331,12 +331,12 @@ function SurveyStep({ pathName, survey, setSurvey, index, setIndex, onGenerate, 
           <div className={footerCls}>
             <div className="flex items-center gap-3">
               <button onClick={back}
-                className="flex items-center gap-1 rounded-[10px] border px-4 py-3 text-sm font-semibold"
+                className="tp-body flex items-center gap-1 rounded-[10px] border px-4 py-3 font-semibold"
                 style={{ borderColor: 'var(--ink-200)', color: 'var(--text-primary)' }}>
                 <ChevronLeft size={15} /> Back
               </button>
               <button onClick={onGenerate}
-                className="flex flex-1 items-center justify-center gap-2 rounded-[10px] py-3 text-sm font-semibold text-white"
+                className="tp-body flex flex-1 items-center justify-center gap-2 rounded-[10px] py-3 font-semibold text-white"
                 style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}>
                 <Sparkles size={15} /> Build my outreach plan
               </button>
@@ -357,7 +357,7 @@ function SurveyStep({ pathName, survey, setSurvey, index, setIndex, onGenerate, 
           {step.question}
         </h2>
         {step.hint && (
-          <p className="mt-1.5 text-sm" style={{ color: 'var(--text-secondary)' }}>{step.hint}</p>
+          <p className="tp-lead mt-2" style={{ color: 'var(--text-secondary)' }}>{step.hint}</p>
         )}
 
         <div className="mt-5 min-h-[220px]">
@@ -381,7 +381,7 @@ function SurveyStep({ pathName, survey, setSurvey, index, setIndex, onGenerate, 
                 ))}
               </div>
               <label className="mt-4 block">
-                <span className="mb-1.5 block text-xs font-semibold" style={{ color: 'var(--text-secondary)' }}>
+                <span className="tp-meta mb-1.5 block font-semibold" style={{ color: 'var(--text-secondary)' }}>
                   {step.customLabel}
                 </span>
                 <textarea rows={2} value={survey[step.key]} placeholder={step.placeholder}
@@ -400,7 +400,7 @@ function SurveyStep({ pathName, survey, setSurvey, index, setIndex, onGenerate, 
                 ))}
               </div>
               <label className="mt-4 block">
-                <span className="mb-1.5 block text-xs font-semibold" style={{ color: 'var(--text-secondary)' }}>
+                <span className="tp-meta mb-1.5 block font-semibold" style={{ color: 'var(--text-secondary)' }}>
                   {step.customLabel}
                 </span>
                 <input value={survey[step.key]} placeholder={step.placeholder}
@@ -415,20 +415,20 @@ function SurveyStep({ pathName, survey, setSurvey, index, setIndex, onGenerate, 
         <div className="flex items-center gap-3">
           {index > 0 ? (
             <button onClick={back}
-              className="flex items-center gap-1 rounded-[10px] border px-4 py-3 text-sm font-semibold"
+              className="tp-body flex items-center gap-1 rounded-[10px] border px-4 py-3 font-semibold"
               style={{ borderColor: 'var(--ink-200)', color: 'var(--text-primary)' }}>
               <ChevronLeft size={15} /> Back
             </button>
           ) : (
             <button onClick={onClose}
-              className="rounded-[10px] border px-4 py-3 text-sm font-semibold"
+              className="tp-body rounded-[10px] border px-4 py-3 font-semibold"
               style={{ borderColor: 'var(--ink-200)', color: 'var(--text-primary)' }}>
               Cancel
             </button>
           )}
 
           <button onClick={next} disabled={!answered}
-            className="flex flex-1 items-center justify-center gap-2 rounded-[10px] py-3 text-sm font-semibold text-white disabled:opacity-40"
+            className="tp-body flex flex-1 items-center justify-center gap-2 rounded-[10px] py-3 font-semibold text-white disabled:opacity-40"
             style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}>
             {step.optional && !((survey[step.key] || '').toString().trim()) ? 'Skip' : 'Continue'}
             <ChevronRight size={15} />
@@ -437,7 +437,7 @@ function SurveyStep({ pathName, survey, setSurvey, index, setIndex, onGenerate, 
 
         {index > 0 && (
           <button onClick={() => go(STEPS.length, 'fwd')}
-            className="mt-2.5 block w-full text-center text-xs font-semibold"
+            className="tp-meta mt-2.5 block w-full text-center font-semibold"
             style={{ color: 'var(--text-secondary)' }}>
             Skip the rest and build my plan
           </button>
@@ -452,12 +452,12 @@ function ArchetypeCard({ archetype }) {
     <div className="rounded-[16px] border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] p-4">
       <div className="flex items-center gap-2 mb-2">
         <User size={14} style={{ color: 'var(--brand-navy-900)' }} />
-        <p className="text-sm font-bold text-[color:var(--surface-dark-900)]">{archetype.title}</p>
+        <p className="tp-card text-[color:var(--surface-dark-900)]">{archetype.title}</p>
       </div>
-      <p className="text-xs text-[color:var(--ink-700)] mb-2">{archetype.why_useful}</p>
+      <p className="tp-prose mb-3 text-[color:var(--ink-700)]">{archetype.why_useful}</p>
       <div className="flex flex-wrap gap-1.5">
         {archetype.where_to_find?.map((w, i) => (
-          <span key={i} className="rounded-full border border-[color:var(--ink-200)] px-2 py-0.5 text-[10px] text-[color:var(--ink-500)]">{w}</span>
+          <span key={i} className="tp-meta rounded-full border border-[color:var(--ink-200)] px-2.5 py-0.5 text-[color:var(--ink-500)]">{w}</span>
         ))}
       </div>
     </div>
@@ -470,17 +470,17 @@ function OutreachExperimentCard({ exp }) {
     <div className="rounded-[16px] border border-[color:var(--ink-200)] bg-white p-4 space-y-2">
       <div className="flex items-center gap-2">
         <Beaker size={14} style={{ color: 'var(--brand-navy-900)' }} />
-        <p className="text-sm font-bold text-[color:var(--surface-dark-900)]">{exp.title}</p>
+        <p className="tp-card text-[color:var(--surface-dark-900)]">{exp.title}</p>
       </div>
-      <p className="text-xs text-[color:var(--ink-700)]">{exp.objective}</p>
-      <div className="grid grid-cols-2 gap-2 text-xs text-[color:var(--ink-500)]">
+      <p className="tp-prose text-[color:var(--ink-700)]">{exp.objective}</p>
+      <div className="tp-meta grid grid-cols-2 gap-2 text-[color:var(--ink-500)]">
         {exp.target_contact_type && <span><span className="font-semibold">Target:</span> {exp.target_contact_type}</span>}
         {exp.suggested_contacts && <span><span className="font-semibold">Contacts:</span> {exp.suggested_contacts}</span>}
         {exp.timeline && <span><span className="font-semibold">Timeline:</span> {exp.timeline}</span>}
         {exp.deliverable && <span><span className="font-semibold">Deliverable:</span> {exp.deliverable}</span>}
       </div>
       {exp.why_it_tests_path && (
-        <p className="text-xs rounded-lg px-3 py-2" style={{ background: 'var(--ink-100)', color: 'var(--brand-navy-900)' }}>
+        <p className="tp-meta rounded-lg px-3 py-2.5" style={{ background: 'var(--ink-100)', color: 'var(--brand-navy-900)' }}>
           <span className="font-semibold">Why it tests this path:</span> {exp.why_it_tests_path}
         </p>
       )}
@@ -499,12 +499,12 @@ function MessageTemplate({ template }) {
   return (
     <div className="rounded-[16px] border border-[color:var(--ink-200)] bg-white p-4">
       <div className="flex items-center justify-between mb-2">
-        <p className="text-xs font-bold uppercase tracking-wide text-[color:var(--ink-500)]">{template.label}</p>
-        <button onClick={copy} className="text-xs font-semibold transition" style={{ color: 'var(--brand-navy-900)' }}>
+        <p className="tp-eyebrow text-[color:var(--ink-500)]">{template.label}</p>
+        <button onClick={copy} className="tp-meta font-semibold transition" style={{ color: 'var(--brand-navy-900)' }}>
           {copied ? 'Copied' : 'Copy'}
         </button>
       </div>
-      <pre className="text-xs text-[color:var(--ink-700)] whitespace-pre-wrap font-body leading-5 max-h-40 overflow-y-auto">{template.body}</pre>
+      <pre className="tp-meta text-[color:var(--ink-700)] whitespace-pre-wrap font-body max-h-40 overflow-y-auto">{template.body}</pre>
     </div>
   );
 }
@@ -515,7 +515,7 @@ function linkedInSearchUrl(name, organization, role) {
   return `https://www.linkedin.com/search/results/people/?keywords=${encodeURIComponent(parts)}`;
 }
 
-// Detect if a URL is a direct LinkedIn profile (linkedin.com/in/...) — these must never come from AI
+// Detect if a URL is a direct LinkedIn profile (linkedin.com/in/...). These must never come from AI
 function isLinkedInProfileUrl(url) {
   if (!url) return false;
   try {
@@ -589,34 +589,34 @@ function ContactSuggestionCard({ suggestion, pathName, experimentId, onSaved, on
           <div className="flex-1 min-w-0">
             {isArchetype ? (
               <div className="flex items-center gap-2 mb-1">
-                <span className="rounded-full px-2 py-0.5 text-[10px] font-bold" style={{ background: 'var(--ink-100)', color: 'var(--ink-500)' }}>Archetype</span>
-                <p className="text-sm font-bold text-[color:var(--surface-dark-900)]">{suggestion.archetype_title}</p>
+                <span className="tp-meta rounded-full px-2.5 py-0.5 font-bold" style={{ background: 'var(--ink-100)', color: 'var(--ink-500)' }}>Archetype</span>
+                <p className="tp-card text-[color:var(--surface-dark-900)]">{suggestion.archetype_title}</p>
               </div>
             ) : (
               <div>
                 <div className="flex items-center gap-2 mb-0.5">
-                  <span className="rounded-full px-2 py-0.5 text-[10px] font-bold" style={{ background: 'var(--info-50)', color: 'var(--info-700)' }}>Suggested Contact</span>
-                  <p className="text-sm font-bold text-[color:var(--surface-dark-900)]">{suggestion.name}</p>
+                  <span className="tp-meta rounded-full px-2.5 py-0.5 font-bold" style={{ background: 'var(--info-50)', color: 'var(--info-700)' }}>Suggested Contact</span>
+                  <p className="tp-card text-[color:var(--surface-dark-900)]">{suggestion.name}</p>
                 </div>
-                <p className="text-xs text-[color:var(--ink-700)]">{suggestion.role}{suggestion.role && suggestion.organization ? ' · ' : ''}{suggestion.organization}</p>
+                <p className="tp-meta mt-1 text-[color:var(--ink-700)]">{suggestion.role}{suggestion.role && suggestion.organization ? ' · ' : ''}{suggestion.organization}</p>
               </div>
             )}
-            <p className="text-xs text-[color:var(--ink-500)] mt-1">{suggestion.why_relevant}</p>
+            <p className="tp-prose mt-2 text-[color:var(--ink-500)]">{suggestion.why_relevant}</p>
             {!isArchetype && (
               <>
-                {/* Never link directly to a LinkedIn profile URL from AI — always use verified search */}
+                {/* Never link directly to a LinkedIn profile URL from AI, always use verified search */}
                 <a
                   href={linkedInSearchUrl(suggestion.name, suggestion.organization, suggestion.role)}
                   target="_blank" rel="noopener noreferrer"
-                  className="flex items-center gap-1 mt-1.5 text-[10px] font-semibold hover:underline"
+                  className="tp-meta mt-2.5 flex items-center gap-1.5 font-semibold hover:underline"
                   style={{ color: 'var(--brand-navy-700)' }}>
-                  <ExternalLink size={10} /> Search on LinkedIn
+                  <ExternalLink size={13} /> Search on LinkedIn
                 </a>
-                <p className="text-[10px] text-[color:var(--ink-400)] mt-0.5">
+                <p className="tp-meta mt-1 text-[color:var(--ink-400)]">
                   Direct profile not verified. Review search results and confirm this person's company and role before reaching out.
                 </p>
-                <div className="mt-1.5 flex items-center gap-1 text-[10px] text-amber-600">
-                  <AlertTriangle size={10} />
+                <div className="tp-meta mt-2 flex items-center gap-1.5 text-amber-600">
+                  <AlertTriangle size={13} />
                   <span>Verify identity independently. Role and company may have changed.</span>
                 </div>
               </>
@@ -629,25 +629,25 @@ function ContactSuggestionCard({ suggestion, pathName, experimentId, onSaved, on
         </div>
 
         {saved ? (
-          <div className="flex items-center gap-2 text-xs text-green-700 font-semibold">
+          <div className="tp-meta flex items-center gap-2 text-green-700 font-semibold">
             <CheckCircle size={13} /> Saved to Outreach
           </div>
         ) : (
           <div className="flex flex-wrap gap-2">
             <button onClick={() => setShowSaveModal(true)}
-              className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold text-white transition"
+              className="tp-meta flex items-center gap-1.5 rounded-lg px-3.5 py-2 font-semibold text-white transition"
               style={{ background: 'var(--brand-navy-900)' }}>
-              <Save size={11} /> Save to Outreach
+              <Save size={13} /> Save to Outreach
             </button>
             <button onClick={handleCreateMission} disabled={missionLoading}
-              className="flex items-center gap-1.5 rounded-lg border border-[color:var(--ink-200)] px-3 py-1.5 text-xs font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)] disabled:opacity-60 transition">
-              {missionLoading ? <Loader2 size={11} className="animate-spin" /> : <Target size={11} />}
+              className="tp-meta flex items-center gap-1.5 rounded-lg border border-[color:var(--ink-200)] px-3.5 py-2 font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)] disabled:opacity-60 transition">
+              {missionLoading ? <Loader2 size={13} className="animate-spin" /> : <Target size={13} />}
               Create Mission
             </button>
           </div>
         )}
         {missionError && (
-          <p className="mt-2 text-xs" style={{ color: 'var(--warning-700)' }}>{missionError}</p>
+          <p className="tp-meta mt-2" style={{ color: 'var(--warning-700)' }}>{missionError}</p>
         )}
       </div>
     </>
@@ -661,7 +661,7 @@ function SaveContactConfirmModal({ suggestion, pathName, experimentId, experimen
     ? experiments.find(e => e.id === experimentId)
     : experiments.find(e => e.path_name === pathName);
 
-  // Never pre-fill profile_url from AI-generated source_url — could be a fabricated LinkedIn link
+  // Never pre-fill profile_url from AI-generated source_url: it could be a fabricated LinkedIn link
   const placeholders = new Set(['n/a', 'na', 'unknown', 'tbd', '']);
   const cleanName = (v) => {
     const s = (v || '').trim();
@@ -709,13 +709,13 @@ function SaveContactConfirmModal({ suggestion, pathName, experimentId, experimen
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" style={{ background: 'rgba(5,8,22,0.6)' }}>
       <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-[24px] bg-white p-6">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="font-heading text-lg font-bold text-[color:var(--surface-dark-900)]">Save to Outreach</h3>
+          <h3 className="tp-section text-[color:var(--surface-dark-900)]">Save to Outreach</h3>
           <button onClick={onClose}><X size={18} className="text-[color:var(--ink-500)]" /></button>
         </div>
 
         {isArchetype && (
           <div className="mb-4 rounded-xl p-3" style={{ background: 'var(--warning-50)', border: '1px solid rgba(180,83,9,0.2)' }}>
-            <p className="text-xs text-[color:var(--warning-700)] font-semibold">This is an archetype template. Fill in the actual contact details below before saving.</p>
+            <p className="tp-meta text-[color:var(--warning-700)] font-semibold">This is an archetype template. Fill in the actual contact details below before saving.</p>
           </div>
         )}
 
@@ -727,15 +727,15 @@ function SaveContactConfirmModal({ suggestion, pathName, experimentId, experimen
             { name: 'profile_url', label: 'LinkedIn or public profile URL', placeholder: 'https://...' },
           ].map(f => (
             <label key={f.name} className="block">
-              <span className="text-xs font-semibold text-[color:var(--ink-700)] block mb-1">{f.label}{f.required && <span className="text-red-500"> *</span>}</span>
+              <span className="tp-meta block mb-1.5 font-semibold text-[color:var(--ink-700)]">{f.label}{f.required && <span className="text-red-500"> *</span>}</span>
               <input name={f.name} value={form[f.name]} onChange={ch} placeholder={f.placeholder} className={inputCls} />
             </label>
           ))}
           <label className="block">
-            <span className="text-xs font-semibold text-[color:var(--ink-700)] block mb-1">Reason for outreach</span>
+            <span className="tp-meta block mb-1.5 font-semibold text-[color:var(--ink-700)]">Reason for outreach</span>
             <textarea name="reason_for_contact" rows={2} value={form.reason_for_contact} onChange={ch} className={inputCls} />
           </label>
-          <div className="rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] px-4 py-3 text-xs">
+          <div className="tp-meta rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] px-4 py-3">
             <p className="font-semibold text-[color:var(--ink-500)] mb-0.5">Path</p>
             <p className="text-[color:var(--surface-dark-900)] font-bold">{pathName}</p>
             {linkedExp && <>
@@ -746,11 +746,11 @@ function SaveContactConfirmModal({ suggestion, pathName, experimentId, experimen
         </div>
 
         <div className="mt-5 flex gap-3">
-          <button onClick={onClose} className="flex-1 rounded-[10px] border border-[color:var(--ink-200)] py-3 text-sm font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)]">
+          <button onClick={onClose} className="tp-body flex-1 rounded-[10px] border border-[color:var(--ink-200)] py-3 font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)]">
             Cancel
           </button>
           <button onClick={handleSave} disabled={saving || !form.name.trim()}
-            className="flex-1 flex items-center justify-center gap-2 rounded-[10px] py-3 text-sm font-semibold text-white disabled:opacity-60"
+            className="tp-body flex-1 flex items-center justify-center gap-2 rounded-[10px] py-3 font-semibold text-white disabled:opacity-60"
             style={{ background: 'var(--brand-navy-900)' }}>
             {saving ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle size={14} />}
             {saving ? 'Saving…' : 'Confirm & Save'}
@@ -874,7 +874,7 @@ function ResultsStep({ plan, pathName, experimentId, experiments, onContactSaved
   return (
     <div className="space-y-4">
       {savedCount > 0 && (
-        <div className="rounded-xl px-4 py-2.5 flex items-center gap-2 text-xs font-semibold text-green-700" style={{ background: 'var(--success-50)', border: '1px solid #BBF7D0' }}>
+        <div className="tp-meta rounded-xl px-4 py-3 flex items-center gap-2 font-semibold text-green-700" style={{ background: 'var(--success-50)', border: '1px solid #BBF7D0' }}>
           <CheckCircle size={13} /> {savedCount} contact{savedCount !== 1 ? 's' : ''} saved to Outreach
           {missionCount > 0 && ` · ${missionCount} mission${missionCount !== 1 ? 's' : ''} created`}
         </div>
@@ -884,12 +884,12 @@ function ResultsStep({ plan, pathName, experimentId, experiments, onContactSaved
       <div className="flex gap-1 flex-wrap">
         {tabs.map(t => (
           <button key={t.id} onClick={() => setActiveTab(t.id)}
-            className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition border"
+            className="tp-meta flex items-center gap-1.5 rounded-lg px-3.5 py-2 font-semibold transition border"
             style={activeTab === t.id
               ? { background: 'var(--brand-navy-900)', color: '#fff', borderColor: 'var(--brand-navy-900)' }
               : { background: 'white', color: 'var(--ink-700)', borderColor: 'var(--ink-200)' }}>
-            <t.icon size={11} /> {t.label}
-            <span className="ml-0.5 rounded-full px-1.5 py-0.5 text-[10px]"
+            <t.icon size={13} /> {t.label}
+            <span className="ml-1 rounded-full px-2 py-0.5"
               style={activeTab === t.id ? { background: 'rgba(255,255,255,0.25)' } : { background: 'var(--ink-100)', color: 'var(--ink-500)' }}>
               {t.count}
             </span>
@@ -899,7 +899,7 @@ function ResultsStep({ plan, pathName, experimentId, experiments, onContactSaved
 
       <div className="space-y-3 max-h-[55vh] overflow-y-auto pr-1">
         {activeCount === 0 && (
-          <p className="rounded-xl px-4 py-3 text-xs text-[color:var(--ink-500)]"
+          <p className="tp-body rounded-xl px-4 py-3 text-[color:var(--ink-500)]"
             style={{ background: 'var(--ink-50)', border: '1px solid var(--ink-200)' }}>
             This section came back empty. Close the plan and build it again to fill it in.
           </p>
@@ -967,7 +967,7 @@ export default function OutreachPlanModal({ path, experiment, onClose, onContact
 
     try {
       // Produces message templates the student sends to real professionals and
-      // names real people — the site least tolerant of a weaker model. Highest
+      // names real people, the site least tolerant of a weaker model. Highest
       // quality tier; see src/lib/llm.js.
       const { ok, data } = await generateValidated({
         feature: 'outreach_plan',
@@ -1121,7 +1121,7 @@ ${PLAIN_PROSE_RULES}${correction}`,
         {!isSurvey && (
           <>
             <div className="mb-1 flex items-center justify-between">
-              <h2 className="font-heading text-xl font-bold text-[color:var(--surface-dark-900)]">
+              <h2 className="tp-section text-[color:var(--surface-dark-900)]">
                 {step === 'generating' ? 'Building your outreach plan…' : 'Your Outreach Plan'}
               </h2>
               {step !== 'generating' && (
@@ -1129,7 +1129,7 @@ ${PLAIN_PROSE_RULES}${correction}`,
               )}
             </div>
             {step !== 'generating' && (
-              <p className="mb-5 text-sm text-[color:var(--ink-500)]">Tailored outreach strategy for {path.path_name}.</p>
+              <p className="tp-lead mb-6 text-[color:var(--ink-500)]">Tailored outreach strategy for {path.path_name}.</p>
             )}
           </>
         )}
@@ -1150,8 +1150,8 @@ ${PLAIN_PROSE_RULES}${correction}`,
         {step === 'generating' && (
           <div className="py-16 flex flex-col items-center gap-4 text-center">
             <Loader2 size={36} className="animate-spin" style={{ color: 'var(--brand-navy-900)' }} />
-            <p className="font-heading text-lg font-bold text-[color:var(--surface-dark-900)]">Generating your personalized outreach plan…</p>
-            <p className="text-sm text-[color:var(--ink-500)] max-w-sm">
+            <p className="tp-section text-[color:var(--surface-dark-900)]">Generating your personalized outreach plan…</p>
+            <p className="tp-body max-w-sm text-[color:var(--ink-500)]">
               Building outreach experiments, contact archetypes, and message templates tailored to {path.path_name}.
             </p>
           </div>

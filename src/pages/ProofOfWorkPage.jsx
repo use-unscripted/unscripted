@@ -8,7 +8,7 @@ class CardErrorBoundary extends Component {
   componentDidCatch(err) { console.error('[ProofOfWorkPage] Card render error:', err?.message || err); }
   render() {
     if (this.state.hasError)
-      return <div className="rounded-[20px] border border-dashed border-[color:var(--ink-200)] p-6 text-center text-xs text-[color:var(--ink-400)]">This record could not be displayed.</div>;
+      return <div className="tp-meta rounded-[20px] border border-dashed border-[color:var(--ink-200)] p-6 text-center text-[color:var(--ink-400)]">This record could not be displayed.</div>;
     return this.props.children;
   }
 }
@@ -63,7 +63,7 @@ function FilePreviewModal({ entry, onClose }) {
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" style={{ background: 'rgba(5,8,22,0.85)' }}>
       <div className="w-full max-w-3xl rounded-[20px] bg-white overflow-hidden">
         <div className="flex items-center justify-between px-5 py-4 border-b border-[color:var(--ink-200)]">
-          <p className="font-semibold text-[color:var(--surface-dark-900)] truncate">{entry.file_name || entry.title}</p>
+          <p className="tp-card truncate text-[color:var(--surface-dark-900)]">{entry.file_name || entry.title}</p>
           <button onClick={onClose} aria-label="Close preview"><X size={20} className="text-[color:var(--ink-500)]" /></button>
         </div>
         <div className="p-5 bg-[color:var(--ink-50)] flex items-center justify-center min-h-[300px]">
@@ -77,16 +77,16 @@ function FilePreviewModal({ entry, onClose }) {
               <div className="mx-auto w-16 h-16 rounded-2xl flex items-center justify-center mb-4" style={{ background: 'var(--ink-100)' }}>
                 <FileIcon name={entry.file_name} mime={entry.mime_type} size={28} />
               </div>
-              <p className="text-sm font-semibold text-[color:var(--surface-dark-900)] mb-1">{entry.file_name}</p>
-              {entry.file_size && <p className="text-xs text-[color:var(--ink-500)] mb-4">{fmtSize(entry.file_size)}</p>}
+              <p className="tp-card mb-1 text-[color:var(--surface-dark-900)]">{entry.file_name}</p>
+              {entry.file_size && <p className="tp-meta mb-4 text-[color:var(--ink-500)]">{fmtSize(entry.file_size)}</p>}
               <a href={entry.file_url} target="_blank" rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 rounded-[10px] px-5 py-2.5 text-sm font-semibold text-white"
+                className="tp-body inline-flex items-center gap-2 rounded-[10px] px-5 py-2.5 font-semibold text-white"
                 style={{ background: 'var(--brand-navy-900)' }}>
                 <ExternalLink size={14} /> Open File
               </a>
             </div>
           ) : (
-            <p className="text-sm text-[color:var(--ink-500)]">No file attached.</p>
+            <p className="tp-body text-[color:var(--ink-500)]">No file attached.</p>
           )}
         </div>
       </div>
@@ -105,7 +105,7 @@ function ProofCard({ entry, missionsMap, experimentsMap, onDelete, onNavigateToP
     file_name: entry.file_name || null,
     file_size: entry.file_size || null,
     mime_type: entry.mime_type || null,
-    // Student-entered URL — only http(s) survives, so a javascript: value can
+    // Student-entered URL: only http(s) survives, so a javascript: value can
     // never reach the href below.
     external_url: safeExternalUrl(entry.external_url),
     skills_demonstrated: Array.isArray(entry.skills_demonstrated) ? entry.skills_demonstrated : [],
@@ -126,22 +126,22 @@ function ProofCard({ entry, missionsMap, experimentsMap, onDelete, onNavigateToP
   // min-w-0: grid items default to min-width:auto, so a long filename or URL
   // stretches the card past its track and scrolls the whole page sideways.
   return (
-    <div className="min-w-0 rounded-[20px] border border-[color:var(--ink-200)] bg-white p-5">
+    <div className="tp-card-body min-w-0 rounded-[20px] border border-[color:var(--ink-200)] bg-white">
       {showPreview && <FilePreviewModal entry={safeEntry} onClose={() => setShowPreview(false)} />}
 
       {/* Header */}
       <div className="flex items-start justify-between gap-3 mb-3">
         <div className="flex-1 min-w-0">
           <div className="flex flex-wrap items-center gap-2 mb-1.5">
-            <span className="rounded-full px-2.5 py-0.5 text-xs font-bold" style={{ background: 'var(--ink-100)', color: 'var(--brand-navy-700)' }}>
+            <span className="tp-meta rounded-full px-2.5 py-0.5 font-bold" style={{ background: 'var(--ink-100)', color: 'var(--brand-navy-700)' }}>
               {safeEntry.category.replace(/_/g,' ').replace(/\b\w/g,l=>l.toUpperCase())}
             </span>
             {safeEntry.visibility === 'public'
-              ? <span className="rounded-full px-2.5 py-0.5 text-xs font-bold flex items-center gap-1" style={{ background: 'var(--success-50)', color: 'var(--success-700)' }}><Eye size={10} />Public</span>
-              : <span className="rounded-full px-2.5 py-0.5 text-xs font-bold flex items-center gap-1" style={{ background: 'var(--ink-50)', color: 'var(--ink-500)' }}><EyeOff size={10} />Private</span>}
+              ? <span className="tp-meta rounded-full px-2.5 py-0.5 font-bold flex items-center gap-1.5" style={{ background: 'var(--success-50)', color: 'var(--success-700)' }}><Eye size={12} />Public</span>
+              : <span className="tp-meta rounded-full px-2.5 py-0.5 font-bold flex items-center gap-1.5" style={{ background: 'var(--ink-50)', color: 'var(--ink-500)' }}><EyeOff size={12} />Private</span>}
           </div>
-          <h3 className="font-heading font-bold text-[color:var(--surface-dark-900)] leading-snug">{safeEntry.title}</h3>
-          {safeEntry.description && <p className="mt-1 text-sm text-[color:var(--ink-700)] line-clamp-2">{safeEntry.description}</p>}
+          <h3 className="tp-card text-[color:var(--surface-dark-900)]">{safeEntry.title}</h3>
+          {safeEntry.description && <p className="tp-prose mt-1.5 text-[color:var(--ink-700)] line-clamp-2">{safeEntry.description}</p>}
         </div>
 
         {/* More actions */}
@@ -154,7 +154,7 @@ function ProofCard({ entry, missionsMap, experimentsMap, onDelete, onNavigateToP
           {menuOpen && (
             <div className="absolute right-0 top-8 z-10 w-36 rounded-xl border border-[color:var(--ink-200)] bg-white shadow-lg py-1">
               <button onClick={() => { setMenuOpen(false); onDelete(entry); }}
-                className="w-full flex items-center gap-2 px-4 py-2 text-xs text-red-600 hover:bg-red-50">
+                className="tp-meta w-full flex items-center gap-2 px-4 py-2.5 text-red-600 hover:bg-red-50">
                 <Trash2 size={13} /> Delete
               </button>
             </div>
@@ -169,13 +169,13 @@ function ProofCard({ entry, missionsMap, experimentsMap, onDelete, onNavigateToP
             <FileIcon name={safeEntry.file_name} mime={safeEntry.mime_type} size={16} />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-xs font-semibold text-[color:var(--ink-700)] truncate">{safeEntry.file_name || 'Attached file'}</p>
-            {safeEntry.file_size && <p className="text-[10px] text-[color:var(--ink-400)]">{fmtSize(safeEntry.file_size)}</p>}
+            <p className="tp-meta font-semibold text-[color:var(--ink-700)] truncate">{safeEntry.file_name || 'Attached file'}</p>
+            {safeEntry.file_size && <p className="tp-meta text-[color:var(--ink-400)]">{fmtSize(safeEntry.file_size)}</p>}
           </div>
           <button onClick={() => setShowPreview(true)}
-            className="shrink-0 flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-white"
+            className="tp-meta shrink-0 flex items-center gap-1.5 rounded-lg px-3.5 py-2 font-semibold text-white"
             style={{ background: 'var(--brand-navy-900)' }}>
-            {vid ? <><Play size={11} />Play</> : <><ExternalLink size={11} />Open</>}
+            {vid ? <><Play size={13} />Play</> : <><ExternalLink size={13} />Open</>}
           </button>
         </div>
       )}
@@ -183,8 +183,8 @@ function ProofCard({ entry, missionsMap, experimentsMap, onDelete, onNavigateToP
       {/* External URL */}
       {safeEntry.external_url && (
         <a href={safeEntry.external_url} target="_blank" rel="noopener noreferrer"
-          className="mb-3 flex items-start gap-1.5 text-xs hover:underline" style={{ color: 'var(--brand-navy-700)' }}>
-          <ExternalLink size={11} className="mt-0.5 shrink-0" />
+          className="tp-meta mb-3 flex items-start gap-1.5 hover:underline" style={{ color: 'var(--brand-navy-700)' }}>
+          <ExternalLink size={13} className="mt-0.5 shrink-0" />
           <span className="min-w-0 break-all">{safeEntry.external_url}</span>
         </a>
       )}
@@ -193,7 +193,7 @@ function ProofCard({ entry, missionsMap, experimentsMap, onDelete, onNavigateToP
       {safeEntry.skills_demonstrated.length > 0 && (
         <div className="mb-3 flex flex-wrap gap-1.5">
           {safeEntry.skills_demonstrated.map((s, i) => (
-            <span key={i} className="rounded-full border border-[color:var(--ink-200)] px-2.5 py-0.5 text-[10px] text-[color:var(--ink-700)]">{s}</span>
+            <span key={i} className="tp-meta rounded-full border border-[color:var(--ink-200)] px-2.5 py-0.5 text-[color:var(--ink-700)]">{s}</span>
           ))}
         </div>
       )}
@@ -203,27 +203,27 @@ function ProofCard({ entry, missionsMap, experimentsMap, onDelete, onNavigateToP
         <div className="pt-3 border-t border-[color:var(--ink-100)] flex flex-wrap gap-3">
           {mission ? (
             <button onClick={() => onNavigateToProof('experiments')}
-              className="text-xs text-[color:var(--ink-500)] hover:text-[color:var(--brand-navy-700)] transition text-left">
+              className="tp-meta text-[color:var(--ink-500)] hover:text-[color:var(--brand-navy-700)] transition text-left">
               Mission: <span className="font-semibold text-[color:var(--ink-700)]">{mission.title}</span>
             </button>
           ) : safeEntry.mission_id ? (
-            <span className="text-xs text-[color:var(--ink-400)]">Mission: <span className="italic">No longer available</span></span>
+            <span className="tp-meta text-[color:var(--ink-400)]">Mission: <span className="italic">No longer available</span></span>
           ) : null}
           {experiment ? (
             <button onClick={() => onNavigateToProof('experiments')}
-              className="text-xs text-[color:var(--ink-500)] hover:text-[color:var(--brand-navy-700)] transition text-left">
+              className="tp-meta text-[color:var(--ink-500)] hover:text-[color:var(--brand-navy-700)] transition text-left">
               Experiment: <span className="font-semibold text-[color:var(--ink-700)]">{experiment.title}</span>
             </button>
           ) : safeEntry.experiment_id ? (
-            <span className="text-xs text-[color:var(--ink-400)]">Experiment: <span className="italic">Not linked</span></span>
+            <span className="tp-meta text-[color:var(--ink-400)]">Experiment: <span className="italic">Not linked</span></span>
           ) : null}
           {experiment?.path_name && (
-            <span className="text-xs text-[color:var(--ink-400)]">Path: {experiment.path_name}</span>
+            <span className="tp-meta text-[color:var(--ink-400)]">Path: {experiment.path_name}</span>
           )}
         </div>
       )}
 
-      <p className="mt-2 text-[10px] text-[color:var(--ink-400)]">Submitted {fmtDate(safeEntry.created_date) || 'date unavailable'}</p>
+      <p className="tp-meta mt-3 text-[color:var(--ink-400)]">Submitted {fmtDate(safeEntry.created_date) || 'date unavailable'}</p>
     </div>
   );
 }
@@ -283,7 +283,7 @@ export default function ProofOfWorkPage() {
   const paths = ['all', ...new Set(experiments.map(e => e.path_name).filter(Boolean))];
   const expOptions = ['all', ...experiments.map(e => e.id)];
 
-  // Filtered list — all field access guarded against undefined
+  // Filtered list, all field access guarded against undefined
   const filtered = entries.filter(e => {
     if (!e || !e.id) return false;
     const mission = e.mission_id ? (missionsMap[e.mission_id] || null) : null;
@@ -326,7 +326,7 @@ export default function ProofOfWorkPage() {
   };
 
   return (
-    <main className="mx-auto max-w-5xl px-5 py-10 sm:px-8">
+    <main className="app-page">
       {deleteTarget && (
         <SoftDeleteConfirm
           itemName={deleteTarget.title}
@@ -391,7 +391,7 @@ export default function ProofOfWorkPage() {
         action={
           <button
             onClick={() => setShowNew(true)}
-            className="inline-flex items-center gap-2 rounded-[10px] px-5 py-2.5 text-sm font-semibold text-white shrink-0"
+            className="tp-body inline-flex items-center gap-2 rounded-[10px] px-6 py-3 font-semibold text-white shrink-0"
             style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}>
             <Plus size={16} /> Add Proof of Work
           </button>
@@ -401,8 +401,8 @@ export default function ProofOfWorkPage() {
       {/* Search + Filters.
           Held back until the data lands. The path and experiment dropdowns only
           exist once there are paths and experiments to put in them, so rendering
-          the row early meant it grew by two controls — and on mobile by two
-          stacked rows — the moment loading finished, pushing every card down. */}
+          the row early meant it grew by two controls (and on mobile by two
+          stacked rows) the moment loading finished, pushing every card down. */}
       {loading ? (
         <SkControls search filters={3} />
       ) : (
@@ -443,33 +443,33 @@ export default function ProofOfWorkPage() {
         </>
       ) : loadError ? (
         <div className="rounded-[24px] border border-dashed border-red-200 p-16 text-center">
-          <h3 className="font-heading text-xl font-bold text-[color:var(--surface-dark-900)]">We couldn't load your proof of work.</h3>
-          <p className="mt-2 text-sm text-[color:var(--ink-500)]">There was a problem fetching your records. Please try again.</p>
+          <h3 className="tp-section text-[color:var(--surface-dark-900)]">We couldn't load your proof of work.</h3>
+          <p className="tp-body mx-auto mt-2.5 max-w-[46ch] text-[color:var(--ink-500)]">There was a problem fetching your records. Please try again.</p>
           <div className="mt-6 flex justify-center gap-3">
             <button onClick={load}
-              className="inline-flex items-center gap-2 rounded-[10px] px-5 py-2.5 text-sm font-semibold text-white"
+              className="tp-body inline-flex items-center gap-2 rounded-[10px] px-5 py-2.5 font-semibold text-white"
               style={{ background: 'var(--brand-navy-900)' }}>
               Retry
             </button>
             <button onClick={() => navigate('/journey')}
-              className="inline-flex items-center gap-2 rounded-[10px] border border-[color:var(--ink-200)] px-5 py-2.5 text-sm font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)]">
+              className="tp-body inline-flex items-center gap-2 rounded-[10px] border border-[color:var(--ink-200)] px-5 py-2.5 font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)]">
               Return to My Journey
             </button>
           </div>
         </div>
       ) : filtered.length === 0 ? (
         <div className="rounded-[24px] border border-dashed border-[color:var(--ink-200)] p-16 text-center">
-          <h3 className="font-heading text-xl font-bold text-[color:var(--surface-dark-900)]">
+          <h3 className="tp-section text-[color:var(--surface-dark-900)]">
             {entries.length === 0 ? 'No proof submitted yet.' : 'No results match your filters.'}
           </h3>
-          <p className="mt-2 text-sm text-[color:var(--ink-500)]">
+          <p className="tp-body mx-auto mt-2.5 max-w-[52ch] text-[color:var(--ink-500)]">
             {entries.length === 0
               ? 'Add work from your experiments and missions to build a record of what you have learned and completed.'
               : 'Try adjusting your search or filters.'}
           </p>
           {entries.length === 0 && (
             <button onClick={() => setShowNew(true)}
-              className="mt-6 inline-flex items-center gap-2 rounded-[10px] px-6 py-3 text-sm font-semibold text-white"
+              className="tp-body mt-6 inline-flex items-center gap-2 rounded-[10px] px-6 py-3 font-semibold text-white"
               style={{ background: 'var(--brand-navy-900)' }}>
               <Plus size={16} /> Add Proof of Work
             </button>
@@ -477,8 +477,8 @@ export default function ProofOfWorkPage() {
         </div>
       ) : (
         <>
-          <p className="text-xs text-[color:var(--ink-400)] mb-4">{filtered.length} submission{filtered.length !== 1 ? 's' : ''}, newest first</p>
-          <div className="grid gap-4 sm:grid-cols-2">
+          <p className="tp-meta mb-4 text-[color:var(--ink-400)]">{filtered.length} submission{filtered.length !== 1 ? 's' : ''}, newest first</p>
+          <div className="grid gap-5 sm:grid-cols-2">
             {filtered.map(e => (
               <CardErrorBoundary key={e.id}>
                 <ProofCard

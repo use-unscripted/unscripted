@@ -538,22 +538,22 @@ export default function ResumeExport({ resume }) {
     <div>
       <div className="flex flex-wrap gap-2">
         <button onClick={handlePDF} disabled={!!loading}
-          className="flex items-center gap-2 rounded-[10px] border border-[color:var(--ink-200)] px-4 py-2.5 text-sm font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)] disabled:opacity-50 transition">
+          className="tp-body flex items-center gap-2 rounded-[10px] border border-[color:var(--ink-200)] px-4 py-2.5 font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)] disabled:opacity-50 transition">
           <FileText size={15} style={{ color: 'var(--brand-navy-900)' }} />
           {loading === 'pdf' ? 'Preparing PDF…' : 'Download PDF'}
         </button>
         <button onClick={handleDOCX} disabled={!!loading}
-          className="flex items-center gap-2 rounded-[10px] border border-[color:var(--ink-200)] px-4 py-2.5 text-sm font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)] disabled:opacity-50 transition">
+          className="tp-body flex items-center gap-2 rounded-[10px] border border-[color:var(--ink-200)] px-4 py-2.5 font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)] disabled:opacity-50 transition">
           <File size={15} style={{ color: 'var(--info-700)' }} />
           {loading === 'docx' ? 'Preparing…' : 'Download Word (.doc)'}
         </button>
       </div>
       {isClassicFinance && (
-        <p className="mt-1.5 text-[10px] text-[color:var(--ink-400)]">
+        <p className="tp-meta mt-2 text-[color:var(--ink-400)]">
           Word export produces a .doc file (HTML format) editable in Microsoft Word and Google Docs. True .docx requires an additional integration.
         </p>
       )}
-      {error && <p className="mt-2 text-xs text-red-600">{error}</p>}
+      {error && <p className="tp-meta mt-2 text-red-600">{error}</p>}
     </div>
   );
 }

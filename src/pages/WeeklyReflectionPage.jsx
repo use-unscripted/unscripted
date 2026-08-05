@@ -1,5 +1,5 @@
 /**
- * Weekly reflection — asked one question at a time instead of eight blank
+ * Weekly reflection, asked one question at a time instead of eight blank
  * textareas on one screen.
  *
  * The number this page exists to move: no StudentProfile has ever been updated
@@ -21,7 +21,7 @@
  *     no such element on a page and the optional chain swallows the miss, so a
  *     student on a phone lands mid-step. This scrolls the window instead.
  *   - its sticky footer's `-mx-6 sm:-mx-8` has to cancel the container's
- *     padding exactly. There is no sticky footer here at all — deleting the
+ *     padding exactly. There is no sticky footer here at all, so deleting the
  *     invariant beats matching it.
  */
 import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
@@ -50,7 +50,7 @@ import { activityFor } from '@/lib/weekly-activity';
 const isActive = (r) => !r?.deletion_status || r.deletion_status === 'active';
 
 // The entity stores completed_items / avoided_items as string arrays. Nothing
-// in this component ever puts one of those arrays into a text control — that is
+// in this component ever puts one of those arrays into a text control. That is
 // what used to throw a TypeError in the component body and white-screen the
 // page the moment a saved reflection was opened for editing. Arrays live in
 // array state, prose lives in its own string state, and this is the only place
@@ -74,7 +74,7 @@ const bigInputCls = 'w-full rounded-2xl border border-[color:var(--ink-200)] bg-
 
 // ── Step 1 options ─────────────────────────────────────────────────────────────
 // Asked, never asserted. The page cannot substantiate "nothing got logged this
-// week" — the first option here concedes as much — so it opens with a question
+// week" (the first option here concedes as much) so it opens with a question
 // and lets the student say which of these it was.
 //
 // `text` is what gets stored, and it is also how a saved row is read back into
@@ -106,7 +106,7 @@ const ALL_OPTION_TEXTS = new Set(WEEK_OPTIONS.map(o => o.text));
 const OTHER_KEY = '__other';
 
 // The only stems in the whole flow, on the only genuinely open question. They
-// are inserted into the box to be edited, not options to be picked — a
+// are inserted into the box to be edited, not options to be picked. A
 // reflection that can be completed by tapping is not a reflection.
 const STEMS = [
   'I was surprised that',
@@ -118,13 +118,13 @@ const STEMS = [
 // ── Path fit ───────────────────────────────────────────────────────────────────
 // The whole loop ends in "Adjust", and the pitch is that we can tell a student
 // whether a path fits. A reflection that collects no path signal cannot feed
-// either. One tap, one string, into `path_feedback` — which already exists on
+// either. One tap, one string, into `path_feedback`, which already exists on
 // the entity, so this needs no schema change.
 //
 // THIS IS A SIGNAL, NOT A DECISION, and that split is deliberate. Continue /
 // adjust / stop is asked in exactly one place: the end-of-experiment conclusion
 // (`/reflect` → DecisionStep), which is the only surface that acts on the answer
-// — it pauses or promotes the path, closes the CareerCycle and opens the next
+// it pauses or promotes the path, closes the CareerCycle and opens the next
 // one. Asking it weekly would let one slow week read as quitting a path, and
 // would produce an answer nothing carries out. If a fourth version of this
 // question shows up, delete it rather than adding a storage location.
@@ -147,7 +147,7 @@ const PATH_FIT_TEXTS = new Set(PATH_FIT_OPTIONS.map(o => o.text));
 // Fields the guided flow no longer asks about. A student who answered them in
 // the old eight-textarea form must not lose that answer by opening the row in
 // this one, so they are read off the record and written straight back.
-// `path_feedback` is deliberately NOT here — the fit step owns it now, and it
+// `path_feedback` is deliberately NOT here. The fit step owns it now, and it
 // preserves old prose itself rather than carrying it blind.
 const CARRIED_FIELDS = ['avoidance_reasons', 'surprises', 'skill_gaps_noticed'];
 
@@ -173,8 +173,8 @@ function clearDraft() {
   try { localStorage.removeItem(DRAFT_KEY); } catch { /* private mode */ }
 }
 
-// The activity read-out — what this student actually logged against this
-// experiment during this week — is src/lib/weekly-activity.js. When there is
+// The activity read-out (what this student actually logged against this
+// experiment during this week) is src/lib/weekly-activity.js. When there is
 // anything in it, step 1 shows it back to them instead of the canned options:
 // their own record beats a guess about their week.
 
@@ -188,9 +188,9 @@ function SuccessToast({ experiment, mission, onOpenExp, onDismiss }) {
           <CheckCircle size={20} className="text-green-600" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-bold text-[color:var(--surface-dark-900)]">Reflection saved.</p>
-          {experiment && <p className="text-xs text-[color:var(--ink-500)] mt-0.5 truncate">Experiment: {experiment.title}</p>}
-          {mission && <p className="text-xs text-[color:var(--ink-400)] truncate">Mission: {mission.title}</p>}
+          <p className="tp-card text-[color:var(--surface-dark-900)]">Reflection saved.</p>
+          {experiment && <p className="tp-meta mt-1 truncate text-[color:var(--ink-500)]">Experiment: {experiment.title}</p>}
+          {mission && <p className="tp-meta truncate text-[color:var(--ink-400)]">Mission: {mission.title}</p>}
         </div>
         <button onClick={onDismiss} aria-label="Dismiss" className="shrink-0 text-[color:var(--ink-400)] hover:text-[color:var(--ink-700)]">
           <X size={16} />
@@ -199,7 +199,7 @@ function SuccessToast({ experiment, mission, onOpenExp, onDismiss }) {
       {/* No "View Reflection" button: saving already switches to History with
           the row on screen, so it did nothing at all when pressed. */}
       {experiment && (
-        <button onClick={onOpenExp} className="w-full rounded-[8px] border border-[color:var(--ink-200)] py-2 text-xs font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)]">
+        <button onClick={onOpenExp} className="tp-meta w-full rounded-[8px] border border-[color:var(--ink-200)] py-2.5 font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)]">
           Open Experiment
         </button>
       )}
@@ -231,7 +231,7 @@ function ReflectionFlow({ experiments, missions, proofs, outreach, initialData, 
 
     if (draft && !isEdit) {
       // A draft's ticked items are labels, and the activity list they came from
-      // is recomputed live — editing a mission moves it out of the week and its
+      // is recomputed live. Editing a mission moves it out of the week and its
       // label stops matching. Orphans go into the free-text box rather than
       // vanishing, the same routing an edited record gets below.
       const draftPicks = Array.isArray(draft.picks) ? draft.picks : [];
@@ -280,7 +280,7 @@ function ReflectionFlow({ experiments, missions, proofs, outreach, initialData, 
       freeText: freeLines.join('\n'),
       // Free prose a student typed into the old "What did you avoid or not
       // finish?" box. It is shown back to them so it is editable rather than
-      // invisible, and it is always written back — a canned label is appended
+      // invisible, and it is always written back. A canned label is appended
       // alongside it, never over it.
       avoidedProse: avoided.filter(v => !ALL_OPTION_TEXTS.has(v)).join('\n'),
       energySources: initialData?.energy_sources || '',
@@ -436,7 +436,7 @@ function ReflectionFlow({ experiments, missions, proofs, outreach, initialData, 
 
   // `touched` gates the save, not just the draft. Without it a pre-ticked
   // activity read-out could be saved with zero taps, filing a row that only
-  // echoes rows already in the database — and "WeeklyReflections finally has
+  // echoes rows already in the database, and "WeeklyReflections finally has
   // rows" is precisely the number that must not be an echo.
   const canSave = !!expId && hasContent && touched && !saving;
 
@@ -522,7 +522,7 @@ function ReflectionFlow({ experiments, missions, proofs, outreach, initialData, 
       energy_drains: energyDrains.trim() || undefined,
       // An edit clears these explicitly instead of omitting them. An omitted key
       // is a partial update, so a student who taps their answer off and saves
-      // would keep the old one in the database — a stale path signal is worse
+      // would keep the old one in the database. A stale path signal is worse
       // than none. Both empty values are accepted by the entity (verified
       // against the dev data environment).
       path_feedback: pathFeedback || (isEdit ? '' : undefined),
@@ -654,7 +654,7 @@ function ReflectionFlow({ experiments, missions, proofs, outreach, initialData, 
   // things:
   //
   //   Enter is the default activation of a focused button or link. Calling
-  //   preventDefault() on it cancels the click — a keyboard user pressing Enter
+  //   preventDefault() on it cancels the click. A keyboard user pressing Enter
   //   on "Back" would move FORWARD, and Enter on "Done for now" would not save.
   //   So Enter is left alone on anything that activates on Enter, and on the
   //   controls that own it (textarea inserts a newline, select opens).
@@ -791,7 +791,7 @@ function ReflectionFlow({ experiments, missions, proofs, outreach, initialData, 
         {freeTextOpen && (
           <div className="anim-slide-up mt-2">
             {!chosen && (
-              <p className="mb-1.5 text-xs font-semibold" style={{ color: 'var(--text-secondary)' }}>What you wrote down</p>
+              <p className="tp-meta mb-1.5 font-semibold" style={{ color: 'var(--text-secondary)' }}>What you wrote down</p>
             )}
             <textarea rows={3} value={freeText} onChange={e => setFreeText(e.target.value)} autoFocus={!seed.otherOpen}
               placeholder="What did you actually do? One per line." className={`${inputCls} resize-none`} />
@@ -812,21 +812,21 @@ function ReflectionFlow({ experiments, missions, proofs, outreach, initialData, 
     body = (
       <div className="space-y-4">
         <label className="block">
-          <span className="mb-1.5 block text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>What gave you energy?</span>
+          <span className="tp-body mb-1.5 block font-semibold" style={{ color: 'var(--text-primary)' }}>What gave you energy?</span>
           <input value={energySources} onChange={e => setEnergySources(e.target.value)} autoFocus
             placeholder="e.g. the call with the analyst" className={bigInputCls} />
         </label>
         <label className="block">
-          <span className="mb-1.5 block text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>What drained you?</span>
+          <span className="tp-body mb-1.5 block font-semibold" style={{ color: 'var(--text-primary)' }}>What drained you?</span>
           <input value={energyDrains} onChange={e => setEnergyDrains(e.target.value)}
             placeholder="e.g. writing the outreach emails" className={bigInputCls} />
         </label>
         {/* Only rendered for a record that already has this prose. It is not a
-            question this flow asks — it exists so an old answer stays visible
+            question this flow asks. It exists so an old answer stays visible
             and editable instead of being silently carried or silently lost. */}
         {seed.avoidedProse && (
           <label className="block">
-            <span className="mb-1.5 block text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
+            <span className="tp-body mb-1.5 block font-semibold" style={{ color: 'var(--text-primary)' }}>
               What you avoided or didn&apos;t finish <span className="font-normal" style={{ color: 'var(--text-secondary)' }}>· from your earlier answer</span>
             </span>
             <textarea rows={2} value={avoidedProse} onChange={e => setAvoidedProse(e.target.value)}
@@ -863,7 +863,7 @@ function ReflectionFlow({ experiments, missions, proofs, outreach, initialData, 
             being overwritten by a canned label. */}
         {seed.pathFitProse && (
           <label className="mt-4 block">
-            <span className="mb-1.5 block text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
+            <span className="tp-body mb-1.5 block font-semibold" style={{ color: 'var(--text-primary)' }}>
               What you said before <span className="font-normal" style={{ color: 'var(--text-secondary)' }}>· kept as you wrote it</span>
             </span>
             <textarea rows={2} value={pathFitProse} onChange={e => setPathFitProse(e.target.value)}
@@ -891,7 +891,7 @@ function ReflectionFlow({ experiments, missions, proofs, outreach, initialData, 
           <div className="mt-2 flex flex-wrap gap-2">
             {STEMS.map(stem => (
               <button key={stem} type="button" onClick={() => insertStem(stem)}
-                className="ui-press rounded-full border px-3 py-1.5 text-xs font-semibold"
+                className="ui-press tp-meta rounded-full border px-3.5 py-2 font-semibold"
                 style={{ borderColor: 'var(--ink-200)', color: 'var(--brand-navy-700)', background: 'var(--brand-white)' }}>
                 {stem} …
               </button>
@@ -901,14 +901,14 @@ function ReflectionFlow({ experiments, missions, proofs, outreach, initialData, 
 
         {/* The only forward-looking answer in the form. It stays in the open. */}
         <label className="block">
-          <span className="mb-1.5 block text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>What should change next week?</span>
+          <span className="tp-body mb-1.5 block font-semibold" style={{ color: 'var(--text-primary)' }}>What should change next week?</span>
           <input value={nextChanges} onChange={e => setNextChanges(e.target.value)}
             placeholder="One thing you'll do differently, drop, or try" className={bigInputCls} />
         </label>
 
         {expMissions.length > 0 && (
           <label className="block">
-            <span className="mb-1 block text-xs font-semibold" style={{ color: 'var(--text-secondary)' }}>
+            <span className="tp-meta mb-1.5 block font-semibold" style={{ color: 'var(--text-secondary)' }}>
               Mission this relates to <span className="font-normal">· optional</span>
             </span>
             <select value={missionId} onChange={e => setMissionId(e.target.value)} className={inputCls}>
@@ -919,19 +919,19 @@ function ReflectionFlow({ experiments, missions, proofs, outreach, initialData, 
         )}
 
         {genError && (
-          <p className="flex items-start gap-1.5 text-xs font-semibold text-red-600" role="alert">
+          <p className="tp-meta flex items-start gap-1.5 font-semibold text-red-600" role="alert">
             <AlertCircle size={13} className="mt-0.5 shrink-0" />{genError}
           </p>
         )}
 
         {summary && (
           <div className="rounded-[20px] p-5" style={{ background: 'var(--surface-dark-700)', border: '1px solid rgba(31,58,95,0.5)' }}>
-            <p className="mb-2 text-xs font-bold uppercase tracking-wide" style={{ color: 'var(--brand-gold-500)' }}>Unscripted&apos;s analysis</p>
-            <p className="text-sm leading-6 text-[color:var(--ink-300)]">{summary}</p>
+            <p className="tp-eyebrow mb-2.5" style={{ color: 'var(--brand-gold-500)' }}>Unscripted&apos;s analysis</p>
+            <p className="tp-prose text-[color:var(--ink-300)]">{summary}</p>
             {adjustments.length > 0 && (
               <ul className="mt-4 space-y-2">
                 {adjustments.map((a, i) => (
-                  <li key={i} className="flex gap-2 text-sm text-[color:var(--ink-300)]">
+                  <li key={i} className="tp-body flex gap-2 text-[color:var(--ink-300)]">
                     <ArrowRight size={14} className="mt-0.5 shrink-0" style={{ color: 'var(--brand-gold-500)' }} />{a}
                   </li>
                 ))}
@@ -972,10 +972,10 @@ function ReflectionFlow({ experiments, missions, proofs, outreach, initialData, 
 
       <div className="mb-6">
         <div className="mb-3 flex items-center justify-between gap-3">
-          <span className="truncate rounded-full px-2.5 py-1 text-[11px] font-bold" style={{ background: 'var(--ink-100)', color: 'var(--brand-navy-900)' }}>
+          <span className="tp-meta truncate rounded-full px-2.5 py-1 font-bold" style={{ background: 'var(--ink-100)', color: 'var(--brand-navy-900)' }}>
             Week of {fmtWeek(weekStart)}
           </span>
-          <span className="whitespace-nowrap text-[11px] font-semibold" style={{ color: 'var(--text-secondary)' }}>
+          <span className="tp-meta whitespace-nowrap font-semibold" style={{ color: 'var(--text-secondary)' }}>
             {index + 1} of {steps.length}
           </span>
         </div>
@@ -986,11 +986,11 @@ function ReflectionFlow({ experiments, missions, proofs, outreach, initialData, 
         <h2 ref={headingRef} tabIndex={-1} className="font-heading text-[26px] font-bold leading-tight outline-none" style={{ color: 'var(--surface-dark-900)' }}>
           {question}
         </h2>
-        {hint && <p className="mt-1.5 text-sm" style={{ color: 'var(--text-secondary)' }}>{hint}</p>}
+        {hint && <p className="tp-lead mt-2" style={{ color: 'var(--text-secondary)' }}>{hint}</p>}
 
         <div className="mt-5 min-h-[220px]">
           {error && (
-            <div className="mb-4 flex items-start gap-2 rounded-xl bg-red-50 p-3 text-sm text-red-700" role="alert">
+            <div className="tp-body mb-4 flex items-start gap-2 rounded-xl bg-red-50 p-3 text-red-700" role="alert">
               <AlertCircle size={14} className="mt-0.5 shrink-0" />{error}
             </div>
           )}
@@ -1001,7 +1001,7 @@ function ReflectionFlow({ experiments, missions, proofs, outreach, initialData, 
       <div className="mt-6">
         {footer}
         {blockedReason && (
-          <p className="mt-2.5 text-center text-xs font-semibold" style={{ color: 'var(--text-secondary)' }}>{blockedReason}</p>
+          <p className="tp-meta mt-2.5 text-center font-semibold" style={{ color: 'var(--text-secondary)' }}>{blockedReason}</p>
         )}
       </div>
     </div>
@@ -1166,7 +1166,7 @@ export default function WeeklyReflectionPage() {
   });
 
   return (
-    <main className="mx-auto max-w-3xl px-5 py-10 sm:px-8">
+    <main className="app-page">
       {deleteTarget && (
         <SoftDeleteConfirm
           itemName={`Week of ${fmtWeek(deleteTarget.week_start, { month: 'long', day: 'numeric', year: 'numeric' })}`}
@@ -1189,12 +1189,12 @@ export default function WeeklyReflectionPage() {
         action={
           <div className="flex gap-2">
             <button onClick={startReflection}
-              className="rounded-[10px] px-4 py-2.5 text-sm font-semibold transition"
+              className="tp-body rounded-[10px] px-4 py-2.5 font-semibold transition"
               style={tabCls(view === 'form')}>
               {currentWeekRow ? 'This week' : 'New reflection'}
             </button>
             <button onClick={() => setView('history')}
-              className="rounded-[10px] px-4 py-2.5 text-sm font-semibold transition"
+              className="tp-body rounded-[10px] px-4 py-2.5 font-semibold transition"
               style={tabCls(view === 'history')}>
               History {reflections.length > 0 && `(${reflections.length})`}
             </button>
@@ -1207,9 +1207,9 @@ export default function WeeklyReflectionPage() {
       ) : view === 'form' ? (
         experiments.length === 0 ? (
           <div className="rounded-[24px] border border-dashed p-12 text-center" style={{ borderColor: 'var(--border-light)' }}>
-            <p className="text-sm text-[color:var(--ink-500)]">There is nothing to reflect on yet. Start an experiment first.</p>
+            <p className="tp-body text-[color:var(--ink-500)]">There is nothing to reflect on yet. Start an experiment first.</p>
             <button onClick={() => navigate('/experiments')}
-              className="mt-4 rounded-[10px] px-5 py-3 text-sm font-semibold text-white"
+              className="tp-body mt-5 rounded-[10px] px-5 py-3 font-semibold text-white"
               style={{ background: 'var(--brand-navy-900)' }}>
               Go to Missions
             </button>
@@ -1220,15 +1220,15 @@ export default function WeeklyReflectionPage() {
             {draftOffer && !activeDraft && !editingReflection && (
               <div className="anim-slide-up mb-4 flex flex-wrap items-center gap-3 rounded-[16px] border px-4 py-3"
                 style={{ borderColor: 'var(--border-light)', background: 'var(--background-tertiary)' }}>
-                <p className="flex-1 text-sm text-[color:var(--ink-700)]">
+                <p className="tp-body flex-1 text-[color:var(--ink-700)]">
                   You started a reflection for the week of <strong>{fmtWeek(draftOffer.week_start)}</strong> and didn&apos;t save it.
                 </p>
                 <button onClick={() => setActiveDraft(draftOffer)}
-                  className="rounded-[8px] px-3 py-1.5 text-xs font-semibold text-white" style={{ background: 'var(--brand-navy-900)' }}>
+                  className="tp-meta rounded-[8px] px-3.5 py-2 font-semibold text-white" style={{ background: 'var(--brand-navy-900)' }}>
                   Pick it up
                 </button>
                 <button onClick={() => { clearDraft(); setDraftOffer(null); }}
-                  className="rounded-[8px] border border-[color:var(--ink-200)] px-3 py-1.5 text-xs font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)]">
+                  className="tp-meta rounded-[8px] border border-[color:var(--ink-200)] px-3.5 py-2 font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)]">
                   Start fresh
                 </button>
               </div>
@@ -1236,11 +1236,11 @@ export default function WeeklyReflectionPage() {
 
             {/* Only shown in the state where it is true: the flow is actually
                 bound to this week's saved row and will update it. The earlier
-                version of this line rendered when editingReflection was null —
-                exactly when the next save would create a SECOND row — and
+                version of this line rendered when editingReflection was null,
+                exactly when the next save would create a SECOND row, and
                 disappeared once it became accurate. */}
             {currentWeekRow && editingReflection?.id === currentWeekRow.id && (
-              <p className="mb-4 text-sm text-[color:var(--ink-500)]">
+              <p className="tp-body mb-4 text-[color:var(--ink-500)]">
                 Picking up this week&apos;s reflection. Saving updates it rather than adding a second.
               </p>
             )}
@@ -1272,7 +1272,7 @@ export default function WeeklyReflectionPage() {
                 onChange={setSelectedPathId}
                 showAll
               />
-              {selectedPath && <span className="text-xs text-[color:var(--ink-400)]">Reflections for <strong className="text-[color:var(--ink-700)]">{selectedPath.path_name}</strong></span>}
+              {selectedPath && <span className="tp-meta text-[color:var(--ink-400)]">Reflections for <strong className="text-[color:var(--ink-700)]">{selectedPath.path_name}</strong></span>}
             </div>
           )}
 
@@ -1291,14 +1291,14 @@ export default function WeeklyReflectionPage() {
               </select>
             )}
             <button onClick={startReflection}
-              className="inline-flex shrink-0 items-center gap-2 rounded-[10px] px-4 py-2.5 text-sm font-semibold text-white"
+              className="tp-body inline-flex shrink-0 items-center gap-2 rounded-[10px] px-4 py-2.5 font-semibold text-white"
               style={{ background: 'var(--brand-navy-900)' }}>
               <Plus size={15} /> Add
             </button>
           </div>
 
           {filteredReflections.length === 0 ? (
-            <div className="rounded-[24px] border border-dashed border-[color:var(--ink-200)] p-12 text-center text-[color:var(--ink-500)]">
+            <div className="tp-body rounded-[24px] border border-dashed border-[color:var(--ink-200)] p-12 text-center text-[color:var(--ink-500)]">
               {reflections.length === 0
                 ? 'No reflections yet. The first one takes about a minute.'
                 : 'No reflections match your search or filter.'}
@@ -1311,41 +1311,41 @@ export default function WeeklyReflectionPage() {
                 const preview = r.generated_summary || r.lessons || r.next_changes
                   || toStringArray(r.completed_items).join(' · ') || toStringArray(r.avoided_items).join(' · ');
                 return (
-                  <div key={r.id} className="rounded-[20px] border border-[color:var(--ink-200)] bg-white p-5">
+                  <div key={r.id} className="tp-card-body rounded-[20px] border border-[color:var(--ink-200)] bg-white">
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0 flex-1">
-                        <p className="font-heading font-bold text-[color:var(--surface-dark-900)]">
+                        <p className="tp-card text-[color:var(--surface-dark-900)]">
                           Week of {fmtWeek(r.week_start, { month: 'long', day: 'numeric', year: 'numeric' })}
                         </p>
 
                         {linkedExp ? (
-                          <p className="mt-0.5 text-xs font-semibold" style={{ color: 'var(--brand-navy-700)' }}>
+                          <p className="tp-meta mt-1 font-semibold" style={{ color: 'var(--brand-navy-700)' }}>
                             {linkedExp.title}{linkedExp.path_name ? ` (${linkedExp.path_name})` : ''}
                           </p>
                         ) : (
-                          <p className="mt-0.5 text-xs text-[color:var(--ink-400)]">Experiment not linked.</p>
+                          <p className="tp-meta mt-1 text-[color:var(--ink-400)]">Experiment not linked.</p>
                         )}
 
-                        {linkedMission && <p className="mt-0.5 text-xs text-[color:var(--ink-500)]">Mission: {linkedMission.title}</p>}
-                        {preview && <p className="mt-2 line-clamp-2 text-sm text-[color:var(--ink-500)]">{preview}</p>}
+                        {linkedMission && <p className="tp-meta mt-1 text-[color:var(--ink-500)]">Mission: {linkedMission.title}</p>}
+                        {preview && <p className="tp-prose mt-2.5 line-clamp-2 text-[color:var(--ink-500)]">{preview}</p>}
                       </div>
                       {r.generated_summary && <CheckCircle size={18} className="mt-1 shrink-0" style={{ color: 'var(--success-700)' }} />}
                     </div>
 
-                    <div className="mt-3 flex flex-wrap gap-2">
+                    <div className="mt-4 flex flex-wrap gap-2">
                       <button onClick={() => { setEditingReflection(r); setView('form'); }}
-                        className="rounded-[8px] border border-[color:var(--ink-200)] px-3 py-1.5 text-xs font-semibold text-[color:var(--ink-700)] transition hover:bg-[color:var(--ink-50)]">
+                        className="tp-meta rounded-[8px] border border-[color:var(--ink-200)] px-3.5 py-2 font-semibold text-[color:var(--ink-700)] transition hover:bg-[color:var(--ink-50)]">
                         View / Edit
                       </button>
                       {linkedExp && (
                         <button onClick={() => navigate('/experiments')}
-                          className="flex items-center gap-1 rounded-[8px] border border-[color:var(--ink-200)] px-3 py-1.5 text-xs font-semibold text-[color:var(--ink-700)] transition hover:bg-[color:var(--ink-50)]">
-                          <ExternalLink size={11} /> Open Experiment
+                          className="tp-meta flex items-center gap-1.5 rounded-[8px] border border-[color:var(--ink-200)] px-3.5 py-2 font-semibold text-[color:var(--ink-700)] transition hover:bg-[color:var(--ink-50)]">
+                          <ExternalLink size={13} /> Open Experiment
                         </button>
                       )}
                       <button onClick={() => setDeleteTarget(r)}
-                        className="flex items-center gap-1 rounded-[8px] border border-red-100 px-3 py-1.5 text-xs font-semibold text-red-400 transition hover:border-red-400 hover:text-red-600">
-                        <Trash2 size={11} /> Delete
+                        className="tp-meta flex items-center gap-1.5 rounded-[8px] border border-red-100 px-3.5 py-2 font-semibold text-red-400 transition hover:border-red-400 hover:text-red-600">
+                        <Trash2 size={13} /> Delete
                       </button>
                     </div>
                   </div>

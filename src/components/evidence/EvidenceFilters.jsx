@@ -17,7 +17,7 @@ export default function EvidenceFilters({ filters, setFilters, options, shown, t
     .filter((k) => k !== 'q' && filters[k] !== DEFAULT_FILTERS[k]).length;
 
   // A dropdown that can only ever pick the one value already on screen narrows
-  // nothing — drop it rather than show a dead control.
+  // nothing, so drop it rather than show a dead control.
   const drops = [
     options.paths.length > 1 && ['path', 'All paths', options.paths.map((p) => [p, p])],
     options.cycles.length > 1 && ['cycle', 'All cycles', options.cycles],
@@ -44,7 +44,7 @@ export default function EvidenceFilters({ filters, setFilters, options, shown, t
             <SlidersHorizontal size={14} className="text-[color:var(--ink-500)]" />
             Filters
             {activeCount > 0 && (
-              <span className="rounded-full px-1.5 py-0.5 text-[10px] font-bold" style={{ background: 'var(--ink-100)', color: 'var(--brand-navy-700)' }}>
+              <span className="tp-meta rounded-full px-2 py-0.5 font-bold" style={{ background: 'var(--ink-100)', color: 'var(--brand-navy-700)' }}>
                 {activeCount}
               </span>
             )}
@@ -65,7 +65,7 @@ export default function EvidenceFilters({ filters, setFilters, options, shown, t
 
           </div>
 
-          <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-[color:var(--ink-500)]">
+          <div className="tp-meta mt-2 flex flex-wrap items-center gap-2 text-[color:var(--ink-500)]">
             <span className="shrink-0">Between</span>
             <input type="date" value={filters.from} onChange={set('from')} aria-label="From date" className={`${sel} sm:w-44`} />
             <span className="shrink-0">and</span>
@@ -74,15 +74,15 @@ export default function EvidenceFilters({ filters, setFilters, options, shown, t
 
           {activeCount > 0 && (
             <button onClick={() => setFilters({ ...DEFAULT_FILTERS, q: filters.q })}
-              className="mt-3 flex items-center gap-1 rounded-lg border border-[color:var(--ink-200)] px-3 py-1.5 text-xs font-semibold text-[color:var(--ink-500)] transition hover:border-red-200 hover:text-red-600">
-              <X size={12} /> Clear filters
+              className="tp-meta mt-3 flex items-center gap-1.5 rounded-lg border border-[color:var(--ink-200)] px-4 py-2 font-semibold text-[color:var(--ink-500)] transition hover:border-red-200 hover:text-red-600">
+              <X size={13} /> Clear filters
             </button>
           )}
         </div>
       )}
 
       {shown !== total && (
-        <p className="mt-2 text-xs text-[color:var(--ink-400)]">
+        <p className="tp-meta mt-2 text-[color:var(--ink-400)]">
           {shown} of {total} shown.
         </p>
       )}

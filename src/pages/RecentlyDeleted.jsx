@@ -44,17 +44,17 @@ function PermanentDeleteConfirm({ itemName, onConfirm, onCancel }) {
           <div className="w-9 h-9 rounded-full flex items-center justify-center bg-red-50 shrink-0">
             <AlertTriangle size={18} className="text-red-600" />
           </div>
-          <h3 className="font-heading text-lg font-bold text-[color:var(--surface-dark-900)]">Permanently delete?</h3>
+          <h3 className="tp-section text-[color:var(--surface-dark-900)]">Permanently delete?</h3>
         </div>
-        <p className="text-sm text-[color:var(--ink-700)] mb-1">"{itemName}"</p>
-        <p className="text-sm text-[color:var(--ink-500)] mb-5">This cannot be recovered.</p>
+        <p className="tp-body text-[color:var(--ink-700)] mb-1">"{itemName}"</p>
+        <p className="tp-body text-[color:var(--ink-500)] mb-5">This cannot be recovered.</p>
         <div className="flex gap-3">
           <button onClick={onCancel}
-            className="flex-1 rounded-[10px] border border-[color:var(--ink-200)] py-2.5 text-sm font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)] transition">
+            className="tp-body flex-1 rounded-[10px] border border-[color:var(--ink-200)] py-2.5 font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)] transition">
             Cancel
           </button>
           <button onClick={onConfirm}
-            className="flex-1 rounded-[10px] py-2.5 text-sm font-semibold text-white bg-red-600 hover:bg-red-700 transition">
+            className="tp-body flex-1 rounded-[10px] py-2.5 font-semibold text-white bg-red-600 hover:bg-red-700 transition">
             Permanently Delete
           </button>
         </div>
@@ -82,33 +82,33 @@ function ExperimentDeletedCard({ exp, onRestore, onPermanentDelete, actionLoadin
   }, [exp.id]);
 
   return (
-    <div className="rounded-[16px] border border-[color:var(--ink-200)] bg-white p-4">
+    <div className="rounded-[16px] border border-[color:var(--ink-200)] bg-white p-5">
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
-          <div className="flex flex-wrap items-center gap-2 mb-1">
-            <span className="rounded-full px-2.5 py-0.5 text-[10px] font-bold" style={{ background: 'var(--ink-100)', color: 'var(--brand-navy-900)' }}>Experiment</span>
-            <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold flex items-center gap-1 ${urgent ? 'bg-red-50 text-red-600' : 'bg-amber-50 text-amber-700'}`}>
-              <Clock size={9} /> {days === 0 ? 'Expires today' : `${days} day${days !== 1 ? 's' : ''} left`}
+          <div className="flex flex-wrap items-center gap-2 mb-2">
+            <span className="tp-meta rounded-full px-2.5 py-0.5 font-bold" style={{ background: 'var(--ink-100)', color: 'var(--brand-navy-900)' }}>Experiment</span>
+            <span className={`tp-meta rounded-full px-2.5 py-0.5 font-bold flex items-center gap-1.5 ${urgent ? 'bg-red-50 text-red-600' : 'bg-amber-50 text-amber-700'}`}>
+              <Clock size={12} /> {days === 0 ? 'Expires today' : `${days} day${days !== 1 ? 's' : ''} left`}
             </span>
-            <span className="rounded-full px-2.5 py-0.5 text-[10px] font-semibold bg-[color:var(--ink-100)] text-[color:var(--ink-700)]">{statusLabel} before deletion</span>
+            <span className="tp-meta rounded-full px-2.5 py-0.5 font-semibold bg-[color:var(--ink-100)] text-[color:var(--ink-700)]">{statusLabel} before deletion</span>
           </div>
-          <p className="font-semibold text-sm text-[color:var(--surface-dark-900)] truncate">{exp.title}</p>
-          {exp.path_name && <p className="text-[10px] font-semibold mt-0.5" style={{ color: 'var(--brand-navy-700)' }}>Path: {exp.path_name}</p>}
-          {exp.objective && <p className="text-[10px] text-[color:var(--ink-500)] mt-0.5 line-clamp-1">{exp.objective}</p>}
-          <p className="text-[10px] text-[color:var(--ink-400)] mt-0.5">Deleted {fmtDate(exp.deleted_at)}</p>
+          <p className="tp-card truncate text-[color:var(--surface-dark-900)]">{exp.title}</p>
+          {exp.path_name && <p className="tp-meta mt-1 font-semibold" style={{ color: 'var(--brand-navy-700)' }}>Path: {exp.path_name}</p>}
+          {exp.objective && <p className="tp-meta mt-1 text-[color:var(--ink-500)] line-clamp-1">{exp.objective}</p>}
+          <p className="tp-meta mt-1 text-[color:var(--ink-400)]">Deleted {fmtDate(exp.deleted_at)}</p>
 
           {/* Linked counts */}
           {counts === null ? (
-            <p className="text-[10px] text-[color:var(--ink-400)] mt-2 flex items-center gap-1"><Loader2 size={9} className="animate-spin" /> Loading linked records…</p>
+            <p className="tp-meta mt-2.5 flex items-center gap-1.5 text-[color:var(--ink-400)]"><Loader2 size={12} className="animate-spin" /> Loading linked records…</p>
           ) : (
-            <div className="mt-2 flex flex-wrap gap-3">
+            <div className="mt-2.5 flex flex-wrap gap-3">
               {[
                 { label: 'Mission', count: counts.missions },
                 { label: 'Proof', count: counts.proof },
                 { label: 'Contact', count: counts.contacts },
                 { label: 'Reflection', count: counts.reflections },
               ].map(({ label, count }) => (
-                <span key={label} className="text-[10px] text-[color:var(--ink-500)]">
+                <span key={label} className="tp-meta text-[color:var(--ink-500)]">
                   {count} {label}{count !== 1 ? 's' : ''}
                 </span>
               ))}
@@ -120,16 +120,16 @@ function ExperimentDeletedCard({ exp, onRestore, onPermanentDelete, actionLoadin
           <button
             onClick={() => onRestore(exp)}
             disabled={actionLoading === exp.id}
-            className="flex items-center gap-1 rounded-lg border border-[color:var(--ink-200)] px-3 py-1.5 text-xs font-semibold text-[color:var(--ink-700)] hover:border-green-400 hover:text-green-700 transition disabled:opacity-50"
+            className="tp-meta flex items-center gap-1.5 rounded-lg border border-[color:var(--ink-200)] px-3.5 py-2 font-semibold text-[color:var(--ink-700)] hover:border-green-400 hover:text-green-700 transition disabled:opacity-50"
           >
-            {actionLoading === exp.id ? <Loader2 size={11} className="animate-spin" /> : <RotateCcw size={11} />} Restore
+            {actionLoading === exp.id ? <Loader2 size={13} className="animate-spin" /> : <RotateCcw size={13} />} Restore
           </button>
           <button
             onClick={() => onPermanentDelete(exp)}
             disabled={actionLoading === exp.id}
-            className="flex items-center gap-1 rounded-lg border border-red-100 px-3 py-1.5 text-xs font-semibold text-red-400 hover:border-red-400 hover:text-red-600 transition disabled:opacity-50"
+            className="tp-meta flex items-center gap-1.5 rounded-lg border border-red-100 px-3 py-2 font-semibold text-red-400 hover:border-red-400 hover:text-red-600 transition disabled:opacity-50"
           >
-            <Trash2 size={11} />
+            <Trash2 size={13} />
           </button>
         </div>
       </div>
@@ -146,39 +146,39 @@ function DeletedItemCard({ item, tab, experimentsMap, missionsMap, onRestore, on
   const mission = item.mission_id ? missionsMap[item.mission_id] : null;
 
   return (
-    <div className="rounded-[16px] border border-[color:var(--ink-200)] bg-white p-4">
+    <div className="rounded-[16px] border border-[color:var(--ink-200)] bg-white p-5">
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
-          <div className="flex flex-wrap items-center gap-2 mb-1">
-            <span className="rounded-full px-2.5 py-0.5 text-[10px] font-bold" style={{ background: 'var(--ink-100)', color: 'var(--brand-navy-900)' }}>
+          <div className="flex flex-wrap items-center gap-2 mb-2">
+            <span className="tp-meta rounded-full px-2.5 py-0.5 font-bold" style={{ background: 'var(--ink-100)', color: 'var(--brand-navy-900)' }}>
               {tab.label.replace(/s$/, '')}
             </span>
-            <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold flex items-center gap-1 ${urgent ? 'bg-red-50 text-red-600' : 'bg-amber-50 text-amber-700'}`}>
-              <Clock size={9} /> {days === 0 ? 'Expires today' : `${days} day${days !== 1 ? 's' : ''} left`}
+            <span className={`tp-meta rounded-full px-2.5 py-0.5 font-bold flex items-center gap-1.5 ${urgent ? 'bg-red-50 text-red-600' : 'bg-amber-50 text-amber-700'}`}>
+              <Clock size={12} /> {days === 0 ? 'Expires today' : `${days} day${days !== 1 ? 's' : ''} left`}
             </span>
           </div>
-          <p className="font-semibold text-sm text-[color:var(--surface-dark-900)] truncate">{name}</p>
-          <p className="text-[10px] text-[color:var(--ink-400)] mt-0.5">Deleted {fmtDate(item.deleted_at)}</p>
-          <div className="mt-1.5 flex flex-wrap gap-3">
+          <p className="tp-card truncate text-[color:var(--surface-dark-900)]">{name}</p>
+          <p className="tp-meta mt-1 text-[color:var(--ink-400)]">Deleted {fmtDate(item.deleted_at)}</p>
+          <div className="mt-2 flex flex-wrap gap-3">
             {exp ? (
-              <p className="text-[10px] text-[color:var(--ink-500)]">Experiment: <span className="font-semibold">{exp.title}</span></p>
+              <p className="tp-meta text-[color:var(--ink-500)]">Experiment: <span className="font-semibold">{exp.title}</span></p>
             ) : item.experiment_id ? (
-              <p className="text-[10px] text-[color:var(--ink-400)] italic">Experiment no longer exists, can restore as unlinked</p>
+              <p className="tp-meta text-[color:var(--ink-400)] italic">Experiment no longer exists, can restore as unlinked</p>
             ) : null}
-            {exp?.path_name && <p className="text-[10px] text-[color:var(--ink-400)]">Path: {exp.path_name}</p>}
-            {mission && <p className="text-[10px] text-[color:var(--ink-400)]">Mission: {mission.title}</p>}
+            {exp?.path_name && <p className="tp-meta text-[color:var(--ink-400)]">Path: {exp.path_name}</p>}
+            {mission && <p className="tp-meta text-[color:var(--ink-400)]">Mission: {mission.title}</p>}
           </div>
         </div>
         <div className="flex gap-2 shrink-0 mt-1">
           <button onClick={() => onRestore(item, tab)}
             disabled={actionLoading === item.id}
-            className="flex items-center gap-1 rounded-lg border border-[color:var(--ink-200)] px-3 py-1.5 text-xs font-semibold text-[color:var(--ink-700)] hover:border-green-400 hover:text-green-700 transition disabled:opacity-50">
-            {actionLoading === item.id ? <Loader2 size={11} className="animate-spin" /> : <RotateCcw size={11} />} Restore
+            className="tp-meta flex items-center gap-1.5 rounded-lg border border-[color:var(--ink-200)] px-3.5 py-2 font-semibold text-[color:var(--ink-700)] hover:border-green-400 hover:text-green-700 transition disabled:opacity-50">
+            {actionLoading === item.id ? <Loader2 size={13} className="animate-spin" /> : <RotateCcw size={13} />} Restore
           </button>
           <button onClick={() => onPermanentDelete(item, tab)}
             disabled={actionLoading === item.id}
-            className="flex items-center gap-1 rounded-lg border border-red-100 px-3 py-1.5 text-xs font-semibold text-red-400 hover:border-red-400 hover:text-red-600 transition disabled:opacity-50">
-            <Trash2 size={11} />
+            className="tp-meta flex items-center gap-1.5 rounded-lg border border-red-100 px-3 py-2 font-semibold text-red-400 hover:border-red-400 hover:text-red-600 transition disabled:opacity-50">
+            <Trash2 size={13} />
           </button>
         </div>
       </div>
@@ -193,7 +193,7 @@ export default function RecentlyDeleted() {
   const [loading, setLoading] = useState(true);
   const [experiments, setExperiments] = useState([]);
   const [missions, setMissions] = useState([]);
-  const [confirmPerm, setConfirmPerm] = useState(null); // { item, tab } — for non-experiment tabs
+  const [confirmPerm, setConfirmPerm] = useState(null); // { item, tab }, for non-experiment tabs
   const [permExpTarget, setPermExpTarget] = useState(null); // experiment for custom modal
   const [actionLoading, setActionLoading] = useState(null);
 
@@ -236,7 +236,7 @@ export default function RecentlyDeleted() {
     }
   };
 
-  // Restore an experiment — return to prior status
+  // Restore an experiment, returning it to its prior status
   const handleRestoreExperiment = async (exp) => {
     setActionLoading(exp.id);
     try {
@@ -275,7 +275,7 @@ export default function RecentlyDeleted() {
   const currentItems = items[activeTab] || [];
 
   return (
-    <main className="mx-auto max-w-3xl px-5 py-10 sm:px-8">
+    <main className="app-page">
       {confirmPerm && (
         <PermanentDeleteConfirm
           itemName={getItemName(confirmPerm.item, confirmPerm.tab.nameField)}
@@ -302,8 +302,8 @@ export default function RecentlyDeleted() {
           const count = (items[tab.id] || []).length;
           return (
             <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-              className={`shrink-0 px-4 py-2.5 text-sm font-semibold transition border-b-2 -mb-px ${activeTab === tab.id ? 'border-[color:var(--brand-navy-900)] text-[color:var(--brand-navy-900)]' : 'border-transparent text-[color:var(--ink-500)] hover:text-[color:var(--ink-700)]'}`}>
-              {tab.label} {count > 0 && <span className="ml-1 rounded-full px-1.5 py-0.5 text-[10px] font-bold bg-[color:var(--ink-100)] text-[color:var(--brand-navy-900)]">{count}</span>}
+              className={`tp-body shrink-0 px-4 py-3 font-semibold transition border-b-2 -mb-px ${activeTab === tab.id ? 'border-[color:var(--brand-navy-900)] text-[color:var(--brand-navy-900)]' : 'border-transparent text-[color:var(--ink-500)] hover:text-[color:var(--ink-700)]'}`}>
+              {tab.label} {count > 0 && <span className="tp-meta ml-1.5 rounded-full px-2 py-0.5 font-bold bg-[color:var(--ink-100)] text-[color:var(--brand-navy-900)]">{count}</span>}
             </button>
           );
         })}
@@ -313,8 +313,8 @@ export default function RecentlyDeleted() {
         <SkCards count={3} h={128} gap={12} r={20} />
       ) : currentItems.length === 0 ? (
         <div className="rounded-[24px] border border-dashed border-[color:var(--ink-200)] py-16 text-center">
-          <p className="text-sm font-semibold text-[color:var(--surface-dark-900)]">No deleted {currentTab?.label.toLowerCase()} found.</p>
-          <p className="text-xs text-[color:var(--ink-400)] mt-1">Items you delete will appear here for 30 days.</p>
+          <p className="tp-section text-[color:var(--surface-dark-900)]">No deleted {currentTab?.label.toLowerCase()} found.</p>
+          <p className="tp-body mt-2 text-[color:var(--ink-400)]">Items you delete will appear here for 30 days.</p>
         </div>
       ) : (
         <div className="space-y-3">

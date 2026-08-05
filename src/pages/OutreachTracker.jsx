@@ -74,7 +74,7 @@ function ContactCard({ c, experimentsMap, missionsMap, onEdit, onStatusChange, o
   const websiteHref = safeExternalUrl(c.website_url) || safeExternalUrl('https://' + (c.website_url || ''));
 
   return (
-    <div className="rounded-[20px] border border-[color:var(--ink-200)] bg-white p-5">
+    <div className="tp-card-body rounded-[20px] border border-[color:var(--ink-200)] bg-white">
       {confirmDelete && (
         <SoftDeleteConfirm
           itemName={c.name}
@@ -87,22 +87,22 @@ function ContactCard({ c, experimentsMap, missionsMap, onEdit, onStatusChange, o
         <div className="flex-1 min-w-0">
           <div className="flex flex-wrap items-center gap-2 mb-1">
             {c.contact_type && (
-              <span className="rounded-full px-2.5 py-0.5 text-xs font-bold" style={{ background: 'var(--ink-100)', color: 'var(--brand-navy-700)' }}>
+              <span className="tp-meta rounded-full px-2.5 py-0.5 font-bold" style={{ background: 'var(--ink-100)', color: 'var(--brand-navy-700)' }}>
                 {CONTACT_TYPE_LABELS[c.contact_type] || c.contact_type}
               </span>
             )}
-            <span className="rounded-full px-2.5 py-0.5 text-xs font-bold" style={{ background: s.bg, color: s.text }}>
+            <span className="tp-meta rounded-full px-2.5 py-0.5 font-bold" style={{ background: s.bg, color: s.text }}>
               {s.label}
             </span>
             {c.thank_you_sent && (
-              <span className="rounded-full px-2.5 py-0.5 text-xs font-bold flex items-center gap-1" style={{ background: 'var(--success-50)', color: 'var(--success-700)' }}>
-                <CheckCircle size={10} /> Thank-you sent
+              <span className="tp-meta rounded-full px-2.5 py-0.5 font-bold flex items-center gap-1.5" style={{ background: 'var(--success-50)', color: 'var(--success-700)' }}>
+                <CheckCircle size={12} /> Thank-you sent
               </span>
             )}
           </div>
-          <h3 className="font-heading font-bold text-[color:var(--surface-dark-900)] leading-snug">{c.name}</h3>
+          <h3 className="tp-card text-[color:var(--surface-dark-900)]">{c.name}</h3>
           {(c.role || c.company) && (
-            <p className="text-sm text-[color:var(--ink-700)]">
+            <p className="tp-body mt-1 text-[color:var(--ink-700)]">
               {c.role}{c.role && c.company ? ' · ' : ''}{c.company}
             </p>
           )}
@@ -114,15 +114,15 @@ function ContactCard({ c, experimentsMap, missionsMap, onEdit, onStatusChange, o
           {menuOpen && (
             <div className="absolute right-0 top-8 z-10 w-44 rounded-xl border border-[color:var(--ink-200)] bg-white shadow-lg py-1">
               <button onClick={() => { setMenuOpen(false); onEdit(c); }}
-                className="w-full flex items-center gap-2 px-4 py-2 text-xs text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)]">
+                className="tp-meta w-full flex items-center gap-2 px-4 py-2.5 text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)]">
                 <Pencil size={13} /> Edit contact
               </button>
               <button onClick={() => { setMenuOpen(false); onToggleThankYou(c); }}
-                className="w-full flex items-center gap-2 px-4 py-2 text-xs text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)]">
+                className="tp-meta w-full flex items-center gap-2 px-4 py-2.5 text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)]">
                 <CheckCircle size={13} /> {c.thank_you_sent ? 'Unmark thank-you' : 'Mark thank-you sent'}
               </button>
               <button onClick={() => { setMenuOpen(false); setConfirmDelete(true); }}
-                className="w-full flex items-center gap-2 px-4 py-2 text-xs text-red-500 hover:bg-red-50">
+                className="tp-meta w-full flex items-center gap-2 px-4 py-2.5 text-red-500 hover:bg-red-50">
                 <Trash2 size={13} /> Delete contact
               </button>
             </div>
@@ -131,27 +131,27 @@ function ContactCard({ c, experimentsMap, missionsMap, onEdit, onStatusChange, o
       </div>
 
       {/* Contact methods */}
-      <div className="flex flex-wrap gap-3 mb-3">
+      <div className="flex flex-wrap gap-x-4 gap-y-2 mb-4">
         {c.email && (
-          <a href={`mailto:${c.email}`} className="flex items-center gap-1 text-xs text-[color:var(--ink-500)] hover:text-[color:var(--brand-navy-700)] transition">
-            <Mail size={12} />{c.email}
+          <a href={`mailto:${c.email}`} className="tp-meta flex items-center gap-1.5 text-[color:var(--ink-500)] hover:text-[color:var(--brand-navy-700)] transition">
+            <Mail size={13} />{c.email}
           </a>
         )}
         {c.phone && (
-          <a href={`tel:${c.phone}`} className="flex items-center gap-1 text-xs text-[color:var(--ink-500)] hover:text-[color:var(--brand-navy-700)] transition">
-            <Phone size={12} />{c.phone}
+          <a href={`tel:${c.phone}`} className="tp-meta flex items-center gap-1.5 text-[color:var(--ink-500)] hover:text-[color:var(--brand-navy-700)] transition">
+            <Phone size={13} />{c.phone}
           </a>
         )}
         {profileHref && (
           <a href={profileHref} target="_blank" rel="noopener noreferrer"
-            className="flex items-center gap-1 text-xs text-[color:var(--ink-500)] hover:text-[color:var(--brand-navy-700)] transition">
-            <ExternalLink size={12} />LinkedIn
+            className="tp-meta flex items-center gap-1.5 text-[color:var(--ink-500)] hover:text-[color:var(--brand-navy-700)] transition">
+            <ExternalLink size={13} />LinkedIn
           </a>
         )}
         {websiteHref && (
           <a href={websiteHref} target="_blank" rel="noopener noreferrer"
-            className="flex items-center gap-1 text-xs text-[color:var(--ink-500)] hover:text-[color:var(--brand-navy-700)] transition">
-            <ExternalLink size={12} />Website
+            className="tp-meta flex items-center gap-1.5 text-[color:var(--ink-500)] hover:text-[color:var(--brand-navy-700)] transition">
+            <ExternalLink size={13} />Website
           </a>
         )}
       </div>
@@ -159,14 +159,14 @@ function ContactCard({ c, experimentsMap, missionsMap, onEdit, onStatusChange, o
       {/* Status selector */}
       <div className="mb-3">
         <select value={c.response_status} onChange={e => onStatusChange(c.id, e.target.value)}
-          className="rounded-lg border border-[color:var(--ink-200)] px-2.5 py-1.5 text-xs outline-none"
+          className="tp-meta rounded-lg border border-[color:var(--ink-200)] px-3 py-2 outline-none"
           style={{ background: s.bg, color: s.text }}>
           {ALL_STATUS_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
         </select>
       </div>
 
       {/* Dates */}
-      <div className="flex flex-wrap gap-3 text-xs text-[color:var(--ink-400)] mb-3">
+      <div className="tp-meta flex flex-wrap gap-x-4 gap-y-2 text-[color:var(--ink-400)] mb-3">
         {c.date_contacted && <span>First contact: <span className="text-[color:var(--ink-500)] font-medium">{fmtDate(c.date_contacted)}</span></span>}
         {c.followup_date && (
           <span className={isOverdue ? 'text-[color:var(--danger-700)] font-semibold' : ''}>
@@ -177,21 +177,21 @@ function ContactCard({ c, experimentsMap, missionsMap, onEdit, onStatusChange, o
       </div>
 
       {/* Notes preview */}
-      {c.notes && <p className="text-xs text-[color:var(--ink-500)] line-clamp-2 mb-3">{c.notes}</p>}
+      {c.notes && <p className="tp-prose text-[color:var(--ink-500)] line-clamp-2 mb-3">{c.notes}</p>}
 
       {/* Experiment / Path / Mission */}
       {(exp || c.path_being_tested || mission) && (
         <div className="pt-3 border-t border-[color:var(--ink-100)] flex flex-wrap gap-3">
           {exp && (
-            <span className="flex items-center gap-1 text-xs text-[color:var(--ink-500)]">
-              <Beaker size={11} />Experiment: <span className="font-semibold text-[color:var(--ink-700)]">{exp.title}</span>
+            <span className="tp-meta flex items-center gap-1.5 text-[color:var(--ink-500)]">
+              <Beaker size={13} />Experiment: <span className="font-semibold text-[color:var(--ink-700)]">{exp.title}</span>
             </span>
           )}
           {(c.path_being_tested || exp?.path_name) && (
-            <span className="text-xs text-[color:var(--ink-400)]">Path: {c.path_being_tested || exp?.path_name}</span>
+            <span className="tp-meta text-[color:var(--ink-400)]">Path: {c.path_being_tested || exp?.path_name}</span>
           )}
           {mission && (
-            <span className="text-xs text-[color:var(--ink-400)]">Mission: <span className="font-semibold text-[color:var(--ink-500)]">{mission.title}</span></span>
+            <span className="tp-meta text-[color:var(--ink-400)]">Mission: <span className="font-semibold text-[color:var(--ink-500)]">{mission.title}</span></span>
           )}
         </div>
       )}
@@ -291,7 +291,7 @@ export default function OutreachTracker() {
   });
 
   return (
-    <main className="mx-auto max-w-6xl px-5 py-10 sm:px-8">
+    <main className="app-page">
       {outreachPlanPath && (
         <OutreachPlanModal
           path={outreachPlanPath}
@@ -323,7 +323,7 @@ export default function OutreachTracker() {
         description="Track every professional conversation. Follow up on time. Build real relationships."
         action={
           <button onClick={() => setModal('new')}
-            className="inline-flex items-center gap-2 rounded-[10px] px-5 py-2.5 text-sm font-semibold text-white shrink-0"
+            className="tp-body inline-flex items-center gap-2 rounded-[10px] px-6 py-3 font-semibold text-white shrink-0"
             style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}>
             <Plus size={16} /> Add Contact
           </button>
@@ -352,13 +352,13 @@ export default function OutreachTracker() {
             onChange={setSelectedPathId}
             showAll
           />
-          {selectedPath && <span className="text-xs text-[color:var(--ink-400)]">Contacts for <strong className="text-[color:var(--ink-700)]">{selectedPath.path_name}</strong></span>}
+          {selectedPath && <span className="tp-meta text-[color:var(--ink-400)]">Contacts for <strong className="text-[color:var(--ink-700)]">{selectedPath.path_name}</strong></span>}
           {selectedPath && (
             <button
               onClick={() => setOutreachPlanPath(selectedPath)}
-              className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition"
+              className="tp-meta flex items-center gap-1.5 rounded-lg px-3.5 py-2 font-semibold transition"
               style={{ background: 'var(--background-tertiary)', color: 'var(--brand-navy-700)', border: '1px solid var(--border-light)' }}>
-              <Users size={12} /> Suggested Outreach
+              <Users size={13} /> Suggested Outreach
             </button>
           )}
         </div>
@@ -366,8 +366,8 @@ export default function OutreachTracker() {
 
       {overdue.length > 0 && (
         <div className="mb-6 rounded-[16px] p-4" style={{ background: 'var(--warning-50)', border: '1px solid rgba(180,83,9,0.25)' }}>
-          <p className="text-xs font-bold uppercase tracking-wide text-[color:var(--warning-700)] mb-1">Follow-ups overdue</p>
-          <p className="text-sm text-[color:var(--ink-700)]">{overdue.length} contact{overdue.length > 1 ? 's' : ''} need follow-up. Reschedule or mark complete.</p>
+          <p className="tp-eyebrow text-[color:var(--warning-700)] mb-1.5">Follow-ups overdue</p>
+          <p className="tp-body text-[color:var(--ink-700)]">{overdue.length} contact{overdue.length > 1 ? 's' : ''} need follow-up. Reschedule or mark complete.</p>
         </div>
       )}
 
@@ -397,7 +397,7 @@ export default function OutreachTracker() {
 
       {/* Email Templates */}
       <div className="mb-6">
-        <button onClick={() => setTemplates(!templates)} className="text-sm font-semibold transition hover:opacity-80" style={{ color: 'var(--brand-navy-700)' }}>
+        <button onClick={() => setTemplates(!templates)} className="tp-body font-semibold transition hover:opacity-80" style={{ color: 'var(--brand-navy-700)' }}>
           {templates ? 'Hide' : 'View'} outreach templates →
         </button>
         {templates && (
@@ -410,8 +410,8 @@ export default function OutreachTracker() {
               { label: 'Thank-you note', body: 'Hi [Name],\n\nThank you for taking the time to speak with me. Your insight about [specific thing they said] was genuinely valuable and I\'ve already begun [action taken].\n\nI\'ll keep you updated on my progress. Thank you again for your generosity.\n\n[Your Name]' },
             ].map(t => (
               <div key={t.label} className="rounded-[16px] border border-[color:var(--ink-200)] bg-white p-4">
-                <p className="text-xs font-bold uppercase tracking-wide mb-2" style={{ color: 'var(--brand-navy-900)' }}>{t.label}</p>
-                <pre className="text-xs text-[color:var(--ink-700)] whitespace-pre-wrap font-body leading-5">{t.body}</pre>
+                <p className="tp-eyebrow mb-2.5" style={{ color: 'var(--brand-navy-900)' }}>{t.label}</p>
+                <pre className="tp-meta text-[color:var(--ink-700)] whitespace-pre-wrap font-body">{t.body}</pre>
               </div>
             ))}
           </div>
@@ -422,30 +422,30 @@ export default function OutreachTracker() {
         <SkCards count={4} h={150} r={20} />
       ) : loadError ? (
         <div className="rounded-[24px] border border-dashed border-red-200 p-16 text-center">
-          <h3 className="font-heading text-xl font-bold text-[color:var(--surface-dark-900)]">We couldn't load your outreach contacts.</h3>
-          <p className="mt-2 text-sm text-[color:var(--ink-500)]">There was a problem fetching your records. Please try again.</p>
+          <h3 className="tp-section text-[color:var(--surface-dark-900)]">We couldn't load your outreach contacts.</h3>
+          <p className="tp-body mx-auto mt-2.5 max-w-[46ch] text-[color:var(--ink-500)]">There was a problem fetching your records. Please try again.</p>
           <div className="mt-6 flex justify-center gap-3">
-            <button onClick={load} className="inline-flex items-center gap-2 rounded-[10px] px-5 py-2.5 text-sm font-semibold text-white" style={{ background: 'var(--brand-navy-900)' }}>Retry</button>
-            <button onClick={() => navigate('/journey')} className="inline-flex items-center gap-2 rounded-[10px] border border-[color:var(--ink-200)] px-5 py-2.5 text-sm font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)]">Return to Dashboard</button>
+            <button onClick={load} className="tp-body inline-flex items-center gap-2 rounded-[10px] px-5 py-2.5 font-semibold text-white" style={{ background: 'var(--brand-navy-900)' }}>Retry</button>
+            <button onClick={() => navigate('/journey')} className="tp-body inline-flex items-center gap-2 rounded-[10px] border border-[color:var(--ink-200)] px-5 py-2.5 font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)]">Return to Dashboard</button>
           </div>
         </div>
       ) : contacts.length === 0 ? (
         <div className="rounded-[24px] border border-dashed border-[color:var(--ink-200)] p-16 text-center">
           <Mail size={32} className="mx-auto mb-4 text-[color:var(--ink-300)]" />
-          <h3 className="font-heading text-xl font-bold text-[color:var(--surface-dark-900)]">No contacts added yet.</h3>
-          <p className="mt-2 text-sm text-[color:var(--ink-500)]">Add people connected to your experiments so you can track outreach, conversations, and follow-ups.</p>
-          <button onClick={() => setModal('new')} className="mt-6 inline-flex items-center gap-2 rounded-[10px] px-6 py-3 text-sm font-semibold text-white"
+          <h3 className="tp-section text-[color:var(--surface-dark-900)]">No contacts added yet.</h3>
+          <p className="tp-body mx-auto mt-2.5 max-w-[52ch] text-[color:var(--ink-500)]">Add people connected to your experiments so you can track outreach, conversations, and follow-ups.</p>
+          <button onClick={() => setModal('new')} className="tp-body mt-6 inline-flex items-center gap-2 rounded-[10px] px-6 py-3 font-semibold text-white"
             style={{ background: 'var(--brand-navy-900)' }}><Plus size={16} /> Add Contact</button>
         </div>
       ) : filtered.length === 0 ? (
         <div className="rounded-[24px] border border-dashed border-[color:var(--ink-200)] p-12 text-center">
-          <p className="font-heading text-lg font-bold text-[color:var(--surface-dark-900)]">No results match your filters.</p>
-          <p className="mt-2 text-sm text-[color:var(--ink-500)]">Try adjusting your search or filter.</p>
+          <p className="tp-section text-[color:var(--surface-dark-900)]">No results match your filters.</p>
+          <p className="tp-body mt-2.5 text-[color:var(--ink-500)]">Try adjusting your search or filter.</p>
         </div>
       ) : (
         <>
-          <p className="text-xs text-[color:var(--ink-400)] mb-4">{filtered.length} contact{filtered.length !== 1 ? 's' : ''}</p>
-          <div className="grid gap-4 sm:grid-cols-2">
+          <p className="tp-meta mb-4 text-[color:var(--ink-400)]">{filtered.length} contact{filtered.length !== 1 ? 's' : ''}</p>
+          <div className="grid gap-5 sm:grid-cols-2">
             {filtered.map(c => (
               <ContactCard
                 key={c.id}
