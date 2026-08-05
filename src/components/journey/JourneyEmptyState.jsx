@@ -60,8 +60,8 @@ export default function JourneyEmptyState({ variant, ctaTo }) {
       >
         <Icon size={20} style={{ color: 'var(--brand-navy-700)' }} />
       </div>
-      <h2 className="font-heading mt-4 text-xl font-bold" style={{ color: 'var(--text-primary)' }}>{title}</h2>
-      <p className="mx-auto mt-2 max-w-md text-sm leading-6" style={{ color: 'var(--text-secondary)' }}>{body}</p>
+      <h2 className="tp-section mt-5" style={{ color: 'var(--text-primary)' }}>{title}</h2>
+      <p className="tp-body mx-auto mt-2.5 max-w-md" style={{ color: 'var(--text-secondary)' }}>{body}</p>
       <Link
         to={ctaTo || cta.to}
         className="ui-press mt-5 inline-flex items-center justify-center rounded-[10px] px-6 font-heading font-bold text-white"

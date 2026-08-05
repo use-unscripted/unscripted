@@ -16,11 +16,11 @@ export default function PathSelectedConfirm({ pathName, experiment, onDismiss })
       <div className="flex items-start gap-3">
         <CheckCircle2 size={20} className="mt-0.5 shrink-0" style={{ color: 'var(--success-700)' }} />
         <div className="min-w-0">
-          <h2 className="font-heading text-lg font-bold" style={{ color: '#14532D' }}>
+          <h2 className="tp-section" style={{ color: '#14532D' }}>
             You are now testing {pathName}. Your first experiment is ready.
           </h2>
           {experiment?.title && (
-            <p className="mt-1 text-sm" style={{ color: '#166534' }}>{experiment.title}</p>
+            <p className="tp-body mt-1.5" style={{ color: '#166534' }}>{experiment.title}</p>
           )}
           <div className="mt-4 flex flex-wrap items-center gap-3">
             <Link
@@ -30,7 +30,7 @@ export default function PathSelectedConfirm({ pathName, experiment, onDismiss })
             >
               Open my experiment <ArrowRight size={16} />
             </Link>
-            <button type="button" onClick={onDismiss} className="text-sm font-semibold" style={{ color: '#166534' }}>
+            <button type="button" onClick={onDismiss} className="tp-body font-semibold" style={{ color: '#166534' }}>
               Stay on My Journey
             </button>
           </div>

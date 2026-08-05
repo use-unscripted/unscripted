@@ -50,16 +50,16 @@ export default function ContinuationGate() {
     return (
       <section className="rounded-[20px] bg-white p-6 text-center sm:p-8" style={{ border: '1px solid var(--border-light)' }}>
         <CheckCircle2 size={22} className="mx-auto" style={{ color: 'var(--success-700)' }} />
-        <h2 className="font-heading mt-3 text-xl font-bold" style={{ color: 'var(--text-primary)' }}>
+        <h2 className="tp-section mt-4" style={{ color: 'var(--text-primary)' }}>
           Thanks, that&apos;s recorded.
         </h2>
-        <p className="mx-auto mt-2 max-w-md text-sm leading-6" style={{ color: 'var(--text-secondary)' }}>
+        <p className="tp-body mx-auto mt-2.5 max-w-md" style={{ color: 'var(--text-secondary)' }}>
           {saved.wants_continued_access
             ? 'We have your interest in continued access and your preferred option. We will be in touch before opening it.'
             : 'We have noted that you are not looking to continue right now. Everything you built stays in your Evidence Library.'}
         </p>
         <button type="button" onClick={() => setSaved(null)}
-          className="mt-4 text-sm font-bold" style={{ color: 'var(--brand-navy-700)' }}>
+          className="tp-body mt-5 font-bold" style={{ color: 'var(--brand-navy-700)' }}>
           Change my answer
         </button>
       </section>
@@ -68,10 +68,10 @@ export default function ContinuationGate() {
 
   return (
     <section className="rounded-[20px] bg-white p-6 sm:p-8" style={{ border: '1px solid var(--border-light)' }}>
-      <h2 className="font-heading text-xl font-bold" style={{ color: 'var(--text-primary)' }}>
+      <h2 className="tp-section" style={{ color: 'var(--text-primary)' }}>
         {CONTINUATION_MESSAGE}
       </h2>
-      <p className="mt-2 text-sm leading-6" style={{ color: 'var(--text-secondary)' }}>
+      <p className="tp-prose mt-2.5" style={{ color: 'var(--text-secondary)' }}>
         Your first cycle is complete and everything you produced stays yours. Continued access is not open yet. Tell us
         whether you want it and which option fits, and nothing is charged.
       </p>
@@ -82,7 +82,7 @@ export default function ContinuationGate() {
           const on = wants === val;
           return (
             <button key={String(val)} type="button" onClick={() => { setWants(val); setError(''); }}
-              aria-pressed={on} className="ui-press rounded-[12px] p-3 text-left text-sm font-bold"
+              aria-pressed={on} className="ui-press tp-body rounded-[12px] p-3 text-left font-bold"
               style={on
                 ? { background: 'var(--brand-navy-900)', color: '#fff', minHeight: '48px' }
                 : { background: 'var(--background-secondary)', border: '1px solid var(--border-light)', color: 'var(--text-primary)', minHeight: '48px' }}>
@@ -104,8 +104,8 @@ export default function ContinuationGate() {
                   style={on
                     ? { background: 'var(--brand-navy-900)', color: '#fff', minHeight: '48px' }
                     : { background: 'var(--background-secondary)', border: '1px solid var(--border-light)', color: 'var(--text-primary)', minHeight: '48px' }}>
-                  <span className="block text-sm font-bold">{label}</span>
-                  <span className="mt-0.5 block text-xs" style={{ color: on ? 'rgba(255,255,255,.75)' : 'var(--text-muted)' }}>{sub}</span>
+                  <span className="tp-body block font-bold">{label}</span>
+                  <span className="tp-meta mt-1 block" style={{ color: on ? 'rgba(255,255,255,.75)' : 'var(--text-muted)' }}>{sub}</span>
                 </button>
               );
             })}
@@ -120,11 +120,11 @@ export default function ContinuationGate() {
       )}
 
       <button type="button" onClick={submit} disabled={busy || wants == null}
-        className="ui-press mt-5 flex w-full items-center justify-center gap-2 rounded-[10px] text-sm font-bold text-white disabled:opacity-50"
+        className="ui-press tp-body mt-5 flex w-full items-center justify-center gap-2 rounded-[10px] font-bold text-white disabled:opacity-50"
         style={{ background: 'var(--brand-navy-900)', minHeight: '50px' }}>
         {busy ? <><Loader2 size={15} className="animate-spin" /> Recording…</> : 'Record my answer'}
       </button>
-      <p className="mt-2 text-center text-xs" style={{ color: 'var(--text-muted)' }}>
+      <p className="tp-meta mt-2.5 text-center" style={{ color: 'var(--text-muted)' }}>
         No payment is taken and no card is requested in this phase.
       </p>
     </section>

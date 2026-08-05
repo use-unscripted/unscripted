@@ -49,14 +49,14 @@ function ListingLinks({ event, college, size = 'sm' }) {
   const searchUrl = eventSearchUrl(event, college);
   const registers = Boolean(event.has_register && event.url);
 
-  const pad = size === 'sm' ? 'px-2.5 py-1.5 text-[11px]' : 'px-4 py-2 text-xs';
-  const iconSize = size === 'sm' ? 11 : 13;
+  const pad = size === 'sm' ? 'px-3.5 py-2 tp-meta' : 'px-4 py-2.5 tp-meta';
+  const iconSize = size === 'sm' ? 13 : 14;
 
   const secondary = `inline-flex items-center gap-1.5 rounded-lg border font-bold transition hover:bg-white ${pad}`;
   const primary = `inline-flex items-center gap-1.5 rounded-lg font-bold text-white transition hover:-translate-y-px ${pad}`;
 
   return (
-    <div className="mt-2 flex flex-wrap items-center gap-1.5">
+    <div className="mt-3.5 flex flex-wrap items-center gap-2">
       {registers && (
         <a
           href={event.url}
@@ -120,18 +120,18 @@ export function RecommendedEvent({ event, college, timeOnly = false }) {
       style={{ borderColor: 'rgba(214,182,106,0.55)', background: 'var(--background-primary)' }}
     >
       <div
-        className="flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wide"
+        className="tp-eyebrow flex items-center gap-1.5 px-4 py-2"
         style={{ background: 'rgba(214,182,106,0.16)', color: 'var(--brand-gold-700)' }}
       >
         <Star size={11} aria-hidden="true" /> Worth your time
         {countdown && <span className="ml-auto normal-case tracking-normal">{countdown}</span>}
       </div>
 
-      <div className="px-3 py-2.5">
-        <p className="text-sm font-bold leading-snug" style={{ color: 'var(--text-primary)' }}>
+      <div className="px-4 py-3.5">
+        <p className="tp-card" style={{ color: 'var(--text-primary)' }}>
           {event.title}
         </p>
-        <p className="mt-0.5 text-xs font-semibold" style={{ color: 'var(--text-secondary)' }}>
+        <p className="tp-meta mt-1.5" style={{ color: 'var(--text-secondary)' }}>
           {whenLabel(event, timeOnly)}
           {place && (
             <>
@@ -142,7 +142,7 @@ export function RecommendedEvent({ event, college, timeOnly = false }) {
         </p>
 
         {reason && (
-          <p className="mt-2 text-xs leading-relaxed" style={{ color: 'var(--text-primary)' }}>
+          <p className="tp-prose mt-3" style={{ color: 'var(--text-primary)' }}>
             {reason}
           </p>
         )}
@@ -150,7 +150,7 @@ export function RecommendedEvent({ event, college, timeOnly = false }) {
         <ListingLinks event={event} college={college} size="md" />
 
         {host && (
-          <p className="mt-2 text-[11px]" style={{ color: 'var(--text-muted)' }}>
+          <p className="tp-meta mt-3" style={{ color: 'var(--text-muted)' }}>
             From {host}. Check the time and room before you go.
           </p>
         )}
@@ -174,7 +174,7 @@ export function CompactEvent({ event, college, timeOnly = false, showCountdown =
   return (
     <div>
       <div
-        className="rounded-xl p-2.5"
+        className="rounded-xl p-4"
         style={{
           background: open ? 'var(--background-tertiary)' : 'var(--background-secondary)',
           border: '1px solid var(--border-light)',
@@ -187,10 +187,10 @@ export function CompactEvent({ event, college, timeOnly = false, showCountdown =
             aria-expanded={open}
             className="min-w-0 flex-1 text-left"
           >
-            <p className="text-sm font-semibold leading-snug" style={{ color: 'var(--text-primary)' }}>
+            <p className="tp-card" style={{ color: 'var(--text-primary)' }}>
               {event.title}
             </p>
-            <p className="mt-0.5 text-xs" style={{ color: 'var(--text-muted)' }}>
+            <p className="tp-meta mt-1.5" style={{ color: 'var(--text-muted)' }}>
               {whenLabel(event, timeOnly)}
               {place && (
                 <>
@@ -204,7 +204,7 @@ export function CompactEvent({ event, college, timeOnly = false, showCountdown =
           <span className="flex shrink-0 items-center gap-1.5">
             {countdown && (
               <span
-                className="rounded-full px-2 py-0.5 text-[10px] font-bold"
+                className="tp-meta rounded-full px-2.5 py-1 font-semibold"
                 style={{ background: 'var(--background-tertiary)', color: 'var(--text-muted)' }}
               >
                 {countdown}

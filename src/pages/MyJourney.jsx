@@ -90,16 +90,16 @@ export default function MyJourney() {
     // the title is real because it never changes, so only the parts that
     // depend on data are standing in for anything.
     return (
-      <main className="mx-auto max-w-4xl px-5 py-8 sm:px-8 sm:py-10">
-        <header className="mb-7">
-          <h1 className="font-heading text-2xl font-bold tracking-tight sm:text-3xl" style={{ color: 'var(--text-primary)' }}>
+      <main className="app-page">
+        <header className="mb-10">
+          <h1 className="tp-page" style={{ color: 'var(--text-primary)' }}>
             My Journey
           </h1>
-          <div className="mt-2 flex h-6 items-center">
+          <div className="mt-3 flex h-7 items-center">
             <Sk h={13} r={5} w="72%" style={{ maxWidth: 440 }} />
           </div>
         </header>
-        <div className="space-y-9">
+        <div className="app-stack">
           <Sk h={232} r={22} />
           <div className="space-y-4">
             {[0, 1, 2, 3, 4, 5].map(i => <Sk key={i} h={30} r={8} w={i % 2 ? '58%' : '74%'} />)}
@@ -123,14 +123,14 @@ export default function MyJourney() {
   });
 
   const shell = (children, sub) => (
-    <main className="mx-auto max-w-4xl px-5 py-8 sm:px-8 sm:py-10">
-      <header className="mb-7">
-        <h1 className="font-heading text-2xl font-bold tracking-tight sm:text-3xl" style={{ color: 'var(--text-primary)' }}>
+    <main className="app-page">
+      <header className="mb-10">
+        <h1 className="tp-page" style={{ color: 'var(--text-primary)' }}>
           My Journey
         </h1>
-        <p className="mt-2 text-sm leading-6" style={{ color: 'var(--text-secondary)' }}>{sub}</p>
+        <p className="tp-lead mt-3" style={{ color: 'var(--text-secondary)' }}>{sub}</p>
       </header>
-      <div className="space-y-9">{children}</div>
+      <div className="app-stack">{children}</div>
     </main>
   );
 
@@ -220,7 +220,7 @@ export default function MyJourney() {
 
       <JourneyStages stage={stage} detail={stageDetail} />
 
-      <p className="pt-2 text-center text-xs" style={{ color: 'var(--text-muted)' }}>
+      <p className="tp-meta pt-2 text-center" style={{ color: 'var(--text-muted)' }}>
         Working on something else? <Link to="/paths" className="font-semibold" style={{ color: 'var(--brand-navy-700)' }}>Compare all paths</Link>
         {' · '}
         <Link to="/experiments" className="font-semibold" style={{ color: 'var(--brand-navy-700)' }}>All missions</Link>

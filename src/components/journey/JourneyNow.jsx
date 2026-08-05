@@ -27,11 +27,11 @@ export default function JourneyNow({ stage, path, experiment, action, effort, on
     </>
   );
   const btnClass =
-    'ui-press journey-now-cta inline-flex w-full items-center justify-center gap-2 rounded-[12px] px-7 font-heading text-base font-bold sm:w-auto';
+    'ui-press journey-now-cta inline-flex w-full items-center justify-center gap-2 rounded-[12px] px-8 font-heading text-[1.0625rem] font-bold sm:w-auto';
 
   return (
     <section
-      className="relative overflow-hidden rounded-[22px] px-6 py-7 sm:px-9 sm:py-9"
+      className="relative overflow-hidden rounded-[22px] px-6 py-8 sm:px-10 sm:py-11"
       style={{
         background: 'linear-gradient(148deg, var(--brand-navy-900) 0%, var(--brand-navy-700) 100%)',
       }}
@@ -46,20 +46,20 @@ export default function JourneyNow({ stage, path, experiment, action, effort, on
       />
 
       <div className="max-w-2xl">
-        <p className="font-heading text-xs font-bold uppercase tracking-[.16em]" style={{ color: 'var(--brand-gold-500)' }}>
+        <p className="tp-eyebrow" style={{ color: 'var(--brand-gold-500)' }}>
           Now · {current.label}
         </p>
 
         <h2
           id="journey-now-subject"
-          className="font-heading mt-3 text-2xl font-bold leading-tight text-white sm:text-[2rem]"
+          className="tp-hero mt-4 text-white"
           style={{ overflowWrap: 'anywhere' }}
         >
           {subject}
         </h2>
 
         {detail && (
-          <p className="mt-3 text-sm leading-6" style={{ color: 'var(--ink-300)' }}>
+          <p className="tp-lead mt-4" style={{ color: 'var(--ink-300)' }}>
             {detail}
           </p>
         )}
@@ -71,7 +71,7 @@ export default function JourneyNow({ stage, path, experiment, action, effort, on
             <button type="button" onClick={onAnchorClick} className={btnClass}>{btn}</button>
           )}
           {effort && (
-            <p className="text-sm" style={{ color: 'var(--ink-300)' }}>{effort}</p>
+            <p className="tp-meta" style={{ color: 'var(--ink-300)' }}>{effort}</p>
           )}
         </div>
       </div>

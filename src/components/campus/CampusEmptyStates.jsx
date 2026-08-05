@@ -34,10 +34,10 @@ import {
 export function EmptyPanel({ icon: Icon, title, className = 'mb-5', children }) {
   return (
     <div
-      className={`overflow-hidden rounded-xl border px-4 py-3.5 ${className}`}
+      className={`overflow-hidden rounded-xl border px-5 py-4 ${className}`}
       style={{ borderColor: '#E2E8F0', background: '#F8FAFC' }}
     >
-      <p className="flex items-center gap-1.5 text-sm font-semibold text-[#334155]">
+      <p className="tp-card flex items-center gap-2 text-[#334155]">
         <Icon size={14} className="shrink-0" style={{ color: 'var(--brand-gold-500, #D6B66A)' }} aria-hidden="true" />
         {title}
       </p>
@@ -61,7 +61,7 @@ export function SearchYourSchoolLink({ college, label, looking }) {
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className="mt-2.5 inline-flex items-start gap-1.5 text-xs font-semibold transition hover:underline"
+      className="tp-meta mt-3 inline-flex items-start gap-1.5 font-semibold transition hover:underline"
       style={{ color: 'var(--brand-navy-700)' }}
     >
       <Search size={12} className="mt-0.5 shrink-0" aria-hidden="true" />
@@ -107,7 +107,7 @@ export function NoCollegeState({ profile, disabled, onSaved, className }) {
 
   return (
     <EmptyPanel icon={School} title="Which school do you go to?" className={className}>
-      <p className="mt-1 text-xs leading-relaxed text-[#64748B]">
+      <p className="tp-prose mt-1.5 text-[#64748B]">
         Tell us and we&apos;ll pull real events off your campus calendar, so the first step of
         your guide has a date somebody else already set.
       </p>
@@ -132,7 +132,7 @@ export function NoCollegeState({ profile, disabled, onSaved, className }) {
         <button
           type="submit"
           disabled={disabled || saving || !value.trim()}
-          className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg px-3.5 py-2 text-xs font-bold text-white transition disabled:opacity-50"
+          className="tp-meta inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg px-4 py-2.5 font-bold text-white transition disabled:opacity-50"
           style={{ background: 'var(--brand-navy-700)' }}
         >
           {saving
@@ -143,11 +143,11 @@ export function NoCollegeState({ profile, disabled, onSaved, className }) {
       </form>
 
       {error && (
-        <p className="mt-2 flex items-center gap-1.5 text-xs text-[#B91C1C]" role="alert">
+        <p className="tp-meta mt-2.5 flex items-center gap-1.5 text-[#B91C1C]" role="alert">
           <AlertCircle size={12} aria-hidden="true" /> {error}
         </p>
       )}
-      <p className="mt-2 text-xs text-[#94A3B8]">
+      <p className="tp-meta mt-2.5 text-[#94A3B8]">
         Saves to your profile. You can skip this and build the guide without an event.
       </p>
     </EmptyPanel>
@@ -213,7 +213,7 @@ export function NoFeedState({ college, disabled, onResolved, className }) {
 
   return (
     <EmptyPanel icon={CalendarSearch} title={`No calendar we can read for ${college || 'your school'}`} className={className}>
-      <p className="mt-1 text-xs leading-relaxed text-[#64748B]">
+      <p className="tp-prose mt-1.5 text-[#64748B]">
         Your school&apos;s main events page usually isn&apos;t one we can read, but your{' '}
         <strong className="font-semibold text-[#334155]">club portal</strong> normally is. It&apos;s
         where clubs post their own events, and it&apos;s where the career ones actually live.
@@ -237,7 +237,7 @@ export function NoFeedState({ college, disabled, onResolved, className }) {
         <button
           type="submit"
           disabled={disabled || trying || !value.trim()}
-          className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg px-3.5 py-2 text-xs font-bold text-white transition disabled:opacity-50"
+          className="tp-meta inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg px-4 py-2.5 font-bold text-white transition disabled:opacity-50"
           style={{ background: 'var(--brand-navy-700)' }}
         >
           {trying
@@ -248,12 +248,12 @@ export function NoFeedState({ college, disabled, onResolved, className }) {
       </form>
 
       {problem ? (
-        <p id="campus-feed-problem" role="alert" className="mt-2 flex items-start gap-1.5 text-xs leading-relaxed text-[#B91C1C]">
+        <p id="campus-feed-problem" role="alert" className="tp-meta mt-2.5 flex items-start gap-1.5 text-[#B91C1C]">
           <AlertCircle size={12} className="mt-0.5 shrink-0" aria-hidden="true" />
           {problem}
         </p>
       ) : (
-        <p id="campus-feed-hint" className="mt-2 text-xs text-[#94A3B8]">
+        <p id="campus-feed-hint" className="tp-meta mt-2.5 text-[#94A3B8]">
           Engage, CampusGroups, Presence, BeInvolved: whatever yours calls &ldquo;get
           involved.&rdquo; Log in there and copy the address.
         </p>
@@ -271,7 +271,7 @@ export function NoFeedState({ college, disabled, onResolved, className }) {
         that is a better reason to spend thirty seconds than helping us.
       */}
       <p
-        className="mt-2.5 border-t border-dashed pt-2.5 text-xs leading-relaxed text-[#64748B]"
+        className="tp-meta mt-3 border-t border-dashed pt-3 text-[#64748B]"
         style={{ borderColor: '#E2E8F0' }}
       >
         If it works you&apos;ll see your events here straight away. We check it ourselves before
@@ -285,7 +285,7 @@ export function NoFeedState({ college, disabled, onResolved, className }) {
 export function EmptyCalendarState({ college, className }) {
   return (
     <EmptyPanel icon={CalendarSearch} title="Nothing on your campus calendar right now" className={className}>
-      <p className="mt-1 text-xs leading-relaxed text-[#64748B]">
+      <p className="tp-prose mt-1.5 text-[#64748B]">
         We can read {college || 'your school'}&apos;s calendar and it has nothing posted for the
         next six weeks. That usually means a break. Worth checking again in a week.
       </p>
@@ -298,7 +298,7 @@ export function EmptyCalendarState({ college, className }) {
 export function FeedErrorState({ college, disabled, onRetry, className }) {
   return (
     <EmptyPanel icon={RotateCw} title="Your campus calendar didn't answer" className={className}>
-      <p className="mt-1 text-xs leading-relaxed text-[#64748B]">
+      <p className="tp-prose mt-1.5 text-[#64748B]">
         {college || 'Your school'}&apos;s calendar didn&apos;t respond just now. That&apos;s on their
         end and it usually passes.
       </p>
@@ -307,7 +307,7 @@ export function FeedErrorState({ college, disabled, onRetry, className }) {
           type="button"
           onClick={onRetry}
           disabled={disabled}
-          className="inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-bold transition hover:bg-white disabled:opacity-50"
+          className="tp-meta inline-flex items-center gap-1.5 rounded-lg border px-3.5 py-2 font-bold transition hover:bg-white disabled:opacity-50"
           style={{ borderColor: 'rgba(31,58,95,0.3)', color: 'var(--brand-navy-700)' }}
         >
           <RotateCw size={12} aria-hidden="true" /> Try again
