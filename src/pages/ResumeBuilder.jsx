@@ -555,7 +555,7 @@ export default function ResumeBuilder() {
               <p className="tp-meta font-semibold text-[color:var(--ink-700)] shrink-0">Save version:</p>
               <input value={versionNote} onChange={e => setVersionNote(e.target.value)}
                 placeholder="Optional note (e.g. 'IB version')"
-                className="flex-1 text-base md:text-[13px] outline-none text-[color:var(--ink-700)] placeholder-[color:var(--ink-400)]" />
+                className="min-w-0 flex-1 text-base md:text-[13px] outline-none text-[color:var(--ink-700)] placeholder-[color:var(--ink-400)]" />
               <button onClick={saveVersion} disabled={savingVersion}
                 className="tp-meta shrink-0 rounded-lg px-3.5 py-2 font-semibold text-white disabled:opacity-50"
                 style={{ background: 'var(--brand-navy-900)' }}>
