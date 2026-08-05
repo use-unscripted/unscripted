@@ -66,7 +66,8 @@ function setup({ picks, ranking }) {
     college: 'Fairfield University',
     events: EVENTS,
     profile: { id: 'p1' },
-    profileReady: true,
+    pathName: 'Product Management',
+    rankingReady: true,
     retry: vi.fn(),
     adopt: vi.fn(),
   });
