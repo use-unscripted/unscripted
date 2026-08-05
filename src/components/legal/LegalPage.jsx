@@ -44,6 +44,9 @@ export function LegalPage({ title, effective, updated, notice, lede, contents, c
         </div>
       </header>
 
+      {/* 768px on purpose, narrower than the app's 960px column. This is a
+          legal instrument and a long clause reads worse the wider it runs.
+          Deliberate, not an oversight left behind by the type pass. */}
       <main className="mx-auto max-w-3xl px-6 py-14">
         <h1 className="tp-page" style={{ color: 'var(--text-primary)' }}>
           {title}

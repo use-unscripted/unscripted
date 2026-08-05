@@ -34,7 +34,7 @@ function ContactCard({ contact, onStatus, onNotes }) {
   const questions = contact.questions_to_ask || [];
   return (
     <div className="rounded-[12px] p-4" style={{ background: '#fff', border: '1px solid var(--border-light)' }}>
-      <p className="tp-body font-bold" style={{ color: 'var(--text-primary)' }}>{contact.name}</p>
+      <p className="tp-card" style={{ color: 'var(--text-primary)' }}>{contact.name}</p>
       <p className="tp-meta" style={{ color: 'var(--text-muted)' }}>
         {[contact.role || contact.archetype, contact.company].filter(Boolean).join(' · ')}
       </p>

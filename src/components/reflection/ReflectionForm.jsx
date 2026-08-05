@@ -111,7 +111,7 @@ export default function ReflectionForm({ ctx, onSaved, onSubmit }) {
       <div className="mt-5 space-y-5">
         {QUESTIONS.map((q, i) => (
           <label key={q.key} className="block">
-            <span className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>
+            <span className="tp-body font-bold" style={{ color: 'var(--text-primary)' }}>
               {i + 1}. {q.label}{!q.required && <span className="font-normal" style={{ color: 'var(--text-muted)' }}> · optional</span>}
             </span>
             {q.hint && <span className="tp-meta mt-1 block" style={{ color: 'var(--text-muted)' }}>{q.hint}</span>}
@@ -127,7 +127,7 @@ export default function ReflectionForm({ ctx, onSaved, onSubmit }) {
         ))}
 
         <div>
-          <p className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>7. Are you more or less interested in this path?</p>
+          <p className="tp-body font-bold" style={{ color: 'var(--text-primary)' }}>7. Are you more or less interested in this path?</p>
           <div className="mt-2 grid gap-2 sm:grid-cols-3">
             {INTEREST.map(o => {
               const on = answers.interest === o.value;
@@ -142,7 +142,7 @@ export default function ReflectionForm({ ctx, onSaved, onSubmit }) {
                     ? { background: 'var(--brand-navy-900)', color: 'var(--brand-white)', minHeight: '48px' }
                     : { background: 'var(--background-secondary)', border: '1px solid var(--border-light)', color: 'var(--text-primary)', minHeight: '48px' }}
                 >
-                  <span className="block text-sm font-bold">{o.label}</span>
+                  <span className="tp-card block">{o.label}</span>
                   <span className="tp-meta mt-1 block" style={{ color: on ? 'rgba(255,255,255,.75)' : 'var(--text-muted)' }}>{o.desc}</span>
                 </button>
               );
@@ -158,7 +158,7 @@ export default function ReflectionForm({ ctx, onSaved, onSubmit }) {
         </div>
 
         <label className="block">
-          <span className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>8. What should you do next?</span>
+          <span className="tp-body font-bold" style={{ color: 'var(--text-primary)' }}>8. What should you do next?</span>
           <textarea
             rows={3}
             value={answers.next}
@@ -170,7 +170,7 @@ export default function ReflectionForm({ ctx, onSaved, onSubmit }) {
         </label>
 
         <div>
-          <p className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>
+          <p className="tp-body font-bold" style={{ color: 'var(--text-primary)' }}>
             9. What is your current career-clarity score?
           </p>
           <p className="tp-meta mt-1" style={{ color: 'var(--text-muted)' }}>
@@ -184,7 +184,7 @@ export default function ReflectionForm({ ctx, onSaved, onSubmit }) {
                 type="button"
                 onClick={() => set('clarity', n)}
                 aria-pressed={answers.clarity === n}
-                className="h-12 w-12 rounded-[10px] text-sm font-bold"
+                className="tp-body h-12 w-12 rounded-[10px] font-bold"
                 style={answers.clarity === n
                   ? { background: 'var(--brand-navy-900)', color: 'var(--brand-white)' }
                   : { background: 'var(--background-secondary)', border: '1px solid var(--border-light)', color: 'var(--text-primary)' }}
@@ -197,7 +197,7 @@ export default function ReflectionForm({ ctx, onSaved, onSubmit }) {
       </div>
 
       {error && (
-        <p className="mt-4 flex items-start gap-1.5 text-sm font-semibold text-red-600" role="alert">
+        <p className="tp-body mt-4 flex items-start gap-1.5 font-semibold text-red-600" role="alert">
           <AlertCircle size={14} className="mt-0.5 shrink-0" />{error}
         </p>
       )}
@@ -206,7 +206,7 @@ export default function ReflectionForm({ ctx, onSaved, onSubmit }) {
         type="button"
         onClick={submit}
         disabled={saving}
-        className="ui-press mt-5 flex w-full items-center justify-center gap-2 rounded-[10px] text-sm font-bold text-white disabled:opacity-50"
+        className="ui-press tp-body mt-5 flex w-full items-center justify-center gap-2 rounded-[10px] font-bold text-white disabled:opacity-50"
         style={{ background: 'var(--brand-navy-900)', minHeight: '52px' }}
       >
         {saving
