@@ -117,8 +117,10 @@
   // block at all that was open to any signed-in user.
   //
   // Locking writes costs nothing: every write to this entity runs through
-  // asServiceRole in campusEvents, which bypasses rls, and no browser code
-  // touches the entity at all. The landing page marquee is a hardcoded list.
+  // asServiceRole in campusEvents, and asServiceRole acts *as* role admin
+  // rather than bypassing rls, so it satisfies the condition below rather than
+  // sidestepping it. No browser code touches the entity at all either. The
+  // landing page marquee is a hardcoded list, not a read of this table.
   "rls": {
     "create": {
       "user_condition": {
