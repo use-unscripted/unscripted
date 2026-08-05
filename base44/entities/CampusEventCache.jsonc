@@ -77,9 +77,16 @@
       }
     },
     "truncated": {
-      // True when the stored list was capped and the furthest-out events were
-      // dropped. Worth knowing, because a cached reader can then never see an
-      // event past the cut however well it would have scored for them.
+      // True when the cap dropped events a student could still have attended,
+      // which is worth knowing: a cached reader can never see one of those
+      // however well it would have scored for them.
+      //
+      // Events that finished days ago are dropped first and do NOT set this.
+      // An .ics feed has no lower bound and hands over the school's entire
+      // published past, so on the largest feeds most of what arrives is history
+      // and the flag would be permanently true and permanently meaningless. The
+      // read-time window refuses every one of them in the same request, so
+      // losing them costs a reader nothing.
       "type": "boolean",
       "default": false
     }

@@ -411,6 +411,12 @@ describe('one school fetched once for everybody there', () => {
     ['UID:fair@x', 'SUMMARY:Finance Career Fair', 'DTSTART:20260805T160000Z'],
     ['UID:poetry@x', 'SUMMARY:Poetry Reading', 'DTSTART:20260807T180000Z'],
     ['UID:soon@x', 'SUMMARY:Coffee Hour', 'DTSTART:20260803T113000Z'],
+    // Six hours behind the clock every test here runs on, which puts it well
+    // past the hour of grace a timed event gets. It is in the feed because an
+    // .ics file has no lower bound at all, and it is here because a fixture
+    // where everything is upcoming cannot tell a stored list that skipped the
+    // window filter from one that ran it.
+    ['UID:breakfast@x', 'SUMMARY:Breakfast Social', 'DTSTART:20260803T060000Z'],
   );
 
   let fetches;
@@ -507,23 +513,47 @@ describe('one school fetched once for everybody there', () => {
     expect(row.university_id).toBe('uni-1');
     expect(row.cache_key).toBe('45:1');
     expect(row.feed_url).toBe(FEED);
-    expect(row.event_count).toBe(3);
+    expect(row.event_count).toBe(4);
     expect(row.truncated).toBe(false);
-    // Not scored, not limited, and not put through the upcoming window: all
-    // three events are here including the one that has already started.
-    expect(row.events).toHaveLength(3);
+    // Not scored, not limited, and not put through the upcoming window.
+    expect(row.events).toHaveLength(4);
     expect(row.events.some(e => 'match_score' in e)).toBe(false);
+
+    // The window filter specifically, and it has to be an event the filter
+    // would REALLY have thrown out. Breakfast Social is six hours behind the
+    // clock, so it is stored and it is not shown. An event only half an hour
+    // past would prove nothing: it survives that filter anyway, and this test
+    // would go green with the window moved above the cache.
+    const stored = row.events.map(e => e.title);
+    expect(stored).toContain('Breakfast Social');
+    expect(shownTo(row.events, [])).not.toContain('Breakfast Social');
+    expect(shownTo(row.events, [])).toHaveLength(3);
   });
 
   it('gives two students at the same school different answers off one fetch', async () => {
     const base44 = fakeBase44();
 
-    const forFinance = await schoolEvents(base44, UNIVERSITY, ICAL, 45, 1, false);
-    const forWriting = await schoolEvents(base44, UNIVERSITY, ICAL, 45, 1, false);
-    expect(fetches).toBe(1);
+    // The first student at this school. Their whole request runs: the school is
+    // fetched, then their terms rank it and their limit cuts it to one event.
+    const first = await schoolEvents(base44, UNIVERSITY, ICAL, 45, 1, false);
+    expect(shownTo(first.events, ['finance']).slice(0, 1)).toEqual(['Finance Career Fair']);
 
-    expect(shownTo(forFinance.events, ['finance'])[0]).toBe('Finance Career Fair');
-    expect(shownTo(forWriting.events, ['poetry'])[0]).toBe('Poetry Reading');
+    // None of that reached the row. This is the assertion the whole design
+    // rests on: if scoring, the limit or the window had been applied before the
+    // write, the row would hold one scored event and every later student at
+    // this school would be served a list built for somebody else.
+    const [row] = base44.state.rows;
+    expect(row.events).toHaveLength(4);
+    expect(row.events.some(e => 'match_score' in e)).toBe(false);
+    expect(row.events.map(e => e.title)).toContain('Poetry Reading');
+
+    // The second student, off the stored list, gets the event the first
+    // student's ranking and limit had already thrown away.
+    const second = await schoolEvents(base44, UNIVERSITY, ICAL, 45, 1, false);
+    expect(second.cached).toBe(true);
+    expect(fetches).toBe(1);
+    expect(second.events.some(e => 'match_score' in e)).toBe(false);
+    expect(shownTo(second.events, ['poetry']).slice(0, 1)).toEqual(['Poetry Reading']);
   });
 
   it('drops an event that has happened since the school was asked', async () => {
@@ -617,11 +647,13 @@ describe('one school fetched once for everybody there', () => {
     expect(answer.events.map(e => e.title)).toContain('Finance Career Fair');
   });
 
-  it('treats a school that answered with nothing as a real answer', async () => {
-    // Kept on purpose, so the row always says what the school last answered. A
-    // calendar that empties out stops being served within one fetch instead of
-    // leaving the last good list standing behind it for a day. The health
-    // failure is recorded on the fetch that saw it.
+  it('writes an empty answer but never serves one back', async () => {
+    // Written on purpose, so the row always says what the school last answered
+    // and a calendar that empties out stops being served last week's list
+    // within one fetch. Not READ back on purpose either, and the two are not in
+    // conflict: empty is also what a feed says when something transient is
+    // wrong with it, and nothing here can tell those apart. Serving it would
+    // take one unlucky request and hand it to the whole school for a day.
     globalThis.fetch = () => {
       fetches += 1;
       return Promise.resolve(new Response(calendar(), { status: 200 }));
@@ -633,9 +665,70 @@ describe('one school fetched once for everybody there', () => {
     expect(base44.state.healthWrites[0].patch.events_last_error).toBe('Returned no upcoming events');
 
     const again = await schoolEvents(base44, UNIVERSITY, ICAL, 45, 1, false);
-    expect(again.cached).toBe(true);
+    expect(again.cached).toBe(false);
     expect(again.events).toEqual([]);
+    expect(fetches).toBe(2);
+  });
+
+  it('lets a good list replace an empty one without waiting out the day', async () => {
+    // The other half of the same rule. A school that answered with nothing at
+    // 9am is asked again at 9.01, and the events it has by then are stored and
+    // shared, rather than the school being written off until tomorrow.
+    globalThis.fetch = () => {
+      fetches += 1;
+      return Promise.resolve(new Response(calendar(), { status: 200 }));
+    };
+    const base44 = fakeBase44();
+    await schoolEvents(base44, UNIVERSITY, ICAL, 45, 1, false);
+    expect(base44.state.rows[0].event_count).toBe(0);
+
+    globalThis.fetch = () => {
+      fetches += 1;
+      return Promise.resolve(new Response(CALENDAR, { status: 200 }));
+    };
+    const recovered = await schoolEvents(base44, UNIVERSITY, ICAL, 45, 1, false);
+    expect(recovered.events.map(e => e.title)).toContain('Finance Career Fair');
+    expect(base44.state.rows).toHaveLength(1);
+    expect(base44.state.rows[0].event_count).toBe(4);
+  });
+
+  it('never stores a feed one student pasted in that nobody has approved', async () => {
+    // `resolveFeed` hands back a still-pending submission as the feed while
+    // still handing back the school's University row: the submitter is served
+    // their own link immediately, everybody else keeps the school's. Storing
+    // that under the school's id would put one student's unapproved calendar
+    // into the row the whole school reads, and at a school with a pending
+    // submission the row would thrash between two feeds and never hold.
+    const base44 = fakeBase44();
+    const submitted = { platform: 'ical', feedUrl: FEED, submitted: true };
+
+    const answer = await schoolEvents(base44, UNIVERSITY, submitted, 45, 1, false);
+    expect(answer.events.map(e => e.title)).toContain('Finance Career Fair');
+    expect(base44.state.rows).toHaveLength(0);
+
+    await schoolEvents(base44, UNIVERSITY, submitted, 45, 1, false);
+    expect(fetches).toBe(2);
+    expect(base44.state.rows).toHaveLength(0);
+  });
+
+  it('keys a row on whole numbers, so no request can mint one of its own', async () => {
+    // Both values arrive off the wire. `days` is clamped by the handler but not
+    // floored, and `seriesDates` is only clamped inside the recurrence
+    // expansion, so unrounded ones used to read as ordinary requests and get a
+    // row each. A signed-in student could have filled this entity with
+    // quarter-megabyte rows that nothing deletes.
+    const base44 = fakeBase44();
+    await schoolEvents(base44, UNIVERSITY, ICAL, 45, 1, false);
+
+    const odd = await schoolEvents(base44, UNIVERSITY, ICAL, 45.0001, 1.5, false);
+    expect(odd.cached).toBe(true);
     expect(fetches).toBe(1);
+    expect(base44.state.rows).toHaveLength(1);
+    expect(base44.state.rows[0].cache_key).toBe('45:1');
+
+    // And the clamps still hold at both ends.
+    await schoolEvents(base44, UNIVERSITY, ICAL, 9999, 9999, false);
+    expect(base44.state.rows.map(r => r.cache_key).sort()).toEqual(['120:12', '45:1']);
   });
 
   it('caches nothing for a school with no University row', async () => {
@@ -647,6 +740,155 @@ describe('one school fetched once for everybody there', () => {
     expect(fetches).toBe(2);
     expect(base44.state.rows).toHaveLength(0);
   });
+
+  // The 400 cap, on a list big enough for it to bite. It shipped taking the
+  // WRONG END: the list was sorted by date ascending and cut at 400, and since
+  // nothing in fetchEvents has a lower bound, an .ics feed answers with the
+  // school's entire published past. On four real feeds event 400 by date was
+  // years ago, so the row held nothing but history and the second student at
+  // those schools was served zero events where the first was served 7 to 20.
+  //
+  // Measured on the real feeds it hit, with a 60 day window:
+  //
+  //   lagrange.edu  1064 events  20 live  0 cached
+  //   geneva.edu     786 events   7 live  0 cached
+  //   anoka.tech     775 events  15 live  0 cached
+  //   a Google feed  690 events  10 live  0 cached
+  //
+  // The fixture above has three events and asserted `truncated` false, so none
+  // of that was visible. These are the tests that would have caught it.
+  describe('the cap keeps the events a student can still go to', () => {
+    /** An ICS stamp: 20260803T120000Z. */
+    function stamp(ms) {
+      return new Date(ms).toISOString().replace(/[-:]/g, '').replace(/\.\d{3}Z$/, 'Z');
+    }
+
+    const NOON = Date.parse('2026-08-03T12:00:00Z');
+
+    /**
+     * A feed with real history in it, which is what a school's .ics actually
+     * looks like. Past events run backwards from three days ago, upcoming ones
+     * forwards from now, both on a fixed gap so the expected order is known.
+     */
+    function bulkCalendar({ past = 0, upcoming = 0, gapHours = 3, extra = [] } = {}) {
+      const vevents = [];
+      for (let i = 0; i < past; i++) {
+        vevents.push([
+          `UID:past-${i}@x`,
+          `SUMMARY:Past ${String(i).padStart(3, '0')}`,
+          `DTSTART:${stamp(NOON - (72 + i * gapHours) * 3600000)}`,
+        ]);
+      }
+      for (let i = 0; i < upcoming; i++) {
+        vevents.push([
+          `UID:up-${i}@x`,
+          `SUMMARY:Upcoming ${String(i).padStart(3, '0')}`,
+          `DTSTART:${stamp(NOON + (i + 1) * gapHours * 3600000)}`,
+        ]);
+      }
+      return calendar(...vevents, ...extra);
+    }
+
+    function serveBulk(options) {
+      const ics = bulkCalendar(options);
+      globalThis.fetch = () => {
+        fetches += 1;
+        return Promise.resolve(new Response(ics, { status: 200 }));
+      };
+    }
+
+    it('drops the school\'s history rather than its future', async () => {
+      // 900 events behind us, 250 ahead. Sorted by date and cut at 400 this
+      // used to store 400 events from last spring and nothing else.
+      serveBulk({ past: 900, upcoming: 250 });
+      const base44 = fakeBase44();
+
+      const answer = await schoolEvents(base44, UNIVERSITY, ICAL, 45, 1, false);
+      const [row] = base44.state.rows;
+
+      expect(answer.events.length).toBe(1150); // The whole feed, history and all.
+      expect(row.event_count).toBe(250);
+      expect(row.events.map(e => e.title).some(t => t.startsWith('Past'))).toBe(false);
+      expect(row.events[0].title).toBe('Upcoming 000');
+      expect(row.events[249].title).toBe('Upcoming 249');
+
+      // Nothing fitted through the cap and got dropped, so this is not a
+      // truncation and must not be logged as one.
+      expect(row.truncated).toBe(false);
+    });
+
+    it('never drops an event the student would still have been shown', async () => {
+      // The property that matters, stated as a property: what a second student
+      // is shown off the stored list is exactly what the first student was
+      // shown off the live one. If the cap could ever reach an event the
+      // read-time window keeps, these two lists differ.
+      serveBulk({ past: 900, upcoming: 250, extra: [[
+        // The awkward case the coarse floor exists for. A month-long
+        // exhibition that opened three weeks ago is still running, so the
+        // window keeps it, and its START is far behind the floor. Anything
+        // that looked at the start alone would delete it from every stored
+        // list at every school with a long-running exhibition.
+        'UID:exhibition@x',
+        'SUMMARY:Long Exhibition',
+        'DTSTART;VALUE=DATE:20260714',
+        'DTEND;VALUE=DATE:20260814',
+      ]] });
+      const base44 = fakeBase44();
+
+      const live = await schoolEvents(base44, UNIVERSITY, ICAL, 45, 1, false);
+      const [row] = base44.state.rows;
+
+      expect(shownTo(row.events, [])).toEqual(shownTo(live.events, []));
+      expect(row.events.map(e => e.title)).toContain('Long Exhibition');
+      expect(shownTo(row.events, [])).toContain('Long Exhibition');
+    });
+
+    it('cuts the far end when there genuinely are more than 400 to come', async () => {
+      // 600 events still ahead of the student. The cap has to bite somewhere,
+      // and the events it gives up are the LAST ones, which come back into
+      // range as the window advances.
+      const logged = vi.spyOn(console, 'error').mockImplementation(() => {});
+      try {
+        serveBulk({ past: 200, upcoming: 600, gapHours: 1.5 });
+        const base44 = fakeBase44();
+
+        await schoolEvents(base44, UNIVERSITY, ICAL, 45, 1, false);
+        const [row] = base44.state.rows;
+
+        expect(row.event_count).toBe(400);
+        expect(row.truncated).toBe(true);
+        expect(row.events[0].title).toBe('Upcoming 000');
+        expect(row.events[399].title).toBe('Upcoming 399');
+        expect(row.events.map(e => e.title).some(t => t.startsWith('Past'))).toBe(false);
+
+        // Named in the log, not counted silently, so a cap that starts reaching
+        // ordinary schools is something somebody can see.
+        const line = logged.mock.calls.find(c => c[0] === '[campusEvents] event cache truncated');
+        expect(line).toBeTruthy();
+        expect(line[1]).toMatchObject({ college: 'Example University', kept: 400, of: 600 });
+      } finally {
+        logged.mockRestore();
+      }
+    });
+
+    it('does not call a feed truncated for having a past', async () => {
+      // 900 events dropped, and the flag stays false, because a reader loses
+      // nothing: the same request's window filter refuses every one of them.
+      // Counting history as truncation would have this fire forever on the
+      // large .ics schools and mean nothing on the day the cap really bit.
+      const logged = vi.spyOn(console, 'error').mockImplementation(() => {});
+      try {
+        serveBulk({ past: 900, upcoming: 10 });
+        const base44 = fakeBase44();
+        await schoolEvents(base44, UNIVERSITY, ICAL, 45, 1, false);
+
+        expect(base44.state.rows[0].truncated).toBe(false);
+        expect(logged.mock.calls.some(c => c[0] === '[campusEvents] event cache truncated')).toBe(false);
+      } finally {
+        logged.mockRestore();
+      }
+    });
+  });
 });
 
 // Structural, and deliberately so. The health check asks whether a feed answers
@@ -656,8 +898,14 @@ describe('the admin feed check never reads the cache', () => {
   it('fetches the feed itself rather than going through the cached path', () => {
     const check = ENTRY_SOURCE.slice(ENTRY_SOURCE.indexOf('async function handleCheckFeeds'));
     const body = check.slice(0, check.indexOf('\n/**'));
-    expect(body).toMatch(/await fetchEvents\(/);
-    expect(body).not.toMatch(/schoolEvents\(/);
+    // Comments stripped before matching, because they are the part of this
+    // function most likely to be reworded and the least able to call anything.
+    // Left in, the comment already sitting there explaining WHY this must not
+    // use the cached path is one edit away from failing the test that enforces
+    // it, which teaches whoever hits that to delete the assertion.
+    const code = body.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/[^\n]*/g, '');
+    expect(code).toMatch(/await\s+fetchEvents\s*\(/);
+    expect(code).not.toMatch(/schoolEvents\s*\(/);
   });
 });
 
