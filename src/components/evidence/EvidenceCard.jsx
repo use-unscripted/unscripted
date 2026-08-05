@@ -2,7 +2,7 @@ import { Calendar, Lock, Eye, FileText, ArrowRight, CheckCircle2 } from 'lucide-
 import { RESUME_STATUS, VISIBILITY_LABELS, typeLabel, fmtDate } from '@/lib/evidence-library';
 
 function Chip({ children, bg = 'var(--ink-100)', color = 'var(--ink-500)' }) {
-  return <span className="rounded-full px-2.5 py-1 text-[10px] font-bold" style={{ background: bg, color }}>{children}</span>;
+  return <span className="tp-meta rounded-full px-2.5 py-1 font-bold" style={{ background: bg, color }}>{children}</span>;
 }
 
 export default function EvidenceCard({ item, onReview, onOpenCycle }) {
@@ -10,23 +10,23 @@ export default function EvidenceCard({ item, onReview, onOpenCycle }) {
   const isPrivate = item.visibility === 'private';
 
   return (
-    <div className="rounded-[16px] border border-[color:var(--ink-200)] bg-white p-5">
+    <div className="tp-card-body rounded-[16px] border border-[color:var(--ink-200)] bg-white">
       <div className="flex flex-wrap items-center gap-2">
         <Chip bg="var(--ink-100)" color="var(--brand-navy-900)">{typeLabel(item.type)}</Chip>
         <Chip bg={rs.bg} color={rs.text}>{rs.label}</Chip>
-        <Chip>{isPrivate ? <span className="inline-flex items-center gap-1"><Lock size={9} /> Private</span>
-                        : <span className="inline-flex items-center gap-1"><Eye size={9} /> {VISIBILITY_LABELS[item.visibility] || item.visibility}</span>}</Chip>
+        <Chip>{isPrivate ? <span className="inline-flex items-center gap-1"><Lock size={11} /> Private</span>
+                        : <span className="inline-flex items-center gap-1"><Eye size={11} /> {VISIBILITY_LABELS[item.visibility] || item.visibility}</span>}</Chip>
         {item.date && (
-          <span className="ml-auto inline-flex items-center gap-1 text-[11px] text-[color:var(--ink-400)]"><Calendar size={11} /> {fmtDate(item.date)}</span>
+          <span className="tp-meta ml-auto inline-flex items-center gap-1.5 text-[color:var(--ink-400)]"><Calendar size={13} /> {fmtDate(item.date)}</span>
         )}
       </div>
 
-      <h3 className="mt-3 font-heading text-lg font-bold text-[color:var(--surface-dark-900)]">{item.title}</h3>
+      <h3 className="tp-card mt-4 text-[color:var(--surface-dark-900)]">{item.title}</h3>
 
-      <p className="mt-1 flex flex-wrap items-center gap-1 text-xs text-[color:var(--ink-500)]">
+      <p className="tp-meta mt-1.5 flex flex-wrap items-center gap-1.5 text-[color:var(--ink-500)]">
         {[item.pathName, item.experimentTitle, item.missionTitle].filter(Boolean).map((part, i, arr) => (
           <span key={part + i} className="inline-flex items-center gap-1">
-            {part}{i < arr.length - 1 && <ArrowRight size={10} className="text-[color:var(--ink-300)]" />}
+            {part}{i < arr.length - 1 && <ArrowRight size={12} className="text-[color:var(--ink-300)]" />}
           </span>
         ))}
         {!item.pathName && !item.experimentTitle && !item.missionTitle && <span>Not linked to an experiment yet</span>}
@@ -35,21 +35,21 @@ export default function EvidenceCard({ item, onReview, onOpenCycle }) {
       {item.skills.length > 0 && (
         <div className="mt-3 flex flex-wrap gap-1.5">
           {item.skills.map((s, i) => (
-            <span key={s + i} className="rounded-full border border-[color:var(--ink-200)] px-2.5 py-1 text-[10px] text-[color:var(--ink-700)]">{s}</span>
+            <span key={s + i} className="tp-meta rounded-full border border-[color:var(--ink-200)] px-2.5 py-1 text-[color:var(--ink-700)]">{s}</span>
           ))}
         </div>
       )}
 
-      <div className="mt-4 flex flex-wrap gap-2">
+      <div className="mt-5 flex flex-wrap gap-2">
         <button onClick={() => onReview(item)}
-          className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold text-white"
+          className="tp-meta flex items-center gap-1.5 rounded-lg px-4 py-2 font-semibold text-white"
           style={{ background: 'var(--brand-navy-900)' }}>
-          {item.resumeStatus === 'approved' ? <><CheckCircle2 size={12} /> Review approved details</> : <><FileText size={12} /> Review for resume</>}
+          {item.resumeStatus === 'approved' ? <><CheckCircle2 size={13} /> Review approved details</> : <><FileText size={13} /> Review for resume</>}
         </button>
         {item.cycleId && (
           <button onClick={() => onOpenCycle(item.cycleId)}
-            className="flex items-center gap-1.5 rounded-lg border border-[color:var(--ink-200)] px-3 py-1.5 text-xs font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)]">
-            Open full cycle <ArrowRight size={12} />
+            className="tp-meta flex items-center gap-1.5 rounded-lg border border-[color:var(--ink-200)] px-4 py-2 font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)]">
+            Open full cycle <ArrowRight size={13} />
           </button>
         )}
       </div>

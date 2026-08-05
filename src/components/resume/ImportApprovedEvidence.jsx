@@ -6,7 +6,7 @@ import { newEntry } from './resumeTemplates';
 /**
  * Step 5 of the resume workflow: import evidence the student has already
  * approved. Only approved records appear, and only their approved wording is
- * used — this component never generates or rewrites anything.
+ * used. This component never generates or rewrites anything.
  */
 export default function ImportApprovedEvidence({ resume, onAddEntry, onAddSkills }) {
   const [items, setItems] = useState([]);
@@ -53,23 +53,23 @@ export default function ImportApprovedEvidence({ resume, onAddEntry, onAddSkills
     <div className="mb-5 rounded-[16px] border border-[color:var(--ink-200)] bg-white p-4">
       <div className="mb-1 flex items-center gap-2">
         <ShieldCheck size={15} style={{ color: 'var(--brand-navy-700)' }} />
-        <p className="text-sm font-bold text-[color:var(--surface-dark-900)]">Import approved evidence</p>
+        <p className="tp-card text-[color:var(--surface-dark-900)]">Import approved evidence</p>
       </div>
-      <p className="mb-3 text-xs text-[color:var(--ink-500)]">
+      <p className="tp-prose mb-4 text-[color:var(--ink-500)]">
         Your resume is built from evidence you approved in the Evidence Library. Only your approved wording is imported. Employers, job titles,
         metrics, results and dates are never generated for you.
       </p>
 
       {items.length === 0 ? (
-        <p className="text-xs text-[color:var(--ink-400)]">
+        <p className="tp-prose text-[color:var(--ink-400)]">
           Nothing approved yet. Open Evidence → Library, review a piece of evidence, and approve what is accurate.
         </p>
       ) : (
         <>
-          <label className="mb-3 flex items-center gap-2 text-xs font-semibold text-[color:var(--ink-700)]">
+          <label className="tp-meta mb-4 flex items-center gap-2 font-semibold text-[color:var(--ink-700)]">
             Import into
             <select value={section} onChange={(e) => setSection(e.target.value)}
-              className="rounded-xl border border-[color:var(--ink-200)] px-3 py-2 text-xs outline-none focus:border-[color:var(--brand-navy-900)]">
+              className="tp-meta rounded-xl border border-[color:var(--ink-200)] px-3 py-2 outline-none focus:border-[color:var(--brand-navy-900)]">
               {sections.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}
             </select>
           </label>
@@ -78,22 +78,22 @@ export default function ImportApprovedEvidence({ resume, onAddEntry, onAddSkills
             {items.map((p) => (
               <div key={p.id} className="flex items-start gap-3 rounded-xl border border-[color:var(--ink-200)] p-3">
                 <div className="min-w-0 flex-1">
-                  <p className="text-xs font-bold text-[color:var(--surface-dark-900)]">{p.approved_title || p.title}</p>
-                  {p.approved_bullet && <p className="mt-0.5 text-[11px] leading-4 text-[color:var(--ink-700)]">{p.approved_bullet}</p>}
-                  <p className="mt-0.5 text-[10px] text-[color:var(--ink-400)]">
+                  <p className="tp-card text-[color:var(--surface-dark-900)]">{p.approved_title || p.title}</p>
+                  {p.approved_bullet && <p className="tp-prose mt-1 text-[color:var(--ink-700)]">{p.approved_bullet}</p>}
+                  <p className="tp-meta mt-1.5 text-[color:var(--ink-400)]">
                     {[p.path_tested, p.approved_skills?.join(', ')].filter(Boolean).join(' · ')}
                   </p>
                   {p.approved_link && (
                     <a href={p.approved_link} target="_blank" rel="noopener noreferrer"
-                      className="mt-1 inline-flex items-center gap-1 text-[10px] font-semibold" style={{ color: 'var(--brand-navy-700)' }}>
-                      <ExternalLink size={9} /> Project link
+                      className="tp-meta mt-1.5 inline-flex items-center gap-1.5 font-semibold" style={{ color: 'var(--brand-navy-700)' }}>
+                      <ExternalLink size={13} /> Project link
                     </a>
                   )}
                 </div>
                 <button onClick={() => importItem(p)} disabled={imported.has(p.id)}
-                  className="shrink-0 rounded-lg px-3 py-1.5 text-[10px] font-bold text-white disabled:opacity-50"
+                  className="tp-meta shrink-0 rounded-lg px-3.5 py-2 font-bold text-white disabled:opacity-50"
                   style={{ background: 'var(--brand-navy-900)' }}>
-                  {imported.has(p.id) ? 'Imported' : <span className="flex items-center gap-1"><Plus size={10} /> Import</span>}
+                  {imported.has(p.id) ? 'Imported' : <span className="flex items-center gap-1.5"><Plus size={13} /> Import</span>}
                 </button>
               </div>
             ))}

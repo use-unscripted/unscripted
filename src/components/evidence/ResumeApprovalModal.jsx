@@ -8,9 +8,9 @@ const listToText = (a) => (a || []).join(', ');
 const textToList = (t) => t.split(',').map((s) => s.trim()).filter(Boolean);
 
 /**
- * Step 3–4 of the resume workflow: the student reviews what was extracted from
- * their own submission and approves only what is accurate. Nothing here is
- * generated — every prefilled value came from a field the student filled in.
+ * Steps 3 and 4 of the resume workflow: the student reviews what was extracted
+ * from their own submission and approves only what is accurate. Nothing here is
+ * generated. Every prefilled value came from a field the student filled in.
  */
 export default function ResumeApprovalModal({ item, onClose, onSaved }) {
   const draft0 = extractResumeDraft(item);
@@ -46,15 +46,15 @@ export default function ResumeApprovalModal({ item, onClose, onSaved }) {
       <div className="anim-modal my-8 w-full max-w-lg rounded-[24px] bg-white p-6">
         <div className="mb-1 flex items-start justify-between gap-3">
           <div>
-            <p className="text-[11px] font-bold uppercase tracking-[.14em]" style={{ color: 'var(--brand-navy-700)' }}>Review for your resume</p>
-            <h2 className="font-heading text-xl font-bold text-[color:var(--surface-dark-900)]">{item.title}</h2>
+            <p className="tp-eyebrow mb-1.5" style={{ color: 'var(--brand-navy-700)' }}>Review for your resume</p>
+            <h2 className="tp-section text-[color:var(--surface-dark-900)]">{item.title}</h2>
           </div>
           <button onClick={onClose} aria-label="Close"><X size={18} className="text-[color:var(--ink-400)]" /></button>
         </div>
 
         <div className="my-4 flex gap-2 rounded-xl p-3" style={{ background: 'var(--background-tertiary)' }}>
           <ShieldCheck size={15} className="mt-0.5 shrink-0" style={{ color: 'var(--brand-navy-700)' }} />
-          <p className="text-xs leading-5 text-[color:var(--ink-700)]">
+          <p className="tp-meta text-[color:var(--ink-700)]">
             These details come only from what you submitted. Nothing is invented: no employers, job titles, metrics,
             results, certifications or dates are added for you. Edit anything that is not accurate, then approve.
           </p>
@@ -62,30 +62,30 @@ export default function ResumeApprovalModal({ item, onClose, onSaved }) {
 
         <div className="space-y-3">
           <label className="block">
-            <span className="mb-1 block text-xs font-bold text-[color:var(--ink-700)]">Project title</span>
+            <span className="tp-meta mb-1.5 block font-bold text-[color:var(--ink-700)]">Project title</span>
             <input value={form.approved_title} onChange={set('approved_title')} className={field} />
           </label>
           <label className="block">
-            <span className="mb-1 block text-xs font-bold text-[color:var(--ink-700)]">Deliverable</span>
+            <span className="tp-meta mb-1.5 block font-bold text-[color:var(--ink-700)]">Deliverable</span>
             <input value={form.approved_deliverable} onChange={set('approved_deliverable')} placeholder="What you actually produced" className={field} />
           </label>
           <label className="block">
-            <span className="mb-1 block text-xs font-bold text-[color:var(--ink-700)]">Accomplishment bullet</span>
+            <span className="tp-meta mb-1.5 block font-bold text-[color:var(--ink-700)]">Accomplishment bullet</span>
             <textarea value={form.approved_bullet} onChange={set('approved_bullet')} rows={3}
               placeholder="One line in your own words, only what you did." className={field} />
           </label>
           <label className="block">
-            <span className="mb-1 block text-xs font-bold text-[color:var(--ink-700)]">Skills demonstrated</span>
+            <span className="tp-meta mb-1.5 block font-bold text-[color:var(--ink-700)]">Skills demonstrated</span>
             <input value={form.approved_skills} onChange={set('approved_skills')} placeholder="Comma separated" className={field} />
           </label>
           <label className="block">
-            <span className="mb-1 block text-xs font-bold text-[color:var(--ink-700)]">Tools used</span>
+            <span className="tp-meta mb-1.5 block font-bold text-[color:var(--ink-700)]">Tools used</span>
             <input value={form.approved_tools} onChange={set('approved_tools')} placeholder="Comma separated" className={field} />
           </label>
           <label className="block">
-            <span className="mb-1 block text-xs font-bold text-[color:var(--ink-700)]">Public project link (optional)</span>
+            <span className="tp-meta mb-1.5 block font-bold text-[color:var(--ink-700)]">Public project link (optional)</span>
             <input value={form.approved_link} onChange={set('approved_link')} placeholder="https://…" className={field} />
-            <span className="mt-1 block text-[11px] text-[color:var(--ink-400)]">Uploaded files stay private. Only a link you paste here can appear on a resume.</span>
+            <span className="tp-meta mt-1.5 block text-[color:var(--ink-400)]">Uploaded files stay private. Only a link you paste here can appear on a resume.</span>
           </label>
         </div>
 
@@ -100,7 +100,7 @@ export default function ResumeApprovalModal({ item, onClose, onSaved }) {
             Keep off my resume
           </button>
         </div>
-        <p className="mt-3 text-center text-[11px] text-[color:var(--ink-400)]">Approving does not add anything to a resume. You choose when to import it.</p>
+        <p className="tp-meta mt-3 text-center text-[color:var(--ink-400)]">Approving does not add anything to a resume. You choose when to import it.</p>
       </div>
     </div>
   );
