@@ -322,16 +322,16 @@ export function NothingRelevantState({ college, pathName, className }) {
       title={pathName ? `Nothing here fits ${pathName}` : 'Nothing here matches your interests'}
       className={className}
     >
-      <p className="mt-1 text-xs leading-relaxed text-[#64748B]">
+      <p className="tp-prose mt-1.5 text-[#64748B]">
         We read {college || 'your school'}&apos;s calendar for the next two months. Nothing on it
         is worth crossing campus for. When your school posts something that is, it turns up here.
       </p>
       <Link
         to="/campus"
-        className="mt-2.5 inline-flex items-center gap-1.5 text-xs font-semibold transition hover:underline"
+        className="tp-meta touch-target mt-3 inline-flex items-center gap-1.5 font-semibold transition hover:underline"
         style={{ color: 'var(--brand-navy-700)' }}
       >
-        <CalendarSearch size={12} className="shrink-0" aria-hidden="true" />
+        <CalendarSearch size={13} className="shrink-0" aria-hidden="true" />
         See what&apos;s on anyway
       </Link>
     </EmptyPanel>
