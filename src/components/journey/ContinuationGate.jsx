@@ -76,7 +76,7 @@ export default function ContinuationGate() {
         whether you want it and which option fits, and nothing is charged.
       </p>
 
-      <p className="mt-5 text-sm font-bold" style={{ color: 'var(--text-primary)' }}>Do you want continued access?</p>
+      <p className="tp-body mt-5 font-bold" style={{ color: 'var(--text-primary)' }}>Do you want continued access?</p>
       <div className="mt-2 grid gap-2 sm:grid-cols-2">
         {[[true, 'Yes, I want to keep going'], [false, 'Not right now']].map(([val, label]) => {
           const on = wants === val;
@@ -94,7 +94,7 @@ export default function ContinuationGate() {
 
       {wants === true && (
         <>
-          <p className="mt-5 text-sm font-bold" style={{ color: 'var(--text-primary)' }}>Which would you prefer?</p>
+          <p className="tp-body mt-5 font-bold" style={{ color: 'var(--text-primary)' }}>Which would you prefer?</p>
           <div className="mt-2 grid gap-2 sm:grid-cols-3">
             {PREFERENCES.map(([val, label, sub]) => {
               const on = preference === val;
@@ -114,7 +114,7 @@ export default function ContinuationGate() {
       )}
 
       {error && (
-        <p className="mt-4 flex items-start gap-1.5 text-sm font-semibold text-red-600" role="alert">
+        <p className="tp-body mt-4 flex items-start gap-1.5 font-semibold text-red-600" role="alert">
           <AlertCircle size={14} className="mt-0.5 shrink-0" />{error}
         </p>
       )}

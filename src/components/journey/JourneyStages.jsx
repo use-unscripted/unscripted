@@ -95,7 +95,7 @@ export default function JourneyStages({ stage, detail }) {
 
       {/* Same measure as the instruction panel above, so the two elements read
           as one column rather than a panel with a wide list under it. */}
-      <ol className="mt-5">
+      <ol className="mt-5 max-w-2xl">
         {STAGES.map((s, i) => {
           const state = i < activeIdx ? 'done' : i === activeIdx ? 'current' : 'todo';
           const d = detail?.[s.key];

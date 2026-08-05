@@ -124,7 +124,7 @@ export function RecommendedEvent({ event, college, timeOnly = false }) {
         style={{ background: 'rgba(214,182,106,0.16)', color: 'var(--brand-gold-700)' }}
       >
         <Star size={11} aria-hidden="true" /> Worth your time
-        {countdown && <span className="ml-auto normal-case tracking-normal">{countdown}</span>}
+        {countdown && <span className="tp-meta ml-auto normal-case tracking-normal">{countdown}</span>}
       </div>
 
       <div className="px-4 py-3.5">

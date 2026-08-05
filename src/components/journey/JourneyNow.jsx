@@ -27,7 +27,7 @@ export default function JourneyNow({ stage, path, experiment, action, effort, on
     </>
   );
   const btnClass =
-    'ui-press journey-now-cta inline-flex w-full items-center justify-center gap-2 rounded-[12px] px-8 font-heading text-[1.0625rem] font-bold sm:w-auto';
+    'ui-press journey-now-cta inline-flex w-full items-center justify-center gap-2 rounded-[12px] px-8 tp-card sm:w-auto';
 
   return (
     <section

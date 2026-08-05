@@ -39,6 +39,30 @@ import {
  * from "we haven't looked that far ahead." Bounding the arrows to the months we
  * actually have data for makes an empty square mean one thing.
  */
+/*
+ * A note on the type in here, because the app-wide pass tried to change it and
+ * had to be reverted.
+ *
+ * Everything else behind the login now has a 13px floor. The inside of a day
+ * square is the documented exception, alongside the admin console and the
+ * printed resume. The reason is arithmetic, not taste: the page column is
+ * 960px, the calendar takes two thirds of it, so a square is about 74px wide.
+ * At 13px that is roughly nine characters a line, which truncated all 13 event
+ * titles on a real month instead of the 7 that truncate today, pushed longer
+ * words past the square's own border where they read as a rendering bug, and
+ * made the month 20% taller for strictly less readable content. Measured in a
+ * browser, not guessed.
+ *
+ * So the chips, the "+N more" line and the day numbers stay where they were.
+ * The month heading and the weekday letters are outside the squares and are on
+ * the scale.
+ *
+ * If someone wants real titles in here, the fix is width, not font size: about
+ * 125px a square, which this layout cannot produce. That means giving the
+ * campus page a wider column than the rest of the app, or showing one title
+ * plus a count, or deciding the desktop month grid shows dots and nothing else.
+ * All three are product calls. Do not "fix" this by raising the font size.
+ */
 export default function CampusMonthGrid({
   month,
   eventsByDay,
@@ -172,7 +196,7 @@ function DayCell({ day, events, pickIds, selected, onSelect, compact }) {
 
   // 44px, not the 36 this started at. A compact square is a touch target on a
   // phone, and it is the only way into a day when the titles are not on it.
-  const base = compact ? 'h-11' : 'min-h-[86px]';
+  const base = compact ? 'h-11 text-xs' : 'min-h-[86px] text-sm';
   const numberTone = !inMonth
     ? 'var(--text-muted)'
     : isToday
@@ -263,7 +287,7 @@ function DayCell({ day, events, pickIds, selected, onSelect, compact }) {
                   // No `block` here: line-clamp needs display:-webkit-box, and a
                   // display utility alongside it silently wins, which un-clamps
                   // the title and lets a long one grow the row to six lines.
-                  className="tp-meta border-l-2 pl-1 line-clamp-2"
+                  className="border-l-2 pl-1 text-[10px] leading-[1.25] line-clamp-2"
                   style={{
                     borderColor: picked ? 'var(--brand-gold-500)' : 'var(--border-light)',
                     color: picked ? 'var(--brand-navy-900)' : 'var(--text-secondary)',
@@ -277,7 +301,7 @@ function DayCell({ day, events, pickIds, selected, onSelect, compact }) {
             })}
             {count > 2 && (
               <span
-                className="tp-meta block font-bold"
+                className="block text-[10px] font-bold"
                 style={{ color: hiddenPick ? 'var(--brand-gold-700)' : 'var(--text-muted)' }}
               >
                 +{count - 2} more
@@ -291,11 +315,13 @@ function DayCell({ day, events, pickIds, selected, onSelect, compact }) {
 }
 
 /** Today's number gets the gold disc — the one square a student looks for first. */
-function DayNumber({ value, tone, isToday }) {
+function DayNumber({ value, tone, isToday, compact }) {
   if (isToday) {
     return (
       <span
-        className="tp-meta grid h-5 w-5 place-items-center rounded-full font-bold tabular-nums"
+        className={`grid place-items-center rounded-full font-bold tabular-nums ${
+          compact ? 'h-4 w-4 text-[10px]' : 'h-5 w-5 text-xs'
+        }`}
         style={{ background: 'var(--brand-gold-500)', color: 'var(--brand-navy-900)' }}
       >
         {value}
@@ -305,7 +331,7 @@ function DayNumber({ value, tone, isToday }) {
 
   return (
     <span
-      className="tp-meta block font-semibold tabular-nums"
+      className={`block font-semibold tabular-nums ${compact ? 'text-[11px]' : 'text-xs'}`}
       style={{ color: tone }}
     >
       {value}
