@@ -233,7 +233,7 @@ export default function CampusEventPicker({ profile, pathName, selected, onSelec
       <p className="mb-3 mt-0.5 text-xs text-[color:var(--ink-500)]">
         {unranked
           ? <>Nothing on {college || 'your campus'}&apos;s calendar lines up with this experiment.
-              These are happening anyway, and a date you didn&apos;t set still beats one you did.</>
+              These are happening anyway.</>
           : <>Happening at {college}. Pick one and it becomes your first step, with a date you
               didn&apos;t have to invent.</>}
       </p>
@@ -416,7 +416,7 @@ function NoCollegeState({ profile, disabled, onSaved }) {
           disabled={disabled || saving}
           placeholder="Fairfield University"
           autoComplete="organization"
-          className="min-w-0 flex-1 rounded-lg border bg-white px-3 py-2 text-sm outline-none transition focus:border-[color:var(--brand-navy-900)] disabled:opacity-60"
+          className="min-w-0 flex-1 rounded-lg border bg-white px-3 py-2 text-base md:text-sm outline-none transition focus:border-[color:var(--brand-navy-900)] disabled:opacity-60"
           style={{ borderColor: 'var(--ink-200)' }}
         />
         <button
@@ -521,7 +521,7 @@ function NoFeedState({ college, disabled, onResolved }) {
           placeholder="yourschool.campusgroups.com"
           aria-invalid={problem ? 'true' : undefined}
           aria-describedby={problem ? 'campus-feed-problem' : 'campus-feed-hint'}
-          className="min-w-0 flex-1 rounded-lg border bg-white px-3 py-2 text-sm outline-none transition focus:border-[color:var(--brand-navy-900)] disabled:opacity-60"
+          className="min-w-0 flex-1 rounded-lg border bg-white px-3 py-2 text-base md:text-sm outline-none transition focus:border-[color:var(--brand-navy-900)] disabled:opacity-60"
           style={{ borderColor: problem ? 'var(--danger-700)' : 'var(--ink-200)' }}
         />
         <button
@@ -634,7 +634,7 @@ function WrongCalendarButton({ college }) {
         onChange={e => setNote(e.target.value)}
         placeholder="e.g. this is the law school's calendar"
         maxLength={200}
-        className="mt-1.5 w-full rounded-lg border px-2.5 py-1.5 text-xs"
+        className="mt-1.5 w-full rounded-lg border px-2.5 py-1.5 text-base md:text-xs"
         style={{ borderColor: 'var(--ink-200)' }}
       />
       <div className="mt-2 flex flex-wrap items-center gap-2">

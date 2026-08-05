@@ -411,24 +411,24 @@ export default function ProofOfWorkPage() {
           <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[color:var(--ink-400)]" />
           <input value={search} onChange={e => setSearch(e.target.value)}
             placeholder="Search by title, mission, experiment, or filename…"
-            className="w-full rounded-xl border border-[color:var(--ink-200)] bg-white pl-9 pr-4 py-2.5 text-sm outline-none focus:border-[color:var(--brand-navy-700)]" />
+            className="w-full rounded-xl border border-[color:var(--ink-200)] bg-white pl-9 pr-4 py-2.5 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-700)]" />
         </div>
         {paths.length > 1 && (
           <select value={filterPath} onChange={e => setFilterPath(e.target.value)}
-            className="w-full max-w-full truncate rounded-xl border border-[color:var(--ink-200)] bg-white px-3 py-2.5 text-sm outline-none focus:border-[color:var(--brand-navy-900)] sm:w-[220px]">
+            className="w-full max-w-full truncate rounded-xl border border-[color:var(--ink-200)] bg-white px-3 py-2.5 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)] sm:w-[220px]">
             <option value="all">All paths</option>
             {paths.filter(p => p !== 'all').map(p => <option key={p} value={p}>{p}</option>)}
           </select>
         )}
         {experiments.length > 0 && (
           <select value={filterExp} onChange={e => setFilterExp(e.target.value)}
-            className="w-full max-w-full truncate rounded-xl border border-[color:var(--ink-200)] bg-white px-3 py-2.5 text-sm outline-none focus:border-[color:var(--brand-navy-900)] sm:w-[220px]">
+            className="w-full max-w-full truncate rounded-xl border border-[color:var(--ink-200)] bg-white px-3 py-2.5 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)] sm:w-[220px]">
             <option value="all">All experiments</option>
             {experiments.map(ex => <option key={ex.id} value={ex.id}>{ex.title}</option>)}
           </select>
         )}
         <select value={filterVis} onChange={e => setFilterVis(e.target.value)}
-          className="rounded-xl border border-[color:var(--ink-200)] bg-white px-3 py-2.5 text-sm outline-none focus:border-[color:var(--brand-navy-900)]">
+          className="rounded-xl border border-[color:var(--ink-200)] bg-white px-3 py-2.5 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]">
           <option value="all">All visibility</option>
           <option value="private">Private</option>
           <option value="public">Public</option>

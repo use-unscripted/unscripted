@@ -127,7 +127,7 @@ export default function ExperimentPermanentDeleteModal({ exp, onDeleted, onCance
               value={typed}
               onChange={e => setTyped(e.target.value)}
               placeholder={cascadeConfirmWord}
-              className="w-full rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm font-mono outline-none focus:border-red-400"
+              className="w-full rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-base md:text-sm font-mono outline-none focus:border-red-400"
             />
           </div>
         )}

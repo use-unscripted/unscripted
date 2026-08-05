@@ -19,6 +19,7 @@
    4.5:1+ token now, but it stays out of these pages on purpose: a legal
    instrument should not have two weights of body copy.
    ────────────────────────────────────────────────────────────────────────── */
+import { useId } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { LogoFull } from '@/components/UnscriptedLogo';
@@ -27,7 +28,7 @@ import { CONTACT_EMAIL } from '@/lib/legal';
 
 export function LegalPage({ title, effective, updated, notice, lede, contents, children }) {
   return (
-    <div className="min-h-screen" style={{ background: 'var(--page-surface)' }}>
+    <div className="min-h-[100svh]" style={{ background: 'var(--page-surface)' }}>
       <header className="border-b" style={{ borderColor: 'var(--border-light)' }}>
         <div className="mx-auto flex max-w-3xl items-center justify-between gap-4 px-6 py-5">
           <Link to="/" className="rounded focus-visible:outline-2 focus-visible:outline-offset-4" style={{ outlineColor: 'var(--brand-navy-900)' }}>
@@ -187,22 +188,61 @@ export function Conspicuous({ children }) {
   );
 }
 
-/** Disclosure table (categories of Personal Information, recipients). Scrolls
-    inside itself on narrow screens rather than pushing the page sideways. */
+/**
+ * Disclosure table (categories of Personal Information, recipients).
+ *
+ * The table needs 560px to hold its columns, and a phone gives the policy
+ * body about 353px at 393px wide. It used to scroll sideways inside itself,
+ * which kept the page from moving but left the last one or two columns off
+ * screen with nothing to show they were there. iOS hides scrollbars until a
+ * scroll is already in progress, so the purpose and retention columns, the
+ * ones that answer "what do you do with my data", were simply lost.
+ *
+ * Below 640px each row is stacked into a labelled card instead. That is the
+ * right call for a document meant to be read top to bottom rather than
+ * compared column against column, and it costs no horizontal scrolling.
+ * 640px is content-driven: at that width the body column is 592px, so the
+ * 560px table fits, and every width from there up renders exactly as before.
+ *
+ * The labels are drawn with ::before from data-label, not from added markup,
+ * so the rendered layout gains a heading per field while the document's text
+ * content stays byte for byte what it was.
+ *
+ * Switching the display values would normally cost the table its semantics,
+ * so the roles are stated explicitly and every cell points at its column
+ * header through headers/id. A screen reader still reads "Purpose of
+ * collection" before the value at any width.
+ */
 export function DataTable({ caption, columns, rows }) {
+  const uid = useId().replace(/:/g, '');
+  const headerId = (j) => `${uid}-col-${j}`;
+  const captionId = caption ? `${uid}-caption` : undefined;
+
   return (
-    <div className="-mx-1 overflow-x-auto pb-1">
-      <table className="w-full min-w-[560px] border-collapse text-left text-[13px]">
+    <div className="sm:-mx-1 sm:overflow-x-auto sm:pb-1">
+      <table
+        role="table"
+        aria-labelledby={captionId}
+        className="block w-full border-collapse text-left text-[13px] sm:table sm:min-w-[560px]"
+      >
         {caption && (
-          <caption className="pb-3 text-left text-[13px]" style={{ color: 'var(--text-secondary)' }}>
+          <caption
+            id={captionId}
+            className="block pb-3 text-left text-[13px] sm:table-caption"
+            style={{ color: 'var(--text-secondary)' }}
+          >
             {caption}
           </caption>
         )}
-        <thead>
-          <tr>
-            {columns.map((c) => (
+        {/* Kept in the accessibility tree at every width, drawn only where the
+            columns exist. On a phone the same words arrive as the card labels. */}
+        <thead role="rowgroup" className="sr-only sm:not-sr-only sm:table-header-group">
+          <tr role="row">
+            {columns.map((c, j) => (
               <th
                 key={c}
+                id={headerId(j)}
+                role="columnheader"
                 scope="col"
                 className="border-b-2 px-3 py-2 align-bottom text-xs font-bold uppercase tracking-wide"
                 style={{ borderColor: 'var(--brand-navy-900)', color: 'var(--text-primary)' }}
@@ -212,13 +252,23 @@ export function DataTable({ caption, columns, rows }) {
             ))}
           </tr>
         </thead>
-        <tbody>
+        <tbody role="rowgroup" className="block sm:table-row-group">
           {rows.map((row, i) => (
-            <tr key={i}>
+            <tr
+              key={i}
+              role="row"
+              className="mt-3 block rounded-xl border p-4 first:mt-0 border-[color:var(--border-light)] bg-[color:var(--background-secondary)] sm:mt-0 sm:table-row sm:rounded-none sm:border-0 sm:bg-transparent sm:p-0"
+            >
+              {/* sm:first:pt-3 is not redundant with sm:py-3. first:pt-0 carries a
+                  second class of specificity, so without it the mobile rule survives
+                  into the desktop table and lifts every first-column cell out of line. */}
               {row.map((cell, j) => (
                 <td
                   key={j}
-                  className="border-b px-3 py-3 align-top leading-relaxed"
+                  role="cell"
+                  headers={headerId(j)}
+                  data-label={columns[j]}
+                  className="block px-0 pb-0 pt-4 align-top leading-relaxed first:pt-0 before:mb-1 before:block before:text-[11px] before:font-bold before:uppercase before:leading-tight before:tracking-wide before:text-[color:var(--text-primary)] before:content-[attr(data-label)] sm:table-cell sm:border-b sm:px-3 sm:py-3 sm:first:pt-3 sm:before:hidden"
                   style={{ borderColor: 'var(--border-light)', color: j === 0 ? 'var(--text-primary)' : 'var(--text-secondary)', fontWeight: j === 0 ? 600 : 400 }}
                 >
                   {cell}

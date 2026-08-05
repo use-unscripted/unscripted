@@ -179,7 +179,7 @@ export default function PathResults() {
   // this becomes. This is the first real screen a new student sees, so it is
   // the last place we want a bare centred sentence that then vanishes.
   if (loading) return (
-    <main className="min-h-screen px-5 py-10" style={{ background: 'var(--page-surface)' }}>
+    <main className="min-h-[100svh] px-5 py-10" style={{ background: 'var(--page-surface)' }}>
       <div className="mx-auto max-w-3xl">
         <div className="mb-8"><LogoWordmark /></div>
         <div className="mb-3">
@@ -196,7 +196,7 @@ export default function PathResults() {
   );
 
   return (
-    <main className="min-h-screen px-5 py-10" style={{ background: 'var(--page-surface)' }}>
+    <main className="min-h-[100svh] px-5 py-10" style={{ background: 'var(--page-surface)' }}>
       <div className="mx-auto max-w-3xl">
         <div className="mb-8">
           <LogoWordmark />

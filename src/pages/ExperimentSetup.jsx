@@ -229,23 +229,23 @@ function StepCustom({ pathName, data, onChange, onBack, onNext }) {
       ].map(f => (
         <label key={f.name} className="block">
           <span className="text-sm font-semibold text-[color:var(--ink-700)] block mb-1">{f.label}</span>
-          <input className="w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-sm outline-none focus:border-[color:var(--brand-navy-900)]"
+          <input className="w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]"
             placeholder={f.placeholder} value={data[f.name] || ''} onChange={e => onChange(f.name, e.target.value)} />
         </label>
       ))}
       <label className="block">
         <span className="text-sm font-semibold text-[color:var(--ink-700)] block mb-1">Path being tested</span>
-        <input className="w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--ink-100)] px-4 py-3 text-sm outline-none text-[color:var(--ink-700)]"
+        <input className="w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--ink-100)] px-4 py-3 text-base md:text-sm outline-none text-[color:var(--ink-700)]"
           value={pathName} readOnly />
       </label>
       <label className="block">
         <span className="text-sm font-semibold text-[color:var(--ink-700)] block mb-1">Estimated hours</span>
-        <input type="number" min="1" max="40" className="w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-sm outline-none focus:border-[color:var(--brand-navy-900)]"
+        <input type="number" min="1" max="40" className="w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]"
           value={data.estimated_hours || 5} onChange={e => onChange('estimated_hours', Number(e.target.value))} />
       </label>
       <label className="block">
         <span className="text-sm font-semibold text-[color:var(--ink-700)] block mb-1">Deadline (optional)</span>
-        <input type="date" className="w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-sm outline-none focus:border-[color:var(--brand-navy-900)]"
+        <input type="date" className="w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]"
           value={data.deadline || ''} onChange={e => onChange('deadline', e.target.value)} />
       </label>
       <button onClick={onNext} disabled={!data.title || !data.objective}
@@ -649,7 +649,7 @@ ${PLAIN_PROSE_RULES}${correction}`,
     // was a spinner centred on an empty page, so the step rail that tells the
     // student how long this takes arrived last instead of first.
     return (
-      <main className="min-h-screen px-5 py-10" style={{ background: 'var(--page-surface)' }}>
+      <main className="min-h-[100svh] px-5 py-10" style={{ background: 'var(--page-surface)' }}>
         <div className="mx-auto max-w-2xl">
           <div className="mb-8 flex items-center justify-between">
             <LogoWordmark />
@@ -686,7 +686,7 @@ ${PLAIN_PROSE_RULES}${correction}`,
 
   if (loadError) {
     return (
-      <main className="min-h-screen px-5 py-10 flex items-center justify-center" style={{ background: 'var(--page-surface)' }}>
+      <main className="min-h-[100svh] px-5 py-10 flex items-center justify-center" style={{ background: 'var(--page-surface)' }}>
         <div className="max-w-md text-center space-y-4">
           <AlertCircle className="mx-auto text-red-500" size={40} />
           <h2 className="font-heading text-xl font-bold text-[color:var(--surface-dark-900)]">{loadError}</h2>
@@ -703,7 +703,7 @@ ${PLAIN_PROSE_RULES}${correction}`,
   const progressStep = step === 'pick' ? 1 : step === 'custom' ? 2 : step === 'generating' ? 3 : 4;
 
   return (
-    <main className="min-h-screen px-5 py-10" style={{ background: 'var(--page-surface)' }}>
+    <main className="min-h-[100svh] px-5 py-10" style={{ background: 'var(--page-surface)' }}>
       {duplicate && (
         <DuplicateModal
           existing={duplicate}

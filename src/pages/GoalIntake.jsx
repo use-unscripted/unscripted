@@ -23,7 +23,7 @@ function GoalRow({ goal, onChange, onRemove }) {
     <div className="rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] p-4 space-y-3">
       <div className="grid gap-3 sm:grid-cols-2">
         <input
-          className="rounded-lg border border-[color:var(--ink-200)] bg-white px-3 py-2.5 text-sm text-[color:var(--surface-dark-900)] placeholder-[color:var(--ink-400)] outline-none focus:border-[color:var(--brand-navy-900)] sm:col-span-2"
+          className="rounded-lg border border-[color:var(--ink-200)] bg-white px-3 py-2.5 text-base md:text-sm text-[color:var(--surface-dark-900)] placeholder-[color:var(--ink-400)] outline-none focus:border-[color:var(--brand-navy-900)] sm:col-span-2"
           placeholder="What is this goal?"
           value={goal.goal_text}
           onChange={e => onChange({ ...goal, goal_text: e.target.value })}
@@ -35,14 +35,14 @@ function GoalRow({ goal, onChange, onRemove }) {
           onChange={e => onChange({ ...goal, measurable_outcome: e.target.value })}
         />
         <select
-          className="rounded-lg border border-[color:var(--ink-200)] bg-white px-3 py-2.5 text-sm text-[color:var(--ink-700)] outline-none focus:border-[color:var(--brand-navy-900)]"
+          className="rounded-lg border border-[color:var(--ink-200)] bg-white px-3 py-2.5 text-base md:text-sm text-[color:var(--ink-700)] outline-none focus:border-[color:var(--brand-navy-900)]"
           value={goal.category}
           onChange={e => onChange({ ...goal, category: e.target.value })}
         >
           {CATEGORIES.map(c => <option key={c} value={c}>{c.charAt(0).toUpperCase() + c.slice(1)}</option>)}
         </select>
         <select
-          className="rounded-lg border border-[color:var(--ink-200)] bg-white px-3 py-2.5 text-sm text-[color:var(--ink-700)] outline-none focus:border-[color:var(--brand-navy-900)]"
+          className="rounded-lg border border-[color:var(--ink-200)] bg-white px-3 py-2.5 text-base md:text-sm text-[color:var(--ink-700)] outline-none focus:border-[color:var(--brand-navy-900)]"
           value={goal.priority}
           onChange={e => onChange({ ...goal, priority: e.target.value })}
         >
@@ -51,7 +51,7 @@ function GoalRow({ goal, onChange, onRemove }) {
           <option value="low">Low priority</option>
         </select>
         <input type="number" min="0" max="40"
-          className="rounded-lg border border-[color:var(--ink-200)] bg-white px-3 py-2.5 text-sm text-[color:var(--surface-dark-900)] outline-none focus:border-[color:var(--brand-navy-900)]"
+          className="rounded-lg border border-[color:var(--ink-200)] bg-white px-3 py-2.5 text-base md:text-sm text-[color:var(--surface-dark-900)] outline-none focus:border-[color:var(--brand-navy-900)]"
           placeholder="Estimated hours/week"
           value={goal.estimated_hours || ''}
           onChange={e => onChange({ ...goal, estimated_hours: Number(e.target.value) })}
@@ -65,17 +65,17 @@ function GoalRow({ goal, onChange, onRemove }) {
 function ScheduleBlockRow({ block, onChange, onRemove }) {
   return (
     <div className="grid gap-2 rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] p-3 sm:grid-cols-5">
-      <select className="rounded-lg border border-[color:var(--ink-200)] bg-white px-2 py-2 text-xs text-[color:var(--ink-700)] outline-none focus:border-[color:var(--brand-navy-900)]"
+      <select className="rounded-lg border border-[color:var(--ink-200)] bg-white px-2 py-2 text-base md:text-xs text-[color:var(--ink-700)] outline-none focus:border-[color:var(--brand-navy-900)]"
         value={block.block_type} onChange={e => onChange({ ...block, block_type: e.target.value })}>
         {BLOCK_TYPES.map(b => <option key={b.value} value={b.value}>{b.label}</option>)}
       </select>
-      <select className="rounded-lg border border-[color:var(--ink-200)] bg-white px-2 py-2 text-xs text-[color:var(--ink-700)] outline-none focus:border-[color:var(--brand-navy-900)]"
+      <select className="rounded-lg border border-[color:var(--ink-200)] bg-white px-2 py-2 text-base md:text-xs text-[color:var(--ink-700)] outline-none focus:border-[color:var(--brand-navy-900)]"
         value={block.day} onChange={e => onChange({ ...block, day: e.target.value })}>
         {DAYS.map(d => <option key={d} value={d}>{d}</option>)}
       </select>
-      <input type="time" className="rounded-lg border border-[color:var(--ink-200)] bg-white px-2 py-2 text-xs text-[color:var(--ink-700)] outline-none focus:border-[color:var(--brand-navy-900)]"
+      <input type="time" className="rounded-lg border border-[color:var(--ink-200)] bg-white px-2 py-2 text-base md:text-xs text-[color:var(--ink-700)] outline-none focus:border-[color:var(--brand-navy-900)]"
         value={block.start_time || ''} onChange={e => onChange({ ...block, start_time: e.target.value })} />
-      <input type="time" className="rounded-lg border border-[color:var(--ink-200)] bg-white px-2 py-2 text-xs text-[color:var(--ink-700)] outline-none focus:border-[color:var(--brand-navy-900)]"
+      <input type="time" className="rounded-lg border border-[color:var(--ink-200)] bg-white px-2 py-2 text-base md:text-xs text-[color:var(--ink-700)] outline-none focus:border-[color:var(--brand-navy-900)]"
         value={block.end_time || ''} onChange={e => onChange({ ...block, end_time: e.target.value })} />
       <button onClick={onRemove} className="text-xs font-semibold text-[color:var(--danger-700)] hover:underline">Remove</button>
     </div>
@@ -124,7 +124,7 @@ export default function GoalIntake() {
   const setGoalsForTab = tab === 'annual' ? setAnnualGoals : tab === 'monthly' ? setMonthlyGoals : setWeeklyGoals;
 
   return (
-    <main className="min-h-screen px-5 py-10" style={{ background: 'var(--page-surface)' }}>
+    <main className="min-h-[100svh] px-5 py-10" style={{ background: 'var(--page-surface)' }}>
       <div className="mx-auto max-w-4xl">
         <div className="mb-8 flex items-center justify-between">
           <LogoWordmark />
@@ -204,20 +204,20 @@ export default function GoalIntake() {
                   <span className="text-sm font-semibold text-[color:var(--ink-700)]">Available hours/week for growth</span>
                   <input type="number" min="1" max="40" value={availableHours}
                     onChange={e => setAvailableHours(Number(e.target.value))}
-                    className="mt-2 w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-sm outline-none focus:border-[color:var(--brand-navy-900)]" />
+                    className="mt-2 w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]" />
                   <p className="mt-1 text-xs text-[color:var(--ink-400)]">Be conservative and honest.</p>
                 </label>
                 <label className="block">
                   <span className="text-sm font-semibold text-[color:var(--ink-700)]">High-energy times</span>
                   <input type="text" value={highEnergyTimes} onChange={e => setHighEnergyTimes(e.target.value)}
                     placeholder="e.g. 7-10am, after gym"
-                    className="mt-2 w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-sm outline-none focus:border-[color:var(--brand-navy-900)]" />
+                    className="mt-2 w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]" />
                 </label>
                 <label className="block">
                   <span className="text-sm font-semibold text-[color:var(--ink-700)]">Low-energy times</span>
                   <input type="text" value={lowEnergyTimes} onChange={e => setLowEnergyTimes(e.target.value)}
                     placeholder="e.g. 2-4pm after lunch"
-                    className="mt-2 w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-sm outline-none focus:border-[color:var(--brand-navy-900)]" />
+                    className="mt-2 w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]" />
                 </label>
               </div>
             </div>

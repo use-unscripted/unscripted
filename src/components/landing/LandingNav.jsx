@@ -101,7 +101,7 @@ export default function LandingNav() {
 
         <Link
           to="/onboarding"
-          className="block whitespace-nowrap rounded-[var(--r-control)] px-4 py-2.5 text-sm font-semibold text-white"
+          className="touch-target inline-flex items-center whitespace-nowrap rounded-[var(--r-control)] px-4 py-2.5 text-sm font-semibold text-white"
           style={{ background: 'var(--brand-navy-900)', boxShadow: '0 6px 20px rgb(31 58 95 / 0.25)' }}
         >
           Start your 30-day test

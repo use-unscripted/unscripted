@@ -102,7 +102,7 @@ export default function GoalsPage() {
                     )}
                     {g.estimated_hours && <p className="mt-1 text-xs text-[color:var(--ink-400)]">{g.estimated_hours}h/week estimated</p>}
                   </div>
-                  <select className="rounded-lg border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-2 py-1.5 text-xs text-[color:var(--ink-700)] outline-none"
+                  <select className="rounded-lg border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-2 py-1.5 text-base md:text-xs text-[color:var(--ink-700)] outline-none"
                     value={g.status} onChange={e => updateStatus(g.id, e.target.value)}>
                     <option value="active">Active</option>
                     <option value="completed">Completed</option>

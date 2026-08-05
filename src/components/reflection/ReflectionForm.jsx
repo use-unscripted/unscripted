@@ -28,7 +28,7 @@ const INTEREST = [
   { value: 'less', label: 'Less interested', desc: 'Worth saying out loud early.' },
 ];
 
-const field = 'w-full rounded-[10px] border px-3 py-2.5 text-sm outline-none';
+const field = 'w-full rounded-[10px] border px-3 py-2.5 text-base md:text-sm outline-none';
 const fieldStyle = { borderColor: 'var(--border-light)', background: 'var(--background-secondary)' };
 
 export default function ReflectionForm({ ctx, onSaved, onSubmit }) {

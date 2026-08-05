@@ -20,7 +20,7 @@ import { toText, toTextList, isPlainObject } from '@/lib/ai-validation';
 import { generateValidated } from '@/lib/ai-generate';
 import { reportAiFailure } from '@/lib/ai-failures';
 
-const inputCls = 'w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-2.5 text-sm outline-none focus:border-[color:var(--brand-navy-900)]';
+const inputCls = 'w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-2.5 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]';
 
 // ── Step 1: Survey ─────────────────────────────────────────────────────────────
 const DEFAULT_SURVEY = {
@@ -219,6 +219,10 @@ function SurveyStep({ pathName, survey, setSurvey, index, setIndex, onGenerate, 
     clearTimeout(advanceRef.current);
     advanceRef.current = setTimeout(() => { setDir('fwd'); setIndex(i => Math.min(i + 1, STEPS.length)); }, 230);
   };
+
+  // On an optional question with nothing chosen, the forward button is a skip. Say so,
+  // and drop it to secondary weight so the loudest thing on the screen is answering.
+  const skipping = !reviewing && !!step.optional && !((survey[step.key] || '').toString().trim());
 
   const answered = !reviewing && step.kind === 'multi'
     ? composeWhatToLearn(survey).length > 0
@@ -428,9 +432,11 @@ function SurveyStep({ pathName, survey, setSurvey, index, setIndex, onGenerate, 
           )}
 
           <button onClick={next} disabled={!answered}
-            className="flex flex-1 items-center justify-center gap-2 rounded-[10px] py-3 text-sm font-semibold text-white disabled:opacity-40"
-            style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}>
-            {step.optional && !((survey[step.key] || '').toString().trim()) ? 'Skip' : 'Continue'}
+            className={`flex flex-1 items-center justify-center gap-2 rounded-[10px] border py-3 text-sm font-semibold transition-colors disabled:opacity-40 ${skipping ? '' : 'text-white'}`}
+            style={skipping
+              ? { borderColor: 'var(--ink-200)', color: 'var(--text-secondary)' }
+              : { background: 'var(--brand-navy-900)', borderColor: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}>
+            {skipping ? 'Skip' : 'Continue'}
             <ChevronRight size={15} />
           </button>
         </div>

@@ -26,7 +26,7 @@ export function isShellRoute(pathname) {
 
 export default function AppShellSkeleton() {
   return (
-    <div className="min-h-screen font-body" style={{ background: 'var(--background-secondary)' }}>
+    <div className="min-h-[100svh] font-body" style={{ background: 'var(--background-secondary)' }}>
       {/* Sidebar — same width, same colour, same rhythm as the real one, so it
           does not redraw when the real nav takes over. */}
       <aside
@@ -47,7 +47,7 @@ export default function AppShellSkeleton() {
         </nav>
       </aside>
 
-      <main className="pb-24 lg:ml-60 lg:pb-0">
+      <main className="pb-[calc(6rem+env(safe-area-inset-bottom))] pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)] lg:ml-60 lg:pb-0">
         <div className="mx-auto max-w-5xl px-5 py-10 sm:px-8">
           <SkHeader />
           <SkCards count={3} h={152} r={20} />
@@ -57,7 +57,12 @@ export default function AppShellSkeleton() {
       {/* Mobile bottom nav */}
       <nav
         className="fixed inset-x-0 bottom-0 z-30 flex border-t bg-white lg:hidden"
-        style={{ borderColor: 'var(--border-light)', paddingBottom: 'env(safe-area-inset-bottom)' }}
+        style={{
+          borderColor: 'var(--border-light)',
+          paddingBottom: 'env(safe-area-inset-bottom)',
+          paddingLeft: 'env(safe-area-inset-left)',
+          paddingRight: 'env(safe-area-inset-right)',
+        }}
         aria-hidden="true"
       >
         {[0, 1, 2, 3].map(i => (

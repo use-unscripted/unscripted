@@ -69,7 +69,7 @@ export default function ImportApprovedEvidence({ resume, onAddEntry, onAddSkills
           <label className="mb-3 flex items-center gap-2 text-xs font-semibold text-[color:var(--ink-700)]">
             Import into
             <select value={section} onChange={(e) => setSection(e.target.value)}
-              className="rounded-xl border border-[color:var(--ink-200)] px-3 py-2 text-xs outline-none focus:border-[color:var(--brand-navy-900)]">
+              className="rounded-xl border border-[color:var(--ink-200)] px-3 py-2 text-base md:text-xs outline-none focus:border-[color:var(--brand-navy-900)]">
               {sections.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}
             </select>
           </label>

@@ -62,7 +62,7 @@ export default function AppShell() {
   }, [isAdmin]);
 
   return (
-    <div className="min-h-screen font-body" style={{ background: 'var(--background-secondary)' }}>
+    <div className="min-h-[100svh] font-body" style={{ background: 'var(--background-secondary)' }}>
       <PilotTracker />
       {/* Sidebar */}
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-60 flex-col lg:flex py-5 px-4" style={{ background: 'var(--brand-navy-900)' }}>
@@ -128,13 +128,23 @@ export default function AppShell() {
         </button>
       </aside>
 
-      <main className="pb-24 lg:ml-60 lg:pb-0">
+      {/* The bottom nav is as tall as its own bar plus whatever the phone
+          reserves for the home indicator, so the page has to clear both or the
+          last thing on every scrolling screen hides behind it. */}
+      <main className="pb-[calc(6rem+env(safe-area-inset-bottom))] pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)] lg:ml-60 lg:pb-0">
         <Outlet />
       </main>
 
-      {/* Mobile bottom nav — same four destinations, touch-sized */}
+      {/* Mobile bottom nav — same four destinations, touch-sized. The side
+          insets only do anything in landscape, where the notch eats into one
+          end of a full-bleed bar. */}
       <nav className="fixed inset-x-0 bottom-0 z-30 flex border-t bg-white lg:hidden"
-        style={{ borderColor: 'var(--border-light)', paddingBottom: 'env(safe-area-inset-bottom)' }}>
+        style={{
+          borderColor: 'var(--border-light)',
+          paddingBottom: 'env(safe-area-inset-bottom)',
+          paddingLeft: 'env(safe-area-inset-left)',
+          paddingRight: 'env(safe-area-inset-right)',
+        }}>
         {NAV.map(([to, , shortLabel, Icon]) => (
           <NavLink key={to} to={to}
             className={({ isActive }) =>

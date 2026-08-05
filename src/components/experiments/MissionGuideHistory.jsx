@@ -172,7 +172,7 @@ function RenameRow({ guide, onRenamed, onCancel }) {
         value={title}
         onChange={e => setTitle(e.target.value)}
         onKeyDown={e => { if (e.key === 'Enter') handleSave(); if (e.key === 'Escape') onCancel(); }}
-        className="flex-1 rounded-lg border border-[color:var(--ink-200)] bg-white px-3 py-1.5 text-sm outline-none focus:border-[color:var(--brand-navy-900)]"
+        className="flex-1 rounded-lg border border-[color:var(--ink-200)] bg-white px-3 py-1.5 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]"
       />
       <button onClick={handleSave} disabled={saving || !title.trim()}
         className="rounded-lg px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-60"

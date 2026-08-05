@@ -87,7 +87,7 @@ function PausedPathPanel({ path, experiments, missions, proof, contacts, reflect
 
       <div className="flex flex-wrap gap-3">
         <button onClick={onResume}
-          className="flex items-center gap-2 rounded-[10px] px-5 py-2.5 text-sm font-semibold text-white"
+          className="touch-target flex items-center gap-2 rounded-[10px] px-5 py-2.5 text-sm font-semibold text-white"
           style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}>
           <RotateCcw size={14} /> Resume This Path
         </button>
@@ -146,61 +146,61 @@ function PathCard({ path, experiments, missions, proof, contacts, reflections, o
             )}
           </div>
 
-          <button onClick={onToggle} className="shrink-0 rounded-xl border border-[color:var(--ink-200)] p-2 hover:bg-[color:var(--ink-50)]">
+          <button onClick={onToggle} className="touch-target-square flex shrink-0 items-center justify-center rounded-xl border border-[color:var(--ink-200)] p-2 hover:bg-[color:var(--ink-50)]">
             {expanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
           </button>
         </div>
 
         <div className="mt-4 flex flex-wrap gap-2">
           <button onClick={onBuildOutreachPlan}
-            className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition"
+            className="touch-target flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition"
             style={{ background: 'var(--background-tertiary)', color: 'var(--brand-navy-700)', border: '1px solid var(--border-light)' }}>
             <Users size={12} /> Build Outreach Plan
           </button>
           <button onClick={() => onAction('edit', path)}
-            className="flex items-center gap-1.5 rounded-lg border border-[color:var(--ink-200)] px-3 py-1.5 text-xs font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)]">
+            className="touch-target flex items-center gap-1.5 rounded-lg border border-[color:var(--ink-200)] px-3 py-1.5 text-xs font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)]">
             <Pencil size={12} /> Edit
           </button>
           {!path.is_primary_focus && ACTIVE_STATUSES.includes(path.status) && (
             <button onClick={() => onAction('make_primary', path)}
-              className="flex items-center gap-1.5 rounded-lg border border-[color:var(--ink-200)] px-3 py-1.5 text-xs font-semibold text-[color:var(--ink-700)] hover:bg-[#F8ECEF]">
+              className="touch-target flex items-center gap-1.5 rounded-lg border border-[color:var(--ink-200)] px-3 py-1.5 text-xs font-semibold text-[color:var(--ink-700)] hover:bg-[#F8ECEF]">
               <Star size={12} /> Make Primary
             </button>
           )}
           {ACTIVE_STATUSES.includes(path.status) && (
             <button onClick={() => onAction('pause', path)}
-              className="flex items-center gap-1.5 rounded-lg border border-[color:var(--ink-200)] px-3 py-1.5 text-xs font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)]">
+              className="touch-target flex items-center gap-1.5 rounded-lg border border-[color:var(--ink-200)] px-3 py-1.5 text-xs font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)]">
               <Pause size={12} /> Pause
             </button>
           )}
           {path.status === 'paused' && (
             <button onClick={() => onAction('resume', path)}
-              className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold text-white"
+              className="touch-target flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold text-white"
               style={{ background: 'var(--brand-navy-900)' }}>
               <Play size={12} /> Resume
             </button>
           )}
           {path.status !== 'archived' && path.status !== 'completed' && (
             <button onClick={() => onAction('complete', path)}
-              className="flex items-center gap-1.5 rounded-lg border border-[color:var(--ink-200)] px-3 py-1.5 text-xs font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)]">
+              className="touch-target flex items-center gap-1.5 rounded-lg border border-[color:var(--ink-200)] px-3 py-1.5 text-xs font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)]">
               <CheckCircle2 size={12} /> Mark Complete
             </button>
           )}
           {path.status === 'completed' && (
             <button onClick={() => onAction('uncomplete', path)}
-              className="flex items-center gap-1.5 rounded-lg border border-blue-200 px-3 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-50 transition">
+              className="touch-target flex items-center gap-1.5 rounded-lg border border-blue-200 px-3 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-50 transition">
               <RotateCcw size={12} /> Mark Not Complete
             </button>
           )}
           {path.status !== 'archived' && (
             <button onClick={() => onAction('archive', path)}
-              className="flex items-center gap-1.5 rounded-lg border border-[color:var(--ink-200)] px-3 py-1.5 text-xs font-semibold text-[color:var(--ink-500)] hover:bg-[color:var(--ink-50)]">
+              className="touch-target flex items-center gap-1.5 rounded-lg border border-[color:var(--ink-200)] px-3 py-1.5 text-xs font-semibold text-[color:var(--ink-500)] hover:bg-[color:var(--ink-50)]">
               <Archive size={12} /> Archive
             </button>
           )}
           {path.status === 'archived' && (
             <button onClick={() => onAction('unarchive', path)}
-              className="flex items-center gap-1.5 rounded-lg border border-[color:var(--ink-200)] px-3 py-1.5 text-xs font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--success-50)] hover:border-green-200 hover:text-green-700 transition">
+              className="touch-target flex items-center gap-1.5 rounded-lg border border-[color:var(--ink-200)] px-3 py-1.5 text-xs font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--success-50)] hover:border-green-200 hover:text-green-700 transition">
               <ArchiveRestore size={12} /> Un-archive
             </button>
           )}
@@ -324,6 +324,24 @@ function PathCard({ path, experiments, missions, proof, contacts, reflections, o
 }
 
 // ── Sort + Filter bar ─────────────────────────────────────────────────────────
+const sel = 'field-select rounded-xl border border-[color:var(--ink-200)] bg-white px-3 py-2 text-base md:text-sm text-[color:var(--ink-700)] focus:border-[color:var(--brand-navy-900)] focus:outline-none';
+
+// A real select, because the iOS wheel picker beats anything we would build.
+// The wrapper only exists to hold the chevron, which stands in for the platform
+// arrow that clearing the native appearance takes away. See `.field-select`.
+function FilterSelect({ children, ...props }) {
+  return (
+    <span className="relative inline-flex">
+      <select {...props} className={sel}>{children}</select>
+      <ChevronDown
+        size={14}
+        aria-hidden="true"
+        className="field-select-chevron pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[color:var(--ink-400)]"
+      />
+    </span>
+  );
+}
+
 function SortFilterBar({ paths, sortBy, setSortBy, filters, setFilters }) {
   const categories = useMemo(() => {
     const cats = [...new Set(paths.map(p => p.path_category).filter(Boolean))].sort();
@@ -334,8 +352,6 @@ function SortFilterBar({ paths, sortBy, setSortBy, filters, setFilters }) {
   const activeCount = Object.values(filters).filter(v => v !== 'all').length;
 
   const clearFilters = () => setFilters(DEFAULT_FILTERS);
-
-  const sel = 'rounded-xl border border-[color:var(--ink-200)] bg-white px-3 py-2 text-sm text-[color:var(--ink-700)] focus:border-[color:var(--brand-navy-900)] focus:outline-none';
 
   return (
     <div className="mb-5 rounded-[16px] border border-[color:var(--ink-200)] bg-white p-4">
@@ -351,73 +367,68 @@ function SortFilterBar({ paths, sortBy, setSortBy, filters, setFilters }) {
         </div>
 
         {/* Sort */}
-        <select
+        <FilterSelect
           value={sortBy}
           onChange={e => setSortBy(e.target.value)}
           aria-label="Sort paths by"
-          className={sel}
         >
           {SORT_OPTIONS.map(o => (
             <option key={o.value} value={o.value}>{o.label}</option>
           ))}
-        </select>
+        </FilterSelect>
 
         {/* Status group */}
-        <select
+        <FilterSelect
           value={filters.statusGroup}
           onChange={e => setFilters(f => ({ ...f, statusGroup: e.target.value }))}
           aria-label="Filter by status"
-          className={sel}
         >
           <option value="all">All statuses</option>
           <option value="active">Active only</option>
           <option value="paused">Paused only</option>
           <option value="history">History</option>
-        </select>
+        </FilterSelect>
 
         {/* Risk */}
-        <select
+        <FilterSelect
           value={filters.risk}
           onChange={e => setFilters(f => ({ ...f, risk: e.target.value }))}
           aria-label="Filter by risk level"
-          className={sel}
         >
           <option value="all">All risk levels</option>
           <option value="low">Low risk</option>
           <option value="medium">Moderate risk</option>
           <option value="high">High risk</option>
-        </select>
+        </FilterSelect>
 
         {/* Confidence */}
-        <select
+        <FilterSelect
           value={filters.confidence}
           onChange={e => setFilters(f => ({ ...f, confidence: e.target.value }))}
           aria-label="Filter by confidence level"
-          className={sel}
         >
           <option value="all">All confidence levels</option>
           <option value="high">High confidence</option>
           <option value="medium">Moderate confidence</option>
           <option value="low">Low confidence</option>
-        </select>
+        </FilterSelect>
 
         {/* Category */}
         {categories.length > 0 && (
-          <select
+          <FilterSelect
             value={filters.category}
             onChange={e => setFilters(f => ({ ...f, category: e.target.value }))}
             aria-label="Filter by category"
-            className={sel}
           >
             <option value="all">All categories</option>
             {categories.map(c => <option key={c} value={c}>{c}</option>)}
-          </select>
+          </FilterSelect>
         )}
 
         {hasActiveFilters && (
           <button
             onClick={clearFilters}
-            className="flex items-center gap-1 rounded-lg border border-[color:var(--ink-200)] px-3 py-2 text-xs font-semibold text-[color:var(--ink-500)] hover:text-red-600 hover:border-red-200 transition"
+            className="touch-target flex items-center gap-1 rounded-lg border border-[color:var(--ink-200)] px-3 py-2 text-xs font-semibold text-[color:var(--ink-500)] hover:text-red-600 hover:border-red-200 transition"
             aria-label="Clear all filters"
           >
             <X size={12} /> Clear filters
@@ -610,7 +621,7 @@ export default function PathComparison() {
         description="Explore multiple paths at once. Test, pause, resume and compare. None is permanent until you decide it is."
         action={
           <button onClick={() => setShowCreate(true)}
-            className="flex items-center gap-2 rounded-[10px] px-5 py-2.5 text-sm font-semibold text-white shrink-0"
+            className="touch-target flex items-center gap-2 rounded-[10px] px-5 py-2.5 text-sm font-semibold text-white shrink-0"
             style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}>
             <Plus size={16} /> Create Another Path
           </button>
@@ -660,7 +671,7 @@ export default function PathComparison() {
               value={search}
               onChange={e => setSearch(e.target.value)}
               placeholder="Search paths by name, category, or description…"
-              className="w-full rounded-xl border border-[color:var(--ink-200)] bg-white pl-9 pr-4 py-2.5 text-sm outline-none focus:border-[color:var(--brand-navy-900)]"
+              className="w-full rounded-xl border border-[color:var(--ink-200)] bg-white pl-9 pr-4 py-2.5 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]"
             />
             {search && (
               <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-[color:var(--ink-400)] hover:text-[color:var(--ink-700)]">
