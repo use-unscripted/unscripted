@@ -3,8 +3,8 @@ import { Link } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import ScrollReveal from '@/components/ScrollReveal';
 import useCampusEvents from './useCampusEvents';
-import { NoFeedState, EmptyCalendarState } from './CampusEmptyStates';
-import { RecommendedEvent, CompactEvent } from './CampusEventRow';
+import { NoFeedState, EmptyCalendarState, NothingRelevantState } from './CampusEmptyStates';
+import { RecommendedEvent } from './CampusEventRow';
 import useCampusPicks from './useCampusPicks';
 import { upcomingEvents, eventDayKey, dayKey } from '@/lib/calendar-grid';
 
@@ -35,12 +35,23 @@ import { upcomingEvents, eventDayKey, dayKey } from '@/lib/calendar-grid';
  *
  * ## Quiet when it has nothing
  *
- * Only two of the five empty states earn a slot on a dashboard: a school whose
- * calendar we cannot read (fixable by the student, and a quarter of them) and a
- * working calendar with nothing on it (worth saying, so an empty section is not
- * mistaken for a broken feature). No college, or a feed that timed out, renders
- * nothing at all — the dashboard is not where that conversation belongs, and a
- * grey apology among live content is worse than one less section.
+ * Only three of the empty states earn a slot on a dashboard: a school whose
+ * calendar we cannot read (fixable by the student, and a quarter of them), a
+ * working calendar with nothing on it, and a full calendar with nothing on it
+ * for this student. That last one is the common case, and it is worth saying
+ * out loud so an empty section is not mistaken for a broken feature. No
+ * college, or a feed that timed out, renders nothing at all — the dashboard is
+ * not where that conversation belongs, and a grey apology among live content is
+ * worse than one less section.
+ *
+ * ## Only ranked events reach this page
+ *
+ * Every row here is one the model picked out and can say something specific
+ * about. The section used to top up its slots from the front of the feed, which
+ * is how a student testing operations management ended up looking at a staff
+ * vendor training and a children's storytime. A recommendation surface that
+ * fills its slots when it has no recommendation teaches a student that the
+ * slots are furniture.
  */
 export default function CampusEventsPanel({ delay = 0 }) {
   const { loading, status, college, events, profile, pathName, rankingReady, adopt } = useCampusEvents({ days: 60, limit: 40 });
@@ -79,7 +90,6 @@ export default function CampusEventsPanel({ delay = 0 }) {
   const lead = picks.find(p => withinCycle.has(p.id))
     || picks.find(p => upcomingIds.has(p.id))
     || null;
-  const rest = upcoming.filter(e => e.id !== lead?.id).slice(0, lead ? 2 : 3);
 
   // Ranking is part of loading here, not a second phase after it. Rendering a
   // flat list and then rearranging it into a recommendation a second later is
@@ -90,7 +100,15 @@ export default function CampusEventsPanel({ delay = 0 }) {
   // them back off the dashboard to show a spinner where a real dated event was.
   // With events in hand, the only thing still worth waiting for is a first
   // ranking, because that is the sentence this section exists to carry.
-  const cold = upcoming.length === 0 ? (loading || ranking) : (ranking && picks.length === 0);
+  //
+  // The wait is measured on the lead rather than on `picks`, and the difference
+  // is a returning student. A re-rank keeps yesterday's picks on screen while
+  // the new answer is worked out, so `picks` is non-empty during it. If
+  // yesterday's event has since happened there is no lead in it, and keying on
+  // `picks` would let the section announce that nothing fits while it was still
+  // deciding. Saying that wrongly is worse than the old bare list, because a
+  // list was never a claim.
+  const cold = upcoming.length === 0 ? (loading || ranking) : (ranking && !lead);
   if (cold) {
     return (
       <Section delay={delay}>
@@ -121,53 +139,43 @@ export default function CampusEventsPanel({ delay = 0 }) {
   // no_college and feed_error: say nothing, take no space.
   if (status !== 'ok') return null;
 
+  /*
+    Nothing cleared the relevance floor, so the section says that and stops.
+
+    This is the common outcome rather than the rare one, and it is the whole
+    point of the change: the calendar is full, and almost none of a campus
+    calendar is for any one student. Printing the next three events under an
+    apology was the old answer, and it put a bookstore storytime in front of a
+    student testing operations management. The events are still one link away
+    on the full calendar, which is the screen whose job is showing what exists.
+  */
+  // The section header's own "Full calendar" link is dropped here, because the
+  // panel below carries one to the same place a few pixels lower.
+  if (!lead) {
+    return (
+      <Section delay={delay} college={college}>
+        <NothingRelevantState college={college} pathName={pathName} className="" />
+      </Section>
+    );
+  }
+
+  /*
+    One recommendation, with its reason, and nothing under it.
+
+    The dashboard gets a single pick rather than three: it is a glance on the
+    way to something else, and a student who reads one sentence and goes is the
+    entire point of this section. The model's other picks are on the full
+    calendar, which the header links to.
+
+    A tail was tried and taken out again. The reason sentence is rendered in
+    one place in this app, on the recommendation card, so a second and third
+    pick underneath arrive as bare titles: rows that say "worth your time" over
+    nothing that says why. That is the same undifferentiated list this change
+    removed, with a better filter on it.
+  */
   return (
     <Section delay={delay} college={college} linkToAll>
-      {/*
-        One recommendation with its reason, then what's simply next.
-
-        The dashboard gets a single pick rather than three: it is a glance on
-        the way to something else, and a student who reads one sentence and
-        goes is the entire point of this section.
-      */}
-      <div className="space-y-2">
-        {lead && <RecommendedEvent event={lead} college={college} />}
-
-        {/*
-          Nothing cleared the relevance floor, and the student is owed the
-          reason.
-
-          Without this the section degrades to a heading and three dated lines,
-          which is a listings page: the student cannot tell whether we looked
-          and found nothing or whether the app simply has no opinion about
-          them. It used to be a rare state and now it is the common one, since
-          most of a campus calendar is general to any one student.
-
-          Only said when we know what it failed to match. A student with no
-          chosen path gets the bare list, because "nothing lines up with"
-          needs something to name.
-        */}
-        {!lead && rest.length > 0 && pathName && (
-          <p className="pb-1 text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-            Nothing on the calendar lines up with {pathName}. These are happening anyway.
-          </p>
-        )}
-
-        {rest.length > 0 && (
-          <>
-            {/* The sentence above already introduces the list, so the label
-                would be the third thing in a row saying "here are events". */}
-            {(lead || !pathName) && (
-              <p className="tp-eyebrow pt-3 pb-1" style={{ color: 'var(--text-muted)' }}>
-                {lead ? 'Also on' : 'Next up'}
-              </p>
-            )}
-            {rest.map(event => (
-              <CompactEvent key={event.id} event={event} college={college} showCountdown />
-            ))}
-          </>
-        )}
-      </div>
+      <RecommendedEvent event={lead} college={college} />
     </Section>
   );
 }

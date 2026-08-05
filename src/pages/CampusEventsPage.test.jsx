@@ -103,3 +103,38 @@ describe('the Coming up panel while the ranking runs', () => {
     expect(screen.getAllByText(/Finance Career Night/).length).toBeGreaterThan(0);
   });
 });
+
+/**
+ * This page is a calendar, so it keeps showing what is on. What it stops doing
+ * is presenting it as an answer.
+ *
+ * The dashboard drops the unranked events outright; here they fold, because a
+ * student who came to a calendar came to see the calendar. The month grid
+ * beside this panel has every one of them either way.
+ */
+describe('the Coming up panel when nothing clears the relevance floor', () => {
+  it('says what it failed to match before listing anything', () => {
+    setup({ picks: [], ranking: false });
+
+    expect(screen.getByText(/Nothing coming up lines up with Product Management/i)).toBeTruthy();
+  });
+
+  it('waits rather than saying it while a re-rank is still running', () => {
+    // Yesterday's pick, for an event that has already happened. `picks` is not
+    // empty, but there is nothing to recommend out of it.
+    const stale = { id: 'gone', title: 'Last Week’s Panel', start: '2020-01-01T15:00:00Z' };
+    setup({ picks: [stale], ranking: true });
+
+    expect(screen.queryByText(/Nothing coming up lines up with/i)).toBeNull();
+    expect(screen.getByRole('status').textContent).toMatch(/picking the ones worth going to/i);
+  });
+
+  it('folds the events away instead of leading with them', () => {
+    setup({ picks: [], ranking: false });
+
+    expect(screen.getByText(/See what.s on anyway/i)).toBeTruthy();
+    // The month grid still carries them. The panel does not.
+    const panel = screen.getByText(/Nothing coming up lines up with/i).closest('div');
+    expect(panel.textContent).not.toMatch(/Resume Lab/);
+  });
+});
