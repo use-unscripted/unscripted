@@ -29,7 +29,7 @@ function GoalRow({ goal, onChange, onRemove }) {
           onChange={e => onChange({ ...goal, goal_text: e.target.value })}
         />
         <input
-          className="rounded-lg border border-[color:var(--ink-200)] bg-white px-3 py-2.5 text-sm text-[color:var(--surface-dark-900)] placeholder-[color:var(--ink-400)] outline-none focus:border-[color:var(--brand-navy-900)]"
+          className="rounded-lg border border-[color:var(--ink-200)] bg-white px-3 py-2.5 text-base md:text-sm text-[color:var(--surface-dark-900)] placeholder-[color:var(--ink-400)] outline-none focus:border-[color:var(--brand-navy-900)]"
           placeholder="Measurable outcome"
           value={goal.measurable_outcome}
           onChange={e => onChange({ ...goal, measurable_outcome: e.target.value })}

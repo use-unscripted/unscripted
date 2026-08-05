@@ -700,24 +700,24 @@ function ResearchEntryEditor({ entry: r, onUpdate, onRemove }) {
               <label className="block text-[10px] font-semibold text-[color:var(--ink-500)] mb-1">Start (Month/Year)</label>
               <div className="flex gap-1">
                 <select value={r.startMonth || ''} onChange={e => set('startMonth', e.target.value)}
-                  className="flex-1 rounded-lg border border-[color:var(--ink-200)] px-1 py-1.5 text-base md:text-xs outline-none bg-white">
+                  className="min-w-[3.5rem] flex-1 rounded-lg border border-[color:var(--ink-200)] px-1 py-1.5 text-base md:text-xs outline-none bg-white">
                   <option value="">Mo</option>
                   {MONTH_OPTIONS.map(m => <option key={m.val} value={m.val}>{m.label}</option>)}
                 </select>
                 <input value={r.startYear || ''} onChange={e => set('startYear', e.target.value)} placeholder="YYYY"
-                  className="w-16 rounded-lg border border-[color:var(--ink-200)] px-2 py-1.5 text-base md:text-xs outline-none" />
+                  className="min-w-0 w-16 rounded-lg border border-[color:var(--ink-200)] px-2 py-1.5 text-base md:text-xs outline-none" />
               </div>
             </div>
             <div>
               <label className="block text-[10px] font-semibold text-[color:var(--ink-500)] mb-1">End (Month/Year)</label>
               <div className="flex gap-1 items-center">
                 <select value={r.endMonth || ''} onChange={e => set('endMonth', e.target.value)} disabled={r.current}
-                  className="flex-1 rounded-lg border border-[color:var(--ink-200)] px-1 py-1.5 text-base md:text-xs outline-none bg-white disabled:opacity-40">
+                  className="min-w-[3.5rem] flex-1 rounded-lg border border-[color:var(--ink-200)] px-1 py-1.5 text-base md:text-xs outline-none bg-white disabled:opacity-40">
                   <option value="">Mo</option>
                   {MONTH_OPTIONS.map(m => <option key={m.val} value={m.val}>{m.label}</option>)}
                 </select>
                 <input value={r.endYear || ''} onChange={e => set('endYear', e.target.value)} placeholder="YYYY" disabled={r.current}
-                  className="w-16 rounded-lg border border-[color:var(--ink-200)] px-2 py-1.5 text-base md:text-xs outline-none disabled:opacity-40" />
+                  className="min-w-0 w-16 rounded-lg border border-[color:var(--ink-200)] px-2 py-1.5 text-base md:text-xs outline-none disabled:opacity-40" />
                 <label className="flex items-center gap-1 text-[10px] text-[color:var(--ink-500)] cursor-pointer whitespace-nowrap">
                   <input type="checkbox" checked={!!r.current} onChange={e => set('current', e.target.checked)} className="accent-[color:var(--brand-navy-900)]" />
                   Now
