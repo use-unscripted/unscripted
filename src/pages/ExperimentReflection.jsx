@@ -1,9 +1,9 @@
 /**
  * Reflection as the conclusion of the active experiment.
  *
- * Everything is resolved automatically — user, cycle, path, experiment, completed
- * missions, outreach, proof, baseline clarity — so arriving from My Journey never
- * asks the student to pick an experiment again. Reflection → decision → cycle
+ * Everything is resolved automatically (user, cycle, path, experiment, completed
+ * missions, outreach, proof, baseline clarity) so arriving from My Journey never
+ * asks the student to pick an experiment again. Reflection, decision and cycle
  * summary happen in this one place.
  */
 import { useCallback, useEffect, useState } from 'react';
@@ -22,17 +22,17 @@ import JourneyEmptyState from '@/components/journey/JourneyEmptyState';
 import { Sk } from '@/components/PageSkeleton';
 
 function Shell({ children }) {
-  return <main className="mx-auto max-w-3xl px-5 py-8 sm:px-8 sm:py-10"><div className="space-y-5">{children}</div></main>;
+  return <main className="app-page"><div className="space-y-5">{children}</div></main>;
 }
 
 function Notice({ title, body, to, cta }) {
   return (
     <section className="rounded-[20px] bg-white p-6" style={{ border: '1px solid var(--border-light)' }}>
-      <p className="flex items-center gap-2 text-sm font-bold" style={{ color: 'var(--text-primary)' }}>
+      <p className="tp-body flex items-center gap-2 font-bold" style={{ color: 'var(--text-primary)' }}>
         <AlertCircle size={15} style={{ color: 'var(--brand-navy-700)' }} /> {title}
       </p>
-      <p className="mt-2 text-sm leading-6" style={{ color: 'var(--text-secondary)' }}>{body}</p>
-      <Link to={to} className="ui-press mt-4 inline-flex items-center rounded-[10px] px-5 py-3 text-sm font-bold text-white"
+      <p className="tp-prose mt-2" style={{ color: 'var(--text-secondary)' }}>{body}</p>
+      <Link to={to} className="ui-press tp-body mt-4 inline-flex items-center rounded-[10px] px-5 py-3 font-bold text-white"
         style={{ background: 'var(--brand-navy-900)', minHeight: '48px' }}>
         {cta}
       </Link>
@@ -82,8 +82,8 @@ export default function ExperimentReflection() {
     return (
       <Shell>
         <section className="rounded-[20px] bg-white p-6" style={{ border: '1px solid var(--border-light)' }}>
-          <p className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>{loadError}</p>
-          <button onClick={load} className="ui-press mt-4 inline-flex items-center gap-2 rounded-[10px] px-5 text-sm font-bold text-white"
+          <p className="tp-body font-bold" style={{ color: 'var(--text-primary)' }}>{loadError}</p>
+          <button onClick={load} className="ui-press tp-body mt-4 inline-flex items-center gap-2 rounded-[10px] px-5 font-bold text-white"
             style={{ background: 'var(--brand-navy-900)', minHeight: '48px' }}>
             <RotateCcw size={15} /> Try again
           </button>
@@ -94,7 +94,7 @@ export default function ExperimentReflection() {
 
   if (!ctx) {
     // The context card, then the form or gate that follows it, then the
-    // footer links — at the sizes they actually occupy. Two arbitrary grey
+    // footer links, at the sizes they actually occupy. Two arbitrary grey
     // blocks used to stand here and neither matched what replaced it.
     return (
       <Shell>
@@ -157,7 +157,7 @@ export default function ExperimentReflection() {
       ) : reflection ? (
         <>
           <DecisionStep ctx={ctx} reflection={reflection} onDecided={handleDecided} />
-          <p className="text-center text-xs" style={{ color: 'var(--text-muted)' }}>
+          <p className="tp-meta text-center" style={{ color: 'var(--text-muted)' }}>
             Reflection saved.{' '}
             <button onClick={() => setReflection(null)} className="font-semibold" style={{ color: 'var(--brand-navy-700)' }}>
               Edit my answers
@@ -168,7 +168,7 @@ export default function ExperimentReflection() {
         <ReflectionForm ctx={ctx} onSaved={handleSaved} onSubmit={handleSubmit} />
       )}
 
-      <p className="pt-1 text-center text-xs" style={{ color: 'var(--text-muted)' }}>
+      <p className="tp-meta pt-1 text-center" style={{ color: 'var(--text-muted)' }}>
         <Link to="/journey" className="font-semibold" style={{ color: 'var(--brand-navy-700)' }}>My Journey</Link>
         {' · '}
         <Link to={`/experiment?experimentId=${ctx.experiment.id}`} className="font-semibold" style={{ color: 'var(--brand-navy-700)' }}>

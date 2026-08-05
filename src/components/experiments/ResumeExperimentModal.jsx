@@ -46,34 +46,34 @@ export default function ResumeExperimentModal({ exp, missions = [], onClose, onR
         <div className="flex items-start justify-between gap-3 mb-4">
           <div className="flex items-center gap-2">
             <Play size={18} style={{ color: 'var(--success-700)' }} />
-            <h3 className="font-heading text-lg font-bold text-[color:var(--surface-dark-900)]">Resume this experiment?</h3>
+            <h3 className="tp-section text-[color:var(--surface-dark-900)]">Resume this experiment?</h3>
           </div>
           <button onClick={onClose}><X size={18} className="text-[color:var(--ink-400)]" /></button>
         </div>
 
         {/* Summary */}
         <div className="rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] p-4 mb-4 space-y-2">
-          <p className="font-semibold text-sm text-[color:var(--surface-dark-900)]">{exp.title}</p>
-          {exp.path_name && <p className="text-xs text-[color:var(--ink-500)]">Path: <span className="font-medium text-[color:var(--ink-700)]">{exp.path_name}</span></p>}
-          {exp.paused_at && <p className="text-xs text-[color:var(--ink-500)] flex items-center gap-1"><Clock size={11} /> Paused: {fmtDate(exp.paused_at)}</p>}
-          {exp.deadline && <p className="text-xs text-[color:var(--ink-500)] flex items-center gap-1"><Calendar size={11} /> Original deadline: {fmtDate(exp.deadline)}</p>}
-          {exp.pause_reason && <p className="text-xs text-[color:var(--ink-400)] italic">Pause reason: {exp.pause_reason}</p>}
+          <p className="tp-card text-[color:var(--surface-dark-900)]">{exp.title}</p>
+          {exp.path_name && <p className="tp-meta text-[color:var(--ink-500)]">Path: <span className="font-medium text-[color:var(--ink-700)]">{exp.path_name}</span></p>}
+          {exp.paused_at && <p className="tp-meta text-[color:var(--ink-500)] flex items-center gap-1"><Clock size={11} /> Paused: {fmtDate(exp.paused_at)}</p>}
+          {exp.deadline && <p className="tp-meta text-[color:var(--ink-500)] flex items-center gap-1"><Calendar size={11} /> Original deadline: {fmtDate(exp.deadline)}</p>}
+          {exp.pause_reason && <p className="tp-meta text-[color:var(--ink-400)] italic">Pause reason: {exp.pause_reason}</p>}
         </div>
 
         {/* Progress summary */}
         <div className="grid grid-cols-2 gap-3 mb-4">
           <div className="rounded-xl border border-[color:var(--ink-200)] p-3 text-center">
             <p className="font-heading text-xl font-bold text-[color:var(--surface-dark-900)]">{completedMissions.length}</p>
-            <p className="text-xs text-[color:var(--ink-500)]">Missions completed</p>
+            <p className="tp-meta text-[color:var(--ink-500)]">Missions completed</p>
           </div>
           <div className="rounded-xl border border-[color:var(--ink-200)] p-3 text-center">
             <p className="font-heading text-xl font-bold text-[color:var(--surface-dark-900)]">{remainingMissions.length}</p>
-            <p className="text-xs text-[color:var(--ink-500)]">Missions remaining</p>
+            <p className="tp-meta text-[color:var(--ink-500)]">Missions remaining</p>
           </div>
         </div>
 
         {/* Options */}
-        <p className="text-xs font-bold uppercase tracking-wide text-[color:var(--ink-500)] mb-2">How would you like to continue?</p>
+        <p className="tp-eyebrow text-[color:var(--ink-500)] mb-2">How would you like to continue?</p>
         <div className="space-y-2 mb-4">
           {[
             { value: 'continue', label: 'Continue existing plan', desc: 'Keep the same deadline and weekly commitment.' },
@@ -90,9 +90,9 @@ export default function ResumeExperimentModal({ exp, missions = [], onClose, onR
                   style={{ borderColor: choice === opt.value ? 'var(--brand-navy-900)' : 'var(--ink-300)' }}>
                   {choice === opt.value && <div className="w-2 h-2 rounded-full" style={{ background: 'var(--brand-navy-900)' }} />}
                 </div>
-                <span className="text-sm font-semibold text-[color:var(--surface-dark-900)]">{opt.label}</span>
+                <span className="tp-body font-semibold text-[color:var(--surface-dark-900)]">{opt.label}</span>
               </div>
-              <p className="text-xs text-[color:var(--ink-500)] mt-0.5 ml-6">{opt.desc}</p>
+              <p className="tp-meta text-[color:var(--ink-500)] mt-0.5 ml-6">{opt.desc}</p>
             </button>
           ))}
         </div>
@@ -100,12 +100,12 @@ export default function ResumeExperimentModal({ exp, missions = [], onClose, onR
         {choice === 'update' && (
           <div className="space-y-3 mb-4 rounded-xl border border-[color:var(--ink-200)] p-4">
             <label className="block">
-              <span className="text-sm font-semibold text-[color:var(--ink-700)] block mb-1">Revised deadline</span>
+              <span className="tp-body font-semibold text-[color:var(--ink-700)] block mb-1">Revised deadline</span>
               <input type="date" value={newDeadline} onChange={e => setNewDeadline(e.target.value)}
                 className="w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-2.5 text-sm outline-none focus:border-[color:var(--brand-navy-900)]" />
             </label>
             <label className="block">
-              <span className="text-sm font-semibold text-[color:var(--ink-700)] block mb-1">Updated weekly hours</span>
+              <span className="tp-body font-semibold text-[color:var(--ink-700)] block mb-1">Updated weekly hours</span>
               <input type="number" value={newHours} onChange={e => setNewHours(e.target.value)} min={1} max={40}
                 className="w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-2.5 text-sm outline-none focus:border-[color:var(--brand-navy-900)]" />
             </label>
@@ -113,7 +113,7 @@ export default function ResumeExperimentModal({ exp, missions = [], onClose, onR
         )}
 
         <label className="block mb-5">
-          <span className="text-sm font-semibold text-[color:var(--ink-700)] block mb-1">
+          <span className="tp-body font-semibold text-[color:var(--ink-700)] block mb-1">
             Anything changed since you paused? <span className="font-normal text-[color:var(--ink-400)]">(optional)</span>
           </span>
           <textarea
@@ -127,11 +127,11 @@ export default function ResumeExperimentModal({ exp, missions = [], onClose, onR
 
         <div className="flex gap-3">
           <button onClick={onClose}
-            className="flex-1 rounded-[10px] border border-[color:var(--ink-200)] py-2.5 text-sm font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)] transition">
+            className="tp-body flex-1 rounded-[10px] border border-[color:var(--ink-200)] py-2.5 font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)] transition">
             Cancel
           </button>
           <button onClick={handleResume} disabled={saving}
-            className="flex-1 rounded-[10px] py-2.5 text-sm font-semibold text-white transition disabled:opacity-60"
+            className="tp-body flex-1 rounded-[10px] py-2.5 font-semibold text-white transition disabled:opacity-60"
             style={{ background: 'var(--brand-navy-900)' }}>
             {saving ? 'Resuming…' : 'Resume Experiment'}
           </button>

@@ -12,18 +12,18 @@ export function ProofSuccessToast({ proof, missionTitle, onViewProof, onReturnTo
           <CheckCircle size={20} className="text-green-600" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-bold text-[color:var(--surface-dark-900)]">Proof saved successfully.</p>
-          <p className="text-xs text-[color:var(--ink-500)] mt-0.5 truncate">{proof.title}</p>
-          {missionTitle && <p className="text-xs text-[color:var(--ink-400)] truncate">Mission: {missionTitle}</p>}
+          <p className="tp-body font-bold text-[color:var(--surface-dark-900)]">Proof saved successfully.</p>
+          <p className="tp-meta text-[color:var(--ink-500)] mt-0.5 truncate">{proof.title}</p>
+          {missionTitle && <p className="tp-meta text-[color:var(--ink-400)] truncate">Mission: {missionTitle}</p>}
         </div>
         <button onClick={onDismiss} aria-label="Dismiss" className="shrink-0 text-[color:var(--ink-400)] hover:text-[color:var(--ink-700)]">
           <X size={16} />
         </button>
       </div>
       <div className="flex gap-2">
-        <button onClick={onViewProof} className="flex-1 rounded-[8px] py-2 text-xs font-semibold text-white"
+        <button onClick={onViewProof} className="tp-meta flex-1 rounded-[8px] py-2.5 font-semibold text-white"
           style={{ background: 'var(--brand-navy-900)' }}>View Proof</button>
-        <button onClick={onReturnToMission} className="flex-1 rounded-[8px] border border-[color:var(--ink-200)] py-2 text-xs font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)]">
+        <button onClick={onReturnToMission} className="tp-meta flex-1 rounded-[8px] border border-[color:var(--ink-200)] py-2.5 font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)]">
           Return to Mission
         </button>
       </div>

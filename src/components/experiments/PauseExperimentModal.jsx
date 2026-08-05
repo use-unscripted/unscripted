@@ -31,19 +31,19 @@ export default function PauseExperimentModal({ exp, onClose, onPaused }) {
         <div className="flex items-start justify-between gap-3 mb-1">
           <div className="flex items-center gap-2">
             <PauseCircle size={20} className="text-[color:var(--warning-700)]" />
-            <h3 className="font-heading text-lg font-bold text-[color:var(--surface-dark-900)]">Pause this experiment?</h3>
+            <h3 className="tp-section text-[color:var(--surface-dark-900)]">Pause this experiment?</h3>
           </div>
           <button onClick={onClose}><X size={18} className="text-[color:var(--ink-400)]" /></button>
         </div>
 
-        {exp.title && <p className="text-sm font-semibold text-[color:var(--ink-700)] mb-3">"{exp.title}"</p>}
+        {exp.title && <p className="tp-body font-semibold text-[color:var(--ink-700)] mb-3">"{exp.title}"</p>}
 
-        <p className="text-sm text-[color:var(--ink-500)] mb-4">
+        <p className="tp-prose text-[color:var(--ink-500)] mb-4">
           Your missions, Mission Guides, proof, contacts, and reflections will remain saved. You can resume this experiment at any time.
         </p>
 
         <label className="block mb-5">
-          <span className="text-sm font-semibold text-[color:var(--ink-700)] block mb-1">
+          <span className="tp-body font-semibold text-[color:var(--ink-700)] block mb-1">
             Why are you pausing this experiment? <span className="font-normal text-[color:var(--ink-400)]">(optional)</span>
           </span>
           <textarea
@@ -57,11 +57,11 @@ export default function PauseExperimentModal({ exp, onClose, onPaused }) {
 
         <div className="flex gap-3">
           <button onClick={onClose}
-            className="flex-1 rounded-[10px] border border-[color:var(--ink-200)] py-2.5 text-sm font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)] transition">
+            className="tp-body flex-1 rounded-[10px] border border-[color:var(--ink-200)] py-2.5 font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)] transition">
             Cancel
           </button>
           <button onClick={handlePause} disabled={saving}
-            className="flex-1 rounded-[10px] py-2.5 text-sm font-semibold text-white transition disabled:opacity-60"
+            className="tp-body flex-1 rounded-[10px] py-2.5 font-semibold text-white transition disabled:opacity-60"
             style={{ background: 'var(--warning-700)' }}>
             {saving ? 'Pausing…' : 'Pause Experiment'}
           </button>

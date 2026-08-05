@@ -22,13 +22,13 @@ import CampusEventCard from './CampusEventCard';
  *
  * Measured, not guessed: one generation call took 42s on a real experiment,
  * and a guide that fails validation pays for a second one. That is far too
- * long for a spinner in a button — at 40 seconds an unlabelled spinner reads
+ * long for a spinner in a button. At 40 seconds an unlabelled spinner reads
  * as a hang, and the student's next move is to press it again or leave.
  *
  * The lines below track what the model is actually asked to produce, in the
  * order the prompt asks for it, so they are a description rather than
  * decoration. They advance on a timer because the call streams nothing back to
- * key off — which means they must never claim a step is *finished*.
+ * key off, which means they must never claim a step is *finished*.
  */
 const GUIDE_STAGES = [
   'Reading your experiment and what it has to prove',
@@ -50,10 +50,10 @@ const VARIATION_OPTIONS = [
 /**
  * MissionGuideGenerator
  * Props:
- *   experiment       – Experiments record
- *   existingGuides   – MissionGuides[] already saved for this experiment
- *   onGenerated      – (newGuide) => void — called after successful save
- *   onClose          – () => void
+ *   experiment: Experiments record
+ *   existingGuides: MissionGuides[] already saved for this experiment
+ *   onGenerated: (newGuide) => void, called after successful save
+ *   onClose: () => void
  */
 export default function MissionGuideGenerator({ experiment, existingGuides = [], onGenerated, onClose }) {
   const hasExisting = existingGuides.length > 0;
@@ -178,7 +178,7 @@ export default function MissionGuideGenerator({ experiment, existingGuides = [],
         throw new Error(validation.errors[0] || 'Generation failed. Please try again.');
       }
 
-      // The calendar record is pinned on after validation, never generated —
+      // The calendar record is pinned on after validation, never generated.
       // when and where come from the school's feed, not from the model.
       const guide = campusEvent ? attachCampusEvent(validation.guide, campusEvent) : validation.guide;
 
@@ -214,7 +214,7 @@ export default function MissionGuideGenerator({ experiment, existingGuides = [],
       // Deactivating first and then failing the create left them with ZERO
       // active guides: the guide they were using was already dead in the
       // database, nothing had replaced it, and the screen still offered "keep my
-      // current active guide" — which saved a draft and stranded them with
+      // current active guide", which saved a draft and stranded them with
       // nothing. Silent, and only visible after a reload.
       //
       // Rolling the deactivation back on failure was the other option and is
@@ -223,8 +223,8 @@ export default function MissionGuideGenerator({ experiment, existingGuides = [],
       // the rollback too. Create-first needs no compensation to be correct.
       //
       // createGuideOnce keeps that ordering exactly as it is. The only thing it
-      // adds ahead of the create is a READ — has this pending guide's key
-      // already been written? — which cannot leave the database in any state,
+      // adds ahead of the create is a READ: has this pending guide's key
+      // already been written? That cannot leave the database in any state,
       // so nothing below needs to change to accommodate it.
       const status = makeActive ? 'active' : 'draft';
       const { row: saved } = await createGuideOnce(
@@ -255,7 +255,7 @@ export default function MissionGuideGenerator({ experiment, existingGuides = [],
       // Now that a replacement exists, retire the guides it replaces. A failure
       // here is survivable in a way the old ordering's failure was not: it
       // leaves two active guides rather than none, and the student still has a
-      // working guide either way. So don't throw — the save the student asked
+      // working guide either way. So don't throw: the save the student asked
       // for did happen, and reporting it as failed would only invite a retry
       // that creates a duplicate.
       let deactivatedIds = [];
@@ -280,7 +280,7 @@ export default function MissionGuideGenerator({ experiment, existingGuides = [],
     } catch (err) {
       // Nothing the student can see was written: the create is still the first
       // write, so a throw here leaves the database holding what it held before,
-      // and the parent's guidesMap — which is only ever touched on success —
+      // and the parent's guidesMap, which is only ever touched on success,
       // still matches it. The decision screen's "you already have an active
       // guide" is therefore still true, and the student can simply choose again.
       //
@@ -302,27 +302,27 @@ export default function MissionGuideGenerator({ experiment, existingGuides = [],
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(5,8,22,0.5)' }}>
         <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-[24px] bg-white p-6 sm:p-8">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="font-heading text-xl font-bold text-[color:var(--surface-dark-900)]">Guide generated</h2>
+            <h2 className="tp-section text-[color:var(--surface-dark-900)]">Guide generated</h2>
             <button onClick={onClose}><X size={20} className="text-[color:var(--ink-500)]" /></button>
           </div>
 
           {/* Preview */}
           <div className="rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] p-4 mb-5">
-            <p className="text-xs font-bold uppercase tracking-wide text-[color:var(--ink-500)] mb-1">Version {pendingGuide.version_number}</p>
-            <p className="font-semibold text-[color:var(--surface-dark-900)] text-sm">{pendingGuide.guide_title}</p>
-            <p className="text-xs text-[color:var(--ink-500)] mt-1">{pendingGuide.objective}</p>
-            <div className="flex gap-3 mt-2 text-xs text-[color:var(--ink-400)]">
+            <p className="tp-eyebrow text-[color:var(--ink-500)] mb-1">Version {pendingGuide.version_number}</p>
+            <p className="tp-card text-[color:var(--surface-dark-900)]">{pendingGuide.guide_title}</p>
+            <p className="tp-body text-[color:var(--ink-500)] mt-1">{pendingGuide.objective}</p>
+            <div className="tp-meta flex gap-3 mt-2 text-[color:var(--ink-400)]">
               <span>{pendingGuide.steps?.length} steps</span>
               {pendingGuide.estimated_time && <span>· {pendingGuide.estimated_time}</span>}
             </div>
             {pendingGuide.steps?.[0] && (
               <div className="mt-3 rounded-lg border border-[color:var(--ink-200)] bg-white p-3">
-                <p className="text-[10px] font-bold uppercase tracking-wide" style={{ color: 'var(--brand-gold-500, var(--brand-gold-500))' }}>
+                <p className="tp-eyebrow" style={{ color: 'var(--brand-gold-500, var(--brand-gold-500))' }}>
                   Start here · {pendingGuide.steps[0].estimated_minutes} min
                 </p>
-                <p className="text-sm font-semibold text-[color:var(--surface-dark-900)] mt-0.5">{pendingGuide.steps[0].title}</p>
+                <p className="tp-body font-semibold text-[color:var(--surface-dark-900)] mt-0.5">{pendingGuide.steps[0].title}</p>
                 {pendingGuide.steps[0].artifact?.kind !== 'none' && (
-                  <p className="text-xs text-[color:var(--ink-500)] mt-1">Comes pre-written. You fill in the blanks.</p>
+                  <p className="tp-meta text-[color:var(--ink-500)] mt-1">Comes pre-written. You fill in the blanks.</p>
                 )}
                 {pendingGuide.steps[0].campus_event && (
                   <div className="mt-2">
@@ -333,7 +333,7 @@ export default function MissionGuideGenerator({ experiment, existingGuides = [],
             )}
           </div>
 
-          <p className="text-sm font-semibold text-[color:var(--ink-700)] mb-3">
+          <p className="tp-body font-semibold text-[color:var(--ink-700)] mb-3">
             {hasActive ? 'You already have an active guide. What would you like to do?' : 'Set this as your active guide?'}
           </p>
 
@@ -341,35 +341,35 @@ export default function MissionGuideGenerator({ experiment, existingGuides = [],
             <button
               onClick={() => { setActiveDecision('make_active'); handleSave(true); }}
               disabled={saving}
-              className="w-full rounded-xl border-2 px-4 py-3 text-sm font-semibold text-left transition hover:bg-[#F8ECEF] disabled:opacity-60"
+              className="tp-body w-full rounded-xl border-2 px-4 py-3 font-semibold text-left transition hover:bg-[#F8ECEF] disabled:opacity-60"
               style={{ borderColor: 'var(--brand-navy-700)', color: 'var(--brand-navy-700)' }}>
               Make this the active guide
-              {hasActive && <span className="block text-xs font-normal text-[color:var(--warning-700)] mt-0.5">Will deactivate your current guide</span>}
+              {hasActive && <span className="tp-meta block font-normal text-[color:var(--warning-700)] mt-0.5">Will deactivate your current guide</span>}
             </button>
             <button
               onClick={() => { setActiveDecision('keep_current'); handleSave(false); }}
               disabled={saving}
-              className="w-full rounded-xl border border-[color:var(--ink-200)] px-4 py-3 text-sm font-semibold text-[color:var(--ink-700)] text-left transition hover:bg-[color:var(--ink-50)] disabled:opacity-60">
+              className="tp-body w-full rounded-xl border border-[color:var(--ink-200)] px-4 py-3 font-semibold text-[color:var(--ink-700)] text-left transition hover:bg-[color:var(--ink-50)] disabled:opacity-60">
               {hasActive ? 'Keep my current active guide' : 'Save as draft'}
-              <span className="block text-xs font-normal text-[color:var(--ink-400)] mt-0.5">New guide saved as draft</span>
+              <span className="tp-meta block font-normal text-[color:var(--ink-400)] mt-0.5">New guide saved as draft</span>
             </button>
             {hasActive && (
               <button
                 onClick={() => { setActiveDecision('compare'); handleSave(false); }}
                 disabled={saving}
-                className="w-full rounded-xl border border-[color:var(--ink-200)] px-4 py-3 text-sm font-semibold text-[color:var(--ink-500)] text-left transition hover:bg-[color:var(--ink-50)] disabled:opacity-60">
+                className="tp-body w-full rounded-xl border border-[color:var(--ink-200)] px-4 py-3 font-semibold text-[color:var(--ink-500)] text-left transition hover:bg-[color:var(--ink-50)] disabled:opacity-60">
                 Compare guides first
-                <span className="block text-xs font-normal text-[color:var(--ink-400)] mt-0.5">Opens comparison view after saving</span>
+                <span className="tp-meta block font-normal text-[color:var(--ink-400)] mt-0.5">Opens comparison view after saving</span>
               </button>
             )}
           </div>
 
           {saving && (
-            <div className="flex items-center justify-center gap-2 text-sm text-[color:var(--ink-500)]">
+            <div className="tp-body flex items-center justify-center gap-2 text-[color:var(--ink-500)]">
               <Loader2 size={15} className="animate-spin" /> Saving guide...
             </div>
           )}
-          {error && <p className="text-sm text-red-600 mt-2">{error}</p>}
+          {error && <p className="tp-body text-red-600 mt-2">{error}</p>}
         </div>
       </div>
     );
@@ -380,7 +380,7 @@ export default function MissionGuideGenerator({ experiment, existingGuides = [],
   // A screen of its own rather than a spinner in the button. The call was
   // measured at 42 seconds, and a validation retry doubles it; nothing else in
   // the product asks a student to wait that long at a control that still looks
-  // pressable. The options they picked are gone from view on purpose — there is
+  // pressable. The options they picked are gone from view on purpose: there is
   // nothing to change now, and leaving them there invites a second press.
   if (generating) {
     return (
@@ -390,15 +390,15 @@ export default function MissionGuideGenerator({ experiment, existingGuides = [],
             <Wand2 size={24} style={{ color: 'var(--brand-navy-700)' }} aria-hidden="true" />
           </div>
 
-          <h2 className="font-heading mt-5 text-xl font-bold text-[color:var(--surface-dark-900)]">
+          <h2 className="tp-section mt-5 text-[color:var(--surface-dark-900)]">
             {attempt > 0 ? 'Rewriting a section that came back short' : 'Writing your Mission Guide'}
           </h2>
-          <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-[color:var(--ink-500)]">
+          <p className="tp-body mx-auto mt-2 max-w-sm text-[color:var(--ink-500)]">
             {experiment.title}
           </p>
 
           {/* Reserved so the line changing underneath never moves the dialog. */}
-          <p className="mx-auto mt-5 flex min-h-[40px] max-w-sm items-center justify-center text-sm text-[color:var(--ink-700)]">
+          <p className="tp-body mx-auto mt-5 flex min-h-[40px] max-w-sm items-center justify-center text-[color:var(--ink-700)]">
             {GUIDE_STAGES[stage]}
           </p>
 
@@ -406,24 +406,24 @@ export default function MissionGuideGenerator({ experiment, existingGuides = [],
             <div className="picker-progress h-full rounded-full" style={{ background: 'var(--brand-navy-700)' }} />
           </div>
 
-          <p className="mt-5 text-xs text-[color:var(--ink-400)]">
+          <p className="tp-meta mt-5 text-[color:var(--ink-400)]">
             {attempt > 0
               ? 'This one needs a second pass, so it will take about another forty seconds.'
               : 'This usually takes about forty seconds. It writes the whole guide in one go: steps, the email, and what counts as proof.'}
           </p>
 
           {/* A way out. Forty seconds with no exit is a trap, and the previous
-              version had one too — its close button was disabled for the whole
+              version had one too, and its close button was disabled for the whole
               call. Backing out is safe: nothing is written until the student
               picks what to do with the finished guide, so leaving just drops a
               result that was never saved. */}
           <button
             onClick={onClose}
-            className="mt-6 text-xs font-semibold text-[color:var(--ink-500)] underline underline-offset-2 hover:text-[color:var(--ink-700)]"
+            className="tp-meta mt-6 py-2 font-semibold text-[color:var(--ink-500)] underline underline-offset-2 hover:text-[color:var(--ink-700)]"
           >
             Stop and go back
           </button>
-          <p className="mt-2 text-xs text-[color:var(--ink-400)]">
+          <p className="tp-meta mt-2 text-[color:var(--ink-400)]">
             Nothing is saved until you choose what to do with it.
           </p>
         </div>
@@ -436,12 +436,12 @@ export default function MissionGuideGenerator({ experiment, existingGuides = [],
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(5,8,22,0.5)' }}>
       <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-[24px] bg-white p-6 sm:p-8">
         <div className="flex items-center justify-between mb-1">
-          <h2 className="font-heading text-xl font-bold text-[color:var(--surface-dark-900)]">
+          <h2 className="tp-section text-[color:var(--surface-dark-900)]">
             {hasExisting ? 'Generate Another Mission Guide' : 'Generate Mission Guide'}
           </h2>
           <button onClick={onClose} disabled={generating}><X size={20} className="text-[color:var(--ink-500)]" /></button>
         </div>
-        <p className="text-sm text-[color:var(--ink-500)] mb-5">
+        <p className="tp-lead text-[color:var(--ink-500)] mb-5">
           {hasExisting
             ? `Version ${nextVersion} will be created. Previous guides are preserved.`
             : 'AI will generate a step-by-step guide for this experiment.'}
@@ -449,12 +449,12 @@ export default function MissionGuideGenerator({ experiment, existingGuides = [],
 
         {/* Experiment context */}
         <div className="rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] p-3 mb-5">
-          <p className="text-xs font-bold uppercase tracking-wide text-[color:var(--ink-500)] mb-0.5">Experiment</p>
-          <p className="text-sm font-semibold text-[color:var(--surface-dark-900)]">{experiment.title}</p>
-          {experiment.path_name && <p className="text-xs" style={{ color: 'var(--brand-navy-700)' }}>{experiment.path_name}</p>}
+          <p className="tp-eyebrow text-[color:var(--ink-500)] mb-0.5">Experiment</p>
+          <p className="tp-body font-semibold text-[color:var(--surface-dark-900)]">{experiment.title}</p>
+          {experiment.path_name && <p className="tp-meta" style={{ color: 'var(--brand-navy-700)' }}>{experiment.path_name}</p>}
         </div>
 
-        {/* Real campus events — gives the first step a date the student didn't set */}
+        {/* Real campus events: gives the first step a date the student didn't set */}
         <CampusEventPicker
           profile={profile}
           pathName={experiment.path_name}
@@ -463,21 +463,21 @@ export default function MissionGuideGenerator({ experiment, existingGuides = [],
           disabled={generating}
         />
 
-        {/* Variation picker — only for subsequent guides */}
+        {/* Variation picker: only for subsequent guides */}
         {hasExisting && (
           <div className="mb-5">
-            <p className="text-sm font-semibold text-[color:var(--ink-700)] mb-2">What should be different?</p>
+            <p className="tp-body font-semibold text-[color:var(--ink-700)] mb-2">What should be different?</p>
             <div className="space-y-2">
               {VARIATION_OPTIONS.map(opt => (
                 <button
                   key={opt.value}
                   onClick={() => setVariation(variation === opt.value ? '' : opt.value)}
-                  className="w-full rounded-xl border px-4 py-3 text-sm text-left transition"
+                  className="tp-body w-full rounded-xl border px-4 py-3 text-left transition"
                   style={variation === opt.value
                     ? { borderColor: 'var(--brand-navy-700)', background: 'var(--background-tertiary)', color: 'var(--brand-navy-700)' }
                     : { borderColor: 'var(--ink-200)', background: 'white', color: 'var(--ink-700)' }}>
                   <span className="font-semibold">{opt.label}</span>
-                  <span className="block text-xs text-[color:var(--ink-400)] mt-0.5">{opt.description}</span>
+                  <span className="tp-meta block text-[color:var(--ink-400)] mt-0.5">{opt.description}</span>
                 </button>
               ))}
             </div>
@@ -494,7 +494,7 @@ export default function MissionGuideGenerator({ experiment, existingGuides = [],
         )}
 
         {error && (
-          <div className="mb-4 flex items-start gap-2 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">
+          <div className="tp-body mb-4 flex items-start gap-2 rounded-xl bg-red-50 px-4 py-3 text-red-700">
             <AlertCircle size={15} className="mt-0.5 shrink-0" />
             <div>
               <p>{error}</p>
@@ -505,13 +505,13 @@ export default function MissionGuideGenerator({ experiment, existingGuides = [],
 
         <div className="flex gap-3">
           <button onClick={onClose} disabled={generating}
-            className="flex-1 rounded-[10px] border border-[color:var(--ink-200)] py-3 text-sm font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)] disabled:opacity-60">
+            className="tp-body flex-1 rounded-[10px] border border-[color:var(--ink-200)] py-3 font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)] disabled:opacity-60">
             Cancel
           </button>
           <button
             onClick={handleGenerate}
             disabled={generating || (variation === 'custom' && !customInstruction.trim())}
-            className="flex-1 rounded-[10px] py-3 text-sm font-semibold text-white transition disabled:opacity-60 flex items-center justify-center gap-2"
+            className="tp-body flex-1 rounded-[10px] py-3 font-semibold text-white transition disabled:opacity-60 flex items-center justify-center gap-2"
             style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}>
             {generating ? (
               <><Loader2 size={15} className="animate-spin" /> Generating...</>

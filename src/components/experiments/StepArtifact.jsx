@@ -20,7 +20,7 @@ const KIND_META = {
 const WRITTEN_KINDS = ['email', 'message'];
 const NUMBERED_KINDS = ['question_list', 'checklist', 'outline'];
 
-/** Marks remaining [TOKENS]. Underlined as well as tinted — never colour alone. */
+/** Marks remaining [TOKENS]. Underlined as well as tinted, never colour alone. */
 function WithBlanks({ text }) {
   if (typeof text !== 'string') return null;
   return text.split(TOKEN_SPLIT_RE).map((part, i) =>
@@ -48,7 +48,7 @@ function CopyButton({ getText, label }) {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      /* clipboard blocked — the text is on screen and selectable anyway */
+      /* clipboard blocked: the text is on screen and selectable anyway */
     }
   };
 
@@ -56,7 +56,7 @@ function CopyButton({ getText, label }) {
     <button
       onClick={handleCopy}
       aria-label={copied ? 'Copied to clipboard' : label}
-      className="flex shrink-0 items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-semibold transition"
+      className="tp-meta flex shrink-0 items-center gap-1.5 rounded-lg border px-2.5 py-2 font-semibold transition"
       style={{
         borderColor: copied ? '#BBF7D0' : 'var(--ink-200)',
         background: copied ? 'var(--success-50)' : '#fff',
@@ -70,7 +70,7 @@ function CopyButton({ getText, label }) {
 }
 
 /**
- * A finished artifact the student edits — the actual email, the actual questions.
+ * A finished artifact the student edits: the actual email, the actual questions.
  *
  * Two rules keep this honest:
  *   - the instruction line is never part of what Copy puts on the clipboard
@@ -88,7 +88,7 @@ export default function StepArtifact({ artifact: raw, profile }) {
   const isQuery = kind === 'search_query';
   const numbered = NUMBERED_KINDS.includes(kind);
 
-  // For anything but an email, `body` is guidance about the payload — shown
+  // For anything but an email, `body` is guidance about the payload, shown
   // above the paste zone, and deliberately excluded from the clipboard.
   const instruction = isWritten ? '' : body;
   const payload = isWritten
@@ -98,28 +98,28 @@ export default function StepArtifact({ artifact: raw, profile }) {
   return (
     <div className="mt-3 overflow-hidden rounded-xl border border-[color:var(--ink-200)] bg-white">
       <div className="flex items-center justify-between gap-3 border-b border-[color:var(--ink-200)] bg-[color:var(--ink-50)] px-3 py-2">
-        <span className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-[color:var(--ink-500)]">
+        <span className="tp-eyebrow flex items-center gap-1.5 text-[color:var(--ink-500)]">
           <Icon size={12} /> {meta.label}
         </span>
         <CopyButton getText={() => payload} label={`Copy the ${isWritten ? 'message' : 'text to paste'}`} />
       </div>
 
       {instruction && (
-        <p className="border-b border-[color:var(--ink-100)] px-3 py-2 text-xs leading-relaxed text-[color:var(--ink-500)]">
+        <p className="tp-meta border-b border-[color:var(--ink-100)] px-3 py-2 text-[color:var(--ink-500)]">
           <WithBlanks text={instruction} />
         </p>
       )}
 
       <div className="px-3 py-3">
         {isWritten && subject && (
-          <p className="mb-3 border-b border-dashed border-[color:var(--ink-200)] pb-2 text-sm text-[color:var(--surface-dark-900)]">
+          <p className="tp-body mb-3 border-b border-dashed border-[color:var(--ink-200)] pb-2 text-[color:var(--surface-dark-900)]">
             <span className="text-[color:var(--ink-400)]">Subject: </span>
             <span className="font-semibold"><WithBlanks text={subject} /></span>
           </p>
         )}
 
         {isWritten && body && (
-          <p className="whitespace-pre-wrap text-sm leading-relaxed text-[color:var(--ink-700)]">
+          <p className="tp-prose whitespace-pre-wrap text-[color:var(--ink-700)]">
             <WithBlanks text={body} />
           </p>
         )}
@@ -130,9 +130,9 @@ export default function StepArtifact({ artifact: raw, profile }) {
               {items.map((item, i) => (
                 <p
                   key={i}
-                  // Wrap rather than scroll — a clipped query hides the part the
+                  // Wrap rather than scroll: a clipped query hides the part the
                   // student needs to check before pasting.
-                  className="whitespace-pre-wrap break-words rounded-lg px-3 py-2 text-xs leading-relaxed"
+                  className="tp-meta whitespace-pre-wrap break-words rounded-lg px-3 py-2"
                   style={{ fontFamily: MONO, background: 'var(--ink-50)', border: '1px solid var(--ink-100)', color: 'var(--ink-700)' }}
                 >
                   <WithBlanks text={item} />
@@ -142,8 +142,8 @@ export default function StepArtifact({ artifact: raw, profile }) {
           ) : (
             <ol className="space-y-2">
               {items.map((item, i) => (
-                <li key={i} className="flex gap-2.5 text-sm leading-relaxed text-[color:var(--ink-700)]">
-                  <span className="shrink-0 pt-0.5 text-xs font-bold tabular-nums text-[color:var(--ink-400)]">
+                <li key={i} className="tp-body flex gap-2.5 text-[color:var(--ink-700)]">
+                  <span className="tp-meta shrink-0 pt-0.5 font-bold tabular-nums text-[color:var(--ink-400)]">
                     {numbered ? `${i + 1}.` : '·'}
                   </span>
                   <span><WithBlanks text={item} /></span>
@@ -156,7 +156,7 @@ export default function StepArtifact({ artifact: raw, profile }) {
 
       {(blanks.length > 0 || prefilled.length > 0) && (
         <div className="border-t border-[color:var(--ink-200)] bg-[#FCFBF7] px-3 py-2.5">
-          <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wide text-[color:var(--ink-500)]">
+          <p className="tp-eyebrow mb-1.5 text-[color:var(--ink-500)]">
             {blanks.length > 0 ? `You fill in (${blanks.length})` : 'Ready as-is'}
             {prefilled.length > 0 && (
               <span className="font-medium normal-case tracking-normal text-[color:var(--ink-400)]">
@@ -167,7 +167,7 @@ export default function StepArtifact({ artifact: raw, profile }) {
           {blanks.length > 0 && (
             <ul className="space-y-1">
               {blanks.map((blank, i) => (
-                <li key={i} className="text-xs text-[color:var(--ink-500)]">
+                <li key={i} className="tp-meta text-[color:var(--ink-500)]">
                   <code className="font-semibold" style={{ fontFamily: MONO, color: '#7A5B12' }}>
                     {blank.token}
                   </code>
