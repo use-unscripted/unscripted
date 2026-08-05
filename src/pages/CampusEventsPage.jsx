@@ -164,7 +164,7 @@ export default function CampusEventsPage() {
   );
 
   return (
-    <main className="app-page">
+    <main className="app-page app-page--wide">
       <PageHeader
         title="On your campus"
         description={

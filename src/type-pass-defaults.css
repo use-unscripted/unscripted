@@ -51,6 +51,10 @@
      mission card, narrow enough that a paragraph inside it does not run past
      a comfortable line. */
   --app-measure: 60rem;   /* 960px */
+  /* For the screens whose content is a grid rather than something to read.
+     Line length is what sets the measure above, and a calendar square has no
+     line in it. */
+  --app-measure-wide: 80rem;   /* 1280px */
   /* Prose never runs the full width of a wide card. */
   --prose-measure: 68ch;
 }
@@ -65,6 +69,12 @@
 @media (min-width: 640px) {
   .app-page { padding: 2.5rem 2rem 5rem; }
 }
+/* The one exception, and it has to earn the class. A month grid divides
+   whatever it is given by seven, so the measure lands on each square: at 60rem
+   a square is about 80px with the day panel open, which is close enough to the
+   72px floor that titles clip, and it does that while a strip of page sits
+   empty either side. Same padding and centring, more room. */
+.app-page--wide { max-width: var(--app-measure-wide); }
 
 /* Section rhythm. One value between major sections, bigger than the spacing
    inside them, which is what makes a page read as a few groups rather than a
