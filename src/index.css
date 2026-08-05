@@ -352,6 +352,43 @@
     min-height: 44px;
     margin: -14px -17px;
   }
+
+  /* A short text link or button sitting in a row of its own. Raising its height
+     would make it a chunky new control and change the row, so instead an
+     invisible box grows out from its centre into the space already around it.
+     The box is out of flow and paints nothing, so the layout does not move.
+
+     Only for a control with slack around it: text, padding, or a control that
+     does the same thing. Next to something unrelated the box would swallow its
+     taps. An ancestor with `overflow: hidden` clips it, so keep it inside the
+     card it belongs to. */
+  .touch-reach {
+    position: relative;
+  }
+
+  .touch-reach::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 100%;
+    height: 44px;
+  }
+
+  /* A line of links written as running text. On a phone the line wraps, and a
+     box on the first line lands on the link that moved to the second, which
+     stops answering taps at all. The links become a row that wraps on purpose,
+     spaced so each line clears the one under it. The gap stands in for the
+     space either side of the separator, so nothing shifts while the line still
+     fits on one row. */
+  .touch-reach-line {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    column-gap: 3px;
+    row-gap: 28px;
+  }
 }
 
 /* ── Native <select> on a touch screen ──────────────────────────────────── */

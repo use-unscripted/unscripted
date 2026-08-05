@@ -168,14 +168,14 @@ export default function ExperimentReflection() {
         <ReflectionForm ctx={ctx} onSaved={handleSaved} onSubmit={handleSubmit} />
       )}
 
-      <p className="tp-meta pt-1 text-center" style={{ color: 'var(--text-muted)' }}>
-        <Link to="/journey" className="font-semibold" style={{ color: 'var(--brand-navy-700)' }}>My Journey</Link>
+      <p className="touch-reach-line tp-meta justify-center pt-1 text-center" style={{ color: 'var(--text-muted)' }}>
+        <Link to="/journey" className="touch-reach font-semibold" style={{ color: 'var(--brand-navy-700)' }}>My Journey</Link>
         {' · '}
-        <Link to={`/experiment?experimentId=${ctx.experiment.id}`} className="font-semibold" style={{ color: 'var(--brand-navy-700)' }}>
+        <Link to={`/experiment?experimentId=${ctx.experiment.id}`} className="touch-reach font-semibold" style={{ color: 'var(--brand-navy-700)' }}>
           The experiment
         </Link>
         {' · '}
-        <Link to="/evidence?tab=reflect" className="font-semibold" style={{ color: 'var(--brand-navy-700)' }}>Reflection history</Link>
+        <Link to="/evidence?tab=reflect" className="touch-reach font-semibold" style={{ color: 'var(--brand-navy-700)' }}>Reflection history</Link>
       </p>
     </Shell>
   );

@@ -374,7 +374,7 @@ function PausedSection({ experiments, missions, guides, onResumed, onDelete, onE
   if (experiments.length === 0) {
     return (
       <div className="mb-8">
-        <button onClick={() => setOpen(v => !v)} className="flex items-center gap-2 mb-3">
+        <button onClick={() => setOpen(v => !v)} className="touch-reach flex items-center gap-2 mb-3">
           <PauseCircle size={15} className="text-[color:var(--warning-700)]" />
           <h2 className="tp-section text-[color:var(--surface-dark-900)]">Paused</h2>
           {open ? <ChevronUp size={14} className="text-[color:var(--ink-400)]" /> : <ChevronDown size={14} className="text-[color:var(--ink-400)]" />}
@@ -394,7 +394,7 @@ function PausedSection({ experiments, missions, guides, onResumed, onDelete, onE
 
   return (
     <div className="mb-8">
-      <button onClick={() => setOpen(v => !v)} className="flex items-center gap-2 mb-3">
+      <button onClick={() => setOpen(v => !v)} className="touch-reach flex items-center gap-2 mb-3">
         <PauseCircle size={15} className="text-[color:var(--warning-700)]" />
         <h2 className="tp-section text-[color:var(--surface-dark-900)]">Paused</h2>
         <span className="tp-meta rounded-full px-2.5 py-0.5 font-bold" style={{ background: 'var(--warning-50)', color: 'var(--warning-700)' }}>{experiments.length}</span>

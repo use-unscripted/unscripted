@@ -266,7 +266,7 @@ export default function ActiveExperiment() {
               Missions {missions.length ? `(${missions.length})` : ''}
             </h3>
             <button onClick={() => setShowAddMission(true)}
-              className="tp-meta inline-flex items-center gap-1.5 font-bold" style={{ color: 'var(--brand-navy-700)' }}>
+              className="touch-reach tp-meta inline-flex items-center gap-1.5 font-bold" style={{ color: 'var(--brand-navy-700)' }}>
               <Plus size={13} /> Add mission
             </button>
           </div>
@@ -301,10 +301,10 @@ export default function ActiveExperiment() {
 
         <ExperimentStatusPanel proofs={proofs} reflections={reflections} cycle={cycle} />
 
-        <p className="tp-meta pt-1 text-center" style={{ color: 'var(--text-muted)' }}>
-          <Link to="/journey" className="font-semibold" style={{ color: 'var(--brand-navy-700)' }}>Back to My Journey</Link>
+        <p className="touch-reach-line tp-meta justify-center pt-1 text-center" style={{ color: 'var(--text-muted)' }}>
+          <Link to="/journey" className="touch-reach font-semibold" style={{ color: 'var(--brand-navy-700)' }}>Back to My Journey</Link>
           {' · '}
-          <Link to="/experiments" className="font-semibold" style={{ color: 'var(--brand-navy-700)' }}>All experiments</Link>
+          <Link to="/experiments" className="touch-reach font-semibold" style={{ color: 'var(--brand-navy-700)' }}>All experiments</Link>
         </p>
       </div>
     </main>

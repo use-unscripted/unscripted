@@ -103,7 +103,7 @@ export default function GuideDetailPage() {
     return (
       <div className="app-page text-center">
         <p className="tp-lead mx-auto mb-5 text-[color:var(--ink-500)]">{error || 'Guide not found.'}</p>
-        <button onClick={() => navigate('/experiments')} className="tp-body font-semibold text-[var(--brand-navy-900)] underline">
+        <button onClick={() => navigate('/experiments')} className="touch-reach tp-body font-semibold text-[var(--brand-navy-900)] underline">
           Back to Missions
         </button>
       </div>

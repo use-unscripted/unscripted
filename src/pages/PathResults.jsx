@@ -50,7 +50,7 @@ function PathCard({ rec, index, onStart, starting, disabled }) {
             <h3 className="tp-section text-[color:var(--surface-dark-900)]">{rec.path_name}</h3>
           </div>
           <button onClick={() => setExpanded(e => !e)}
-            className="tp-meta shrink-0 px-1 py-1 font-semibold transition hover:opacity-70" style={{ color: 'var(--brand-navy-900)' }}>
+            className="touch-reach tp-meta shrink-0 px-1 py-1 font-semibold transition hover:opacity-70" style={{ color: 'var(--brand-navy-900)' }}>
             {expanded ? 'Collapse' : 'See details'}
           </button>
         </div>
@@ -239,7 +239,7 @@ export default function PathResults() {
             Pick a path above to start its 30-day test. You can compare all three from your dashboard first.
           </p>
           <Link to="/journey"
-            className="inline-flex items-center gap-1.5 text-sm font-semibold text-[color:var(--ink-300)] transition hover:text-white">
+            className="touch-reach inline-flex items-center gap-1.5 text-sm font-semibold text-[color:var(--ink-300)] transition hover:text-white">
             Open My Dashboard <ArrowRight size={15} />
           </Link>
         </div>

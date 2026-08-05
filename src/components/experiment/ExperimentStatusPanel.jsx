@@ -17,7 +17,7 @@ function Row({ Icon, label, value, to, cta }) {
         <p className="tp-meta mt-1" style={{ color: 'var(--text-muted)' }}>{value}</p>
       </div>
       {to && (
-        <Link to={to} className="tp-meta shrink-0 py-1 font-bold" style={{ color: 'var(--brand-navy-700)' }}>{cta} →</Link>
+        <Link to={to} className="touch-reach tp-meta shrink-0 py-1 font-bold" style={{ color: 'var(--brand-navy-700)' }}>{cta} →</Link>
       )}
     </div>
   );
