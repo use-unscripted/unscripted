@@ -435,11 +435,10 @@ export default function ResumeBuilder() {
     isDirty.current = true;
   };
 
-  // app-page everywhere the rest of the app sits, plus one widening at xl.
-  // This is the only screen with a third column (the 380px live preview), and
-  // inside 960px the editor form is squeezed to about 310px.
+  // The widening this screen used to do for itself is now the shared measure,
+  // so it sits on the same page container as everything else.
   return (
-    <main className="app-page xl:max-w-[76rem]">
+    <main className="app-page">
       {showTemplates && <TemplatePicker onSelect={createResume} onCancel={() => setShowTemplates(false)} />}
       {showVersions && draft && (
         <VersionHistory versions={versions} currentResume={draft} onRestore={restoreVersion} onClose={() => setShowVersions(false)} />
