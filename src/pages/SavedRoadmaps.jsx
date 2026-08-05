@@ -9,7 +9,7 @@ export default function SavedRoadmaps() {
   useEffect(() => { base44.entities.Roadmap.list('-created_date', 50).then(setItems); }, []);
 
   return (
-    <main className="mx-auto max-w-5xl px-5 py-10 sm:px-8">
+    <main className="app-page">
       <PageHeader
         title="Your paths, saved."
         description="Revisit earlier strategies and see how your direction evolves as you create evidence."
@@ -28,17 +28,17 @@ export default function SavedRoadmaps() {
               <Map style={{ color: 'var(--brand-navy-900)' }} size={20} />
             </span>
             <div className="min-w-0 flex-1">
-              <h2 className="font-heading truncate font-bold text-[color:var(--surface-dark-800)]">{r.title}</h2>
-              <p className="mt-1 text-xs text-[color:var(--ink-500)]">
+              <h2 className="tp-card truncate text-[color:var(--surface-dark-800)]">{r.title}</h2>
+              <p className="tp-meta mt-1.5 text-[color:var(--ink-500)]">
                 Created {new Date(r.created_date).toLocaleDateString()} · {r.thirty_day_plan?.length || 0} milestones
               </p>
             </div>
-            <span className="hidden text-xs font-bold text-[color:var(--ink-400)] sm:block">VERSION {items.length - i}</span>
+            <span className="tp-eyebrow hidden text-[color:var(--ink-400)] sm:block">VERSION {items.length - i}</span>
             <ArrowRight className="text-[color:var(--ink-300)] shrink-0" size={18} />
           </Link>
         ))}
         {!items.length && (
-          <div className="rounded-[20px] border border-dashed border-[color:var(--ink-200)] p-12 text-center text-[color:var(--ink-400)]">
+          <div className="tp-body rounded-[20px] border border-dashed border-[color:var(--ink-200)] px-8 py-14 text-center text-[color:var(--ink-400)]">
             Your first roadmap will appear here.
           </div>
         )}

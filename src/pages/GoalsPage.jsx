@@ -37,7 +37,7 @@ export default function GoalsPage() {
   const filteredGoals = goals.filter(g => g.timeframe === tab);
 
   return (
-    <main className="mx-auto max-w-5xl px-5 py-10 sm:px-8">
+    <main className="app-page">
       <PageHeader
         title="What you're building toward."
         description="Annual, monthly, and weekly goals, with honest feasibility assessments so your plan stays realistic."
@@ -46,8 +46,8 @@ export default function GoalsPage() {
       {/* Feasibility summary */}
       {goals.some(g => g.feasibility_status === 'unrealistic') && (
         <div className="mb-6 rounded-[16px] p-5" style={{ background: 'var(--danger-50)', border: '1px solid rgba(185,28,28,0.2)' }}>
-          <p className="text-xs font-bold uppercase tracking-wide text-[color:var(--danger-700)] mb-2">Feasibility issue detected</p>
-          <p className="text-sm text-[color:var(--ink-700)]">
+          <p className="tp-eyebrow text-[color:var(--danger-700)] mb-2">Feasibility issue detected</p>
+          <p className="tp-prose text-[color:var(--ink-700)]">
             {goals.filter(g => g.feasibility_status === 'unrealistic').length} goal{goals.filter(g => g.feasibility_status === 'unrealistic').length > 1 ? 's were' : ' was'} flagged as unrealistic based on your available time. Consider deferring or reducing scope.
           </p>
         </div>
@@ -57,10 +57,10 @@ export default function GoalsPage() {
       <div className="mb-6 flex gap-2 rounded-xl border border-[color:var(--ink-200)] bg-white p-1.5">
         {TIMEFRAME_ORDER.map(t => (
           <button key={t} onClick={() => setTab(t)}
-            className="flex-1 rounded-lg py-2.5 text-sm font-semibold transition"
+            className="tp-body flex-1 rounded-lg py-3 font-semibold transition"
             style={tab === t ? { background: 'var(--brand-navy-900)', color: '#fff' } : { color: 'var(--ink-500)' }}>
             {TIMEFRAME_LABELS[t]}
-            <span className="ml-2 text-xs opacity-70">({goals.filter(g => g.timeframe === t).length})</span>
+            <span className="tp-meta ml-2 inline opacity-70">({goals.filter(g => g.timeframe === t).length})</span>
           </button>
         ))}
       </div>
@@ -68,7 +68,7 @@ export default function GoalsPage() {
       {loading ? (
         <SkCards count={3} h={168} gap={12} r={20} />
       ) : filteredGoals.length === 0 ? (
-        <div className="rounded-[24px] border border-dashed border-[color:var(--ink-200)] p-12 text-center text-[color:var(--ink-500)]">
+        <div className="tp-body rounded-[24px] border border-dashed border-[color:var(--ink-200)] px-8 py-14 text-center text-[color:var(--ink-500)]">
           No {tab} goals yet. Complete the goal intake or add one manually.
         </div>
       ) : (
@@ -81,28 +81,28 @@ export default function GoalsPage() {
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1">
                     <div className="flex flex-wrap items-center gap-2 mb-2">
-                      <span className="rounded-full px-2.5 py-0.5 text-xs font-bold capitalize"
+                      <span className="tp-meta rounded-full px-2.5 py-0.5 font-bold capitalize"
                         style={{ background: CAT_COLORS[g.category] ? `${CAT_COLORS[g.category]}18` : 'var(--ink-100)', color: CAT_COLORS[g.category] || 'var(--ink-500)' }}>
                         {g.category}
                       </span>
-                      <span className="rounded-full px-2.5 py-0.5 text-xs font-bold capitalize"
+                      <span className="tp-meta rounded-full px-2.5 py-0.5 font-bold capitalize"
                         style={g.priority === 'high' ? { background: 'var(--ink-100)', color: 'var(--brand-navy-900)' } : g.priority === 'medium' ? { background: 'var(--warning-50)', color: 'var(--warning-700)' } : { background: 'var(--ink-100)', color: 'var(--ink-500)' }}>
                         {g.priority} priority
                       </span>
                       {g.feasibility_status && (
-                        <span className="flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-bold capitalize" style={{ background: fs.bg, color: fs.text }}>
-                          <FIcon size={10} /> {g.feasibility_status.replace('_', ' ')}
+                        <span className="tp-meta flex items-center gap-1 rounded-full px-2.5 py-0.5 font-bold capitalize" style={{ background: fs.bg, color: fs.text }}>
+                          <FIcon size={13} /> {g.feasibility_status.replace('_', ' ')}
                         </span>
                       )}
                     </div>
-                    <p className="text-sm font-semibold text-[color:var(--surface-dark-900)]">{g.goal_text}</p>
-                    {g.measurable_outcome && <p className="mt-1 text-xs text-[color:var(--ink-500)]">Outcome: {g.measurable_outcome}</p>}
+                    <p className="tp-card text-[color:var(--surface-dark-900)]">{g.goal_text}</p>
+                    {g.measurable_outcome && <p className="tp-body mt-1.5 text-[color:var(--ink-500)]">Outcome: {g.measurable_outcome}</p>}
                     {g.feasibility_note && g.feasibility_status === 'unrealistic' && (
-                      <p className="mt-2 flex items-start gap-1.5 text-xs font-semibold text-[color:var(--danger-700)]"><AlertTriangle size={13} className="mt-px shrink-0" aria-hidden="true" />{g.feasibility_note}</p>
+                      <p className="tp-meta mt-2.5 flex items-start gap-1.5 font-semibold text-[color:var(--danger-700)]"><AlertTriangle size={13} className="mt-px shrink-0" aria-hidden="true" />{g.feasibility_note}</p>
                     )}
-                    {g.estimated_hours && <p className="mt-1 text-xs text-[color:var(--ink-400)]">{g.estimated_hours}h/week estimated</p>}
+                    {g.estimated_hours && <p className="tp-meta mt-1.5 text-[color:var(--ink-400)]">{g.estimated_hours}h/week estimated</p>}
                   </div>
-                  <select className="rounded-lg border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-2 py-1.5 text-xs text-[color:var(--ink-700)] outline-none"
+                  <select className="rounded-lg border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-2.5 py-2 text-sm text-[color:var(--ink-700)] outline-none"
                     value={g.status} onChange={e => updateStatus(g.id, e.target.value)}>
                     <option value="active">Active</option>
                     <option value="completed">Completed</option>

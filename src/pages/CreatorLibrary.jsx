@@ -62,16 +62,16 @@ export default function CreatorLibrary() {
   if (selected) {
     const p = selected;
     return (
-      <main className="mx-auto max-w-4xl px-5 py-10 sm:px-8">
-        <button onClick={() => setSelected(null)} className="mb-6 text-sm font-semibold transition hover:opacity-80" style={{ color: 'var(--brand-navy-900)' }}>← Back to profiles</button>
+      <main className="app-page">
+        <button onClick={() => setSelected(null)} className="tp-body mb-7 font-semibold transition hover:opacity-80" style={{ color: 'var(--brand-navy-900)' }}>← Back to profiles</button>
         <div className="rounded-[24px] border border-[color:var(--ink-200)] bg-white p-7 sm:p-10">
           <div className="flex items-start justify-between gap-4 flex-wrap">
             <div>
-              <h1 className="font-heading text-3xl font-bold text-[color:var(--surface-dark-900)]">{p.name}</h1>
-              <p className="mt-1 text-[color:var(--ink-500)]">{p.role}{p.company ? ` · ${p.company}` : ''}</p>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {p.category?.map((c, i) => <span key={i} className="rounded-full px-2.5 py-1 text-xs font-semibold" style={{ background: 'var(--ink-100)', color: 'var(--brand-navy-900)' }}>{c}</span>)}
-                {p.verified && <span className="rounded-full px-2.5 py-1 text-xs font-bold" style={{ background: 'var(--success-50)', color: 'var(--success-700)' }}>Verified profile</span>}
+              <h1 className="tp-page text-[color:var(--surface-dark-900)]">{p.name}</h1>
+              <p className="tp-lead mt-2 text-[color:var(--ink-500)]">{p.role}{p.company ? ` · ${p.company}` : ''}</p>
+              <div className="mt-4 flex flex-wrap gap-2">
+                {p.category?.map((c, i) => <span key={i} className="tp-meta rounded-full px-2.5 py-1 font-semibold" style={{ background: 'var(--ink-100)', color: 'var(--brand-navy-900)' }}>{c}</span>)}
+                {p.verified && <span className="tp-meta rounded-full px-2.5 py-1 font-bold" style={{ background: 'var(--success-50)', color: 'var(--success-700)' }}>Verified profile</span>}
               </div>
             </div>
             <div className="flex gap-3">
@@ -84,20 +84,20 @@ export default function CreatorLibrary() {
 
           <div className="mt-8 space-y-6">
             <div>
-              <h2 className="font-heading text-lg font-bold text-[color:var(--surface-dark-900)] mb-3">Overview</h2>
-              <p className="text-sm text-[color:var(--ink-700)] leading-7">{p.short_bio}</p>
+              <h2 className="tp-section text-[color:var(--surface-dark-900)] mb-3">Overview</h2>
+              <p className="tp-prose text-[color:var(--ink-700)]">{p.short_bio}</p>
             </div>
             {p.starting_point && (
               <div>
-                <h2 className="font-heading text-lg font-bold text-[color:var(--surface-dark-900)] mb-3">Starting point</h2>
-                <p className="text-sm text-[color:var(--ink-700)] leading-7">{p.starting_point}</p>
+                <h2 className="tp-section text-[color:var(--surface-dark-900)] mb-3">Starting point</h2>
+                <p className="tp-prose text-[color:var(--ink-700)]">{p.starting_point}</p>
               </div>
             )}
             {p.milestones?.length > 0 && (
               <div>
-                <h2 className="font-heading text-lg font-bold text-[color:var(--surface-dark-900)] mb-3">Major milestones</h2>
+                <h2 className="tp-section text-[color:var(--surface-dark-900)] mb-3">Major milestones</h2>
                 <ol className="space-y-2">{p.milestones.map((m, i) => (
-                  <li key={i} className="flex gap-3 text-sm text-[color:var(--ink-700)]">
+                  <li key={i} className="tp-body flex gap-3 text-[color:var(--ink-700)]">
                     <span className="shrink-0 font-bold" style={{ color: 'var(--brand-navy-900)' }}>{i + 1}.</span>{m}
                   </li>
                 ))}</ol>
@@ -105,18 +105,18 @@ export default function CreatorLibrary() {
             )}
             {p.lessons?.length > 0 && (
               <div>
-                <h2 className="font-heading text-lg font-bold text-[color:var(--surface-dark-900)] mb-3">Honest lessons</h2>
-                <ul className="space-y-2">{p.lessons.map((l, i) => <li key={i} className="flex gap-2 text-sm text-[color:var(--ink-700)]"><span style={{ color: 'var(--brand-navy-900)' }}>·</span>{l}</li>)}</ul>
+                <h2 className="tp-section text-[color:var(--surface-dark-900)] mb-3">Honest lessons</h2>
+                <ul className="space-y-2">{p.lessons.map((l, i) => <li key={i} className="tp-body flex gap-2 text-[color:var(--ink-700)]"><span style={{ color: 'var(--brand-navy-900)' }}>·</span>{l}</li>)}</ul>
               </div>
             )}
             {p.student_takeaways && (
               <div className="rounded-[16px] p-5" style={{ background: 'var(--ink-100)', border: '1px solid rgba(31,58,95,0.15)' }}>
-                <h2 className="font-heading font-bold mb-2" style={{ color: 'var(--brand-navy-900)' }}>What you can take away</h2>
-                <p className="text-sm text-[color:var(--ink-700)] leading-7">{p.student_takeaways}</p>
+                <h2 className="tp-section mb-2.5" style={{ color: 'var(--brand-navy-900)' }}>What you can take away</h2>
+                <p className="tp-prose text-[color:var(--ink-700)]">{p.student_takeaways}</p>
               </div>
             )}
             {p.source_urls?.length > 0 && (
-              <p className="text-xs text-[color:var(--ink-400)]">Sources: {p.source_urls.join(', ')}
+              <p className="tp-meta text-[color:var(--ink-400)]">Sources: {p.source_urls.join(', ')}
                 {p.last_reviewed && ` · Reviewed ${new Date(p.last_reviewed).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}`}
               </p>
             )}
@@ -127,7 +127,7 @@ export default function CreatorLibrary() {
   }
 
   return (
-    <main className="mx-auto max-w-6xl px-5 py-10 sm:px-8">
+    <main className="app-page">
       {/* The title was word-for-word the same as the Blueprint Library's.
           With the page-name eyebrow above it the two headings were at least
           distinguishable; without it they were the same page twice. */}
@@ -139,7 +139,7 @@ export default function CreatorLibrary() {
       <div className="mb-8 flex flex-wrap gap-2">
         {FILTER_TAGS.map(t => (
           <button key={t} onClick={() => setFilter(t)}
-            className="rounded-full px-4 py-1.5 text-xs font-semibold transition border"
+            className="tp-meta rounded-full px-4 py-2 font-semibold transition border"
             style={filter === t ? { background: 'var(--brand-navy-900)', color: '#fff', borderColor: 'var(--brand-navy-900)' } : { background: 'white', color: 'var(--ink-700)', borderColor: 'var(--ink-200)' }}>
             {t}
           </button>
@@ -153,7 +153,7 @@ export default function CreatorLibrary() {
       {loading ? (
         <SkGrid count={3} h={200} cols={3} r={20} />
       ) : filtered.length === 0 ? (
-        <div className="rounded-[24px] border border-dashed border-[color:var(--ink-200)] p-12 text-center text-[color:var(--ink-500)]">
+        <div className="tp-body rounded-[24px] border border-dashed border-[color:var(--ink-200)] px-8 py-14 text-center text-[color:var(--ink-500)]">
           No profiles in this category yet. More are being added regularly.
         </div>
       ) : (
@@ -163,13 +163,13 @@ export default function CreatorLibrary() {
               className="rounded-[20px] border border-[color:var(--ink-200)] bg-white p-5 text-left transition hover:shadow-md hover:border-[rgba(31,58,95,0.25)] hover:-translate-y-0.5">
               <div className="mb-3 flex flex-wrap gap-1.5">
                 {p.category?.slice(0, 2).map((c, ci) => (
-                  <span key={ci} className="rounded-full px-2 py-0.5 text-xs font-semibold" style={{ background: 'var(--ink-100)', color: 'var(--brand-navy-900)' }}>{c}</span>
+                  <span key={ci} className="tp-meta rounded-full px-2.5 py-0.5 font-semibold" style={{ background: 'var(--ink-100)', color: 'var(--brand-navy-900)' }}>{c}</span>
                 ))}
                 {p.verified && <BadgeCheck size={14} className="text-[color:var(--success-700)]" aria-label="Verified profile" />}
               </div>
-              <h3 className="font-heading text-lg font-bold text-[color:var(--surface-dark-900)]">{p.name}</h3>
-              <p className="text-xs text-[color:var(--ink-500)] mt-0.5">{p.role}{p.company ? ` · ${p.company}` : ''}</p>
-              <p className="mt-3 text-sm text-[color:var(--ink-700)] line-clamp-3">{p.short_bio}</p>
+              <h3 className="tp-card text-[color:var(--surface-dark-900)]">{p.name}</h3>
+              <p className="tp-meta text-[color:var(--ink-500)] mt-1">{p.role}{p.company ? ` · ${p.company}` : ''}</p>
+              <p className="tp-body mt-3 text-[color:var(--ink-700)] line-clamp-3">{p.short_bio}</p>
             </button>
           ))}
         </div>
@@ -177,8 +177,8 @@ export default function CreatorLibrary() {
       </div>
 
       <div className="mt-10 rounded-[20px] p-5" style={{ background: 'var(--ink-100)' }}>
-        <p className="text-xs font-bold uppercase tracking-wide text-[color:var(--ink-500)] mb-1">About these profiles</p>
-        <p className="text-sm text-[color:var(--ink-700)]">All profiles use publicly available information. Unscripted does not scrape protected social-media content, fabricate histories, or claim private information. Profiles are reviewed periodically for accuracy. Dates shown indicate last review.</p>
+        <p className="tp-eyebrow text-[color:var(--ink-500)] mb-2">About these profiles</p>
+        <p className="tp-prose text-[color:var(--ink-700)]">All profiles use publicly available information. Unscripted does not scrape protected social-media content, fabricate histories, or claim private information. Profiles are reviewed periodically for accuracy. Dates shown indicate last review.</p>
       </div>
     </main>
   );

@@ -99,7 +99,7 @@ export default function AddToCalendarModal({ item, itemType, onClose }) {
         <div className="flex items-center justify-between mb-5">
           <div className="flex items-center gap-2">
             <Calendar size={18} style={{ color: 'var(--brand-navy-900)' }} />
-            <h2 className="font-heading text-lg font-bold text-[color:var(--surface-dark-900)]">Add to Calendar</h2>
+            <h2 className="tp-section text-[color:var(--surface-dark-900)]">Add to Calendar</h2>
           </div>
           <button onClick={onClose}><X size={18} className="text-[color:var(--ink-500)]" /></button>
         </div>
@@ -109,13 +109,13 @@ export default function AddToCalendarModal({ item, itemType, onClose }) {
             <div className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4" style={{ background: 'var(--success-50)' }}>
               <Calendar size={24} className="text-green-600" />
             </div>
-            <p className="font-heading font-bold text-[color:var(--surface-dark-900)] mb-1">Download started!</p>
-            <p className="text-sm text-[color:var(--ink-500)] mb-5">Open the .ics file to add it to Google Calendar, Apple Calendar, Outlook, or any calendar app.</p>
+            <p className="tp-card text-[color:var(--surface-dark-900)] mb-1.5">Download started!</p>
+            <p className="tp-prose mx-auto text-[color:var(--ink-500)] mb-5">Open the .ics file to add it to Google Calendar, Apple Calendar, Outlook, or any calendar app.</p>
             <div className="flex gap-2">
-              <button onClick={() => setDone(false)} className="flex-1 rounded-[10px] border border-[color:var(--ink-200)] py-2.5 text-sm font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)]">
+              <button onClick={() => setDone(false)} className="tp-body flex-1 rounded-[10px] border border-[color:var(--ink-200)] py-3 font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)]">
                 Export Again
               </button>
-              <button onClick={onClose} className="flex-1 rounded-[10px] py-2.5 text-sm font-semibold text-white" style={{ background: 'var(--brand-navy-900)' }}>
+              <button onClick={onClose} className="tp-body flex-1 rounded-[10px] py-3 font-semibold text-white" style={{ background: 'var(--brand-navy-900)' }}>
                 Done
               </button>
             </div>
@@ -124,40 +124,40 @@ export default function AddToCalendarModal({ item, itemType, onClose }) {
           <>
             <div className="space-y-3">
               <label className="block">
-                <span className="text-xs font-semibold text-[color:var(--ink-700)] block mb-1">Event title</span>
+                <span className="tp-meta font-semibold text-[color:var(--ink-700)] block mb-1.5">Event title</span>
                 <input name="title" value={form.title} onChange={ch} className={inputCls} />
               </label>
 
               <label className="block">
-                <span className="text-xs font-semibold text-[color:var(--ink-700)] block mb-1">Description (optional)</span>
+                <span className="tp-meta font-semibold text-[color:var(--ink-700)] block mb-1.5">Description (optional)</span>
                 <textarea name="description" value={form.description} onChange={ch} rows={2}
                   className={inputCls + ' resize-none'} />
               </label>
 
               <div className="grid grid-cols-2 gap-3">
                 <label className="block">
-                  <span className="text-xs font-semibold text-[color:var(--ink-700)] block mb-1">Date</span>
+                  <span className="tp-meta font-semibold text-[color:var(--ink-700)] block mb-1.5">Date</span>
                   <input type="date" name="date" value={form.date} onChange={ch} className={inputCls} />
                 </label>
                 <label className="block">
-                  <span className="text-xs font-semibold text-[color:var(--ink-700)] block mb-1">Timezone</span>
+                  <span className="tp-meta font-semibold text-[color:var(--ink-700)] block mb-1.5">Timezone</span>
                   <select name="timezone" value={form.timezone} onChange={ch} className={inputCls}>
                     {TIMEZONES.map(tz => <option key={tz} value={tz}>{tz}</option>)}
                   </select>
                 </label>
                 <label className="block">
-                  <span className="text-xs font-semibold text-[color:var(--ink-700)] block mb-1">Start time</span>
+                  <span className="tp-meta font-semibold text-[color:var(--ink-700)] block mb-1.5">Start time</span>
                   <input type="time" name="start_time" value={form.start_time} onChange={ch} className={inputCls} />
                 </label>
                 <label className="block">
-                  <span className="text-xs font-semibold text-[color:var(--ink-700)] block mb-1">End time</span>
+                  <span className="tp-meta font-semibold text-[color:var(--ink-700)] block mb-1.5">End time</span>
                   <input type="time" name="end_time" value={form.end_time} onChange={ch} className={inputCls} />
                 </label>
               </div>
 
               <label className="block">
-                <span className="text-xs font-semibold text-[color:var(--ink-700)] block mb-1">
-                  <Clock size={11} className="inline mr-1" />Reminder
+                <span className="tp-meta font-semibold text-[color:var(--ink-700)] block mb-1.5">
+                  <Clock size={13} className="inline mr-1 -mt-px" />Reminder
                 </span>
                 <select name="reminder" value={form.reminder} onChange={e => setForm(f => ({ ...f, reminder: e.target.value === 'null' ? null : e.target.value === 'custom' ? 'custom' : parseInt(e.target.value, 10) }))} className={inputCls}>
                   {REMINDER_OPTIONS.map(o => (
@@ -168,27 +168,27 @@ export default function AddToCalendarModal({ item, itemType, onClose }) {
 
               {form.reminder === 'custom' && (
                 <label className="block">
-                  <span className="text-xs font-semibold text-[color:var(--ink-700)] block mb-1">Minutes before</span>
+                  <span className="tp-meta font-semibold text-[color:var(--ink-700)] block mb-1.5">Minutes before</span>
                   <input type="number" min="1" name="customMinutes" value={form.customMinutes} onChange={ch}
                     placeholder="e.g. 45" className={inputCls} />
                 </label>
               )}
             </div>
 
-            {error && <p className="mt-3 text-xs text-red-600 font-semibold">{error}</p>}
+            {error && <p className="tp-meta mt-3 text-red-600 font-semibold">{error}</p>}
 
-            <div className="mt-5 rounded-[12px] p-3 text-xs text-[color:var(--ink-500)]" style={{ background: 'var(--ink-50)', border: '1px solid var(--ink-200)' }}>
+            <div className="tp-meta mt-5 rounded-[12px] p-3.5 text-[color:var(--ink-500)]" style={{ background: 'var(--ink-50)', border: '1px solid var(--ink-200)' }}>
               Downloads an .ics file compatible with Google Calendar, Apple Calendar, Outlook, and all standard calendar apps.
             </div>
 
             <div className="mt-4 flex gap-3">
-              <button onClick={onClose} className="flex-1 rounded-[10px] border border-[color:var(--ink-200)] py-2.5 text-sm font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)]">
+              <button onClick={onClose} className="tp-body flex-1 rounded-[10px] border border-[color:var(--ink-200)] py-3 font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)]">
                 Cancel
               </button>
               <button onClick={handleDownload} disabled={downloading || !form.date}
-                className="flex-1 flex items-center justify-center gap-2 rounded-[10px] py-2.5 text-sm font-semibold text-white disabled:opacity-60"
+                className="tp-body flex-1 flex items-center justify-center gap-2 rounded-[10px] py-3 font-semibold text-white disabled:opacity-60"
                 style={{ background: 'var(--brand-navy-900)' }}>
-                <Download size={14} />
+                <Download size={15} />
                 {downloading ? 'Preparing…' : 'Download .ics'}
               </button>
             </div>
