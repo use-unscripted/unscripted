@@ -66,6 +66,9 @@ export default function MissionGuideGenerator({ experiment, existingGuides = [],
   const [saving, setSaving] = useState(false);
   const [profile, setProfile] = useState(null);
   const [campusEvent, setCampusEvent] = useState(null);
+  // The picker saying it still has something coming. Generating is never
+  // blocked on it; the button underneath just stops claiming to be ready.
+  const [pickerBusy, setPickerBusy] = useState(true);
   const generatingRef = useRef(false);
   // Which of the two attempts is running. The second one exists because the
   // model drifts on artifact completeness; when it happens the wait roughly
@@ -432,6 +435,11 @@ export default function MissionGuideGenerator({ experiment, existingGuides = [],
   }
 
   // ── Step 1 & 2: Generate UI ───────────────────────────────────────────────
+  //
+  // A student who has already chosen an event is not waiting for anything, even
+  // if the picker is still ranking behind them, so the button stays ordinary.
+  const waitingOnCalendar = pickerBusy && !campusEvent;
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(5,8,22,0.5)' }}>
       <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-[24px] bg-white p-6 sm:p-8">
@@ -456,11 +464,11 @@ export default function MissionGuideGenerator({ experiment, existingGuides = [],
 
         {/* Real campus events: gives the first step a date the student didn't set */}
         <CampusEventPicker
-          profile={profile}
           pathName={experiment.path_name}
           selected={campusEvent}
           onSelect={setCampusEvent}
           disabled={generating}
+          onBusy={setPickerBusy}
         />
 
         {/* Variation picker: only for subsequent guides */}
@@ -503,6 +511,22 @@ export default function MissionGuideGenerator({ experiment, existingGuides = [],
           </div>
         )}
 
+        {/*
+          Still pressable while the calendar is being read. An event is an
+          enhancement and nothing in this product should hold a student at a
+          disabled button. What changes is that the button says what it will
+          actually do if pressed right now, which is the part that was missing:
+          it read "Generate Mission Guide" in exactly the same words it uses
+          when everything is ready, so a student looking at a loading panel had
+          no reason to think waiting bought them anything.
+        */}
+        {waitingOnCalendar && (
+          <p className="tp-meta mb-2.5 text-center text-[color:var(--ink-500)]">
+            Your campus calendar is still loading. Wait for it and your first step gets a real
+            date, set by somebody other than you.
+          </p>
+        )}
+
         <div className="flex gap-3">
           <button onClick={onClose} disabled={generating}
             className="tp-body flex-1 rounded-[10px] border border-[color:var(--ink-200)] py-3 font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)] disabled:opacity-60">
@@ -516,7 +540,9 @@ export default function MissionGuideGenerator({ experiment, existingGuides = [],
             {generating ? (
               <><Loader2 size={15} className="animate-spin" /> Generating...</>
             ) : (
-              <><Wand2 size={15} /> {hasExisting ? 'Generate Another Mission Guide' : 'Generate Mission Guide'}</>
+              <><Wand2 size={15} /> {waitingOnCalendar
+                ? 'Generate without an event'
+                : hasExisting ? 'Generate Another Mission Guide' : 'Generate Mission Guide'}</>
             )}
           </button>
         </div>
