@@ -252,9 +252,14 @@ not fill the ${MAX_RECOMMENDATIONS} slots because they are there.
 ${PLAIN_PROSE_RULES}`;
 }
 
-async function readCampusEvents(days, limit, seriesDates) {
+async function readCampusEvents(days, limit, seriesDates, refresh) {
   try {
-    const response = await base44.functions.invoke('campusEvents', { days, limit, seriesDates });
+    // `refresh` has to go over the wire, not just clear what this browser
+    // remembers. The server keeps a per-school list of its own for a day, and a
+    // student pressing retry is telling us they think what they are looking at
+    // is wrong, and handing them the same stored list is the one thing that
+    // button must not do.
+    const response = await base44.functions.invoke('campusEvents', { days, limit, seriesDates, refresh });
     const data = response?.data ?? response;
     if (!data || !Array.isArray(data.events)) {
       return { status: 'feed_error', events: [], college: '' };
@@ -292,7 +297,7 @@ export async function fetchCampusEvents({
   // that failed look the same from here, and only one of them is worth keeping.
   if (refresh) cache.clear();
 
-  const pending = cached(key, FEED_TTL_MS, () => readCampusEvents(days, limit, seriesDates));
+  const pending = cached(key, FEED_TTL_MS, () => readCampusEvents(days, limit, seriesDates, refresh));
   const data = await pending;
   if (data?.status === 'feed_error') cache.delete(key);
   return data;

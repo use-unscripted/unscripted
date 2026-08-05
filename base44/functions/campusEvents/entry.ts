@@ -4262,7 +4262,10 @@ async function submittedFeedFor(base44: any, college: string, userId: string) {
   );
   if (!row) return null;
 
-  return { platform: row.resolved_platform, feedUrl: row.resolved_feed_url };
+  // `submitted` marks this as one student's, not the school's. Nothing about
+  // rendering changes; it stops the shared per-school event cache storing a
+  // list nobody has approved under the school's own id. See `schoolEvents`.
+  return { platform: row.resolved_platform, feedUrl: row.resolved_feed_url, submitted: true };
 }
 
 /**
@@ -4679,6 +4682,12 @@ async function handleCheckFeeds(base44: any, user: any): Promise<Response> {
     let error = '';
     let count = 0;
     try {
+      // `fetchEvents` directly, never `schoolEvents`, and that must not be
+      // "tidied up" later. This check asks whether a feed answers RIGHT NOW; a
+      // cache hit would answer a different question and report a school that
+      // died last week as healthy, which is the exact failure this page exists
+      // to catch.
+      //
       // The store goes in here too, or every scraped school reports as a broken
       // feed on the health page and someone goes looking for a fault that is
       // this call not being given what it needs to read one.
@@ -4936,6 +4945,411 @@ async function handleReviewSubmission(base44: any, user: any, body: any): Promis
   return Response.json({ ok: true, id, review_status: decision, promoted });
 }
 
+// ── One school's events, fetched once for everybody there ───────────────────
+
+/**
+ * How long a stored list is served before the school is asked again.
+ *
+ * 24 hours, and it is a decision rather than a tuning knob: if anyone at a
+ * college has pulled that calendar today, we do not pull it again today. One
+ * constant, so changing it is a one-line edit.
+ *
+ * What a day costs, said plainly, because the rule this whole file is built on
+ * is that sending a student to an empty room is worse than showing nothing: an
+ * event CANCELLED after we stored it goes on being offered for up to a day.
+ * Nothing here can see a cancellation, since seeing one means asking the
+ * school. That is an accepted trade and not an oversight.
+ *
+ * It is the only staleness this introduces. Everything else is still caught at
+ * read time: the upcoming-window filter runs against the request's own clock,
+ * so an event that has simply happened is dropped out of a day-old list exactly
+ * as it is out of a fresh one.
+ */
+const EVENT_CACHE_TTL_MS = 24 * 3600000;
+
+/**
+ * Most events one row keeps, soonest first.
+ *
+ * Measured against real feeds rather than guessed. A 60 day window is 100 to
+ * 200 events on every hosted platform we read, because each of those adapters
+ * asks for one page and stops: the largest was 200 events at 185kb. The
+ * unbounded path is iCal, and four of the 38 .ics feeds our sweep resolved ran
+ * well past that, at 690, 775, 786 and 1064 events and up to 466kb serialized.
+ *
+ * 400 with descriptions cut to 500 characters holds the worst of those to
+ * 237kb and does not touch a single hosted school, none of which reaches 400.
+ *
+ * The cap is taken off the FORWARD end, and that is not a detail. Those event
+ * counts are mostly history: `fetchEvents` has no lower bound anywhere, so an
+ * .ics file hands back everything the school has ever published. On all four of
+ * those feeds event number 400 by date is years in the past, so a cap applied
+ * to the raw list keeps only history and throws away every event a student
+ * could still attend. The first version of this did exactly that and was caught
+ * in review before it merged: measured against those four feeds over 60 days,
+ * all four went from 7 to 20 live events down to zero for the second student.
+ * Clearly past events are dropped first now, and only then is the cap applied.
+ *
+ * What the cut costs after that, on those four schools only: they publish fewer
+ * than 400 events that are still ahead of the window, so nothing is lost today.
+ * If one ever does pass 400, the events beyond it are the LATEST ones, they are
+ * missing from the stored list however well they would have scored, and they
+ * come back into range as the window advances. `truncated` is set and the
+ * school is named in the log when that happens, so a cap that starts reaching
+ * ordinary schools is visible rather than silent.
+ */
+const EVENT_CACHE_MAX_EVENTS = 400;
+
+/**
+ * How far back a stored list is allowed to reach before the cap is applied.
+ *
+ * A coarse floor, and deliberately COARSER than the read-time window, because
+ * its only job is to stop years of history eating the 400 slots that upcoming
+ * events need. It must never remove something `stillUpcoming` would have kept,
+ * so it is written to be strictly the looser of the two:
+ *
+ *   `stillUpcoming` keeps an event while `max(start, end)` is no more than 24
+ *   hours behind now, since the widest grace it grants is one whole day. This
+ *   drops nothing until `max(start, end)` is 48 hours behind. Everything the
+ *   read-time filter keeps therefore survives this, with a full day to spare,
+ *   and the two never have to be kept in step: widening the read window by
+ *   anything under a day cannot make this floor bite.
+ *
+ * An event whose dates cannot be read at all is KEPT, again in the looser
+ * direction. The read-time filter refuses it anyway, so it costs a cap slot and
+ * nothing else, and guessing the other way would mean a parser change quietly
+ * deleting real events from every stored list.
+ *
+ * Dropping these loses a cached reader nothing, which is why it does not set
+ * `truncated`: every one of them fails the read-time window in the same request.
+ */
+const EVENT_CACHE_PAST_FLOOR_MS = 48 * 3600000;
+
+/**
+ * Every adapter already cuts a description to 600 characters, so this only
+ * trims the last 100 of the longest ones: about 4% of the payload, measured.
+ * Scoring reads far less than that, and so does the ranking prompt the client
+ * hands the model.
+ */
+const EVENT_CACHE_MAX_DESCRIPTION = 500;
+
+/** Enough rows to find the newest one even after a race wrote a duplicate. */
+const EVENT_CACHE_SCAN = 5;
+
+/**
+ * The two request parameters that change what a fetch returns, as whole numbers
+ * inside the ranges this function actually honours.
+ *
+ * Rounded here rather than trusted, because these two values name the row. The
+ * handler clamps `days` but does not floor it, and `seriesDates` is only
+ * clamped further down inside the recurrence expansion, so `{days: 45.0001,
+ * seriesDates: 1.5}` off the wire read as an ordinary request and mint a row of
+ * their own. Any signed-in student could then ask for a few thousand of those
+ * and fill this entity with 237kb rows that nothing deletes.
+ *
+ * Whole numbers make that impossible: every request lands on one of a handful
+ * of keys. They are also what gets fetched, not just what gets stored, so the
+ * key never describes a window other than the one in the row.
+ */
+function eventCacheWindow(days: number, seriesDates: number) {
+  return {
+    days: Math.min(Math.max(Math.floor(Number(days) || DEFAULT_DAYS), 1), MAX_DAYS),
+    // The same clamp `expandRecurrence` applies, moved forward so the key and
+    // the fetch cannot disagree about it.
+    seriesDates: Math.min(
+      Math.max(Math.floor(Number(seriesDates) || RECURRENCE_DEFAULT_DATES), 1),
+      RECURRENCE_MAX_DATES,
+    ),
+  };
+}
+
+/**
+ * The two request parameters that change what a fetch returns.
+ *
+ * Only 45:1 and 60:1 are asked for today, so this is two rows per school.
+ */
+function eventCacheKey(days: number, seriesDates: number): string {
+  return `${days}:${seriesDates}`;
+}
+
+/** Milliseconds, or NaN for anything that is not a readable stamp. */
+function stampOf(value: unknown): number {
+  return new Date(String(value || '')).getTime();
+}
+
+/**
+ * Has this event finished long enough ago that no reader could still see it?
+ *
+ * The end is consulted as well as the start, and combined with `Math.max` for
+ * the same reason `stillUpcoming` does it: an end is the least reliable field
+ * in every feed here, so it is only ever allowed to keep an event alive, never
+ * to bury one early. A three-day fair that started last week is still current.
+ */
+function longFinished(event: NormalizedEvent, now: number): boolean {
+  const at = Math.max(stampOf(event?.start) || -Infinity, stampOf(event?.end) || -Infinity);
+  return Number.isFinite(at) && at < now - EVENT_CACHE_PAST_FLOOR_MS;
+}
+
+/**
+ * The stored list for this school and window, if there is a usable one.
+ *
+ * Four ways to miss, all of them silent and all of them cheap: no row, a row
+ * pointing at a different feed than the one this request would read, a row
+ * older than the TTL, or a row holding an empty list. A miss costs one entity
+ * read and then the fetch that would have happened anyway.
+ *
+ * The empty one is the odd-looking case, and it is deliberate. The row is still
+ * WRITTEN empty, so a school whose calendar has genuinely emptied out stops
+ * being served last week's list within one fetch. But an empty list is not
+ * served BACK, because empty is also what a feed answers when something
+ * transient is wrong with it and nothing here can tell those apart: EMS answers
+ * 200 with no events when it wants a session cookie it did not get, and Iowa
+ * State's WAF does the same to us. Serving that from the row would take one
+ * unlucky request and give it to the whole school for a day. Re-asking costs a
+ * fetch on a school that has nothing, which is the cheap direction to be wrong
+ * in, and the student is not left with an empty page they cannot get out of:
+ * the empty state has no retry button, so nothing else would clear it.
+ */
+// deno-lint-ignore no-explicit-any
+async function readEventCache(
+  // deno-lint-ignore no-explicit-any
+  base44: any,
+  // deno-lint-ignore no-explicit-any
+  university: any,
+  cacheKey: string,
+  feedUrl: string,
+): Promise<NormalizedEvent[] | null> {
+  if (!university?.id) return null;
+
+  // deno-lint-ignore no-explicit-any
+  let rows: any[] = [];
+  try {
+    rows = await base44.asServiceRole.entities.CampusEventCache.filter(
+      { university_id: university.id, cache_key: cacheKey },
+      '-created_date',
+      EVENT_CACHE_SCAN,
+    );
+  } catch (err) {
+    // Never costs a student their events, but say so out loud. "The entity has
+    // not synced yet" and "RLS is refusing the service role" are the same
+    // silence otherwise, and under the second one every school is re-fetched on
+    // every page load exactly as if this feature had never shipped.
+    console.error('[campusEvents] could not read the event cache', {
+      university_id: university.id,
+      cache_key: cacheKey,
+      error: err instanceof Error ? err.message : String(err),
+    });
+    return null;
+  }
+
+  // Newest by when the school was actually asked, not by row age. Two
+  // simultaneous misses can leave a duplicate behind, and after that the older
+  // row may well be the one that keeps being refreshed.
+  const usable = (rows || [])
+    // deno-lint-ignore no-explicit-any
+    .filter((row: any) => row?.feed_url === feedUrl && Array.isArray(row?.events))
+    // deno-lint-ignore no-explicit-any
+    .sort((a: any, b: any) => (stampOf(b.fetched_at) || 0) - (stampOf(a.fetched_at) || 0))[0];
+  if (!usable) return null;
+
+  const age = Date.now() - stampOf(usable.fetched_at);
+  // A row that cannot say when it was fetched is treated as stale, and so is
+  // one stamped in the future: guessing in either row's favour serves a student
+  // a calendar nothing can vouch for.
+  if (!Number.isFinite(age) || age < 0 || age > EVENT_CACHE_TTL_MS) return null;
+
+  // An empty list is a miss. See above: it is written so it can supersede a
+  // stale good list, and not read back so one bad minute at a school cannot
+  // become that school's whole day.
+  if (!usable.events.length) return null;
+
+  return usable.events as NormalizedEvent[];
+}
+
+/**
+ * Store what the school just gave us, for everybody else there.
+ *
+ * Updates the school's existing row for this window rather than appending: a
+ * calendar is a current state, and nothing here is worth keeping once it is
+ * superseded. Two simultaneous misses will both fetch and both write, which is
+ * left alone deliberately. Locking would cost every request to save a duplicate
+ * fetch that only happens on the first hit of a cold school, and reads take the
+ * newest row, so a duplicate cannot break one.
+ *
+ * A failure here must never cost the student the events this request already
+ * has in hand, so everything is wrapped and the caller is told nothing.
+ */
+async function writeEventCache(
+  // deno-lint-ignore no-explicit-any
+  base44: any,
+  // deno-lint-ignore no-explicit-any
+  university: any,
+  cacheKey: string,
+  feedUrl: string,
+  events: NormalizedEvent[],
+): Promise<void> {
+  if (!university?.id) return;
+
+  // History goes first, and it has to be first, or the cap keeps the wrong end
+  // of the list. Nothing in `fetchEvents` has a lower bound: `withinWindow`
+  // tests only how far AHEAD an event is, so an .ics file answers with the
+  // school's entire published past as well as its future. On the largest feeds
+  // we read, hundreds of events sort ahead of today. Cap that list as it stands
+  // and the row holds nothing but old news.
+  //
+  // The floor is deliberately coarse and deliberately looser than the read-time
+  // window, so this can only ever drop events that request would have dropped
+  // anyway. See EVENT_CACHE_PAST_FLOOR_MS.
+  const now = Date.now();
+  const current = events.filter(event => !longFinished(event, now));
+
+  // Sorted on the date as written, never on a parsed instant. Several feeds
+  // hand over a wall clock with no zone at all, and turning those into moments
+  // to sort them means guessing an offset, which is the one thing this file
+  // refuses to do anywhere else. A string compare puts a bare day ahead of that
+  // same day's timed events, which is the right end of the list to be exact
+  // about anyway.
+  const soonestFirst = [...current]
+    .sort((a, b) => String(a.start).localeCompare(String(b.start)))
+    .slice(0, EVENT_CACHE_MAX_EVENTS)
+    .map(event => (
+      String(event.description || '').length > EVENT_CACHE_MAX_DESCRIPTION
+        ? { ...event, description: String(event.description).slice(0, EVENT_CACHE_MAX_DESCRIPTION) }
+        : event
+    ));
+
+  // Measured against the list AFTER the floor, not against everything the feed
+  // sent. Dropping events that finished two days ago costs a reader nothing,
+  // since the same request's window filter refuses them too, and counting that
+  // as truncation would have this fire on every large .ics school forever and
+  // mean nothing when it did. `truncated` says one thing only: real upcoming
+  // events did not fit.
+  const truncated = soonestFirst.length < current.length;
+  if (truncated) {
+    // Named, not counted silently. The cap was measured against four unusually
+    // large .ics schools; the day it starts reaching an ordinary one is the day
+    // it needs raising, and this line is the only way anyone finds out.
+    console.error('[campusEvents] event cache truncated', {
+      college: university.canonical_name || '',
+      cache_key: cacheKey,
+      feed_url: feedUrl,
+      kept: soonestFirst.length,
+      of: current.length,
+    });
+  }
+
+  const row = {
+    university_id: university.id,
+    cache_key: cacheKey,
+    feed_url: feedUrl,
+    fetched_at: new Date().toISOString(),
+    event_count: soonestFirst.length,
+    events: soonestFirst,
+    truncated,
+  };
+
+  try {
+    const db = base44.asServiceRole.entities.CampusEventCache;
+    const existing = await db.filter(
+      { university_id: university.id, cache_key: cacheKey },
+      '-created_date',
+      1,
+    );
+    if (existing?.[0]?.id) await db.update(existing[0].id, row);
+    else await db.create(row);
+  } catch (err) {
+    console.error('[campusEvents] could not store the event cache', {
+      college: university.canonical_name || '',
+      cache_key: cacheKey,
+      error: err instanceof Error ? err.message : String(err),
+    });
+  }
+}
+
+/**
+ * The school's whole calendar: off the stored list if it is current, off the
+ * school's own server if it is not.
+ *
+ * Everything above the per-student layer and nothing below it. What comes back
+ * is the same school-wide list `fetchEvents` returns either way, so the caller
+ * filters, scores and slices it per request exactly as it always did.
+ *
+ * Two things a hit deliberately does NOT do:
+ *
+ *   it does not record feed health. Nothing was observed, and writing "fine"
+ *     off a stored list is a fabricated observation on the one surface whose
+ *     entire job is to notice a school going quiet.
+ *   it does not touch the upcoming-window filter, which is the caller's and
+ *     runs against the request's own clock. That is what stops a day-old list
+ *     offering an event that has already happened.
+ *
+ * `refresh` is the student pressing retry. They are looking at something they
+ * believe is wrong, so handing them the same stored list is the one thing this
+ * must not do: it skips the read, fetches live, and refreshes the row.
+ *
+ * A feed the student pasted in themselves and nobody has approved yet is read
+ * live and never stored. See below.
+ *
+ * A fetch failure is thrown rather than swallowed, so the caller can record the
+ * health failure and answer the student. The success-path health record lives
+ * here because a hit has to be able to skip it.
+ */
+export async function schoolEvents(
+  // deno-lint-ignore no-explicit-any
+  base44: any,
+  // deno-lint-ignore no-explicit-any
+  university: any,
+  feed: { platform: string; feedUrl: string; submitted?: boolean },
+  askedDays: number,
+  askedSeriesDates: number,
+  refresh = false,
+): Promise<{ events: NormalizedEvent[]; cached: boolean }> {
+  // Whole numbers, and the same ones the fetch below uses, so a row can never
+  // be keyed on a window other than the one it holds. See eventCacheWindow.
+  const { days, seriesDates } = eventCacheWindow(askedDays, askedSeriesDates);
+  const cacheKey = eventCacheKey(days, seriesDates);
+
+  if (!refresh) {
+    const stored = await readEventCache(base44, university, cacheKey, feed.feedUrl);
+    if (stored) return { events: stored, cached: true };
+  }
+
+  const events = await fetchEvents(
+    feed.platform,
+    feed.feedUrl,
+    days,
+    seriesDates,
+    scrapedStore(base44),
+  );
+
+  // Judged on what the calendar actually held, not on what survives ranking:
+  // the caller cuts this list to one student's interests and to their limit, so
+  // a healthy feed can legitimately leave them with nothing. An empty list HERE
+  // is the feed itself having nothing, which is the failure worth recording.
+  //
+  // Awaited, not fired and forgotten: this runtime can tear the request down
+  // the moment we return, and a health record that loses the race is worse than
+  // none, because it reads as "still fine" on the page whose job is to say
+  // otherwise.
+  await recordFeedHealth(base44, university, events.length ? '' : 'Returned no upcoming events');
+
+  // One student's unapproved paste does not get to be the school's answer.
+  //
+  // `resolveFeed` hands back a still-pending submission as the feed while ALSO
+  // handing back the school's University row, because the submitter is served
+  // their own feed immediately and everybody else keeps the school's. Storing
+  // that under the school's id would write one student's link into the shared
+  // row, which is the exact blast radius `submittedFeedFor` was written to
+  // avoid. Reads guard on `feed_url`, so nothing leaks out of it, but the row
+  // ends up thrashing between two feeds and the cache never holds at the one
+  // school where somebody bothered to help us. Approval writes the URL onto the
+  // University row, and from then on it is stored like any other feed.
+  if (!feed.submitted) {
+    await writeEventCache(base44, university, cacheKey, feed.feedUrl, events);
+  }
+
+  return { events, cached: false };
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -4999,13 +5413,17 @@ Deno.serve(async (req) => {
 
     let normalized: NormalizedEvent[];
     try {
-      normalized = await fetchEvents(
-        feed.platform,
-        feed.feedUrl,
+      // The school-wide list, off the shared cache where there is a current
+      // one. Everything below this line stays per student and per request.
+      // `refresh` is the retry button and skips the cache entirely.
+      ({ events: normalized } = await schoolEvents(
+        base44,
+        university,
+        feed,
         days,
         seriesDates,
-        scrapedStore(base44),
-      );
+        Boolean(body.refresh),
+      ));
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Calendar feed unavailable';
       // Awaited, not fired and forgotten: this runtime can tear the request
@@ -5033,15 +5451,11 @@ Deno.serve(async (req) => {
       .sort((a, b) => (b.match_score - a.match_score) || (new Date(a.start).getTime() - new Date(b.start).getTime()))
       .slice(0, limit);
 
-    // Judged on what the calendar actually held, not on what survived ranking:
-    // `events` has been cut to this student's interests and to `limit`, so a
-    // healthy feed can legitimately leave it empty. `normalized` empty is the
-    // feed itself having nothing, which is the failure worth recording.
-    await recordFeedHealth(
-      base44,
-      university,
-      normalized.length ? '' : 'Returned no upcoming events',
-    );
+    // Health for a fetch that worked is recorded inside `schoolEvents`, next to
+    // the fetch it is a record of, because a cache hit has to be able to skip
+    // it: nothing was observed on a hit, and writing "fine" off a stored list
+    // would be a fabricated observation. A fetch that FAILED is still recorded
+    // above, where the error is.
 
     return Response.json({
       status: events.length ? 'ok' : 'no_matches',

@@ -84,6 +84,10 @@ export default function useCampusEvents({ days = 60, limit = 40 } = {}) {
   const [rankingReady, setRankingReady] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
   const userId = useRef('');
+  // Which reload the feed effect below has already served. Anything past the
+  // first is the student pressing "try again", and that has to reach the server
+  // as a real refresh. See the effect.
+  const servedReload = useRef(0);
 
   const retry = useCallback(() => setReloadKey(key => key + 1), []);
 
@@ -164,8 +168,18 @@ export default function useCampusEvents({ days = 60, limit = 40 } = {}) {
     let cancelled = false;
     setState(prev => ({ ...prev, refreshing: true }));
 
+    // The server keeps its own copy of the school's calendar for a day, shared
+    // by everyone there, so clearing what this browser remembers is no longer
+    // the whole of a retry. A student pressing "try again" is telling us they
+    // think what they are looking at is wrong, and handing them back the same
+    // stored list is the one thing that button must not do. Ordinary renders
+    // stay off it, or every visit would make the school fetch its own calendar
+    // again and the shared copy would never be worth having.
+    const isRetry = reloadKey !== servedReload.current;
+    servedReload.current = reloadKey;
+
     (async () => {
-      const feed = await fetchCampusEvents({ days, limit });
+      const feed = await fetchCampusEvents({ days, limit, refresh: isRetry });
       if (cancelled) return;
 
       const events = feed.events || [];
