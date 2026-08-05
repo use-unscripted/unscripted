@@ -1,6 +1,6 @@
 /**
  * Real-time password requirement checklist + strength indicator.
- * Purely presentational — no state, no storage.
+ * Purely presentational: no state, no storage.
  */
 import React from "react";
 import { Check, X } from "lucide-react";
@@ -22,7 +22,7 @@ function StrengthBar({ password, email }) {
           />
         ))}
       </div>
-      <p className="text-xs font-medium" style={{ color }}>{label}</p>
+      <p className="tp-meta" style={{ color }}>{label}</p>
     </div>
   );
 }
@@ -42,7 +42,7 @@ export default function PasswordChecklist({ password, email = "", confirmPasswor
 
   return (
     <div className="mt-2 space-y-1.5" aria-label="Password requirements">
-      <p className="text-xs font-semibold text-[color:var(--ink-700)] mb-1">Your password must include:</p>
+      <p className="tp-meta font-semibold text-[color:var(--ink-700)] mb-1">Your password must include:</p>
       {REQUIREMENTS.map(({ key, text }) => {
         const met = results[key];
         return (
@@ -57,7 +57,7 @@ export default function PasswordChecklist({ password, email = "", confirmPasswor
                 : <X className="w-2.5 h-2.5 text-[color:var(--ink-400)]" strokeWidth={3} />
               }
             </span>
-            <span className={`text-xs ${met ? "text-[color:var(--success-700)] line-through decoration-[#22c55e]" : "text-[color:var(--ink-500)]"}`}>
+            <span className={`tp-meta ${met ? "text-[color:var(--success-700)] line-through decoration-[#22c55e]" : "text-[color:var(--ink-500)]"}`}>
               {text}
             </span>
           </div>
@@ -67,7 +67,7 @@ export default function PasswordChecklist({ password, email = "", confirmPasswor
       <StrengthBar password={password} email={email} />
 
       {showConfirmError && (
-        <p className="text-xs text-destructive font-medium mt-1" role="alert">
+        <p className="tp-meta text-destructive mt-1" role="alert">
           Passwords do not match.
         </p>
       )}

@@ -26,10 +26,10 @@ export default function ConclusionGate({ availability, experiment, onEndEarly })
 
   return (
     <section className="rounded-[20px] bg-white p-5 sm:p-6" style={{ border: '1px solid var(--border-light)' }}>
-      <h2 className="font-heading text-lg font-bold" style={{ color: 'var(--text-primary)' }}>
+      <h2 className="tp-section" style={{ color: 'var(--text-primary)' }}>
         Reflection opens once the work is done
       </h2>
-      <p className="mt-2 text-sm leading-6" style={{ color: 'var(--text-secondary)' }}>
+      <p className="tp-lead mt-2.5" style={{ color: 'var(--text-secondary)' }}>
         {availability.reason === 'no_missions'
           ? 'This experiment has no missions yet, so there is nothing to conclude. Add or generate missions first.'
           : `${availability.openCount} mission${availability.openCount === 1 ? '' : 's'} still open on ${experiment.title}. Finish them, or end this experiment early and tell us why.`}
@@ -70,7 +70,7 @@ export default function ConclusionGate({ availability, experiment, onEndEarly })
             style={{ borderColor: 'var(--border-light)' }}
           />
           {error && (
-            <p className="mt-2 flex items-start gap-1.5 text-xs font-semibold text-red-600" role="alert">
+            <p className="tp-meta mt-2 flex items-start gap-1.5 font-semibold text-red-600" role="alert">
               <AlertCircle size={13} className="mt-0.5 shrink-0" />{error}
             </p>
           )}

@@ -12,7 +12,7 @@
    - a contents block, since a reader is usually looking for one clause
    - <Conspicuous> for the warranty disclaimer and liability cap. UCC § 2-316
      requires those to be conspicuous to be enforceable, which is why they are
-     the only blocks set in caps — if the whole document shouted, none of it
+     the only blocks set in caps: if the whole document shouted, none of it
      would be conspicuous.
 
    Type colour is --text-secondary throughout. --text-muted is a legible
@@ -45,7 +45,7 @@ export function LegalPage({ title, effective, updated, notice, lede, contents, c
       </header>
 
       <main className="mx-auto max-w-3xl px-6 py-14">
-        <h1 className="font-heading text-4xl font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>
+        <h1 className="tp-page" style={{ color: 'var(--text-primary)' }}>
           {title}
         </h1>
 
@@ -74,7 +74,7 @@ export function LegalPage({ title, effective, updated, notice, lede, contents, c
             className="mt-10 rounded-2xl border p-6"
             style={{ borderColor: 'var(--border-light)', background: 'var(--background-secondary)' }}
           >
-            <h2 className="text-xs font-bold uppercase tracking-[.16em]" style={{ color: 'var(--brand-gold-700)' }}>
+            <h2 className="tp-meta font-bold uppercase tracking-[.16em]" style={{ color: 'var(--brand-gold-700)' }}>
               Contents
             </h2>
             {/* Columns, not a grid: a reader scans a contents list down one
@@ -137,7 +137,7 @@ export function P({ children }) {
   );
 }
 
-/** Lettered enumeration — the convention for obligations and carve-outs. */
+/** Lettered enumeration, the convention for obligations and carve-outs. */
 export function Enum({ items }) {
   return (
     <ol className="list-[lower-alpha] space-y-2 pl-9 marker:font-semibold marker:text-[var(--brand-gold-700)]">
@@ -167,7 +167,7 @@ export function Defs({ items }) {
 }
 
 /**
- * Conspicuous block — caps, bold, boxed, contrasting rule. Reserved for the
+ * Conspicuous block: caps, bold, boxed, contrasting rule. Reserved for the
  * warranty disclaimer and the liability limitation, which are unenforceable
  * if a reasonable person would not notice them.
  */
@@ -204,7 +204,7 @@ export function DataTable({ caption, columns, rows }) {
               <th
                 key={c}
                 scope="col"
-                className="border-b-2 px-3 py-2 align-bottom text-xs font-bold uppercase tracking-wide"
+                className="tp-meta border-b-2 px-3 py-2 align-bottom font-bold uppercase tracking-wide"
                 style={{ borderColor: 'var(--brand-navy-900)', color: 'var(--text-primary)' }}
               >
                 {c}

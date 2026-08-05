@@ -1,5 +1,5 @@
 /* ──────────────────────────────────────────────────────────────────────────
-   SiteFooter — the public footer.
+   SiteFooter: the public footer.
 
    Replaces the one-line copyright that named no entity and linked nowhere.
    Two things it has to do beyond looking finished: give a visitor a route to
@@ -48,7 +48,7 @@ export default function SiteFooter() {
           © {new Date().getFullYear()} {PRODUCT}. Write your unscripted path.
         </p>
 
-        <p className="max-w-2xl text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+        <p className="tp-meta max-w-2xl" style={{ color: 'var(--text-secondary)' }}>
           {PRODUCT} is an independent product. It is not affiliated with, endorsed by, or
           sponsored by any university, and it does not provide career, academic, financial,
           legal or medical advice.

@@ -1,6 +1,6 @@
 /**
  * Outreach, inside the mission that requires it. Never a separate CRM.
- * Links are either a confirmed direct profile or a LinkedIn search — we never
+ * Links are either a confirmed direct profile or a LinkedIn search. We never
  * invent an /in/ URL.
  */
 import { useState } from 'react';
@@ -17,7 +17,7 @@ function StatusRow({ contact, onChange }) {
           key={s.key}
           type="button"
           onClick={() => onChange(s.key)}
-          className="rounded-full px-2.5 py-1 text-[11px] font-bold"
+          className="tp-meta rounded-full px-3 py-1.5 font-bold"
           style={current === s.key
             ? { background: 'var(--brand-navy-900)', color: '#fff' }
             : { background: '#fff', color: 'var(--text-secondary)', border: '1px solid var(--border-light)' }}
@@ -34,30 +34,30 @@ function ContactCard({ contact, onStatus, onNotes }) {
   const questions = contact.questions_to_ask || [];
   return (
     <div className="rounded-[12px] p-4" style={{ background: '#fff', border: '1px solid var(--border-light)' }}>
-      <p className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>{contact.name}</p>
-      <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+      <p className="tp-body font-bold" style={{ color: 'var(--text-primary)' }}>{contact.name}</p>
+      <p className="tp-meta" style={{ color: 'var(--text-muted)' }}>
         {[contact.role || contact.archetype, contact.company].filter(Boolean).join(' · ')}
       </p>
 
       <a href={link.href} target="_blank" rel="noopener noreferrer"
-        className="mt-2 inline-flex items-center gap-1.5 text-xs font-bold" style={{ color: 'var(--brand-navy-700)' }}>
+        className="tp-meta mt-2.5 inline-flex items-center gap-1.5 font-bold" style={{ color: 'var(--brand-navy-700)' }}>
         {link.verified ? <ShieldCheck size={13} /> : <Search size={13} />} {link.label} <ExternalLink size={11} />
       </a>
 
       {contact.reason_for_contact && (
-        <p className="mt-2 text-xs leading-5" style={{ color: 'var(--text-secondary)' }}>
+        <p className="tp-body mt-2.5" style={{ color: 'var(--text-secondary)' }}>
           <strong>Purpose:</strong> {contact.reason_for_contact}
         </p>
       )}
       {contact.suggested_message && (
-        <p className="mt-2 rounded-[8px] p-2 text-xs leading-5" style={{ background: 'var(--background-secondary)', color: 'var(--text-secondary)' }}>
+        <p className="tp-body mt-2.5 rounded-[8px] p-2.5" style={{ background: 'var(--background-secondary)', color: 'var(--text-secondary)' }}>
           {contact.suggested_message}
         </p>
       )}
       {questions.length > 0 && (
         <ul className="mt-2 space-y-1">
           {questions.map((q, i) => (
-            <li key={i} className="text-xs leading-5" style={{ color: 'var(--text-secondary)' }}>· {q}</li>
+            <li key={i} className="tp-body" style={{ color: 'var(--text-secondary)' }}>· {q}</li>
           ))}
         </ul>
       )}
@@ -69,7 +69,7 @@ function ContactCard({ contact, onStatus, onNotes }) {
         defaultValue={contact.notes || ''}
         onBlur={e => onNotes(e.target.value)}
         placeholder="Notes from the conversation…"
-        className="mt-3 w-full rounded-[8px] border px-2.5 py-2 text-xs outline-none"
+        className="mt-3 w-full rounded-[8px] border px-3 py-2 text-sm outline-none"
         style={{ borderColor: 'var(--border-light)', background: 'var(--background-secondary)' }}
       />
     </div>
@@ -103,23 +103,23 @@ export default function MissionOutreachPanel({ mission, experiment, path, contac
       value={form[name]}
       onChange={e => setForm(f => ({ ...f, [name]: e.target.value }))}
       placeholder={placeholder}
-      className="w-full rounded-[8px] border px-2.5 py-2 text-xs outline-none"
+      className="w-full rounded-[8px] border px-3 py-2 text-sm outline-none"
       style={{ borderColor: 'var(--border-light)', background: '#fff' }}
     />
   );
 
   return (
     <div className="mt-4 rounded-[12px] p-4" style={{ background: 'var(--background-secondary)', border: '1px solid var(--border-light)' }}>
-      <p className="text-[11px] font-bold uppercase tracking-[.1em]" style={{ color: 'var(--brand-navy-700)' }}>
+      <p className="tp-eyebrow" style={{ color: 'var(--brand-navy-700)' }}>
         Outreach required for this mission
       </p>
       {mission.outreach_archetype && (
-        <p className="mt-1 text-sm" style={{ color: 'var(--text-primary)' }}>
+        <p className="tp-body mt-1.5" style={{ color: 'var(--text-primary)' }}>
           Who to contact: <strong>{mission.outreach_archetype}</strong>
         </p>
       )}
       {mission.outreach_purpose && (
-        <p className="mt-1 text-xs leading-5" style={{ color: 'var(--text-secondary)' }}>{mission.outreach_purpose}</p>
+        <p className="tp-body mt-1.5" style={{ color: 'var(--text-secondary)' }}>{mission.outreach_purpose}</p>
       )}
 
       <div className="mt-3 space-y-2">
@@ -132,7 +132,7 @@ export default function MissionOutreachPanel({ mission, experiment, path, contac
           />
         ))}
         {contacts.length === 0 && !adding && (
-          <p className="text-xs italic" style={{ color: 'var(--text-muted)' }}>
+          <p className="tp-meta italic" style={{ color: 'var(--text-muted)' }}>
             No one added yet. Add the person (or the role) you plan to speak with.
           </p>
         )}
@@ -144,7 +144,7 @@ export default function MissionOutreachPanel({ mission, experiment, path, contac
           {field('role', 'Role')}
           {field('company', 'Company')}
           {field('profile_url', 'LinkedIn profile URL, only if you have confirmed it')}
-          <label className="flex items-center gap-2 text-xs" style={{ color: 'var(--text-secondary)' }}>
+          <label className="tp-meta flex items-center gap-2" style={{ color: 'var(--text-secondary)' }}>
             <input
               type="checkbox"
               checked={form.profile_verified}
@@ -153,16 +153,16 @@ export default function MissionOutreachPanel({ mission, experiment, path, contac
             I confirmed this profile is the right person
           </label>
           <div className="flex gap-2">
-            <button onClick={() => setAdding(false)} className="flex-1 rounded-[8px] border py-2 text-xs font-semibold"
+            <button onClick={() => setAdding(false)} className="tp-meta flex-1 rounded-[8px] border py-2.5 font-semibold"
               style={{ borderColor: 'var(--border-light)', color: 'var(--text-primary)' }}>Cancel</button>
             <button onClick={add} disabled={busy}
-              className="flex-1 rounded-[8px] py-2 text-xs font-bold text-white disabled:opacity-60"
+              className="tp-meta flex-1 rounded-[8px] py-2.5 font-bold text-white disabled:opacity-60"
               style={{ background: 'var(--brand-navy-900)' }}>{busy ? 'Saving…' : 'Save contact'}</button>
           </div>
         </div>
       ) : (
         <button onClick={() => setAdding(true)}
-          className="mt-3 inline-flex items-center gap-1.5 text-xs font-bold" style={{ color: 'var(--brand-navy-700)' }}>
+          className="tp-meta mt-3 inline-flex items-center gap-1.5 py-1 font-bold" style={{ color: 'var(--brand-navy-700)' }}>
           <Plus size={13} /> Add someone to contact
         </button>
       )}

@@ -16,8 +16,8 @@ const STATUS = {
 function Block({ label, children }) {
   return (
     <div className="mt-3">
-      <p className="text-[11px] font-bold uppercase tracking-[.1em]" style={{ color: 'var(--text-muted)' }}>{label}</p>
-      <div className="mt-1 text-sm leading-6" style={{ color: 'var(--text-secondary)' }}>{children}</div>
+      <p className="tp-eyebrow" style={{ color: 'var(--text-muted)' }}>{label}</p>
+      <div className="tp-body mt-1.5" style={{ color: 'var(--text-secondary)' }}>{children}</div>
     </div>
   );
 }
@@ -34,14 +34,14 @@ export default function MissionItem({ mission, experiment, path, contacts, proof
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="rounded-full px-2 py-0.5 text-[11px] font-bold" style={{ background: s.bg, color: s.text }}>{s.label}</span>
+            <span className="tp-meta rounded-full px-2.5 py-1 font-bold" style={{ background: s.bg, color: s.text }}>{s.label}</span>
             {mission.outreach_required && (
-              <span className="rounded-full px-2 py-0.5 text-[11px] font-bold" style={{ background: 'var(--background-tertiary)', color: 'var(--brand-navy-700)' }}>
+              <span className="tp-meta rounded-full px-2.5 py-1 font-bold" style={{ background: 'var(--background-tertiary)', color: 'var(--brand-navy-700)' }}>
                 Outreach required
               </span>
             )}
           </div>
-          <h4 className="font-heading mt-1.5 text-base font-bold" style={{ color: 'var(--text-primary)' }}>{mission.title}</h4>
+          <h4 className="tp-card mt-2" style={{ color: 'var(--text-primary)' }}>{mission.title}</h4>
         </div>
         <button onClick={() => setOpen(v => !v)} aria-label={open ? 'Collapse mission' : 'Expand mission'}
           className="rounded-[8px] border p-1.5" style={{ borderColor: 'var(--border-light)' }}>
@@ -67,7 +67,7 @@ export default function MissionItem({ mission, experiment, path, contacts, proof
               </ol>
             </Block>
           )}
-          <div className="mt-3 flex flex-wrap items-center gap-4 text-xs" style={{ color: 'var(--text-muted)' }}>
+          <div className="tp-meta mt-4 flex flex-wrap items-center gap-5" style={{ color: 'var(--text-muted)' }}>
             <span className="flex items-center gap-1">
               <Clock size={12} /> {mission.estimated_hours ? `~${mission.estimated_hours}h` : 'Effort not set'}
             </span>
@@ -78,7 +78,7 @@ export default function MissionItem({ mission, experiment, path, contacts, proof
           {proofs.length > 0 && (
             <div className="mt-3 space-y-1">
               {proofs.map(p => (
-                <p key={p.id} className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: 'var(--success-700)' }}>
+                <p key={p.id} className="tp-meta flex items-center gap-1.5 font-semibold" style={{ color: 'var(--success-700)' }}>
                   <FileText size={12} /> {p.title}
                 </p>
               ))}
