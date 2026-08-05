@@ -55,7 +55,13 @@ function Shell({ children }) {
           the app shell, with no nav and no signed in furniture around it. The
           same wordmark the login screen uses is the whole of what makes it
           recognisably us, and without it this is an unbranded card asking
-          somebody to press a button. */}
+          somebody to press a button.
+
+          It keeps its own narrow centring rather than taking app-page, for the
+          same reason the login and generation screens do: this centres one card
+          in the viewport, it does not run a page column, and the app's 960px
+          measure would leave a single question stranded across a wide empty
+          screen. */}
       <div className="mb-7 flex justify-center">
         <LogoFull height={36} />
       </div>
@@ -77,8 +83,8 @@ function Notice({ title, body, to = HOME, cta = 'Go to My Journey' }) {
   return (
     <Shell>
       <Card>
-        <p className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>{title}</p>
-        {body && <p className="mt-2 text-sm leading-6" style={{ color: 'var(--text-secondary)' }}>{body}</p>}
+        <p className="tp-section" style={{ color: 'var(--text-primary)' }}>{title}</p>
+        {body && <p className="tp-prose mt-2" style={{ color: 'var(--text-secondary)' }}>{body}</p>}
         <Link
           to={to}
           className="ui-press mt-5 inline-flex items-center rounded-[10px] px-5 py-3 text-sm font-bold text-white"
@@ -329,7 +335,7 @@ function AnswerNudgeInner() {
     return (
       <Shell>
         <Card>
-          <p className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>
+          <p className="tp-section" style={{ color: 'var(--text-primary)' }}>
             We could not load that question just now.
           </p>
           <button
@@ -417,23 +423,29 @@ function AnswerNudgeInner() {
 
   return (
     <Shell>
-      <p className="text-xs font-bold uppercase tracking-[.14em]" style={{ color: 'var(--brand-navy-700)' }}>
+      <p className="tp-eyebrow" style={{ color: 'var(--brand-navy-700)' }}>
         {eyebrow}
       </p>
 
       <Card>
+        {/* font-bold is not redundant here. Tailwind's reset sets font-weight on
+            h1 with a real element selector, and the scale sets it inside
+            :where(), which has no specificity, so an h1 loses the 700 and
+            renders at body weight without this. */}
         {ask.title && (
-          <h1 className="font-heading text-2xl font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>
+          <h1 className="tp-page font-bold" style={{ color: 'var(--text-primary)' }}>
             {ask.title}
           </h1>
         )}
 
         {ask.body && (
-          <p className="mt-3 text-sm leading-6" style={{ color: 'var(--text-secondary)' }}>{ask.body}</p>
+          <p className="tp-lead mt-3" style={{ color: 'var(--text-secondary)' }}>{ask.body}</p>
         )}
 
+        {/* The question is the label for the one box on the screen, so it sits a
+            step above the sentence over it rather than matching it. */}
         {(isQuestion || isRuleOut) && ask.question && (
-          <p className="mt-5 text-sm font-bold leading-6" style={{ color: 'var(--text-primary)' }}>
+          <p className="tp-card mt-5" style={{ color: 'var(--text-primary)' }}>
             {ask.question}
           </p>
         )}
@@ -452,7 +464,7 @@ function AnswerNudgeInner() {
           </label>
         )}
 
-        {problem && <p className="mt-3 text-xs font-semibold text-red-600" role="alert">{problem}</p>}
+        {problem && <p className="tp-meta mt-3 font-semibold text-red-600" role="alert">{problem}</p>}
 
         <div className="mt-4 space-y-3">
           {isQuestion && (
@@ -478,7 +490,7 @@ function AnswerNudgeInner() {
               >
                 {isAccount ? 'Yes, stop sending these' : 'Yes, close it out'}
               </button>
-              <p className="text-xs leading-5" style={{ color: 'var(--text-muted)' }}>
+              <p className="tp-meta" style={{ color: 'var(--text-muted)' }}>
                 {isAccount
                   ? 'Your account stays exactly as it is, and you can turn these back on whenever.'
                   : 'Nothing gets deleted. It comes off your list, and what you wrote stays with it.'}
@@ -523,7 +535,7 @@ function AnswerNudgeInner() {
               type="button"
               disabled={saving}
               onClick={() => setDeclining(true)}
-              className="w-full text-center text-xs font-semibold disabled:opacity-60"
+              className="tp-meta w-full py-3 text-center font-semibold disabled:opacity-60"
               style={{ color: 'var(--brand-navy-700)' }}
             >
               Skip this one
@@ -535,7 +547,7 @@ function AnswerNudgeInner() {
           <div className="mt-5 rounded-[16px] border border-[color:var(--ink-200)] p-4">
             <label className="block text-sm font-semibold" style={{ color: 'var(--ink-700)' }}>
               Why, if you feel like saying?
-              <span className="ml-2 text-xs font-normal" style={{ color: 'var(--ink-400)' }}>Optional</span>
+              <span className="tp-meta ml-2 font-normal" style={{ color: 'var(--ink-400)' }}>Optional</span>
               <textarea
                 rows={3}
                 value={declineReason}
@@ -558,7 +570,7 @@ function AnswerNudgeInner() {
         )}
       </Card>
 
-      <p className="text-center text-xs leading-5" style={{ color: 'var(--text-muted)' }}>
+      <p className="tp-meta text-center" style={{ color: 'var(--text-muted)' }}>
         To stop these emails, turn them off in your{' '}
         <Link to="/settings" className="font-semibold" style={{ color: 'var(--brand-navy-700)' }}>settings</Link>.
       </p>
