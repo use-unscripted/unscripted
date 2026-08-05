@@ -105,5 +105,36 @@
   },
   "required": [
     "canonical_name"
-  ]
+  ],
+  // Same shape as Resources: reference data everyone may read, nobody but an
+  // admin may change. Nothing here is private (school names, public logos,
+  // public calendar URLs), so read stays open.
+  //
+  // The write side is the part that matters. events_feed_url is fetched
+  // server-side by campusEvents and its contents are shown to every student at
+  // that school, so an account able to edit this row could point our own server
+  // at a URL of its choosing and feed the result to other people. With no rls
+  // block at all that was open to any signed-in user.
+  //
+  // Locking writes costs nothing: every write to this entity runs through
+  // asServiceRole in campusEvents, which bypasses rls, and no browser code
+  // touches the entity at all. The landing page marquee is a hardcoded list.
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": null,
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
 }
