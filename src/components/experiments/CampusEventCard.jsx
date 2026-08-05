@@ -32,12 +32,15 @@ export default function CampusEventCard({ event, college = '', compact = false }
         className="flex items-center justify-between gap-3 border-b px-3 py-2"
         style={{ borderColor: 'var(--ink-200)', background: 'var(--ink-50)' }}
       >
-        <span className="tp-eyebrow flex items-center gap-1.5 text-[color:var(--ink-500)]">
+        {/* tracking-wide, not the eyebrow's own 0.14em. This strip also renders
+            two-up inside a 448px modal, where the wider tracking wrapped this
+            label onto a third line and grew the card by a fifth. */}
+        <span className="tp-eyebrow flex items-center gap-1.5 tracking-wide text-[color:var(--ink-500)]">
           <Calendar size={12} /> On your campus calendar
         </span>
         {countdown && (
           <span
-            className="tp-meta rounded-full px-2 py-0.5 font-bold"
+            className="tp-eyebrow rounded-full px-2 py-0.5 normal-case tracking-normal"
             style={{ background: 'rgba(214,182,106,0.22)', color: '#7A5B12' }}
           >
             {countdown}

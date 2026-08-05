@@ -303,7 +303,7 @@ function StepSuccess({ experiment, missionGuide, onViewGuide }) {
 
       <div className="rounded-[20px] text-center p-8 space-y-3" style={{ background: 'var(--success-50)', border: '1px solid #86EFAC' }}>
         <CheckCircle className="mx-auto text-green-600" size={40} />
-        <h2 className="tp-section text-[color:var(--surface-dark-900)]">Mission Created</h2>
+        <h2 className="tp-page text-[color:var(--surface-dark-900)]">Mission Created</h2>
         <div className="space-y-1">
           <p className="tp-body text-[color:var(--ink-700)]"><span className="font-semibold">You are testing:</span> {experiment.path_name}</p>
           <p className="tp-body text-[color:var(--ink-700)]"><span className="font-semibold">Your experiment:</span> {experiment.title}</p>

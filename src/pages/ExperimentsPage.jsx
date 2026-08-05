@@ -54,7 +54,7 @@ function PathDropdown({ paths, value, onChange, error }) {
   if (paths.filter(p => !['archived', 'deprioritized'].includes(p.status)).length === 0) {
     return (
       <div className="rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] p-4 text-center">
-        <p className="text-sm font-semibold text-[color:var(--ink-700)] mb-1">No paths available</p>
+        <p className="tp-body font-semibold text-[color:var(--ink-700)] mb-1">No paths available</p>
         <p className="tp-meta text-[color:var(--ink-500)]">You need to create or activate a path before creating an experiment.</p>
         <div className="mt-3 flex gap-2 justify-center flex-wrap">
           <a href="/paths" className="rounded-lg px-3 py-1.5 tp-meta font-semibold text-white" style={{ background: 'var(--brand-navy-900)' }}>Create a Path</a>
@@ -143,7 +143,7 @@ function MissionRow({ mission, experiment, onProofAdded, onDeleted }) {
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
           <span className="rounded-full px-2 py-0.5 tp-meta font-bold" style={{ background: s.bg, color: s.text }}>{s.label}</span>
-          <span className="text-sm font-semibold text-[color:var(--surface-dark-900)] truncate">{mission.title}</span>
+          <span className="tp-body font-semibold text-[color:var(--surface-dark-900)] truncate">{mission.title}</span>
         </div>
         {mission.objective && <p className="mt-0.5 tp-meta text-[color:var(--ink-500)] line-clamp-1">{mission.objective}</p>}
       </div>
@@ -269,7 +269,7 @@ function ExperimentCard({ exp, onStatusChange, onExpand, expanded, missions, loa
             <div className="rounded-xl p-3 flex items-start gap-3" style={{ background: 'var(--warning-50)', border: '1px solid rgba(180,83,9,0.2)' }}>
               <PauseCircle size={16} className="text-[color:var(--warning-700)] shrink-0 mt-0.5" />
               <div>
-                <p className="text-sm font-bold text-[color:var(--warning-700)]">This experiment is paused</p>
+                <p className="tp-body font-bold text-[color:var(--warning-700)]">This experiment is paused</p>
                 {exp.pause_reason && <p className="tp-meta text-[color:var(--ink-700)] mt-0.5">{exp.pause_reason}</p>}
                 {exp.paused_at && <p className="tp-meta text-[color:var(--ink-400)] mt-0.5">Paused on {fmtDate(exp.paused_at)}</p>}
                 <button onClick={() => onResumed(exp)}
@@ -306,7 +306,7 @@ function ExperimentCard({ exp, onStatusChange, onExpand, expanded, missions, loa
           {exp.reflection_questions?.length > 0 && (
             <div>
               <p className="tp-eyebrow text-[color:var(--ink-500)] mb-2">Reflection questions</p>
-              <ul className="space-y-1">{exp.reflection_questions.map((q, i) => <li key={i} className="text-sm text-[color:var(--ink-700)]">· {q}</li>)}</ul>
+              <ul className="space-y-1">{exp.reflection_questions.map((q, i) => <li key={i} className="tp-body text-[color:var(--ink-700)]">· {q}</li>)}</ul>
             </div>
           )}
 
@@ -420,7 +420,7 @@ function PausedSection({ experiments, missions, guides, onResumed, onDelete, onE
                         {exp.path_name && <span className="rounded-full px-2.5 py-1 tp-meta font-semibold" style={{ background: 'var(--background-tertiary)', color: 'var(--brand-navy-700)' }}>{exp.path_name}</span>}
                       </div>
                       <h3 className="font-heading font-bold text-[color:var(--surface-dark-900)]">{exp.title}</h3>
-                      <p className="mt-1 text-sm text-[color:var(--ink-700)] line-clamp-2">{exp.objective}</p>
+                      <p className="tp-prose mt-2 text-[color:var(--ink-700)] line-clamp-2">{exp.objective}</p>
                       <div className="mt-2 flex flex-wrap items-center gap-3 tp-meta text-[color:var(--ink-400)]">
                         {exp.paused_at && <span className="flex items-center gap-1"><PauseCircle size={11} /> Paused {fmtDate(exp.paused_at)}</span>}
                         {totalCount(exp.id) > 0 && <span><Target size={11} className="inline mr-0.5" />{completedCount(exp.id)}/{totalCount(exp.id)} missions done</span>}
@@ -469,7 +469,7 @@ function PausedSection({ experiments, missions, guides, onResumed, onDelete, onE
                             return (
                               <div key={m.id} className="flex items-center gap-2 rounded-lg border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] px-3 py-2">
                                 <span className="rounded-full px-2 py-0.5 tp-meta font-bold" style={{ background: ms.bg, color: ms.text }}>{ms.label}</span>
-                                <span className="text-sm text-[color:var(--ink-700)]">{m.title}</span>
+                                <span className="tp-body text-[color:var(--ink-700)]">{m.title}</span>
                               </div>
                             );
                           })}
@@ -533,11 +533,11 @@ function NewExperimentModal({ onClose, onSave, paths }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(5,8,22,0.5)' }}>
       <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-[24px] bg-white p-6 sm:p-8">
-        <h2 className="font-heading text-2xl font-bold text-[color:var(--surface-dark-900)] mb-1">New Experiment</h2>
-        <p className="text-sm text-[color:var(--ink-500)] mb-6">Define what you want to test. Open the experiment after saving to generate a Mission Guide.</p>
+        <h2 className="tp-section text-[color:var(--surface-dark-900)] mb-1">New Experiment</h2>
+        <p className="tp-lead text-[color:var(--ink-500)] mb-6">Define what you want to test. Open the experiment after saving to generate a Mission Guide.</p>
         <div className="space-y-4">
           <div>
-            <label className="text-sm font-semibold text-[color:var(--ink-700)] block mb-1">Choose an experiment type</label>
+            <label className="tp-body font-semibold text-[color:var(--ink-700)] block mb-1">Choose an experiment type</label>
             <select className="w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-sm outline-none focus:border-[color:var(--brand-navy-900)]"
               value={data.experiment_type} onChange={e => setData(d => ({ ...d, experiment_type: e.target.value, title: d.title || e.target.value }))}>
               <option value="">Select or type your own below</option>
@@ -546,13 +546,13 @@ function NewExperimentModal({ onClose, onSave, paths }) {
           </div>
 
           <label className="block">
-            <span className="text-sm font-semibold text-[color:var(--ink-700)] block mb-1">Experiment title</span>
+            <span className="tp-body font-semibold text-[color:var(--ink-700)] block mb-1">Experiment title</span>
             <input className="w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-sm outline-none focus:border-[color:var(--brand-navy-900)]"
               placeholder="e.g. Interview 3 investment bankers" value={data.title || ''} onChange={e => setData(d => ({ ...d, title: e.target.value }))} />
           </label>
 
           <div>
-            <label className="text-sm font-semibold text-[color:var(--ink-700)] block mb-1">Path being tested <span className="text-red-500">*</span></label>
+            <label className="tp-body font-semibold text-[color:var(--ink-700)] block mb-1">Path being tested <span className="text-red-500">*</span></label>
             <PathDropdown paths={paths} value={data.path_name} onChange={handlePathChange} error={pathError} />
           </div>
 
@@ -561,21 +561,21 @@ function NewExperimentModal({ onClose, onSave, paths }) {
             { name: 'deliverable', label: 'Deliverable', placeholder: 'What will you produce or submit?' },
           ].map(f => (
             <label key={f.name} className="block">
-              <span className="text-sm font-semibold text-[color:var(--ink-700)] block mb-1">{f.label}</span>
+              <span className="tp-body font-semibold text-[color:var(--ink-700)] block mb-1">{f.label}</span>
               <input className="w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-sm outline-none focus:border-[color:var(--brand-navy-900)]"
                 placeholder={f.placeholder} value={data[f.name] || ''} onChange={e => setData(d => ({ ...d, [f.name]: e.target.value }))} />
             </label>
           ))}
           <label className="block">
-            <span className="text-sm font-semibold text-[color:var(--ink-700)] block mb-1">Deadline</span>
+            <span className="tp-body font-semibold text-[color:var(--ink-700)] block mb-1">Deadline</span>
             <input type="date" className="w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-sm outline-none focus:border-[color:var(--brand-navy-900)]"
               value={data.deadline || ''} onChange={e => setData(d => ({ ...d, deadline: e.target.value }))} />
           </label>
         </div>
         <div className="mt-6 flex gap-3">
-          <button onClick={onClose} className="flex-1 rounded-[10px] border border-[color:var(--ink-200)] py-3 text-sm font-semibold text-[color:var(--ink-700)] transition hover:bg-[color:var(--ink-50)]">Cancel</button>
+          <button onClick={onClose} className="tp-body flex-1 rounded-[10px] border border-[color:var(--ink-200)] py-3 font-semibold text-[color:var(--ink-700)] transition hover:bg-[color:var(--ink-50)]">Cancel</button>
           <button onClick={handleSave} disabled={saving}
-            className="flex-1 rounded-[10px] py-3 text-sm font-semibold text-white transition hover:-translate-y-px disabled:opacity-60"
+            className="tp-body flex-1 rounded-[10px] py-3 font-semibold text-white transition hover:-translate-y-px disabled:opacity-60"
             style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}>
             {saving ? 'Saving...' : 'Save Experiment'}
           </button>
@@ -929,7 +929,7 @@ export default function ExperimentsPage() {
                   <h3 className="tp-section text-[color:var(--surface-dark-900)]">No experiments yet.</h3>
                   <p className="tp-body mt-2.5 text-[color:var(--ink-500)]">Start your first experiment to test a path in the real world.</p>
                   <button onClick={() => setShowNew(true)}
-                    className="mt-6 inline-flex items-center gap-2 rounded-[10px] px-6 py-3 text-sm font-semibold text-white"
+                    className="tp-body mt-6 inline-flex items-center gap-2 rounded-[10px] px-6 py-3 font-semibold text-white"
                     style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}>
                                       <Plus size={16} /> Create first experiment
                   </button>

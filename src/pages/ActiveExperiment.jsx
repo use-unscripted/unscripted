@@ -160,7 +160,7 @@ export default function ActiveExperiment() {
 
         <section className="rounded-[16px] bg-white p-5" style={{ border: '1px solid var(--border-light)' }}>
           <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-            <h3 className="tp-card flex items-center gap-1.5" style={{ color: 'var(--text-primary)' }}>
+            <h3 className="tp-section flex items-center gap-1.5" style={{ color: 'var(--text-primary)' }}>
               <Wand2 size={14} style={{ color: 'var(--brand-navy-700)' }} /> Mission Guide
               {activeGuide && (
                 <span className="tp-meta rounded-full px-2 py-0.5 font-bold" style={{ background: 'var(--success-50)', color: 'var(--success-700)' }}>
