@@ -70,7 +70,7 @@ export default function ResetPassword() {
           </Link>
         }
       >
-        <p className="text-sm text-foreground text-center">
+        <p className="tp-body text-foreground text-center">
           The link you used appears to be incomplete. Please request a new password reset email.
         </p>
       </AuthLayout>
@@ -84,7 +84,7 @@ export default function ResetPassword() {
         title="Password updated"
         subtitle="Your new password has been set successfully."
       >
-        <p className="text-sm text-center text-muted-foreground mb-6">
+        <p className="tp-body text-center text-muted-foreground mb-6">
           You can now log in with your new password.
         </p>
         <Button

@@ -1,5 +1,5 @@
 /**
- * ClaimOnboarding — protected page.
+ * ClaimOnboarding: a protected page.
  * Reads the guest draft from localStorage, saves it to the DB, generates
  * tailored paths, then navigates to /journey.
  * Idempotent: checks for existing onboarding data before creating new records.
@@ -54,7 +54,7 @@ export default function ClaimOnboarding() {
       // ── No usable draft ──
       if (!isDraftComplete(draft)) {
         if (existingProfiles.length > 0) {
-          // Answers were already saved on a previous attempt — finish setup
+          // Answers were already saved on a previous attempt, so finish setup
           // instead of sending the user back through onboarding again.
           await generatePathTest();
           trackFunnel('paths_generated', { from: 'saved_profile' });
@@ -81,7 +81,7 @@ export default function ClaimOnboarding() {
           major: draft.major || 'Undecided',
           graduation_year: draft.graduation_year,
           school_year: draft.school_year,
-          // The intake no longer asks "paths you are considering" separately —
+          // The intake no longer asks "paths you are considering" separately:
           // the path they chose to test is the answer to that question.
           career_interests: draft.primary_path,
           pressured_paths: draft.pressured_path,
@@ -121,10 +121,10 @@ export default function ClaimOnboarding() {
         });
       }
 
-      // ── Generate paths (idempotent — generator checks for existing recs) ──
+      // ── Generate paths (idempotent: generator checks for existing recs) ──
       await generatePathTest();
       // The end of the funnel, and the only point where the wall's stated
-      // cost — a real model call — is actually paid.
+      // cost (a real model call) is actually paid.
       trackFunnel('paths_generated', { from: 'guest_draft' });
 
       // ── Mark onboarding complete ──
@@ -136,12 +136,12 @@ export default function ClaimOnboarding() {
       nav('/journey', { replace: true });
     } catch (e) {
       const msg = e?.message || 'Something went wrong. Please try again.';
-      // Distinguish import vs generation failures — this picks the recovery UI.
+      // Distinguish import vs generation failures. This picks the recovery UI.
       const stage = phaseIdx >= 2 ? 'generate' : 'import';
       setErrorType(stage);
       // A generation failure now says which step of the pipeline broke; an
       // import failure has no finer grain to report. Codes and stage names are
-      // fixed strings — no message text, which can carry server detail.
+      // fixed strings, no message text, which can carry server detail.
       const detail = e?.stage || null;
       const codes = Array.isArray(e?.codes) && e.codes.length ? e.codes.join(',') : null;
       console.error(`ClaimOnboarding failed at stage=${detail || stage}${codes ? ` codes=${codes}` : ''}`);
@@ -162,10 +162,10 @@ export default function ClaimOnboarding() {
             style={{ background: 'rgba(31,58,95,0.25)', border: '1px solid rgba(31,58,95,0.4)' }}>
             <AlertTriangle size={24} aria-hidden="true" />
           </div>
-          <h1 className="font-heading text-2xl font-bold">
+          <h1 className="tp-page">
             {errorType === 'generate' ? 'Generation failed' : 'Setup failed'}
           </h1>
-          <p className="mt-3 text-sm text-[color:var(--ink-400)] leading-6">{error}</p>
+          <p className="tp-lead mt-3 text-[color:var(--ink-400)]">{error}</p>
           <div className="mt-8 flex flex-col items-center gap-3">
             <button onClick={run}
               className="flex items-center gap-2 rounded-[10px] px-6 py-3 text-sm font-semibold text-white transition hover:-translate-y-px"
@@ -190,13 +190,13 @@ export default function ClaimOnboarding() {
         <div className="mx-auto flex items-center justify-center h-16 w-16 animate-pulse">
           <CompassIcon size={56} />
         </div>
-        <h1 className="font-heading mt-8 text-3xl font-bold">Building your 30-day path test.</h1>
-        <p className="mt-3 text-[color:var(--ink-400)]">{PHASES[phaseIdx]}</p>
+        <h1 className="tp-page mt-8">Building your 30-day path test.</h1>
+        <p className="tp-lead mx-auto mt-3 text-[color:var(--ink-400)]">{PHASES[phaseIdx]}</p>
         <div className="mx-auto mt-8 h-1.5 w-64 overflow-hidden rounded-full" style={{ background: 'rgba(255,255,255,0.08)' }}>
           <div className="h-full animate-pulse rounded-full"
             style={{ width: `${Math.round((phaseIdx + 1) / PHASES.length * 100)}%`, background: 'var(--brand-navy-900)', transition: 'width 0.5s ease' }} />
         </div>
-        <p className="mt-6 text-xs text-[color:var(--ink-500)]">This usually takes 20-30 seconds.</p>
+        <p className="tp-meta mt-6 text-[color:var(--ink-500)]">This usually takes 20-30 seconds.</p>
       </div>
     </main>
   );

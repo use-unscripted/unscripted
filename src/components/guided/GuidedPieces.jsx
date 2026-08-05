@@ -1,7 +1,7 @@
 /**
  * The presentation pieces a guided, one-question-at-a-time flow is built from.
  *
- * One copy, shared by every guided flow — the outreach survey
+ * One copy, shared by every guided flow: the outreach survey
  * (src/components/outreach/OutreachPlanModal.jsx) and anything else that asks
  * one question at a time. Change a token here and every flow moves together;
  * that is the point of the file.
@@ -12,7 +12,7 @@
 import { Check } from 'lucide-react';
 
 // A guided panel drops its own bottom padding so this bar can stick to the
-// panel's edge — the primary action stays reachable however long the list is.
+// panel's edge, so the primary action stays reachable however long the list is.
 export const footerCls =
   'sticky bottom-0 z-10 -mx-6 mt-6 rounded-b-[24px] border-t border-[color:var(--ink-100)] bg-white px-6 pb-6 pt-4 sm:-mx-8 sm:px-8';
 
@@ -59,12 +59,12 @@ export function OptionRow({ option, selected, index, onSelect, multi }) {
         {selected && <Check size={12} strokeWidth={3} className="anim-scale-in text-white" />}
       </span>
       <span className="min-w-0 flex-1">
-        <span className="block text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{option.label}</span>
-        {option.desc && <span className="mt-0.5 block text-xs" style={{ color: 'var(--text-secondary)' }}>{option.desc}</span>}
+        <span className="tp-body block font-semibold" style={{ color: 'var(--text-primary)' }}>{option.label}</span>
+        {option.desc && <span className="tp-meta mt-1 block" style={{ color: 'var(--text-secondary)' }}>{option.desc}</span>}
       </span>
       {/* only the first nine are reachable by number key, so only those get the hint */}
       {index < 9 && (
-        <span className="opt-key hidden shrink-0 rounded-md border px-1.5 py-0.5 text-[10px] font-semibold sm:block"
+        <span className="opt-key tp-meta hidden shrink-0 rounded-md border px-2 py-0.5 font-semibold sm:block"
           style={{ borderColor: 'var(--ink-200)', color: 'var(--ink-500)' }}>
           {index + 1}
         </span>

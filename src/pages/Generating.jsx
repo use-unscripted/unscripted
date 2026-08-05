@@ -30,8 +30,8 @@ export default function Generating() {
       nav('/path-results', { replace: true });
     } catch (e) {
       // The generator has already logged the stage it failed at. Logging the
-      // error object again here would put the raw server message — and with it
-      // whatever of the student's profile the model was working from — into the
+      // error object again here would put the raw server message, and with it
+      // whatever of the student's profile the model was working from, into the
       // console a second time.
       if (e?.stage) console.error(`Path generation failed at stage=${e.stage}`);
       else console.error('Path generation failed.');
@@ -51,8 +51,8 @@ export default function Generating() {
           <div className="mx-auto mb-6 flex h-14 w-14 items-center justify-center rounded-full"           style={{ background: 'rgba(31,58,95,0.25)', border: '1px solid rgba(31,58,95,0.4)' }}>
             <AlertTriangle size={24} aria-hidden="true" />
           </div>
-          <h1 className="font-heading text-2xl font-bold">Generation failed</h1>
-          <p className="mt-3 text-sm text-[color:var(--ink-400)] leading-6">{error}</p>
+          <h1 className="tp-page">Generation failed</h1>
+          <p className="tp-lead mt-3 text-[color:var(--ink-400)]">{error}</p>
           <div className="mt-8 flex flex-col items-center gap-3">
             <button onClick={run}
               className="flex items-center gap-2 rounded-[10px] px-6 py-3 text-sm font-semibold text-white transition hover:-translate-y-px"
@@ -78,12 +78,12 @@ export default function Generating() {
         <div className="mx-auto flex items-center justify-center h-16 w-16 animate-pulse">
           <CompassIcon size={56} />
         </div>
-        <h1 className="font-heading mt-8 text-3xl font-bold">Building your 30-day path test.</h1>
-        <p className="mt-3 text-[color:var(--ink-400)]">{LABELS[labelIdx]}</p>
+        <h1 className="tp-page mt-8">Building your 30-day path test.</h1>
+        <p className="tp-lead mx-auto mt-3 text-[color:var(--ink-400)]">{LABELS[labelIdx]}</p>
         <div className="mx-auto mt-8 h-1.5 w-64 overflow-hidden rounded-full" style={{ background: 'rgba(255,255,255,0.08)' }}>
           <div className="h-full animate-pulse rounded-full" style={{ width: `${Math.round((labelIdx + 1) / LABELS.length * 100)}%`, background: 'var(--brand-navy-900)', transition: 'width 0.5s ease' }} />
         </div>
-        <p className="mt-6 text-xs text-[color:var(--ink-500)]">This usually takes 20-30 seconds.</p>
+        <p className="tp-meta mt-6 text-[color:var(--ink-500)]">This usually takes 20-30 seconds.</p>
       </div>
     </main>
   );

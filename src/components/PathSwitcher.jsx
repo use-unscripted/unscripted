@@ -69,7 +69,7 @@ export default function PathSwitcher({ paths = [], selectedId, onChange, showAll
 
       {activePaths.length > 0 && (
         <>
-          <p className="px-4 pt-2 pb-1 text-[10px] font-bold uppercase tracking-widest text-[color:var(--ink-400)]">Active</p>
+          <p className="tp-eyebrow px-4 pt-2.5 pb-1.5 text-[color:var(--ink-400)]">Active</p>
           {activePaths.map(p => {
             const c = statusCfg(p.status);
             return (
@@ -81,7 +81,7 @@ export default function PathSwitcher({ paths = [], selectedId, onChange, showAll
                 {p.is_primary_focus && <Star size={13} className="shrink-0" style={{ color: 'var(--brand-gold-500)' }} />}
                 {!p.is_primary_focus && <div className="w-[13px] shrink-0" />}
                 <span className="flex-1 font-semibold text-[color:var(--surface-dark-900)] text-left truncate">{p.path_name}</span>
-                <span className="shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold" style={{ background: c.bg, color: c.text }}>
+                <span className="tp-meta shrink-0 rounded-full px-2.5 py-0.5 font-bold" style={{ background: c.bg, color: c.text }}>
                   {c.label}
                 </span>
               </button>
@@ -92,7 +92,7 @@ export default function PathSwitcher({ paths = [], selectedId, onChange, showAll
 
       {otherPaths.length > 0 && (
         <>
-          <p className="px-4 pt-2 pb-1 text-[10px] font-bold uppercase tracking-widest text-[color:var(--ink-400)]">Other</p>
+          <p className="tp-eyebrow px-4 pt-2.5 pb-1.5 text-[color:var(--ink-400)]">Other</p>
           {otherPaths.map(p => {
             const c = statusCfg(p.status);
             return (
@@ -103,7 +103,7 @@ export default function PathSwitcher({ paths = [], selectedId, onChange, showAll
               >
                 <div className="w-[13px] shrink-0" />
                 <span className="flex-1 font-semibold text-[color:var(--ink-700)] text-left truncate">{p.path_name}</span>
-                <span className="shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold" style={{ background: c.bg, color: c.text }}>
+                <span className="tp-meta shrink-0 rounded-full px-2.5 py-0.5 font-bold" style={{ background: c.bg, color: c.text }}>
                   {c.label}
                 </span>
               </button>
@@ -113,7 +113,7 @@ export default function PathSwitcher({ paths = [], selectedId, onChange, showAll
       )}
 
       {paths.length === 0 && (
-        <p className="px-4 py-3 text-sm text-[color:var(--ink-400)]">No paths yet.</p>
+        <p className="tp-body px-4 py-3 text-[color:var(--ink-400)]">No paths yet.</p>
       )}
     </div>
   );
@@ -132,7 +132,7 @@ export default function PathSwitcher({ paths = [], selectedId, onChange, showAll
           <>
             {selected.is_primary_focus && <Star size={13} className="shrink-0" style={{ color: 'var(--brand-gold-500)' }} />}
             <span className="flex-1 truncate text-left">{selected.path_name}</span>
-            <span className="shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold" style={{ background: cfg.bg, color: cfg.text }}>
+            <span className="tp-meta shrink-0 rounded-full px-2.5 py-0.5 font-bold" style={{ background: cfg.bg, color: cfg.text }}>
               {cfg.label}
             </span>
           </>

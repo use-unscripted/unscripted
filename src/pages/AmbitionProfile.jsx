@@ -9,7 +9,7 @@ import { SkHeader, SkGrid } from '@/components/PageSkeleton';
 const Chips = ({ items }) => (
   <div className="flex flex-wrap gap-2">
     {items?.map(x => (
-      <span key={x} className="rounded-full border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-3 py-1.5 text-xs font-semibold text-[color:var(--ink-700)]">{x}</span>
+      <span key={x} className="tp-meta rounded-full border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-3 py-1.5 font-semibold text-[color:var(--ink-700)]">{x}</span>
     ))}
   </div>
 );
@@ -22,14 +22,14 @@ export default function AmbitionProfile() {
   // two-column page, is the most violent swap on the site. Stand the page up
   // where it will actually be instead.
   if (!p) return (
-    <main className="mx-auto max-w-6xl px-5 py-10 sm:px-8" style={{ background: 'var(--page-surface)' }}>
+    <main className="app-page" style={{ background: 'var(--page-surface)' }}>
       <SkHeader eyebrow />
       <SkGrid count={4} h={210} cols={2} gap={20} r={24} />
     </main>
   );
 
   return (
-    <main className="mx-auto max-w-6xl px-5 py-10 sm:px-8" style={{ background: 'var(--page-surface)' }}>
+    <main className="app-page" style={{ background: 'var(--page-surface)' }}>
       <PageHeader
         eyebrow="Your Unscripted Profile"
         title={`You are a ${p.archetype}.`}
@@ -45,20 +45,20 @@ export default function AmbitionProfile() {
         <ProfileCard label="Biggest risk">
           <div className="flex gap-3">
             <AlertTriangle className="shrink-0 text-amber-500" size={18} />
-            <p className="text-sm leading-6 text-[color:var(--ink-700)]">{p.biggest_risk}</p>
+            <p className="tp-body text-[color:var(--ink-700)]">{p.biggest_risk}</p>
           </div>
         </ProfileCard>
         <ProfileCard label="Biggest opportunity">
           <div className="flex gap-3">
             <TrendingUp className="shrink-0" size={18} style={{ color: 'var(--success-700)' }} />
-            <p className="text-sm leading-6 text-[color:var(--ink-700)]">{p.biggest_opportunity}</p>
+            <p className="tp-body text-[color:var(--ink-700)]">{p.biggest_opportunity}</p>
           </div>
         </ProfileCard>
         <ProfileCard label="Stop doing">
-          <p className="text-sm leading-6 text-[color:var(--ink-700)]">{p.stop_doing}</p>
+          <p className="tp-prose text-[color:var(--ink-700)]">{p.stop_doing}</p>
         </ProfileCard>
         <ProfileCard label="Start doing">
-          <p className="text-sm leading-6 text-[color:var(--ink-700)]">{p.start_doing}</p>
+          <p className="tp-prose text-[color:var(--ink-700)]">{p.start_doing}</p>
         </ProfileCard>
       </div>
       <Link
