@@ -231,7 +231,10 @@ export default function PathResults() {
         )}
 
         <div className="rounded-[20px] p-6" style={{ background: 'var(--surface-dark-700)', border: '1px solid rgba(31,58,95,0.3)' }}>
-          <p className="tp-eyebrow mb-2.5" style={{ color: 'var(--brand-navy-900)' }}>Your 30-day experiment plan is ready</p>
+          {/* Gold, not navy: navy-900 on this surface measures 1.63:1 and the
+              label was effectively invisible. Same treatment as the dashboard's
+              dark panel, which carries the same kind of label. */}
+          <p className="tp-eyebrow mb-2.5" style={{ color: 'var(--brand-gold-500)' }}>Your 30-day experiment plan is ready</p>
           <p className="tp-prose text-[color:var(--ink-300)] mb-5">
             Pick a path above to start its 30-day test. You can compare all three from your dashboard first.
           </p>

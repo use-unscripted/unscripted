@@ -34,7 +34,7 @@ export default function TaskRow({ task, onToggle }) {
           </p>
           <div className="mt-2 flex items-center gap-2">
             <span
-              className="tp-eyebrow rounded-full px-2.5 py-1"
+              className="tp-meta rounded-full px-2.5 py-1 font-bold"
               style={{ background: style.bg, color: style.text }}
             >
               {task.task_type}

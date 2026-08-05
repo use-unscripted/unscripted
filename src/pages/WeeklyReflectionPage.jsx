@@ -986,7 +986,7 @@ function ReflectionFlow({ experiments, missions, proofs, outreach, initialData, 
         <h2 ref={headingRef} tabIndex={-1} className="font-heading text-[26px] font-bold leading-tight outline-none" style={{ color: 'var(--surface-dark-900)' }}>
           {question}
         </h2>
-        {hint && <p className="tp-lead mt-2" style={{ color: 'var(--text-secondary)' }}>{hint}</p>}
+        {hint && <p className="tp-lead mt-2" style={{ color: 'var(--text-secondary)', maxWidth: '48ch' }}>{hint}</p>}
 
         <div className="mt-5 min-h-[220px]">
           {error && (

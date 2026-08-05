@@ -128,7 +128,7 @@ export default function MyJourney() {
         <h1 className="tp-page" style={{ color: 'var(--text-primary)' }}>
           My Journey
         </h1>
-        <p className="tp-lead mt-3" style={{ color: 'var(--text-secondary)' }}>{sub}</p>
+        <p className="tp-lead mt-3" style={{ color: 'var(--text-secondary)', maxWidth: '48ch' }}>{sub}</p>
       </header>
       <div className="app-stack">{children}</div>
     </main>

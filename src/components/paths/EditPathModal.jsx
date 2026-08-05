@@ -60,7 +60,7 @@ export default function EditPathModal({ path, onClose, onSaved, onDeleted }) {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(5,8,22,0.6)' }}>
       <div className="w-full max-w-2xl max-h-[92vh] overflow-y-auto rounded-[24px] bg-white p-6 sm:p-8">
         <div className="flex items-center justify-between mb-1">
-          <h2 className="font-heading text-xl font-bold text-[color:var(--surface-dark-900)]">Edit Path</h2>
+          <h2 className="tp-section text-[color:var(--surface-dark-900)]">Edit Path</h2>
           <button onClick={onClose} disabled={saving}><X size={20} className="text-[color:var(--ink-500)]" /></button>
         </div>
         <p className="text-sm text-[color:var(--ink-500)] mb-5">Changes to this path will not affect other paths.</p>

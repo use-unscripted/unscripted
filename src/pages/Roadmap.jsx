@@ -60,9 +60,10 @@ export default function Roadmap() {
       {/* Feasibility assessment */}
       {r.feasibility_assessment && (
         <div className="mb-6 flex items-start gap-3 rounded-[20px] p-6" style={{ background: 'var(--surface-dark-700)', border: '1px solid rgba(31,58,95,0.30)' }}>
-          <AlertTriangle size={18} className="shrink-0 mt-0.5" style={{ color: 'var(--brand-navy-900)' }} />
+          <AlertTriangle size={18} className="shrink-0 mt-0.5" style={{ color: 'var(--brand-gold-500)' }} />
           <div>
-            <p className="tp-eyebrow mb-2" style={{ color: 'var(--brand-navy-900)' }}>Feasibility assessment</p>
+            {/* Gold, not navy: navy-900 on this surface measures 1.63:1. */}
+            <p className="tp-eyebrow mb-2" style={{ color: 'var(--brand-gold-500)' }}>Feasibility assessment</p>
             <p className="tp-prose text-[color:var(--ink-300)]">{r.feasibility_assessment}</p>
           </div>
         </div>
