@@ -62,7 +62,7 @@ export default function Login() {
         <div className="absolute inset-0 flex items-center">
           <div className="w-full border-t border-border" />
         </div>
-        <div className="relative flex justify-center text-xs uppercase">
+        <div className="tp-eyebrow relative flex justify-center">
           <span className="bg-card px-3 text-muted-foreground">or</span>
         </div>
       </div>
@@ -94,7 +94,7 @@ export default function Login() {
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <Label htmlFor="password">Password</Label>
-            <Link to="/forgot-password" className="text-xs text-primary hover:underline">
+            <Link to="/forgot-password" className="tp-meta text-primary hover:underline">
               Forgot password?
             </Link>
           </div>

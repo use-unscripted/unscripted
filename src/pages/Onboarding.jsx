@@ -1,5 +1,5 @@
 /**
- * The guest intake — one question per screen.
+ * The guest intake: one question per screen.
  *
  * Built on the same guided pieces as the outreach survey
  * (src/components/guided/GuidedPieces.jsx), so the signed-out intake and the
@@ -8,7 +8,7 @@
  *
  * Two rules govern what is asked here, and both matter more than the layout:
  *
- *   1. Only four answers are required — the path to test, plus name, college
+ *   1. Only four answers are required: the path to test, plus name, college
  *      and major. Everything else says "optional" on the question itself and
  *      has a Skip button, so no student has to guess what they can leave out.
  *
@@ -20,7 +20,7 @@
  *      and live permanently in Settings, so they are enrichment a student adds
  *      once they have a reason to, not a wall before their first result.
  *
- * Path selection used to be a separate page (/paths-intake). It is steps 1–4
+ * Path selection used to be a separate page (/paths-intake). It is steps 1-4
  * here now; that route redirects into this flow.
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -66,7 +66,7 @@ const VISION_THEMES = [
 const asOptions = (values) => values.map(v => ({ value: v, label: v }));
 
 /**
- * Types an example out, holds it, deletes it, moves to the next one — the
+ * Types an example out, holds it, deletes it, moves to the next one. The
  * placeholder is the demonstration.
  *
  * Runs only while `active`, which the caller drops the moment the field has
@@ -107,13 +107,13 @@ const prefersReducedMotion = () =>
   typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 
 /* One question per screen. `kind` drives the control:
-   paths     — one text box; the examples type themselves in the placeholder
-   choice    — tap exactly one (auto-advances)
-   text      — chips that fill in a text answer, plus your own words
-   sliders   — the five priority scores, together, because they are comparative
-   toggles   — tap any that are true
-   vision    — theme chips plus an optional description
-   about     — the identity fields, grouped: they need no thought, so grouping
+   paths     one text box; the examples type themselves in the placeholder
+   choice    tap exactly one (auto-advances)
+   text      chips that fill in a text answer, plus your own words
+   sliders   the five priority scores, together, because they are comparative
+   toggles   tap any that are true
+   vision    theme chips plus an optional description
+   about     the identity fields, grouped: they need no thought, so grouping
                them is faster than five screens of typing
 
    Anything without `required` is skippable and says so.                     */
@@ -303,7 +303,7 @@ function PathField({ step, value, onChange }) {
         className="w-full rounded-[14px] border px-4 py-4 text-lg outline-none transition focus:border-[color:var(--brand-navy-900)]"
         style={{ borderColor: 'var(--border-light)', background: 'var(--background-secondary)' }}
       />
-      <span className="mt-2 block text-xs" style={{ color: 'var(--text-muted)' }}>
+      <span className="tp-meta mt-2 block" style={{ color: 'var(--text-muted)' }}>
         Anything you can name. It does not have to be a job title.
       </span>
     </label>
@@ -353,7 +353,7 @@ export default function Onboarding() {
   const step = STEPS[index];
   const reviewing = index === REVIEW;
 
-  // Restore a draft, then let ?step= override where it drops you — that is how
+  // Restore a draft, then let ?step= override where it drops you. That is how
   // "edit my path selection" gets back to question one.
   useEffect(() => {
     const draft = loadDraft();
@@ -395,7 +395,7 @@ export default function Onboarding() {
   };
 
   // Every question starts at the top of the page, however far you had scrolled,
-  // and takes focus — otherwise focus stays on whatever sat at that spot on the
+  // and takes focus. Otherwise focus stays on whatever sat at that spot on the
   // previous screen, which both reads wrong and leaves a ring on an unrelated
   // answer after an auto-advance.
   useEffect(() => {
@@ -554,10 +554,10 @@ export default function Onboarding() {
         <div className="mb-8 flex items-center justify-between">
           <LogoWordmark />
           <div className="flex items-center gap-4">
-            <span className="text-xs font-bold text-[color:var(--text-secondary)]">
+            <span className="tp-eyebrow text-[color:var(--text-secondary)]">
               {reviewing ? 'REVIEW' : `${index + 1} OF ${STEPS.length}`}
             </span>
-            <Link to="/login" className="text-xs font-semibold text-[color:var(--text-secondary)] hover:text-[color:var(--text-primary)] transition">
+            <Link to="/login" className="tp-meta font-semibold text-[color:var(--text-secondary)] hover:text-[color:var(--text-primary)] transition">
               Log in
             </Link>
           </div>
@@ -573,11 +573,11 @@ export default function Onboarding() {
         {resumed && (
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-[12px] px-4 py-3"
             style={{ background: 'var(--background-secondary)', border: '1px solid var(--border-light)' }}>
-            <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+            <p className="tp-body" style={{ color: 'var(--text-secondary)' }}>
               Your answers from last time are still here.
             </p>
             <button onClick={startOver}
-              className="ui-press rounded-[10px] border px-3 py-1.5 text-xs font-bold"
+              className="ui-press tp-meta rounded-[10px] border px-3.5 py-2 font-bold"
               style={{ borderColor: 'var(--border-light)', color: 'var(--text-primary)', background: 'white' }}>
               Start over
             </button>
@@ -587,7 +587,7 @@ export default function Onboarding() {
         <section className="rounded-[20px] bg-white p-6 pb-0 sm:p-8 sm:pb-0" style={{ border: '1px solid var(--border-light)' }}>
           {children}
           {error && (
-            <p className="mt-4 rounded-[12px] px-3 py-2.5 text-sm" role="alert"
+            <p className="tp-body mt-4 rounded-[12px] px-3 py-2.5" role="alert"
               style={{ background: 'var(--danger-50, #FEF2F2)', color: 'var(--danger-700, #B91C1C)' }}>
               {error}
             </p>
@@ -595,7 +595,7 @@ export default function Onboarding() {
           {footer}
         </section>
 
-        <p className="mt-6 text-center text-xs" style={{ color: 'var(--text-muted)' }}>
+        <p className="tp-meta mt-6 text-center" style={{ color: 'var(--text-muted)' }}>
           No account yet. We need four answers. Everything else you can skip.{' '}
           <Link to="/login" className="underline hover:text-[color:var(--text-primary)]">Already have an account?</Link>
         </p>
@@ -606,13 +606,13 @@ export default function Onboarding() {
   if (reviewing) {
     return shell(
       <div key="review" className="step-pane-fwd">
-        <p className="text-xs font-bold uppercase tracking-[.12em]" style={{ color: 'var(--brand-navy-700)' }}>
+        <p className="tp-eyebrow" style={{ color: 'var(--brand-navy-700)' }}>
           Your intake
         </p>
-        <h1 ref={headingRef} tabIndex={-1} className="font-heading mt-2 text-2xl font-bold leading-tight outline-none sm:text-3xl" style={{ color: 'var(--text-primary)' }}>
+        <h1 ref={headingRef} tabIndex={-1} className="tp-page mt-2.5 outline-none" style={{ color: 'var(--text-primary)' }}>
           That is everything.
         </h1>
-        <p className="mt-2 text-sm" style={{ color: 'var(--text-secondary)' }}>
+        <p className="tp-lead mt-3" style={{ color: 'var(--text-secondary)' }}>
           Tap any answer to change it.
         </p>
         <div className="mt-5 space-y-1.5">
@@ -623,10 +623,10 @@ export default function Onboarding() {
                 className="opt-row flex w-full items-start gap-3 rounded-xl border px-3.5 py-2.5 text-left"
                 style={{ animationDelay: `${i * 30}ms`, borderColor: 'var(--border-light)', background: 'var(--brand-white)' }}>
                 <span className="min-w-0 flex-1">
-                  <span className="block text-[11px] font-semibold uppercase tracking-wide" style={{ color: 'var(--text-secondary)' }}>
+                  <span className="tp-eyebrow block" style={{ color: 'var(--text-secondary)' }}>
                     {s.question}
                   </span>
-                  <span className="mt-0.5 block text-sm font-semibold" style={{ color: value ? 'var(--text-primary)' : 'var(--text-secondary)' }}>
+                  <span className="tp-body mt-1 block font-semibold" style={{ color: value ? 'var(--text-primary)' : 'var(--text-secondary)' }}>
                     {value || 'Skipped'}
                   </span>
                 </span>
@@ -681,7 +681,7 @@ export default function Onboarding() {
             ))}
           </div>
           <label className="mt-4 block">
-            <span className="mb-1.5 block text-xs font-semibold" style={{ color: 'var(--text-secondary)' }}>
+            <span className="tp-meta mb-2 block font-semibold" style={{ color: 'var(--text-secondary)' }}>
               {step.customLabel}
             </span>
             <input value={data[step.key] || ''} placeholder={step.placeholder}
@@ -700,7 +700,7 @@ export default function Onboarding() {
                 <span className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>{s.label}</span>
                 <span className="text-sm font-bold" style={{ color: 'var(--brand-navy-900)' }}>{data[s.name] ?? 3}/5</span>
               </div>
-              <p className="mb-2 text-xs" style={{ color: 'var(--text-secondary)' }}>{s.desc}</p>
+              <p className="tp-meta mb-2" style={{ color: 'var(--text-secondary)' }}>{s.desc}</p>
               <input type="range" min="1" max="5" value={data[s.name] ?? 3}
                 onChange={e => set(s.name, Number(e.target.value))}
                 className="w-full accent-[color:var(--brand-navy-900)]" />
@@ -733,7 +733,7 @@ export default function Onboarding() {
             ))}
           </div>
           <label className="mt-5 block">
-            <span className="mb-1.5 block text-xs font-semibold" style={{ color: 'var(--text-secondary)' }}>
+            <span className="tp-meta mb-2 block font-semibold" style={{ color: 'var(--text-secondary)' }}>
               Anything you want to say in your own words
             </span>
             <textarea rows={3} value={data.desired_lifestyle || ''}
@@ -744,11 +744,11 @@ export default function Onboarding() {
       );
     }
 
-    // about — the only screen that groups fields, because none of them need thought
+    // about: the only screen that groups fields, because none of them need thought
     const missing = missingOnAbout();
     const textField = (name, label, placeholder) => (
       <label className="block">
-        <span className="mb-1.5 block text-xs font-semibold" style={{ color: 'var(--text-secondary)' }}>
+        <span className="tp-meta mb-2 block font-semibold" style={{ color: 'var(--text-secondary)' }}>
           {label} <span style={{ color: 'var(--brand-navy-900)' }}>*</span>
         </span>
         <input value={data[name] || ''} placeholder={placeholder}
@@ -765,7 +765,7 @@ export default function Onboarding() {
           {textField('major', 'Major', 'Your primary major')}
         </div>
         <div>
-          <p className="mb-2 text-xs font-semibold" style={{ color: 'var(--text-secondary)' }}>
+          <p className="tp-meta mb-2 font-semibold" style={{ color: 'var(--text-secondary)' }}>
             Year in school <span className="font-normal">· optional</span>
           </p>
           <div className="flex flex-wrap gap-2">
@@ -776,7 +776,7 @@ export default function Onboarding() {
           </div>
         </div>
         <div>
-          <p className="mb-2 text-xs font-semibold" style={{ color: 'var(--text-secondary)' }}>
+          <p className="tp-meta mb-2 font-semibold" style={{ color: 'var(--text-secondary)' }}>
             Graduation year <span className="font-normal">· optional</span>
           </p>
           <div className="flex flex-wrap gap-2">
@@ -792,13 +792,13 @@ export default function Onboarding() {
 
   return shell(
     <div key={index} className={dir === 'fwd' ? 'step-pane-fwd' : 'step-pane-back'}>
-      <p className="text-xs font-bold uppercase tracking-[.12em]" style={{ color: 'var(--brand-navy-700)' }}>
+      <p className="tp-eyebrow" style={{ color: 'var(--brand-navy-700)' }}>
         {sectionFor(index)}
       </p>
-      <h1 ref={headingRef} tabIndex={-1} className="font-heading mt-2 text-2xl font-bold leading-tight outline-none sm:text-3xl" style={{ color: 'var(--text-primary)' }}>
+      <h1 ref={headingRef} tabIndex={-1} className="tp-page mt-2.5 outline-none" style={{ color: 'var(--text-primary)' }}>
         {step.question}
       </h1>
-      <p className="mt-2 text-sm" style={{ color: 'var(--text-secondary)' }}>
+      <p className="tp-lead mt-3" style={{ color: 'var(--text-secondary)' }}>
         {step.hint}
         {!step.required && <span className="ml-1 font-semibold" style={{ color: 'var(--text-muted)' }}>Optional.</span>}
       </p>
@@ -827,7 +827,7 @@ export default function Onboarding() {
           times to find that out. */}
       {index > 0 && index < STEPS.length - 1 && (
         <button onClick={() => go(STEPS.length - 1, 'fwd')}
-          className="mt-2.5 block w-full text-center text-xs font-semibold"
+          className="tp-meta mt-2.5 block w-full py-1 text-center font-semibold"
           style={{ color: 'var(--text-secondary)' }}>
           Skip the rest of the optional questions
         </button>

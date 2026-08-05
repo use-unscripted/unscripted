@@ -8,7 +8,7 @@ export default function PostAuth() {
     <div className="grid min-h-screen place-items-center" style={{ background: 'var(--page-surface)' }}>
       <div className="flex flex-col items-center gap-4">
         <CompassIcon size={36} className="animate-pulse" />
-        <p className="text-sm font-semibold text-[color:var(--ink-700)]">Signing you in...</p>
+        <p className="tp-body font-semibold text-[color:var(--ink-700)]">Signing you in...</p>
       </div>
     </div>
   );

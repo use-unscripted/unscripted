@@ -82,7 +82,7 @@ export default function Register() {
     try {
       await base44.auth.register({ email, password });
       // Email/password accepted and a code is on its way. No address is ever
-      // sent with the event — only the fact that a visitor got this far.
+      // sent with the event, only the fact that a visitor got this far.
       trackFunnel('register_code_sent', { method: 'password' });
       setShowOtp(true);
       // Clear password from state after successful registration step
@@ -164,7 +164,7 @@ export default function Register() {
         >
           {loading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Verifying...</> : "Verify"}
         </Button>
-        <p className="text-center text-sm text-muted-foreground mt-4">
+        <p className="tp-body text-center text-muted-foreground mt-4">
           Didn't receive the code?{" "}
           <button onClick={handleResend} className="text-primary font-medium hover:underline">Resend</button>
         </p>
@@ -195,7 +195,7 @@ export default function Register() {
         <div className="absolute inset-0 flex items-center">
           <div className="w-full border-t border-border" />
         </div>
-        <div className="relative flex justify-center text-xs uppercase">
+        <div className="tp-eyebrow relative flex justify-center">
           <span className="bg-card px-3 text-muted-foreground">or</span>
         </div>
       </div>
@@ -260,9 +260,9 @@ export default function Register() {
           {loading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Creating account...</> : "Create account"}
         </Button>
 
-        {/* Consent notice — covers the Google button above as well as this one.
-            Must stay visible on both paths into an account. */}
-        <p className="pt-1 text-center text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+        {/* Consent notice. Covers the Google button above as well as this one,
+            and must stay visible on both paths into an account. */}
+        <p className="tp-meta pt-1 text-center" style={{ color: 'var(--text-secondary)' }}>
           By creating an account you agree to our{" "}
           <Link to="/terms" className="font-semibold underline underline-offset-2">Terms</Link>{" "}
           and{" "}

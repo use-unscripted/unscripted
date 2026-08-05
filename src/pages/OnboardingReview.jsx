@@ -14,7 +14,7 @@ export default function OnboardingReview() {
   useEffect(() => {
     const d = loadDraft();
     if (!d || !d.primary_path) {
-      // No usable draft — send back to start
+      // No usable draft, so send back to start
       nav('/onboarding', { replace: true });
       return;
     }
@@ -27,7 +27,7 @@ export default function OnboardingReview() {
         if (user?.onboarding_completed) {
           nav('/journey', { replace: true });
         } else {
-          // Authenticated but not finished — go claim
+          // Authenticated but not finished, so go claim
           nav('/claim-onboarding', { replace: true });
         }
         return;
@@ -115,62 +115,62 @@ export default function OnboardingReview() {
             style={{ background: 'var(--ink-100)', border: '2px solid rgba(31,58,95,0.25)' }}>
             <Target size={28} style={{ color: 'var(--brand-navy-900)' }} />
           </div>
-          <h1 className="font-heading text-3xl font-bold tracking-tight text-[color:var(--surface-dark-900)]">
+          <h1 className="tp-page text-[color:var(--surface-dark-900)]">
             Your 30-Day Path Test Is Ready
           </h1>
-          <p className="mt-3 max-w-lg text-[color:var(--ink-500)] leading-6">
+          <p className="tp-lead mt-3 text-[color:var(--ink-500)]">
             You've completed the intake. Create a free account to generate your three tailored paths, save your Mission Guides, and track what you learn.
           </p>
         </div>
 
         {/* Summary card */}
         <div className="mb-6 rounded-[24px] border border-[color:var(--ink-200)] bg-white p-7 shadow-sm">
-          <p className="text-xs font-bold uppercase tracking-[.14em] mb-5" style={{ color: 'var(--brand-navy-700)' }}>Your intake summary</p>
+          <p className="tp-eyebrow mb-5" style={{ color: 'var(--brand-navy-700)' }}>Your intake summary</p>
 
           <div className="space-y-4">
             {draft.name && (
               <div className="flex gap-3">
-                <div className="mt-0.5 h-5 w-5 shrink-0 rounded-full flex items-center justify-center" style={{ background: 'var(--ink-100)' }}>
-                  <span className="text-[10px] font-bold" style={{ color: 'var(--brand-navy-900)' }}>1</span>
+                <div className="mt-0.5 h-6 w-6 shrink-0 rounded-full flex items-center justify-center" style={{ background: 'var(--ink-100)' }}>
+                  <span className="tp-meta font-bold" style={{ color: 'var(--brand-navy-900)' }}>1</span>
                 </div>
                 <div>
-                  <p className="text-xs font-bold uppercase tracking-wide text-[color:var(--ink-400)]">About you</p>
-                  <p className="text-sm text-[color:var(--ink-700)]">{draft.name}{draft.college ? ` · ${draft.college}` : ''}{draft.major ? ` · ${draft.major}` : ''}</p>
+                  <p className="tp-eyebrow text-[color:var(--ink-400)]">About you</p>
+                  <p className="tp-body mt-1 text-[color:var(--ink-700)]">{draft.name}{draft.college ? ` · ${draft.college}` : ''}{draft.major ? ` · ${draft.major}` : ''}</p>
                 </div>
               </div>
             )}
 
             <div className="flex gap-3">
-              <div className="mt-0.5 h-5 w-5 shrink-0 rounded-full flex items-center justify-center" style={{ background: 'var(--ink-100)' }}>
-                <span className="text-[10px] font-bold" style={{ color: 'var(--brand-navy-900)' }}>2</span>
+              <div className="mt-0.5 h-6 w-6 shrink-0 rounded-full flex items-center justify-center" style={{ background: 'var(--ink-100)' }}>
+                <span className="tp-meta font-bold" style={{ color: 'var(--brand-navy-900)' }}>2</span>
               </div>
               <div>
-                <p className="text-xs font-bold uppercase tracking-wide text-[color:var(--ink-400)]">Primary path to test</p>
-                <p className="text-sm font-semibold text-[color:var(--surface-dark-900)]">{draft.primary_path}</p>
+                <p className="tp-eyebrow text-[color:var(--ink-400)]">Primary path to test</p>
+                <p className="tp-body mt-1 font-semibold text-[color:var(--surface-dark-900)]">{draft.primary_path}</p>
                 {draft.comparison_path && (
-                  <p className="text-sm text-[color:var(--ink-500)]">Comparing against: {draft.comparison_path}</p>
+                  <p className="tp-body text-[color:var(--ink-500)]">Comparing against: {draft.comparison_path}</p>
                 )}
               </div>
             </div>
 
             <div className="flex gap-3">
-              <div className="mt-0.5 h-5 w-5 shrink-0 rounded-full flex items-center justify-center" style={{ background: 'var(--ink-100)' }}>
+              <div className="mt-0.5 h-6 w-6 shrink-0 rounded-full flex items-center justify-center" style={{ background: 'var(--ink-100)' }}>
                 <Clock size={11} style={{ color: 'var(--brand-navy-900)' }} />
               </div>
               <div>
-                <p className="text-xs font-bold uppercase tracking-wide text-[color:var(--ink-400)]">Weekly availability</p>
-                <p className="text-sm text-[color:var(--ink-700)]">{draft.available_hours_per_week || 8} hours per week available for path-testing</p>
+                <p className="tp-eyebrow text-[color:var(--ink-400)]">Weekly availability</p>
+                <p className="tp-body mt-1 text-[color:var(--ink-700)]">{draft.available_hours_per_week || 8} hours per week available for path-testing</p>
               </div>
             </div>
 
             {tradeoffs && (
               <div className="flex gap-3">
-                <div className="mt-0.5 h-5 w-5 shrink-0 rounded-full flex items-center justify-center" style={{ background: 'var(--ink-100)' }}>
+                <div className="mt-0.5 h-6 w-6 shrink-0 rounded-full flex items-center justify-center" style={{ background: 'var(--ink-100)' }}>
                   <Zap size={11} style={{ color: 'var(--brand-navy-900)' }} />
                 </div>
                 <div>
-                  <p className="text-xs font-bold uppercase tracking-wide text-[color:var(--ink-400)]">Tradeoff to explore</p>
-                  <p className="text-sm text-[color:var(--ink-700)]">{tradeoffs}</p>
+                  <p className="tp-eyebrow text-[color:var(--ink-400)]">Tradeoff to explore</p>
+                  <p className="tp-body mt-1 text-[color:var(--ink-700)]">{tradeoffs}</p>
                 </div>
               </div>
             )}
@@ -179,19 +179,19 @@ export default function OnboardingReview() {
 
         {/* The intake stops at the questions the generator needs. Personal
             context is offered here instead, once a student can see what it is
-            for — and it stays editable in Settings afterwards. */}
+            for, and it stays editable in Settings afterwards. */}
         {!hasNotes && !editingNotes && (
           <div className="mb-6 rounded-[24px] border border-dashed border-[color:var(--ink-200)] bg-white p-6 shadow-sm">
             <div className="flex items-start gap-3">
               <FileText size={16} className="mt-0.5 shrink-0" style={{ color: 'var(--brand-navy-900)' }} />
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-bold text-[color:var(--surface-dark-900)]">Want to add personal context?</p>
-                <p className="mt-1 text-sm text-[color:var(--ink-500)] leading-6">
+                <p className="tp-card text-[color:var(--surface-dark-900)]">Want to add personal context?</p>
+                <p className="tp-prose mt-2 text-[color:var(--ink-500)]">
                   Responsibilities, things you want to rule out, what your recommendations should weigh
                   heavily. Entirely optional. You can add it now or any time from your settings.
                 </p>
                 <button onClick={() => setEditingNotes(true)}
-                  className="mt-3 rounded-[10px] border border-[color:var(--ink-200)] px-4 py-2 text-xs font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)]">
+                  className="tp-meta mt-3 rounded-[10px] border border-[color:var(--ink-200)] px-4 py-2 font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)]">
                   Add personal context
                 </button>
               </div>
@@ -205,15 +205,15 @@ export default function OnboardingReview() {
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <FileText size={16} style={{ color: 'var(--brand-navy-900)' }} />
-                <p className="text-xs font-bold uppercase tracking-[.14em]" style={{ color: 'var(--brand-navy-700)' }}>Personal context</p>
+                <p className="tp-eyebrow" style={{ color: 'var(--brand-navy-700)' }}>Personal context</p>
               </div>
               <div className="flex gap-2">
                 <button onClick={() => setEditingNotes(true)}
-                  className="flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-semibold text-[color:var(--ink-700)] border border-[color:var(--ink-200)] hover:bg-[color:var(--ink-50)]">
+                  className="tp-meta flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-semibold text-[color:var(--ink-700)] border border-[color:var(--ink-200)] hover:bg-[color:var(--ink-50)]">
                   <Pencil size={11} /> Edit
                 </button>
                 <button onClick={removeNotes}
-                  className="flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-semibold text-red-600 border border-red-100 hover:bg-red-50">
+                  className="tp-meta flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-semibold text-red-600 border border-red-100 hover:bg-red-50">
                   <X size={11} /> Remove
                 </button>
               </div>
@@ -221,32 +221,32 @@ export default function OnboardingReview() {
             <div className="space-y-3">
               {draft.personal_notes && (
                 <div>
-                  <p className="text-[10px] font-bold uppercase tracking-wide text-[color:var(--ink-400)] mb-0.5">Notes</p>
-                  <p className="text-sm text-[color:var(--ink-700)] line-clamp-3">{draft.personal_notes}</p>
+                  <p className="tp-eyebrow text-[color:var(--ink-400)] mb-1">Notes</p>
+                  <p className="tp-body text-[color:var(--ink-700)] line-clamp-3">{draft.personal_notes}</p>
                 </div>
               )}
               {draft.long_term_ambitions && (
                 <div>
-                  <p className="text-[10px] font-bold uppercase tracking-wide text-[color:var(--ink-400)] mb-0.5">Long-term ambitions</p>
-                  <p className="text-sm text-[color:var(--ink-700)] line-clamp-2">{draft.long_term_ambitions}</p>
+                  <p className="tp-eyebrow text-[color:var(--ink-400)] mb-1">Long-term ambitions</p>
+                  <p className="tp-body text-[color:var(--ink-700)] line-clamp-2">{draft.long_term_ambitions}</p>
                 </div>
               )}
               {draft.responsibilities_constraints && (
                 <div>
-                  <p className="text-[10px] font-bold uppercase tracking-wide text-[color:var(--ink-400)] mb-0.5">Responsibilities</p>
-                  <p className="text-sm text-[color:var(--ink-700)] line-clamp-2">{draft.responsibilities_constraints}</p>
+                  <p className="tp-eyebrow text-[color:var(--ink-400)] mb-1">Responsibilities</p>
+                  <p className="tp-body text-[color:var(--ink-700)] line-clamp-2">{draft.responsibilities_constraints}</p>
                 </div>
               )}
               {draft.things_to_avoid && (
                 <div>
-                  <p className="text-[10px] font-bold uppercase tracking-wide text-[color:var(--ink-400)] mb-0.5">Things to avoid</p>
-                  <p className="text-sm text-[color:var(--ink-700)] line-clamp-2">{draft.things_to_avoid}</p>
+                  <p className="tp-eyebrow text-[color:var(--ink-400)] mb-1">Things to avoid</p>
+                  <p className="tp-body text-[color:var(--ink-700)] line-clamp-2">{draft.things_to_avoid}</p>
                 </div>
               )}
               {draft.priorities_for_recommendations && (
                 <div>
-                  <p className="text-[10px] font-bold uppercase tracking-wide text-[color:var(--ink-400)] mb-0.5">Priorities</p>
-                  <p className="text-sm text-[color:var(--ink-700)] line-clamp-2">{draft.priorities_for_recommendations}</p>
+                  <p className="tp-eyebrow text-[color:var(--ink-400)] mb-1">Priorities</p>
+                  <p className="tp-body text-[color:var(--ink-700)] line-clamp-2">{draft.priorities_for_recommendations}</p>
                 </div>
               )}
             </div>
@@ -255,7 +255,7 @@ export default function OnboardingReview() {
 
         {editingNotes && (
           <div className="mb-6 rounded-[24px] border border-[color:var(--brand-navy-900)] bg-white p-7 shadow-sm">
-            <p className="text-xs font-bold uppercase tracking-[.14em] mb-4" style={{ color: 'var(--brand-navy-700)' }}>Edit personal context</p>
+            <p className="tp-eyebrow mb-4" style={{ color: 'var(--brand-navy-700)' }}>Edit personal context</p>
             {[
               { name: 'personal_notes', label: 'Personal notes and context', maxLength: 3000 },
               { name: 'long_term_ambitions', label: 'Long-term ambitions' },
@@ -286,7 +286,7 @@ export default function OnboardingReview() {
 
         {/* CTA */}
         <div className="rounded-[24px] border border-[color:var(--ink-200)] bg-white p-7 shadow-sm text-center">
-          <p className="text-sm text-[color:var(--ink-500)] mb-6 leading-6">
+          <p className="tp-body mx-auto text-[color:var(--ink-500)] mb-6">
             Create a free account to generate your three tailored paths, save your Mission Guides, and track what you learn.
           </p>
           <button onClick={handleCreateAccount}
@@ -294,7 +294,7 @@ export default function OnboardingReview() {
             style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}>
             Create My Free Account <ArrowRight size={16} />
           </button>
-          <p className="mt-4 text-sm text-[color:var(--ink-400)]">
+          <p className="tp-body mt-4 text-[color:var(--ink-400)]">
             Already have an account?{' '}
             <Link to="/login" onClick={() => trackFunnel('wall_login_clicked', { placement: 'cta' })} className="font-semibold underline" style={{ color: 'var(--brand-navy-900)' }}>Log in</Link>
           </p>

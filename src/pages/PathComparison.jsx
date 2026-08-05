@@ -49,8 +49,8 @@ function PausedPathPanel({ path, experiments, missions, proof, contacts, reflect
   return (
     <div className="rounded-[20px] border-2 p-6 space-y-5" style={{ borderColor: 'rgba(180,83,9,0.3)', background: '#FFFDF7' }}>
       <div className="rounded-xl p-4" style={{ background: 'var(--warning-50)', border: '1px solid rgba(180,83,9,0.2)' }}>
-        <p className="text-sm font-bold text-[color:var(--warning-700)]">You previously explored this path.</p>
-        {path.last_active_at && <p className="text-xs text-[color:var(--ink-700)] mt-1">Last active: {fmtDate(path.last_active_at)}</p>}
+        <p className="tp-body font-bold text-[color:var(--warning-700)]">You previously explored this path.</p>
+        {path.last_active_at && <p className="tp-meta text-[color:var(--ink-700)] mt-1">Last active: {fmtDate(path.last_active_at)}</p>}
       </div>
 
       <div className="grid gap-3 sm:grid-cols-4 text-center">
@@ -62,17 +62,17 @@ function PausedPathPanel({ path, experiments, missions, proof, contacts, reflect
         ].map(({ label, val }) => (
           <div key={label} className="rounded-xl border border-[color:var(--ink-200)] bg-white p-3">
             <p className="font-heading text-2xl font-bold text-[color:var(--surface-dark-900)]">{val}</p>
-            <p className="text-xs text-[color:var(--ink-500)] mt-0.5">{label}</p>
+            <p className="tp-meta text-[color:var(--ink-500)] mt-1">{label}</p>
           </div>
         ))}
       </div>
 
       {completedExps.length > 0 && (
         <div>
-          <p className="text-xs font-bold uppercase tracking-wide text-[color:var(--ink-500)] mb-2">Completed experiments</p>
+          <p className="tp-eyebrow text-[color:var(--ink-500)] mb-2">Completed experiments</p>
           <div className="space-y-1.5">
             {completedExps.map(e => (
-              <div key={e.id} className="flex items-center gap-2 text-sm">
+              <div key={e.id} className="tp-body flex items-center gap-2">
                 <CheckCircle2 size={13} className="text-green-600 shrink-0" />
                 <span className="text-[color:var(--ink-700)]">{e.title}</span>
               </div>
@@ -82,7 +82,7 @@ function PausedPathPanel({ path, experiments, missions, proof, contacts, reflect
       )}
 
       {pathReflections.length > 0 && (
-        <p className="text-xs text-[color:var(--ink-500)]">{pathReflections.length} reflection{pathReflections.length > 1 ? 's' : ''} saved on this path.</p>
+        <p className="tp-meta text-[color:var(--ink-500)]">{pathReflections.length} reflection{pathReflections.length > 1 ? 's' : ''} saved on this path.</p>
       )}
 
       <div className="flex flex-wrap gap-3">
@@ -117,21 +117,21 @@ function PathCard({ path, experiments, missions, proof, contacts, reflections, o
           <div className="flex-1 min-w-0">
             <div className="flex flex-wrap items-center gap-2 mb-2">
               {path.is_primary_focus && (
-                <span className="rounded-full px-2.5 py-1 text-xs font-bold flex items-center gap-1" style={{ background: 'var(--ink-100)', color: 'var(--brand-navy-900)' }}>
+                <span className="tp-meta rounded-full px-3 py-1 font-bold flex items-center gap-1.5" style={{ background: 'var(--ink-100)', color: 'var(--brand-navy-900)' }}>
                   <Star size={11} /> Primary Focus
                 </span>
               )}
-              <span className="rounded-full px-2.5 py-1 text-xs font-bold" style={{ background: cfg.bg, color: cfg.text }}>{cfg.label}</span>
+              <span className="tp-meta rounded-full px-3 py-1 font-bold" style={{ background: cfg.bg, color: cfg.text }}>{cfg.label}</span>
               {path.risk_level ? <RiskBadge riskLevel={path.risk_level} /> : <RiskNotAssessed onAutoAssess={onAutoAssess} onAssess={() => onAction('edit', path)} assessing={assessing} />}
               {path.confidence_level && <ConfidenceBadge confidenceLevel={path.confidence_level} />}
             </div>
-            <h2 className="font-heading text-xl font-bold text-[color:var(--surface-dark-900)]">{path.path_name}</h2>
-            {path.path_category && <p className="text-xs text-[color:var(--ink-400)] mt-0.5">{path.path_category}</p>}
-            <p className="mt-2 text-sm text-[color:var(--ink-700)] line-clamp-2">{path.why_it_fits || path.fit_reason}</p>
+            <h2 className="tp-section text-[color:var(--surface-dark-900)]">{path.path_name}</h2>
+            {path.path_category && <p className="tp-meta text-[color:var(--ink-400)] mt-1">{path.path_category}</p>}
+            <p className="tp-body mt-2 text-[color:var(--ink-700)] line-clamp-2">{path.why_it_fits || path.fit_reason}</p>
 
             {pathExps.length > 0 && (
               <div className="mt-3">
-                <div className="flex justify-between text-xs text-[color:var(--ink-400)] mb-1">
+                <div className="tp-meta flex justify-between text-[color:var(--ink-400)] mb-1.5">
                   <span>Experiment progress</span>
                   <span>{completedExps.length}/{pathExps.length}</span>
                 </div>
@@ -142,7 +142,7 @@ function PathCard({ path, experiments, missions, proof, contacts, reflections, o
             )}
 
             {path.last_active_at && (
-              <p className="mt-2 text-xs text-[color:var(--ink-400)] flex items-center gap-1"><Clock size={11} /> Last active {fmtDate(path.last_active_at)}</p>
+              <p className="tp-meta mt-2.5 text-[color:var(--ink-400)] flex items-center gap-1.5"><Clock size={11} /> Last active {fmtDate(path.last_active_at)}</p>
             )}
           </div>
 
@@ -153,54 +153,54 @@ function PathCard({ path, experiments, missions, proof, contacts, reflections, o
 
         <div className="mt-4 flex flex-wrap gap-2">
           <button onClick={onBuildOutreachPlan}
-            className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition"
+            className="flex items-center gap-1.5 rounded-lg tp-meta px-3 py-1.5 font-semibold transition"
             style={{ background: 'var(--background-tertiary)', color: 'var(--brand-navy-700)', border: '1px solid var(--border-light)' }}>
             <Users size={12} /> Build Outreach Plan
           </button>
           <button onClick={() => onAction('edit', path)}
-            className="flex items-center gap-1.5 rounded-lg border border-[color:var(--ink-200)] px-3 py-1.5 text-xs font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)]">
+            className="flex items-center gap-1.5 rounded-lg border border-[color:var(--ink-200)] tp-meta px-3 py-1.5 font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)]">
             <Pencil size={12} /> Edit
           </button>
           {!path.is_primary_focus && ACTIVE_STATUSES.includes(path.status) && (
             <button onClick={() => onAction('make_primary', path)}
-              className="flex items-center gap-1.5 rounded-lg border border-[color:var(--ink-200)] px-3 py-1.5 text-xs font-semibold text-[color:var(--ink-700)] hover:bg-[#F8ECEF]">
+              className="flex items-center gap-1.5 rounded-lg border border-[color:var(--ink-200)] tp-meta px-3 py-1.5 font-semibold text-[color:var(--ink-700)] hover:bg-[#F8ECEF]">
               <Star size={12} /> Make Primary
             </button>
           )}
           {ACTIVE_STATUSES.includes(path.status) && (
             <button onClick={() => onAction('pause', path)}
-              className="flex items-center gap-1.5 rounded-lg border border-[color:var(--ink-200)] px-3 py-1.5 text-xs font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)]">
+              className="flex items-center gap-1.5 rounded-lg border border-[color:var(--ink-200)] tp-meta px-3 py-1.5 font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)]">
               <Pause size={12} /> Pause
             </button>
           )}
           {path.status === 'paused' && (
             <button onClick={() => onAction('resume', path)}
-              className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold text-white"
+              className="flex items-center gap-1.5 rounded-lg tp-meta px-3 py-1.5 font-semibold text-white"
               style={{ background: 'var(--brand-navy-900)' }}>
               <Play size={12} /> Resume
             </button>
           )}
           {path.status !== 'archived' && path.status !== 'completed' && (
             <button onClick={() => onAction('complete', path)}
-              className="flex items-center gap-1.5 rounded-lg border border-[color:var(--ink-200)] px-3 py-1.5 text-xs font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)]">
+              className="flex items-center gap-1.5 rounded-lg border border-[color:var(--ink-200)] tp-meta px-3 py-1.5 font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)]">
               <CheckCircle2 size={12} /> Mark Complete
             </button>
           )}
           {path.status === 'completed' && (
             <button onClick={() => onAction('uncomplete', path)}
-              className="flex items-center gap-1.5 rounded-lg border border-blue-200 px-3 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-50 transition">
+              className="flex items-center gap-1.5 rounded-lg border border-blue-200 tp-meta px-3 py-1.5 font-semibold text-blue-700 hover:bg-blue-50 transition">
               <RotateCcw size={12} /> Mark Not Complete
             </button>
           )}
           {path.status !== 'archived' && (
             <button onClick={() => onAction('archive', path)}
-              className="flex items-center gap-1.5 rounded-lg border border-[color:var(--ink-200)] px-3 py-1.5 text-xs font-semibold text-[color:var(--ink-500)] hover:bg-[color:var(--ink-50)]">
+              className="flex items-center gap-1.5 rounded-lg border border-[color:var(--ink-200)] tp-meta px-3 py-1.5 font-semibold text-[color:var(--ink-500)] hover:bg-[color:var(--ink-50)]">
               <Archive size={12} /> Archive
             </button>
           )}
           {path.status === 'archived' && (
             <button onClick={() => onAction('unarchive', path)}
-              className="flex items-center gap-1.5 rounded-lg border border-[color:var(--ink-200)] px-3 py-1.5 text-xs font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--success-50)] hover:border-green-200 hover:text-green-700 transition">
+              className="flex items-center gap-1.5 rounded-lg border border-[color:var(--ink-200)] tp-meta px-3 py-1.5 font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--success-50)] hover:border-green-200 hover:text-green-700 transition">
               <ArchiveRestore size={12} /> Un-archive
             </button>
           )}
@@ -224,38 +224,38 @@ function PathCard({ path, experiments, missions, proof, contacts, reflections, o
 
           {(path.why_it_may_not_fit || path.concern) && (
             <div className="rounded-xl p-3" style={{ background: 'var(--warning-50)', border: '1px solid rgba(180,83,9,0.2)' }}>
-              <p className="text-xs font-bold text-[color:var(--warning-700)] uppercase tracking-wide mb-1">Potential concern</p>
-              <p className="text-sm text-[color:var(--ink-700)]">{path.why_it_may_not_fit || path.concern}</p>
+              <p className="tp-eyebrow text-[color:var(--warning-700)] mb-1.5">Potential concern</p>
+              <p className="tp-body text-[color:var(--ink-700)]">{path.why_it_may_not_fit || path.concern}</p>
             </div>
           )}
 
           {(path.lifestyle_implications || d.lifestyle) && (
             <div>
-              <p className="text-xs font-bold uppercase tracking-[.12em] text-[color:var(--ink-500)] mb-2">Lifestyle</p>
-              <p className="text-sm text-[color:var(--ink-700)]">{path.lifestyle_implications || d.lifestyle}</p>
+              <p className="tp-eyebrow text-[color:var(--ink-500)] mb-2">Lifestyle</p>
+              <p className="tp-body text-[color:var(--ink-700)]">{path.lifestyle_implications || d.lifestyle}</p>
             </div>
           )}
 
           {d.income_trajectory && (
             <div>
-              <p className="text-xs font-bold uppercase tracking-[.12em] text-[color:var(--ink-500)] mb-2">Income trajectory</p>
-              <p className="text-sm text-[color:var(--ink-700)]">{d.income_trajectory}</p>
+              <p className="tp-eyebrow text-[color:var(--ink-500)] mb-2">Income trajectory</p>
+              <p className="tp-body text-[color:var(--ink-700)]">{d.income_trajectory}</p>
             </div>
           )}
 
           {path.goals && (
             <div>
-              <p className="text-xs font-bold uppercase tracking-[.12em] text-[color:var(--ink-500)] mb-2">Your goals</p>
-              <p className="text-sm text-[color:var(--ink-700)]">{path.goals}</p>
+              <p className="tp-eyebrow text-[color:var(--ink-500)] mb-2">Your goals</p>
+              <p className="tp-body text-[color:var(--ink-700)]">{path.goals}</p>
             </div>
           )}
 
           {(path.skill_gaps?.length > 0 || path.current_gaps?.length > 0) && (
             <div>
-              <p className="text-xs font-bold uppercase tracking-[.12em] text-[color:var(--ink-500)] mb-2">Skill gaps</p>
+              <p className="tp-eyebrow text-[color:var(--ink-500)] mb-2">Skill gaps</p>
               <div className="flex flex-wrap gap-2">
                 {(path.skill_gaps || path.current_gaps || []).map((g, i) => (
-                  <span key={i} className="rounded-full border border-[color:var(--ink-200)] px-3 py-1 text-xs text-[color:var(--ink-700)]">{g}</span>
+                  <span key={i} className="tp-meta rounded-full border border-[color:var(--ink-200)] px-3 py-1 text-[color:var(--ink-700)]">{g}</span>
                 ))}
               </div>
             </div>
@@ -265,14 +265,14 @@ function PathCard({ path, experiments, missions, proof, contacts, reflections, o
             <div className="grid gap-4 sm:grid-cols-2">
               {path.first_experiment && (
                 <div className="rounded-xl p-4" style={{ background: 'var(--background-tertiary)', border: '1px solid var(--border-light)' }}>
-                   <p className="text-xs font-bold uppercase tracking-[.12em] mb-2" style={{ color: 'var(--brand-navy-900)' }}>Suggested first experiment</p>
-                  <p className="text-sm text-[color:var(--ink-700)]">{path.first_experiment}</p>
+                   <p className="tp-eyebrow mb-2" style={{ color: 'var(--brand-navy-900)' }}>Suggested first experiment</p>
+                  <p className="tp-body text-[color:var(--ink-700)]">{path.first_experiment}</p>
                 </div>
               )}
               {d.day_to_day && (
                 <div>
-                  <p className="text-xs font-bold uppercase tracking-[.12em] text-[color:var(--ink-500)] mb-2">Day-to-day reality</p>
-                  <p className="text-sm text-[color:var(--ink-700)]">{d.day_to_day}</p>
+                  <p className="tp-eyebrow text-[color:var(--ink-500)] mb-2">Day-to-day reality</p>
+                  <p className="tp-body text-[color:var(--ink-700)]">{d.day_to_day}</p>
                 </div>
               )}
             </div>
@@ -280,13 +280,13 @@ function PathCard({ path, experiments, missions, proof, contacts, reflections, o
 
           {path.notes && (
             <div>
-              <p className="text-xs font-bold uppercase tracking-[.12em] text-[color:var(--ink-500)] mb-2">Notes</p>
-              <p className="text-sm text-[color:var(--ink-700)]">{path.notes}</p>
+              <p className="tp-eyebrow text-[color:var(--ink-500)] mb-2">Notes</p>
+              <p className="tp-body text-[color:var(--ink-700)]">{path.notes}</p>
             </div>
           )}
 
           <div>
-            <p className="text-xs font-bold uppercase tracking-[.12em] text-[color:var(--ink-500)] mb-3 flex items-center gap-1.5"><History size={12} /> Path history</p>
+            <p className="tp-eyebrow text-[color:var(--ink-500)] mb-3 flex items-center gap-1.5"><History size={12} /> Path history</p>
             <div className="space-y-1.5">
               {[
                 path.created_date && { date: path.created_date, label: 'Path created' },
@@ -295,14 +295,14 @@ function PathCard({ path, experiments, missions, proof, contacts, reflections, o
                 path.completed_at && { date: path.completed_at, label: 'Completed' },
                 path.last_active_at && path.status === 'active' && { date: path.last_active_at, label: 'Last active' },
               ].filter(Boolean).map((evt, i) => (
-                <div key={i} className="flex items-center gap-3 text-xs text-[color:var(--ink-500)]">
+                <div key={i} className="tp-meta flex items-center gap-3 text-[color:var(--ink-500)]">
                   <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: 'var(--brand-navy-900)' }} />
                   <span className="font-medium">{fmtDate(evt.date)}</span>
                   <span>{evt.label}</span>
                 </div>
               ))}
               {pathExps.map(e => (
-                <div key={e.id} className="flex items-center gap-3 text-xs text-[color:var(--ink-400)]">
+                <div key={e.id} className="tp-meta flex items-center gap-3 text-[color:var(--ink-400)]">
                   <div className="w-1.5 h-1.5 rounded-full shrink-0 bg-[color:var(--ink-200)]" />
                   <span className="font-medium">{fmtDate(e.created_date)}</span>
                   <span>Experiment: {e.title}</span>
@@ -342,9 +342,9 @@ function SortFilterBar({ paths, sortBy, setSortBy, filters, setFilters }) {
       <div className="flex flex-wrap items-center gap-3">
         <div className="flex items-center gap-2 shrink-0">
           <SlidersHorizontal size={14} className="text-[color:var(--ink-500)]" />
-          <span className="text-xs font-bold uppercase tracking-[.12em] text-[color:var(--ink-500)]">Sort & Filter</span>
+          <span className="tp-eyebrow text-[color:var(--ink-500)]">Sort & Filter</span>
           {hasActiveFilters && (
-            <span className="rounded-full px-2 py-0.5 text-[10px] font-bold" style={{ background: 'var(--ink-100)', color: 'var(--brand-navy-700)' }}>
+            <span className="tp-meta rounded-full px-2.5 py-0.5 font-bold" style={{ background: 'var(--ink-100)', color: 'var(--brand-navy-700)' }}>
               {activeCount} active
             </span>
           )}
@@ -417,7 +417,7 @@ function SortFilterBar({ paths, sortBy, setSortBy, filters, setFilters }) {
         {hasActiveFilters && (
           <button
             onClick={clearFilters}
-            className="flex items-center gap-1 rounded-lg border border-[color:var(--ink-200)] px-3 py-2 text-xs font-semibold text-[color:var(--ink-500)] hover:text-red-600 hover:border-red-200 transition"
+            className="tp-meta flex items-center gap-1.5 rounded-lg border border-[color:var(--ink-200)] px-3 py-2 font-semibold text-[color:var(--ink-500)] hover:text-red-600 hover:border-red-200 transition"
             aria-label="Clear all filters"
           >
             <X size={12} /> Clear filters
@@ -509,7 +509,7 @@ export default function PathComparison() {
 
   useEffect(() => { load(); }, []);
 
-  // Derived: sorted then filtered — recomputed whenever sort, filters, or raw paths change
+  // Derived: sorted then filtered, recomputed whenever sort, filters, or raw paths change
   const displayedPaths = useMemo(() => {
     const sorted = sortPaths(paths, sortBy);
     const filtered = filterPaths(sorted, filters);
@@ -574,7 +574,7 @@ export default function PathComparison() {
   const cardProps = { experiments, missions, proof, contacts, reflections, onAction: handleAction };
 
   return (
-    <main className="mx-auto max-w-5xl px-5 py-10 sm:px-8">
+    <main className="app-page">
       {showCreate && (
         <CreatePathModal
           existingRecommendations={paths}
@@ -618,7 +618,7 @@ export default function PathComparison() {
       />
 
       {assessError && (
-        <div className="mb-4 flex items-start justify-between gap-3 rounded-xl px-4 py-3 text-sm"
+        <div className="tp-body mb-4 flex items-start justify-between gap-3 rounded-xl px-4 py-3"
           style={{ background: 'var(--warning-50)', border: '1px solid var(--warning-700)', color: 'var(--warning-700)' }}>
           <span>{assessError}</span>
           <button onClick={() => setAssessError('')} className="shrink-0 font-semibold underline">Dismiss</button>
@@ -632,13 +632,13 @@ export default function PathComparison() {
           <SkCards count={3} h={210} r={24} />
         </>
       ) : loadFailed || (paths.length === 0 && submission) ? (
-        // Onboarding was completed but no paths came back — recoverable, never blank,
+        // Onboarding was completed but no paths came back. Recoverable, never blank,
         // and never silently regenerated.
         <PathRecoveryPanel variant="missing" onRestored={load} />
       ) : paths.length === 0 ? (
         <div className="rounded-[24px] border border-dashed border-[color:var(--ink-200)] p-16 text-center">
-          <h3 className="font-heading text-xl font-bold text-[color:var(--surface-dark-900)]">No paths yet.</h3>
-          <p className="mt-2 text-sm text-[color:var(--ink-500)]">Create your first path to start tracking experiments, reflections, and progress.</p>
+          <h3 className="tp-section text-[color:var(--surface-dark-900)]">No paths yet.</h3>
+          <p className="tp-body mt-2.5 text-[color:var(--ink-500)]">Create your first path to start tracking experiments, reflections, and progress.</p>
           <button onClick={() => setShowCreate(true)}
             className="mt-6 inline-flex items-center gap-2 rounded-[10px] px-6 py-3 text-sm font-semibold text-white"
             style={{ background: 'var(--brand-navy-900)' }}>
@@ -678,24 +678,24 @@ export default function PathComparison() {
           />
 
           {/* Result count */}
-          <p className="mb-4 text-xs text-[color:var(--ink-400)]">
+          <p className="tp-meta mb-4 text-[color:var(--ink-400)]">
             {displayedPaths.length} path{displayedPaths.length !== 1 ? 's' : ''} shown
             {paths.length !== displayedPaths.length ? ` of ${paths.length}` : ''}
           </p>
 
           {displayedPaths.length === 0 ? (
             <div className="rounded-[24px] border border-dashed border-[color:var(--ink-200)] py-16 text-center">
-              <p className="text-sm font-semibold text-[color:var(--surface-dark-900)]">No paths match these filters.</p>
-              <p className="text-xs text-[color:var(--ink-400)] mt-1">Try adjusting your sort or filter options.</p>
+              <p className="tp-body font-semibold text-[color:var(--surface-dark-900)]">No paths match these filters.</p>
+              <p className="tp-meta text-[color:var(--ink-400)] mt-1.5">Try adjusting your sort or filter options.</p>
               <button
                 onClick={() => setFilters(DEFAULT_FILTERS)}
-                className="mt-4 inline-flex items-center gap-1.5 rounded-[10px] border border-[color:var(--ink-200)] px-4 py-2 text-xs font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)]"
+                className="tp-meta mt-4 inline-flex items-center gap-1.5 rounded-[10px] border border-[color:var(--ink-200)] px-4 py-2 font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)]"
               >
                 <X size={12} /> Clear Filters
               </button>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-5">
               {displayedPaths.map(p => (
                 <PathCard
                   key={p.id}
@@ -711,7 +711,7 @@ export default function PathComparison() {
             </div>
           )}
 
-          <div className="mt-8 rounded-[20px] p-5 text-center text-sm text-[color:var(--ink-500)]"
+          <div className="tp-body mt-8 rounded-[20px] p-5 text-center text-[color:var(--ink-500)]"
             style={{ background: 'var(--background-tertiary)', border: '1px solid var(--border-light)' }}>
             These paths are recommendations and tests, not permanent commitments. Your goal is to learn what fits you, not to pick one and stay forever.
           </div>

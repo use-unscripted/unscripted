@@ -56,7 +56,7 @@ function GoalRow({ goal, onChange, onRemove }) {
           value={goal.estimated_hours || ''}
           onChange={e => onChange({ ...goal, estimated_hours: Number(e.target.value) })}
         />
-        <button onClick={onRemove} className="text-xs font-semibold text-[color:var(--danger-700)] hover:underline text-left">Remove</button>
+        <button onClick={onRemove} className="tp-meta font-semibold text-[color:var(--danger-700)] hover:underline text-left">Remove</button>
       </div>
     </div>
   );
@@ -65,19 +65,19 @@ function GoalRow({ goal, onChange, onRemove }) {
 function ScheduleBlockRow({ block, onChange, onRemove }) {
   return (
     <div className="grid gap-2 rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] p-3 sm:grid-cols-5">
-      <select className="rounded-lg border border-[color:var(--ink-200)] bg-white px-2 py-2 text-xs text-[color:var(--ink-700)] outline-none focus:border-[color:var(--brand-navy-900)]"
+      <select className="rounded-lg border border-[color:var(--ink-200)] bg-white px-2 py-2 text-sm text-[color:var(--ink-700)] outline-none focus:border-[color:var(--brand-navy-900)]"
         value={block.block_type} onChange={e => onChange({ ...block, block_type: e.target.value })}>
         {BLOCK_TYPES.map(b => <option key={b.value} value={b.value}>{b.label}</option>)}
       </select>
-      <select className="rounded-lg border border-[color:var(--ink-200)] bg-white px-2 py-2 text-xs text-[color:var(--ink-700)] outline-none focus:border-[color:var(--brand-navy-900)]"
+      <select className="rounded-lg border border-[color:var(--ink-200)] bg-white px-2 py-2 text-sm text-[color:var(--ink-700)] outline-none focus:border-[color:var(--brand-navy-900)]"
         value={block.day} onChange={e => onChange({ ...block, day: e.target.value })}>
         {DAYS.map(d => <option key={d} value={d}>{d}</option>)}
       </select>
-      <input type="time" className="rounded-lg border border-[color:var(--ink-200)] bg-white px-2 py-2 text-xs text-[color:var(--ink-700)] outline-none focus:border-[color:var(--brand-navy-900)]"
+      <input type="time" className="rounded-lg border border-[color:var(--ink-200)] bg-white px-2 py-2 text-sm text-[color:var(--ink-700)] outline-none focus:border-[color:var(--brand-navy-900)]"
         value={block.start_time || ''} onChange={e => onChange({ ...block, start_time: e.target.value })} />
-      <input type="time" className="rounded-lg border border-[color:var(--ink-200)] bg-white px-2 py-2 text-xs text-[color:var(--ink-700)] outline-none focus:border-[color:var(--brand-navy-900)]"
+      <input type="time" className="rounded-lg border border-[color:var(--ink-200)] bg-white px-2 py-2 text-sm text-[color:var(--ink-700)] outline-none focus:border-[color:var(--brand-navy-900)]"
         value={block.end_time || ''} onChange={e => onChange({ ...block, end_time: e.target.value })} />
-      <button onClick={onRemove} className="text-xs font-semibold text-[color:var(--danger-700)] hover:underline">Remove</button>
+      <button onClick={onRemove} className="tp-meta font-semibold text-[color:var(--danger-700)] hover:underline">Remove</button>
     </div>
   );
 }
@@ -124,11 +124,11 @@ export default function GoalIntake() {
   const setGoalsForTab = tab === 'annual' ? setAnnualGoals : tab === 'monthly' ? setMonthlyGoals : setWeeklyGoals;
 
   return (
-    <main className="min-h-screen px-5 py-10" style={{ background: 'var(--page-surface)' }}>
-      <div className="mx-auto max-w-4xl">
+    <main className="min-h-screen" style={{ background: 'var(--page-surface)' }}>
+      <div className="app-page">
         <div className="mb-8 flex items-center justify-between">
           <LogoWordmark />
-          <span className="text-xs font-bold text-[color:var(--ink-500)]">GOALS &amp; SCHEDULE</span>
+          <span className="tp-eyebrow text-[color:var(--ink-500)]">GOALS &amp; SCHEDULE</span>
         </div>
 
         <div className="mb-2 h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--ink-200)' }}>
@@ -136,9 +136,9 @@ export default function GoalIntake() {
         </div>
 
         <div className="mb-6 mt-8">
-          <p className="text-xs font-bold uppercase tracking-[.14em]" style={{ color: 'var(--brand-navy-700)' }}>Step 2 of 2</p>
-          <h1 className="font-heading mt-2 text-3xl font-bold text-[color:var(--surface-dark-900)]">Goals and schedule.</h1>
-          <p className="mt-2 text-sm text-[color:var(--ink-500)]">Be honest about what you can actually do with the time you have. Unscripted will tell you if your goals are realistic.</p>
+          <p className="tp-eyebrow" style={{ color: 'var(--brand-navy-700)' }}>Step 2 of 2</p>
+          <h1 className="tp-page mt-2.5 text-[color:var(--surface-dark-900)]">Goals and schedule.</h1>
+          <p className="tp-lead mt-3 text-[color:var(--ink-500)]">Be honest about what you can actually do with the time you have. Unscripted will tell you if your goals are realistic.</p>
         </div>
 
         {/* Tabs */}
@@ -155,7 +155,7 @@ export default function GoalIntake() {
         <div className="rounded-[24px] border border-[color:var(--ink-200)] bg-white p-6 sm:p-8">
           {tab !== 'weekly' ? (
             <div className="space-y-4">
-              <p className="text-sm text-[color:var(--ink-500)]">
+              <p className="tp-body text-[color:var(--ink-500)]">
                 {tab === 'annual' ? 'What would make the next 12 months successful? Be specific.' : 'What should be true 30 days from now? Which goals matter most this month?'}
               </p>
               {goalsForTab.map((g, i) => (
@@ -171,7 +171,7 @@ export default function GoalIntake() {
           ) : (
             <div className="space-y-6">
               <div className="space-y-4">
-                <p className="text-sm text-[color:var(--ink-500)]">What must happen this week? Add your most important weekly actions.</p>
+                <p className="tp-body text-[color:var(--ink-500)]">What must happen this week? Add your most important weekly actions.</p>
                 {weeklyGoals.map((g, i) => (
                   <GoalRow key={i} goal={g}
                     onChange={val => updateGoal(weeklyGoals, setWeeklyGoals, i, val)}
@@ -184,8 +184,8 @@ export default function GoalIntake() {
               </div>
 
               <div className="border-t border-[color:var(--ink-200)] pt-6">
-                <h3 className="font-heading mb-4 font-bold text-[color:var(--surface-dark-900)]">Your fixed schedule</h3>
-                <p className="mb-4 text-sm text-[color:var(--ink-500)]">Add your fixed commitments so we can plan around them, not over them.</p>
+                <h3 className="tp-section mb-4 text-[color:var(--surface-dark-900)]">Your fixed schedule</h3>
+                <p className="tp-body mb-4 text-[color:var(--ink-500)]">Add your fixed commitments so we can plan around them, not over them.</p>
                 <div className="space-y-2">
                   {scheduleBlocks.map((b, i) => (
                     <ScheduleBlockRow key={i} block={b}
@@ -205,7 +205,7 @@ export default function GoalIntake() {
                   <input type="number" min="1" max="40" value={availableHours}
                     onChange={e => setAvailableHours(Number(e.target.value))}
                     className="mt-2 w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-sm outline-none focus:border-[color:var(--brand-navy-900)]" />
-                  <p className="mt-1 text-xs text-[color:var(--ink-400)]">Be conservative and honest.</p>
+                  <p className="tp-meta mt-1 text-[color:var(--ink-400)]">Be conservative and honest.</p>
                 </label>
                 <label className="block">
                   <span className="text-sm font-semibold text-[color:var(--ink-700)]">High-energy times</span>
