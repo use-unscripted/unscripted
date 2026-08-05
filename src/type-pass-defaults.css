@@ -47,10 +47,16 @@
    ───────────────────────────────────────────────────────────────────────── */
 
 :root {
-  /* One measure for every signed-in screen. Wide enough for a two-column
-     mission card, narrow enough that a paragraph inside it does not run past
-     a comfortable line. */
-  --app-measure: 60rem;   /* 960px */
+  /* One measure for every signed-in screen.
+
+     It is not set by line length. Paragraphs carry their own measure below, so
+     a wider page never buys a longer line — what it buys is a calendar square,
+     a resume panel and a card row that get the room they need. At 60rem the
+     app sat as a narrow column with an empty strip down both sides of any
+     laptop, and the two screens that had already broken out of it to do their
+     job, the resume builder and the campus calendar, were the two that looked
+     right. This is that width, for everything. */
+  --app-measure: 76rem;   /* 1216px */
   /* Prose never runs the full width of a wide card. */
   --prose-measure: 68ch;
 }

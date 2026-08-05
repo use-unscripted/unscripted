@@ -179,16 +179,19 @@ export default function Settings() {
         <Field label="Major" value={user.major} name="major" onChange={change} />
         <Field label="Graduation year" value={user.graduation_year} name="graduation_year" onChange={change} />
         <Field label="School year" value={user.school_year} name="school_year" onChange={change} />
+        {/* Sized to its own words above `sm` rather than to the card. A button
+            as wide as the form was already stretched at the old page width;
+            on the wider one it was a 1000px bar. */}
         <button
           onClick={save}
-          className="rounded-[10px] px-5 py-3 font-semibold text-white transition hover:-translate-y-px sm:col-span-2"
+          className="rounded-[10px] px-5 py-3 font-semibold text-white transition hover:-translate-y-px sm:col-span-2 sm:justify-self-start sm:px-10"
           style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}
         >
           {saved ? 'Saved' : 'Save changes'}
         </button>
         <button
           onClick={() => { clearCampusStore(); base44.auth.logout('/'); }}
-          className="tp-body touch-target font-semibold text-[color:var(--ink-500)] hover:text-[color:var(--surface-dark-900)] transition sm:col-span-2"
+          className="tp-body touch-target font-semibold text-[color:var(--ink-500)] hover:text-[color:var(--surface-dark-900)] transition sm:col-span-2 sm:justify-self-start"
         >
           Log out
         </button>
