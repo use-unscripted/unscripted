@@ -67,9 +67,11 @@
 
 .app-page {
   width: 100%;
-  max-width: var(--app-measure);
   margin-inline: auto;
   padding: 2rem 1.25rem 4rem;
+}
+:where(.app-page) {
+  max-width: var(--app-measure);
 }
 @media (min-width: 640px) {
   .app-page { padding: 2.5rem 2rem 5rem; }
@@ -83,11 +85,28 @@
   .app-stack > * + * { margin-top: 3rem; }
 }
 
+
+/* ── Why half of every rule below sits inside :where() ────────────────────
+   This stylesheet loads after Tailwind's utilities (see main.jsx), which is
+   what lets a tp- class beat a stray text-xs. That same ordering would also
+   beat font-semibold, normal-case and tracking-wide, and 522 lines across 65
+   files legitimately set one of those on top of a scale class: a form label
+   that wants bold, a countdown that wants sentence case.
+
+   So the rules are split by intent. Size and line-height are the contract and
+   keep normal specificity. Weight, family, casing, tracking and measure are
+   defaults, and :where() gives them zero specificity so any utility on the
+   same element still wins. Add a new property to the wrong half and you either
+   lose the floor or take away a caller's override.
+   ───────────────────────────────────────────────────────────────────────── */
+
 /* ── The scale ───────────────────────────────────────────────────────────── */
 .tp-page {
-  font-family: var(--font-heading);
   font-size: 2rem;
   line-height: 1.12;
+}
+:where(.tp-page) {
+  font-family: var(--font-heading);
   font-weight: 700;
   letter-spacing: -0.022em;
 }
@@ -96,17 +115,21 @@
 }
 
 .tp-section {
-  font-family: var(--font-heading);
   font-size: 1.1875rem;
   line-height: 1.3;
+}
+:where(.tp-section) {
+  font-family: var(--font-heading);
   font-weight: 700;
   letter-spacing: -0.01em;
 }
 
 .tp-card {
-  font-family: var(--font-heading);
   font-size: 1.0625rem;
   line-height: 1.35;
+}
+:where(.tp-card) {
+  font-family: var(--font-heading);
   font-weight: 700;
   letter-spacing: -0.01em;
 }
@@ -114,6 +137,8 @@
 .tp-lead {
   font-size: 1rem;
   line-height: 1.6;
+}
+:where(.tp-lead) {
   max-width: var(--prose-measure);
 }
 
@@ -127,19 +152,25 @@
 .tp-prose {
   font-size: 0.9375rem;
   line-height: 1.6;
+}
+:where(.tp-prose) {
   max-width: var(--prose-measure);
 }
 
 .tp-meta {
   font-size: 0.8125rem;
   line-height: 1.45;
+}
+:where(.tp-meta) {
   font-weight: 500;
 }
 
 .tp-eyebrow {
-  font-family: var(--font-heading);
   font-size: 0.6875rem;
   line-height: 1.2;
+}
+:where(.tp-eyebrow) {
+  font-family: var(--font-heading);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.14em;
@@ -150,9 +181,11 @@
    app. It was 2rem, the same as a page title, which left the screen with two
    things claiming to be the most important. */
 .tp-hero {
-  font-family: var(--font-heading);
   font-size: 1.75rem;
   line-height: 1.14;
+}
+:where(.tp-hero) {
+  font-family: var(--font-heading);
   font-weight: 700;
   letter-spacing: -0.02em;
 }
