@@ -20,7 +20,7 @@ export default function PageNotFound({}) {
     });
     
     return (
-        <div className="min-h-screen flex items-center justify-center p-6 bg-[color:var(--ink-50)]">
+        <div className="min-h-[100svh] flex items-center justify-center p-6 bg-[color:var(--ink-50)]">
             <div className="max-w-md w-full">
                 <div className="text-center space-y-6">
                     {/* 404 Error Code */}

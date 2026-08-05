@@ -3,7 +3,7 @@ import { base44 } from '@/api/base44Client';
 import { X, ShieldCheck, Check } from 'lucide-react';
 import { extractResumeDraft } from '@/lib/evidence-library';
 
-const field = 'w-full rounded-xl border border-[color:var(--ink-200)] px-3 py-2 text-sm text-[color:var(--ink-700)] outline-none focus:border-[color:var(--brand-navy-900)]';
+const field = 'w-full rounded-xl border border-[color:var(--ink-200)] px-3 py-2 text-base md:text-sm text-[color:var(--ink-700)] outline-none focus:border-[color:var(--brand-navy-900)]';
 const listToText = (a) => (a || []).join(', ');
 const textToList = (t) => t.split(',').map((s) => s.trim()).filter(Boolean);
 

@@ -318,7 +318,7 @@ export default function Hero() {
             <div className="mt-9 flex flex-wrap items-center gap-3">
               <Link
                 to="/onboarding"
-                className="group flex items-center gap-2 whitespace-nowrap rounded-[var(--r-control)] px-7 py-3.5 text-sm font-semibold text-white"
+                className="touch-target group flex items-center gap-2 whitespace-nowrap rounded-[var(--r-control)] px-7 py-3.5 text-sm font-semibold text-white"
                 style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgb(31 58 95 / 0.25)' }}
               >
                 Start your 30-day test

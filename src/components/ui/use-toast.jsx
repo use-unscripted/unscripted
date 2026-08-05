@@ -1,8 +1,19 @@
 // Inspired by react-hot-toast library
 import { useState, useEffect } from "react";
 
-const TOAST_LIMIT = 20;
-const TOAST_REMOVE_DELAY = 1000000;
+// Three is what fits on a 393px phone without burying the page. The upstream
+// default was 20, which on a phone is a wall of cards over the whole screen.
+const TOAST_LIMIT = 3;
+
+// How long a toast sits on screen before it takes itself away.
+const TOAST_DURATION = 5000;
+
+// An error is something a student actually has to read, so it stays longer.
+const TOAST_DURATION_DESTRUCTIVE = 8000;
+
+// Gap between "closed" and unmounting, so the slide-out animation gets to run.
+// Upstream ships 1000000 here, which is 16 minutes and is why toasts never left.
+const TOAST_REMOVE_DELAY = 300;
 
 const actionTypes = {
   ADD_TOAST: "ADD_TOAST",
@@ -19,6 +30,7 @@ function genId() {
 }
 
 const toastTimeouts = new Map();
+const dismissTimeouts = new Map();
 
 const addToRemoveQueue = (toastId) => {
   if (toastTimeouts.has(toastId)) {
@@ -36,7 +48,7 @@ const addToRemoveQueue = (toastId) => {
   toastTimeouts.set(toastId, timeout);
 };
 
-const _clearFromRemoveQueue = (toastId) => {
+const clearFromRemoveQueue = (toastId) => {
   const timeout = toastTimeouts.get(toastId);
   if (timeout) {
     clearTimeout(timeout);
@@ -44,13 +56,48 @@ const _clearFromRemoveQueue = (toastId) => {
   }
 };
 
+// The countdown that closes a toast on its own, so nobody has to find the X.
+const addToDismissQueue = (toastId, duration) => {
+  if (dismissTimeouts.has(toastId)) {
+    return;
+  }
+
+  const timeout = setTimeout(() => {
+    dismissTimeouts.delete(toastId);
+    dispatch({
+      type: actionTypes.DISMISS_TOAST,
+      toastId,
+    });
+  }, duration);
+
+  dismissTimeouts.set(toastId, timeout);
+};
+
+const clearFromDismissQueue = (toastId) => {
+  const timeout = dismissTimeouts.get(toastId);
+  if (timeout) {
+    clearTimeout(timeout);
+    dismissTimeouts.delete(toastId);
+  }
+};
+
+const forgetToast = (toastId) => {
+  clearFromDismissQueue(toastId);
+  clearFromRemoveQueue(toastId);
+};
+
 export const reducer = (state, action) => {
   switch (action.type) {
-    case actionTypes.ADD_TOAST:
+    case actionTypes.ADD_TOAST: {
+      const next = [action.toast, ...state.toasts];
+      // Anything pushed off the end is gone from the screen, so drop its
+      // pending timers too rather than leaving them to fire at nothing.
+      next.slice(TOAST_LIMIT).forEach((t) => forgetToast(t.id));
       return {
         ...state,
-        toasts: [action.toast, ...state.toasts].slice(0, TOAST_LIMIT),
+        toasts: next.slice(0, TOAST_LIMIT),
       };
+    }
 
     case actionTypes.UPDATE_TOAST:
       return {
@@ -66,9 +113,11 @@ export const reducer = (state, action) => {
       // ! Side effects ! - This could be extracted into a dismissToast() action,
       // but I'll keep it here for simplicity
       if (toastId) {
+        clearFromDismissQueue(toastId);
         addToRemoveQueue(toastId);
       } else {
         state.toasts.forEach((toast) => {
+          clearFromDismissQueue(toast.id);
           addToRemoveQueue(toast.id);
         });
       }
@@ -87,11 +136,13 @@ export const reducer = (state, action) => {
     }
     case actionTypes.REMOVE_TOAST:
       if (action.toastId === undefined) {
+        state.toasts.forEach((t) => forgetToast(t.id));
         return {
           ...state,
           toasts: [],
         };
       }
+      forgetToast(action.toastId);
       return {
         ...state,
         toasts: state.toasts.filter((t) => t.id !== action.toastId),
@@ -133,6 +184,13 @@ function toast({ ...props }) {
       },
     },
   });
+
+  addToDismissQueue(
+    id,
+    props.variant === "destructive"
+      ? TOAST_DURATION_DESTRUCTIVE
+      : TOAST_DURATION
+  );
 
   return {
     id,

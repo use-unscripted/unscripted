@@ -10,7 +10,7 @@ echo "=== source ==="
 
 # The floor.
 #
-# Five exemptions, each deliberate and each argued somewhere in the tree:
+# Six exemptions, each deliberate and each argued somewhere in the tree:
 #   admin console + pilot   its own dense 13px system, outside this pass
 #   ResumePreview           the printed document, not app chrome; the PDF and
 #                           Word exporters read that node
@@ -19,6 +19,11 @@ echo "=== source ==="
 #                           in that file, it was measured and reverted
 #   components/landing      the reference standard this pass is reaching for,
 #                           deliberately untouched so it cannot regress
+#   LegalPage               its one hit is before:text-[11px] on the field
+#                           labels the stacked mobile table draws from
+#                           data-label: bold, uppercase, tracked out. That is
+#                           tp-eyebrow, the one thing the scale allows under
+#                           13px, and a pseudo-element cannot take a class.
 BELOW=$(grep -rE 'text-xs\b|text-\[([0-9]|1[012])px\]|text-\[0\.[0-6][0-9]*rem\]' src \
   --include='*.jsx' --include='*.js' \
   | grep -v '^src/pages/admin/' \
@@ -31,11 +36,12 @@ BELOW=$(grep -rE 'text-xs\b|text-\[([0-9]|1[012])px\]|text-\[0\.[0-6][0-9]*rem\]
   | grep -v '^src/components/pilot/' \
   | grep -v '^src/components/campus/CampusMonthGrid.jsx' \
   | grep -v '^src/components/landing/' \
+  | grep -v '^src/components/legal/LegalPage.jsx' \
   | wc -l | tr -d ' ')
 check "no text below the 13px floor" "$BELOW"
 [ "$BELOW" -gt 0 ] && grep -rE 'text-xs\b|text-\[([0-9]|1[012])px\]' src --include='*.jsx' \
   | grep -v '/admin/' | grep -v 'PilotDashboard\|AdminCampusFeeds\|AdminAiFailures\|ResumePreview' \
-  | grep -v '/ui/\|/pilot/\|/landing/\|CampusMonthGrid' | cut -d: -f1 | sort | uniq -c | sort -rn | head -10
+  | grep -v '/ui/\|/pilot/\|/landing/\|CampusMonthGrid\|LegalPage' | cut -d: -f1 | sort | uniq -c | sort -rn | head -10
 
 # Layering: a tp- class next to the class it supersedes.
 LAYERED=$(grep -rE 'tp-(page|section|card|lead|body|prose|meta|eyebrow)[^"'"'"']*\b(text-(xs|sm|base|lg|xl|[2-9]xl)|leading-[0-9])' src --include='*.jsx' | wc -l | tr -d ' ')

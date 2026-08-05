@@ -13,8 +13,14 @@ import { Check } from 'lucide-react';
 
 // A guided panel drops its own bottom padding so this bar can stick to the
 // panel's edge, so the primary action stays reachable however long the list is.
+//
+// The ::before is a scrim, not decoration. The bar is opaque, so on a short
+// phone it used to land across the middle of an option card and cut it in half
+// with a hard edge, which reads as a broken render rather than as "there is
+// more below". Fading the last few pixels out says the list continues.
 export const footerCls =
-  'sticky bottom-0 z-10 -mx-6 mt-6 rounded-b-[24px] border-t border-[color:var(--ink-100)] bg-white px-6 pb-6 pt-4 sm:-mx-8 sm:px-8';
+  'sticky bottom-0 z-10 -mx-6 mt-6 rounded-b-[24px] border-t border-[color:var(--ink-100)] bg-white px-6 pb-6 pt-4 sm:-mx-8 sm:px-8 ' +
+  "before:pointer-events-none before:absolute before:inset-x-0 before:bottom-full before:h-7 before:bg-gradient-to-t before:from-white before:to-white/0 before:content-['']";
 
 
 export function ProgressBar({ value }) {

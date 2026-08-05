@@ -5,7 +5,7 @@ import { unwrapLLM, PLAIN_PROSE_RULES } from '@/lib/llm';
 import { toText, toEnum, LEVELS } from '@/lib/ai-validation';
 import { reportAiFailure } from '@/lib/ai-failures';
 
-const inputCls = 'w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-sm text-[color:var(--surface-dark-900)] placeholder-[color:var(--ink-400)] outline-none focus:border-[color:var(--brand-navy-900)]';
+const inputCls = 'w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-base md:text-sm text-[color:var(--surface-dark-900)] placeholder-[color:var(--ink-400)] outline-none focus:border-[color:var(--brand-navy-900)]';
 
 const RISK_LEVELS = ['low', 'medium', 'high'];
 const CONFIDENCE_LEVELS = ['low', 'medium', 'high'];
@@ -239,7 +239,7 @@ ${PLAIN_PROSE_RULES}`,
               <div key={q.name}>
                 <label className="block text-sm font-semibold text-[color:var(--ink-700)] mb-1.5">{q.label}</label>
                 <textarea rows={2} name={q.name} value={survey[q.name]} onChange={chSurvey} placeholder={q.placeholder}
-                  className="w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-sm outline-none focus:border-[color:var(--brand-navy-900)] resize-none placeholder-[color:var(--ink-400)]" />
+                  className="w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)] resize-none placeholder-[color:var(--ink-400)]" />
               </div>
             ))}
             <div className="flex gap-3 mt-4">
@@ -268,7 +268,7 @@ ${PLAIN_PROSE_RULES}`,
                 <label className="block text-sm font-semibold text-[color:var(--ink-700)] mb-1.5">{f.label}</label>
                 {f.rows ? (
                   <textarea rows={f.rows} name={f.name} value={form[f.name]} onChange={ch} placeholder={f.placeholder}
-                    className="w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-sm outline-none focus:border-[color:var(--brand-navy-900)] resize-none placeholder-[color:var(--ink-400)]" />
+                    className="w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)] resize-none placeholder-[color:var(--ink-400)]" />
                 ) : (
                   <input name={f.name} value={form[f.name]} onChange={ch} placeholder={f.placeholder} className={inputCls} />
                 )}

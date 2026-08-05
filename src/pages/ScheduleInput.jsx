@@ -31,7 +31,7 @@ export default function ScheduleInput() {
   };
 
   return (
-    <main className="min-h-screen" style={{ background: 'var(--page-surface)' }}>
+    <main className="min-h-[100svh]" style={{ background: 'var(--page-surface)' }}>
       <div className="app-page">
         <div className="mb-8">
           <div className="mb-6">

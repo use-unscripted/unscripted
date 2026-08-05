@@ -78,7 +78,7 @@ function PathDropdown({ paths, value, onChange, error }) {
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Search paths..."
-            className="w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] pl-8 pr-4 py-2.5 text-sm outline-none focus:border-[color:var(--brand-navy-900)]"
+            className="w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] pl-8 pr-4 py-2.5 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]"
           />
         </div>
       )}
@@ -538,7 +538,7 @@ function NewExperimentModal({ onClose, onSave, paths }) {
         <div className="space-y-4">
           <div>
             <label className="tp-body font-semibold text-[color:var(--ink-700)] block mb-1">Choose an experiment type</label>
-            <select className="w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-sm outline-none focus:border-[color:var(--brand-navy-900)]"
+            <select className="w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]"
               value={data.experiment_type} onChange={e => setData(d => ({ ...d, experiment_type: e.target.value, title: d.title || e.target.value }))}>
               <option value="">Select or type your own below</option>
               {EXPERIMENT_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
@@ -547,7 +547,7 @@ function NewExperimentModal({ onClose, onSave, paths }) {
 
           <label className="block">
             <span className="tp-body font-semibold text-[color:var(--ink-700)] block mb-1">Experiment title</span>
-            <input className="w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-sm outline-none focus:border-[color:var(--brand-navy-900)]"
+            <input className="w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]"
               placeholder="e.g. Interview 3 investment bankers" value={data.title || ''} onChange={e => setData(d => ({ ...d, title: e.target.value }))} />
           </label>
 
@@ -562,13 +562,13 @@ function NewExperimentModal({ onClose, onSave, paths }) {
           ].map(f => (
             <label key={f.name} className="block">
               <span className="tp-body font-semibold text-[color:var(--ink-700)] block mb-1">{f.label}</span>
-              <input className="w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-sm outline-none focus:border-[color:var(--brand-navy-900)]"
+              <input className="w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]"
                 placeholder={f.placeholder} value={data[f.name] || ''} onChange={e => setData(d => ({ ...d, [f.name]: e.target.value }))} />
             </label>
           ))}
           <label className="block">
             <span className="tp-body font-semibold text-[color:var(--ink-700)] block mb-1">Deadline</span>
-            <input type="date" className="w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-sm outline-none focus:border-[color:var(--brand-navy-900)]"
+            <input type="date" className="w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]"
               value={data.deadline || ''} onChange={e => setData(d => ({ ...d, deadline: e.target.value }))} />
           </label>
         </div>

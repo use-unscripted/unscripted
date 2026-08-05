@@ -47,8 +47,11 @@ function Tooltip({ text }) {
         type="button"
         onClick={(e) => {e.stopPropagation();setOpen((v) => !v);}}
         aria-label="More information"
-        className="ml-0.5 rounded-full text-current opacity-50 hover:opacity-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-current transition">
-        
+        // 10px square was not a target a thumb can hit. `touch-icon` grows the
+        // tap area to 44px on a touch screen and hands the space back through a
+        // negative margin, so the badge stays the size it is.
+        className="touch-icon ml-0.5 rounded-full text-current opacity-50 hover:opacity-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-current transition">
+
         <Info size={10} />
       </button>
       {open &&
@@ -62,7 +65,9 @@ function Tooltip({ text }) {
             <button
             type="button"
             onClick={() => setOpen(false)}
-            className="absolute top-1.5 right-1.5 text-[color:var(--ink-400)] hover:text-[color:var(--ink-700)]"
+            // Pinned top-right inside its own box, so the tap area can grow
+            // without the glyph moving.
+            className="touch-target-square absolute top-1.5 right-1.5 flex items-start justify-end text-[color:var(--ink-400)] hover:text-[color:var(--ink-700)]"
             aria-label="Close tooltip">
             
               <X size={10} />

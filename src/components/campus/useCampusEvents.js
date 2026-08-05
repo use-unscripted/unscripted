@@ -2,6 +2,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { fetchCampusEvents } from '@/lib/campus-events';
 import { readCampusFeed, writeCampusFeed, clearCampusStore } from '@/lib/campus-store';
+import { loadOwnedPaths } from '@/lib/path-set';
+import { resolveJourney } from '@/lib/journey';
 
 /**
  * The student's campus feed, for surfaces that show the calendar itself.
@@ -55,28 +57,54 @@ export default function useCampusEvents({ days = 60, limit = 40 } = {}) {
   });
 
   const [profile, setProfile] = useState(null);
+
+  /**
+   * The path this student is currently testing.
+   *
+   * Ranking without it was the gap that made the relevance floor weaker here
+   * than in the Mission Guide picker. The picker is handed a path because it is
+   * building a guide around one; the dashboard and the calendar page were
+   * ranking against the profile alone, so a student four weeks into testing
+   * investment banking was judged on whatever they typed at signup. The path is
+   * the strongest signal we have about what is worth their time and it was the
+   * one thing these two surfaces never sent.
+   */
+  const [pathName, setPathName] = useState('');
+
   // "We have not looked yet" and "this student has no profile" are the same
   // `null`, and they must not be. The ranking is keyed on profile fields, so
   // ranking against a profile that is merely late produces a different key,
   // a second model call, and a recommendation written for nobody in
   // particular. Stored events arrive on the first frame now, well before the
   // profile does, so this race is live on every visit rather than theoretical.
-  const [profileReady, setProfileReady] = useState(false);
+  //
+  // The path is read in the same pass and gates the same flag, for the same
+  // reason: ranking against "no path yet" and then again once it lands is two
+  // model calls and two different answers for one student on one visit.
+  const [rankingReady, setRankingReady] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
   const userId = useRef('');
 
   const retry = useCallback(() => setReloadKey(key => key + 1), []);
 
   /**
-   * The student's own profile, for ranking.
+   * The student's own profile and the path they are testing, for ranking.
    *
-   * The backend already reads this to filter the feed, but it does not send it
-   * back, and the "why you should go" prompt needs the major and interests to
-   * say anything specific. A missing profile just means unranked events.
+   * The backend already reads the profile to filter the feed, but it does not
+   * send it back, and the "why you should go" prompt needs the major and
+   * interests to say anything specific. A missing profile just means a generic
+   * ranking rather than none.
    *
    * It is also where a different student signing in on the same browser gets
    * caught. Stored events are public listings, not private data, but they are
    * the wrong school's, so the moment we know who is here they go.
+   *
+   * The path comes from the same two calls My Journey uses for its own "you're
+   * currently testing X" line, rather than from the cycle entity. The cycle
+   * looks like the right source and is not: Drew's account renders that line
+   * correctly today with zero active cycle rows, so reading the cycle here
+   * produced an empty path on the one screen that had a path on it. Sharing
+   * the page's resolver is also what stops the two drifting apart later.
    */
   useEffect(() => {
     let cancelled = false;
@@ -92,15 +120,20 @@ export default function useCampusEvents({ days = 60, limit = 40 } = {}) {
           setState(prev => (prev.cachedAt ? { ...prev, events: [], status: '', loading: true } : prev));
         }
 
-        const rows = await base44.entities.StudentProfile.filter({ user_id: user.id }, '-created_date', 1);
-        if (!cancelled) setProfile(rows?.[0] || null);
+        const [rows, owned] = await Promise.all([
+          base44.entities.StudentProfile.filter({ user_id: user.id }, '-created_date', 1),
+          loadOwnedPaths().catch(() => ({ paths: [] })),
+        ]);
+        if (cancelled) return;
+        setProfile(rows?.[0] || null);
+        setPathName(resolveJourney({ paths: owned?.paths || [] }).currentPath?.path_name || '');
       } catch {
-        if (!cancelled) setProfile(null);
+        if (!cancelled) { setProfile(null); setPathName(''); }
       } finally {
-        // Ready either way. A student with no profile still gets a ranking,
-        // just a generic one, and waiting forever for a row that does not
-        // exist would hold the recommendation off the page permanently.
-        if (!cancelled) setProfileReady(true);
+        // Ready either way. A student with no profile and no chosen path still
+        // gets a ranking, just a generic one, and waiting forever for rows that
+        // do not exist would hold the recommendation off the page permanently.
+        if (!cancelled) setRankingReady(true);
       }
     })();
     return () => { cancelled = true; };
@@ -165,5 +198,5 @@ export default function useCampusEvents({ days = 60, limit = 40 } = {}) {
     return () => { cancelled = true; };
   }, [days, limit, reloadKey, storeKey]);
 
-  return { ...state, profile, profileReady, retry, adopt };
+  return { ...state, profile, pathName, rankingReady, retry, adopt };
 }

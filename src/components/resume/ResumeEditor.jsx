@@ -132,7 +132,7 @@ function BulletsEditor({ bullets, onChange, placeholder = 'Start with an action 
               className="text-[color:var(--ink-400)] hover:text-[color:var(--ink-700)] disabled:opacity-20"><ChevronDown size={11} /></button>
           </div>
           <textarea value={b} onChange={e => set(i, e.target.value)} rows={2} placeholder={placeholder}
-            className="flex-1 rounded-lg border border-[color:var(--ink-200)] px-2.5 py-1.5 tp-meta resize-none outline-none focus:border-[color:var(--brand-navy-900)]" />
+            className="flex-1 rounded-lg border border-[color:var(--ink-200)] px-2.5 py-1.5 text-base md:text-[13px] resize-none outline-none focus:border-[color:var(--brand-navy-900)]" />
           <div className="flex flex-col gap-0.5 pt-1 shrink-0">
             <button type="button" title="AI Help" onClick={() => setAiTarget(aiTarget === i ? null : i)}
               className="text-[color:var(--ink-400)] hover:text-[color:var(--brand-navy-700)]"><Sparkles size={11} /></button>
@@ -160,37 +160,37 @@ function ContactEditor({ contact, onChange }) {
       <div className="col-span-2">
         <label className="block tp-meta font-semibold text-[color:var(--ink-500)] mb-1">Full Name *</label>
         <input value={contact?.name || ''} onChange={e => set('name', e.target.value)} placeholder="Your Full Name"
-          className="w-full rounded-lg border border-[color:var(--ink-200)] px-2.5 py-1.5 tp-meta outline-none focus:border-[color:var(--brand-navy-900)]" />
+          className="w-full rounded-lg border border-[color:var(--ink-200)] px-2.5 py-1.5 text-base md:text-[13px] outline-none focus:border-[color:var(--brand-navy-900)]" />
       </div>
       <div>
         <label className="block tp-meta font-semibold text-[color:var(--ink-500)] mb-1">City</label>
         <input value={contact?.city || ''} onChange={e => set('city', e.target.value)} placeholder="Boston"
-          className="w-full rounded-lg border border-[color:var(--ink-200)] px-2.5 py-1.5 tp-meta outline-none focus:border-[color:var(--brand-navy-900)]" />
+          className="w-full rounded-lg border border-[color:var(--ink-200)] px-2.5 py-1.5 text-base md:text-[13px] outline-none focus:border-[color:var(--brand-navy-900)]" />
       </div>
       <div>
         <label className="block tp-meta font-semibold text-[color:var(--ink-500)] mb-1">State / Region</label>
         <input value={contact?.state || ''} onChange={e => set('state', e.target.value)} placeholder="MA"
-          className="w-full rounded-lg border border-[color:var(--ink-200)] px-2.5 py-1.5 tp-meta outline-none focus:border-[color:var(--brand-navy-900)]" />
+          className="w-full rounded-lg border border-[color:var(--ink-200)] px-2.5 py-1.5 text-base md:text-[13px] outline-none focus:border-[color:var(--brand-navy-900)]" />
       </div>
       <div>
         <label className="block tp-meta font-semibold text-[color:var(--ink-500)] mb-1">Phone</label>
         <input value={contact?.phone || ''} onChange={e => set('phone', e.target.value)} placeholder="555-123-4567"
-          className="w-full rounded-lg border border-[color:var(--ink-200)] px-2.5 py-1.5 tp-meta outline-none focus:border-[color:var(--brand-navy-900)]" />
+          className="w-full rounded-lg border border-[color:var(--ink-200)] px-2.5 py-1.5 text-base md:text-[13px] outline-none focus:border-[color:var(--brand-navy-900)]" />
       </div>
       <div>
         <label className="block tp-meta font-semibold text-[color:var(--ink-500)] mb-1">Email *</label>
         <input value={contact?.email || ''} onChange={e => set('email', e.target.value)} placeholder="you@school.edu"
-          className="w-full rounded-lg border border-[color:var(--ink-200)] px-2.5 py-1.5 tp-meta outline-none focus:border-[color:var(--brand-navy-900)]" />
+          className="w-full rounded-lg border border-[color:var(--ink-200)] px-2.5 py-1.5 text-base md:text-[13px] outline-none focus:border-[color:var(--brand-navy-900)]" />
       </div>
       <div className="col-span-2">
         <label className="block tp-meta font-semibold text-[color:var(--ink-500)] mb-1">LinkedIn URL</label>
         <input value={contact?.linkedin || ''} onChange={e => set('linkedin', e.target.value)} placeholder="linkedin.com/in/yourname"
-          className="w-full rounded-lg border border-[color:var(--ink-200)] px-2.5 py-1.5 tp-meta outline-none focus:border-[color:var(--brand-navy-900)]" />
+          className="w-full rounded-lg border border-[color:var(--ink-200)] px-2.5 py-1.5 text-base md:text-[13px] outline-none focus:border-[color:var(--brand-navy-900)]" />
       </div>
       <div className="col-span-2">
         <label className="block tp-meta font-semibold text-[color:var(--ink-500)] mb-1">Portfolio / Website (optional)</label>
         <input value={contact?.portfolio || ''} onChange={e => set('portfolio', e.target.value)} placeholder="yoursite.com"
-          className="w-full rounded-lg border border-[color:var(--ink-200)] px-2.5 py-1.5 tp-meta outline-none focus:border-[color:var(--brand-navy-900)]" />
+          className="w-full rounded-lg border border-[color:var(--ink-200)] px-2.5 py-1.5 text-base md:text-[13px] outline-none focus:border-[color:var(--brand-navy-900)]" />
       </div>
       <p className="col-span-2 tp-meta text-[color:var(--ink-400)]">Home address is not collected. City and state appear in the resume header.</p>
     </div>
@@ -243,19 +243,19 @@ function EducationCFEditor({ entries, onChange }) {
           <div>
             <label className="block tp-meta font-semibold text-[color:var(--ink-500)] mb-1">University Name *</label>
             <input value={e.institution || ''} onChange={ev => set('institution', ev.target.value)} placeholder="e.g. Fairfield University"
-              className="w-full rounded-lg border border-[color:var(--ink-200)] px-2.5 py-1.5 tp-meta outline-none focus:border-[color:var(--brand-navy-900)]" />
+              className="w-full rounded-lg border border-[color:var(--ink-200)] px-2.5 py-1.5 text-base md:text-[13px] outline-none focus:border-[color:var(--brand-navy-900)]" />
           </div>
           {/* City + State */}
           <div className="grid grid-cols-2 gap-2">
             <div>
               <label className="block tp-meta font-semibold text-[color:var(--ink-500)] mb-1">City *</label>
               <input value={e.city || ''} onChange={ev => set('city', ev.target.value)} placeholder="Fairfield"
-                className="w-full rounded-lg border border-[color:var(--ink-200)] px-2.5 py-1.5 tp-meta outline-none focus:border-[color:var(--brand-navy-900)]" />
+                className="w-full rounded-lg border border-[color:var(--ink-200)] px-2.5 py-1.5 text-base md:text-[13px] outline-none focus:border-[color:var(--brand-navy-900)]" />
             </div>
             <div>
               <label className="block tp-meta font-semibold text-[color:var(--ink-500)] mb-1">State / Region *</label>
               <input value={e.state || ''} onChange={ev => set('state', ev.target.value)} placeholder="CT"
-                className="w-full rounded-lg border border-[color:var(--ink-200)] px-2.5 py-1.5 tp-meta outline-none focus:border-[color:var(--brand-navy-900)]" />
+                className="w-full rounded-lg border border-[color:var(--ink-200)] px-2.5 py-1.5 text-base md:text-[13px] outline-none focus:border-[color:var(--brand-navy-900)]" />
             </div>
           </div>
           {/* Degree + abbreviation */}
@@ -263,12 +263,12 @@ function EducationCFEditor({ entries, onChange }) {
             <div>
               <label className="block tp-meta font-semibold text-[color:var(--ink-500)] mb-1">Degree Type *</label>
               <input value={e.degree || ''} onChange={ev => set('degree', ev.target.value)} placeholder="Bachelor of Science"
-                className="w-full rounded-lg border border-[color:var(--ink-200)] px-2.5 py-1.5 tp-meta outline-none focus:border-[color:var(--brand-navy-900)]" />
+                className="w-full rounded-lg border border-[color:var(--ink-200)] px-2.5 py-1.5 text-base md:text-[13px] outline-none focus:border-[color:var(--brand-navy-900)]" />
             </div>
             <div>
               <label className="block tp-meta font-semibold text-[color:var(--ink-500)] mb-1">Abbreviation (opt.)</label>
               <input value={e.degreeAbbrev || ''} onChange={ev => set('degreeAbbrev', ev.target.value)} placeholder="B.S."
-                className="w-full rounded-lg border border-[color:var(--ink-200)] px-2.5 py-1.5 tp-meta outline-none focus:border-[color:var(--brand-navy-900)]" />
+                className="w-full rounded-lg border border-[color:var(--ink-200)] px-2.5 py-1.5 text-base md:text-[13px] outline-none focus:border-[color:var(--brand-navy-900)]" />
             </div>
           </div>
           {/* Primary + Second Major */}
@@ -276,12 +276,12 @@ function EducationCFEditor({ entries, onChange }) {
             <div>
               <label className="block tp-meta font-semibold text-[color:var(--ink-500)] mb-1">Primary Major *</label>
               <input value={e.major || ''} onChange={ev => set('major', ev.target.value)} placeholder="Finance"
-                className="w-full rounded-lg border border-[color:var(--ink-200)] px-2.5 py-1.5 tp-meta outline-none focus:border-[color:var(--brand-navy-900)]" />
+                className="w-full rounded-lg border border-[color:var(--ink-200)] px-2.5 py-1.5 text-base md:text-[13px] outline-none focus:border-[color:var(--brand-navy-900)]" />
             </div>
             <div>
               <label className="block tp-meta font-semibold text-[color:var(--ink-500)] mb-1">Second Major (opt.)</label>
               <input value={e.secondMajor || ''} onChange={ev => set('secondMajor', ev.target.value)} placeholder="Economics"
-                className="w-full rounded-lg border border-[color:var(--ink-200)] px-2.5 py-1.5 tp-meta outline-none focus:border-[color:var(--brand-navy-900)]" />
+                className="w-full rounded-lg border border-[color:var(--ink-200)] px-2.5 py-1.5 text-base md:text-[13px] outline-none focus:border-[color:var(--brand-navy-900)]" />
             </div>
           </div>
           {/* Minor + Concentration */}
@@ -289,12 +289,12 @@ function EducationCFEditor({ entries, onChange }) {
             <div>
               <label className="block tp-meta font-semibold text-[color:var(--ink-500)] mb-1">Minor (opt.)</label>
               <input value={e.minor || ''} onChange={ev => set('minor', ev.target.value)} placeholder="Data Analytics"
-                className="w-full rounded-lg border border-[color:var(--ink-200)] px-2.5 py-1.5 tp-meta outline-none focus:border-[color:var(--brand-navy-900)]" />
+                className="w-full rounded-lg border border-[color:var(--ink-200)] px-2.5 py-1.5 text-base md:text-[13px] outline-none focus:border-[color:var(--brand-navy-900)]" />
             </div>
             <div>
               <label className="block tp-meta font-semibold text-[color:var(--ink-500)] mb-1">Concentration (opt.)</label>
               <input value={e.concentration || ''} onChange={ev => set('concentration', ev.target.value)} placeholder="Financial Planning"
-                className="w-full rounded-lg border border-[color:var(--ink-200)] px-2.5 py-1.5 tp-meta outline-none focus:border-[color:var(--brand-navy-900)]" />
+                className="w-full rounded-lg border border-[color:var(--ink-200)] px-2.5 py-1.5 text-base md:text-[13px] outline-none focus:border-[color:var(--brand-navy-900)]" />
             </div>
           </div>
           {/* Expected Grad Month + Year */}
@@ -302,7 +302,7 @@ function EducationCFEditor({ entries, onChange }) {
             <div>
               <label className="block tp-meta font-semibold text-[color:var(--ink-500)] mb-1">Expected Grad Month *</label>
               <select value={e.gradMonth || ''} onChange={ev => set('gradMonth', ev.target.value)}
-                className="w-full rounded-lg border border-[color:var(--ink-200)] px-2 py-1.5 tp-meta outline-none focus:border-[color:var(--brand-navy-900)] bg-white">
+                className="w-full rounded-lg border border-[color:var(--ink-200)] px-2 py-1.5 text-base md:text-[13px] outline-none focus:border-[color:var(--brand-navy-900)] bg-white">
                 <option value="">Month</option>
                 {MONTH_OPTIONS.map(m => <option key={m.val} value={m.val}>{m.label}</option>)}
               </select>
@@ -310,7 +310,7 @@ function EducationCFEditor({ entries, onChange }) {
             <div>
               <label className="block tp-meta font-semibold text-[color:var(--ink-500)] mb-1">Expected Grad Year *</label>
               <input value={e.gradYear || ''} onChange={ev => set('gradYear', ev.target.value)} placeholder="2028" maxLength={4}
-                className="w-full rounded-lg border border-[color:var(--ink-200)] px-2.5 py-1.5 tp-meta outline-none focus:border-[color:var(--brand-navy-900)]" />
+                className="w-full rounded-lg border border-[color:var(--ink-200)] px-2.5 py-1.5 text-base md:text-[13px] outline-none focus:border-[color:var(--brand-navy-900)]" />
             </div>
           </div>
           {/* GPA */}
@@ -318,12 +318,12 @@ function EducationCFEditor({ entries, onChange }) {
             <div>
               <label className="block tp-meta font-semibold text-[color:var(--ink-500)] mb-1">Cumulative GPA (opt.)</label>
               <input value={e.gpa || ''} onChange={ev => set('gpa', ev.target.value)} placeholder="3.84"
-                className="w-full rounded-lg border border-[color:var(--ink-200)] px-2.5 py-1.5 tp-meta outline-none focus:border-[color:var(--brand-navy-900)]" />
+                className="w-full rounded-lg border border-[color:var(--ink-200)] px-2.5 py-1.5 text-base md:text-[13px] outline-none focus:border-[color:var(--brand-navy-900)]" />
             </div>
             <div>
               <label className="block tp-meta font-semibold text-[color:var(--ink-500)] mb-1">GPA Scale</label>
               <input value={e.gpaScale || '4.00'} onChange={ev => set('gpaScale', ev.target.value)} placeholder="4.00"
-                className="w-full rounded-lg border border-[color:var(--ink-200)] px-2.5 py-1.5 tp-meta outline-none focus:border-[color:var(--brand-navy-900)]" />
+                className="w-full rounded-lg border border-[color:var(--ink-200)] px-2.5 py-1.5 text-base md:text-[13px] outline-none focus:border-[color:var(--brand-navy-900)]" />
             </div>
             <div className="flex items-end pb-1.5">
               <label className="flex items-center gap-1 tp-meta text-[color:var(--ink-500)] cursor-pointer">
@@ -337,7 +337,7 @@ function EducationCFEditor({ entries, onChange }) {
             <label className="block tp-meta font-semibold text-[color:var(--ink-500)] mb-1">Relevant Coursework (opt.)</label>
             <input value={e.coursework || ''} onChange={ev => set('coursework', ev.target.value)}
               placeholder="Financial Modeling, Valuation, Corporate Finance, Investment Analysis"
-              className="w-full rounded-lg border border-[color:var(--ink-200)] px-2.5 py-1.5 tp-meta outline-none focus:border-[color:var(--brand-navy-900)]" />
+              className="w-full rounded-lg border border-[color:var(--ink-200)] px-2.5 py-1.5 text-base md:text-[13px] outline-none focus:border-[color:var(--brand-navy-900)]" />
             <p className="tp-meta text-[color:var(--ink-400)] mt-0.5">Separate courses with commas</p>
           </div>
           {/* Honors */}
@@ -345,7 +345,7 @@ function EducationCFEditor({ entries, onChange }) {
             <label className="block tp-meta font-semibold text-[color:var(--ink-500)] mb-1">Honors &amp; Awards (opt.)</label>
             <input value={e.honors || ''} onChange={ev => set('honors', ev.target.value)}
               placeholder="Dean's List All Semesters, Merit Scholarship"
-              className="w-full rounded-lg border border-[color:var(--ink-200)] px-2.5 py-1.5 tp-meta outline-none focus:border-[color:var(--brand-navy-900)]" />
+              className="w-full rounded-lg border border-[color:var(--ink-200)] px-2.5 py-1.5 text-base md:text-[13px] outline-none focus:border-[color:var(--brand-navy-900)]" />
             <p className="tp-meta text-[color:var(--ink-400)] mt-0.5">Education-specific honors only. Broader awards go in the Awards section.</p>
           </div>
         </div>
@@ -382,13 +382,13 @@ function EntryEditor({ entry, onChange, onRemove, onDuplicate, isActivity = fals
               <label className="block tp-meta font-semibold text-[color:var(--ink-500)] mb-1">{isActivity ? 'Organization' : 'Employer / Organization'}</label>
               <input value={entry.org || ''} onChange={e => set('org', e.target.value)}
                 placeholder={isActivity ? 'e.g. Investment Club' : 'e.g. Goldman Sachs'}
-                className="w-full rounded-lg border border-[color:var(--ink-200)] px-2.5 py-1.5 tp-meta outline-none focus:border-[color:var(--brand-navy-900)]" />
+                className="w-full rounded-lg border border-[color:var(--ink-200)] px-2.5 py-1.5 text-base md:text-[13px] outline-none focus:border-[color:var(--brand-navy-900)]" />
             </div>
             <div>
               <label className="block tp-meta font-semibold text-[color:var(--ink-500)] mb-1">{isActivity ? 'Position / Role' : 'Position Title'}</label>
               <input value={entry.title || ''} onChange={e => set('title', e.target.value)}
                 placeholder={isActivity ? 'e.g. Vice President' : 'e.g. Analyst Intern'}
-                className="w-full rounded-lg border border-[color:var(--ink-200)] px-2.5 py-1.5 tp-meta outline-none focus:border-[color:var(--brand-navy-900)]" />
+                className="w-full rounded-lg border border-[color:var(--ink-200)] px-2.5 py-1.5 text-base md:text-[13px] outline-none focus:border-[color:var(--brand-navy-900)]" />
             </div>
           </div>
 
@@ -397,12 +397,12 @@ function EntryEditor({ entry, onChange, onRemove, onDuplicate, isActivity = fals
               <div>
                 <label className="block tp-meta font-semibold text-[color:var(--ink-500)] mb-1">Sector / Group (opt.)</label>
                 <input value={entry.sectorGroup || ''} onChange={e => set('sectorGroup', e.target.value)} placeholder="e.g. Healthcare Sector"
-                  className="w-full rounded-lg border border-[color:var(--ink-200)] px-2.5 py-1.5 tp-meta outline-none focus:border-[color:var(--brand-navy-900)]" />
+                  className="w-full rounded-lg border border-[color:var(--ink-200)] px-2.5 py-1.5 text-base md:text-[13px] outline-none focus:border-[color:var(--brand-navy-900)]" />
               </div>
               <div>
                 <label className="block tp-meta font-semibold text-[color:var(--ink-500)] mb-1">Hours/week (opt.)</label>
                 <input value={entry.hoursPerWeek || ''} onChange={e => set('hoursPerWeek', e.target.value)} placeholder="e.g. 40"
-                  className="w-full rounded-lg border border-[color:var(--ink-200)] px-2.5 py-1.5 tp-meta outline-none focus:border-[color:var(--brand-navy-900)]" />
+                  className="w-full rounded-lg border border-[color:var(--ink-200)] px-2.5 py-1.5 text-base md:text-[13px] outline-none focus:border-[color:var(--brand-navy-900)]" />
               </div>
             </div>
           )}
@@ -411,13 +411,13 @@ function EntryEditor({ entry, onChange, onRemove, onDuplicate, isActivity = fals
             <div>
               <label className="block tp-meta font-semibold text-[color:var(--ink-500)] mb-1">Location</label>
               <input value={entry.location || ''} onChange={e => set('location', e.target.value)} placeholder="City, State"
-                className="w-full rounded-lg border border-[color:var(--ink-200)] px-2.5 py-1.5 tp-meta outline-none focus:border-[color:var(--brand-navy-900)]" />
+                className="w-full rounded-lg border border-[color:var(--ink-200)] px-2.5 py-1.5 text-base md:text-[13px] outline-none focus:border-[color:var(--brand-navy-900)]" />
             </div>
             {!isActivity && (
               <div>
                 <label className="block tp-meta font-semibold text-[color:var(--ink-500)] mb-1">Arrangement</label>
                 <select value={entry.arrangement || ''} onChange={e => set('arrangement', e.target.value)}
-                  className="w-full rounded-lg border border-[color:var(--ink-200)] px-2.5 py-1.5 tp-meta outline-none focus:border-[color:var(--brand-navy-900)] bg-white">
+                  className="w-full rounded-lg border border-[color:var(--ink-200)] px-2.5 py-1.5 text-base md:text-[13px] outline-none focus:border-[color:var(--brand-navy-900)] bg-white">
                   <option value="">Select</option>
                   <option value="On-site">On-site</option>
                   <option value="Hybrid">Hybrid</option>
@@ -428,13 +428,13 @@ function EntryEditor({ entry, onChange, onRemove, onDuplicate, isActivity = fals
             <div>
               <label className="block tp-meta font-semibold text-[color:var(--ink-500)] mb-1">Start</label>
               <input type="month" value={entry.startDate || ''} onChange={e => set('startDate', e.target.value)}
-                className="w-full rounded-lg border border-[color:var(--ink-200)] px-2.5 py-1.5 tp-meta outline-none focus:border-[color:var(--brand-navy-900)]" />
+                className="w-full rounded-lg border border-[color:var(--ink-200)] px-2.5 py-1.5 text-base md:text-[13px] outline-none focus:border-[color:var(--brand-navy-900)]" />
             </div>
             <div>
               <label className="block tp-meta font-semibold text-[color:var(--ink-500)] mb-1">{entry.current ? 'End (current)' : 'End'}</label>
               <div className="flex gap-1 items-center">
                 <input type="month" value={entry.current ? '' : (entry.endDate || '')} onChange={e => set('endDate', e.target.value)} disabled={entry.current}
-                  className="w-full rounded-lg border border-[color:var(--ink-200)] px-2.5 py-1.5 tp-meta outline-none focus:border-[color:var(--brand-navy-900)] disabled:opacity-40" />
+                  className="w-full rounded-lg border border-[color:var(--ink-200)] px-2.5 py-1.5 text-base md:text-[13px] outline-none focus:border-[color:var(--brand-navy-900)] disabled:opacity-40" />
                 <label className="flex items-center gap-1 tp-meta text-[color:var(--ink-500)] cursor-pointer whitespace-nowrap">
                   <input type="checkbox" checked={!!entry.current} onChange={e => set('current', e.target.checked)} className="accent-[color:var(--brand-navy-900)]" />
                   Now
@@ -448,12 +448,12 @@ function EntryEditor({ entry, onChange, onRemove, onDuplicate, isActivity = fals
               <div>
                 <label className="block tp-meta font-semibold text-[color:var(--ink-500)] mb-1">Link Label (opt.)</label>
                 <input value={entry.linkLabel || ''} onChange={e => set('linkLabel', e.target.value)} placeholder="e.g. Club Website"
-                  className="w-full rounded-lg border border-[color:var(--ink-200)] px-2.5 py-1.5 tp-meta outline-none focus:border-[color:var(--brand-navy-900)]" />
+                  className="w-full rounded-lg border border-[color:var(--ink-200)] px-2.5 py-1.5 text-base md:text-[13px] outline-none focus:border-[color:var(--brand-navy-900)]" />
               </div>
               <div>
                 <label className="block tp-meta font-semibold text-[color:var(--ink-500)] mb-1">Link URL (opt.)</label>
                 <input value={entry.linkUrl || ''} onChange={e => set('linkUrl', e.target.value)} placeholder="https://..."
-                  className="w-full rounded-lg border border-[color:var(--ink-200)] px-2.5 py-1.5 tp-meta outline-none focus:border-[color:var(--brand-navy-900)]" />
+                  className="w-full rounded-lg border border-[color:var(--ink-200)] px-2.5 py-1.5 text-base md:text-[13px] outline-none focus:border-[color:var(--brand-navy-900)]" />
               </div>
             </div>
           )}
@@ -494,7 +494,7 @@ function SkillsGroupedEditor({ groups, onChange }) {
                 g.id === 'other' ? 'Chess Club, Student Government…' :
                 'Hiking, Photography, Music…'
               }
-              className="w-full rounded-lg border border-[color:var(--ink-200)] px-2.5 py-1.5 tp-meta outline-none focus:border-[color:var(--brand-navy-900)]" />
+              className="w-full rounded-lg border border-[color:var(--ink-200)] px-2.5 py-1.5 text-base md:text-[13px] outline-none focus:border-[color:var(--brand-navy-900)]" />
           </div>
         </div>
       ))}
@@ -525,19 +525,19 @@ function CertificationsEditor({ entries, onChange }) {
                 <div>
                   <label className="block tp-meta font-semibold text-[color:var(--ink-500)] mb-1">Certification Name</label>
                   <input value={c.name || ''} onChange={e => set('name', e.target.value)} placeholder="e.g. CFA Level I"
-                    className="w-full rounded-lg border border-[color:var(--ink-200)] px-2.5 py-1.5 tp-meta outline-none focus:border-[color:var(--brand-navy-900)]" />
+                    className="w-full rounded-lg border border-[color:var(--ink-200)] px-2.5 py-1.5 text-base md:text-[13px] outline-none focus:border-[color:var(--brand-navy-900)]" />
                 </div>
                 <div>
                   <label className="block tp-meta font-semibold text-[color:var(--ink-500)] mb-1">Issuing Organization</label>
                   <input value={c.issuer || ''} onChange={e => set('issuer', e.target.value)} placeholder="e.g. CFA Institute"
-                    className="w-full rounded-lg border border-[color:var(--ink-200)] px-2.5 py-1.5 tp-meta outline-none focus:border-[color:var(--brand-navy-900)]" />
+                    className="w-full rounded-lg border border-[color:var(--ink-200)] px-2.5 py-1.5 text-base md:text-[13px] outline-none focus:border-[color:var(--brand-navy-900)]" />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <div>
                   <label className="block tp-meta font-semibold text-[color:var(--ink-500)] mb-1">Month Earned</label>
                   <select value={c.month || ''} onChange={e => set('month', e.target.value)}
-                    className="w-full rounded-lg border border-[color:var(--ink-200)] px-2 py-1.5 tp-meta outline-none bg-white">
+                    className="w-full rounded-lg border border-[color:var(--ink-200)] px-2 py-1.5 text-base md:text-[13px] outline-none bg-white">
                     <option value="">Month</option>
                     {MONTH_OPTIONS.map(m => <option key={m.val} value={m.val}>{m.label}</option>)}
                   </select>
@@ -545,19 +545,19 @@ function CertificationsEditor({ entries, onChange }) {
                 <div>
                   <label className="block tp-meta font-semibold text-[color:var(--ink-500)] mb-1">Year Earned</label>
                   <input value={c.year || ''} onChange={e => set('year', e.target.value)} placeholder="2025"
-                    className="w-full rounded-lg border border-[color:var(--ink-200)] px-2.5 py-1.5 tp-meta outline-none focus:border-[color:var(--brand-navy-900)]" />
+                    className="w-full rounded-lg border border-[color:var(--ink-200)] px-2.5 py-1.5 text-base md:text-[13px] outline-none focus:border-[color:var(--brand-navy-900)]" />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <div>
                   <label className="block tp-meta font-semibold text-[color:var(--ink-500)] mb-1">Credential ID (opt.)</label>
                   <input value={c.credentialId || ''} onChange={e => set('credentialId', e.target.value)} placeholder="ID or license number"
-                    className="w-full rounded-lg border border-[color:var(--ink-200)] px-2.5 py-1.5 tp-meta outline-none focus:border-[color:var(--brand-navy-900)]" />
+                    className="w-full rounded-lg border border-[color:var(--ink-200)] px-2.5 py-1.5 text-base md:text-[13px] outline-none focus:border-[color:var(--brand-navy-900)]" />
                 </div>
                 <div>
                   <label className="block tp-meta font-semibold text-[color:var(--ink-500)] mb-1">Credential URL (opt.)</label>
                   <input value={c.credentialUrl || ''} onChange={e => set('credentialUrl', e.target.value)} placeholder="https://..."
-                    className="w-full rounded-lg border border-[color:var(--ink-200)] px-2.5 py-1.5 tp-meta outline-none focus:border-[color:var(--brand-navy-900)]" />
+                    className="w-full rounded-lg border border-[color:var(--ink-200)] px-2.5 py-1.5 text-base md:text-[13px] outline-none focus:border-[color:var(--brand-navy-900)]" />
                 </div>
               </div>
             </div>
@@ -604,19 +604,19 @@ function AwardsEditor({ entries, educationHonors = '', onChange }) {
                 <div>
                   <label className="block tp-meta font-semibold text-[color:var(--ink-500)] mb-1">Award Name</label>
                   <input value={a.name || ''} onChange={e => set('name', e.target.value)} placeholder="e.g. Dean's Award"
-                    className="w-full rounded-lg border border-[color:var(--ink-200)] px-2.5 py-1.5 tp-meta outline-none focus:border-[color:var(--brand-navy-900)]" />
+                    className="w-full rounded-lg border border-[color:var(--ink-200)] px-2.5 py-1.5 text-base md:text-[13px] outline-none focus:border-[color:var(--brand-navy-900)]" />
                 </div>
                 <div>
                   <label className="block tp-meta font-semibold text-[color:var(--ink-500)] mb-1">Issuing Organization</label>
                   <input value={a.issuer || ''} onChange={e => set('issuer', e.target.value)} placeholder="e.g. University Name"
-                    className="w-full rounded-lg border border-[color:var(--ink-200)] px-2.5 py-1.5 tp-meta outline-none focus:border-[color:var(--brand-navy-900)]" />
+                    className="w-full rounded-lg border border-[color:var(--ink-200)] px-2.5 py-1.5 text-base md:text-[13px] outline-none focus:border-[color:var(--brand-navy-900)]" />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <div>
                   <label className="block tp-meta font-semibold text-[color:var(--ink-500)] mb-1">Month</label>
                   <select value={a.month || ''} onChange={e => set('month', e.target.value)}
-                    className="w-full rounded-lg border border-[color:var(--ink-200)] px-2 py-1.5 tp-meta outline-none bg-white">
+                    className="w-full rounded-lg border border-[color:var(--ink-200)] px-2 py-1.5 text-base md:text-[13px] outline-none bg-white">
                     <option value="">Month</option>
                     {MONTH_OPTIONS.map(m => <option key={m.val} value={m.val}>{m.label}</option>)}
                   </select>
@@ -624,13 +624,13 @@ function AwardsEditor({ entries, educationHonors = '', onChange }) {
                 <div>
                   <label className="block tp-meta font-semibold text-[color:var(--ink-500)] mb-1">Year</label>
                   <input value={a.year || ''} onChange={e => set('year', e.target.value)} placeholder="2025"
-                    className="w-full rounded-lg border border-[color:var(--ink-200)] px-2.5 py-1.5 tp-meta outline-none focus:border-[color:var(--brand-navy-900)]" />
+                    className="w-full rounded-lg border border-[color:var(--ink-200)] px-2.5 py-1.5 text-base md:text-[13px] outline-none focus:border-[color:var(--brand-navy-900)]" />
                 </div>
               </div>
               <div>
                 <label className="block tp-meta font-semibold text-[color:var(--ink-500)] mb-1">Description (opt.)</label>
                 <input value={a.description || ''} onChange={e => set('description', e.target.value)} placeholder="Brief description"
-                  className="w-full rounded-lg border border-[color:var(--ink-200)] px-2.5 py-1.5 tp-meta outline-none focus:border-[color:var(--brand-navy-900)]" />
+                  className="w-full rounded-lg border border-[color:var(--ink-200)] px-2.5 py-1.5 text-base md:text-[13px] outline-none focus:border-[color:var(--brand-navy-900)]" />
               </div>
             </div>
           </div>
@@ -663,36 +663,36 @@ function ResearchEntryEditor({ entry: r, onUpdate, onRemove }) {
             <div>
               <label className="block tp-meta font-semibold text-[color:var(--ink-500)] mb-1">Research Title</label>
               <input value={r.title || ''} onChange={e => set('title', e.target.value)} placeholder="e.g. Equity Risk Premiums"
-                className="w-full rounded-lg border border-[color:var(--ink-200)] px-2.5 py-1.5 tp-meta outline-none focus:border-[color:var(--brand-navy-900)]" />
+                className="w-full rounded-lg border border-[color:var(--ink-200)] px-2.5 py-1.5 text-base md:text-[13px] outline-none focus:border-[color:var(--brand-navy-900)]" />
             </div>
             <div>
               <label className="block tp-meta font-semibold text-[color:var(--ink-500)] mb-1">Institution / Organization</label>
               <input value={r.institution || ''} onChange={e => set('institution', e.target.value)} placeholder="e.g. Fairfield University"
-                className="w-full rounded-lg border border-[color:var(--ink-200)] px-2.5 py-1.5 tp-meta outline-none focus:border-[color:var(--brand-navy-900)]" />
+                className="w-full rounded-lg border border-[color:var(--ink-200)] px-2.5 py-1.5 text-base md:text-[13px] outline-none focus:border-[color:var(--brand-navy-900)]" />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-2">
             <div>
               <label className="block tp-meta font-semibold text-[color:var(--ink-500)] mb-1">Role</label>
               <input value={r.role || ''} onChange={e => set('role', e.target.value)} placeholder="e.g. Research Assistant"
-                className="w-full rounded-lg border border-[color:var(--ink-200)] px-2.5 py-1.5 tp-meta outline-none focus:border-[color:var(--brand-navy-900)]" />
+                className="w-full rounded-lg border border-[color:var(--ink-200)] px-2.5 py-1.5 text-base md:text-[13px] outline-none focus:border-[color:var(--brand-navy-900)]" />
             </div>
             <div>
               <label className="block tp-meta font-semibold text-[color:var(--ink-500)] mb-1">Advisor (opt.)</label>
               <input value={r.advisor || ''} onChange={e => set('advisor', e.target.value)} placeholder="e.g. Prof. Smith"
-                className="w-full rounded-lg border border-[color:var(--ink-200)] px-2.5 py-1.5 tp-meta outline-none focus:border-[color:var(--brand-navy-900)]" />
+                className="w-full rounded-lg border border-[color:var(--ink-200)] px-2.5 py-1.5 text-base md:text-[13px] outline-none focus:border-[color:var(--brand-navy-900)]" />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-2">
             <div>
               <label className="block tp-meta font-semibold text-[color:var(--ink-500)] mb-1">Location (opt.)</label>
               <input value={r.location || ''} onChange={e => set('location', e.target.value)} placeholder="City, State"
-                className="w-full rounded-lg border border-[color:var(--ink-200)] px-2.5 py-1.5 tp-meta outline-none focus:border-[color:var(--brand-navy-900)]" />
+                className="w-full rounded-lg border border-[color:var(--ink-200)] px-2.5 py-1.5 text-base md:text-[13px] outline-none focus:border-[color:var(--brand-navy-900)]" />
             </div>
             <div>
               <label className="block tp-meta font-semibold text-[color:var(--ink-500)] mb-1">Public Link (opt.)</label>
               <input value={r.link || ''} onChange={e => set('link', e.target.value)} placeholder="https://..."
-                className="w-full rounded-lg border border-[color:var(--ink-200)] px-2.5 py-1.5 tp-meta outline-none focus:border-[color:var(--brand-navy-900)]" />
+                className="w-full rounded-lg border border-[color:var(--ink-200)] px-2.5 py-1.5 text-base md:text-[13px] outline-none focus:border-[color:var(--brand-navy-900)]" />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-2">
@@ -700,24 +700,24 @@ function ResearchEntryEditor({ entry: r, onUpdate, onRemove }) {
               <label className="block tp-meta font-semibold text-[color:var(--ink-500)] mb-1">Start (Month/Year)</label>
               <div className="flex gap-1">
                 <select value={r.startMonth || ''} onChange={e => set('startMonth', e.target.value)}
-                  className="flex-1 rounded-lg border border-[color:var(--ink-200)] px-1 py-1.5 tp-meta outline-none bg-white">
+                  className="flex-1 rounded-lg border border-[color:var(--ink-200)] px-1 py-1.5 text-base md:text-[13px] outline-none bg-white">
                   <option value="">Mo</option>
                   {MONTH_OPTIONS.map(m => <option key={m.val} value={m.val}>{m.label}</option>)}
                 </select>
                 <input value={r.startYear || ''} onChange={e => set('startYear', e.target.value)} placeholder="YYYY"
-                  className="w-16 rounded-lg border border-[color:var(--ink-200)] px-2 py-1.5 tp-meta outline-none" />
+                  className="w-16 rounded-lg border border-[color:var(--ink-200)] px-2 py-1.5 text-base md:text-[13px] outline-none" />
               </div>
             </div>
             <div>
               <label className="block tp-meta font-semibold text-[color:var(--ink-500)] mb-1">End (Month/Year)</label>
               <div className="flex gap-1 items-center">
                 <select value={r.endMonth || ''} onChange={e => set('endMonth', e.target.value)} disabled={r.current}
-                  className="flex-1 rounded-lg border border-[color:var(--ink-200)] px-1 py-1.5 tp-meta outline-none bg-white disabled:opacity-40">
+                  className="flex-1 rounded-lg border border-[color:var(--ink-200)] px-1 py-1.5 text-base md:text-[13px] outline-none bg-white disabled:opacity-40">
                   <option value="">Mo</option>
                   {MONTH_OPTIONS.map(m => <option key={m.val} value={m.val}>{m.label}</option>)}
                 </select>
                 <input value={r.endYear || ''} onChange={e => set('endYear', e.target.value)} placeholder="YYYY" disabled={r.current}
-                  className="w-16 rounded-lg border border-[color:var(--ink-200)] px-2 py-1.5 tp-meta outline-none disabled:opacity-40" />
+                  className="w-16 rounded-lg border border-[color:var(--ink-200)] px-2 py-1.5 text-base md:text-[13px] outline-none disabled:opacity-40" />
                 <label className="flex items-center gap-1 tp-meta text-[color:var(--ink-500)] cursor-pointer whitespace-nowrap">
                   <input type="checkbox" checked={!!r.current} onChange={e => set('current', e.target.checked)} className="accent-[color:var(--brand-navy-900)]" />
                   Now

@@ -4,7 +4,7 @@ import { LogoFull } from '@/components/UnscriptedLogo';
 
 export default function AuthLayout({ title, subtitle, footer, backTo, backLabel = 'Back', children }) {
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-4" style={{ background: 'var(--background-secondary)' }}>
+    <div className="min-h-[100svh] flex flex-col items-center justify-center px-4" style={{ background: 'var(--background-secondary)' }}>
       <div className="w-full max-w-md">
         {/* Opt-in escape hatch. An auth screen reached from a public page is a
             dead end without it: there is no nav here, so the only exits are
@@ -12,7 +12,8 @@ export default function AuthLayout({ title, subtitle, footer, backTo, backLabel 
         {backTo && (
           <Link
             to={backTo}
-            className="mb-6 inline-flex items-center gap-1.5 text-sm font-semibold hover:underline"
+            // The only exit on the page, so it has to be a target a thumb can hit.
+            className="touch-target mb-6 inline-flex items-center gap-1.5 text-sm font-semibold hover:underline"
             style={{ color: 'var(--brand-navy-700)' }}
           >
             <ArrowLeft size={16} aria-hidden="true" />

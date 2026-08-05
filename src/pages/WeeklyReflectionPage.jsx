@@ -69,7 +69,7 @@ function dedupe(list) {
   return Array.from(new Set(list.filter(Boolean)));
 }
 
-const inputCls = 'w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-sm text-[color:var(--surface-dark-900)] placeholder-[color:var(--ink-400)] outline-none focus:border-[color:var(--brand-navy-900)]';
+const inputCls = 'w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-base md:text-sm text-[color:var(--surface-dark-900)] placeholder-[color:var(--ink-400)] outline-none focus:border-[color:var(--brand-navy-900)]';
 const bigInputCls = 'w-full rounded-2xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-4 text-base text-[color:var(--surface-dark-900)] placeholder-[color:var(--ink-400)] outline-none focus:border-[color:var(--brand-navy-900)]';
 
 // ── Step 1 options ─────────────────────────────────────────────────────────────
@@ -1281,11 +1281,11 @@ export default function WeeklyReflectionPage() {
               <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[color:var(--ink-400)]" />
               <input value={search} onChange={e => setSearch(e.target.value)}
                 placeholder="Search reflections…"
-                className="w-full rounded-xl border border-[color:var(--ink-200)] bg-white py-2.5 pl-9 pr-4 text-sm outline-none focus:border-[color:var(--brand-navy-900)]" />
+                className="w-full rounded-xl border border-[color:var(--ink-200)] bg-white py-2.5 pl-9 pr-4 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]" />
             </div>
             {experiments.length > 0 && (
               <select value={filterExp} onChange={e => setFilterExp(e.target.value)}
-                className="max-w-full rounded-xl border border-[color:var(--ink-200)] bg-white px-3 py-2.5 text-sm outline-none focus:border-[color:var(--brand-navy-900)]">
+                className="max-w-full rounded-xl border border-[color:var(--ink-200)] bg-white px-3 py-2.5 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]">
                 <option value="all">All experiments</option>
                 {experiments.map(exp => <option key={exp.id} value={exp.id}>{exp.title}</option>)}
               </select>

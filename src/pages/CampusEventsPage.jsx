@@ -70,9 +70,9 @@ import { describeAge } from '@/lib/campus-store';
  */
 export default function CampusEventsPage() {
   const {
-    loading, refreshing, cachedAt, status, college, events, profile, profileReady, retry, adopt,
+    loading, refreshing, cachedAt, status, college, events, profile, pathName, rankingReady, retry, adopt,
   } = useCampusEvents({ days: 60, limit: 40 });
-  const { picks, loading: ranking } = useCampusPicks(events, profile, { ready: profileReady });
+  const { picks, loading: ranking } = useCampusPicks(events, profile, { pathName, ready: rankingReady });
 
   const [month, setMonth] = useState(() => {
     const now = new Date();
@@ -336,7 +336,7 @@ function ViewToggle({ view, onChange }) {
           type="button"
           onClick={() => onChange(value)}
           aria-pressed={view === value}
-          className="tp-meta inline-flex items-center gap-1.5 rounded-lg px-3.5 py-2 font-bold transition"
+          className="tp-meta touch-target inline-flex items-center gap-1.5 rounded-lg px-3.5 py-2 font-bold transition"
           style={
             view === value
               ? { background: 'var(--background-primary)', color: 'var(--brand-navy-900)', boxShadow: '0 1px 2px rgba(5,8,22,0.08)' }
@@ -368,7 +368,7 @@ function MonthList({ month, events, college, picks, range, onChangeMonth }) {
             type="button"
             onClick={() => onChangeMonth(new Date(month.getFullYear(), month.getMonth() - 1, 1))}
             disabled={range && month.getTime() <= range.first.getTime()}
-            className="tp-meta rounded-lg border px-3 py-1.5 font-bold transition disabled:opacity-30"
+            className="tp-meta touch-target rounded-lg border px-3 py-1.5 font-bold transition disabled:opacity-30"
             style={{ borderColor: 'var(--border-light)', color: 'var(--brand-navy-700)' }}
           >
             Earlier
@@ -377,7 +377,7 @@ function MonthList({ month, events, college, picks, range, onChangeMonth }) {
             type="button"
             onClick={() => onChangeMonth(new Date(month.getFullYear(), month.getMonth() + 1, 1))}
             disabled={range && month.getTime() >= range.last.getTime()}
-            className="tp-meta rounded-lg border px-3 py-1.5 font-bold transition disabled:opacity-30"
+            className="tp-meta touch-target rounded-lg border px-3 py-1.5 font-bold transition disabled:opacity-30"
             style={{ borderColor: 'var(--border-light)', color: 'var(--brand-navy-700)' }}
           >
             Later
@@ -416,20 +416,43 @@ function MonthList({ month, events, college, picks, range, onChangeMonth }) {
 }
 
 /**
- * Placeholder in the shape of what is coming, so the panel does not resize
- * around the student when the ranking lands.
+ * The wait while the ranking is worked out, named.
+ *
+ * This used to be two shimmering blocks and nothing else. The fill was
+ * `--background-secondary`, which is #F7F9FB on a white card, so the panel read
+ * as an empty box for as long as the model took. A student watching that has no
+ * way to tell the difference between "something is being worked out for you"
+ * and "this part of the page is broken", and the ranking is the one thing on
+ * the page worth waiting for.
+ *
+ * So it says what is happening and roughly how long, over placeholders in the
+ * shape of what is coming, so the panel does not resize around the student when
+ * the answer lands.
  */
-function PanelSkeleton() {
+function PanelSkeleton({ college }) {
   return (
-    <div className="space-y-2" role="status" aria-label="Working out which events are worth your time">
-      <div
-        className="animate-pulse rounded-xl border-2"
-        style={{ borderColor: 'rgba(214,182,106,0.35)', height: 176, background: 'var(--background-secondary)' }}
-      />
-      <div
-        className="animate-pulse rounded-xl"
-        style={{ border: '1px solid var(--border-light)', height: 40, background: 'var(--background-secondary)' }}
-      />
+    <div className="space-y-3" role="status" aria-live="polite">
+      <div>
+        <p className="flex items-center gap-2 text-sm font-bold" style={{ color: 'var(--text-primary)' }}>
+          <Loader2 size={14} className="animate-spin" aria-hidden="true" />
+          Picking the ones worth going to
+        </p>
+        <p className="tp-meta mt-1" style={{ color: 'var(--text-muted)' }}>
+          We're checking {college ? `${college}'s` : 'your campus'} calendar against what you're
+          testing. It takes a few seconds.
+        </p>
+      </div>
+
+      <div className="space-y-2" aria-hidden="true">
+        <div
+          className="animate-pulse rounded-xl border-2"
+          style={{ borderColor: 'rgba(214,182,106,0.35)', height: 176, background: 'var(--background-tertiary)' }}
+        />
+        <div
+          className="animate-pulse rounded-xl"
+          style={{ border: '1px solid var(--border-light)', height: 40, background: 'var(--background-tertiary)' }}
+        />
+      </div>
     </div>
   );
 }
@@ -518,7 +541,7 @@ function DayPanel({ selectedKey, selectedEvents, upcoming, picks, ranking, colle
         on the calendar, so it stands until it is replaced.
       */}
       {ranking && picks.length === 0 && pool.length > 0 ? (
-        <PanelSkeleton />
+        <PanelSkeleton college={college} />
       ) : pool.length === 0 ? (
         <p className="tp-body" style={{ color: 'var(--text-muted)' }}>Nothing on this day.</p>
       ) : (

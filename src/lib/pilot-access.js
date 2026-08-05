@@ -2,10 +2,13 @@
  * Pilot access — who a signed-in user is in the pilot, and what they may start.
  *
  * Three access sources live on the User record:
- *   independent_beta       — one full cycle, then a continuation-interest step
- *   institution_sponsored   — unlimited during the sponsored window, no paywall
- *   internal_admin          — unlimited, and the only source that sees the
- *                             pilot dashboard (alongside the app admin role)
+ *   independent_beta        one full cycle, then a continuation-interest step
+ *   institution_sponsored   unlimited during the sponsored window, no paywall
+ *   internal_admin          unlimited cycles, and nothing else
+ *
+ * None of these three grants admin. `access_source` is a field the account
+ * itself can write, so it can never be an authorization signal. See `isAdmin`
+ * below.
  *
  * No payment processing anywhere in this phase: the second-cycle step records
  * interest and a preferred plan, nothing more.
@@ -60,7 +63,19 @@ export async function loadPilotAccess() {
     // pilot window; internal admins never do at all.
     paywallExempt: unlimitedCycles,
     unlimitedCycles,
-    isAdmin: user?.role === 'admin' || accessSource === 'internal_admin',
+    // Platform assigned role, and nothing else.
+    //
+    // This used to also accept `access_source === 'internal_admin'`. It cannot.
+    // Measured against the real backend on 2026-08-04, as a signed-in non-admin
+    // student: `auth.updateMe({ access_source: 'internal_admin' })` succeeds and
+    // sticks, and so does an entity update on the account's own User row. So any
+    // student could hand themselves that label and open every screen this flag
+    // gates. `role` is defended by the platform and answers 403 from both paths,
+    // which is why it is the only thing read here.
+    //
+    // Do not widen this back. A field the account owns is a preference, never a
+    // permission.
+    isAdmin: user?.role === 'admin',
     cyclesCompleted,
     canStartNewCycle: unlimitedCycles || cyclesCompleted < INDEPENDENT_CYCLE_LIMIT,
   };

@@ -1,3 +1,30 @@
+// The account record. Until 2026-08-04 this entity carried no row level
+// security at all, which in Base44 means every row is readable, writable and
+// deletable by every signed-in account. Measured that day: any student could
+// list all 86 accounts with names and email addresses straight from the
+// browser, and could write to somebody else's row.
+//
+// The rules below close that. Two things to know before editing them:
+//
+//   `create` stays open on purpose. Registration creates these rows and this
+//   is exactly the permission that was in force while signup worked. Closing
+//   it is how you break the front door.
+//
+//   `asServiceRole` runs as role admin and does NOT bypass RLS, so every rule
+//   here has to name admin or the backend loses its own reads.
+//
+// Own-row access is matched on `id` and nothing else. The usual handle,
+// `created_by`, does not exist on this entity: a real row was read on
+// 2026-08-04 and it carries no `created_by` and no `created_by_id` at all, so a
+// rule written against either would silently match nothing. The row's own `id`
+// is the only thing that can equal the caller.
+//
+// Nothing in the app reads its own account through the entity API. Every caller
+// goes through the auth endpoint instead, which is a different door and is not
+// governed by these rules, so a student keeps working even in the worst case
+// where the id template does not resolve. Verify that with the real student
+// account the first time this reaches an environment, and revert if it does not
+// hold.
 {
   "name": "User",
   "type": "object",
@@ -18,6 +45,15 @@
       "type": "boolean",
       "default": false
     },
+    // Which pilot bucket this account is in. Unlimited cycles for the sponsored
+    // and internal values, and nothing more: this field grants no admin access
+    // anywhere in the app, and must never be made to again.
+    //
+    // `update` is admin only because the account itself owns this row. Before
+    // this rule an ordinary student could write `internal_admin` onto their own
+    // record through either the auth endpoint or a direct entity update, and
+    // both stuck. `create` is deliberately left to the entity rule so the
+    // default below still applies at registration.
     "access_source": {
       "type": "string",
       "enum": [
@@ -25,7 +61,15 @@
         "institution_sponsored",
         "internal_admin"
       ],
-      "default": "independent_beta"
+      "default": "independent_beta",
+      "rls": {
+        "read": true,
+        "update": {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      }
     },
     "institution_id": {
       "type": "string"
@@ -40,6 +84,48 @@
     "sponsored_end": {
       "type": "string",
       "format": "date"
+    }
+  },
+  "required": [
+    "college",
+    "major",
+    "graduation_year",
+    "school_year",
+    "institution_id",
+    "cohort_id",
+    "sponsored_start",
+    "sponsored_end"
+  ],
+  "rls": {
+    "create": true,
+    "read": {
+      "$or": [
+        {
+          "id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
     }
   }
 }

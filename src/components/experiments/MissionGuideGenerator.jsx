@@ -487,7 +487,7 @@ export default function MissionGuideGenerator({ experiment, existingGuides = [],
                 placeholder="Describe what you want to change or focus on..."
                 value={customInstruction}
                 onChange={e => setCustomInstruction(e.target.value)}
-                className="mt-3 w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-sm outline-none focus:border-[color:var(--brand-navy-900)]"
+                className="mt-3 w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]"
               />
             )}
           </div>
