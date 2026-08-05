@@ -411,7 +411,7 @@ describe('fetchCampusEvents', () => {
 
     await fetchCampusEvents({ days: 30, limit: 5, seriesDates: 1 });
 
-    expect(base44.functions.invoke).toHaveBeenCalledWith('campusEvents', { days: 30, limit: 5, seriesDates: 1 });
+    expect(base44.functions.invoke).toHaveBeenCalledWith('campusEvents', { days: 30, limit: 5, seriesDates: 1, refresh: false });
   });
 
   it('defaults the window when called with nothing', async () => {
@@ -419,7 +419,7 @@ describe('fetchCampusEvents', () => {
 
     await fetchCampusEvents();
 
-    expect(base44.functions.invoke).toHaveBeenCalledWith('campusEvents', { days: 45, limit: 20, seriesDates: 1 });
+    expect(base44.functions.invoke).toHaveBeenCalledWith('campusEvents', { days: 45, limit: 20, seriesDates: 1, refresh: false });
   });
 
   it('returns a raw response as-is', async () => {
@@ -498,7 +498,7 @@ describe('not asking twice', () => {
 
     expect(base44.functions.invoke).toHaveBeenCalledTimes(2);
     expect(base44.functions.invoke).toHaveBeenLastCalledWith('campusEvents', {
-      days: 45, limit: 20, seriesDates: 12,
+      days: 45, limit: 20, seriesDates: 12, refresh: false,
     });
   });
 
@@ -521,6 +521,20 @@ describe('not asking twice', () => {
     await fetchCampusEvents({ refresh: true });
 
     expect(base44.functions.invoke).toHaveBeenCalledTimes(2);
+  });
+
+  // Clearing what this browser remembers is only half of it. The server keeps a
+  // per-school list for a day, shared by everyone there, and a retry that does
+  // not say so gets handed the same list back, which is exactly what the
+  // student is pressing the button to escape.
+  it('tells the server to skip its own cache on a retry', async () => {
+    base44.functions.invoke.mockResolvedValue({ status: 'ok', events: [calendarEvent()] });
+
+    await fetchCampusEvents({ refresh: true });
+
+    expect(base44.functions.invoke).toHaveBeenLastCalledWith('campusEvents', {
+      days: 45, limit: 20, seriesDates: 1, refresh: true,
+    });
   });
 
   it('forgets the calendar once a student tells us where it is', async () => {

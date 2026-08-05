@@ -69,6 +69,8 @@ const {
   isAttendable,
   stillUpcoming,
   scrapedFeedFor,
+  scoreEvent,
+  schoolEvents,
   SCRAPED_MAX_AGE_DAYS,
 } = await loadEntry();
 
@@ -381,6 +383,281 @@ describe('events read off a school page', () => {
 
   it('returns nothing when no store is passed, instead of throwing', async () => {
     expect(await fetchEvents('scraped', PAGE, 45)).toEqual([]);
+  });
+});
+
+// The shared per-school event cache. Every test here is about the LAYERING, not
+// about speed: the stored list is the school's whole calendar, and every step
+// that depends on who is asking, or on what time it is, has to keep running on
+// top of it. A cache that sits one layer too high is not a slow product, it is
+// a wrong one. The first student at a school would decide what every later
+// student sees.
+describe('one school fetched once for everybody there', () => {
+  const FEED = 'https://example.edu/events.ics';
+  const UNIVERSITY = {
+    id: 'uni-1',
+    canonical_name: 'Example University',
+    events_platform: 'ical',
+    events_feed_url: FEED,
+    // Stamped as failing so a health record on a successful fetch is a real
+    // transition and therefore a real write. recordFeedHealth writes on change
+    // only, so a school already marked healthy would make every assertion below
+    // about health vacuous.
+    events_last_error: 'Calendar feed unavailable',
+  };
+  const ICAL = { platform: 'ical', feedUrl: FEED };
+
+  const CALENDAR = calendar(
+    ['UID:fair@x', 'SUMMARY:Finance Career Fair', 'DTSTART:20260805T160000Z'],
+    ['UID:poetry@x', 'SUMMARY:Poetry Reading', 'DTSTART:20260807T180000Z'],
+    ['UID:soon@x', 'SUMMARY:Coffee Hour', 'DTSTART:20260803T113000Z'],
+  );
+
+  let fetches;
+  let realFetch;
+
+  /** A fake entity layer, counting what the cache actually wrote. */
+  function fakeBase44({ rows = [], failWrites = false } = {}) {
+    const state = { rows: [...rows], creates: 0, updates: 0, healthWrites: [] };
+    let nextId = 1;
+    const cache = {
+      filter: (query, _order, limit) => Promise.resolve(
+        state.rows
+          .filter(r => r.university_id === query.university_id && r.cache_key === query.cache_key)
+          .slice(0, limit ?? state.rows.length),
+      ),
+      create: (row) => {
+        if (failWrites) return Promise.reject(new Error('RLS refused the write'));
+        state.creates += 1;
+        const created = { id: `cache-${nextId++}`, ...row };
+        state.rows.unshift(created);
+        return Promise.resolve(created);
+      },
+      update: (id, patch) => {
+        if (failWrites) return Promise.reject(new Error('RLS refused the write'));
+        state.updates += 1;
+        const row = state.rows.find(r => r.id === id);
+        Object.assign(row, patch);
+        return Promise.resolve(row);
+      },
+    };
+    return {
+      state,
+      asServiceRole: {
+        entities: {
+          CampusEventCache: cache,
+          University: {
+            update: (id, patch) => {
+              state.healthWrites.push({ id, patch });
+              return Promise.resolve({ id, ...patch });
+            },
+          },
+          CampusScrapedEvents: { filter: () => Promise.resolve([]) },
+        },
+      },
+    };
+  }
+
+  /** What one student is actually shown, from a list somebody else may have fetched. */
+  function shownTo(events, terms, now = Date.now()) {
+    return events
+      .filter(isAttendable)
+      .filter(e => stillUpcoming(e.start, e.end, e.all_day, now))
+      .map(e => ({ ...e, match_score: scoreEvent(e, terms) }))
+      .sort((a, b) => (b.match_score - a.match_score)
+        || (new Date(a.start).getTime() - new Date(b.start).getTime()))
+      .map(e => e.title);
+  }
+
+  beforeEach(() => {
+    fetches = 0;
+    realFetch = globalThis.fetch;
+    globalThis.fetch = () => {
+      fetches += 1;
+      return Promise.resolve(new Response(CALENDAR, { status: 200 }));
+    };
+  });
+
+  afterEach(() => {
+    globalThis.fetch = realFetch;
+  });
+
+  it('asks the school once and serves the second student off the stored list', async () => {
+    const base44 = fakeBase44();
+
+    const first = await schoolEvents(base44, UNIVERSITY, ICAL, 45, 1, false);
+    expect(first.cached).toBe(false);
+    expect(fetches).toBe(1);
+
+    const second = await schoolEvents(base44, UNIVERSITY, ICAL, 45, 1, false);
+    expect(second.cached).toBe(true);
+    expect(fetches).toBe(1); // The whole point: no second outbound request.
+    // Same events. Not the same order: what is stored is sorted soonest first,
+    // because that is the end of the list the cap keeps. Nothing downstream
+    // cares, since the caller sorts by score and then by date regardless.
+    expect(second.events.map(e => e.title).sort())
+      .toEqual(first.events.map(e => e.title).sort());
+  });
+
+  it('stores the school-wide list, with nothing about any student in it', async () => {
+    const base44 = fakeBase44();
+    await schoolEvents(base44, UNIVERSITY, ICAL, 45, 1, false);
+
+    const [row] = base44.state.rows;
+    expect(row.university_id).toBe('uni-1');
+    expect(row.cache_key).toBe('45:1');
+    expect(row.feed_url).toBe(FEED);
+    expect(row.event_count).toBe(3);
+    expect(row.truncated).toBe(false);
+    // Not scored, not limited, and not put through the upcoming window: all
+    // three events are here including the one that has already started.
+    expect(row.events).toHaveLength(3);
+    expect(row.events.some(e => 'match_score' in e)).toBe(false);
+  });
+
+  it('gives two students at the same school different answers off one fetch', async () => {
+    const base44 = fakeBase44();
+
+    const forFinance = await schoolEvents(base44, UNIVERSITY, ICAL, 45, 1, false);
+    const forWriting = await schoolEvents(base44, UNIVERSITY, ICAL, 45, 1, false);
+    expect(fetches).toBe(1);
+
+    expect(shownTo(forFinance.events, ['finance'])[0]).toBe('Finance Career Fair');
+    expect(shownTo(forWriting.events, ['poetry'])[0]).toBe('Poetry Reading');
+  });
+
+  it('drops an event that has happened since the school was asked', async () => {
+    const base44 = fakeBase44();
+    const fresh = await schoolEvents(base44, UNIVERSITY, ICAL, 45, 1, false);
+    expect(shownTo(fresh.events, [])).toContain('Coffee Hour');
+
+    // Eighteen hours later. Still a cache hit, so nothing is re-fetched, and the
+    // read-time window is the only thing standing between the student and an
+    // event that ended yesterday.
+    vi.setSystemTime(new Date('2026-08-04T06:00:00Z'));
+    const later = await schoolEvents(base44, UNIVERSITY, ICAL, 45, 1, false);
+    expect(later.cached).toBe(true);
+    expect(fetches).toBe(1);
+    expect(later.events.map(e => e.title)).toContain('Coffee Hour'); // still stored
+    expect(shownTo(later.events, [])).not.toContain('Coffee Hour'); // never shown
+  });
+
+  it('asks the school again once the stored list is a day old', async () => {
+    const base44 = fakeBase44();
+    await schoolEvents(base44, UNIVERSITY, ICAL, 45, 1, false);
+
+    vi.setSystemTime(new Date('2026-08-04T12:00:01Z')); // A second past 24h.
+    const after = await schoolEvents(base44, UNIVERSITY, ICAL, 45, 1, false);
+    expect(after.cached).toBe(false);
+    expect(fetches).toBe(2);
+    // Refreshed in place. A school's calendar is a current state, not a history.
+    expect(base44.state.rows).toHaveLength(1);
+    expect(base44.state.updates).toBe(1);
+  });
+
+  it('ignores a stored list that came from a different feed', async () => {
+    // What an approved submission, or an upheld report, leaves behind. The
+    // school's feed moved and the old list is nobody's answer any more.
+    const base44 = fakeBase44({
+      rows: [{
+        id: 'cache-old',
+        university_id: 'uni-1',
+        cache_key: '45:1',
+        feed_url: 'https://example.edu/the-library-calendar.ics',
+        fetched_at: new Date().toISOString(),
+        events: [{ title: 'Book Sale', start: '2026-08-06T16:00:00Z', end: '', all_day: false }],
+      }],
+    });
+
+    const answer = await schoolEvents(base44, UNIVERSITY, ICAL, 45, 1, false);
+    expect(answer.cached).toBe(false);
+    expect(fetches).toBe(1);
+    expect(answer.events.map(e => e.title)).not.toContain('Book Sale');
+  });
+
+  it('keeps windows apart, because one cannot be cut down to another', async () => {
+    const base44 = fakeBase44();
+    await schoolEvents(base44, UNIVERSITY, ICAL, 45, 1, false);
+    await schoolEvents(base44, UNIVERSITY, ICAL, 60, 12, false);
+    expect(fetches).toBe(2);
+    expect(base44.state.rows.map(r => r.cache_key).sort()).toEqual(['45:1', '60:12']);
+  });
+
+  it('makes retry mean retry, and stores what it found', async () => {
+    const base44 = fakeBase44();
+    await schoolEvents(base44, UNIVERSITY, ICAL, 45, 1, false);
+    const stampedAt = base44.state.rows[0].fetched_at;
+
+    vi.setSystemTime(new Date('2026-08-03T12:05:00Z'));
+    const retried = await schoolEvents(base44, UNIVERSITY, ICAL, 45, 1, true);
+    expect(retried.cached).toBe(false);
+    expect(fetches).toBe(2);
+    expect(base44.state.rows).toHaveLength(1);
+    expect(base44.state.rows[0].fetched_at).not.toBe(stampedAt);
+  });
+
+  it('records feed health on a fetch and never off a stored list', async () => {
+    const base44 = fakeBase44();
+
+    await schoolEvents(base44, UNIVERSITY, ICAL, 45, 1, false);
+    expect(base44.state.healthWrites).toHaveLength(1);
+    expect(base44.state.healthWrites[0].patch.events_last_error).toBe('');
+
+    // A hit observed nothing. Saying the feed is fine would be inventing an
+    // observation on the one surface whose job is to notice a school going
+    // quiet, so it must stay at one write.
+    await schoolEvents(base44, UNIVERSITY, ICAL, 45, 1, false);
+    expect(base44.state.healthWrites).toHaveLength(1);
+  });
+
+  it('still gives the student their events when the cache write fails', async () => {
+    const base44 = fakeBase44({ failWrites: true });
+    const answer = await schoolEvents(base44, UNIVERSITY, ICAL, 45, 1, false);
+    expect(answer.cached).toBe(false);
+    expect(answer.events.map(e => e.title)).toContain('Finance Career Fair');
+  });
+
+  it('treats a school that answered with nothing as a real answer', async () => {
+    // Kept on purpose, so the row always says what the school last answered. A
+    // calendar that empties out stops being served within one fetch instead of
+    // leaving the last good list standing behind it for a day. The health
+    // failure is recorded on the fetch that saw it.
+    globalThis.fetch = () => {
+      fetches += 1;
+      return Promise.resolve(new Response(calendar(), { status: 200 }));
+    };
+    const base44 = fakeBase44();
+
+    await schoolEvents(base44, UNIVERSITY, ICAL, 45, 1, false);
+    expect(base44.state.rows[0].event_count).toBe(0);
+    expect(base44.state.healthWrites[0].patch.events_last_error).toBe('Returned no upcoming events');
+
+    const again = await schoolEvents(base44, UNIVERSITY, ICAL, 45, 1, false);
+    expect(again.cached).toBe(true);
+    expect(again.events).toEqual([]);
+    expect(fetches).toBe(1);
+  });
+
+  it('caches nothing for a school with no University row', async () => {
+    // The one path where there is no key to share a list under. A per-student
+    // submitted feed at a school we have never resolved lands here.
+    const base44 = fakeBase44();
+    await schoolEvents(base44, null, ICAL, 45, 1, false);
+    await schoolEvents(base44, null, ICAL, 45, 1, false);
+    expect(fetches).toBe(2);
+    expect(base44.state.rows).toHaveLength(0);
+  });
+});
+
+// Structural, and deliberately so. The health check asks whether a feed answers
+// right now; a cache hit answers a different question and would report a school
+// that died last week as healthy. It is one word away from being wrong forever.
+describe('the admin feed check never reads the cache', () => {
+  it('fetches the feed itself rather than going through the cached path', () => {
+    const check = ENTRY_SOURCE.slice(ENTRY_SOURCE.indexOf('async function handleCheckFeeds'));
+    const body = check.slice(0, check.indexOf('\n/**'));
+    expect(body).toMatch(/await fetchEvents\(/);
+    expect(body).not.toMatch(/schoolEvents\(/);
   });
 });
 
