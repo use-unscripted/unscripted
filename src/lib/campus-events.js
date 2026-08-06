@@ -380,6 +380,37 @@ export async function listCampusFeeds() {
 }
 
 /**
+ * How few different titles a feed can hold before it stops looking like a
+ * calendar and starts looking like one thing posted over and over.
+ *
+ * Calibrated against Ohio State, which is the worked example this exists for:
+ * its feed holds 180 entries, all of them the same title, and a student there
+ * sees 46 upcoming events that are 46 copies of "Campuses Take Charge". Every
+ * count we record says that feed is healthy. One or two distinct titles across
+ * a real number of events is the shape of a campaign page, a single department,
+ * or one weekly meeting, and never the shape of a university calendar.
+ *
+ * The floor on events matters as much as the ceiling on titles. A school with
+ * three events and one title is a quiet week, not a broken feed, and flagging
+ * it would train whoever reads this page to ignore the flag. Five is where a
+ * repeat stops being a coincidence: WPI, the milder real case, is seven
+ * upcoming with four titles and correctly does not trip this.
+ *
+ * A display rule and nothing more. The backend records the two numbers and
+ * never reads this, so nothing is hidden from a student by it.
+ */
+export const FEED_REPEAT_MAX_TITLES = 2;
+export const FEED_REPEAT_MIN_EVENTS = 5;
+
+/** Does this school's feed read as one thing posted over and over? */
+export function feedLooksRepetitive(feed) {
+  const upcoming = Number(feed?.events_upcoming_count);
+  const distinct = Number(feed?.events_distinct_titles);
+  if (!Number.isFinite(upcoming) || !Number.isFinite(distinct) || !distinct) return false;
+  return upcoming >= FEED_REPEAT_MIN_EVENTS && distinct <= FEED_REPEAT_MAX_TITLES;
+}
+
+/**
  * Fetch every school's calendar right now and record what happened.
  *
  * Slow on purpose — it reads whole calendars one at a time — so the caller has

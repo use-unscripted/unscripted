@@ -63,6 +63,42 @@ function loadEntry() {
   return import(pathToFileURL(out).href);
 }
 
+/**
+ * The same file again, but keeping the request handler `loadEntry` throws away.
+ *
+ * `loadEntry` cuts the module off at `Deno.serve` because Node cannot run it,
+ * which leaves everything the handler itself decides untestable except by
+ * matching source text. That is not enough: a reviewer mutated three separate
+ * properties of the handler and all 160 tests stayed green, because a test that
+ * compares the positions of two substrings is satisfied by code that no longer
+ * does the thing. So here `Deno.serve(` becomes an export instead of being
+ * deleted, and the SDK client becomes something a test can hand a fake to.
+ *
+ * Nothing in the deployed file changes to make this possible, exactly as with
+ * `loadEntry`. Both transforms are on the text, at import time.
+ */
+function loadHandler() {
+  const file = fileURLToPath(new URL('./entry.ts', import.meta.url));
+  let source = readFileSync(file, 'utf8');
+
+  source = source.replace(
+    /^import \{ createClientFromRequest \}.*$/m,
+    'let __client = null;\n'
+    + 'export function __setClient(c) { __client = c; }\n'
+    + 'const createClientFromRequest = () => __client;',
+  );
+
+  const serve = source.indexOf('\nDeno.serve(');
+  if (serve < 0) throw new Error('entry.ts no longer ends in Deno.serve. Update this harness.');
+  source = source.slice(0, serve) + '\nexport const __handler = (' + source.slice(serve + '\nDeno.serve('.length);
+
+  const { code } = transformSync(source, { loader: 'ts', format: 'esm', target: 'node20' });
+  const dir = mkdtempSync(join(tmpdir(), 'campus-events-handler-'));
+  const out = join(dir, 'handler.mjs');
+  writeFileSync(out, code);
+  return import(pathToFileURL(out).href);
+}
+
 const {
   parseIcsEvents,
   fetchEvents,
@@ -71,8 +107,13 @@ const {
   scrapedFeedFor,
   scoreEvent,
   schoolEvents,
+  collapseRepeatedTitles,
+  feedVariety,
+  probeTrumba,
   SCRAPED_MAX_AGE_DAYS,
 } = await loadEntry();
+
+const { __handler, __setClient } = await loadHandler();
 
 const ENTRY_SOURCE = readFileSync(fileURLToPath(new URL('./entry.ts', import.meta.url)), 'utf8');
 
@@ -906,6 +947,570 @@ describe('the admin feed check never reads the cache', () => {
     const code = body.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/[^\n]*/g, '');
     expect(code).toMatch(/await\s+fetchEvents\s*\(/);
     expect(code).not.toMatch(/schoolEvents\s*\(/);
+  });
+});
+
+// ── One event listed forty times ────────────────────────────────────────────
+//
+// Ohio State's feed holds 180 entries and every one of them is the same title,
+// one copy per day into 2027. It answers, it passes every health check, and the
+// student is shown 46 identical rows. Nothing we recorded could tell.
+describe('a title that repeats is shown once', () => {
+  const event = (title, start, extra = {}) => ({
+    id: `${title}-${start}`,
+    title,
+    description: '',
+    start,
+    end: '',
+    all_day: false,
+    location: '',
+    audience: [],
+    topics: [],
+    types: [],
+    keywords: [],
+    departments: [],
+    ...extra,
+  });
+
+  it('collapses forty copies of one title down to one', () => {
+    const feed = Array.from({ length: 40 }, (_, i) =>
+      event('Campuses Take Charge', `2026-08-${String(10 + i).padStart(2, '0')}T14:00:00.000Z`));
+
+    const shown = collapseRepeatedTitles(feed);
+
+    expect(shown).toHaveLength(1);
+    expect(shown[0].title).toBe('Campuses Take Charge');
+  });
+
+  it('keeps the soonest one, whatever order the feed listed them in', () => {
+    const shown = collapseRepeatedTitles([
+      event('SGA Senate Meeting', '2026-08-24T21:00:00.000Z'),
+      event('SGA Senate Meeting', '2026-08-10T21:00:00.000Z'), // The next one.
+      event('SGA Senate Meeting', '2026-08-17T21:00:00.000Z'),
+    ]);
+
+    expect(shown).toHaveLength(1);
+    expect(shown[0].start).toBe('2026-08-10T21:00:00.000Z');
+  });
+
+  it('leaves genuinely different events alone', () => {
+    const feed = [
+      event('Finance Career Fair', '2026-08-05T16:00:00.000Z'),
+      event('Poetry Reading', '2026-08-07T18:00:00.000Z'),
+      event('Coffee Hour', '2026-08-11T11:30:00.000Z'),
+    ];
+
+    expect(collapseRepeatedTitles(feed).map(e => e.title))
+      .toEqual(['Finance Career Fair', 'Poetry Reading', 'Coffee Hour']);
+  });
+
+  it('matches on case and spacing, since a feed is not consistent about either', () => {
+    const shown = collapseRepeatedTitles([
+      event('Drop-in Advising', '2026-08-12T15:00:00.000Z'),
+      event('  drop-in   ADVISING ', '2026-08-11T15:00:00.000Z'),
+    ]);
+
+    expect(shown).toHaveLength(1);
+    expect(shown[0].start).toBe('2026-08-11T15:00:00.000Z');
+  });
+
+  // The judgement this encodes: one event listed forty times is far commoner
+  // than two different events sharing a title, but a school that runs the same
+  // clinic in four buildings is running four things a student picks between.
+  it('does not collapse the same title in two different places', () => {
+    const shown = collapseRepeatedTitles([
+      event('Drop-in Advising', '2026-08-11T15:00:00.000Z', { location: 'Engineering Building' }),
+      event('Drop-in Advising', '2026-08-12T15:00:00.000Z', { location: 'Business School' }),
+    ]);
+
+    expect(shown).toHaveLength(2);
+  });
+
+  it('does not lump every untitled event together', () => {
+    const shown = collapseRepeatedTitles([
+      event('', '2026-08-11T15:00:00.000Z'),
+      event('', '2026-08-12T15:00:00.000Z'),
+    ]);
+
+    expect(shown).toHaveLength(2);
+  });
+
+  // The whole reason this is in the per-request path. If it ran before the
+  // slice was applied it would be doing nothing; if it ran after, a school with
+  // one repeated event would hand a student a list of one.
+  it('runs before the limit slice, so the freed slots go to other events', () => {
+    const feed = [
+      ...Array.from({ length: 20 }, (_, i) =>
+        event('Campuses Take Charge', `2026-08-${String(10 + i).padStart(2, '0')}T14:00:00.000Z`)),
+      event('Finance Career Fair', '2026-09-02T16:00:00.000Z'),
+      event('Alumni Panel', '2026-09-03T16:00:00.000Z'),
+    ];
+
+    const shown = collapseRepeatedTitles(feed).slice(0, 5).map(e => e.title);
+
+    expect(shown).toEqual(['Campuses Take Charge', 'Finance Career Fair', 'Alumni Panel']);
+  });
+});
+
+describe('how varied a feed is, recorded so a human can see it', () => {
+  const NOW = new Date('2026-08-03T12:00:00Z').getTime();
+  const event = (title, start) => ({
+    id: `${title}-${start}`, title, description: '', start, end: '', all_day: false,
+    location: '', audience: [], topics: [], types: [], keywords: [], departments: [],
+  });
+
+  it('counts upcoming events and the different titles among them', () => {
+    const feed = Array.from({ length: 46 }, (_, i) =>
+      event('Campuses Take Charge', `2026-08-${String(4 + (i % 27)).padStart(2, '0')}T14:00:00.000Z`));
+
+    expect(feedVariety(feed, NOW)).toEqual({ upcoming: 46, distinct_titles: 1 });
+  });
+
+  it('a real calendar reads as a real calendar', () => {
+    expect(feedVariety([
+      event('Finance Career Fair', '2026-08-05T16:00:00.000Z'),
+      event('Poetry Reading', '2026-08-07T18:00:00.000Z'),
+      event('Coffee Hour', '2026-08-11T11:30:00.000Z'),
+    ], NOW)).toEqual({ upcoming: 3, distinct_titles: 3 });
+  });
+
+  it('ignores what has already happened, on the same rule a student is served by', () => {
+    expect(feedVariety([
+      event('Breakfast Social', '2026-08-03T06:00:00.000Z'), // Six hours behind the clock.
+      event('Finance Career Fair', '2026-08-05T16:00:00.000Z'),
+    ], NOW)).toEqual({ upcoming: 1, distinct_titles: 1 });
+  });
+});
+
+describe('collapsing is per request, not baked into the shared list', () => {
+  const FEED = 'https://repeats.edu/events.ics';
+  const ICAL = { platform: 'ical', feedUrl: FEED };
+  // Ohio State in miniature: one title, one copy a day.
+  const CALENDAR = calendar(
+    ...Array.from({ length: 6 }, (_, i) => [
+      `UID:campaign-${i}@x`,
+      'SUMMARY:Campuses Take Charge',
+      `DTSTART:202608${String(10 + i).padStart(2, '0')}T140000Z`,
+    ]),
+  );
+
+  function fakeBase44() {
+    const state = { rows: [], healthWrites: [] };
+    let nextId = 1;
+    return {
+      state,
+      asServiceRole: {
+        entities: {
+          CampusEventCache: {
+            filter: (query, _order, limit) => Promise.resolve(
+              state.rows
+                .filter(r => r.university_id === query.university_id && r.cache_key === query.cache_key)
+                .slice(0, limit ?? state.rows.length),
+            ),
+            create: (row) => {
+              const created = { id: `cache-${nextId++}`, ...row };
+              state.rows.unshift(created);
+              return Promise.resolve(created);
+            },
+            update: (id, patch) => {
+              const row = state.rows.find(r => r.id === id);
+              Object.assign(row, patch);
+              return Promise.resolve(row);
+            },
+          },
+          University: {
+            update: (id, patch) => {
+              state.healthWrites.push({ id, patch });
+              return Promise.resolve({ id, ...patch });
+            },
+          },
+          CampusScrapedEvents: { filter: () => Promise.resolve([]) },
+        },
+      },
+    };
+  }
+
+  let realFetch;
+  beforeEach(() => {
+    realFetch = globalThis.fetch;
+    globalThis.fetch = () => Promise.resolve(new Response(CALENDAR, { status: 200 }));
+  });
+  afterEach(() => {
+    globalThis.fetch = realFetch;
+  });
+
+  const healthy = () => ({
+    id: 'uni-repeat',
+    canonical_name: 'Repeat State',
+    events_platform: 'ical',
+    events_feed_url: FEED,
+    events_last_error: '',
+  });
+
+  it('stores every copy, so the first student does not decide what the rest are shown', async () => {
+    const base44 = fakeBase44();
+    await schoolEvents(base44, healthy(), ICAL, 45, 1, false);
+
+    const [row] = base44.state.rows;
+    // Six in the row, one on a student's screen. That split is the whole point:
+    // a month grid, a different window, or a later change of mind all still
+    // have the raw list to work from.
+    expect(row.events).toHaveLength(6);
+    expect(row.event_count).toBe(6);
+    expect(collapseRepeatedTitles(row.events)).toHaveLength(1);
+  });
+
+  it('records how many upcoming events there were and how many were different', async () => {
+    const base44 = fakeBase44();
+    await schoolEvents(base44, healthy(), ICAL, 45, 1, false);
+
+    const patch = base44.state.healthWrites.at(-1).patch;
+    expect(patch.events_upcoming_count).toBe(6);
+    expect(patch.events_distinct_titles).toBe(1);
+    expect(patch.events_variety_days).toBe(45);
+    expect(patch.events_variety_at).toBeTruthy();
+  });
+
+  // The rule the health fields have always followed and this must not break:
+  // written on transition, never on every read.
+  it('writes nothing when the figures have not moved', async () => {
+    const base44 = fakeBase44();
+    const known = {
+      ...healthy(),
+      events_upcoming_count: 6,
+      events_distinct_titles: 1,
+      events_variety_days: 45,
+    };
+
+    await schoolEvents(base44, known, ICAL, 45, 1, true);
+
+    expect(base44.state.healthWrites).toEqual([]);
+  });
+
+  // The picker asks for 45 days and the calendar page for 60, and both write
+  // these fields. Same counts over a different window is a different
+  // observation, not the same one holding still, so it gets written and the
+  // page can say which window it is showing.
+  it('writes when the same counts came from a different window', async () => {
+    const base44 = fakeBase44();
+    const known = {
+      ...healthy(),
+      events_upcoming_count: 6,
+      events_distinct_titles: 1,
+      events_variety_days: 45,
+    };
+
+    await schoolEvents(base44, known, ICAL, 60, 1, true);
+
+    const patch = base44.state.healthWrites.at(-1).patch;
+    expect(patch.events_variety_days).toBe(60);
+    expect(patch.events_upcoming_count).toBe(6);
+  });
+
+  it('records nothing at all off the stored list, because nothing was observed', async () => {
+    const base44 = fakeBase44();
+    await schoolEvents(base44, healthy(), ICAL, 45, 1, false);
+    base44.state.healthWrites.length = 0;
+
+    const second = await schoolEvents(base44, healthy(), ICAL, 45, 1, false);
+
+    expect(second.cached).toBe(true);
+    expect(base44.state.healthWrites).toEqual([]);
+  });
+});
+
+// Structural, like the cache assertion above, and for the same reason: the
+// property is about WHERE the call sits, and no amount of output-checking can
+// pin that down. Collapsing below the cache line would write one student's view
+// into the row every other student at that school is served from.
+describe('the collapse sits above the shared cache', () => {
+  it('is not called anywhere in the stored-list path', () => {
+    const from = ENTRY_SOURCE.indexOf('export async function schoolEvents');
+    const path = ENTRY_SOURCE.slice(ENTRY_SOURCE.indexOf('async function writeEventCache'));
+    const stored = path.slice(0, path.indexOf('\nDeno.serve('));
+    expect(from).toBeGreaterThan(0);
+    const code = stored.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/[^\n]*/g, '');
+    expect(code).not.toMatch(/collapseRepeatedTitles\s*\(/);
+  });
+
+  // Kept, but do not trust it on its own. It compares the positions of two
+  // substrings, so it passes for code where the collapse happens AFTER the
+  // slice as long as the call is written earlier in the file. The behavioural
+  // version below is the one that catches that; this only says the call exists.
+  it('runs in the request path, before the slice', () => {
+    const handler = ENTRY_SOURCE.slice(ENTRY_SOURCE.indexOf('\nDeno.serve('));
+    const code = handler.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/[^\n]*/g, '');
+    const collapse = code.indexOf('collapseRepeatedTitles(');
+    const slice = code.indexOf('.slice(0, limit)');
+    expect(collapse).toBeGreaterThan(0);
+    expect(collapse).toBeLessThan(slice);
+  });
+});
+
+// ── A Trumba slug is read, never derived ────────────────────────────────────
+//
+// Two of our students were shown Oregon State's events for weeks. Ohio State's
+// row resolved to trumba.com/calendars/osu.json because the probe fell back to
+// the domain label, and `osu` in Trumba's global namespace is Oregon State's
+// development instance: Pacific offsets, permalinks on
+// dev.trumba.drupal.oregonstate.edu, categories reading "OSU|Women's Center".
+// The feed answers, parses and passes every health check, so nothing
+// downstream could tell.
+describe('finding a school\'s Trumba calendar', () => {
+  const trumbaFeed = title => JSON.stringify([{
+    eventID: '1',
+    title,
+    startDateTime: '2026-09-12T18:30:00',
+    endDateTime: '2026-09-12T20:00:00',
+    location: 'Somewhere',
+    description: '',
+  }]);
+
+  /** Answers pages with `html` and any trumba.com/25livepub address with a feed. */
+  function serve({ html = '', feeds = {} }) {
+    return (url) => {
+      const target = String(url);
+      const calendar = Object.keys(feeds).find(slug => target.includes(`/calendars/${slug}.json`));
+      if (calendar) {
+        return Promise.resolve(new Response(trumbaFeed(feeds[calendar]), {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        }));
+      }
+      if (target.includes('trumba.com') || target.includes('25livepub')) {
+        return Promise.resolve(new Response('not found', { status: 404 }));
+      }
+      return Promise.resolve(new Response(html, {
+        status: 200,
+        headers: { 'content-type': 'text/html' },
+      }));
+    };
+  }
+
+  let realFetch;
+  beforeEach(() => {
+    realFetch = globalThis.fetch;
+  });
+  afterEach(() => {
+    globalThis.fetch = realFetch;
+  });
+
+  it('uses the slug the school\'s own page names', async () => {
+    globalThis.fetch = serve({
+      html: '<script>var webName: "tufts-featured-events";</script>',
+      feeds: { 'tufts-featured-events': 'Tufts Career Fair' },
+    });
+
+    expect(await probeTrumba('tufts.edu'))
+      .toBe('https://www.trumba.com/calendars/tufts-featured-events.json');
+  });
+
+  // The regression. Before this, `osu.edu` fell back to the label, asked for
+  // `osu`, got a real Trumba feed back, and returned it: a working calendar
+  // belonging to a different university 2,000 miles away.
+  it('does not fall back to the domain label when the page names nothing', async () => {
+    globalThis.fetch = serve({
+      html: '<html><body>Our events are listed below.</body></html>',
+      // Oregon State's development instance, which is what actually sits here.
+      feeds: { osu: 'OSU Women\'s Center Drop-in' },
+    });
+
+    expect(await probeTrumba('osu.edu')).toBeNull();
+  });
+
+  // The label is not "tried last", it is not tried at all. A page that names a
+  // slug which turns out to be dead does not get to fall through to a guess.
+  it('gives up rather than guessing when the named slug does not answer', async () => {
+    globalThis.fetch = serve({
+      html: '<script>var webName: "osu-university-events";</script>',
+      feeds: { osu: 'OSU Women\'s Center Drop-in' },
+    });
+
+    expect(await probeTrumba('osu.edu')).toBeNull();
+  });
+});
+
+// ── The handler itself, driven end to end ───────────────────────────────────
+//
+// Written after a reviewer mutated three properties of the request path and
+// every test in this file stayed green:
+//
+//   1. moving the collapse to after the `limit` slice, which inverts the point
+//      of the change and leaves a student with a list of one
+//   2. deleting the `seriesDates` skip, so a month grid loses every Tuesday
+//      square but the first
+//   3. deleting the collapse from the pasted-feed handler, so the one student
+//      who went and found us their calendar is the one shown 40 copies
+//
+// None of the three changes what any exported function returns, which is why
+// nothing caught them. They change what the HANDLER returns, so these drive the
+// handler. See `loadHandler`.
+describe('the request path, with a feed that is one event over and over', () => {
+  const FEED = 'https://events.repeat.edu/all.ics';
+  // Ohio State in miniature: one campaign title, one copy a day, plus two real
+  // events sitting behind them.
+  const CAMPAIGN_COPIES = 12;
+  const CALENDAR = calendar(
+    ...Array.from({ length: CAMPAIGN_COPIES }, (_, i) => [
+      `UID:campaign-${i}@x`,
+      'SUMMARY:Campuses Take Charge',
+      'LOCATION:Oval',
+      `DTSTART:202608${String(10 + i).padStart(2, '0')}T140000Z`,
+    ]),
+    ['UID:fair@x', 'SUMMARY:Finance Career Fair', 'DTSTART:20260902T160000Z'],
+    ['UID:panel@x', 'SUMMARY:Alumni Panel', 'DTSTART:20260903T160000Z'],
+  );
+
+  const UNIVERSITY = {
+    id: 'uni-repeat',
+    canonical_name: 'Repeat State',
+    match_keys: ['Repeat State'],
+    approved_domains: ['repeat.edu'],
+    events_platform: 'ical',
+    events_feed_url: FEED,
+    events_last_error: '',
+  };
+
+  /**
+   * Enough of the SDK for one request. Deliberately not shared with the
+   * `schoolEvents` fake above: this one has to answer `auth.me` and the student
+   * profile as well, because the handler starts one layer further out.
+   */
+  function fakeClient() {
+    const state = { cacheRows: [], universityPatches: [], submissions: [] };
+    let nextId = 1;
+    const entities = {
+      StudentProfile: {
+        filter: () => Promise.resolve([{ id: 'prof-1', college: 'Repeat State' }]),
+      },
+    };
+    return {
+      state,
+      auth: { me: () => Promise.resolve({ id: 'stu-1', college: 'Repeat State' }) },
+      entities,
+      asServiceRole: {
+        entities: {
+          ...entities,
+          University: {
+            filter: () => Promise.resolve([{ ...UNIVERSITY }]),
+            update: (id, patch) => {
+              state.universityPatches.push({ id, patch });
+              return Promise.resolve({ id, ...patch });
+            },
+          },
+          CampusEventCache: {
+            filter: (query, _order, limit) => Promise.resolve(
+              state.cacheRows
+                .filter(r => r.university_id === query.university_id && r.cache_key === query.cache_key)
+                .slice(0, limit ?? state.cacheRows.length),
+            ),
+            create: (row) => {
+              const created = { id: `cache-${nextId++}`, ...row };
+              state.cacheRows.unshift(created);
+              return Promise.resolve(created);
+            },
+            update: (id, patch) => {
+              const row = state.cacheRows.find(r => r.id === id);
+              Object.assign(row, patch);
+              return Promise.resolve(row);
+            },
+          },
+          CampusFeedSubmission: {
+            filter: () => Promise.resolve([]),
+            create: (row) => {
+              state.submissions.push(row);
+              return Promise.resolve({ id: `sub-${nextId++}`, ...row });
+            },
+          },
+          CampusScrapedEvents: { filter: () => Promise.resolve([]) },
+        },
+      },
+    };
+  }
+
+  let realFetch;
+  let client;
+  beforeEach(() => {
+    client = fakeClient();
+    __setClient(client);
+    realFetch = globalThis.fetch;
+    // Every address answers with the calendar. Content type matters: the JSON
+    // probe on the submission path has to fall through to reading it as a
+    // calendar file, which is what it does for any non-JSON response.
+    globalThis.fetch = () => Promise.resolve(
+      new Response(CALENDAR, { status: 200, headers: { 'content-type': 'text/calendar' } }),
+    );
+  });
+  afterEach(() => {
+    globalThis.fetch = realFetch;
+    __setClient(null);
+  });
+
+  const post = async (body) => {
+    const res = await __handler(new Request('https://fn.test/campusEvents', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(body),
+    }));
+    return await res.json();
+  };
+  const titlesOf = data => data.events.map(e => e.title);
+
+  it('spends the freed slots on other events instead of shrinking the list', async () => {
+    // Twelve copies then two real events, and room for five. Collapsing first
+    // leaves three rows, all different. Collapsing after the slice would take
+    // the first five (all copies) and hand back a list of one, which is the
+    // mutation the structural test above cannot see.
+    const data = await post({ days: 45, limit: 5 });
+
+    expect(data.status).toBe('ok');
+    expect(titlesOf(data)).toEqual(['Campuses Take Charge', 'Finance Career Fair', 'Alumni Panel']);
+  });
+
+  it('leaves every date in place when the caller asked for a series of dates', async () => {
+    // A month grid saying so out loud. A weekly club belongs on every Tuesday
+    // square, so nothing is collapsed and all fourteen come back.
+    const data = await post({ days: 45, limit: 40, seriesDates: 3 });
+
+    expect(data.events).toHaveLength(CAMPAIGN_COPIES + 2);
+    expect(titlesOf(data).filter(t => t === 'Campuses Take Charge')).toHaveLength(CAMPAIGN_COPIES);
+  });
+
+  // The fractional-input class of bug `eventCacheWindow` exists to defuse, one
+  // layer up. 1.5 floors to 1 for the fetch, so the feed emits a list, but
+  // `1.5 > 1` read as a month grid and skipped the collapse.
+  it('treats a fractional series count as the one date it actually fetches', async () => {
+    const data = await post({ days: 45, limit: 40, seriesDates: 1.5 });
+
+    expect(titlesOf(data)).toEqual(['Campuses Take Charge', 'Finance Career Fair', 'Alumni Panel']);
+  });
+
+  it('collapses the calendar a student pasted, the same as any other', async () => {
+    const data = await post({ action: 'submit_calendar_url', url: FEED, limit: 40 });
+
+    expect(data.status).toBe('ok');
+    expect(data.from_submission).toBe(true);
+    expect(titlesOf(data)).toEqual(['Campuses Take Charge', 'Finance Career Fair', 'Alumni Panel']);
+  });
+
+  it('still queues the uncollapsed shape for whoever reviews it', async () => {
+    await post({ action: 'submit_calendar_url', url: FEED, limit: 40 });
+
+    // The reviewer is deciding whether to give a whole school this calendar and
+    // has to see what is actually in it, so the queue row is not collapsed.
+    const [row] = client.state.submissions;
+    expect(row.event_count).toBe(CAMPAIGN_COPIES + 2);
+    expect(row.sample_titles.every(t => t === 'Campuses Take Charge')).toBe(true);
+  });
+
+  it('records the window the counts were taken over', async () => {
+    await post({ days: 60, limit: 20 });
+
+    const patch = client.state.universityPatches.at(-1).patch;
+    expect(patch.events_variety_days).toBe(60);
+    expect(patch.events_upcoming_count).toBe(CAMPAIGN_COPIES + 2);
+    expect(patch.events_distinct_titles).toBe(3);
+    expect(patch.events_variety_at).toBeTruthy();
   });
 });
 
