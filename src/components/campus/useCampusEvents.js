@@ -125,7 +125,13 @@ export default function useCampusEvents({ days = 60, limit = 40 } = {}) {
         }
 
         const [rows, owned] = await Promise.all([
-          base44.entities.StudentProfile.filter({ user_id: user.id }, '-created_date', 1),
+          // created_by_id, not user_id: StudentProfile has no user_id field, so
+          // this filter matched nothing and every student came back
+          // profile-less. Every other profile read in the app already uses
+          // created_by_id; this was the last one that didn't. It meant the
+          // ranking below was written for a student with no major and no
+          // interests, on every surface this hook feeds.
+          base44.entities.StudentProfile.filter({ created_by_id: user.id }, '-created_date', 1),
           loadOwnedPaths().catch(() => ({ paths: [] })),
         ]);
         if (cancelled) return;
