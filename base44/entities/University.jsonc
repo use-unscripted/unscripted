@@ -124,9 +124,21 @@
       // How many different titles those were, matched on case and whitespace.
       "type": "number"
     },
+    "events_variety_days": {
+      // How far ahead the fetch that produced those two numbers was looking.
+      // Without it they are ambiguous: three callers write these fields and
+      // they ask for different windows (45 from the picker, 60 from the
+      // calendar page, 45 from the admin check), so the row held whichever ran
+      // last with nothing saying which. Ohio State reads 46 upcoming at 45 days
+      // and 61 at 60. A different window is a different measurement, so a
+      // change of window is a transition and gets written like one.
+      "type": "number"
+    },
     "events_variety_at": {
-      // When the two numbers above were observed. A cache hit observes nothing
-      // and writes nothing, so this can legitimately lag the last page load.
+      // When the numbers above were observed. A cache hit observes nothing and
+      // writes nothing, so this can legitimately lag the last page load, which
+      // is why the admin page shows it rather than leaving today's counts
+      // sitting next to a "last worked" date that may be much older.
       "type": "string",
       "format": "date-time"
     }

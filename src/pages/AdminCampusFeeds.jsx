@@ -296,6 +296,12 @@ function FeedRow({ feed }) {
   // to happen before it gets them. Showing nothing beats showing a zero that
   // reads as an empty calendar.
   const counted = Number.isFinite(upcoming) && Number.isFinite(distinct) && Boolean(feed.events_variety_at);
+  // The window those two were counted over. Three callers ask for different
+  // ones and all three write the same fields, so a bare "46 upcoming" is a
+  // number with no unit: Ohio State is 46 at 45 days and 61 at 60. Rows written
+  // before this was recorded have no window and say so by omission.
+  const windowDays = Number(feed.events_variety_days);
+  const windowed = Number.isFinite(windowDays) && windowDays > 0;
 
   return (
     <div className="rounded-xl border bg-white px-4 py-3"
@@ -336,11 +342,21 @@ function FeedRow({ feed }) {
             <span>·</span>
             {/*
               The count on its own is the number Ohio State looks healthy on.
-              The two together are the whole point of showing either.
+              The two together are the whole point of showing either, and the
+              window is what makes them mean one thing rather than two.
             */}
             <span className="tabular-nums">
-              {upcoming} upcoming, {distinct} {distinct === 1 ? 'title' : 'different titles'}
+              {`${upcoming} upcoming${windowed ? ` in ${windowDays} days` : ''}`}
+              {`, ${distinct} ${distinct === 1 ? 'title' : 'different titles'}`}
             </span>
+            <span>·</span>
+            {/*
+              Shown because "last worked" above is not refreshed for a school
+              that was already healthy, so it can be weeks old while these
+              counts are from this morning. Side by side with no date on them,
+              today's numbers read as being as old as that date.
+            */}
+            <span>counted {fmtWhen(feed.events_variety_at)}</span>
           </>
         )}
       </p>

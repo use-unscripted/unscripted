@@ -822,8 +822,26 @@ function trumbaSlugsFrom(html: string): string[] {
  * A school whose page does not name a slug simply does not resolve. Guessing
  * variants would be brute-forcing someone else's calendar namespace, and a
  * wrong slug means sending a student to another school's events.
+ *
+ * That last sentence used to be a comment sitting above code that did the
+ * opposite. The domain label was pushed on as a last-resort candidate, so
+ * osu.edu asked for the slug `osu`, and `trumba.com/calendars/osu.json` is
+ * Oregon State's development instance: Pacific offsets, permalinks on
+ * dev.trumba.drupal.oregonstate.edu, categories reading "OSU|Women's Center".
+ * Two of our students were shown another university's events for weeks and
+ * nothing downstream could tell, because the feed answers and parses fine.
+ *
+ * The fallback is gone rather than validated. Validating it would mean asking
+ * whether a calendar belongs to a school, and Trumba gives us nothing that
+ * answers it: the only ownership evidence in the payload is `permaLinkUrl`,
+ * which on a correctly matched school is routinely trumba.com's own address
+ * rather than the school's, so the check would refuse real schools while still
+ * accepting any calendar that publishes no permalinks at all. A guess wearing a
+ * validator is still a guess, and the failure it produces is silent. The slug
+ * is either named by the school's own page or the school does not resolve
+ * through Trumba.
  */
-async function probeTrumba(domain: string): Promise<string | null> {
+export async function probeTrumba(domain: string): Promise<string | null> {
   const pages = await Promise.all(trumbaPageCandidates(domain).map(async (url) => {
     try {
       return await fetchHtmlHead(url, TRUMBA_HTML_SCAN_BYTES);
@@ -839,13 +857,11 @@ async function probeTrumba(domain: string): Promise<string | null> {
     }
   }
 
-  // The domain label goes last, behind anything the page actually named. It is
-  // still a guess, so it only gets to answer when discovery found nothing —
-  // and like every other candidate it has to validate against a real feed
-  // before it is returned.
+  // Only slugs the school's own page named. Nothing derived from the domain:
+  // Trumba's /calendars/<slug> is one flat namespace shared by every publisher
+  // in it, so a label-derived slug answering means somebody owns that name, not
+  // that this school does. See the docstring.
   const candidates = slugs.slice(0, TRUMBA_MAX_SLUGS);
-  const label = domainLabel(domain);
-  if (label && !candidates.includes(label)) candidates.push(label);
 
   for (const slug of candidates) {
     const hit = await firstValidUrl(TRUMBA_HOSTS.map(host => `${host}/${slug}.json`), looksLikeTrumba);
@@ -3718,6 +3734,9 @@ async function probeEmbeddedCalendar(
   const modernCampus = await firstValidModernCampus(modernCampusIdsFrom(page.html));
   if (modernCampus) return { platform: 'moderncampus', feedUrl: modernCampus };
 
+  // Page-named slugs only, the same as `probeTrumba`, and for the same reason:
+  // a slug derived from the domain is a guess at a global namespace and lands
+  // on whichever school happens to hold that name. Do not add a fallback here.
   for (const slug of trumbaSlugsFrom(page.html).slice(0, TRUMBA_MAX_SLUGS)) {
     const hit = await firstValidUrl(TRUMBA_HOSTS.map(h => `${h}/${slug}.json`), looksLikeTrumba);
     if (hit) return { platform: 'trumba', feedUrl: hit };
@@ -4432,13 +4451,21 @@ function repeatTitleKey(title: string): string {
  * State still collapses to one, and so does a weekly club that meets in its
  * usual room.
  *
- * The direction the error runs, stated plainly, because the brief for this
- * asked for it: this errs toward LEAVING duplicates in, never toward hiding a
- * real event. A series whose place is written two ways across its instances
- * ("CC 101" one week, "Campus Center 101" the next) survives as two rows rather
- * than one. That is a tidiness problem. The other direction walks a student
- * past the only session they could have made, which this file holds to be the
- * worse of the two everywhere else as well.
+ * The direction the error runs, stated plainly and without the flattering
+ * version an earlier draft of this comment carried. What it never does is drop
+ * a title: every distinct title in the feed is still in the list afterwards.
+ * What it does do is drop the other DATES of a repeated title, and some of
+ * those are a real choice a student had. Measured on live feeds: a school runs
+ * its academic-skills workshop three times, same room, three separate
+ * registration links, and it now appears once, at the soonest of the three. A
+ * student who cannot make that date is shown no second chance and the later
+ * two are not reachable from this list at all.
+ *
+ * That is a real cost and it is accepted, against 46 rows of one campaign
+ * event. The place in the key is what bounds it: one program running in four
+ * buildings still shows four times, and a series whose place is written two
+ * ways across its instances ("CC 101" one week, "Campus Center 101" the next)
+ * survives as two rows rather than one, which is untidy in the safe direction.
  *
  * `location` only, not `room` or `address`. `room` is where the same event
  * legitimately differs between instances, and the one feed that hands us a
@@ -4783,9 +4810,18 @@ function isAdmin(user: any): boolean {
  * mean two places that can disagree about the same feed.
  *
  * It keeps the transition rule by widening what counts as a transition instead
- * of dropping it. Nothing is written unless one of the two figures would
+ * of dropping it. Nothing is written unless one of the three figures would
  * actually change, so a school whose calendar is the same today as yesterday
  * costs no write, exactly as an unchanged health state costs none.
+ *
+ * The window is the third figure, and it is there because without it the other
+ * two are ambiguous. Three callers write these fields and they ask for
+ * different windows: the picker 45 days, the calendar page 60, the admin check
+ * DEFAULT_DAYS. Ohio State reads 46 upcoming at 45 days and 61 at 60, so the
+ * page showed whichever ran last and gave no way to tell which. Recording the
+ * window with the counts makes each observation say what it measured, and a
+ * change of window now counts as a transition in its own right, because it is a
+ * different measurement rather than the same one moving.
  *
  * It does not reach the hot path at all. Every caller passing `variety` has
  * just fetched the feed over the network, and a fetch happens once per school
@@ -4801,7 +4837,7 @@ async function recordFeedHealth(
   // deno-lint-ignore no-explicit-any
   university: any,
   error: string,
-  variety: { upcoming: number; distinct_titles: number } | null = null,
+  variety: { upcoming: number; distinct_titles: number; days: number } | null = null,
 ): Promise<void> {
   if (!university?.id) return;
 
@@ -4824,10 +4860,12 @@ async function recordFeedHealth(
   if (
     variety &&
     (Number(university.events_upcoming_count) !== variety.upcoming ||
-      Number(university.events_distinct_titles) !== variety.distinct_titles)
+      Number(university.events_distinct_titles) !== variety.distinct_titles ||
+      Number(university.events_variety_days) !== variety.days)
   ) {
     patch.events_upcoming_count = variety.upcoming;
     patch.events_distinct_titles = variety.distinct_titles;
+    patch.events_variety_days = variety.days;
     patch.events_variety_at = now;
   }
 
@@ -4889,7 +4927,7 @@ async function handleCheckFeeds(base44: any, user: any): Promise<Response> {
     const asked = Date.now();
     let error = '';
     let count = 0;
-    let variety: { upcoming: number; distinct_titles: number } | null = null;
+    let variety: { upcoming: number; distinct_titles: number; days: number } | null = null;
     try {
       // `fetchEvents` directly, never `schoolEvents`, and that must not be
       // "tidied up" later. This check asks whether a feed answers RIGHT NOW; a
@@ -4915,7 +4953,14 @@ async function handleCheckFeeds(base44: any, user: any): Promise<Response> {
       // list rather than restating the counting here is the point: one
       // definition of "upcoming", one definition of "a different title", and no
       // way for this page and a student's page to disagree about a school.
-      variety = feedVariety(events, asked);
+      //
+      // The window goes on the record alongside the two figures. This check
+      // asks for DEFAULT_DAYS and a student's calendar page asks for 60, and
+      // both used to write the same two fields, so the page showed whichever
+      // ran last with nothing saying which window it was. Ohio State reads 46
+      // upcoming at 45 days and 61 at 60: same feed, same shape, two different
+      // numbers, and no way to tell them apart on the page.
+      variety = { ...feedVariety(events, asked), days: DEFAULT_DAYS };
       if (!count) error = 'Returned no upcoming events';
     } catch (err) {
       error = err instanceof Error ? err.message : 'Calendar feed unavailable';
@@ -4927,7 +4972,6 @@ async function handleCheckFeeds(base44: any, user: any): Promise<Response> {
       platform: row.events_platform,
       feed_url: row.events_feed_url,
       event_count: count,
-      distinct_titles: variety?.distinct_titles ?? 0,
       error,
     });
   }
@@ -5562,7 +5606,11 @@ export async function schoolEvents(
     base44,
     university,
     events.length ? '' : 'Returned no upcoming events',
-    feedVariety(events, asked),
+    // The window travels with the counts. Two callers reach this line asking
+    // for different ones (45 from the picker, 60 from the calendar page) and
+    // both write the same fields, so without it the admin page shows whichever
+    // fetched last and cannot say which window it was.
+    { ...feedVariety(events, asked), days },
   );
 
   // One student's unapproved paste does not get to be the school's answer.
@@ -5617,9 +5665,17 @@ Deno.serve(async (req) => {
     // the descriptions, gets a fair spread to choose from.
     const limit = Math.min(Math.max(Number(body.limit) || 20, 1), 40);
     // How many dates one repeating event contributes. A list wants the next one
-    // — a weekly club would otherwise take most of the slots to say one thing.
+    // (a weekly club would otherwise take most of the slots to say one thing).
     // A month grid wants every Tuesday it meets on. See RECURRENCE_DEFAULT_DATES.
-    const seriesDates = Number(body.seriesDates) || RECURRENCE_DEFAULT_DATES;
+    //
+    // Clamped here through `eventCacheWindow`, which is the one place that
+    // rounds it, rather than read raw off the wire. Raw is what the fetch never
+    // sees: `{seriesDates: 1.5}` floors to 1 downstream, so the feed emits one
+    // date per series, but `1.5 > 1` read as a month grid and skipped the
+    // collapse, handing any signed-in caller the uncollapsed list this exists
+    // to prevent. Same fractional-input class of bug that helper was written
+    // for, one layer up.
+    const { seriesDates } = eventCacheWindow(days, body.seriesDates);
 
     const profile = await loadProfile(base44, user);
     const college = collegeOf(profile, user);
