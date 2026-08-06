@@ -4402,6 +4402,164 @@ export function isAttendable(event: NormalizedEvent): boolean {
   return studentFacing || !restricted;
 }
 
+// ── One event, listed forty times ───────────────────────────────────────────
+
+/**
+ * A title flattened to the part two listings of the same event would agree on.
+ *
+ * Case and whitespace, and nothing else. Punctuation is deliberately left in:
+ * "Yoga (Beginners)" and "Yoga (Advanced)" are two different sessions, and a
+ * key that strips brackets is how one of them quietly stops being shown. The
+ * repetition this exists to fix is exact repetition, so an exact-after-casing
+ * match already catches it.
+ */
+function repeatTitleKey(title: string): string {
+  return String(title || '').toLowerCase().replace(/\s+/g, ' ').trim();
+}
+
+/**
+ * What counts as "the same listing again" for the purpose of collapsing.
+ *
+ * Title AND place, not title alone, and that is the one judgement in here worth
+ * arguing about. Title alone is the aggressive reading: it is right for Ohio
+ * State, whose feed is 180 copies of one campaign event, and it is wrong for a
+ * school that runs "Drop-in Advising" in four different buildings, or an "Info
+ * Session" per department. Those are genuinely different events that a student
+ * would want to choose between, and title alone hides three of every four.
+ *
+ * Adding the place costs nothing on the failure this is for: a feed publishing
+ * the same event once a day publishes it at the same place every time, so Ohio
+ * State still collapses to one, and so does a weekly club that meets in its
+ * usual room.
+ *
+ * The direction the error runs, stated plainly, because the brief for this
+ * asked for it: this errs toward LEAVING duplicates in, never toward hiding a
+ * real event. A series whose place is written two ways across its instances
+ * ("CC 101" one week, "Campus Center 101" the next) survives as two rows rather
+ * than one. That is a tidiness problem. The other direction walks a student
+ * past the only session they could have made, which this file holds to be the
+ * worse of the two everywhere else as well.
+ *
+ * `location` only, not `room` or `address`. `room` is where the same event
+ * legitimately differs between instances, and the one feed that hands us a
+ * room per booking (EMS) already collapses those before they reach here.
+ */
+function repeatGroupKey(event: NormalizedEvent): string {
+  return `${repeatTitleKey(event.title)}|${repeatTitleKey(event.location)}`;
+}
+
+/** Milliseconds, or +Infinity for a start nothing can read, so a readable one always wins. */
+function repeatStartAt(event: NormalizedEvent): number {
+  const at = stampOf(event?.start);
+  return Number.isFinite(at) ? at : Infinity;
+}
+
+/**
+ * A repeated title appears once, at its soonest upcoming date.
+ *
+ * ## What this is for
+ *
+ * Two of our students' schools resolve to a feed that answers, passes every
+ * health check we run, and is the wrong calendar. Ohio State's holds 180
+ * entries and every one of them is `Campuses Take Charge`, one copy per day
+ * into 2027: it is a single-purpose campaign calendar, not the university's.
+ * The student is shown 46 rows that are 46 copies of one thing. WPI's is milder
+ * and the same shape, four of its seven upcoming events being the same SGA
+ * Senate meeting on four consecutive Mondays.
+ *
+ * This is NOT the recurring-event rule. Both feeds hand back separate dated
+ * instances rather than a repeating rule, so `seriesDates` never sees them and
+ * its cap cannot help. The fix has to be here, on the flat list.
+ *
+ * ## Why it lives here and not in the stored list
+ *
+ * Above the shared cache, in the per-request path, next to the other filtering
+ * and scoring. What is stored is the raw school-wide list, and every piece of
+ * presentation or per-student work runs over it per request. Collapsing before
+ * the write would bake one student's view into the row every other student at
+ * that school is served, which is the exact failure the cache layering was
+ * written to prevent.
+ *
+ * ## Why it runs before the limit slice
+ *
+ * The slice is the last step, so freeing forty slots hands them to genuinely
+ * different events rather than shrinking the list. On Ohio State it makes no
+ * difference, since there is nothing else in that feed. On an ordinary school
+ * with a weekly club in it, it is the whole point.
+ *
+ * ## Which instance is kept
+ *
+ * The soonest, because a student wants to know when the next one is. Ties go to
+ * whichever the feed listed first, and the group keeps the position of its own
+ * first appearance. Order barely matters, since every caller sorts by score and
+ * then by date afterwards, but a stable answer is worth having in a test.
+ *
+ * A blank title is left alone rather than being grouped with every other blank
+ * title, on the same "never hide a real event" reasoning: they are rare, they
+ * carry no evidence that they are the same thing, and the place they are most
+ * likely to appear is a feed we are already parsing badly.
+ */
+export function collapseRepeatedTitles(events: NormalizedEvent[]): NormalizedEvent[] {
+  const soonest = new Map<string, NormalizedEvent>();
+  const kept: NormalizedEvent[] = [];
+
+  for (const event of events || []) {
+    if (!repeatTitleKey(event?.title)) {
+      // No title to repeat. Passed through untouched, in place.
+      kept.push(event);
+      continue;
+    }
+    const key = repeatGroupKey(event);
+    const held = soonest.get(key);
+    if (!held) {
+      soonest.set(key, event);
+      kept.push(event);
+      continue;
+    }
+    if (repeatStartAt(event) < repeatStartAt(held)) soonest.set(key, event);
+  }
+
+  // `kept` holds one placeholder per group in first-appearance order, plus the
+  // untitled events in their own positions. Swapping each placeholder for its
+  // group's soonest instance is what keeps both properties at once.
+  return kept.map(event => (repeatTitleKey(event?.title) ? soonest.get(repeatGroupKey(event)) as NormalizedEvent : event));
+}
+
+/**
+ * How varied a feed actually is, as two numbers a human can read.
+ *
+ * The only thing we have ever recorded about a feed is how many events it
+ * returned, which is exactly the number a campaign calendar looks healthy on.
+ * Ohio State scores 46, the same as a real university calendar with 46 things
+ * on it, and nothing downstream can tell the two apart. A distinct-title count
+ * separates them in one glance: 46 and 1 is not a calendar.
+ *
+ * Counted over the events a student could actually be shown, so the figure on
+ * the admin page matches what is happening to a student rather than what is in
+ * the file. It calls `stillUpcoming` rather than restating it: the standing rule
+ * in this file is that there is one upcoming-window rule and copies of it are
+ * how the 2026-08-03 revert happened.
+ *
+ * Deliberately just a measurement. Nothing acts on it, nothing is hidden or
+ * down-ranked because of it, and no school is marked broken by it. It exists so
+ * a person can look at the page and see which feeds are worth replacing.
+ */
+export function feedVariety(
+  events: NormalizedEvent[],
+  now: number,
+): { upcoming: number; distinct_titles: number } {
+  const upcoming = (events || [])
+    .filter(isAttendable)
+    .filter(e => stillUpcoming(e.start, e.end, e.all_day, now));
+  // Blank titles share one bucket here, unlike in the collapse above. Nothing
+  // is hidden by counting them together, and a feed of nothing but untitled
+  // rows should read as the one repeated thing it is.
+  return {
+    upcoming: upcoming.length,
+    distinct_titles: new Set(upcoming.map(e => repeatTitleKey(e?.title))).size,
+  };
+}
+
 // ── Handler ─────────────────────────────────────────────────────────────────
 
 /**
@@ -4562,7 +4720,13 @@ async function handleSubmission(base44: any, user: any, body: any): Promise<Resp
     platform: feed.platform,
     window_days: days,
     matched_on: terms.slice(0, 25),
-    events: events
+    // Collapsed the same way the ordinary path is. This is a student's list
+    // too, and a pasted club portal is if anything likelier to be a handful of
+    // titles repeated weekly. The queue row written above deliberately keeps
+    // the UNCOLLAPSED count and sample titles: it is the record of what that
+    // feed actually contains, and a reviewer deciding whether to give a whole
+    // school this calendar should see the raw shape of it.
+    events: collapseRepeatedTitles(events)
       .map(e => ({ ...e, match_score: scoreEvent(e, terms) }))
       .sort((a, b) => (b.match_score - a.match_score) || (new Date(a.start).getTime() - new Date(b.start).getTime()))
       .slice(0, limit),
@@ -4610,20 +4774,64 @@ function isAdmin(user: any): boolean {
  *     student and the same job for us. A feed that reads perfectly and returns
  *     nothing is the single most likely way this breaks, because it is what an
  *     expired token, a moved calendar and a finished term all look like.
+ *
+ * ## How the variety figures fit without breaking either rule
+ *
+ * `variety` is the second thing this records: how many upcoming events the feed
+ * returned and how many different titles that was. It rides on this write
+ * rather than getting one of its own, because a second health mechanism would
+ * mean two places that can disagree about the same feed.
+ *
+ * It keeps the transition rule by widening what counts as a transition instead
+ * of dropping it. Nothing is written unless one of the two figures would
+ * actually change, so a school whose calendar is the same today as yesterday
+ * costs no write, exactly as an unchanged health state costs none.
+ *
+ * It does not reach the hot path at all. Every caller passing `variety` has
+ * just fetched the feed over the network, and a fetch happens once per school
+ * per window per day thanks to the stored list, plus whenever an admin presses
+ * check, plus a student pressing retry. A cache hit records nothing here, which
+ * is the same reason it records no health: nothing was observed, and a figure
+ * copied off a day-old list is a fabricated observation.
  */
 // deno-lint-ignore no-explicit-any
-async function recordFeedHealth(base44: any, university: any, error: string): Promise<void> {
+async function recordFeedHealth(
+  // deno-lint-ignore no-explicit-any
+  base44: any,
+  // deno-lint-ignore no-explicit-any
+  university: any,
+  error: string,
+  variety: { upcoming: number; distinct_titles: number } | null = null,
+): Promise<void> {
   if (!university?.id) return;
 
   const wasFailing = Boolean(university.events_last_error);
   const isFailing = Boolean(error);
   // Nothing changed. This is the common case and it costs a boolean.
-  if (wasFailing === isFailing && (!isFailing || university.events_last_error === error)) return;
+  const healthSame = wasFailing === isFailing && (!isFailing || university.events_last_error === error);
 
   const now = new Date().toISOString();
-  const patch = isFailing
-    ? { events_last_error: error.slice(0, 300), events_last_error_at: now }
-    : { events_last_error: '', events_last_error_at: '', events_last_ok_at: now };
+  // deno-lint-ignore no-explicit-any
+  const patch: Record<string, any> = healthSame
+    ? {}
+    : isFailing
+      ? { events_last_error: error.slice(0, 300), events_last_error_at: now }
+      : { events_last_error: '', events_last_error_at: '', events_last_ok_at: now };
+
+  // A row that has never carried these reads back as undefined, which compares
+  // unequal to any number, so the first observation of a school always lands
+  // and every identical one after it costs nothing.
+  if (
+    variety &&
+    (Number(university.events_upcoming_count) !== variety.upcoming ||
+      Number(university.events_distinct_titles) !== variety.distinct_titles)
+  ) {
+    patch.events_upcoming_count = variety.upcoming;
+    patch.events_distinct_titles = variety.distinct_titles;
+    patch.events_variety_at = now;
+  }
+
+  if (!Object.keys(patch).length) return;
 
   try {
     await base44.asServiceRole.entities.University.update(university.id, patch);
@@ -4681,6 +4889,7 @@ async function handleCheckFeeds(base44: any, user: any): Promise<Response> {
     const asked = Date.now();
     let error = '';
     let count = 0;
+    let variety: { upcoming: number; distinct_titles: number } | null = null;
     try {
       // `fetchEvents` directly, never `schoolEvents`, and that must not be
       // "tidied up" later. This check asks whether a feed answers RIGHT NOW; a
@@ -4701,17 +4910,24 @@ async function handleCheckFeeds(base44: any, user: any): Promise<Response> {
         .filter(isAttendable)
         .filter(e => stillUpcoming(e.start, e.end, e.all_day, asked));
       count = events.length;
+      // `events` is already through both filters, and `feedVariety` runs them
+      // again over the same clock, which is a no-op. Handing it the filtered
+      // list rather than restating the counting here is the point: one
+      // definition of "upcoming", one definition of "a different title", and no
+      // way for this page and a student's page to disagree about a school.
+      variety = feedVariety(events, asked);
       if (!count) error = 'Returned no upcoming events';
     } catch (err) {
       error = err instanceof Error ? err.message : 'Calendar feed unavailable';
     }
-    await recordFeedHealth(base44, row, error);
+    await recordFeedHealth(base44, row, error, variety);
     checked.push({
       id: row.id,
       college: row.canonical_name,
       platform: row.events_platform,
       feed_url: row.events_feed_url,
       event_count: count,
+      distinct_titles: variety?.distinct_titles ?? 0,
       error,
     });
   }
@@ -5313,6 +5529,14 @@ export async function schoolEvents(
     if (stored) return { events: stored, cached: true };
   }
 
+  // Stamped before the fetch, for the reason the handler stamps its own clock
+  // before the fetch: the recurrence expansion reads its own clock inside
+  // `fetchEvents`, so a clock read afterwards is stricter than the expansion by
+  // however long the network took. Only the variety count uses this, and a
+  // count that is stricter than what the student is shown would report a school
+  // as quieter than it is.
+  const asked = Date.now();
+
   const events = await fetchEvents(
     feed.platform,
     feed.feedUrl,
@@ -5330,7 +5554,16 @@ export async function schoolEvents(
   // the moment we return, and a health record that loses the race is worse than
   // none, because it reads as "still fine" on the page whose job is to say
   // otherwise.
-  await recordFeedHealth(base44, university, events.length ? '' : 'Returned no upcoming events');
+  //
+  // The variety figures ride along on the same write. They are recorded HERE,
+  // not in the caller, for the same reason health is: a cache hit returns above
+  // this line and must record neither, because nothing was observed on a hit.
+  await recordFeedHealth(
+    base44,
+    university,
+    events.length ? '' : 'Returned no upcoming events',
+    feedVariety(events, asked),
+  );
 
   // One student's unapproved paste does not get to be the school's answer.
   //
@@ -5444,9 +5677,21 @@ Deno.serve(async (req) => {
       body.extraInterests
     );
 
-    const events = normalized
+    const upcoming = normalized
       .filter(isAttendable)
-      .filter(e => stillUpcoming(e.start, e.end, e.all_day, asked))
+      .filter(e => stillUpcoming(e.start, e.end, e.all_day, asked));
+
+    // A title that repeats appears once, at its soonest date, and the freed
+    // slots go to genuinely different events because this runs before the
+    // slice. See `collapseRepeatedTitles` for what it is protecting against.
+    //
+    // Skipped when the caller asked for more than one date per series, because
+    // that is a month grid saying so out loud: a weekly club belongs on every
+    // Tuesday square, and one row across a month is as wrong there as six rows
+    // in a list. Nothing in the app asks for that today, so this is the rule
+    // being written down before the first caller trips over it rather than
+    // after. See RECURRENCE_DEFAULT_DATES.
+    const events = (seriesDates > 1 ? upcoming : collapseRepeatedTitles(upcoming))
       .map(e => ({ ...e, match_score: scoreEvent(e, terms) }))
       .sort((a, b) => (b.match_score - a.match_score) || (new Date(a.start).getTime() - new Date(b.start).getTime()))
       .slice(0, limit);

@@ -8,6 +8,7 @@ import { SkCards } from '@/components/PageSkeleton';
 import { useAuth } from '@/lib/AuthContext';
 import {
   listFeedSubmissions, reviewFeedSubmission, listCampusFeeds, checkCampusFeeds,
+  feedLooksRepetitive,
 } from '@/lib/campus-events';
 
 /**
@@ -209,15 +210,22 @@ function fmtWhen(value) {
  * The list is ordered failures-first and says the count out loud, because the
  * only reason to open this tab is to find out whether anything is wrong, and a
  * broken school buried alphabetically among healthy ones is not an answer.
+ *
+ * A feed that answers can still be the wrong calendar, and until now nothing
+ * here could say so. Ohio State returns 46 upcoming events that are 46 copies
+ * of one campaign event: healthy by every number this page showed. So a feed
+ * whose events collapse to one or two titles now sorts up next to the broken
+ * ones and says what it is, because it needs the same thing from a human.
  */
 function FeedHealth({ feeds, broken, checking, note, onCheck }) {
   const ordered = useMemo(() => {
-    const rank = f => (f.events_last_error ? 0 : 1);
+    const rank = f => (f.events_last_error ? 0 : feedLooksRepetitive(f) ? 1 : 2);
     return [...feeds].sort((a, b) =>
       rank(a) - rank(b) || String(a.canonical_name || '').localeCompare(String(b.canonical_name || '')));
   }, [feeds]);
 
   const withFeeds = ordered.filter(f => f.events_feed_url);
+  const repetitive = withFeeds.filter(f => !f.events_last_error && feedLooksRepetitive(f));
 
   return (
     <div>
@@ -247,6 +255,23 @@ function FeedHealth({ feeds, broken, checking, note, onCheck }) {
         </button>
       </div>
 
+      {/*
+        Separate from the working/not working line above, and it has to stay
+        separate. Every school counted here answered fine, so folding it into
+        that count would either call a working feed broken or hide the thing
+        this is for. It is a nudge to go and look, not a verdict.
+      */}
+      {repetitive.length > 0 && (
+        <p className="mb-4 flex items-start gap-2 rounded-xl border px-4 py-3 text-sm"
+          style={{ borderColor: '#FDE68A', background: '#FFFBEB', color: '#92400E' }}>
+          <TriangleAlert size={15} className="mt-0.5 shrink-0" aria-hidden="true" />
+          <span>
+            {repetitive.length === 1 ? '1 school shows' : `${repetitive.length} schools show`}
+            {' '}the same event over and over. Worth checking whether we found the wrong calendar.
+          </span>
+        </p>
+      )}
+
       {note && (
         <p className="mb-4 text-xs" style={{ color: 'var(--text-secondary)' }}>{note}</p>
       )}
@@ -264,27 +289,70 @@ function FeedHealth({ feeds, broken, checking, note, onCheck }) {
 
 function FeedRow({ feed }) {
   const failing = Boolean(feed.events_last_error);
+  const repetitive = !failing && feedLooksRepetitive(feed);
+  const upcoming = Number(feed.events_upcoming_count);
+  const distinct = Number(feed.events_distinct_titles);
+  // A school resolved before these were recorded has neither, and a fetch has
+  // to happen before it gets them. Showing nothing beats showing a zero that
+  // reads as an empty calendar.
+  const counted = Number.isFinite(upcoming) && Number.isFinite(distinct) && Boolean(feed.events_variety_at);
 
   return (
-    <div className="rounded-xl border bg-white px-4 py-3" style={{ borderColor: failing ? '#FECACA' : 'var(--ink-200)' }}>
+    <div className="rounded-xl border bg-white px-4 py-3"
+      style={{ borderColor: failing ? '#FECACA' : repetitive ? '#FDE68A' : 'var(--ink-200)' }}>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="flex items-center gap-1.5 text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
           <School size={14} className="shrink-0" style={{ color: 'var(--ink-400)' }} aria-hidden="true" />
           {feed.canonical_name || 'Unknown school'}
         </p>
-        <span className="rounded-full px-2 py-0.5 text-[11px] font-bold"
-          style={failing
-            ? { background: 'var(--danger-50)', color: 'var(--danger-700)' }
-            : { background: '#DCFCE7', color: '#166534' }}>
-          {failing ? 'Not working' : 'Working'}
-        </span>
+        <div className="flex items-center gap-2">
+          {/*
+            Two separate labels, never merged. A feed can answer perfectly and
+            still be the wrong calendar, so "Working" has to keep meaning "it
+            answers" and this has to sit next to it saying what it answered
+            with. Calling it not working would be a claim we cannot support.
+          */}
+          {repetitive && (
+            <span className="rounded-full px-2 py-0.5 text-[11px] font-bold"
+              style={{ background: '#FEF3C7', color: '#92400E' }}>
+              One event repeated
+            </span>
+          )}
+          <span className="rounded-full px-2 py-0.5 text-[11px] font-bold"
+            style={failing
+              ? { background: 'var(--danger-50)', color: 'var(--danger-700)' }
+              : { background: '#DCFCE7', color: '#166534' }}>
+            {failing ? 'Not working' : 'Working'}
+          </span>
+        </div>
       </div>
 
       <p className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs" style={{ color: 'var(--text-secondary)' }}>
         <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>{feed.events_platform}</span>
         <span>·</span>
         <span>last worked {fmtWhen(feed.events_last_ok_at)}</span>
+        {counted && (
+          <>
+            <span>·</span>
+            {/*
+              The count on its own is the number Ohio State looks healthy on.
+              The two together are the whole point of showing either.
+            */}
+            <span className="tabular-nums">
+              {upcoming} upcoming, {distinct} {distinct === 1 ? 'title' : 'different titles'}
+            </span>
+          </>
+        )}
       </p>
+
+      {repetitive && (
+        <p className="mt-1.5 text-xs leading-relaxed" style={{ color: '#92400E' }}>
+          {distinct === 1
+            ? `All ${upcoming} upcoming events have the same title.`
+            : `${upcoming} upcoming events, ${distinct} titles between them.`}
+          {' '}A feed this narrow is usually one campaign or one department, not the school&rsquo;s calendar.
+        </p>
+      )}
 
       {failing && (
         <p className="mt-1.5 text-xs leading-relaxed" style={{ color: 'var(--danger-700)' }}>

@@ -101,6 +101,34 @@
     "events_last_error_at": {
       "type": "string",
       "format": "date-time"
+    },
+    // ── Is that feed a real calendar? ──
+    // A count of events is the only thing we ever recorded, and it is exactly
+    // the number a campaign calendar looks healthy on. Ohio State's feed holds
+    // 180 entries that are all the same title, "Campuses Take Charge", one copy
+    // per day into 2027. It answers, it passes every health check above, and
+    // the student scrolls 46 identical rows. These two numbers side by side are
+    // what tells that apart from a university calendar: 46 upcoming and 1
+    // distinct title is not a calendar.
+    //
+    // Written on the same transition rule as the health fields, and only when
+    // one of the numbers would actually change. Nothing acts on them. No school
+    // is marked broken and no event is hidden from a student because of them:
+    // they exist so a person can open /admin/campus-feeds and look.
+    "events_upcoming_count": {
+      // Upcoming events the last real fetch returned, before any one student's
+      // interests or limit are applied.
+      "type": "number"
+    },
+    "events_distinct_titles": {
+      // How many different titles those were, matched on case and whitespace.
+      "type": "number"
+    },
+    "events_variety_at": {
+      // When the two numbers above were observed. A cache hit observes nothing
+      // and writes nothing, so this can legitimately lag the last page load.
+      "type": "string",
+      "format": "date-time"
     }
   },
   "required": [
