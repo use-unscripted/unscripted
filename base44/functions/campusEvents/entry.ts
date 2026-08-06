@@ -227,20 +227,69 @@ const GENERIC_SCHOOL_WORDS = new Set([
 ]);
 
 /**
- * The words in a school's name that actually identify it.
+ * A school's name as words, in the order written, with the spelling differences
+ * vendors introduce folded away.
  *
  * "Saint" and "St." are the same word and the vendors disagree about which to
  * write. Presence returns "St. Olaf College" where our own row says "Saint Olaf
  * College", and without folding them the two names share nothing but a generic.
+ *
+ * The apostrophe has to go rather than act as a separator. `normalizeName`
+ * treats it as punctuation, so "Saint John's University" comes apart into
+ * "john" plus a junk "s" and stops matching "St Johns University" at all, while
+ * the extra token inflates the word count every rule below measures against.
+ * Every possessive name is exposed to that, and there are a lot of them.
+ *
+ * Accents are folded for the same reason: `normalizeName` keeps ASCII only, so
+ * a name written properly splits where the accent was and refuses its own
+ * unaccented spelling.
  */
+function schoolNameTokens(name: string): string[] {
+  const folded = String(name || '')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/['\u2018\u2019\u02bc`]/g, '');
+  return normalizeName(folded)
+    .split(' ')
+    .filter(Boolean)
+    .map(word => (word === 'saint' ? 'st' : word));
+}
+
+/** The words in a school's name that actually identify it. */
 function schoolNameWords(name: string): Set<string> {
   const words = new Set<string>();
-  for (const raw of normalizeName(name).split(' ')) {
-    const word = raw === 'saint' ? 'st' : raw;
-    if (!word || GENERIC_SCHOOL_WORDS.has(word)) continue;
+  for (const word of schoolNameTokens(name)) {
+    if (GENERIC_SCHOOL_WORDS.has(word)) continue;
     words.add(word);
   }
   return words;
+}
+
+/**
+ * Is one name written inside the other, word for word and unbroken?
+ *
+ * This is what tells a campus suffix apart from a different school, and the two
+ * are the same shape when only the identifying words are counted. "Washington
+ * State University" against "Washington State University - Pullman" leaves one
+ * identifying word on one side and two on the other, and so does "Georgia State
+ * University" against "Georgia Southern University". The first pair is one
+ * school and the second is two, and the difference is visible only in the full
+ * name: a campus, a school of law or a vendor's page furniture wraps the name
+ * it was given without breaking it up, and a different school does not.
+ *
+ * Generic words are deliberately kept here, because they are the evidence. Drop
+ * them and "georgia" sits inside "georgia southern" as neatly as "washington"
+ * sits inside "washington pullman".
+ */
+function nameWrittenInside(short: string[], long: string[]): boolean {
+  if (!short.length || short.length > long.length) return false;
+  for (let i = 0; i + short.length <= long.length; i++) {
+    let all = true;
+    for (let j = 0; j < short.length; j++) {
+      if (long[i + j] !== short[j]) { all = false; break; }
+    }
+    if (all) return true;
+  }
+  return false;
 }
 
 /**
@@ -254,14 +303,62 @@ function schoolNameWords(name: string): Set<string> {
  * strings to match would refuse all of those, and refusing a real school is how
  * a validator turns into a coverage loss rather than a safety win.
  *
- * The rule is that the identifying words have to agree on **more than half** of
- * the shorter name. More than half rather than at least half, because half is
- * where the dangerous pairs sit: "San Jose State" and "San Diego State" share
- * exactly one of two words each, and one shared geographic prefix is not a
- * school. The strict inequality refuses that pair and still accepts every
- * abbreviation above, which was measured rather than guessed. Across the 119
- * live Presence feeds this gates, it keeps all 118 that are the school we asked
- * for and refuses the one that is not.
+ * Three ways in, and they are narrow on purpose. An earlier version of this ran
+ * one rule, "the identifying words agree on more than half of the shorter
+ * name", and described itself as strict. It was not. Half of most school names
+ * is one word, because `<Place> University` carries exactly one word the
+ * generic list does not eat, and "more than half of one" is "share one word".
+ * Run over all 2,348 US institution names it called 3,238 pairs of genuinely
+ * different schools the same school, and 1,353 institutions collided with at
+ * least one other: Columbia University with Columbia College Chicago, Georgia
+ * State with Georgia Southern, and so on down the list.
+ *
+ *   1. The identifying words are the same on both sides. One school, two
+ *      spellings: Utica College and Utica University, St. Olaf and Saint Olaf,
+ *      Copper Mountain College and Copper Mountain Community College.
+ *
+ *   2. One name is written inside the other, in order and unbroken. That is
+ *      what a campus suffix looks like ("Washington State University" inside
+ *      "Washington State University - Pullman") and what a vendor's page
+ *      furniture looks like ("Ohlone College" inside "Campus Calendar- Ohlone
+ *      College"). See `nameWrittenInside` for why the generic words have to be
+ *      counted here and nowhere else.
+ *
+ *   3. Real overlap: at least two shared identifying words, and more than half
+ *      of the shorter name. That is "CSU San Marcos" against "California State
+ *      University, San Marcos", which share San and Marcos and disagree about
+ *      the rest.
+ *
+ * Both halves of the third clause are doing work. More than half rather than at
+ * least half refuses "San Jose State" against "San Diego State". Two shared
+ * words rather than one refuses Columbia University against Columbia College
+ * Chicago, and Georgia State against Georgia Southern. Together the three
+ * clauses take the national collision count from 3,238 pairs of different
+ * schools to 1,362, and the institutions caught up in one from 1,353 to 792.
+ *
+ * Measured against the live feeds it actually gates rather than only against
+ * the name list: all 119 Presence portals that answer at a school's domain
+ * label were re-read on 2026-08-06, and this keeps the same 118 the looser rule
+ * kept and refuses the same one, `rrcc.mnscu.edu` being served Red Rocks.
+ * Tightening clause 3 any further does cost real schools. Requiring an
+ * unmatched word on each side, which would refuse San Diego State University
+ * against San Diego Christian College and 235 pairs like it, also refuses
+ * Bloomsburg University of Pennsylvania against the "Commonwealth University of
+ * Pennsylvania - Bloomsburg" its own feed now says, and Washington University,
+ * Saint Louis against "Washington University in St. Louis". Two real schools
+ * lose their calendar to remove collisions no live feed produces, so it is not
+ * done.
+ *
+ * What is left is genuinely undecidable from the strings and is documented
+ * rather than fixed. Boston College and Boston University, Miami University and
+ * the University of Miami, Trinity College and Trinity University: each pair
+ * reduces to the same single identifying word, and the only thing telling them
+ * apart is the word this list calls generic. Accepting them is the deliberate
+ * side to fail on, because rejecting them would take Utica College and Utica
+ * University with them, which is one school. No live feed hits any of these:
+ * the check is only ever asked whether a feed is the school we already asked
+ * for, so both halves of such a pair have to answer at the same vendor slug
+ * before it matters.
  *
  * Either side being empty is a refusal. A name made entirely of generic words
  * carries no evidence, and inventing agreement out of nothing is the failure
@@ -271,9 +368,20 @@ export function namesSameSchool(a: string, b: string): boolean {
   const left = schoolNameWords(a);
   const right = schoolNameWords(b);
   if (!left.size || !right.size) return false;
+
   let shared = 0;
   for (const word of left) if (right.has(word)) shared++;
-  return shared * 2 > Math.min(left.size, right.size);
+  if (!shared) return false;
+
+  if (shared === left.size && shared === right.size) return true;
+
+  const one = schoolNameTokens(a);
+  const two = schoolNameTokens(b);
+  if (one.length <= two.length ? nameWrittenInside(one, two) : nameWrittenInside(two, one)) {
+    return true;
+  }
+
+  return shared >= 2 && shared * 2 > Math.min(left.size, right.size);
 }
 
 /** Any name we know the school by agreeing is enough. They are all it. */
@@ -339,6 +447,25 @@ function domainLabel(domain: string): string {
  * guessing. In production it is never empty: `resolveFeed` returns early on a
  * blank college name, so every probe it runs carries at least the string the
  * student typed.
+ *
+ * Because any one name is enough, the weakest name we hold is the one that
+ * decides, and on a school's first resolve the only name we hold is what one
+ * student typed. A student who types "Miami" gives that school a one-word
+ * identity, and one word is enough for any feed whose name contains it: Miami
+ * University, the University of Miami and Miami Dade College all satisfy it.
+ *
+ * That is deliberate and it stays. Requiring two words would refuse "MIT",
+ * "UCLA", "Bowdoin" and "Fairfield", which is how most students write their own
+ * school, and refusing them costs each one their calendar for the sake of a
+ * collision that cannot happen on its own. This check is never the only gate: a
+ * probe only ever asks it about a vendor slug derived from a domain, and that
+ * domain has already had to be the right school's. For "Miami" to be shown
+ * Miami Dade's calendar, the domain step would have to have produced Miami
+ * Dade's domain first, at which point the student is on the wrong school
+ * entirely and a name check cannot save them. What the identity is for is the
+ * case where the domain is right and the vendor's slug is somebody else's,
+ * which is what `rrcc.mnscu.edu` is, and one word refuses that as firmly as
+ * three do.
  */
 interface SchoolIdentity {
   names: string[];
@@ -1358,26 +1485,52 @@ const CAMPUS_GROUPS_OWNER_PAGES = ['/', '/events'];
 /**
  * Does this portal point back at the school we are asking about?
  *
+ * Every figure below was re-read live on 2026-08-06 against all 2,348 US
+ * institutions, because the first set written here was wrong in the direction
+ * that costs schools: it recorded 68 settled by page markup and 32 refused,
+ * where the code as written settles 35 and refuses 65.
+ *
  * Cheapest evidence first, and the cheapest is free: the API request has
  * already been made, and a school that has branded the portal onto its own
- * hostname redirected it there. 145 of the 245 portals answering nationally are
+ * hostname redirected it there. 146 of the 246 portals answering nationally are
  * settled on that alone, at no cost.
  *
- * The rest are read. A CampusGroups portal that belongs to a school links back
- * to it (the footer's terms-of-service and dean-of-students links are on the
- * school's own domain), so one or two page reads settle another 70. They are
- * only ever paid by a school whose portal already answered, which is roughly a
- * hundred schools nationally, once each ever.
+ * The other 100 are read, and the pages say who they belong to two ways.
  *
- * What it will not do is accept a portal that names nobody. Sixteen do, and
- * most of them look genuine, so this refuses about sixteen real schools. That
- * is the price of the sixteen it catches, and they are not near misses:
- * `bates.ctc.edu` is Bates Technical College in Tacoma and `bates` is Bates
- * College in Maine; `franklin.edu` is Franklin University in Columbus and
+ * A portal that belongs to a school links back to it, because the footer's
+ * terms-of-service and dean-of-students links sit on the school's own domain.
+ * That settles 35.
+ *
+ * The rest print the school's domain as a contact address rather than a link:
+ * getinvolved@sacredheart.edu, inose@lehigh.edu, Student.Activities@marist.edu,
+ * asksalp@pdx.edu. Reading those settles another 27, and only a link was read
+ * at first, which refused every one of them. An address on the school's own
+ * domain is a statement of ownership on exactly the same footing as a link, so
+ * accepting it costs nothing in safety and is worth 27 schools. 13 of the 27
+ * have no other calendar platform anywhere in the sweep, so without this clause
+ * they have no campus events at all: Carroll, Colorado Mesa, Lehigh, Marist,
+ * MICA, Minnesota State Moorhead, Newberry, New Mexico Highlands, Portland
+ * State, Sacred Heart, Cerritos, Oklahoma City Community College and UNT
+ * Dallas.
+ *
+ * Reads are only ever paid by a school whose portal already answered, which is
+ * a hundred schools nationally, once each ever.
+ *
+ * What it will not do is accept a portal that names nobody. 38 are refused. 16
+ * of those are demonstrably somebody else's portal and they are not near
+ * misses: `bates.ctc.edu` is Bates Technical College in Tacoma and `bates` is
+ * Bates College in Maine; `franklin.edu` is Franklin University in Columbus and
  * `franklin` is Franklin College in Indiana; Marshall University gets USC's
  * Marshall School of Business, Imperial Valley College gets Imperial College
  * London, Spelman gets the American University in Cairo, Kellogg Community
- * College gets Northwestern's Kellogg School.
+ * College gets Northwestern's Kellogg School, Abilene Christian gets Australian
+ * Catholic, Utah State gets a .edu.au.
+ *
+ * The other 22 name no academic domain at all and most of them look genuine.
+ * 11 of the 22 have no other platform in the sweep, so the honest cost is 11
+ * real schools losing their only calendar against 16 strangers removed. Before
+ * the address clause it was 24 against 16, and Trumba's ratio was three real
+ * schools lost per stranger and it shipped.
  */
 async function campusGroupsBelongsTo(host: string, landedOn: string, domain: string): Promise<boolean> {
   if (sameSite(landedOn, domain)) return true;
@@ -1390,6 +1543,12 @@ async function campusGroupsBelongsTo(host: string, landedOn: string, domain: str
       continue; // A page that will not load is not evidence either way.
     }
     for (const match of html.matchAll(CALENDAR_HOST_RE)) {
+      if (sameSite(stripWww(match[1].toLowerCase()), domain)) return true;
+    }
+    // The same statement of ownership, written as a contact address instead of
+    // a link. Two in five of the portals that name nobody in their links are
+    // naming the school in their footer the whole time. See EMAIL_HOST_RE.
+    for (const match of html.matchAll(EMAIL_HOST_RE)) {
       if (sameSite(stripWww(match[1].toLowerCase()), domain)) return true;
     }
   }
@@ -1405,9 +1564,11 @@ async function campusGroupsBelongsTo(host: string, landedOn: string, domain: str
  * names the Olin Arts Center and "The Puddle".
  *
  * Validated rather than deleted, because unlike Trumba this platform does say
- * who it belongs to. Measured against all 2,348 US institutions: 245 answer at
- * their domain label, 213 of them point back at the school's own domain, and 16
- * point at a different school's. The remaining 16 name nobody and are refused.
+ * who it belongs to. Measured against all 2,348 US institutions on 2026-08-06:
+ * 246 answer at their domain label, 208 of them point back at the school's own
+ * domain, and 16 point at a different school's. The remaining 22 name nobody
+ * and are refused. See `campusGroupsBelongsTo` for the three kinds of evidence
+ * and what refusing costs.
  *
  * Note the check hangs off this function and not off `probeCampusGroupsAt`,
  * which is the right boundary rather than an oversight. Discovery reaches the
@@ -2219,28 +2380,47 @@ const EMS_OWNER_SCAN_BYTES = 250_000;
  *
  * The first is a link back to the school. An install belonging to a school
  * links to it, and Sacred Heart, LeTourneau, Wisconsin-Green Bay, Denison,
- * Wesleyan and Maryville all name their own domain on the page.
+ * Wesleyan, Maryville, Daemen, Wisconsin-Stevens Point and Western Connecticut
+ * State all name their own domain on the page.
  *
  * The second is for the installs that link nowhere at all, which Cleveland
- * State, Ohlone, Florida, Miami and Memphis all do. There the page's own title is the evidence: EMS
- * renders it as "Campus Calendar- <the institution>", so it names its owner
- * outright. That clause is allowed only when the page names no school's domain
- * whatsoever, and Franklin is exactly why. Its title says "Campus Calendar-
- * Franklin College", which agrees with "Franklin University" on the only word
- * either name carries, so the title alone would wave it through. The page also
- * links to franklincollege.edu, and a page naming a domain that is not this
- * school's has told us whose calendar it is.
+ * State, Ohlone, Florida, Miami, Memphis, Oregon Tech, Texas Southern, Penn
+ * College, Aims, Grambling State and Bridgewater State all do. There the page's
+ * own title is the evidence: EMS renders it as "Campus Calendar- <the
+ * institution>", so it names its owner outright. That clause is allowed only
+ * when the page names no school's domain whatsoever, and Franklin is exactly
+ * why. Its title says "Campus Calendar- Franklin College", which agrees with
+ * "Franklin University" on the only word either name carries, so the title
+ * alone would wave it through. The page also links to franklincollege.edu, and
+ * a page naming a domain that is not this school's has told us whose calendar
+ * it is.
  *
  * A generic word in the title like "Calendar" cannot manufacture a match: it
- * only ever enlarges the vendor's side of the comparison, and agreement is
- * measured against the shorter of the two.
+ * only ever enlarges the vendor's side of the comparison, and "Campus Calendar-
+ * <name>" is the school's own name written whole inside a longer string, which
+ * is the second clause of `namesSameSchool` and not the overlap one.
  *
- * Measured against all 2,348 US institutions. 24 hold a live tenancy at their
- * own domain label. 20 are kept, 12 on a link back and 8 on the title. Four are
- * refused and three of those are strangers: Franklin above, Eastern West
- * Virginia Community and Technical College getting the Connecticut Community
- * College System, and Grays Harbor College in Washington getting Granada Hills
- * Charter *High School*.
+ * One title passes that is worth knowing about, because it is a department and
+ * not a campus. `miami.emscloudservice.com` is titled "Campus Calendar-
+ * University of Miami, School of Law", so what it holds is one school's room
+ * bookings rather than the university's events. It is allowed through
+ * deliberately. This check asks one question, whose institution is this, and
+ * the answer is right: the law school is the University of Miami. Whether a
+ * department's calendar is the right calendar to show a student is the question
+ * the submission review queue exists for, and it is asked about feeds we
+ * already believe belong to the school. Refusing it here would give Miami
+ * students nothing at all, and this address is only ever reached after
+ * `ems.miami.edu`, `calendar.miami.edu` and `events.miami.edu` have all failed
+ * to answer.
+ *
+ * Measured against all 2,348 US institutions, and re-read live on 2026-08-06.
+ * 24 hold a live tenancy at their own domain label. 20 are kept, 9 on a link
+ * back and 11 on the title. Which of the two settles a given school moves
+ * around, because these pages are built per install and a marketing link comes
+ * and goes; the 20 and the 4 do not move. Four are refused and three of those
+ * are strangers: Franklin above, Eastern West Virginia Community and Technical
+ * College getting the Connecticut Community College System, and Grays Harbor
+ * College in Washington getting Granada Hills Charter *High School*.
  *
  * The fourth is a real school and it is worth knowing about, because it is the
  * shape of false refusal this rule produces. Utah Tech University's tenancy is
@@ -4011,6 +4191,26 @@ function sameSite(host: string, domain: string): boolean {
  * there in its homepage markup, and we read past it.
  */
 const CALENDAR_HOST_RE = /(?:https?:)?\/\/([a-z0-9.-]+\.[a-z]{2,})/gi;
+
+/**
+ * The domain half of an email address printed in a page.
+ *
+ * CALENDAR_HOST_RE only ever matches a host written after `//`, so it reads
+ * links and nothing else. A lot of portals name the school they belong to as a
+ * contact address instead: getinvolved@sacredheart.edu, inose@lehigh.edu,
+ * Student.Activities@marist.edu. That is at least as strong a statement of
+ * ownership as a link, because only the school hands out addresses on its own
+ * domain, so refusing to read it was throwing evidence away.
+ *
+ * The capture is greedy and takes the whole domain rather than stopping at the
+ * first suffix that looks academic, which is what keeps the check honest. The
+ * pattern the shared namespace produces is a foreign school whose domain merely
+ * ends in ours: `inose@aculife.acu.edu.au` is Australian Catholic University,
+ * and a substring test for `acu.edu` accepts it. Capturing the full
+ * `aculife.acu.edu.au` and handing it to `sameSite` refuses it, exactly as it
+ * refuses the same host written as a link.
+ */
+const EMAIL_HOST_RE = /[a-z0-9._%+-]+@([a-z0-9-]+(?:\.[a-z0-9-]+)*\.[a-z]{2,})/gi;
 
 /**
  * Calendar-looking hosts inside the school's own registrable domain.
