@@ -110,6 +110,12 @@ const {
   collapseRepeatedTitles,
   feedVariety,
   probeTrumba,
+  probeEmbeddedCalendar,
+  probePresence,
+  probeCampusGroups,
+  probeEms,
+  emsCandidates,
+  namesSameSchool,
   SCRAPED_MAX_AGE_DAYS,
 } = await loadEntry();
 
@@ -1522,5 +1528,327 @@ describe('rendering a date', () => {
     ]));
     expect(starts(events)).toEqual(['0999-01-01']);
     expect(Number.isNaN(new Date(events[0].start).getTime())).toBe(false);
+  });
+});
+
+// ── A label-derived vendor identifier has to prove whose calendar it is ─────
+//
+// Four adapters build a vendor address out of the school's domain label:
+// Presence, CampusGroups, EMS's hosted tenancy and Campus Labs. The label has
+// no relationship to the vendor's namespace, so an answer means somebody holds
+// that name, not that this school does. Trumba's version of this shipped Ohio
+// State students Oregon State's calendar for weeks. Measured against all 2,348
+// US institutions, these paths are wrong right now for real schools:
+// bates.ctc.edu (Bates Technical College, Tacoma) is served Bates College in
+// Maine, franklin.edu (Franklin University, Columbus) is served Franklin
+// College in Indiana, and rrcc.mnscu.edu is served Red Rocks in Colorado.
+//
+// Each block below is a regression, not a specification of taste. Every one of
+// them was confirmed failing against the unfixed code.
+
+/** Swap global fetch for the duration of one test. */
+function serving(router) {
+  const real = globalThis.fetch;
+  globalThis.fetch = (url, init) => Promise.resolve(router(String(url), init));
+  return () => { globalThis.fetch = real; };
+}
+
+function json(body) {
+  return new Response(JSON.stringify(body), {
+    status: 200,
+    headers: { 'content-type': 'application/json' },
+  });
+}
+
+function html(body) {
+  return new Response(body, { status: 200, headers: { 'content-type': 'text/html' } });
+}
+
+describe('telling one school\'s name from another\'s', () => {
+  it('accepts the same school written two ways', () => {
+    // Every one of these is a real pair from the live Presence feeds: a
+    // renaming, an abbreviation, a campus suffix, and Saint against St.
+    expect(namesSameSchool('Utica College', 'Utica University')).toBe(true);
+    expect(namesSameSchool('California State University, San Marcos', 'CSU San Marcos')).toBe(true);
+    expect(namesSameSchool('Washington State University', 'Washington State University - Pullman')).toBe(true);
+    expect(namesSameSchool('Saint Olaf College', 'St. Olaf College')).toBe(true);
+    expect(namesSameSchool('Copper Mountain Community College', 'Copper Mountain College')).toBe(true);
+  });
+
+  it('refuses two schools that only share the words every school has', () => {
+    // The pair this whole check exists for. Both are community colleges and
+    // both are four words long, and they are 900 miles apart.
+    expect(namesSameSchool('Rainy River Community College', 'Red Rocks Community College')).toBe(false);
+    // Half is not agreement: one shared geographic prefix is not a school.
+    expect(namesSameSchool('San Jose State University', 'San Diego State University')).toBe(false);
+    // A name made only of generic words carries no evidence at all.
+    expect(namesSameSchool('The University', 'Community College')).toBe(false);
+    expect(namesSameSchool('', 'Bowdoin College')).toBe(false);
+  });
+});
+
+describe('finding a school\'s Presence portal', () => {
+  const feed = campusName => [{
+    eventNoSqlId: 'e1',
+    eventName: 'Resume Lab',
+    campusName,
+    subdomain: 'rrcc',
+    startDateTimeUtc: '2026-09-12T18:30:00Z',
+    endDateTimeUtc: '2026-09-12T20:00:00Z',
+    hasEventEnded: false,
+  }];
+
+  let restore;
+  afterEach(() => restore?.());
+
+  it('accepts the portal that says it belongs to this school', async () => {
+    restore = serving(() => json(feed('Red Rocks Community College')));
+    expect(await probePresence('rrcc.edu', { names: ['Red Rocks Community College'] }))
+      .toBe('https://api.presence.io/rrcc/v1/events');
+  });
+
+  // The regression. `rrcc.mnscu.edu` is Rainy River Community College in
+  // Minnesota; the slug `rrcc` is Red Rocks in Colorado, and its 87 upcoming
+  // events are what a Rainy River student was being shown.
+  it('refuses a portal that names a different school', async () => {
+    restore = serving(() => json(feed('Red Rocks Community College')));
+    expect(await probePresence('rrcc.mnscu.edu', { names: ['Rainy River Community College'] }))
+      .toBeNull();
+  });
+
+  it('refuses a portal that names nobody, rather than assuming it is ours', async () => {
+    restore = serving(() => json(feed('')));
+    expect(await probePresence('rrcc.edu', { names: ['Red Rocks Community College'] })).toBeNull();
+  });
+
+  it('refuses when we do not know what the school is called', async () => {
+    restore = serving(() => json(feed('Red Rocks Community College')));
+    expect(await probePresence('rrcc.edu')).toBeNull();
+  });
+});
+
+describe('finding a school\'s CampusGroups portal', () => {
+  const EVENTS = [{
+    fields: 'eventId,eventName,ariaEventDetails,',
+    p0: '1',
+    p1: 'Career Fair',
+    p2: 'Career Fair. Thursday, 10 September 2026 At 4:00 PM, EDT (GMT-4).',
+  }];
+
+  /**
+   * `pages` maps a path on the portal to its markup; `landsOn` is the host the
+   * API request ends up at after the vendor's own redirect, which is the field
+   * the ownership check reads first because it costs nothing.
+   */
+  function portalServing({ landsOn = '', pages = {} } = {}) {
+    const real = globalThis.fetch;
+    globalThis.fetch = (url) => {
+      const target = String(url);
+      if (target.includes('/mobile_ws/')) {
+        const res = json(EVENTS);
+        // `Response.url` is read-only and empty on a constructed response, and
+        // it is exactly the field the ownership check reads to see where the
+        // request landed. Defining it is how a fake serves a redirect.
+        Object.defineProperty(res, 'url', {
+          value: landsOn ? `https://${landsOn}/mobile_ws/v17/mobile_events_list` : target,
+        });
+        return Promise.resolve(res);
+      }
+      const path = new URL(target).pathname;
+      return Promise.resolve(html(pages[path] ?? '<html><body>Please sign in</body></html>'));
+    };
+    return () => { globalThis.fetch = real; };
+  }
+
+  let restore;
+  afterEach(() => restore?.());
+
+  it('accepts a portal the school has redirected onto its own domain', async () => {
+    restore = portalServing({ landsOn: 'engage.bates.edu' });
+    expect(await probeCampusGroups('bates.edu'))
+      .toBe('https://bates.campusgroups.com/mobile_ws/v17/mobile_events_list');
+  });
+
+  it('accepts a portal whose own page links back to the school', async () => {
+    restore = portalServing({
+      pages: { '/': '<a href="https://www.bowdoin.edu/dean-of-students/">Terms</a>' },
+    });
+    expect(await probeCampusGroups('bowdoin.edu'))
+      .toBe('https://bowdoin.campusgroups.com/mobile_ws/v17/mobile_events_list');
+  });
+
+  // The regression, and it is live. Bates Technical College in Tacoma sits on
+  // bates.ctc.edu, so the label `bates` sends it to Bates College in Maine:
+  // the Olin Arts Center, the AESOP orientation programme, and "The Puddle".
+  it('refuses a portal that belongs to a different school with the same label', async () => {
+    restore = portalServing({
+      landsOn: 'engage.bates.edu',
+      pages: { '/': '<a href="https://www.bates.edu/">Bates College</a>' },
+    });
+    expect(await probeCampusGroups('bates.ctc.edu')).toBeNull();
+  });
+
+  it('refuses a portal that points at nobody at all', async () => {
+    restore = portalServing({});
+    expect(await probeCampusGroups('csi.edu')).toBeNull();
+  });
+});
+
+describe('finding a school\'s EMS calendar', () => {
+  // Reversing this order is the whole fix for one class of collision: a host
+  // under the school's own domain cannot belong to anyone else, and the
+  // vendor's shared hosting can. It used to be read first.
+  it('asks the school\'s own hosts before the vendor\'s shared hosting', () => {
+    expect(emsCandidates('jmu.edu')).toEqual([
+      'https://ems.jmu.edu/MasterCalendar/MasterCalendar.aspx',
+      'https://calendar.jmu.edu/MasterCalendar/MasterCalendar.aspx',
+      'https://events.jmu.edu/MasterCalendar/MasterCalendar.aspx',
+      'https://jmu.emscloudservice.com/calendar/MasterCalendar.aspx',
+    ]);
+  });
+
+  /**
+   * Enough of an EMS install to get past the probe: a session cookie on the
+   * page, then one month of real rows behind the PageMethod.
+   */
+  function install({ page = '', only = 'franklin.emscloudservice.com' } = {}) {
+    const real = globalThis.fetch;
+    globalThis.fetch = (url, init) => {
+      const target = String(url);
+      if (!target.includes(only)) return Promise.resolve(new Response('', { status: 404 }));
+      if (target.endsWith('/GetMoreData')) {
+        return Promise.resolve(json({
+          d: JSON.stringify({
+            PageCount: 1,
+            listData: [{
+              Id: 7,
+              Title: 'Grizzlies Soccer',
+              EventDateTime: { EventDateTime: '9/12/2026 6:30:00 PM', EventDuaration: 90 },
+              Location: { Name: 'Faught Stadium' },
+            }],
+          }),
+        }));
+      }
+      if (String(init?.method) === 'HEAD') {
+        return Promise.resolve(new Response('', {
+          status: 200,
+          headers: { 'set-cookie': 'ASP.NET_SessionId=abc123; path=/' },
+        }));
+      }
+      // EMS picks its date culture off Accept-Language and serves its own
+      // error page without one, at status 200. The first version of the
+      // ownership read omitted the header, got this page, found none of the
+      // school's links on it and refused every real install. The fake answers
+      // the same way so that mistake cannot be made again silently.
+      const language = init?.headers?.['Accept-Language'] || '';
+      if (!language) return Promise.resolve(html('<title>Master Calendar Error</title>'));
+      return Promise.resolve(html(page));
+    };
+    return () => { globalThis.fetch = real; };
+  }
+
+  let restore;
+  afterEach(() => restore?.());
+
+  // LeTourneau, one of the six schools that really do run the hosted tenancy.
+  it('accepts a hosted calendar that links back to the school', async () => {
+    restore = install({
+      only: 'letu.emscloudservice.com',
+      page: '<title>Campus Calendar- LeTourneau University</title>'
+        + '<a href="https://www.letu.edu/">Home</a>',
+    });
+    expect(await probeEms('letu.edu', { names: ['LeTourneau University'] }))
+      .toBe('https://letu.emscloudservice.com/calendar/MasterCalendar.aspx');
+  });
+
+  // The regression, and it is live. franklin.edu is Franklin University, an
+  // online school in Columbus Ohio. franklin.emscloudservice.com is Franklin
+  // College in Indiana: Johnson Center for Fine Arts, Faught Stadium,
+  // Grizzlies athletics. Note the two names agree on the only word either of
+  // them carries, so the title alone would wave this through. The page naming
+  // a domain that is not this school's is what refuses it.
+  it('refuses a hosted calendar that names a different school\'s domain', async () => {
+    restore = install({ page: '<title>Campus Calendar- Franklin College</title>'
+      + '<a href="https://www.franklincollege.edu/">Home</a>' });
+    expect(await probeEms('franklin.edu', { names: ['Franklin University'] })).toBeNull();
+  });
+
+  // Cleveland State and Ohlone both run the hosted tenancy and both link
+  // nowhere at all, so the page's own title is the only evidence they offer.
+  it('accepts a hosted calendar that links nowhere but names the school in its title', async () => {
+    restore = install({
+      only: 'ohlone.emscloudservice.com',
+      page: '<title>Campus Calendar- Ohlone College</title>',
+    });
+    expect(await probeEms('ohlone.edu', { names: ['Ohlone College'] }))
+      .toBe('https://ohlone.emscloudservice.com/calendar/MasterCalendar.aspx');
+  });
+
+  it('refuses a hosted calendar whose title is a different school', async () => {
+    restore = install({
+      only: 'ohlone.emscloudservice.com',
+      page: '<title>Campus Calendar- Ohlone College</title>',
+    });
+    expect(await probeEms('ohlone.k12.edu', { names: ['Ohlone Elementary'] })).toBeNull();
+  });
+
+  it('does not make a host on the school\'s own domain prove anything', async () => {
+    restore = install({ only: 'ems.jmu.edu', page: '' });
+    expect(await probeEms('jmu.edu', { names: ['James Madison University'] }))
+      .toBe('https://ems.jmu.edu/MasterCalendar/MasterCalendar.aspx');
+  });
+});
+
+// The second Trumba path, which until now was guarded only by a comment. A
+// reviewer added a domain-label fallback here and all 170 tests stayed green.
+describe('reading a Trumba calendar off the page that embeds it', () => {
+  const feed = title => JSON.stringify([{
+    eventID: '1',
+    title,
+    startDateTime: '2026-09-12T18:30:00',
+    endDateTime: '2026-09-12T20:00:00',
+  }]);
+
+  function serve({ page, feeds }) {
+    const real = globalThis.fetch;
+    globalThis.fetch = (url) => {
+      const target = String(url);
+      const slug = Object.keys(feeds).find(s => target.includes(`/calendars/${s}.json`));
+      if (slug) {
+        return Promise.resolve(new Response(feed(feeds[slug]), {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        }));
+      }
+      if (target.includes('trumba.com') || target.includes('25livepub')) {
+        return Promise.resolve(new Response('not found', { status: 404 }));
+      }
+      return Promise.resolve(html(page));
+    };
+    return () => { globalThis.fetch = real; };
+  }
+
+  let restore;
+  afterEach(() => restore?.());
+
+  it('uses a slug the page names', async () => {
+    restore = serve({
+      page: '<script>var webName: "osu-university-events";</script>',
+      feeds: { 'osu-university-events': 'Ohio State Career Fair' },
+    });
+    expect(await probeEmbeddedCalendar('https://www.osu.edu/events', 'osu.edu')).toEqual({
+      platform: 'trumba',
+      feedUrl: 'https://www.trumba.com/calendars/osu-university-events.json',
+    });
+  });
+
+  // The pin. A page that names no slug must not fall back to the domain label,
+  // because `osu` in Trumba's namespace is Oregon State's development instance.
+  it('does not fall back to the domain label when the page names no slug', async () => {
+    restore = serve({
+      page: '<html><body>Our events are listed below.</body></html>',
+      feeds: { osu: 'OSU Women\'s Center Drop-in' },
+    });
+    expect(await probeEmbeddedCalendar('https://www.osu.edu/events', 'osu.edu')).toBeNull();
   });
 });

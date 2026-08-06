@@ -74,6 +74,20 @@ const NEGATIVE_RECHECK_DAYS = 30;
  */
 const DOMAIN_RE = /^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$/;
 const ALLOWED_TLDS = ['edu', 'ca', 'uk', 'au', 'nz', 'ie', 'org', 'net', 'com'];
+
+/**
+ * A hostname that belongs to an institution rather than to a CDN, a font
+ * service or the vendor itself.
+ *
+ * Much narrower than ALLOWED_TLDS on purpose, and used for the opposite
+ * question. ALLOWED_TLDS asks "may we fetch this?", where .com and .org have to
+ * be in because schools use them. This asks "does naming this host tell us
+ * whose calendar we are looking at?", and a link to a .com tells us nothing:
+ * every page on the internet has some. Only the suffixes reserved for
+ * education answer it, and every wrong-school hit measured for this fix names
+ * one: franklincollege.edu, imperial.ac.uk, acu.edu.au.
+ */
+const ACADEMIC_HOST_RE = /\.(?:edu|ac\.uk|edu\.au|ac\.nz)$/i;
 /**
  * Names that must never be fetched server-side — matched by host LABEL, never by
  * substring.
@@ -198,6 +212,76 @@ export function normalizeName(value: string): string {
     .trim();
 }
 
+/**
+ * Words so many institutions carry that agreeing on one says nothing.
+ *
+ * Without this list "Rainy River Community College" and "Red Rocks Community
+ * College" share two of their four words and read as the same school, which is
+ * exactly the pair this whole check exists to tell apart.
+ */
+const GENERIC_SCHOOL_WORDS = new Set([
+  'university', 'universities', 'college', 'colleges', 'school', 'schools',
+  'state', 'community', 'technical', 'technology', 'institute', 'institution',
+  'academy', 'seminary', 'campus', 'campuses', 'center', 'centre', 'district',
+  'system', 'main',
+]);
+
+/**
+ * The words in a school's name that actually identify it.
+ *
+ * "Saint" and "St." are the same word and the vendors disagree about which to
+ * write. Presence returns "St. Olaf College" where our own row says "Saint Olaf
+ * College", and without folding them the two names share nothing but a generic.
+ */
+function schoolNameWords(name: string): Set<string> {
+  const words = new Set<string>();
+  for (const raw of normalizeName(name).split(' ')) {
+    const word = raw === 'saint' ? 'st' : raw;
+    if (!word || GENERIC_SCHOOL_WORDS.has(word)) continue;
+    words.add(word);
+  }
+  return words;
+}
+
+/**
+ * Do two names refer to the same school?
+ *
+ * Deliberately not string equality. A vendor writes a school's name in whatever
+ * form it was set up under, and on live feeds that is routinely not the form we
+ * hold: "Utica College" against "Utica University" after a renaming, "CSU San
+ * Marcos" against "California State University, San Marcos", "Washington State
+ * University - Pullman" against "Washington State University". Requiring the
+ * strings to match would refuse all of those, and refusing a real school is how
+ * a validator turns into a coverage loss rather than a safety win.
+ *
+ * The rule is that the identifying words have to agree on **more than half** of
+ * the shorter name. More than half rather than at least half, because half is
+ * where the dangerous pairs sit: "San Jose State" and "San Diego State" share
+ * exactly one of two words each, and one shared geographic prefix is not a
+ * school. The strict inequality refuses that pair and still accepts every
+ * abbreviation above, which was measured rather than guessed. Across the 119
+ * live Presence feeds this gates, it keeps all 118 that are the school we asked
+ * for and refuses the one that is not.
+ *
+ * Either side being empty is a refusal. A name made entirely of generic words
+ * carries no evidence, and inventing agreement out of nothing is the failure
+ * this is here to prevent.
+ */
+export function namesSameSchool(a: string, b: string): boolean {
+  const left = schoolNameWords(a);
+  const right = schoolNameWords(b);
+  if (!left.size || !right.size) return false;
+  let shared = 0;
+  for (const word of left) if (right.has(word)) shared++;
+  return shared * 2 > Math.min(left.size, right.size);
+}
+
+/** Any name we know the school by agreeing is enough. They are all it. */
+function schoolIsCalled(school: SchoolIdentity | undefined, name: string): boolean {
+  if (!name) return false;
+  return (school?.names || []).some(known => namesSameSchool(known, name));
+}
+
 /** Interest terms worth matching on — long enough to mean something. */
 export function termsFrom(...sources: unknown[]): string[] {
   const seen = new Set<string>();
@@ -236,6 +320,33 @@ function domainLabel(domain: string): string {
 // ── Adapter plumbing ────────────────────────────────────────────────────────
 
 /**
+ * Who the school is, for the probes that have to check a calendar is actually
+ * theirs before returning it.
+ *
+ * Three vendors here key a whole school off one short slug in a namespace they
+ * share with every other publisher on the platform, and we derive that slug
+ * from the school's domain label. The label has no relationship to the
+ * namespace, so an answer only means somebody holds that name. Deciding whether
+ * that somebody is this school needs to know who this school is, which a bare
+ * domain does not say: `campusName: "Red Rocks Community College"` is only
+ * recognisable as the wrong answer next to "Rainy River Community College".
+ *
+ * `names` is every string we know the school by: the row's canonical name, its
+ * match keys, and the words the student typed. Any one of them agreeing is
+ * enough, because they are all the same school under different spellings.
+ *
+ * Empty means we know nothing, and a probe that needs this refuses rather than
+ * guessing. In production it is never empty: `resolveFeed` returns early on a
+ * blank college name, so every probe it runs carries at least the string the
+ * student typed.
+ */
+interface SchoolIdentity {
+  names: string[];
+}
+
+const NO_IDENTITY: SchoolIdentity = { names: [] };
+
+/**
  * One calendar platform. `probe` verifies a school actually runs this platform
  * and returns the URL to remember; `fetch` turns that URL back into raw
  * platform events; `normalize` flattens one of those into the shared shape.
@@ -245,7 +356,10 @@ function domainLabel(domain: string): string {
  */
 interface Adapter {
   name: string;
-  probe(domain: string): Promise<string | null>;
+  // `school` is only read by the probes that derive a vendor identifier from the
+  // domain label and therefore have to prove the calendar is this school's. The
+  // rest take it and ignore it, exactly as they do with `seriesDates` below.
+  probe(domain: string, school?: SchoolIdentity): Promise<string | null>;
   // `seriesDates` is how many dates one repeating event contributes. Only iCal
   // carries repeat rules — every other platform's feed hands us dated instances
   // already — so the rest of the adapters take it and have nothing to do.
@@ -764,9 +878,19 @@ async function fetchPage(
   url: string,
   maxChars: number,
   guard: HopGuard = null,
+  // Almost every caller wants the two headers below and nothing else. EMS is
+  // the exception and it is not a preference: without `Accept-Language` that
+  // application serves a 200 carrying its own error page, so a reader that
+  // omits the header gets a well-formed document with none of the school's
+  // links in it and concludes the calendar belongs to nobody.
+  extraHeaders: Record<string, string> = {},
 ): Promise<{ finalHost: string; finalUrl: string; html: string }> {
   const res = await guardedFetch(url, {
-    headers: { Accept: 'text/html,application/xhtml+xml,*/*', 'User-Agent': BROWSER_UA },
+    headers: {
+      Accept: 'text/html,application/xhtml+xml,*/*',
+      'User-Agent': BROWSER_UA,
+      ...extraHeaders,
+    },
     signal: AbortSignal.timeout(PROBE_TIMEOUT_MS),
   }, guard);
 
@@ -949,6 +1073,44 @@ function campusLabsSlug(feedUrl: string): string {
   }
 }
 
+/**
+ * Campus Labs keys off the bare domain label, which is the same guess at a
+ * shared namespace that Presence, CampusGroups and EMS's hosted tenancy make,
+ * and it is wrong for real schools right now. It is nevertheless left alone,
+ * and the reason is measured rather than assumed. Do not "fix" it to match its
+ * neighbours without redoing the count below.
+ *
+ * **There is no ownership evidence to check.** Engage publishes nothing that
+ * says whose calendar this is. The event payload carries `institutionId`, an
+ * opaque integer with no public directory behind it. The portal page is a
+ * JavaScript shell that names no `.edu` at all, and it never redirects off
+ * campuslabs.com, so neither of the two signals the CampusGroups check uses
+ * exists here: measured across all 224 portals that still answer, zero
+ * redirect anywhere and zero name a school's domain. The one human-readable
+ * string is the community's *branded* name, and schools brand these hard:
+ * "Mane Connection", "Bobcat Connect", "MyAULife", "GetInvolvedMU", "CSUinvolve".
+ * Requiring that to agree with the school's name refuses **180 of 224 real
+ * schools**. That is a validator that would cost far more than the guess.
+ *
+ * **So the only option is removal, and removal is far too expensive.** 229 of
+ * the 2,348 US institutions in the national sweep resolve through Campus Labs.
+ * It is the single largest platform we read, 30% of every school that resolves
+ * anywhere, and nine of our own students' schools. 225 of the 229 are on the
+ * bare label; the other four came from discovery.
+ *
+ * **What it actually costs us today is four schools**, found by looking for two
+ * institutions whose domain labels collide. Ashland Community and Technical
+ * College in Kentucky is served Ashland University in Ohio (the AU Chapel, the
+ * John C Myers Convocation Center). CUNY Queensborough is served Quinsigamond
+ * Community College in Massachusetts (Polar Park, the West Boylston campus).
+ * The University of Akron's Wayne College is served Wayne State in Detroit,
+ * whose portal is branded "Wayne State University" outright. College of
+ * Southern Idaho is served CUNY's College of Staten Island.
+ *
+ * Four wrong against 229 lost is fifty-seven real schools given up per stranger
+ * removed. Trumba's ratio was under three, which is why that one went. This one
+ * stays until Anthology publishes something that names an institution.
+ */
 async function probeCampusLabs(domain: string): Promise<string | null> {
   const slug = domainLabel(domain);
   if (!slug) return null;
@@ -1145,7 +1307,10 @@ function campusGroupsOrigin(feedUrl: string): string {
  * every redirect hop; dropping it there silently reopens the SSRF this file was
  * patched for.
  */
-async function probeCampusGroupsAt(host: string, guard: HopGuard = null): Promise<string | null> {
+async function campusGroupsFeedAt(
+  host: string,
+  guard: HopGuard = null,
+): Promise<{ feedUrl: string; landedOn: string } | null> {
   const base = `https://${host}${CAMPUS_GROUPS_PATH}`;
   let res: Response;
   try {
@@ -1160,17 +1325,104 @@ async function probeCampusGroupsAt(host: string, guard: HopGuard = null): Promis
     await res.body?.cancel().catch(() => {});
     return null;
   }
+  // Where the request landed is kept, not just what it returned. A school that
+  // has branded the vendor away redirects the whole portal onto its own
+  // hostname, and that redirect is the cheapest ownership evidence this
+  // platform gives. See `campusGroupsBelongsTo`.
+  let landedOn = host;
   try {
-    return looksLikeCampusGroups(JSON.parse(await res.text())) ? base : null;
+    landedOn = stripWww(new URL(res.url).hostname.toLowerCase());
+  } catch (_) { /* Keep the host we asked for. */ }
+
+  try {
+    return looksLikeCampusGroups(JSON.parse(await res.text())) ? { feedUrl: base, landedOn } : null;
   } catch (_) {
     return null; // Really was a web page.
   }
 }
 
-async function probeCampusGroups(domain: string): Promise<string | null> {
+async function probeCampusGroupsAt(host: string, guard: HopGuard = null): Promise<string | null> {
+  return (await campusGroupsFeedAt(host, guard))?.feedUrl ?? null;
+}
+
+/**
+ * How much of a portal page to read while looking for who owns it. These run
+ * 60-100KB and the school's own link is usually in the footer, so a small
+ * budget reads the header and answers "no owner named" every time.
+ */
+const CAMPUS_GROUPS_OWNER_SCAN_BYTES = 250_000;
+
+/** The pages a CampusGroups portal serves signed-out, richest first. */
+const CAMPUS_GROUPS_OWNER_PAGES = ['/', '/events'];
+
+/**
+ * Does this portal point back at the school we are asking about?
+ *
+ * Cheapest evidence first, and the cheapest is free: the API request has
+ * already been made, and a school that has branded the portal onto its own
+ * hostname redirected it there. 145 of the 245 portals answering nationally are
+ * settled on that alone, at no cost.
+ *
+ * The rest are read. A CampusGroups portal that belongs to a school links back
+ * to it (the footer's terms-of-service and dean-of-students links are on the
+ * school's own domain), so one or two page reads settle another 70. They are
+ * only ever paid by a school whose portal already answered, which is roughly a
+ * hundred schools nationally, once each ever.
+ *
+ * What it will not do is accept a portal that names nobody. Sixteen do, and
+ * most of them look genuine, so this refuses about sixteen real schools. That
+ * is the price of the sixteen it catches, and they are not near misses:
+ * `bates.ctc.edu` is Bates Technical College in Tacoma and `bates` is Bates
+ * College in Maine; `franklin.edu` is Franklin University in Columbus and
+ * `franklin` is Franklin College in Indiana; Marshall University gets USC's
+ * Marshall School of Business, Imperial Valley College gets Imperial College
+ * London, Spelman gets the American University in Cairo, Kellogg Community
+ * College gets Northwestern's Kellogg School.
+ */
+async function campusGroupsBelongsTo(host: string, landedOn: string, domain: string): Promise<boolean> {
+  if (sameSite(landedOn, domain)) return true;
+
+  for (const path of CAMPUS_GROUPS_OWNER_PAGES) {
+    let html = '';
+    try {
+      html = await fetchHtmlHead(`https://${host}${path}`, CAMPUS_GROUPS_OWNER_SCAN_BYTES);
+    } catch (_) {
+      continue; // A page that will not load is not evidence either way.
+    }
+    for (const match of html.matchAll(CALENDAR_HOST_RE)) {
+      if (sameSite(stripWww(match[1].toLowerCase()), domain)) return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * `<label>.campusgroups.com` is a guess at a namespace CampusGroups shares
+ * across every school on the platform, so an answer means somebody holds that
+ * label and nothing more. It is the same shape as the Trumba slug that put two
+ * of our students on Oregon State's calendar, and it is live right now: Bates
+ * Technical College in Tacoma resolves to Bates College in Maine, whose feed
+ * names the Olin Arts Center and "The Puddle".
+ *
+ * Validated rather than deleted, because unlike Trumba this platform does say
+ * who it belongs to. Measured against all 2,348 US institutions: 245 answer at
+ * their domain label, 213 of them point back at the school's own domain, and 16
+ * point at a different school's. The remaining 16 name nobody and are refused.
+ *
+ * Note the check hangs off this function and not off `probeCampusGroupsAt`,
+ * which is the right boundary rather than an oversight. Discovery reaches the
+ * same endpoint at hosts like `engage.babson.edu` and `bullsconnect.usf.edu`,
+ * which are inside the school's own registrable domain already and are
+ * therefore not guesses at anything. Only the label is.
+ */
+export async function probeCampusGroups(domain: string): Promise<string | null> {
   const slug = domainLabel(domain);
   if (!slug) return null;
-  return await probeCampusGroupsAt(`${slug}.campusgroups.com`);
+  const host = `${slug}.campusgroups.com`;
+
+  const hit = await campusGroupsFeedAt(host);
+  if (!hit) return null;
+  return await campusGroupsBelongsTo(host, hit.landedOn, domain) ? hit.feedUrl : null;
 }
 
 /**
@@ -1427,11 +1679,65 @@ function presenceSlug(feedUrl: string): string {
   }
 }
 
-async function probePresence(domain: string): Promise<string | null> {
+/**
+ * Every school this feed says it belongs to. Normally exactly one.
+ *
+ * Presence stamps `campusName` on every row it serves, which makes it the only
+ * vendor here that answers "whose calendar is this?" outright and in the same
+ * request the probe was already making. Reading it off every row rather than
+ * the first is deliberate: a feed naming two schools is a feed we do not
+ * understand, and the caller refuses it rather than picking one.
+ */
+function presenceCampusNames(payload: unknown): string[] {
+  if (!Array.isArray(payload)) return [];
+  const names = new Set<string>();
+  for (const event of payload) {
+    const name = plainText((event as { campusName?: unknown })?.campusName);
+    if (name) names.add(name);
+  }
+  return [...names];
+}
+
+/**
+ * Presence's slug is the school's domain label, and that is a guess at a global
+ * namespace, the same shape of guess that put Ohio State's students on Oregon
+ * State's Trumba calendar. `api.presence.io/<slug>` answering means somebody
+ * holds that slug, not that this school does, and the wrong answer arrives as a
+ * working calendar full of real events that passes every health check we run.
+ *
+ * It is validated rather than removed, and the difference from the Trumba
+ * decision is evidence. Trumba publishes nothing that names its owner, so a
+ * check there would have refused real schools and still waved strangers
+ * through. Presence puts `campusName` on every single event, and that is not an
+ * assumption: across all 2,348 US institutions in the national sweep, 119
+ * answer at their domain label and all 119 carry it. So the feed is accepted
+ * only when it says it belongs to the school we are asking about, and a feed
+ * that names nobody is refused for want of evidence rather than trusted.
+ *
+ * Measured cost of the check, which is why it is a check and not a deletion:
+ * of those 119 feeds, 118 name the school whose domain we derived the slug
+ * from and are kept. One does not. `rrcc.mnscu.edu` is Rainy River Community
+ * College in Minnesota and the slug `rrcc` belongs to Red Rocks Community
+ * College in Colorado, whose 87 upcoming events were what a Rainy River student
+ * would have been shown. Deleting the guess instead, as Trumba required, would
+ * have cost 118 schools to reach that one.
+ */
+export async function probePresence(domain: string, school: SchoolIdentity = NO_IDENTITY): Promise<string | null> {
   const slug = domainLabel(domain);
   if (!slug) return null;
   const base = `${PRESENCE_API}/${slug}/v1/events`;
-  return await firstValidUrl([base], looksLikePresence) ? base : null;
+
+  let payload: unknown;
+  try {
+    payload = await probeJson(base);
+  } catch (_) {
+    return null;
+  }
+  if (!looksLikePresence(payload)) return null;
+
+  const named = presenceCampusNames(payload);
+  if (named.length !== 1 || !schoolIsCalled(school, named[0])) return null;
+  return base;
 }
 
 async function fetchPresence(feedUrl: string, days: number) {
@@ -1864,14 +2170,112 @@ function normalizeEms(event: any, feedUrl: string): NormalizedEvent {
  * on ems., calendar. or events. under /MasterCalendar — James Madison,
  * Shippensburg, Nassau Community, Southern Illinois.
  */
-function emsCandidates(domain: string): string[] {
+export function emsCandidates(domain: string): string[] {
   const label = domainLabel(domain);
+  // The school's own hosts first, and this order is the point rather than a
+  // detail. `ems.`, `calendar.` and `events.` under the school's own domain
+  // cannot belong to anybody else; `<label>.emscloudservice.com` is a guess at
+  // a namespace the vendor shares with every install it hosts. The guess used
+  // to be first, so a school running its own EMS could be answered by a
+  // stranger's hosted tenancy that happened to hold its domain label, and the
+  // school's own calendar would never be asked for. All four candidates are
+  // still fired at once and only the reading order changes, so this costs
+  // nothing.
   const candidates = ['ems', 'calendar', 'events']
     .map(sub => `https://${sub}.${domain}/MasterCalendar/MasterCalendar.aspx`);
   if (label) {
-    candidates.unshift(`https://${label}.emscloudservice.com/calendar/MasterCalendar.aspx`);
+    candidates.push(`https://${label}.emscloudservice.com/calendar/MasterCalendar.aspx`);
   }
   return candidates;
+}
+
+/** The vendor's shared hosting, as opposed to a host the school controls. */
+function isEmsVendorHost(feedUrl: string): boolean {
+  try {
+    return stripWww(new URL(feedUrl).hostname.toLowerCase()).endsWith('emscloudservice.com');
+  } catch (_) {
+    return false;
+  }
+}
+
+/** Enough of the page to reach its footer, where the school's own links sit. */
+const EMS_OWNER_SCAN_BYTES = 250_000;
+
+/**
+ * Is the hosted tenancy at `<label>.emscloudservice.com` really this school's?
+ *
+ * It has to be asked, because the label is a guess at a namespace shared by
+ * every install the vendor hosts and a wrong one answers with a complete,
+ * parseable, perfectly healthy calendar belonging to someone else. Live right
+ * now: `franklin.edu` is Franklin University, an online school in Columbus
+ * Ohio, and `franklin.emscloudservice.com` is Franklin College in Indiana,
+ * serving the Johnson Center for Fine Arts, Faught Stadium and Grizzlies
+ * athletics. That row only became reachable when the Trumba fix removed the
+ * slug it used to resolve through, which is worth remembering: closing one
+ * label-derived path moves schools onto the next one.
+ *
+ * Two ways in, and the page we read is the same MasterCalendar page the probe
+ * already knows answers.
+ *
+ * The first is a link back to the school. An install belonging to a school
+ * links to it, and Sacred Heart, LeTourneau, Wisconsin-Green Bay, Denison,
+ * Wesleyan and Maryville all name their own domain on the page.
+ *
+ * The second is for the installs that link nowhere at all, which Cleveland
+ * State, Ohlone, Florida, Miami and Memphis all do. There the page's own title is the evidence: EMS
+ * renders it as "Campus Calendar- <the institution>", so it names its owner
+ * outright. That clause is allowed only when the page names no school's domain
+ * whatsoever, and Franklin is exactly why. Its title says "Campus Calendar-
+ * Franklin College", which agrees with "Franklin University" on the only word
+ * either name carries, so the title alone would wave it through. The page also
+ * links to franklincollege.edu, and a page naming a domain that is not this
+ * school's has told us whose calendar it is.
+ *
+ * A generic word in the title like "Calendar" cannot manufacture a match: it
+ * only ever enlarges the vendor's side of the comparison, and agreement is
+ * measured against the shorter of the two.
+ *
+ * Measured against all 2,348 US institutions. 24 hold a live tenancy at their
+ * own domain label. 20 are kept, 12 on a link back and 8 on the title. Four are
+ * refused and three of those are strangers: Franklin above, Eastern West
+ * Virginia Community and Technical College getting the Connecticut Community
+ * College System, and Grays Harbor College in Washington getting Granada Hills
+ * Charter *High School*.
+ *
+ * The fourth is a real school and it is worth knowing about, because it is the
+ * shape of false refusal this rule produces. Utah Tech University's tenancy is
+ * genuinely its own and its title says so, but the page still links to
+ * calendar.dixie.edu, which is the domain the school used before it was renamed
+ * from Dixie State. A former name reads here as a different institution. That is
+ * one school nationally against three, and it fails in the direction this file
+ * prefers, so it is accepted rather than special-cased: the alternative is a
+ * rule that treats a foreign domain as harmless whenever the title agrees, and
+ * Franklin's title agrees.
+ */
+async function emsBelongsTo(feedUrl: string, domain: string, school: SchoolIdentity): Promise<boolean> {
+  let html = '';
+  try {
+    // EMS_HEADERS, and this is the third place in this file where leaving them
+    // off answers 200 with the wrong document. Without `Accept-Language` the
+    // application serves its own error page, which names no school at all, so
+    // an unheadered read would refuse Sacred Heart, LeTourneau and every other
+    // real install for want of evidence they publish perfectly well.
+    html = await fetchPage(feedUrl, EMS_OWNER_SCAN_BYTES, null, EMS_HEADERS).then(p => p.html);
+  } catch (_) {
+    return false; // A page we cannot read is not evidence of ownership.
+  }
+  if (!html) return false;
+
+  let namesAnySchool = false;
+  for (const match of html.matchAll(CALENDAR_HOST_RE)) {
+    const host = stripWww(match[1].toLowerCase());
+    if (sameSite(host, domain)) return true;
+    if (ACADEMIC_HOST_RE.test(host)) namesAnySchool = true;
+  }
+  if (namesAnySchool) return false;
+
+  const title = plainText((/<title>([^<]*)<\/title>/i.exec(html) || [])[1] || '');
+  return schoolIsCalled(school, title);
 }
 
 /**
@@ -1911,13 +2315,17 @@ async function probeEmsAt(feedUrl: string, guard: HopGuard = null): Promise<stri
  * that will not resolve for most schools, and waiting each one out in turn puts
  * three timeouts in front of a student watching a spinner.
  */
-async function probeEms(domain: string): Promise<string | null> {
+export async function probeEms(domain: string, school: SchoolIdentity = NO_IDENTITY): Promise<string | null> {
   const attempts = emsCandidates(domain).map(candidate =>
     probeEmsAt(candidate).catch(() => null)
   );
   for (const attempt of attempts) {
     const hit = await attempt;
-    if (hit) return hit;
+    if (!hit) continue;
+    // A host under the school's own domain has nothing to prove. Only the
+    // vendor's shared hosting does, because only that one was guessed.
+    if (!isEmsVendorHost(hit)) return hit;
+    if (await emsBelongsTo(hit, domain, school)) return hit;
   }
   return null;
 }
@@ -3716,7 +4124,7 @@ async function discoverCalendarLocations(
  * already in hand, the Modern Campus id is a regex over markup we have, and
  * Trumba costs a request per slug.
  */
-async function probeEmbeddedCalendar(
+export async function probeEmbeddedCalendar(
   pageUrl: string,
   domain: string,
 ): Promise<{ platform: string; feedUrl: string } | null> {
@@ -3830,12 +4238,14 @@ async function probeKnownHost(
  */
 export async function probeCalendar(
   domain: string,
-  { discover = true }: { discover?: boolean } = {},
+  { discover = true, school = NO_IDENTITY }: { discover?: boolean; school?: SchoolIdentity } = {},
 ): Promise<{ platform: string; feedUrl: string } | null> {
   for (const adapter of ADAPTERS) {
     let feedUrl: string | null = null;
     try {
-      feedUrl = await adapter.probe(domain);
+      // `school` is what lets a probe refuse a calendar that is not this
+      // school's. Only the label-derived ones read it; the rest ignore it.
+      feedUrl = await adapter.probe(domain, school);
     } catch (_) {
       feedUrl = null; // A probe must never take down the request.
     }
@@ -3880,7 +4290,11 @@ export async function probeCalendar(
 
   for (const alias of found.domains) {
     try {
-      const hit = await probeCalendar(alias, { discover: false });
+      // The identity travels to the alias domain too. A school that has renamed
+      // itself is the same school, so it is the same evidence a probe there has
+      // to find. Dropping it here would leave the alias hop as the one way back
+      // into an unvalidated label guess.
+      const hit = await probeCalendar(alias, { discover: false, school });
       if (hit) return hit;
     } catch (_) { /* Next domain. */ }
 
@@ -4326,17 +4740,32 @@ async function resolveFeed(base44: any, college: string, userId = '') {
     .filter(isProbeableDomain);
   const candidates = [...new Set([...known, ...(await guessDomains(base44, college))])];
 
+  // Everything we know this school is called, for the probes that have to prove
+  // a calendar is theirs before returning it. All three sources go in because
+  // they are all the same school spelled differently and the vendor may hold
+  // any one of the spellings: the row's canonical name, the keys other students
+  // have matched on, and the words this student typed. `college` is never blank
+  // here, because this function returned at the top if it was, so a probe run
+  // from production always has something to check against.
+  const school: SchoolIdentity = {
+    names: [...new Set([
+      String(university?.canonical_name || ''),
+      ...(university?.match_keys || []).map((k: string) => String(k || '')),
+      college,
+    ].filter(Boolean))],
+  };
+
   // Cheap pass over every candidate first. Reading pages to discover a hidden
   // calendar host is worth it once, but not once per guessed domain — a school
   // that runs no calendar at all would otherwise pay for it three times over
   // while a student sits watching a spinner.
   let feed: { platform: string; feedUrl: string } | null = null;
   for (const domain of candidates) {
-    feed = await probeCalendar(domain, { discover: false });
+    feed = await probeCalendar(domain, { discover: false, school });
     if (feed) break;
   }
   if (!feed && candidates.length) {
-    feed = await probeCalendar(candidates[0]);
+    feed = await probeCalendar(candidates[0], { school });
   }
 
   // Last, and only after every real feed has failed to answer. A school with a
