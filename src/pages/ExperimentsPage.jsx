@@ -16,6 +16,10 @@ import SoftDeleteConfirm, { softDeletePayload } from '@/components/SoftDeleteCon
 import ExperimentActionsMenu from '@/components/experiments/ExperimentActionsMenu';
 import ResumeExperimentModal from '@/components/experiments/ResumeExperimentModal';
 import ExperimentTestPanel from '@/components/experiments/ExperimentTestPanel';
+import PreExperimentCheckIn from '@/components/measurement/PreExperimentCheckIn';
+import PostExperimentCheckIn from '@/components/measurement/PostExperimentCheckIn';
+import WhatYouLearned from '@/components/measurement/WhatYouLearned';
+import { loadMeasurements, hasPre, hasPost } from '@/lib/experiment-measurement';
 import { backfillLegacyExperiments } from '@/lib/experiment-design';
 
 const STATUS_STYLES = {
@@ -204,7 +208,7 @@ function MissionsSection({ experiment, missions, loadingMissions, onMissionAdded
 }
 
 // ── Experiment card ───────────────────────────────────────────────────────────
-function ExperimentCard({ exp, onStatusChange, onExpand, expanded, missions, loadingMissions, onMissionAdded, onProofAdded, onMissionDeleted, onDelete, onEdited, onFindPeople, paths, guides, onGenerateGuide, onGuideSetActive, onGuideDeleted, onGuideDuplicated, onGuideRenamed, onPaused, onResumed }) {
+function ExperimentCard({ exp, measurement, onStatusChange, onExpand, expanded, missions, loadingMissions, onMissionAdded, onProofAdded, onMissionDeleted, onDelete, onEdited, onFindPeople, paths, guides, onGenerateGuide, onGuideSetActive, onGuideDeleted, onGuideDuplicated, onGuideRenamed, onPaused, onResumed }) {
   const s = STATUS_STYLES[exp.status] || STATUS_STYLES.planned;
   const hasGuides = guides && guides.length > 0;
   const activeGuide = guides?.find(g => g.is_active);
@@ -284,6 +288,8 @@ function ExperimentCard({ exp, onStatusChange, onExpand, expanded, missions, loa
           )}
 
           <ExperimentTestPanel exp={exp} />
+
+          {measurement?.post_completed_at && <WhatYouLearned m={measurement} />}
 
           {exp.expected_learning && (
             <div><p className="tp-eyebrow text-[color:var(--ink-500)] mb-1">Expected learning</p><p className="tp-body text-[color:var(--ink-700)]">{exp.expected_learning}</p></div>
@@ -619,12 +625,19 @@ export default function ExperimentsPage() {
   const toastTimer = useRef(null);
   const [outreachPlanTarget, setOutreachPlanTarget] = useState(null);
   const [resumeTarget, setResumeTarget] = useState(null); // experiment to resume
+  // Expectation vs. reality measurement, keyed by experiment id.
+  const [measurements, setMeasurements] = useState({});
+  const [preTarget, setPreTarget] = useState(null);   // experiment about to start
+  const [postTarget, setPostTarget] = useState(null); // experiment just completed
+  const [learnedTarget, setLearnedTarget] = useState(null);
 
   const load = async () => {
-    const [data, ps] = await Promise.all([
+    const [data, ps, ms] = await Promise.all([
       base44.entities.Experiments.list('-created_date', 100).catch(() => []),
       base44.entities.PathRecommendations.list('-created_date', 100).catch(() => []),
+      loadMeasurements().catch(() => ({})),
     ]);
+    setMeasurements(ms || {});
     const active = Array.isArray(data) ? data.filter(e => !e.deletion_status || e.deletion_status === 'active') : [];
     const pathList = Array.isArray(ps) ? ps : [];
     setExperiments(active);
@@ -692,9 +705,39 @@ export default function ExperimentsPage() {
     load();
   };
 
-  const updateStatus = async (id, status) => {
+  const applyStatus = async (id, status) => {
     await base44.entities.Experiments.update(id, { status });
     setExperiments(prev => prev.map(e => e.id === id ? { ...e, status } : e));
+  };
+
+  /**
+   * Starting an experiment asks what the student expects; completing one asks
+   * what actually happened. Both gates only fire once per experiment, so a
+   * historical experiment is never asked to fill in a past expectation.
+   */
+  const updateStatus = async (id, status) => {
+    const exp = experiments.find(e => e.id === id);
+    const m = measurements[id];
+    if (exp && status === 'in_progress' && !hasPre(m)) { setPreTarget(exp); return; }
+    if (exp && status === 'completed' && !hasPost(m)) {
+      await applyStatus(id, status);
+      setPostTarget(exp);
+      return;
+    }
+    await applyStatus(id, status);
+  };
+
+  const handlePreSaved = async (row) => {
+    const exp = preTarget;
+    setMeasurements(prev => ({ ...prev, [exp.id]: row }));
+    setPreTarget(null);
+    await applyStatus(exp.id, 'in_progress');
+  };
+
+  const handlePostSaved = (row) => {
+    setMeasurements(prev => ({ ...prev, [postTarget.id]: row }));
+    setPostTarget(null);
+    setLearnedTarget(row);
   };
 
   const handleMissionAdded = (expId, mission) => {
@@ -793,6 +836,7 @@ export default function ExperimentsPage() {
 
   const sharedCardProps = (exp) => ({
     exp,
+    measurement: measurements[exp.id],
     expanded: expandedId === exp.id,
     onExpand: () => handleExpand(exp.id),
     onStatusChange: updateStatus,
@@ -841,6 +885,33 @@ export default function ExperimentsPage() {
         />
       )}
       {showNew && <NewExperimentModal onClose={() => setShowNew(false)} onSave={save} paths={paths} />}
+      {preTarget && (
+        <PreExperimentCheckIn
+          exp={preTarget}
+          onClose={() => setPreTarget(null)}
+          onSaved={handlePreSaved}
+        />
+      )}
+      {postTarget && (
+        <PostExperimentCheckIn
+          exp={postTarget}
+          measurement={measurements[postTarget.id]}
+          onClose={() => setPostTarget(null)}
+          onSaved={handlePostSaved}
+        />
+      )}
+      {learnedTarget && (
+        <div className="anim-overlay fixed inset-0 z-50 flex items-end justify-center p-0 sm:items-center sm:p-4" style={{ background: 'rgba(5,8,22,0.55)' }}>
+          <div className="anim-modal w-full max-w-lg max-h-[94vh] overflow-y-auto rounded-t-[24px] bg-white p-6 sm:rounded-[24px] sm:p-8">
+            <WhatYouLearned m={learnedTarget} compact />
+            <button onClick={() => setLearnedTarget(null)}
+              className="tp-body mt-6 w-full rounded-[10px] py-3.5 font-semibold text-white"
+              style={{ background: 'var(--brand-navy-900)' }}>
+              Done
+            </button>
+          </div>
+        </div>
+      )}
       {resumeTarget && (
         <ResumeExperimentModal
           exp={resumeTarget}
