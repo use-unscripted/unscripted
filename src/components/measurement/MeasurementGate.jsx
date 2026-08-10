@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
-import { Gauge } from 'lucide-react';
+import { Gauge, Loader2 } from 'lucide-react';
 import PreExperimentCheckIn from '@/components/measurement/PreExperimentCheckIn';
 import PostExperimentCheckIn from '@/components/measurement/PostExperimentCheckIn';
+import { evaluateExperimentWork } from '@/lib/experiment-evaluation';
 
 /**
  * The measurement step, wherever the loop actually passes through.
@@ -18,6 +19,21 @@ import PostExperimentCheckIn from '@/components/measurement/PostExperimentCheckI
 export default function MeasurementGate({ phase, exp, measurement, onSaved, autoOpen = false }) {
   const done = phase === 'pre' ? !!measurement?.pre_completed_at : !!measurement?.post_completed_at;
   const [open, setOpen] = useState(false);
+  const [reviewing, setReviewing] = useState(false);
+
+  /**
+   * The outcome answers are the student's. The review of the work they produced
+   * is the system's, and it is the only thing that puts real ability evidence on
+   * the record, so it runs as soon as the outcome is saved. A review that fails
+   * or has nothing to read leaves the row alone rather than inventing a score.
+   */
+  const savePost = async (row) => {
+    setOpen(false);
+    setReviewing(true);
+    const reviewed = await evaluateExperimentWork(exp, row).catch(() => null);
+    setReviewing(false);
+    onSaved(reviewed ? { ...row, ...reviewed } : row);
+  };
 
   // Offered once per experiment per session. A student who closes it keeps the
   // card below and can open it again; nobody is trapped behind a modal.
@@ -59,8 +75,19 @@ export default function MeasurementGate({ phase, exp, measurement, onSaved, auto
           exp={exp}
           measurement={measurement}
           onClose={() => setOpen(false)}
-          onSaved={(row) => { setOpen(false); onSaved(row); }}
+          onSaved={savePost}
         />
+      )}
+
+      {reviewing && (
+        <section className="rounded-[20px] bg-white p-5 sm:p-6" style={{ border: '1px solid var(--border-light)' }}>
+          <p className="tp-body flex items-center gap-2 font-semibold" style={{ color: 'var(--text-primary)' }}>
+            <Loader2 size={15} className="animate-spin" /> Reviewing the work you produced
+          </p>
+          <p className="tp-body mt-1.5" style={{ color: 'var(--text-secondary)' }}>
+            Scored against this experiment's own criteria. Your own rating stays exactly as you gave it.
+          </p>
+        </section>
       )}
 
       <section

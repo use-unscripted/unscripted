@@ -19,6 +19,7 @@ import AddMissionModal from '@/components/experiments/AddMissionModal';
 import JourneyEmptyState from '@/components/journey/JourneyEmptyState';
 import MeasurementGate from '@/components/measurement/MeasurementGate';
 import WhatYouLearned from '@/components/measurement/WhatYouLearned';
+import ReviewedWork from '@/components/measurement/ReviewedWork';
 import { loadMeasurements } from '@/lib/experiment-measurement';
 import { Sk } from '@/components/PageSkeleton';
 
@@ -205,6 +206,8 @@ export default function ActiveExperiment() {
         )}
 
         {learned && <WhatYouLearned m={learned} />}
+        {/* The review of the deliverable, kept beside the student's own rating. */}
+        <ReviewedWork m={measurement} />
 
         {/* With no guide, this is the only thing on the page worth doing, so it
             is sized like it. The old version put it behind a 13px text link
