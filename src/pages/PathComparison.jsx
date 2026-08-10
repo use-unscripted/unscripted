@@ -663,8 +663,8 @@ export default function PathComparison() {
       )}
 
       <PageHeader
-        title="Your career paths."
-        description="Explore multiple paths at once. Test, pause, resume and compare. None is permanent until you decide it is."
+        title="Careers worth testing."
+        description="Each path here is a career hypothesis, not a recommendation. Current evidence suggests which may fit; testing them is what settles it."
         action={
           <button onClick={() => setShowCreate(true)}
             className="touch-target flex items-center gap-2 rounded-[10px] px-5 py-2.5 text-sm font-semibold text-white shrink-0"

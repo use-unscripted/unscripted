@@ -126,13 +126,13 @@ export default function LandingSections() {
              them in a row stops being an accent and becomes the template.
              The headings carry their own sections now. */}
           <h2 className="font-heading text-3xl font-bold" style={{ color: 'var(--text-primary)' }}>
-            Pick something you’re actually weighing up.
+            Careers worth testing, not careers you’re told to pick.
           </h2>
           <p className="mt-3 max-w-2xl" style={{ color: 'var(--text-secondary)' }}>
-            The process is the same whichever one you choose: compare the options, run the missions, come back with proof.
+            Your interests are a starting point. Your experiences become the evidence, and the loop is the same whichever career you start with.
           </p>
           <p className="mt-5 text-sm font-semibold" style={{ color: 'var(--brand-navy-700)' }}>
-            Choose one to see its first missions and what you’d walk away with.
+            Choose one to see its first experiments and what you’d walk away with.
           </p>
 
           {/* PathExplorer replaced the static pills in the Base44 builder on
@@ -156,10 +156,13 @@ export default function LandingSections() {
         <div className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-2">
           <div>
             <h2 className="font-heading text-4xl font-bold leading-tight tracking-tight text-white lg:text-5xl">
-              College teaches you subjects. It never teaches you how to test a career before you pick one.
+              Career quizzes tell you what might fit. Unscripted helps you test whether it actually does.
             </h2>
             <p className="mt-6 leading-7 text-[color:var(--ink-300)]">
-              Most people choose on prestige, or on what a parent said, or on a guess made at eighteen. The bill for guessing wrong is four years and a lot of money, and it arrives long after the decision.
+              Most people choose on prestige, or on what a parent said, or on a guess made at eighteen. The bill for guessing wrong arrives long after the decision, and no questionnaire can settle it.
+            </p>
+            <p className="mt-5 leading-7 text-[color:var(--ink-300)]">
+              Not knowing yet is useful. It tells us what to test next.
             </p>
           </div>
 
@@ -168,10 +171,10 @@ export default function LandingSections() {
             style={{ background: 'var(--brand-navy-700)', border: '1px solid rgba(214,182,106,0.25)' }}
           >
             <h3 className="font-heading mb-4 text-2xl font-bold text-white">
-              Compare. Test. Execute. Reflect. Adjust.
+              Being good at the work and enjoying the work are not the same thing.
             </h3>
             <p className="leading-7 text-[color:var(--ink-300)]">
-              You compare three paths, run real missions against the one you pick, work them around the schedule you already have, and move your ranking as the evidence comes in.
+              Unscripted looks beyond whether you can do the work. It helps you learn whether you actually want to keep doing it, and it becomes more confident about what fits you as you test more kinds of work.
             </p>
           </div>
         </div>
@@ -245,7 +248,7 @@ export default function LandingSections() {
 
               <div className="lg:pb-2">
                 <p className="mb-6 max-w-[34ch] leading-7 text-[color:var(--ink-300)]">
-                  You need a better way to test what comes next.
+                  You need a way to test what comes next, and evidence to decide on when you do.
                 </p>
                 <Link
                   to="/onboarding"
@@ -256,7 +259,7 @@ export default function LandingSections() {
                     boxShadow: '0 4px 16px rgb(31 58 95 / 0.18)',
                   }}
                 >
-                  Start your 30-day test <ArrowRight size={17} aria-hidden="true" />
+                  Start exploring <ArrowRight size={17} aria-hidden="true" />
                 </Link>
               </div>
             </div>

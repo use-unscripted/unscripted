@@ -17,6 +17,7 @@ import PathComparisonWorkspace from '@/components/journey/PathComparisonWorkspac
 import PathSelectedConfirm from '@/components/journey/PathSelectedConfirm';
 import JourneyEmptyState from '@/components/journey/JourneyEmptyState';
 import NextBestExperimentPanel from '@/components/next-test/NextBestExperimentPanel';
+import JourneyEvidence from '@/components/journey/JourneyEvidence';
 import CampusEventsPanel from '@/components/campus/CampusEventsPanel';
 import ContinuationGate from '@/components/journey/ContinuationGate';
 import { Sk } from '@/components/PageSkeleton';
@@ -212,6 +213,12 @@ export default function MyJourney() {
           feature rather than the way the loop continues. */}
       <NextBestExperimentPanel />
 
+      {/* Then the evidence: which careers currently look worth testing, what
+          moved since last time, and what we are still learning. It sits under
+          the next action on purpose — the loop is what to do next first, the
+          record of what has been learned second. */}
+      <JourneyEvidence />
+
       {/* The "no experiment yet" case is not listed here: the panel above is
           already showing that exact call to action, and two buttons pointing at
           the same route is what made this page read as a menu. */}
@@ -239,7 +246,7 @@ export default function MyJourney() {
       </p>
     </>,
     currentPath
-      ? `You're currently testing ${currentPath.path_name}.`
+      ? `You're currently testing ${currentPath.path_name}. Nothing here is settled until the evidence says so.`
       : 'One direction at a time. This page tells you what comes next.'
   );
 }
