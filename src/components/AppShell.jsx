@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Outlet, NavLink } from 'react-router-dom';
 import { Compass, CalendarDays, FolderOpen, FileText, Settings, LogOut, BarChart3, Inbox } from 'lucide-react';
+import { MotionConfig } from 'framer-motion';
 import { base44 } from '@/api/base44Client';
+import RouteTransition from '@/components/RouteTransition';
 import { listFeedSubmissions } from '@/lib/campus-events';
 import { clearCampusStore } from '@/lib/campus-store';
 import PilotTracker from '@/components/PilotTracker';
@@ -62,7 +64,13 @@ export default function AppShell() {
   }, [isAdmin]);
 
   return (
-    <div className="min-h-[100svh] font-body" style={{ background: 'var(--background-secondary)' }}>
+    // The landing page's paper, not the cooler grey the app used to sit on: the
+    // two surfaces were a few points apart in hue, which is the amount that
+    // reads as a different site rather than a deliberate change.
+    // MotionConfig mirrors the landing page — any transform in this tree is
+    // neutered for anyone who has asked their OS for reduced motion.
+    <MotionConfig reducedMotion="user">
+    <div className="min-h-[100svh] font-body" style={{ background: 'var(--page-surface)' }}>
       <PilotTracker />
       {/* Sidebar */}
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-60 flex-col lg:flex py-5 px-4" style={{ background: 'var(--brand-navy-900)' }}>
@@ -132,14 +140,22 @@ export default function AppShell() {
           reserves for the home indicator, so the page has to clear both or the
           last thing on every scrolling screen hides behind it. */}
       <main className="pb-[calc(6rem+env(safe-area-inset-bottom))] pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)] lg:ml-60 lg:pb-0">
-        <Outlet />
+        {/* Screens arrive the way the landing fold does, once per route. */}
+        <RouteTransition>
+          <Outlet />
+        </RouteTransition>
       </main>
 
       {/* Mobile bottom nav — same four destinations, touch-sized. The side
           insets only do anything in landscape, where the notch eats into one
           end of a full-bleed bar. */}
-      <nav className="fixed inset-x-0 bottom-0 z-30 flex border-t bg-white lg:hidden"
+      {/* Translucent paper over a blur, the same treatment the landing nav
+          condenses into, rather than a flat white bar. */}
+      <nav className="fixed inset-x-0 bottom-0 z-30 flex border-t lg:hidden"
         style={{
+          background: 'rgba(250,250,249,0.86)',
+          backdropFilter: 'blur(12px)',
+          WebkitBackdropFilter: 'blur(12px)',
           borderColor: 'var(--border-light)',
           paddingBottom: 'env(safe-area-inset-bottom)',
           paddingLeft: 'env(safe-area-inset-left)',
@@ -157,5 +173,6 @@ export default function AppShell() {
         ))}
       </nav>
     </div>
+    </MotionConfig>
   );
 }
