@@ -17,6 +17,7 @@ import ReflectionContextCard from '@/components/reflection/ReflectionContextCard
 import ConclusionGate from '@/components/reflection/ConclusionGate';
 import ReflectionForm from '@/components/reflection/ReflectionForm';
 import DecisionStep from '@/components/reflection/DecisionStep';
+import EvidenceUpdatePanel from '@/components/reflection/EvidenceUpdatePanel';
 import CycleSummary from '@/components/reflection/CycleSummary';
 import JourneyEmptyState from '@/components/journey/JourneyEmptyState';
 import { Sk } from '@/components/PageSkeleton';
@@ -58,7 +59,10 @@ export default function ExperimentReflection() {
       const next = await loadConclusionContext(experimentIdParam);
       setCtx(next);
       // An already-written conclusion means the decision is what is left.
-      if (next.existing && !reflection) setReflection(next.existing);
+      // Set unconditionally: reading the current reflection out of the closure
+      // here made switching to another experiment keep the previous one's state,
+      // which showed the form again over an already-saved conclusion.
+      setReflection(next.existing || null);
     } catch (err) {
       console.error('[reflection] load failed:', err?.message || err);
       // Never leave the page spinning: say what happened and offer a retry.
@@ -156,6 +160,9 @@ export default function ExperimentReflection() {
         <ConclusionGate availability={availability} experiment={ctx.experiment} onEndEarly={handleEndEarly} />
       ) : reflection ? (
         <>
+          {/* The reflection is evidence now: it is folded into the career
+              hypothesis before the student is asked to decide anything. */}
+          <EvidenceUpdatePanel reflection={reflection} experiment={ctx.experiment} />
           <DecisionStep ctx={ctx} reflection={reflection} onDecided={handleDecided} />
           <p className="tp-meta text-center" style={{ color: 'var(--text-muted)' }}>
             Reflection saved.{' '}

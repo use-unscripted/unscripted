@@ -4,9 +4,10 @@ import { HYPOTHESIS_STATUS_LABELS } from '@/lib/career-hypothesis';
 import { EvidenceBadge, ConfidenceMeter } from '@/components/evidence-profile/EvidenceBadge';
 import EvidenceProvenance from '@/components/evidence-profile/EvidenceProvenance';
 import FitBreakdown from '@/components/paths/FitBreakdown';
+import WhyThisChanged from '@/components/paths/WhyThisChanged';
 
 /** One career hypothesis as it currently stands, with its evidence count. */
-export default function HypothesisCard({ item, flagged }) {
+export default function HypothesisCard({ item, flagged, recalculation }) {
   const { path, hypothesis, summary } = item;
   return (
     <div className="rounded-[16px] border bg-white p-5" style={{ borderColor: 'var(--ink-200)' }}>
@@ -40,9 +41,13 @@ export default function HypothesisCard({ item, flagged }) {
 
       <FitBreakdown fit={hypothesis.fit} overall={hypothesis.career_fit_score} evidenceShare={hypothesis.fit_evidence_share} />
 
-      <p className="tp-meta mt-3" style={{ color: 'var(--ink-400)' }}>
-        Score movement is not tracked yet, so nothing is shown here until recalculation exists.
-      </p>
+      {recalculation ? (
+        <WhyThisChanged change={recalculation} compact />
+      ) : (
+        <p className="tp-meta mt-3" style={{ color: 'var(--ink-400)' }}>
+          Nothing has recalculated this estimate yet. Completing an experiment and writing its reflection is what moves it.
+        </p>
+      )}
 
       <EvidenceProvenance
         summary={summary}

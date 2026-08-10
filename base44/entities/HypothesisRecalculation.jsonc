@@ -1,0 +1,106 @@
+{
+  "name": "HypothesisRecalculation",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string"
+    },
+    "path_id": {
+      "type": "string"
+    },
+    "path_name": {
+      "type": "string"
+    },
+    "experiment_id": {
+      "type": "string"
+    },
+    "experiment_title": {
+      "type": "string"
+    },
+    "reflection_id": {
+      "type": "string"
+    },
+    "trigger": {
+      "type": "string",
+      "enum": [
+        "reflection",
+        "experiment_completion",
+        "manual"
+      ],
+      "default": "reflection"
+    },
+    "before": {
+      "type": "object"
+    },
+    "after": {
+      "type": "object"
+    },
+    "delta_fit": {
+      "type": "number"
+    },
+    "delta_confidence": {
+      "type": "number"
+    },
+    "status_before": {
+      "type": "string"
+    },
+    "status_after": {
+      "type": "string"
+    },
+    "reasons": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          },
+          "dimension": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "contradictions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string"
+          },
+          "note": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "evidence_counts": {
+      "type": "object"
+    },
+    "recalculated_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "path_id"
+  ],
+  "rls": {
+    "create": {
+      "created_by_id": "{{user.id}}"
+    },
+    "read": {
+      "created_by_id": "{{user.id}}"
+    },
+    "update": {
+      "created_by_id": "{{user.id}}"
+    },
+    "delete": {
+      "created_by_id": "{{user.id}}"
+    }
+  }
+}

@@ -46,7 +46,7 @@ export default function CareerEvidenceProfile() {
     );
   }
 
-  const { hypotheses, abilities, preferences, energisers, drains, history, proof, experiments, counts, openQuestions, disagreements } = data;
+  const { hypotheses, abilities, preferences, energisers, drains, history, proof, experiments, counts, openQuestions, disagreements, recalculations } = data;
   const flagged = new Set(disagreements.map(d => d.conclusion_key));
   const settledPrefs = preferences.filter(p => p.status !== 'still_learning');
   const learningPrefs = preferences.filter(p => p.status === 'still_learning');
@@ -77,7 +77,8 @@ export default function CareerEvidenceProfile() {
         ) : (
           <div className="space-y-4">
             {hypotheses.map(item => (
-              <HypothesisCard key={item.path.id} item={item} flagged={flagged.has(`career:${item.path.id}`)} />
+              <HypothesisCard key={item.path.id} item={item} flagged={flagged.has(`career:${item.path.id}`)}
+                recalculation={recalculations?.[item.path.id] || null} />
             ))}
           </div>
         )}

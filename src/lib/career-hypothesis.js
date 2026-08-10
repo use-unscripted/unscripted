@@ -13,6 +13,8 @@ import { base44 } from '@/api/base44Client';
 import { deriveUncertaintyMap, uncertaintyQuestions } from '@/lib/uncertainty-model';
 import { deriveFitDimensions, blendOverallFit } from '@/lib/career-fit-dimensions';
 import { characteristicSignals } from '@/lib/evidence-patterns';
+import { evidenceConfidence, detectContradictions } from '@/lib/evidence-contradictions';
+import { extractReflectionSignals } from '@/lib/reflection-signals';
 
 export const HYPOTHESIS_STATUS_LABELS = {
   suggested: 'Suggested',
@@ -26,12 +28,15 @@ export const HYPOTHESIS_STATUS_LABELS = {
 const clamp = (n) => Math.max(0, Math.min(100, Math.round(n)));
 
 /** Records that belong to this path, matched the way the rest of the app does. */
-function activityFor(path, { experiments = [], proof = [], reflections = [] }) {
+function activityFor(path, { experiments = [], proof = [], reflections = [], measurements = {} }) {
   const exps = experiments.filter(e => e.path_name === path.path_name);
   const expIds = new Set(exps.map(e => e.id));
   return {
     exps,
     completedExps: exps.filter(e => e.status === 'completed'),
+    // Experiments with a completed post-experiment check-in. This is the
+    // strongest evidence a career can have, so confidence counts it separately.
+    measured: exps.filter(e => measurements[e.id]?.post_completed_at),
     proof: proof.filter(p => p.path_tested === path.path_name || expIds.has(p.experiment_id)),
     reflections: reflections.filter(r => r.path_name === path.path_name || expIds.has(r.experiment_id)),
   };
@@ -46,20 +51,6 @@ function priorFit(path) {
   const readiness = typeof path.readiness_score === 'number' ? path.readiness_score : null;
   if (readiness === null) return 60;
   return clamp(readiness * 10);
-}
-
-/**
- * Confidence in the fit estimate, 0-100.
- * Onboarding answers alone are a weak basis. Confidence rises only when the
- * student actually produces evidence — never because time has passed.
- */
-function confidenceScore(path, act) {
-  const base = { low: 20, medium: 30, high: 38 }[path.confidence_level] || 25;
-  const earned =
-    act.completedExps.length * 12 +
-    act.proof.length * 8 +
-    act.reflections.length * 6;
-  return clamp(Math.min(base + earned, 90));
 }
 
 function supporting(path, act) {
@@ -87,15 +78,34 @@ function supporting(path, act) {
       source: 'Your reflections',
     });
   }
+  // What the student actually said, in their own words, where a reflection
+  // named a work characteristic and how they felt about it.
+  act.reflections.forEach(r => extractReflectionSignals(r)
+    .filter(x => x.polarity === 'positive')
+    .slice(0, 2)
+    .forEach(x => items.push({
+      text: `You wrote positively about ${x.label.toLowerCase()}: "${x.quote}"`,
+      source: 'Your reflections',
+    })));
   return items;
 }
 
-function contradicting(path) {
+function contradicting(path, act = {}, contradictions = []) {
   const items = [];
   if (path.why_it_may_not_fit || path.concern) {
     items.push({ text: path.why_it_may_not_fit || path.concern, source: 'Your onboarding answers' });
   }
   if (path.main_tradeoffs) items.push({ text: path.main_tradeoffs, source: 'Tradeoffs on this path' });
+  // Negative reflection evidence and conflicting characteristics are recorded
+  // here rather than cancelling out the positive evidence above. Both stay.
+  (act.reflections || []).forEach(r => extractReflectionSignals(r)
+    .filter(x => x.polarity === 'negative')
+    .slice(0, 2)
+    .forEach(x => items.push({
+      text: `You wrote negatively about ${x.label.toLowerCase()}: "${x.quote}"`,
+      source: 'Your reflections',
+    })));
+  contradictions.slice(0, 3).forEach(c => items.push({ text: c.note, source: 'Conflicting evidence' }));
   return items;
 }
 
@@ -127,11 +137,18 @@ function unresolved(path, act) {
   return items.slice(0, 4);
 }
 
-function hypothesisStatus(path, { fit, confidence, act, against }) {
+/**
+ * Status is a description of the evidence, not a verdict. A career is never
+ * archived here just because its fit fell: that is the student's decision.
+ */
+function hypothesisStatus(path, { fit, confidence, act, against, contradictions = [] }) {
   if (path.status === 'archived') return 'archived';
   const tested = act.completedExps.length || act.proof.length || act.reflections.length;
   if (!tested) return 'suggested';
-  if (fit < 45) return 'low_fit';
+  // Directly conflicting evidence outranks everything else: nothing is settled
+  // while the same characteristic has been rated both ways.
+  if (contradictions.length) return 'mixed_evidence';
+  if (fit < 45 && confidence >= 50) return 'low_fit';
   if (confidence >= 65 && fit >= 70) return 'strong_evidence';
   if (against.length) return 'mixed_evidence';
   return 'testing';
@@ -140,19 +157,33 @@ function hypothesisStatus(path, { fit, confidence, act, against }) {
 /** The hypothesis view of a path. Pure — safe to call on every render. */
 export function deriveHypothesis(path, ctx = {}) {
   const act = activityFor(path, ctx);
-  const confidence = confidenceScore(path, act);
-  const against = path.contradicting_evidence?.length ? path.contradicting_evidence : contradicting(path);
+  const signals = ctx.signals || characteristicSignals({
+    experiments: ctx.experiments || [],
+    measurements: ctx.measurements || {},
+    reflections: ctx.reflections || [],
+  });
+  // Conflicting readings on the same characteristic, kept only where the
+  // characteristic actually matters here: a contradiction about teamwork should
+  // not lower certainty on a career that never asks for it.
+  const uncertaintyForRelevance = deriveUncertaintyMap(path, { profile: ctx.profile || {}, act });
+  const relevantIds = new Set([
+    ...(uncertaintyForRelevance.variables || []).filter(v => v.relevance !== 'low').map(v => v.variable),
+    ...act.exps.flatMap(e => [...(e.work_characteristic_ids || []), ...(e.work_characteristics_tested || [])].map(t => String(t).toLowerCase())),
+  ]);
+  const contradictions = detectContradictions(signals)
+    .filter(c => relevantIds.has(c.id) || relevantIds.has(c.label.toLowerCase()));
+  const confidence = evidenceConfidence({ path, act, signals, contradictions });
+  const against = contradicting(path, act, contradictions);
   // Which work characteristics matter here, and which of them we still cannot
   // answer. The unknowns it surfaces are what "what we still need to learn"
   // asks about; the older generic questions remain the fallback.
-  const uncertainty = deriveUncertaintyMap(path, { profile: ctx.profile || {}, act });
+  const uncertainty = uncertaintyForRelevance;
   const fromUncertainty = uncertaintyQuestions(uncertainty);
 
   // Ability and enjoyment are separate evidence dimensions. Overall fit is a
   // weighted blend across several dimensions plus the career's own starting
   // estimate, and each dimension only contributes in proportion to the evidence
   // behind it — so it can never collapse into ability alone.
-  const signals = ctx.signals || characteristicSignals({ experiments: ctx.experiments || [], measurements: ctx.measurements || {} });
   const fitDimensions = deriveFitDimensions(path, { ...ctx, signals, uncertainty });
   const blended = blendOverallFit({
     dimensions: fitDimensions.dimensions,
@@ -163,6 +194,7 @@ export function deriveHypothesis(path, ctx = {}) {
 
   return {
     uncertainty,
+    contradictions,
     fit: fitDimensions,
     fit_evidence_share: blended.evidence_share,
     career_fit_score: fit,
@@ -178,7 +210,7 @@ export function deriveHypothesis(path, ctx = {}) {
     supporting_evidence: path.supporting_evidence?.length ? path.supporting_evidence : supporting(path, act),
     contradicting_evidence: against,
     unresolved_questions: fromUncertainty.length ? fromUncertainty : unresolved(path, act),
-    hypothesis_status: hypothesisStatus(path, { fit, confidence, act, against }),
+    hypothesis_status: hypothesisStatus(path, { fit, confidence, act, against, contradictions }),
   };
 }
 
@@ -192,7 +224,7 @@ export async function backfillHypotheses(paths, ctx) {
   await Promise.all(stale.map(p => {
     // `uncertainty`, `fit` and the evidence share are derived on every render
     // and are not stored fields.
-    const { uncertainty, fit, fit_evidence_share, ...fields } = deriveHypothesis(p, ctx);
+    const { uncertainty, fit, fit_evidence_share, contradictions, ...fields } = deriveHypothesis(p, ctx);
     return base44.entities.PathRecommendations
       .update(p.id, { ...fields, last_recalculated_at: new Date().toISOString() })
       .catch(() => null);

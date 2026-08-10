@@ -12,6 +12,7 @@
  */
 import { evidenceSource, summarizeEvidence } from '@/lib/evidence-graph';
 import { WORK_VARIABLES } from '@/lib/uncertainty-model';
+import { reflectionCharacteristicSignals } from '@/lib/reflection-signals';
 
 const avg = (nums) => (nums.length ? nums.reduce((a, b) => a + b, 0) / nums.length : null);
 const num = (v) => (typeof v === 'number' && Number.isFinite(v) ? v : null);
@@ -28,7 +29,7 @@ const STATED = {
  * Aggregate every rated experiment by the work characteristics it tested.
  * This is the shared spine for preferences, energisers and drains.
  */
-export function characteristicSignals({ experiments = [], measurements = {} }) {
+export function characteristicSignals({ experiments = [], measurements = {}, reflections = [] }) {
   const byLabel = new Map();
   const variableFor = (tag) => {
     const t = String(tag).toLowerCase();
@@ -73,6 +74,18 @@ export function characteristicSignals({ experiments = [], measurements = {} }) {
     });
   });
 
+  // Written reflections join the same buckets rather than living in a parallel
+  // system, so a characteristic the student wrote about is evidence too — at
+  // self-report quality, and unable on its own to look like a measured pattern.
+  reflectionCharacteristicSignals(reflections).forEach(r => {
+    if (!byLabel.has(r.id)) byLabel.set(r.id, { id: r.id, label: r.label, enjoyment: [], energy: [], desire: [], frustration: [], sources: [], experiments: [], extractions: [] });
+    const b = byLabel.get(r.id);
+    b.enjoyment.push(...r.enjoyment);
+    b.energy.push(...r.energy);
+    b.sources.push(...r.sources);
+    b.extractions = [...(b.extractions || []), ...r.extractions];
+  });
+
   return [...byLabel.values()].map(b => ({
     ...b,
     ratedCount: b.enjoyment.length || b.energy.length || b.desire.length,
@@ -107,6 +120,10 @@ export const PREFERENCES = [
 
 const direction = (signal) => {
   if (!signal || !signal.ratedCount) return null;
+  const readings = [...(signal.enjoyment || []), ...(signal.energy || []), ...(signal.desire || [])];
+  // Rated both ways at different times: mixed, and left open for more testing
+  // rather than averaged into a preference the student never expressed.
+  if (readings.some(n => n >= 7) && readings.some(n => n <= 4.5)) return 'mixed';
   const score = avg([signal.avgEnjoyment, signal.avgEnergy, signal.avgDesire].filter(n => n !== null));
   if (score === null) return null;
   if (score >= 7) return 'high';

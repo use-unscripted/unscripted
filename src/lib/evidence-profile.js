@@ -18,6 +18,7 @@ import { buildRecordGraph, summarizeEvidence, evidenceSource } from '@/lib/evide
 import { deriveAbilities, linkAbilities } from '@/lib/evidence-abilities';
 import { characteristicSignals, derivePreferences, deriveEnergyPatterns, linkPatterns } from '@/lib/evidence-patterns';
 import { linkFitDimensions } from '@/lib/career-fit-dimensions';
+import { loadLatestRecalculations } from '@/lib/hypothesis-recalculation';
 
 const active = (rows) => (Array.isArray(rows) ? rows : []).filter(r => r?.deletion_status !== 'deleted' && r?.deletion_status !== 'permanently_deleted');
 
@@ -33,7 +34,10 @@ export async function loadEvidenceProfile() {
     base44.entities.EvidenceDisagreement.list('-created_date', 200).catch(() => []),
   ]);
 
-  const measurements = await loadMeasurements();
+  const [measurements, recalculations] = await Promise.all([
+    loadMeasurements(),
+    loadLatestRecalculations().catch(() => ({})),
+  ]);
   const profile = (Array.isArray(profs) ? profs[0] : null) || {};
   const paths = (owned?.paths || []).filter(p => p.status !== 'archived');
   const experiments = active(exps);
@@ -44,7 +48,7 @@ export async function loadEvidenceProfile() {
 
   // Rated work characteristics, needed by both the fit dimensions and the
   // preference/pattern sections, so they are computed once here.
-  const signals = characteristicSignals({ experiments, measurements });
+  const signals = characteristicSignals({ experiments, measurements, reflections });
 
   // Career hypotheses, read straight from the existing layer. Measurements and
   // signals go in so ability and enjoyment can be scored as separate dimensions.
@@ -113,6 +117,8 @@ export async function loadEvidenceProfile() {
   return {
     user, profile, graph, hypotheses, abilities, preferences, energisers, drains, history,
     proof, experiments, measurements,
+    // The last recorded change per career, so no score has moved invisibly.
+    recalculations,
     openQuestions: openQuestions.slice(0, 10),
     disagreements: Array.isArray(flags) ? flags : [],
     counts: {

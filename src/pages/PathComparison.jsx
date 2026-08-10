@@ -548,7 +548,11 @@ export default function PathComparison() {
       reflections: Array.isArray(refs) ? refs : [],
       profile: studentProfile,
       measurements,
-      signals: characteristicSignals({ experiments: Array.isArray(exps) ? exps : [], measurements }),
+      signals: characteristicSignals({
+        experiments: Array.isArray(exps) ? exps : [],
+        measurements,
+        reflections: Array.isArray(refs) ? refs : [],
+      }),
     };
     const wrote = await backfillHypotheses(ownedPaths, ctx).catch(() => false);
     // Ability and enjoyment are stored as their own fields, so they stay
