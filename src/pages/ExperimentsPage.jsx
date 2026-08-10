@@ -15,6 +15,8 @@ import PathSwitcher from '@/components/PathSwitcher';
 import SoftDeleteConfirm, { softDeletePayload } from '@/components/SoftDeleteConfirm';
 import ExperimentActionsMenu from '@/components/experiments/ExperimentActionsMenu';
 import ResumeExperimentModal from '@/components/experiments/ResumeExperimentModal';
+import ExperimentTestPanel from '@/components/experiments/ExperimentTestPanel';
+import { backfillLegacyExperiments } from '@/lib/experiment-design';
 
 const STATUS_STYLES = {
   planned:     { bg: 'var(--ink-100)', text: 'var(--ink-700)', label: 'Planned' },
@@ -280,6 +282,8 @@ function ExperimentCard({ exp, onStatusChange, onExpand, expanded, missions, loa
               </div>
             </div>
           )}
+
+          <ExperimentTestPanel exp={exp} />
 
           {exp.expected_learning && (
             <div><p className="tp-eyebrow text-[color:var(--ink-500)] mb-1">Expected learning</p><p className="tp-body text-[color:var(--ink-700)]">{exp.expected_learning}</p></div>
@@ -621,9 +625,22 @@ export default function ExperimentsPage() {
       base44.entities.Experiments.list('-created_date', 100).catch(() => []),
       base44.entities.PathRecommendations.list('-created_date', 100).catch(() => []),
     ]);
-    setExperiments(Array.isArray(data) ? data.filter(e => !e.deletion_status || e.deletion_status === 'active') : []);
-    setPaths(Array.isArray(ps) ? ps : []);
+    const active = Array.isArray(data) ? data.filter(e => !e.deletion_status || e.deletion_status === 'active') : [];
+    const pathList = Array.isArray(ps) ? ps : [];
+    setExperiments(active);
+    setPaths(pathList);
     setLoading(false);
+
+    // Older experiments keep their data and are only linked to the career
+    // hypothesis they were run against. Characteristics stay blank unless a
+    // future experiment records them.
+    const wrote = await backfillLegacyExperiments(active, pathList).catch(() => false);
+    if (wrote) {
+      const refreshed = await base44.entities.Experiments.list('-created_date', 100).catch(() => null);
+      if (Array.isArray(refreshed)) {
+        setExperiments(refreshed.filter(e => !e.deletion_status || e.deletion_status === 'active'));
+      }
+    }
   };
 
   useEffect(() => { load(); }, []);

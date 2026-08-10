@@ -9,6 +9,9 @@ import { ArrowLeft, ArrowRight, CheckCircle, Loader2, AlertCircle } from 'lucide
 import { LogoWordmark } from '@/components/UnscriptedLogo';
 import { Sk, SkCards } from '@/components/PageSkeleton';
 import AddToCalendarModal from '@/components/calendar/AddToCalendarModal';
+import ExperimentDesignOption from '@/components/experiments/ExperimentDesignOption';
+import { designExperiments } from '@/lib/experiment-design';
+import { deriveHypothesis } from '@/lib/career-hypothesis';
 import {
   ensureActiveCycle, assertNoActiveExperiment, attachExperimentToCycle,
   ActiveExperimentError, cycleLinks,
@@ -142,7 +145,7 @@ function getExperimentOptions(pathName) {
 }
 
 // ─── Step 1: Path context + experiment picker ────────────────────────────────
-function StepPick({ rec, options, selected, onSelect, onCustom, onNext }) {
+function StepPick({ rec, options, selected, onSelect, onCustom, onNext, designing }) {
   return (
     <div className="space-y-6">
       {/* Path context card */}
@@ -175,9 +178,25 @@ function StepPick({ rec, options, selected, onSelect, onCustom, onNext }) {
 
       {/* Experiment options */}
       <div>
-        <p className="tp-body font-bold text-[color:var(--surface-dark-900)] mb-3">Choose your experiment:</p>
+        <p className="tp-body font-bold text-[color:var(--surface-dark-900)] mb-1">Choose your experiment:</p>
+        <p className="tp-meta text-[color:var(--ink-500)] mb-3">Each one is a short piece of real work, built to answer one open question about whether this career fits you.</p>
+        {designing && (
+          <div className="mb-3 space-y-3">
+            <div className="flex items-center gap-2 tp-body text-[color:var(--ink-500)]">
+              <Loader2 size={15} className="animate-spin" /> Designing experiments for {rec.path_name}…
+            </div>
+            <SkCards count={3} h={132} gap={12} r={16} />
+          </div>
+        )}
         <div className="space-y-3">
-          {options.map((opt, i) => (
+          {!designing && options.map((opt, i) => opt.realistic_scenario ? (
+            <ExperimentDesignOption
+              key={i}
+              design={opt}
+              selected={selected === i}
+              onSelect={() => onSelect(opt)}
+            />
+          ) : (
             <button key={i} onClick={() => onSelect(opt)}
               className="w-full text-left rounded-[16px] border p-4 transition"
               style={selected === i
@@ -393,6 +412,7 @@ export default function ExperimentSetup() {
 
   const [step, setStep] = useState('pick'); // pick | custom | generating | success
   const [options, setOptions] = useState([]);
+  const [designing, setDesigning] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(null);
   const [customData, setCustomData] = useState({});
   const [experiment, setExperiment] = useState(null);
@@ -426,10 +446,41 @@ export default function ExperimentSetup() {
       }
       setRec(resolved);
       setOptions(getExperimentOptions(resolved.path_name));
+      setLoading(false);
+      await designForPath(resolved);
+      return;
     } catch (e) {
       setLoadError('We could not identify the path you selected. Return to Path Comparison and select the path again.');
     }
     setLoading(false);
+  };
+
+  /**
+   * Build experiments against the career hypothesis' uncertainty map, so each
+   * option answers one open question about fit. If the design step cannot run,
+   * the older activity suggestions stay in place rather than blocking the page.
+   */
+  const designForPath = async (resolved) => {
+    if (!resolved?.path_name) return;
+    setDesigning(true);
+    try {
+      const [profs, exps, prf, refs] = await Promise.all([
+        base44.entities.StudentProfile.list('-created_date', 1).catch(() => []),
+        base44.entities.Experiments.list('-created_date', 200).catch(() => []),
+        base44.entities.ProofOfWork.list('-created_date', 200).catch(() => []),
+        base44.entities.WeeklyReflections.list('-created_date', 200).catch(() => []),
+      ]);
+      const hyp = deriveHypothesis(resolved, {
+        profile: (Array.isArray(profs) ? profs[0] : null) || {},
+        experiments: exps || [], proof: prf || [], reflections: refs || [],
+      });
+      const result = await designExperiments(resolved, hyp.uncertainty);
+      if (result?.ok && result.data?.length) setOptions(result.data);
+    } catch (_) {
+      // Static suggestions remain.
+    } finally {
+      setDesigning(false);
+    }
   };
 
   const handleSelectOption = (opt) => {
@@ -440,13 +491,13 @@ export default function ExperimentSetup() {
   const handleConfirmPick = async () => {
     if (selectedIndex === null) return;
     const opt = options[selectedIndex];
+    const { type, ...designFields } = opt;
     await proceedToGenerate({
-      title: opt.title,
-      experiment_type: opt.type,
-      objective: opt.objective,
-      deliverable: opt.deliverable,
-      estimated_hours: opt.estimated_hours,
+      ...designFields,
+      experiment_type: opt.experiment_type || type,
       path_name: rec.path_name,
+      career_name: opt.career_name || rec.path_name,
+      career_hypothesis_id: rec.id || '',
       path_recommendation_id: rec.id || '',
     });
   };
@@ -455,7 +506,10 @@ export default function ExperimentSetup() {
     await proceedToGenerate({
       ...customData,
       experiment_type: 'Custom',
+      design_source: 'custom',
       path_name: rec.path_name,
+      career_name: rec.path_name,
+      career_hypothesis_id: rec.id || '',
       path_recommendation_id: rec.id || '',
     });
   };
@@ -541,6 +595,8 @@ PATH BEING TESTED: ${experimentData.path_name}
 EXPERIMENT: ${experimentData.title}
 OBJECTIVE: ${experimentData.objective}
 DELIVERABLE: ${experimentData.deliverable}
+${experimentData.unresolved_question ? `THE QUESTION THIS MUST ANSWER: ${experimentData.unresolved_question}` : ''}
+${experimentData.realistic_scenario ? `THE SCENARIO THE STUDENT IS WORKING FROM: ${experimentData.realistic_scenario}` : ''}
 
 The guide must be specific to "${experimentData.path_name}", not generic networking advice. Include:
 1. Mission objective (1 sentence)
@@ -749,6 +805,7 @@ ${PLAIN_PROSE_RULES}${correction}`,
               onSelect={handleSelectOption}
               onCustom={() => setStep('custom')}
               onNext={handleConfirmPick}
+              designing={designing}
             />
           )}
           {step === 'custom' && (
