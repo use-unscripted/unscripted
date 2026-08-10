@@ -17,6 +17,9 @@ import MissionGuideHistory from '@/components/experiments/MissionGuideHistory';
 import MissionGuideGenerator from '@/components/experiments/MissionGuideGenerator';
 import AddMissionModal from '@/components/experiments/AddMissionModal';
 import JourneyEmptyState from '@/components/journey/JourneyEmptyState';
+import MeasurementGate from '@/components/measurement/MeasurementGate';
+import WhatYouLearned from '@/components/measurement/WhatYouLearned';
+import { loadMeasurements } from '@/lib/experiment-measurement';
 import { Sk } from '@/components/PageSkeleton';
 
 const OPEN = ['draft', 'planned', 'in_progress'];
@@ -29,6 +32,10 @@ export default function ActiveExperiment() {
   const [justDone, setJustDone] = useState(null);
   const [showGuideGen, setShowGuideGen] = useState(false);
   const [showAddMission, setShowAddMission] = useState(false);
+  // The measurement half of the loop. Held here because this workspace is where
+  // an experiment is actually started and finished.
+  const [measurement, setMeasurement] = useState(null);
+  const [learned, setLearned] = useState(null);
 
   const load = useCallback(async () => {
     const cycle = await getActiveCycle().catch(() => null);
@@ -56,6 +63,9 @@ export default function ActiveExperiment() {
     const path = (Array.isArray(paths) ? paths : []).find(
       p => p.id === (experiment.path_id || cycle?.selected_path_id) || p.path_name === experiment.path_name
     ) || null;
+
+    const ms = await loadMeasurements().catch(() => ({}));
+    setMeasurement(ms[experiment.id] || null);
 
     setState({
       cycle, experiment, path,
@@ -172,6 +182,29 @@ export default function ActiveExperiment() {
         )}
 
         <ExperimentOverview experiment={experiment} path={path} missions={missions} />
+
+        {/* Before the work: what the student expects. After every mission is
+            done: what actually happened. Both are what the reflection, the
+            evidence profile and the next recommendation read. */}
+        {experiment.status === 'completed' || experiment.status === 'skipped' ? (
+          <MeasurementGate
+            phase="post"
+            exp={experiment}
+            measurement={measurement}
+            autoOpen
+            onSaved={(row) => { setMeasurement(row); setLearned(row); }}
+          />
+        ) : (
+          <MeasurementGate
+            phase="pre"
+            exp={experiment}
+            measurement={measurement}
+            autoOpen
+            onSaved={setMeasurement}
+          />
+        )}
+
+        {learned && <WhatYouLearned m={learned} />}
 
         {/* With no guide, this is the only thing on the page worth doing, so it
             is sized like it. The old version put it behind a 13px text link

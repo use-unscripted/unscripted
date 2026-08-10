@@ -21,6 +21,8 @@ import EvidenceUpdatePanel from '@/components/reflection/EvidenceUpdatePanel';
 import CycleSummary from '@/components/reflection/CycleSummary';
 import JourneyEmptyState from '@/components/journey/JourneyEmptyState';
 import NextBestExperimentPanel from '@/components/next-test/NextBestExperimentPanel';
+import MeasurementGate from '@/components/measurement/MeasurementGate';
+import { loadMeasurements } from '@/lib/experiment-measurement';
 import { Sk } from '@/components/PageSkeleton';
 
 function Shell({ children }) {
@@ -53,12 +55,19 @@ export default function ExperimentReflection() {
   const [reflection, setReflection] = useState(null);
   const [decision, setDecision] = useState(null);
   const [closedCycle, setClosedCycle] = useState(null);
+  // The outcome check-in for this experiment. The reflection is recalculated
+  // together with it, so it is collected first rather than left optional.
+  const [measurement, setMeasurement] = useState(null);
 
   const load = useCallback(async () => {
     setLoadError('');
     try {
       const next = await loadConclusionContext(experimentIdParam);
       setCtx(next);
+      if (next.experiment?.id) {
+        const ms = await loadMeasurements().catch(() => ({}));
+        setMeasurement(ms[next.experiment.id] || null);
+      }
       // An already-written conclusion means the decision is what is left.
       // Set unconditionally: reading the current reflection out of the closure
       // here made switching to another experiment keep the previous one's state,
@@ -80,6 +89,7 @@ export default function ExperimentReflection() {
     setReflection(null);
     setDecision(null);
     setClosedCycle(null);
+    setMeasurement(null);
     load();
   }, [experimentIdParam, load]);
 
@@ -165,6 +175,17 @@ export default function ExperimentReflection() {
         </>
       ) : !availability.ready ? (
         <ConclusionGate availability={availability} experiment={ctx.experiment} onEndEarly={handleEndEarly} />
+      ) : !measurement?.post_completed_at ? (
+        /* The outcome numbers come before the written reflection: the
+           recalculation reads both together, and text alone is the weakest
+           evidence in the system. */
+        <MeasurementGate
+          phase="post"
+          exp={ctx.experiment}
+          measurement={measurement}
+          autoOpen
+          onSaved={setMeasurement}
+        />
       ) : reflection ? (
         <>
           {/* The reflection is evidence now: it is folded into the career
