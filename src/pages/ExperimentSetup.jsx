@@ -405,6 +405,9 @@ export default function ExperimentSetup() {
   const recId = searchParams.get('recId');
   const pathId = searchParams.get('pathId');
   const pathNameParam = searchParams.get('pathName');
+  // Set when the student came from a recommended next test: the unknown that
+  // recommendation exists to answer, so the designed experiments test it.
+  const variableParam = searchParams.get('variable');
 
   const [rec, setRec] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -474,7 +477,19 @@ export default function ExperimentSetup() {
         profile: (Array.isArray(profs) ? profs[0] : null) || {},
         experiments: exps || [], proof: prf || [], reflections: refs || [],
       });
-      const result = await designExperiments(resolved, hyp.uncertainty);
+      // A recommended next test names the question to answer, so that unknown is
+      // moved to the front of the map before designs are generated. Everything
+      // else about the map is left alone.
+      const uncertainty = variableParam
+        ? {
+            ...hyp.uncertainty,
+            top_unknowns: [
+              ...(hyp.uncertainty.variables || []).filter(v => v.variable === variableParam),
+              ...(hyp.uncertainty.top_unknowns || []).filter(v => v.variable !== variableParam),
+            ].slice(0, 3),
+          }
+        : hyp.uncertainty;
+      const result = await designExperiments(resolved, uncertainty);
       if (result?.ok && result.data?.length) setOptions(result.data);
     } catch (_) {
       // Static suggestions remain.

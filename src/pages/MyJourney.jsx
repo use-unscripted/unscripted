@@ -16,6 +16,7 @@ import JourneyNow from '@/components/journey/JourneyNow';
 import PathComparisonWorkspace from '@/components/journey/PathComparisonWorkspace';
 import PathSelectedConfirm from '@/components/journey/PathSelectedConfirm';
 import JourneyEmptyState from '@/components/journey/JourneyEmptyState';
+import NextBestExperimentPanel from '@/components/next-test/NextBestExperimentPanel';
 import CampusEventsPanel from '@/components/campus/CampusEventsPanel';
 import ContinuationGate from '@/components/journey/ContinuationGate';
 import { Sk } from '@/components/PageSkeleton';
@@ -203,6 +204,13 @@ export default function MyJourney() {
         effort={effort}
         onAnchorClick={scrollToDecision}
       />
+
+      {/* What to test next, decided by which unresolved question would teach us
+          the most — not by which path currently ranks highest. It sits directly
+          under the one instruction because for most students it IS the next
+          action, and burying it inside the Experiments page would make it a
+          feature rather than the way the loop continues. */}
+      <NextBestExperimentPanel />
 
       {/* The "no experiment yet" case is not listed here: the panel above is
           already showing that exact call to action, and two buttons pointing at

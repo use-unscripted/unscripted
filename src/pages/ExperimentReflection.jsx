@@ -20,6 +20,7 @@ import DecisionStep from '@/components/reflection/DecisionStep';
 import EvidenceUpdatePanel from '@/components/reflection/EvidenceUpdatePanel';
 import CycleSummary from '@/components/reflection/CycleSummary';
 import JourneyEmptyState from '@/components/journey/JourneyEmptyState';
+import NextBestExperimentPanel from '@/components/next-test/NextBestExperimentPanel';
 import { Sk } from '@/components/PageSkeleton';
 
 function Shell({ children }) {
@@ -155,7 +156,13 @@ export default function ExperimentReflection() {
       <ReflectionContextCard ctx={ctx} />
 
       {decision ? (
-        <CycleSummary ctx={ctx} reflection={reflection} decision={decision} closedCycle={closedCycle} />
+        <>
+          <CycleSummary ctx={ctx} reflection={reflection} decision={decision} closedCycle={closedCycle} />
+          {/* The loop continues here. By this point the hypotheses have been
+              recalculated, so the recommendation is computed from the evidence
+              this cycle just produced. */}
+          <NextBestExperimentPanel />
+        </>
       ) : !availability.ready ? (
         <ConclusionGate availability={availability} experiment={ctx.experiment} onEndEarly={handleEndEarly} />
       ) : reflection ? (
