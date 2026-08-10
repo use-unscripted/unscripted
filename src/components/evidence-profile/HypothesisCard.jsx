@@ -3,6 +3,7 @@ import { ArrowUpRight } from 'lucide-react';
 import { HYPOTHESIS_STATUS_LABELS } from '@/lib/career-hypothesis';
 import { EvidenceBadge, ConfidenceMeter } from '@/components/evidence-profile/EvidenceBadge';
 import EvidenceProvenance from '@/components/evidence-profile/EvidenceProvenance';
+import FitBreakdown from '@/components/paths/FitBreakdown';
 
 /** One career hypothesis as it currently stands, with its evidence count. */
 export default function HypothesisCard({ item, flagged }) {
@@ -36,6 +37,8 @@ export default function HypothesisCard({ item, flagged }) {
       {hypothesis.why_this_may_fit && (
         <p className="tp-body mt-4" style={{ color: 'var(--ink-700)' }}>{hypothesis.why_this_may_fit}</p>
       )}
+
+      <FitBreakdown fit={hypothesis.fit} overall={hypothesis.career_fit_score} evidenceShare={hypothesis.fit_evidence_share} />
 
       <p className="tp-meta mt-3" style={{ color: 'var(--ink-400)' }}>
         Score movement is not tracked yet, so nothing is shown here until recalculation exists.

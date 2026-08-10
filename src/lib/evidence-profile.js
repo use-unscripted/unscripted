@@ -17,6 +17,7 @@ import { loadMeasurements } from '@/lib/experiment-measurement';
 import { buildRecordGraph, summarizeEvidence, evidenceSource } from '@/lib/evidence-graph';
 import { deriveAbilities, linkAbilities } from '@/lib/evidence-abilities';
 import { characteristicSignals, derivePreferences, deriveEnergyPatterns, linkPatterns } from '@/lib/evidence-patterns';
+import { linkFitDimensions } from '@/lib/career-fit-dimensions';
 
 const active = (rows) => (Array.isArray(rows) ? rows : []).filter(r => r?.deletion_status !== 'deleted' && r?.deletion_status !== 'permanently_deleted');
 
@@ -41,8 +42,13 @@ export async function loadEvidenceProfile() {
 
   const graph = buildRecordGraph({ user, paths, experiments, measurements, reflections, proof });
 
-  // Career hypotheses, read straight from the existing layer.
-  const ctx = { experiments, proof, reflections, profile };
+  // Rated work characteristics, needed by both the fit dimensions and the
+  // preference/pattern sections, so they are computed once here.
+  const signals = characteristicSignals({ experiments, measurements });
+
+  // Career hypotheses, read straight from the existing layer. Measurements and
+  // signals go in so ability and enjoyment can be scored as separate dimensions.
+  const ctx = { experiments, proof, reflections, profile, measurements, signals };
   const hypotheses = paths.map(p => {
     const h = deriveHypothesis(p, ctx);
     const pathExps = experiments.filter(e => e.path_name === p.path_name);
@@ -69,11 +75,13 @@ export async function loadEvidenceProfile() {
 
   // Abilities and patterns, both traceable back into the record graph.
   const abilities = deriveAbilities({ experiments, measurements, proof, profile });
-  const signals = characteristicSignals({ experiments, measurements });
   const preferences = derivePreferences({ signals, profile });
   const { energisers, drains } = deriveEnergyPatterns(signals);
   linkAbilities(graph, abilities);
   linkPatterns(graph, { preferences, energisers, drains });
+  // Each career's fit dimensions, with an edge from every piece of evidence
+  // behind them, so ability evidence and enjoyment evidence stay distinguishable.
+  hypotheses.forEach(({ path, hypothesis }) => linkFitDimensions(graph, path.id, hypothesis.fit));
 
   // Experiment history, with the measured outcome attached where it exists.
   const history = experiments

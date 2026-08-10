@@ -11,6 +11,8 @@
  */
 import { base44 } from '@/api/base44Client';
 import { deriveUncertaintyMap, uncertaintyQuestions } from '@/lib/uncertainty-model';
+import { deriveFitDimensions, blendOverallFit } from '@/lib/career-fit-dimensions';
+import { characteristicSignals } from '@/lib/evidence-patterns';
 
 export const HYPOTHESIS_STATUS_LABELS = {
   suggested: 'Suggested',
@@ -36,11 +38,10 @@ function activityFor(path, { experiments = [], proof = [], reflections = [] }) {
 }
 
 /**
- * Current estimated career fit, 0-100.
- * Readiness (0-10) from onboarding is the starting estimate. Recalibration from
- * experiment outcomes is a later phase, so nothing else moves this yet.
+ * The starting estimate for career fit, 0-100, before any measured dimension is
+ * taken into account. Readiness (0-10) from onboarding is where it comes from.
  */
-function fitScore(path) {
+function priorFit(path) {
   if (typeof path.career_fit_score === 'number') return clamp(path.career_fit_score);
   const readiness = typeof path.readiness_score === 'number' ? path.readiness_score : null;
   if (readiness === null) return 60;
@@ -139,7 +140,6 @@ function hypothesisStatus(path, { fit, confidence, act, against }) {
 /** The hypothesis view of a path. Pure — safe to call on every render. */
 export function deriveHypothesis(path, ctx = {}) {
   const act = activityFor(path, ctx);
-  const fit = fitScore(path);
   const confidence = confidenceScore(path, act);
   const against = path.contradicting_evidence?.length ? path.contradicting_evidence : contradicting(path);
   // Which work characteristics matter here, and which of them we still cannot
@@ -147,9 +147,32 @@ export function deriveHypothesis(path, ctx = {}) {
   // asks about; the older generic questions remain the fallback.
   const uncertainty = deriveUncertaintyMap(path, { profile: ctx.profile || {}, act });
   const fromUncertainty = uncertaintyQuestions(uncertainty);
+
+  // Ability and enjoyment are separate evidence dimensions. Overall fit is a
+  // weighted blend across several dimensions plus the career's own starting
+  // estimate, and each dimension only contributes in proportion to the evidence
+  // behind it — so it can never collapse into ability alone.
+  const signals = ctx.signals || characteristicSignals({ experiments: ctx.experiments || [], measurements: ctx.measurements || {} });
+  const fitDimensions = deriveFitDimensions(path, { ...ctx, signals, uncertainty });
+  const blended = blendOverallFit({
+    dimensions: fitDimensions.dimensions,
+    weights: fitDimensions.weights,
+    priorFit: typeof path.career_fit_score === 'number' ? path.career_fit_score : priorFit(path),
+  });
+  const fit = blended.score;
+
   return {
     uncertainty,
+    fit: fitDimensions,
+    fit_evidence_share: blended.evidence_share,
     career_fit_score: fit,
+    ability_fit: fitDimensions.scores.ability_fit,
+    enjoyment_fit: fitDimensions.scores.enjoyment_fit,
+    work_environment_fit: fitDimensions.scores.work_environment_fit,
+    preference_fit: fitDimensions.scores.preference_fit,
+    interest_fit: fitDimensions.scores.interest_fit,
+    evidence_confidence: fitDimensions.evidence_confidence,
+    fit_state: fitDimensions.state,
     fit_confidence_score: confidence,
     why_this_may_fit: path.why_this_may_fit || path.why_it_fits || path.fit_reason || '',
     supporting_evidence: path.supporting_evidence?.length ? path.supporting_evidence : supporting(path, act),
@@ -167,11 +190,49 @@ export async function backfillHypotheses(paths, ctx) {
   const stale = paths.filter(p => typeof p.career_fit_score !== 'number');
   if (!stale.length) return false;
   await Promise.all(stale.map(p => {
-    // `uncertainty` is derived on every render and is not a stored field.
-    const { uncertainty, ...fields } = deriveHypothesis(p, ctx);
+    // `uncertainty`, `fit` and the evidence share are derived on every render
+    // and are not stored fields.
+    const { uncertainty, fit, fit_evidence_share, ...fields } = deriveHypothesis(p, ctx);
     return base44.entities.PathRecommendations
       .update(p.id, { ...fields, last_recalculated_at: new Date().toISOString() })
       .catch(() => null);
+  }));
+  return true;
+}
+
+/**
+ * Persist the separate fit dimensions so ability and enjoyment are stored apart
+ * from one another and apart from the overall score.
+ *
+ * Deliberately does NOT touch career_fit_score or hypothesis_status: full
+ * hypothesis recalculation is a later phase. This only keeps the dimension
+ * fields, the self-versus-observed gap and the four-state label in step with the
+ * evidence that already exists.
+ */
+export async function syncFitDimensions(paths, ctx) {
+  const changed = paths.filter(p => {
+    const h = deriveHypothesis(p, ctx);
+    return ['ability_fit', 'enjoyment_fit', 'work_environment_fit', 'preference_fit', 'interest_fit']
+      .some(k => h[k] !== null && p[k] !== h[k]) || p.fit_state !== h.fit_state;
+  });
+  if (!changed.length) return false;
+
+  await Promise.all(changed.map(p => {
+    const h = deriveHypothesis(p, ctx);
+    const self = h.fit.self_perception;
+    return base44.entities.PathRecommendations.update(p.id, {
+      ability_fit: h.ability_fit ?? undefined,
+      enjoyment_fit: h.enjoyment_fit ?? undefined,
+      work_environment_fit: h.work_environment_fit ?? undefined,
+      preference_fit: h.preference_fit ?? undefined,
+      interest_fit: h.interest_fit ?? undefined,
+      evidence_confidence: h.evidence_confidence,
+      fit_state: h.fit_state,
+      self_rated_ability: self.self_rated_ability ?? undefined,
+      observed_ability: self.observed_ability ?? undefined,
+      ability_self_observed_gap: self.discrepancy ?? undefined,
+      fit_dimensions_updated_at: new Date().toISOString(),
+    }).catch(() => null);
   }));
   return true;
 }

@@ -83,8 +83,8 @@ export default function CareerEvidenceProfile() {
         )}
       </ProfileSection>
 
-      <ProfileSection index={2} title="Demonstrated abilities" count={abilities.length}
-        description="Abilities you have shown through real activity. Nothing appears here without evidence behind it.">
+      <ProfileSection index={2} title="What you're showing strength in" count={abilities.length}
+        description="Demonstrated ability only. This section says nothing about whether you enjoy the work, which is measured separately below.">
         {abilities.length === 0 ? (
           <StillLearning>Nothing has been demonstrated yet. Completing an experiment or adding proof of work is what puts an ability here.</StillLearning>
         ) : (
@@ -119,8 +119,8 @@ export default function CareerEvidenceProfile() {
         )}
       </ProfileSection>
 
-      <ProfileSection index={4} title="What energises you" count={energisers.length}
-        description="Kinds of work you rated highest on enjoyment, energy and wanting to do it again.">
+      <ProfileSection index={4} title="What gives you energy" count={energisers.length}
+        description="Enjoyment and motivation only. Strength in something does not put it here, and energy here does not imply strong ability yet.">
         {energisers.length === 0 ? (
           <StillLearning>No pattern yet. These appear once your post-experiment ratings start repeating themselves.</StillLearning>
         ) : (

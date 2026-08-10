@@ -1,6 +1,7 @@
 import { FlaskConical, HelpCircle } from 'lucide-react';
 import { HYPOTHESIS_STATUS_LABELS } from '@/lib/career-hypothesis';
 import CareerUncertaintyMap from '@/components/paths/CareerUncertaintyMap';
+import FitBreakdown from '@/components/paths/FitBreakdown';
 
 function ScoreBar({ label, value, hint, color }) {
   return (
@@ -70,6 +71,9 @@ export default function CareerHypothesisPanel({ pathName, hypothesis }) {
           color="var(--brand-gold-600)"
         />
       </div>
+
+      {/* Ability and enjoyment, kept separate from the overall number above. */}
+      <FitBreakdown fit={h.fit} overall={h.career_fit_score} evidenceShare={h.fit_evidence_share} />
 
       <div className="mt-5 space-y-4">
         {h.why_this_may_fit && (

@@ -21,7 +21,9 @@ import {
 } from '@/lib/path-sort-filter';
 import { autoAssessPathRisk } from '@/lib/risk-assessor';
 import CareerHypothesisPanel from '@/components/paths/CareerHypothesisPanel';
-import { deriveHypothesis, backfillHypotheses } from '@/lib/career-hypothesis';
+import { deriveHypothesis, backfillHypotheses, syncFitDimensions } from '@/lib/career-hypothesis';
+import { loadMeasurements } from '@/lib/experiment-measurement';
+import { characteristicSignals } from '@/lib/evidence-patterns';
 
 const STATUS_CFG = {
   active:        { label: 'Active',         bg: 'var(--success-50)', text: 'var(--success-700)' },
@@ -103,7 +105,7 @@ function PausedPathPanel({ path, experiments, missions, proof, contacts, reflect
 }
 
 // ── Path card ─────────────────────────────────────────────────────────────────
-function PathCard({ path, experiments, missions, proof, contacts, reflections, profile, onAction, expanded, onToggle, onBuildOutreachPlan, onAutoAssess, assessing }) {
+function PathCard({ path, experiments, missions, proof, contacts, reflections, profile, measurements, onAction, expanded, onToggle, onBuildOutreachPlan, onAutoAssess, assessing }) {
   const cfg = statusCfg(path.status);
   const d = path.generated_detail || {};
 
@@ -111,7 +113,7 @@ function PathCard({ path, experiments, missions, proof, contacts, reflections, p
   const completedExps = pathExps.filter(e => e.status === 'completed');
   const pct = pathExps.length ? Math.round(completedExps.length / pathExps.length * 100) : 0;
   const isPausedOrCompleted = ['paused', 'completed'].includes(path.status);
-  const hyp = deriveHypothesis(path, { experiments, proof, reflections, profile });
+  const hyp = deriveHypothesis(path, { experiments, proof, reflections, profile, measurements });
 
   return (
     <div className="rounded-[20px] border border-[color:var(--ink-200)] bg-white overflow-hidden">
@@ -468,6 +470,7 @@ export default function PathComparison() {
   const [contacts, setContacts] = useState([]);
   const [reflections, setReflections] = useState([]);
   const [profile, setProfile] = useState({});
+  const [measurements, setMeasurements] = useState({});
   const [loading, setLoading] = useState(true);
   const [loadFailed, setLoadFailed] = useState(false);
   const [submission, setSubmission] = useState(null);
@@ -537,13 +540,20 @@ export default function PathComparison() {
 
     // Paths created before the hypothesis fields existed get them filled in from
     // their own onboarding answers and activity. Nothing existing is changed.
+    const measurements = await loadMeasurements().catch(() => ({}));
+    setMeasurements(measurements);
     const ctx = {
       experiments: Array.isArray(exps) ? exps : [],
       proof: Array.isArray(prf) ? prf : [],
       reflections: Array.isArray(refs) ? refs : [],
       profile: studentProfile,
+      measurements,
+      signals: characteristicSignals({ experiments: Array.isArray(exps) ? exps : [], measurements }),
     };
     const wrote = await backfillHypotheses(ownedPaths, ctx).catch(() => false);
+    // Ability and enjoyment are stored as their own fields, so they stay
+    // separate from the overall score and from each other.
+    await syncFitDimensions(ownedPaths, ctx).catch(() => null);
     if (wrote) {
       const refreshed = await loadOwnedPaths().catch(() => null);
       if (refreshed?.paths) setPaths(refreshed.paths);
@@ -614,7 +624,7 @@ export default function PathComparison() {
     }
   };
 
-  const cardProps = { experiments, missions, proof, contacts, reflections, profile, onAction: handleAction };
+  const cardProps = { experiments, missions, proof, contacts, reflections, profile, measurements, onAction: handleAction };
 
   return (
     <main className="app-page">

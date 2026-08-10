@@ -171,6 +171,50 @@
     "fit_confidence_score": {
       "type": "number"
     },
+    "ability_fit": {
+      "type": "number"
+    },
+    "enjoyment_fit": {
+      "type": "number"
+    },
+    "work_environment_fit": {
+      "type": "number"
+    },
+    "preference_fit": {
+      "type": "number"
+    },
+    "interest_fit": {
+      "type": "number"
+    },
+    "evidence_confidence": {
+      "type": "number"
+    },
+    "fit_state": {
+      "type": "string",
+      "enum": [
+        "untested",
+        "ability_only",
+        "enjoyment_only",
+        "mixed",
+        "high_ability_high_enjoyment",
+        "high_ability_low_enjoyment",
+        "developing_ability_high_enjoyment",
+        "low_ability_low_enjoyment"
+      ]
+    },
+    "self_rated_ability": {
+      "type": "number"
+    },
+    "observed_ability": {
+      "type": "number"
+    },
+    "ability_self_observed_gap": {
+      "type": "number"
+    },
+    "fit_dimensions_updated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
     "why_this_may_fit": {
       "type": "string"
     },
