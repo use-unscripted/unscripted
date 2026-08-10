@@ -164,6 +164,73 @@
     "network_shared_at": {
       "type": "string",
       "format": "date-time"
+    },
+    "career_fit_score": {
+      "type": "number"
+    },
+    "fit_confidence_score": {
+      "type": "number"
+    },
+    "why_this_may_fit": {
+      "type": "string"
+    },
+    "supporting_evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "contradicting_evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "unresolved_questions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "question": {
+            "type": "string"
+          },
+          "why_it_matters": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "hypothesis_status": {
+      "type": "string",
+      "enum": [
+        "suggested",
+        "testing",
+        "strong_evidence",
+        "mixed_evidence",
+        "low_fit",
+        "archived"
+      ],
+      "default": "suggested"
+    },
+    "last_recalculated_at": {
+      "type": "string",
+      "format": "date-time"
     }
   },
   "required": [

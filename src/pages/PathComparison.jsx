@@ -20,6 +20,8 @@ import {
   ACTIVE_STATUSES, PAUSED_STATUSES, HISTORY_STATUSES,
 } from '@/lib/path-sort-filter';
 import { autoAssessPathRisk } from '@/lib/risk-assessor';
+import CareerHypothesisPanel from '@/components/paths/CareerHypothesisPanel';
+import { deriveHypothesis, backfillHypotheses } from '@/lib/career-hypothesis';
 
 const STATUS_CFG = {
   active:        { label: 'Active',         bg: 'var(--success-50)', text: 'var(--success-700)' },
@@ -109,6 +111,7 @@ function PathCard({ path, experiments, missions, proof, contacts, reflections, o
   const completedExps = pathExps.filter(e => e.status === 'completed');
   const pct = pathExps.length ? Math.round(completedExps.length / pathExps.length * 100) : 0;
   const isPausedOrCompleted = ['paused', 'completed'].includes(path.status);
+  const hyp = deriveHypothesis(path, { experiments, proof, reflections });
 
   return (
     <div className="rounded-[20px] border border-[color:var(--ink-200)] bg-white overflow-hidden">
@@ -128,6 +131,12 @@ function PathCard({ path, experiments, missions, proof, contacts, reflections, o
             <h2 className="tp-section text-[color:var(--surface-dark-900)]">{path.path_name}</h2>
             {path.path_category && <p className="tp-meta text-[color:var(--ink-400)] mt-1">{path.path_category}</p>}
             <p className="tp-body mt-2 text-[color:var(--ink-700)] line-clamp-2">{path.why_it_fits || path.fit_reason}</p>
+
+            {/* The hypothesis headline: two separate numbers, never combined. */}
+            <div className="tp-meta mt-2.5 flex flex-wrap gap-x-4 gap-y-1 text-[color:var(--ink-500)]">
+              <span>Current fit <strong className="text-[color:var(--surface-dark-900)]">{hyp.career_fit_score}%</strong></span>
+              <span>Confidence in estimate <strong className="text-[color:var(--surface-dark-900)]">{hyp.fit_confidence_score}%</strong></span>
+            </div>
 
             {pathExps.length > 0 && (
               <div className="mt-3">
@@ -209,6 +218,11 @@ function PathCard({ path, experiments, missions, proof, contacts, reflections, o
 
       {expanded && (
         <div className="border-t border-[color:var(--ink-200)] p-6 space-y-5">
+          <CareerHypothesisPanel
+            pathName={path.path_name}
+            hypothesis={hyp}
+          />
+
           {isPausedOrCompleted && (
             <PausedPathPanel
               path={path}
@@ -516,6 +530,19 @@ export default function PathComparison() {
     setContacts(Array.isArray(cts) ? cts : []);
     setReflections(Array.isArray(refs) ? refs : []);
     setLoading(false);
+
+    // Paths created before the hypothesis fields existed get them filled in from
+    // their own onboarding answers and activity. Nothing existing is changed.
+    const ctx = {
+      experiments: Array.isArray(exps) ? exps : [],
+      proof: Array.isArray(prf) ? prf : [],
+      reflections: Array.isArray(refs) ? refs : [],
+    };
+    const wrote = await backfillHypotheses(ownedPaths, ctx).catch(() => false);
+    if (wrote) {
+      const refreshed = await loadOwnedPaths().catch(() => null);
+      if (refreshed?.paths) setPaths(refreshed.paths);
+    }
   };
 
   useEffect(() => { load(); }, []);
