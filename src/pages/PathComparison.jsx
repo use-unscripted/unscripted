@@ -103,7 +103,7 @@ function PausedPathPanel({ path, experiments, missions, proof, contacts, reflect
 }
 
 // ── Path card ─────────────────────────────────────────────────────────────────
-function PathCard({ path, experiments, missions, proof, contacts, reflections, onAction, expanded, onToggle, onBuildOutreachPlan, onAutoAssess, assessing }) {
+function PathCard({ path, experiments, missions, proof, contacts, reflections, profile, onAction, expanded, onToggle, onBuildOutreachPlan, onAutoAssess, assessing }) {
   const cfg = statusCfg(path.status);
   const d = path.generated_detail || {};
 
@@ -111,7 +111,7 @@ function PathCard({ path, experiments, missions, proof, contacts, reflections, o
   const completedExps = pathExps.filter(e => e.status === 'completed');
   const pct = pathExps.length ? Math.round(completedExps.length / pathExps.length * 100) : 0;
   const isPausedOrCompleted = ['paused', 'completed'].includes(path.status);
-  const hyp = deriveHypothesis(path, { experiments, proof, reflections });
+  const hyp = deriveHypothesis(path, { experiments, proof, reflections, profile });
 
   return (
     <div className="rounded-[20px] border border-[color:var(--ink-200)] bg-white overflow-hidden">
@@ -467,6 +467,7 @@ export default function PathComparison() {
   const [proof, setProof] = useState([]);
   const [contacts, setContacts] = useState([]);
   const [reflections, setReflections] = useState([]);
+  const [profile, setProfile] = useState({});
   const [loading, setLoading] = useState(true);
   const [loadFailed, setLoadFailed] = useState(false);
   const [submission, setSubmission] = useState(null);
@@ -512,14 +513,17 @@ export default function PathComparison() {
       setLoadFailed(true);
     }
 
-    const [sub, exps, mis, prf, cts, refs] = await Promise.all([
+    const [sub, exps, mis, prf, cts, refs, profs] = await Promise.all([
       loadOnboardingSubmission(),
       base44.entities.Experiments.list('-created_date', 200).catch(() => []),
       base44.entities.Missions.list('-created_date', 200).catch(() => []),
       base44.entities.ProofOfWork.list('-created_date', 200).catch(() => []),
       base44.entities.OutreachContacts.list('-created_date', 200).catch(() => []),
       base44.entities.WeeklyReflections.list('-created_date', 200).catch(() => []),
+      base44.entities.StudentProfile.list('-created_date', 1).catch(() => []),
     ]);
+    const studentProfile = (Array.isArray(profs) ? profs[0] : null) || {};
+    setProfile(studentProfile);
     const ownedPaths = owned?.paths || [];
     setPaths(ownedPaths);
     setActiveSet(authoritativeSet(ownedPaths));
@@ -537,6 +541,7 @@ export default function PathComparison() {
       experiments: Array.isArray(exps) ? exps : [],
       proof: Array.isArray(prf) ? prf : [],
       reflections: Array.isArray(refs) ? refs : [],
+      profile: studentProfile,
     };
     const wrote = await backfillHypotheses(ownedPaths, ctx).catch(() => false);
     if (wrote) {
@@ -609,7 +614,7 @@ export default function PathComparison() {
     }
   };
 
-  const cardProps = { experiments, missions, proof, contacts, reflections, onAction: handleAction };
+  const cardProps = { experiments, missions, proof, contacts, reflections, profile, onAction: handleAction };
 
   return (
     <main className="app-page">

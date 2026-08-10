@@ -10,6 +10,7 @@
  * the career currently looks, confidence is how much evidence stands behind it.
  */
 import { base44 } from '@/api/base44Client';
+import { deriveUncertaintyMap, uncertaintyQuestions } from '@/lib/uncertainty-model';
 
 export const HYPOTHESIS_STATUS_LABELS = {
   suggested: 'Suggested',
@@ -141,13 +142,19 @@ export function deriveHypothesis(path, ctx = {}) {
   const fit = fitScore(path);
   const confidence = confidenceScore(path, act);
   const against = path.contradicting_evidence?.length ? path.contradicting_evidence : contradicting(path);
+  // Which work characteristics matter here, and which of them we still cannot
+  // answer. The unknowns it surfaces are what "what we still need to learn"
+  // asks about; the older generic questions remain the fallback.
+  const uncertainty = deriveUncertaintyMap(path, { profile: ctx.profile || {}, act });
+  const fromUncertainty = uncertaintyQuestions(uncertainty);
   return {
+    uncertainty,
     career_fit_score: fit,
     fit_confidence_score: confidence,
     why_this_may_fit: path.why_this_may_fit || path.why_it_fits || path.fit_reason || '',
     supporting_evidence: path.supporting_evidence?.length ? path.supporting_evidence : supporting(path, act),
     contradicting_evidence: against,
-    unresolved_questions: path.unresolved_questions?.length ? path.unresolved_questions : unresolved(path, act),
+    unresolved_questions: fromUncertainty.length ? fromUncertainty : unresolved(path, act),
     hypothesis_status: hypothesisStatus(path, { fit, confidence, act, against }),
   };
 }
@@ -159,10 +166,12 @@ export function deriveHypothesis(path, ctx = {}) {
 export async function backfillHypotheses(paths, ctx) {
   const stale = paths.filter(p => typeof p.career_fit_score !== 'number');
   if (!stale.length) return false;
-  await Promise.all(stale.map(p =>
-    base44.entities.PathRecommendations
-      .update(p.id, { ...deriveHypothesis(p, ctx), last_recalculated_at: new Date().toISOString() })
-      .catch(() => null)
-  ));
+  await Promise.all(stale.map(p => {
+    // `uncertainty` is derived on every render and is not a stored field.
+    const { uncertainty, ...fields } = deriveHypothesis(p, ctx);
+    return base44.entities.PathRecommendations
+      .update(p.id, { ...fields, last_recalculated_at: new Date().toISOString() })
+      .catch(() => null);
+  }));
   return true;
 }

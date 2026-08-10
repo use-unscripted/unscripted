@@ -1,5 +1,6 @@
 import { FlaskConical, HelpCircle } from 'lucide-react';
 import { HYPOTHESIS_STATUS_LABELS } from '@/lib/career-hypothesis';
+import CareerUncertaintyMap from '@/components/paths/CareerUncertaintyMap';
 
 function ScoreBar({ label, value, hint, color }) {
   return (
@@ -105,6 +106,11 @@ export default function CareerHypothesisPanel({ pathName, hypothesis }) {
             <p className="tp-eyebrow mb-2 flex items-center gap-1.5" style={{ color: 'var(--brand-navy-700)' }}>
               <HelpCircle size={12} /> What we still need to learn
             </p>
+            {h.uncertainty?.biggest_question && (
+              <p className="tp-meta mb-2 text-[color:var(--ink-500)]">
+                Biggest remaining question: {h.uncertainty.biggest_question}
+              </p>
+            )}
             <ul className="space-y-2">
               {h.unresolved_questions.map((q, i) => (
                 <li key={i}>
@@ -115,6 +121,8 @@ export default function CareerHypothesisPanel({ pathName, hypothesis }) {
             </ul>
           </div>
         )}
+
+        <CareerUncertaintyMap map={h.uncertainty} />
       </div>
     </section>
   );
