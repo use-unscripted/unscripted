@@ -5,7 +5,8 @@
  * which are graph nodes, so the profile can show exactly which experiment, proof
  * or performance review put it there.
  */
-import { evidenceSource, summarizeEvidence } from '@/lib/evidence-graph';
+import { evidenceSource, summarizeEvidence, countSourceKinds } from '@/lib/evidence-graph';
+import { depthOf, evidenceStrength } from '@/lib/experiment-depth';
 
 export const ABILITIES = [
   { id: 'analytical_reasoning', label: 'Analytical Reasoning', keys: ['analytic', 'analysis', 'reasoning', 'evaluat', 'assess', 'diagnos'] },
@@ -55,6 +56,7 @@ export function deriveAbilities({ experiments = [], measurements = {}, proof = [
 
   proof.filter(p => p.deletion_status !== 'deleted' && p.deletion_status !== 'permanently_deleted').forEach(p => {
     [...splitTags(p.skills_demonstrated), ...splitTags(p.approved_skills)].forEach(tag => add(tag, evidenceSource({
+      depth_kind: 'proof',
       kind: 'proof',
       detail: p.title,
       date: p.completed_at || p.created_date,
@@ -64,7 +66,10 @@ export function deriveAbilities({ experiments = [], measurements = {}, proof = [
   });
 
   experiments.filter(e => e.status === 'completed').forEach(e => {
+    // Quick Test or Deep Dive is recorded alongside the source, so a conclusion
+    // can say what it is actually built from.
     splitTags(e.work_characteristics_tested).forEach(tag => add(tag, evidenceSource({
+      depth_kind: depthOf(e),
       kind: 'experiment',
       detail: e.title,
       date: e.updated_date || e.created_date,
@@ -74,6 +79,7 @@ export function deriveAbilities({ experiments = [], measurements = {}, proof = [
 
     const m = measurements[e.id];
     splitTags(m?.demonstrated_strengths).forEach(tag => add(tag, evidenceSource({
+      depth_kind: 'system_evaluation',
       kind: 'system_evaluation',
       detail: `Reviewed performance on ${e.title}`,
       date: m.system_evaluated_at || m.post_completed_at,
@@ -83,7 +89,8 @@ export function deriveAbilities({ experiments = [], measurements = {}, proof = [
   });
 
   splitTags(profile.current_skills).forEach(tag => add(tag, evidenceSource({
-    kind: 'onboarding',
+      depth_kind: 'onboarding',
+      kind: 'onboarding',
     detail: `You described this as a current skill: ${tag}`,
     date: profile.created_date,
     link: '/profile',
@@ -91,7 +98,14 @@ export function deriveAbilities({ experiments = [], measurements = {}, proof = [
   })));
 
   return [...found.values()]
-    .map(a => ({ ...a, summary: summarizeEvidence(a.sources) }))
+    .map(a => ({
+      ...a,
+      summary: summarizeEvidence(a.sources),
+      // What this ability rests on, kept separate by level so several Quick
+      // Tests are never presented as if they were one Deep Dive.
+      sourceCounts: countSourceKinds(a.sources),
+      strength: evidenceStrength(a.sources.map(s => ({ kind: s.depth_kind || s.kind, date: s.date }))),
+    }))
     .sort((a, b) => b.summary.score - a.summary.score);
 }
 

@@ -49,8 +49,25 @@ const q = (kind) => EVIDENCE_QUALITY[kind] || EVIDENCE_QUALITY.onboarding;
  * `nodeId` is the graph node it came from, which is what makes the conclusion
  * traceable rather than merely plausible.
  */
-export function evidenceSource({ kind, detail, date, link, nodeId }) {
-  return { kind, quality: q(kind), detail: detail || '', date: date || null, link: link || null, nodeId: nodeId || null };
+export function evidenceSource({ kind, detail, date, link, nodeId, depth_kind }) {
+  return {
+    kind,
+    // The experiment level this came from (Quick Test / Deep Dive) or the other
+    // source kind, so a conclusion can state what it is built from.
+    depth_kind: depth_kind || kind,
+    quality: q(kind),
+    detail: detail || '',
+    date: date || null,
+    link: link || null,
+    nodeId: nodeId || null,
+  };
+}
+
+/** Counts by experiment level and source kind, for "Based on…" lines. */
+export function countSourceKinds(sources = []) {
+  const counts = {};
+  (sources || []).forEach(s => { const k = s?.depth_kind || s?.kind; if (k) counts[k] = (counts[k] || 0) + 1; });
+  return counts;
 }
 
 /**

@@ -27,6 +27,7 @@
 import { deriveHypothesis } from '@/lib/career-hypothesis';
 import { loadRecalculationContext } from '@/lib/hypothesis-recalculation';
 import { blueprintFor } from '@/lib/next-test-blueprints';
+import { depthOf, recommendDepth, deepDiveUnlock, depthMeta } from '@/lib/experiment-depth';
 
 /** Every knob in one place, so the engine's judgement can be tuned. */
 export const LEARNING_VALUE_WEIGHTS = {
@@ -237,6 +238,22 @@ export function nextBestExperiment(ctx) {
 
   const top = candidates[0];
   const blueprint = blueprintFor(top);
+  // Quick Test or Deep Dive. Short is the normal answer; a Deep Dive is only put
+  // forward once there is a run of short evidence on this career or the question
+  // genuinely needs work you can hand over. Both are always offered.
+  const onCareer = (ctx.experiments || []).filter(e =>
+    e.status === 'completed'
+    && (e.career_hypothesis_id === top.attached.path_id || e.path_name === top.attached.path_name));
+  const quickTests = onCareer.filter(e => depthOf(e) === 'quick_test').length;
+  const deepDives = onCareer.filter(e => depthOf(e) === 'deep_dive').length;
+  const depth = recommendDepth({ quickTests, deepDives, question: top.question, contradicted: top.contradicted });
+  const unlock = deepDiveUnlock({
+    careerName: top.attached.path_name,
+    testedDimensions: quickTests,
+    totalDimensions: (top.careers.length && candidates.length + quickTests) || 0,
+    quickTests,
+    deepDives,
+  });
   const mode = modeOf(top, leading, ctx);
   const knows = established(ctx);
   const careerNames = top.careers.filter(c => c.leading).map(c => c.path_name);
@@ -263,6 +280,17 @@ export function nextBestExperiment(ctx) {
     // The career the experiment will be designed against, and how to start it.
     path_id: top.attached.path_id,
     path_name: top.attached.path_name,
+    // Which level we lead with, and the reason, so the screen never has to guess.
+    depth: depth.depth,
+    depth_alternative: depth.alternative,
+    depth_reason: depth.reason,
+    depth_meta: depthMeta(depth.depth),
+    alternative_depth_meta: depthMeta(depth.alternative),
+    quick_test_count: quickTests,
+    deep_dive_count: deepDives,
+    unlock,
+    quick_to: `/moment?recId=${top.attached.path_id}&variable=${encodeURIComponent(top.variable)}`,
+    deep_to: `/experiments/new?recId=${top.attached.path_id}&variable=${encodeURIComponent(top.variable)}`,
     start_to: `/experiments/new?recId=${top.attached.path_id}&variable=${encodeURIComponent(top.variable)}`,
     detail: whyThisMatters(top, { knows, hypotheses, mode }),
     alternatives: candidates.slice(1, 4).map(c => ({

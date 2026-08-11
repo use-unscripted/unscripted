@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, FlaskConical } from 'lucide-react';
+import DepthBadge from '@/components/experiments/DepthBadge';
+import { DEPTHS } from '@/lib/experiment-depth';
 import WhyThisMatters from '@/components/next-test/WhyThisMatters';
 import AlternativeTests from '@/components/next-test/AlternativeTests';
 
@@ -16,7 +18,21 @@ export default function RecommendedNextTest({ recommendation }) {
   const [showOthers, setShowOthers] = useState(false);
   if (!recommendation) return null;
 
-  const { title, why, tests, path_name, start_to, detail, alternatives, early } = recommendation;
+  const {
+    title, why, tests, path_name, detail, alternatives, early,
+    depth = 'quick_test', depth_reason, depth_meta, alternative_depth_meta,
+    quick_to, deep_to, start_to, unlock,
+  } = recommendation;
+
+  const quickFirst = depth !== 'deep_dive';
+  const primary = {
+    to: (quickFirst ? quick_to : deep_to) || start_to,
+    meta: depth_meta || DEPTHS[depth],
+  };
+  const secondary = {
+    to: (quickFirst ? deep_to : quick_to) || start_to,
+    meta: alternative_depth_meta || DEPTHS[quickFirst ? 'deep_dive' : 'quick_test'],
+  };
 
   return (
     <section
@@ -52,22 +68,39 @@ export default function RecommendedNextTest({ recommendation }) {
         </ul>
       </div>
 
+      <div className="mt-4 flex flex-wrap items-center gap-2">
+        <DepthBadge depth={primary.meta.id} />
+        <span className="tp-meta" style={{ color: 'var(--ink-400)' }}>{depth_reason}</span>
+      </div>
+
+      {/* The optional upgrade in depth, once a run of short tests exists. Never
+          a requirement: the short test stays right beside it. */}
+      {unlock && (
+        <div className="mt-4 rounded-[14px] border p-4" style={{ borderColor: 'var(--brand-gold-500)', background: 'var(--warning-50)' }}>
+          <p className="tp-body font-semibold" style={{ color: 'var(--ink-900)' }}>{unlock.headline}</p>
+          <p className="tp-meta mt-1" style={{ color: 'var(--ink-700)' }}>{unlock.prompt}</p>
+          <Link to={deep_to || start_to} className="tp-body mt-2 inline-block font-bold" style={{ color: 'var(--brand-gold-700)' }}>
+            {unlock.cta}
+          </Link>
+        </div>
+      )}
+
       <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
-        {/* The short test is the default. The long version stays available as a
-            Deep Dive for anyone who wants the full simulation. */}
+        {/* Quick Test is the default level. Deep Dive stays one tap away and is
+            never required. */}
         <Link
-          to={start_to.replace('/experiments/new', '/moment')}
+          to={primary.to}
           className="ui-press tp-card inline-flex items-center justify-center gap-2 rounded-[12px] px-6 py-3 font-semibold text-white"
           style={{ background: 'var(--brand-navy-900)' }}
         >
-          Try 4 minutes of {path_name.split(' ')[0]} <ArrowRight size={17} aria-hidden="true" />
+          Start the {primary.meta.label} · {primary.meta.duration_label} <ArrowRight size={17} aria-hidden="true" />
         </Link>
         <Link
-          to={start_to}
+          to={secondary.to}
           className="tp-body rounded-[12px] border px-5 py-3 font-semibold"
           style={{ borderColor: 'var(--ink-200)', color: 'var(--ink-700)' }}
         >
-          Deep dive instead
+          {secondary.meta.label} instead · {secondary.meta.duration_label}
         </Link>
         <button
           type="button"

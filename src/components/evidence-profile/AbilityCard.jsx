@@ -1,5 +1,6 @@
 import { EvidenceBadge, ConfidenceMeter } from '@/components/evidence-profile/EvidenceBadge';
 import EvidenceProvenance from '@/components/evidence-profile/EvidenceProvenance';
+import BasedOnSources from '@/components/evidence-profile/BasedOnSources';
 
 /** An ability the student has actually demonstrated, with its sources. */
 export default function AbilityCard({ ability, flagged }) {
@@ -14,6 +15,8 @@ export default function AbilityCard({ ability, flagged }) {
       <div className="mt-3">
         <ConfidenceMeter summary={summary} />
       </div>
+
+      <BasedOnSources counts={ability.sourceCounts} />
 
       {summary.strongest && (
         <p className="tp-meta mt-3" style={{ color: 'var(--ink-500)' }}>

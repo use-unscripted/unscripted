@@ -13,6 +13,8 @@ import AddMissionModal from '@/components/experiments/AddMissionModal';
 import AddProofModal, { ProofSuccessToast } from '@/components/experiments/AddProofModal';
 import PathSwitcher from '@/components/PathSwitcher';
 import FocusOverlay from '@/components/FocusOverlay';
+import DepthBadge from '@/components/experiments/DepthBadge';
+import { depthOf, DEPTHS } from '@/lib/experiment-depth';
 import SoftDeleteConfirm, { softDeletePayload } from '@/components/SoftDeleteConfirm';
 import ExperimentActionsMenu from '@/components/experiments/ExperimentActionsMenu';
 import ResumeExperimentModal from '@/components/experiments/ResumeExperimentModal';
@@ -222,6 +224,7 @@ function ExperimentCard({ exp, measurement, onStatusChange, onExpand, expanded, 
           <div className="flex-1">
             <div className="flex flex-wrap items-center gap-2 mb-2">
               <span className="tp-meta rounded-full px-3 py-1 font-bold" style={{ background: s.bg, color: s.text }}>{s.label}</span>
+              <DepthBadge depth={depthOf(exp)} />
               {exp.path_name && <span className="tp-meta rounded-full px-3 py-1 font-semibold" style={{ background: 'var(--background-tertiary)', color: 'var(--brand-navy-700)' }}>{exp.path_name}</span>}
               {isPaused && exp.paused_at && (
                 <span className="tp-meta text-[color:var(--ink-400)]">Paused {fmtDate(exp.paused_at)}</span>
@@ -622,6 +625,8 @@ export default function ExperimentsPage() {
   const [showNew, setShowNew] = useState(false);
   const [expandedId, setExpandedId] = useState(null);
   const [filter, setFilter] = useState('active'); // 'active' | 'completed' | 'skipped' | 'all'
+  // Quick Test / Deep Dive, derived from each record rather than stored twice.
+  const [depthFilter, setDepthFilter] = useState('all');
   const [missionsMap, setMissionsMap] = useState({});
   const [loadingMissionsFor, setLoadingMissionsFor] = useState(null);
   const [guidesMap, setGuidesMap] = useState({});
@@ -827,9 +832,10 @@ export default function ExperimentsPage() {
   const allActive = experiments.filter(e => e.status !== 'paused');
   const allPaused = experiments.filter(e => e.status === 'paused');
 
-  const pathFiltered = (list) => selectedPath
-    ? list.filter(e => e.path_name === selectedPath.path_name)
-    : list;
+  const pathFiltered = (list) => {
+    const byPath = selectedPath ? list.filter(e => e.path_name === selectedPath.path_name) : list;
+    return depthFilter === 'all' ? byPath : byPath.filter(e => depthOf(e) === depthFilter);
+  };
 
   const activeFiltered = filter === 'all'
     ? pathFiltered(allActive)
@@ -1001,6 +1007,22 @@ export default function ExperimentsPage() {
           />
 
           {/* Active / filter section */}
+          {/* Two levels of experiment. Quick Test is the default experience;
+              Deep Dive stays available for anyone who wants stronger evidence. */}
+          <div className="mb-3 flex flex-wrap items-center gap-2">
+            {[{ key: 'all', label: 'All levels', duration: '' },
+              { key: 'quick_test', label: DEPTHS.quick_test.label, duration: DEPTHS.quick_test.duration_label },
+              { key: 'deep_dive', label: DEPTHS.deep_dive.label, duration: DEPTHS.deep_dive.duration_label }].map(d => (
+              <button key={d.key} onClick={() => setDepthFilter(d.key)}
+                className="tp-meta rounded-full border px-3.5 py-1.5 font-semibold transition"
+                style={depthFilter === d.key
+                  ? { background: 'var(--brand-navy-900)', color: '#fff', borderColor: 'var(--brand-navy-900)' }
+                  : { background: 'white', color: 'var(--text-secondary)', borderColor: 'var(--border-light)' }}>
+                {d.label}{d.duration ? ` · ${d.duration}` : ''}
+              </button>
+            ))}
+          </div>
+
           <div className="mb-4 flex items-center justify-between gap-3 flex-wrap">
             <SectionHeader label="Active Experiments" count={allActive.length} />
             <div className="flex gap-2 flex-wrap">
