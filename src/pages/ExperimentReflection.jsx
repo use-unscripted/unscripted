@@ -20,6 +20,7 @@ import DecisionStep from '@/components/reflection/DecisionStep';
 import EvidenceUpdatePanel from '@/components/reflection/EvidenceUpdatePanel';
 import CycleSummary from '@/components/reflection/CycleSummary';
 import JourneyEmptyState from '@/components/journey/JourneyEmptyState';
+import PageHeader from '@/components/PageHeader';
 import NextBestExperimentPanel from '@/components/next-test/NextBestExperimentPanel';
 import MeasurementGate from '@/components/measurement/MeasurementGate';
 import { loadMeasurements } from '@/lib/experiment-measurement';
@@ -163,6 +164,9 @@ export default function ExperimentReflection() {
 
   return (
     <Shell>
+      {/* The shared back control, so leaving this page is one thumb-sized tap
+          rather than the footer links at the very bottom. */}
+      <PageHeader showBack backLabel="Go back" title="Conclude this experiment" />
       <ReflectionContextCard ctx={ctx} />
 
       {decision ? (

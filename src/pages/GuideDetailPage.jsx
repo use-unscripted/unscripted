@@ -5,7 +5,8 @@ import StepArtifact from '@/components/experiments/StepArtifact';
 import { trackPilotEvent } from '@/lib/pilot-metrics';
 import CampusEventCard from '@/components/experiments/CampusEventCard';
 import { Sk, SkCards } from '@/components/PageSkeleton';
-import { ArrowLeft, Clock, CheckCircle2, Star, Loader2 } from 'lucide-react';
+import PageHeader from '@/components/PageHeader';
+import { Clock, CheckCircle2, Star, Loader2 } from 'lucide-react';
 
 const STATUS_CFG = {
   active:    { bg: 'var(--success-50)', text: 'var(--success-700)', label: 'Active' },
@@ -118,32 +119,22 @@ export default function GuideDetailPage() {
 
   return (
     <main className="app-page">
-      {/* Back — to the experiment this guide belongs to, which is where the
-          student came from and where the rest of their work lives. */}
-      <button
-        onClick={() => navigate(backToExperiment)}
-        className="tp-body flex items-center gap-2 font-semibold text-[color:var(--ink-500)] hover:text-[color:var(--ink-700)] mb-7 transition"
-      >
-        <ArrowLeft size={16} /> Back to my experiment
-      </button>
-
-      {/* Header */}
-      <div className="mb-8">
-        <div className="flex flex-wrap items-center gap-2 mb-3">
-          <span className="tp-meta font-bold text-[color:var(--ink-400)]">Version {guide.version_number}</span>
-          <span className="tp-meta rounded-full px-2.5 py-1 font-bold" style={{ background: cfg.bg, color: cfg.text }}>{cfg.label}</span>
-          {guide.is_active && (
-            <span className="tp-meta flex items-center gap-1 rounded-full px-2.5 py-1 font-bold" style={{ background: 'var(--success-50)', color: 'var(--success-700)' }}>
-              <CheckCircle2 size={13} /> Active Experiment
-            </span>
-          )}
-        </div>
-        <h1 className="tp-page text-[color:var(--surface-dark-900)]">{guide.guide_title}</h1>
-        <div className="tp-meta flex flex-wrap gap-4 mt-3 text-[color:var(--ink-400)]">
-          <span>Generated {fmtDate(guide.created_date)}</span>
-          {guide.estimated_time && <span className="flex items-center gap-1"><Clock size={13} /> {guide.estimated_time}</span>}
-          <span>{guide.steps?.length || 0} steps</span>
-        </div>
+      {/* Header. The back arrow is the shared one in PageHeader rather than this
+          page's own text link. */}
+      <div className="flex flex-wrap items-center gap-2 mb-3">
+        <span className="tp-meta font-bold text-[color:var(--ink-400)]">Version {guide.version_number}</span>
+        <span className="tp-meta rounded-full px-2.5 py-1 font-bold" style={{ background: cfg.bg, color: cfg.text }}>{cfg.label}</span>
+        {guide.is_active && (
+          <span className="tp-meta flex items-center gap-1 rounded-full px-2.5 py-1 font-bold" style={{ background: 'var(--success-50)', color: 'var(--success-700)' }}>
+            <CheckCircle2 size={13} /> Active Experiment
+          </span>
+        )}
+      </div>
+      <PageHeader showBack backLabel="Back to my experiment" title={guide.guide_title} />
+      <div className="tp-meta -mt-6 mb-8 flex flex-wrap gap-4 text-[color:var(--ink-400)]">
+        <span>Generated {fmtDate(guide.created_date)}</span>
+        {guide.estimated_time && <span className="flex items-center gap-1"><Clock size={13} /> {guide.estimated_time}</span>}
+        <span>{guide.steps?.length || 0} steps</span>
       </div>
 
       {/* Set as Active */}
