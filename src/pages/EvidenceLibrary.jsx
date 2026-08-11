@@ -14,6 +14,7 @@ import EvidenceCard from '@/components/evidence/EvidenceCard';
 import CycleRecordView from '@/components/evidence/CycleRecordView';
 import ResumeApprovalModal from '@/components/evidence/ResumeApprovalModal';
 import { buildLibrary, filterEvidence, filterOptions, DEFAULT_FILTERS, fmtDate } from '@/lib/evidence-library';
+import PullToRefresh from '@/components/PullToRefresh';
 
 export default function EvidenceLibrary() {
   const [raw, setRaw] = useState(null);
@@ -42,7 +43,19 @@ export default function EvidenceLibrary() {
   const shown = useMemo(() => filterEvidence(evidence, filters), [evidence, filters]);
   const openRecord = cycleRecords.find((r) => r.cycle.id === openCycleId) || null;
 
-  const reviewedSaved = () => { setReviewItem(null); load(); };
+  // The modal closes and the row updates on the spot; the refetch that confirms
+  // it runs behind the screen rather than in front of it.
+  const reviewedSaved = (updated) => {
+    const id = reviewItem?.sourceId || reviewItem?.id;
+    setReviewItem(null);
+    if (id) {
+      setRaw(prev => prev && ({
+        ...prev,
+        proof: prev.proof.map(p => (p.id === id ? { ...p, ...(updated || {}), resume_status: updated?.resume_status || 'approved' } : p)),
+      }));
+    }
+    load();
+  };
 
   return (
     <main className="app-page">
@@ -53,6 +66,7 @@ export default function EvidenceLibrary() {
         description="Every piece of proof from your career experiments, in one place."
       />
 
+      <PullToRefresh onRefresh={load}>
       {!raw ? (
         <div>
           {/* view toggle · privacy note · filter bar · cards, in place, at size */}
@@ -142,6 +156,7 @@ export default function EvidenceLibrary() {
           )}
         </>
       )}
+      </PullToRefresh>
     </main>
   );
 }

@@ -231,6 +231,49 @@
   html,
   body {
     overflow-x: clip;
+    /* iOS WebView: a drag that reaches the end of the page must not rubber-band
+       the whole canvas. Vertical scrolling inside the page is untouched. */
+    overscroll-behavior-y: contain;
+  }
+
+  /* Tapping and holding a control on iOS selects its label and raises the
+     callout. Controls and navigation are not text to be copied; prose is, and
+     is deliberately excluded here. */
+  button,
+  a,
+  [role="button"],
+  nav,
+  .nav-link,
+  .app-navlink,
+  label {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+  }
+
+  /* Anything the student might actually want to copy keeps normal selection. */
+  p, li, h1, h2, h3, h4, blockquote, td, th,
+  input, textarea, [contenteditable="true"],
+  .tp-prose, .tp-body, .tp-lead, .selectable {
+    -webkit-user-select: text;
+    user-select: text;
+  }
+
+  /* …except when that prose is the label of a control, where it is still part
+     of the button rather than something to copy. */
+  button p, button li, button h1, button h2, button h3, button h4,
+  a p, a li, a h1, a h2, a h3, a h4,
+  [role="button"] p, [role="button"] li,
+  nav p, nav li {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  /* Scrollable panels contain their own overscroll too, so a modal or a long
+     list cannot drag the page behind it. */
+  [class*="overflow-y-auto"],
+  [class*="overflow-auto"] {
+    overscroll-behavior-y: contain;
   }
 
   /* Hold the scrollbar's space open whether or not the page currently needs

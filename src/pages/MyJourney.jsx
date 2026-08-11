@@ -21,6 +21,7 @@ import JourneyEvidence from '@/components/journey/JourneyEvidence';
 import CampusEventsPanel from '@/components/campus/CampusEventsPanel';
 import ContinuationGate from '@/components/journey/ContinuationGate';
 import { Sk } from '@/components/PageSkeleton';
+import PullToRefresh from '@/components/PullToRefresh';
 import { Reveal, WordReveal, EASE_COPY } from '@/components/motion';
 import { loadPilotAccess, CycleLimitError } from '@/lib/pilot-access';
 import { trackPilotEvent } from '@/lib/pilot-metrics';
@@ -138,7 +139,11 @@ export default function MyJourney() {
           <p className="tp-lead mt-5" style={{ color: 'var(--text-secondary)', maxWidth: '52ch' }}>{sub}</p>
         </Reveal>
       </header>
-      <div className="app-stack">{children}</div>
+      {/* Pull down from the top to re-read the journey, the way a native app
+          does. Touch only, so nothing about the desktop page changes. */}
+      <PullToRefresh onRefresh={load}>
+        <div className="app-stack">{children}</div>
+      </PullToRefresh>
     </main>
   );
 

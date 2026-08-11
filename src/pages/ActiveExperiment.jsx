@@ -80,10 +80,19 @@ export default function ActiveExperiment() {
 
   useEffect(() => { load(); }, [load]);
 
-  const onCompleted = async (result) => {
+  // The modal closes and the mission reads as done immediately; the refetch that
+  // confirms it and pulls in the new proof runs behind the screen.
+  const onCompleted = (result) => {
+    const doneId = completing?.id;
     setCompleting(null);
     setJustDone(result);
-    await load();
+    if (doneId) {
+      setState(prev => prev && ({
+        ...prev,
+        missions: prev.missions.map(m => (m.id === doneId ? { ...m, status: 'completed' } : m)),
+      }));
+    }
+    load();
   };
 
   if (!state) {

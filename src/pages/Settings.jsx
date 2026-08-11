@@ -8,6 +8,7 @@ import ICSExportPanel from '@/components/calendar/ICSExportPanel';
 import { generatePathTest } from '@/lib/path-generator';
 import { buildOptOut, optBackInPatch, isOptedOut, mergeOptOutRows } from '@/lib/nudge-response';
 import { clearCampusStore } from '@/lib/campus-store';
+import DeleteAccountModal from '@/components/settings/DeleteAccountModal';
 
 const textareaCls = 'mt-1 w-full rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] px-4 py-3 text-base md:text-sm text-[color:var(--surface-dark-900)] placeholder-[color:var(--ink-400)] outline-none focus:border-[color:var(--brand-navy-700)] resize-none';
 
@@ -33,6 +34,7 @@ export default function Settings() {
   const [newSetId, setNewSetId] = useState('');
   const [optOutRows, setOptOutRows] = useState([]);
   const [emailBusy, setEmailBusy] = useState(false);
+  const [showDelete, setShowDelete] = useState(false);
 
   // Every nudge email ends with a line telling students to turn these off here,
   // so this read is what makes that sentence true. It asks for this student's
@@ -283,6 +285,20 @@ export default function Settings() {
             Stop these emails
           </button>
         )}
+      </section>
+
+      {showDelete && <DeleteAccountModal onClose={() => setShowDelete(false)} />}
+
+      <div className="mt-10 mb-3">
+        <h2 className="tp-section text-[color:var(--surface-dark-900)] mb-1.5">Delete account</h2>
+        <p className="tp-prose text-[color:var(--ink-700)]">Permanently delete your account and everything in it: paths, experiments, missions, proof of work, contacts, reflections and resumes. This cannot be undone.</p>
+      </div>
+      <section className="rounded-[var(--r-surface)] border border-[color:var(--ink-200)] bg-white p-7 shadow-sm">
+        <button onClick={() => setShowDelete(true)}
+          className="tp-body touch-target inline-flex items-center gap-2 rounded-[var(--r-control)] border px-5 py-3 font-semibold transition"
+          style={{ borderColor: 'var(--danger-700)', color: 'var(--danger-700)' }}>
+          <Trash2 size={16} /> Delete my account
+        </button>
       </section>
 
       <div className="mt-10">
