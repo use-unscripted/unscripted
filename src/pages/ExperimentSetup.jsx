@@ -196,10 +196,22 @@ function StepPick({ rec, options, selected, onSelect, onCustom, onNext, designin
         </div>
       )}
 
+      {/* The default: a few minutes of the actual work. The long simulations
+          below stay available as Deep Dives. */}
+      <Link to={`/moment?recId=${rec.id || ''}&variable=${encodeURIComponent(focus?.variable || '')}`}
+        className="block rounded-[20px] border p-5 transition hover:-translate-y-px"
+        style={{ borderColor: 'var(--brand-navy-900)', background: 'white', boxShadow: '0 8px 24px rgba(31,58,95,0.12)' }}>
+        <p className="tp-eyebrow" style={{ color: 'var(--brand-gold-700)' }}>Recommended · about 4 minutes</p>
+        <p className="tp-card mt-2 text-[color:var(--surface-dark-900)]">Try 4 minutes of {rec.path_name}</p>
+        <p className="tp-body mt-1 text-[color:var(--ink-500)]">
+          One realistic decision, instant feedback, two quick questions. It updates your evidence the same way a long experiment does.
+        </p>
+      </Link>
+
       {/* Experiment options */}
       <div>
-        <p className="tp-body font-bold text-[color:var(--surface-dark-900)] mb-1">Choose your experiment:</p>
-        <p className="tp-meta text-[color:var(--ink-500)] mb-3">Each one is a short piece of real work, built to answer the question you chose.</p>
+        <p className="tp-body font-bold text-[color:var(--surface-dark-900)] mb-1">Or go deeper:</p>
+        <p className="tp-meta text-[color:var(--ink-500)] mb-3">Deep Dives are full work simulations that take a few hours, built to answer the question you chose.</p>
         {designing && (
           <div className="mb-3 space-y-3">
             <div className="flex items-center gap-2 tp-body text-[color:var(--ink-500)]">

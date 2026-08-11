@@ -42,6 +42,7 @@ import Evidence from '@/pages/Evidence';
 import CareerEvidenceProfile from '@/pages/CareerEvidenceProfile';
 import CampusEventsPage from '@/pages/CampusEventsPage';
 import ExperimentSetup from '@/pages/ExperimentSetup';
+import CareerMomentPage from '@/pages/CareerMomentPage';
 import Roadmap from '@/pages/Roadmap';
 import WeeklyCalendar from '@/pages/WeeklyCalendar';
 import SavedRoadmaps from '@/pages/SavedRoadmaps';
@@ -131,6 +132,8 @@ const AuthenticatedApp = () => {
           <Route path="/settings" element={<Settings />} />
           <Route path="/blueprints" element={<BlueprintLibrary />} />
           <Route path="/paths" element={<PathComparison />} />
+          {/* The default, short Experiment: one Career Moment, 2–7 minutes. */}
+          <Route path="/moment" element={<CareerMomentPage />} />
           <Route path="/experiment" element={<ActiveExperiment />} />
           <Route path="/reflect" element={<ExperimentReflection />} />
           <Route path="/experiments" element={<ExperimentsPage />} />

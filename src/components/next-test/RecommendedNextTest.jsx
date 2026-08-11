@@ -53,12 +53,21 @@ export default function RecommendedNextTest({ recommendation }) {
       </div>
 
       <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
+        {/* The short test is the default. The long version stays available as a
+            Deep Dive for anyone who wants the full simulation. */}
         <Link
-          to={start_to}
+          to={start_to.replace('/experiments/new', '/moment')}
           className="ui-press tp-card inline-flex items-center justify-center gap-2 rounded-[12px] px-6 py-3 font-semibold text-white"
           style={{ background: 'var(--brand-navy-900)' }}
         >
-          Start experiment <ArrowRight size={17} aria-hidden="true" />
+          Try 4 minutes of {path_name.split(' ')[0]} <ArrowRight size={17} aria-hidden="true" />
+        </Link>
+        <Link
+          to={start_to}
+          className="tp-body rounded-[12px] border px-5 py-3 font-semibold"
+          style={{ borderColor: 'var(--ink-200)', color: 'var(--ink-700)' }}
+        >
+          Deep dive instead
         </Link>
         <button
           type="button"
