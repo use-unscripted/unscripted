@@ -16,27 +16,28 @@ import { toText, toTextList } from '@/lib/ai-validation';
 import { generateValidated } from '@/lib/ai-generate';
 import { deriveHypothesis } from '@/lib/career-hypothesis';
 import { loadRecalculationContext, recalculateAfterReflection } from '@/lib/hypothesis-recalculation';
-import { savePostMeasurement } from '@/lib/experiment-measurement';
+import { savePreMeasurement, savePostMeasurement, loadMeasurements } from '@/lib/experiment-measurement';
+import { planMeasurements } from '@/lib/measurement-rotation';
+import { recordMomentSignals } from '@/lib/behavioral-signals';
 import { cycleLinks } from '@/lib/career-cycle';
 
-/** The whole micro-reaction. Two questions, no more. */
+/**
+ * The tap-sized controls for the two most-asked fields. `score` is the value
+ * written to the measurement row, which speaks in tens; the emoji and the
+ * three-way answer are only how the question is presented.
+ */
 export const REACTIONS = [
-  { value: 1, emoji: '😫', label: 'Not for me' },
-  { value: 2, emoji: '😐', label: 'Neutral' },
-  { value: 3, emoji: '🙂', label: 'Enjoyed it' },
-  { value: 4, emoji: '🔥', label: 'Loved it' },
+  { value: 1, score: 2, emoji: '😫', label: 'Not for me' },
+  { value: 2, score: 5, emoji: '😐', label: 'Neutral' },
+  { value: 3, score: 8, emoji: '🙂', label: 'Enjoyed it' },
+  { value: 4, score: 10, emoji: '🔥', label: 'Loved it' },
 ];
 
 export const AGAIN_OPTIONS = [
-  { value: 'no', label: 'No' },
-  { value: 'maybe', label: 'Maybe' },
-  { value: 'yes', label: 'Yes' },
+  { value: 'no', score: 2, label: 'No' },
+  { value: 'maybe', score: 5, label: 'Maybe' },
+  { value: 'yes', score: 9, label: 'Yes' },
 ];
-
-// Reaction and repeat answers are 1–4 and three-way; the measurement row speaks
-// in tens, so they are mapped here rather than stored twice.
-const ENJOYMENT_SCALE = { 1: 2, 2: 5, 3: 8, 4: 10 };
-const AGAIN_SCALE = { no: 2, maybe: 5, yes: 9 };
 // A weaker answer is still evidence, never a fail. Nothing below the middle.
 const STRENGTH_SCALE = { 3: 9, 2: 6.5, 1: 4.5 };
 
@@ -179,6 +180,15 @@ export async function loadMomentTarget({ recId, variable } = {}) {
   return { path, focus };
 }
 
+/**
+ * Which one or two questions this Moment should ask, based on what past Moments
+ * already answered. Rotates, and closes gaps before repeating a field.
+ */
+export async function loadMeasurementPlan() {
+  const map = await loadMeasurements().catch(() => ({}));
+  return planMeasurements(Object.values(map || {}));
+}
+
 /** Store the generated moment so the answer has something to attach to. */
 export async function saveCareerMoment(moment) {
   const user = await base44.auth.me().catch(() => null);
@@ -202,7 +212,7 @@ export function feedbackFor(moment, optionKey) {
  * ability/enjoyment split and uncertainty map all move exactly as they do after
  * a long experiment.
  */
-export async function completeCareerMoment({ momentRow, selected, rationale, reaction, again }) {
+export async function completeCareerMoment({ momentRow, selected, rationale, preAnswers, answers, plan, tracker }) {
   const option = (momentRow.options || []).find(o => o.key === selected);
   const links = await cycleLinks({ path: { id: momentRow.path_id } }).catch(() => ({}));
 
@@ -229,10 +239,18 @@ export async function completeCareerMoment({ momentRow, selected, rationale, rea
   });
 
   const score = STRENGTH_SCALE[option?.strength] ?? 6;
-  const measurement = await savePostMeasurement(experiment, null, {
-    actual_enjoyment: ENJOYMENT_SCALE[reaction] ?? null,
-    actual_energy: ENJOYMENT_SCALE[reaction] ?? null,
-    desire_to_repeat: AGAIN_SCALE[again] ?? null,
+
+  // The expectation half, when this Moment asked for one. Written first so the
+  // post save can compute the belief correction against it; skipped entirely
+  // otherwise, rather than storing a guessed baseline.
+  const preRow = preAnswers && Object.keys(preAnswers).length
+    ? await savePreMeasurement(experiment, preAnswers).catch(() => null)
+    : null;
+
+  // Only the one or two fields this Moment actually asked. Everything else stays
+  // absent on the row, which is how an uncollected measurement is stored.
+  const measurement = await savePostMeasurement(experiment, preRow, {
+    ...(answers || {}),
     surprise_reflection: rationale || undefined,
   });
 
@@ -247,13 +265,19 @@ export async function completeCareerMoment({ momentRow, selected, rationale, rea
   await base44.entities.CareerMoment.update(momentRow.id, {
     selected_option: selected,
     rationale_text: rationale || undefined,
-    enjoyment_reaction: reaction,
-    want_again: again,
+    pre_field_asked: plan?.pre?.key || undefined,
+    post_fields_asked: (plan?.post || []).map(f => f.key),
     system_performance_score: score,
     experiment_id: experiment.id,
     status: 'completed',
     completed_at: new Date().toISOString(),
   }).catch(() => null);
+
+  // Passive signals, in their own entity and marked supporting. They sit
+  // alongside the self-report, never inside it.
+  if (tracker) {
+    await recordMomentSignals({ moment: momentRow, experiment, tracker, rationale }).catch(() => null);
+  }
 
   // Same evidence architecture as a long experiment: nothing here is a shortcut
   // around the recalculation.

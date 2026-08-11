@@ -90,6 +90,15 @@
     "rationale_text": {
       "type": "string"
     },
+    "pre_field_asked": {
+      "type": "string"
+    },
+    "post_fields_asked": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
     "enjoyment_reaction": {
       "type": "number"
     },

@@ -1,0 +1,117 @@
+{
+  "name": "BehavioralSignal",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string"
+    },
+    "experiment_id": {
+      "type": "string"
+    },
+    "career_moment_id": {
+      "type": "string"
+    },
+    "career_hypothesis_id": {
+      "type": "string"
+    },
+    "career_name": {
+      "type": "string"
+    },
+    "tested_variable": {
+      "type": "string"
+    },
+    "tested_characteristics": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "evidence_source": {
+      "type": "string",
+      "enum": [
+        "explicit_self_report",
+        "observed_task_performance",
+        "passive_behavioral_signal",
+        "written_reflection",
+        "proof",
+        "onboarding_response"
+      ],
+      "default": "passive_behavioral_signal"
+    },
+    "evidence_weight": {
+      "type": "string",
+      "enum": [
+        "supporting",
+        "definitive"
+      ],
+      "default": "supporting"
+    },
+    "outcome": {
+      "type": "string",
+      "enum": [
+        "completed",
+        "abandoned"
+      ]
+    },
+    "seconds_to_begin": {
+      "type": "number"
+    },
+    "seconds_to_decide": {
+      "type": "number"
+    },
+    "seconds_total": {
+      "type": "number"
+    },
+    "answer_revisions": {
+      "type": "number"
+    },
+    "changed_answer": {
+      "type": "boolean"
+    },
+    "opened_details": {
+      "type": "boolean"
+    },
+    "opened_feedback": {
+      "type": "boolean"
+    },
+    "rationale_characters": {
+      "type": "number"
+    },
+    "voluntary_continuation": {
+      "type": "boolean"
+    },
+    "consecutive_same_career": {
+      "type": "number"
+    },
+    "same_career_moments_total": {
+      "type": "number"
+    },
+    "skipped_similar": {
+      "type": "boolean"
+    },
+    "behavioral_engagement_signal": {
+      "type": "number"
+    },
+    "occurred_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "evidence_source"
+  ],
+  "rls": {
+    "create": {
+      "created_by_id": "{{user.id}}"
+    },
+    "read": {
+      "created_by_id": "{{user.id}}"
+    },
+    "update": {
+      "created_by_id": "{{user.id}}"
+    },
+    "delete": {
+      "created_by_id": "{{user.id}}"
+    }
+  }
+}

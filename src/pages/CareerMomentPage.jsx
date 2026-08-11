@@ -6,7 +6,7 @@
  * Career Evidence Profile, the ability/enjoyment split and the uncertainty map
  * all update from a three minute task.
  */
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { Sk, SkCards } from '@/components/PageSkeleton';
@@ -16,7 +16,9 @@ import MomentFeedback from '@/components/moments/MomentFeedback';
 import MomentReaction from '@/components/moments/MomentReaction';
 import {
   loadMomentTarget, generateCareerMoment, saveCareerMoment, feedbackFor, completeCareerMoment,
+  loadMeasurementPlan,
 } from '@/lib/career-moment';
+import { createTracker, recordMomentSignals } from '@/lib/behavioral-signals';
 
 const STAGES = ['Situation', 'Your call', 'What it showed', 'Reaction'];
 
@@ -32,10 +34,16 @@ export default function CareerMomentPage() {
   const [stage, setStage] = useState('hook'); // hook | task | feedback | reaction | done
   const [selected, setSelected] = useState('');
   const [rationale, setRationale] = useState('');
-  const [reaction, setReaction] = useState(null);
-  const [again, setAgain] = useState('');
+  // At most one question before, one or two after. Which ones rotates.
+  const [plan, setPlan] = useState({ pre: null, post: [] });
+  const [preAnswers, setPreAnswers] = useState({});
+  const [answers, setAnswers] = useState({});
   const [saving, setSaving] = useState(false);
   const [changes, setChanges] = useState([]);
+  // Passive signals only: stage timings, whether the answer changed, how much
+  // was written. Held in a ref so recording never re-renders the Moment.
+  const tracker = useRef(createTracker());
+  const finishedRef = useRef(false);
 
   useEffect(() => {
     let alive = true;
@@ -50,15 +58,36 @@ export default function CareerMomentPage() {
       const saved = await saveCareerMoment(result.data).catch(() => null);
       if (!alive) return;
       if (!saved) { setError('We could not save this Career Moment. Try again in a moment.'); return; }
+      setPlan(await loadMeasurementPlan().catch(() => ({ pre: null, post: [] })));
+      if (!alive) return;
+      tracker.current = createTracker({ careerMomentId: saved.id, careerName: saved.career_name });
       setRow(saved);
     })();
     return () => { alive = false; };
   }, [recId, variable]);
 
+  // Leaving part-way through is itself a signal, and a supporting one only. It
+  // is never read as dislike of the career.
+  useEffect(() => () => {
+    if (row && !finishedRef.current && tracker.current.began_at) {
+      recordMomentSignals({ moment: row, tracker: tracker.current, outcome: 'abandoned', rationale }).catch(() => null);
+    }
+  }, [row, rationale]);
+
+  const selectOption = (key) => {
+    if (selected && selected !== key) {
+      tracker.current.changed_answer = true;
+      tracker.current.revisions += 1;
+    }
+    setSelected(key);
+  };
+
   const finish = async () => {
     setSaving(true);
-    const result = await completeCareerMoment({ momentRow: row, selected, rationale, reaction, again })
-      .catch(() => null);
+    finishedRef.current = true;
+    const result = await completeCareerMoment({
+      momentRow: row, selected, rationale, preAnswers, answers, plan, tracker: tracker.current,
+    }).catch(() => null);
     setSaving(false);
     if (!result) { setError('Your answers could not be saved. Nothing was lost — try Save again.'); return; }
     setChanges(result.changes || []);
@@ -112,26 +141,41 @@ export default function CareerMomentPage() {
         </div>
 
         <div className="rounded-[24px] border bg-white p-6 sm:p-8" style={{ borderColor: 'var(--ink-200)' }}>
-          {stage === 'hook' && <MomentHook moment={row} onStart={() => setStage('task')} />}
+          {stage === 'hook' && (
+            <MomentHook
+              moment={row}
+              preField={plan.pre}
+              preValue={plan.pre ? preAnswers[plan.pre.key] : undefined}
+              onPre={(v) => setPreAnswers({ [plan.pre.key]: v })}
+              onStart={() => { tracker.current.began_at = Date.now(); setStage('task'); }}
+            />
+          )}
           {stage === 'task' && (
             <MomentTask
               moment={row}
               selected={selected}
-              onSelect={setSelected}
+              onSelect={selectOption}
               rationale={rationale}
               onRationale={setRationale}
-              onSubmit={() => setStage('feedback')}
+              onSubmit={() => { tracker.current.decided_at = Date.now(); setStage('feedback'); }}
             />
           )}
           {stage === 'feedback' && (
-            <MomentFeedback feedback={feedbackFor(row, selected)} onNext={() => setStage('reaction')} />
+            <MomentFeedback
+              feedback={feedbackFor(row, selected)}
+              // Read rather than clicked: the feedback is shown either way, so
+              // only dwelling on it counts as engaging with it.
+              onNext={() => {
+                tracker.current.opened_feedback = Date.now() - (tracker.current.decided_at || 0) > 4000;
+                setStage('reaction');
+              }}
+            />
           )}
           {stage === 'reaction' && (
             <MomentReaction
-              reaction={reaction}
-              onReaction={setReaction}
-              again={again}
-              onAgain={setAgain}
+              fields={plan.post}
+              answers={answers}
+              onAnswer={(key, value) => setAnswers(a => ({ ...a, [key]: value }))}
               onFinish={finish}
               saving={saving}
             />
