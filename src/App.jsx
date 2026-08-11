@@ -1,4 +1,5 @@
 import { Toaster } from "@/components/ui/toaster"
+import { ThemeProvider } from 'next-themes'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
 import { BrowserRouter as Router, Route, Routes, useLocation } from 'react-router-dom';
@@ -164,6 +165,10 @@ function App() {
     // Outermost on purpose. A throw anywhere below it lands on a page with a
     // message and a way out, instead of unmounting the tree to a white screen.
     <AppErrorBoundary>
+      {/* Puts the .dark class on <html> so the dark token block in index.css is
+          what decides the palette. attribute="class" matches Tailwind's
+          darkMode: ["class"]. */}
+      <ThemeProvider attribute="class" enableSystem defaultTheme="light" disableTransitionOnChange>
       <AuthProvider>
         <QueryClientProvider client={queryClientInstance}>
           <Router>
@@ -173,6 +178,7 @@ function App() {
           <Toaster />
         </QueryClientProvider>
       </AuthProvider>
+      </ThemeProvider>
     </AppErrorBoundary>
   )
 }

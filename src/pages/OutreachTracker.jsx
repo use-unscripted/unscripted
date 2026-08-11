@@ -7,8 +7,9 @@ import PageHeader from '@/components/PageHeader';
 import { Sk, SkControls, SkCards } from '@/components/PageSkeleton';
 import AddContactModal, { ContactSuccessToast } from '@/components/outreach/AddContactModal';
 import PathSwitcher from '@/components/PathSwitcher';
-import SoftDeleteConfirm, { softDeletePayload } from '@/components/SoftDeleteConfirm';
+import SoftDeleteConfirm from '@/components/SoftDeleteConfirm';
 import { safeExternalUrl } from '@/lib/safe-url';
+import { useOutreachContacts, useUpdateContact, useDeleteContact } from '@/hooks/useOutreachContacts';
 
 const ALL_STATUS_OPTIONS = [
   { value: 'not_sent', label: 'Not contacted', bg: 'var(--ink-100)', text: 'var(--ink-700)' },
@@ -203,10 +204,9 @@ export default function OutreachTracker() {
   const navigate = useNavigate();
   const [paths, setPaths] = useState([]);
   const [selectedPathId, setSelectedPathId] = useState('all');
-  const [contacts, setContacts] = useState([]);
   const [experiments, setExperiments] = useState([]);
   const [missions, setMissions] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [listsLoading, setListsLoading] = useState(true);
   const [modal, setModal] = useState(null); // null | 'new' | contact object
   const [templates, setTemplates] = useState(false);
   const [outreachPlanPath, setOutreachPlanPath] = useState(null);
@@ -217,47 +217,45 @@ export default function OutreachTracker() {
   const [successToast, setSuccessToast] = useState(null);
   const toastTimer = useRef(null);
 
+  // Contacts live in the query cache so every change to one shows immediately;
+  // the supporting lists stay plain fetches.
+  const { data: contactRows, isLoading: contactsLoading, isError: contactsFailed, refetch: refetchContacts } = useOutreachContacts();
+  const contacts = contactRows || [];
+  const updateContact = useUpdateContact();
+  const deleteContact = useDeleteContact();
+
   const load = async () => {
     setLoadError(false);
     try {
-      const [c, e, m, ps] = await Promise.all([
-        base44.entities.OutreachContacts.list('-updated_date', 200).catch(() => null),
+      const [e, m, ps] = await Promise.all([
         base44.entities.Experiments.list('-created_date', 200).catch(() => []),
         base44.entities.Missions.list('-created_date', 200).catch(() => []),
         base44.entities.PathRecommendations.list('-created_date', 100).catch(() => []),
       ]);
-      if (c === null) { setLoadError(true); } else { setContacts(Array.isArray(c) ? c.filter(x => !x.deletion_status || x.deletion_status === 'active') : []); }
+      refetchContacts();
       setExperiments(Array.isArray(e) ? e : []);
       setMissions(Array.isArray(m) ? m : []);
       setPaths(Array.isArray(ps) ? ps : []);
     } catch {
       setLoadError(true);
     } finally {
-      setLoading(false);
+      setListsLoading(false);
     }
   };
+
+  const loading = listsLoading || contactsLoading;
 
   useEffect(() => { load(); }, []);
 
   const experimentsMap = Object.fromEntries(experiments.map(e => [e.id, e]));
   const missionsMap = Object.fromEntries(missions.map(m => [m.id, m]));
 
-  const updateStatus = async (id, response_status) => {
-    await base44.entities.OutreachContacts.update(id, { response_status });
-    setContacts(prev => prev.map(c => c.id === id ? { ...c, response_status } : c));
-  };
+  // Each of these repaints the card before the request finishes.
+  const updateStatus = (id, response_status) => updateContact.mutate({ id, patch: { response_status } });
 
-  const toggleThankYou = async (c) => {
-    const thank_you_sent = !c.thank_you_sent;
-    await base44.entities.OutreachContacts.update(c.id, { thank_you_sent });
-    setContacts(prev => prev.map(x => x.id === c.id ? { ...x, thank_you_sent } : x));
-  };
+  const toggleThankYou = (c) => updateContact.mutate({ id: c.id, patch: { thank_you_sent: !c.thank_you_sent } });
 
-  const handleDelete = async (c) => {
-    const user = await base44.auth.me();
-    await base44.entities.OutreachContacts.update(c.id, softDeletePayload(user.id));
-    setContacts(prev => prev.filter(x => x.id !== c.id));
-  };
+  const handleDelete = (c) => deleteContact.mutate({ id: c.id });
 
   const handleSaved = (saved, experimentTitle, missionTitle) => {
     setModal(null);
@@ -420,7 +418,7 @@ export default function OutreachTracker() {
 
       {loading ? (
         <SkCards count={4} h={150} r={20} />
-      ) : loadError ? (
+      ) : (loadError || contactsFailed) ? (
         <div className="rounded-[var(--r-surface)] border border-dashed border-red-200 p-16 text-center">
           <h3 className="tp-section text-[color:var(--surface-dark-900)]">We couldn't load your outreach contacts.</h3>
           <p className="tp-body mx-auto mt-2.5 max-w-[46ch] text-[color:var(--ink-500)]">There was a problem fetching your records. Please try again.</p>

@@ -21,6 +21,7 @@ import MeasurementGate from '@/components/measurement/MeasurementGate';
 import WhatYouLearned from '@/components/measurement/WhatYouLearned';
 import ReviewedWork from '@/components/measurement/ReviewedWork';
 import { loadMeasurements } from '@/lib/experiment-measurement';
+import { useMissions } from '@/hooks/useMissions';
 import { Sk } from '@/components/PageSkeleton';
 
 const OPEN = ['draft', 'planned', 'in_progress'];
@@ -37,6 +38,8 @@ export default function ActiveExperiment() {
   // an experiment is actually started and finished.
   const [measurement, setMeasurement] = useState(null);
   const [learned, setLearned] = useState(null);
+  // Missions come from the query cache so completing one can be optimistic.
+  const { data: cachedMissions } = useMissions(state?.experiment?.id);
 
   const load = useCallback(async () => {
     const cycle = await getActiveCycle().catch(() => null);
@@ -118,7 +121,10 @@ export default function ActiveExperiment() {
     );
   }
 
-  const { experiment, path, missions, guides, proofs, reflections, contacts, cycle } = state;
+  const { experiment, path, guides, proofs, reflections, contacts, cycle } = state;
+  // The cache is the live copy once it has loaded; the fetch that came with the
+  // page is what shows until then.
+  const missions = cachedMissions || state.missions || [];
   const nextMission = missions.find(m => !['completed', 'skipped'].includes(m.status));
   // The one to open. A guide saved as a draft is still the only guide a student
   // has, so falling back to the newest keeps the card from disappearing.

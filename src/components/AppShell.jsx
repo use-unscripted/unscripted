@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
-import { Outlet, NavLink } from 'react-router-dom';
+import { Outlet, NavLink, useLocation } from 'react-router-dom';
+import TabScrollMemory from '@/components/nav/TabScrollMemory';
+import { tabOf, lastLocation } from '@/lib/tab-stacks';
 import { Compass, CalendarDays, FolderOpen, FileText, Settings, LogOut, Inbox } from 'lucide-react';
 import { MotionConfig } from 'framer-motion';
 import { base44 } from '@/api/base44Client';
@@ -39,6 +41,11 @@ const NAV = [
 ];
 
 export default function AppShell() {
+  // Which tab the current screen belongs to. A deep screen (a path, a guide, the
+  // week) keeps its tab lit rather than lighting nothing.
+  const { pathname } = useLocation();
+  const activeTab = tabOf(pathname);
+
   // Admin-only nav (the campus feed queue below) is hidden from students.
   const [isAdmin, setIsAdmin] = useState(false);
   useEffect(() => { loadPilotAccess().then(a => setIsAdmin(!!a.isAdmin)).catch(() => setIsAdmin(false)); }, []);
@@ -72,6 +79,8 @@ export default function AppShell() {
     <MotionConfig reducedMotion="user">
     <div className="min-h-[100svh] font-body" style={{ background: 'var(--page-surface)' }}>
       <PilotTracker />
+      {/* Each tab remembers the screen and the scroll offset it was left at. */}
+      <TabScrollMemory />
       {/* Sidebar */}
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-60 flex-col lg:flex py-5 px-4" style={{ background: 'var(--brand-navy-900)' }}>
         <NavLink to="/journey" className="block -mx-5 px-5 py-3 mb-8 text-sm">
@@ -83,19 +92,21 @@ export default function AppShell() {
         </NavLink>
 
         <nav className="flex-1 overflow-y-auto">
-          {NAV.map(([to, label, , Icon]) => (
-            <NavLink key={to} to={to}
-              className={({ isActive }) =>
-                `nav-link app-navlink tp-control mb-1 flex items-center gap-3 rounded-[var(--r-control)] px-4 py-3 ${isActive ? 'text-white' : 'text-[color:var(--ink-300)] hover:text-white'}`
-              }
-              style={({ isActive }) => isActive
-                ? { background: 'var(--brand-navy-700)', borderLeft: '3px solid var(--brand-gold-500)', paddingLeft: '13px' }
-                : { borderLeft: '3px solid transparent' }
-              }>
-              <Icon size={17} />
-              {label}
-            </NavLink>
-          ))}
+          {NAV.map(([to, label, , Icon]) => {
+            const isActive = activeTab === to;
+            return (
+              // Returning to a tab resumes it where it was left, not at its root.
+              <NavLink key={to} to={isActive ? to : lastLocation(to)}
+                className={`nav-link app-navlink tp-control mb-1 flex items-center gap-3 rounded-[var(--r-control)] px-4 py-3 ${isActive ? 'text-white' : 'text-[color:var(--ink-300)] hover:text-white'}`}
+                style={isActive
+                  ? { background: 'var(--brand-navy-700)', borderLeft: '3px solid var(--brand-gold-500)', paddingLeft: '13px' }
+                  : { borderLeft: '3px solid transparent' }
+                }>
+                <Icon size={17} />
+                {label}
+              </NavLink>
+            );
+          })}
           {isAdmin && pendingFeeds > 0 && (
             <NavLink to="/admin/campus-feeds"
               className={({ isActive }) =>
@@ -148,16 +159,20 @@ export default function AppShell() {
           paddingLeft: 'env(safe-area-inset-left)',
           paddingRight: 'env(safe-area-inset-right)',
         }}>
-        {NAV.map(([to, , shortLabel, Icon]) => (
-          <NavLink key={to} to={to}
-            className={({ isActive }) =>
-              `nav-link tp-meta flex flex-1 flex-col items-center justify-center gap-1 py-2.5 font-semibold ${isActive ? '' : 'text-[color:var(--ink-400)]'}`
-            }
-            style={({ isActive }) => ({ minHeight: '56px', ...(isActive ? { color: 'var(--brand-navy-900)' } : {}) })}>
-            <Icon size={20} />
-            {shortLabel}
-          </NavLink>
-        ))}
+        {NAV.map(([to, , shortLabel, Icon]) => {
+          const isActive = activeTab === to;
+          return (
+            // Tapping a tab resumes its own stack: the screen it was left on,
+            // at the offset it was left at. Tapping the tab you are already in
+            // returns to its root, the way a native tab bar does.
+            <NavLink key={to} to={isActive ? to : lastLocation(to)}
+              className={`nav-link tp-meta flex flex-1 flex-col items-center justify-center gap-1 py-2.5 font-semibold ${isActive ? '' : 'text-[color:var(--ink-400)]'}`}
+              style={{ minHeight: '56px', ...(isActive ? { color: 'var(--brand-navy-900)' } : {}) }}>
+              <Icon size={20} />
+              {shortLabel}
+            </NavLink>
+          );
+        })}
       </nav>
     </div>
     </MotionConfig>

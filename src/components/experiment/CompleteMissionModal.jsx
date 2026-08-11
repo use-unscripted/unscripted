@@ -7,9 +7,13 @@
 import { useState, useRef } from 'react';
 import { X, Upload, Loader2, AlertTriangle } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
-import { EVIDENCE_TYPES, completeMissionWithProof } from '@/lib/mission-completion';
+import { EVIDENCE_TYPES } from '@/lib/mission-completion';
+import { useCompleteMission } from '@/hooks/useMissions';
 
 export default function CompleteMissionModal({ mission, experiment, path, onClose, onCompleted }) {
+  // The mission list reads as completed as soon as this is saved, and rolls
+  // back on its own if the write fails.
+  const completeMission = useCompleteMission(experiment?.id);
   const [type, setType] = useState(null);
   const [title, setTitle] = useState(mission.title || '');
   const [description, setDescription] = useState('');
@@ -40,7 +44,7 @@ export default function CompleteMissionModal({ mission, experiment, path, onClos
     setError(null);
     setSaving(true);
     try {
-      const result = await completeMissionWithProof({
+      const result = await completeMission.mutateAsync({
         mission,
         experiment,
         path,
