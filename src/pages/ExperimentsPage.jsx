@@ -250,7 +250,7 @@ function ExperimentCard({ exp, measurement, onStatusChange, onExpand, expanded, 
             <span className="flex items-center gap-1"><Target size={12} /> {missions.length} mission{missions.length > 1 ? 's' : ''}</span>
           )}
           {!expanded && guides && guides.length > 0 && (
-            <span className="flex items-center gap-1"><Wand2 size={12} /> {guides.length} guide{guides.length > 1 ? 's' : ''}</span>
+            <span className="flex items-center gap-1"><Wand2 size={12} /> {guides.length} experiment plan{guides.length > 1 ? 's' : ''}</span>
           )}
           {!isPaused && (
             <button onClick={onFindPeople}
@@ -337,14 +337,14 @@ function ExperimentCard({ exp, measurement, onStatusChange, onExpand, expanded, 
           <div className="border-t border-[color:var(--ink-200)] pt-4">
             <div className="flex items-center justify-between mb-2">
               <p className="tp-eyebrow text-[color:var(--ink-500)] flex items-center gap-1.5">
-                <Wand2 size={12} /> Mission Guide
+                <Wand2 size={12} /> Experiment
                 {activeGuide && <span className="rounded-full px-2 py-0.5 tp-meta font-bold" style={{ background: 'var(--success-50)', color: 'var(--success-700)' }}>Active: v{activeGuide.version_number}</span>}
               </p>
               <button onClick={onGenerateGuide}
                 className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 tp-meta font-semibold text-white transition hover:-translate-y-px"
                 style={{ background: 'var(--brand-navy-900)', boxShadow: '0 4px 12px rgba(31,58,95,0.25)' }}>
                 <Wand2 size={11} />
-                {hasGuides ? 'Generate Another Mission Guide' : 'Generate Mission Guide'}
+                {hasGuides ? 'Generate Another Experiment' : 'Generate Experiment'}
               </button>
             </div>
             {hasGuides ? (
@@ -357,7 +357,7 @@ function ExperimentCard({ exp, measurement, onStatusChange, onExpand, expanded, 
                 onGenerateAnother={onGenerateGuide}
               />
             ) : (
-              <p className="tp-meta text-[color:var(--ink-400)] italic">No guides yet. Generate one to get step-by-step instructions.</p>
+              <p className="tp-meta text-[color:var(--ink-400)] italic">Nothing generated yet. Generate one to get step-by-step instructions.</p>
             )}
           </div>
 
@@ -434,7 +434,7 @@ function PausedSection({ experiments, missions, guides, onResumed, onDelete, onE
                       <div className="mt-2 flex flex-wrap items-center gap-3 tp-meta text-[color:var(--ink-400)]">
                         {exp.paused_at && <span className="flex items-center gap-1"><PauseCircle size={11} /> Paused {fmtDate(exp.paused_at)}</span>}
                         {totalCount(exp.id) > 0 && <span><Target size={11} className="inline mr-0.5" />{completedCount(exp.id)}/{totalCount(exp.id)} missions done</span>}
-                        {activeGuide && <span className="flex items-center gap-1"><Wand2 size={11} /> Guide v{activeGuide.version_number}</span>}
+                        {activeGuide && <span className="flex items-center gap-1"><Wand2 size={11} /> Experiment v{activeGuide.version_number}</span>}
                       </div>
                       {exp.pause_reason && <p className="mt-1 tp-meta text-[color:var(--ink-500)] italic">"{exp.pause_reason}"</p>}
                     </div>
@@ -488,7 +488,7 @@ function PausedSection({ experiments, missions, guides, onResumed, onDelete, onE
                     )}
                     {expGuides.length > 0 && (
                       <div>
-                        <p className="tp-eyebrow text-[color:var(--ink-500)] mb-1">Mission Guides ({expGuides.length})</p>
+                        <p className="tp-eyebrow text-[color:var(--ink-500)] mb-1">Experiments ({expGuides.length})</p>
                         {expGuides.map(g => (
                           <div key={g.id} className="flex items-center gap-2 tp-meta text-[color:var(--ink-700)]">
                             <Wand2 size={11} style={{ color: 'var(--brand-navy-700)' }} />
@@ -544,7 +544,7 @@ function NewExperimentModal({ onClose, onSave, paths }) {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(5,8,22,0.5)' }}>
       <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-[24px] bg-white p-6 sm:p-8">
         <h2 className="tp-section text-[color:var(--surface-dark-900)] mb-1">New Experiment</h2>
-        <p className="tp-lead text-[color:var(--ink-500)] mb-6">Define what you want to test. Open the experiment after saving to generate a Mission Guide.</p>
+        <p className="tp-lead text-[color:var(--ink-500)] mb-6">Define what you want to test. Open it after saving to generate the full experiment.</p>
         <div className="space-y-4">
           <div>
             <label className="tp-body font-semibold text-[color:var(--ink-700)] block mb-1">Choose an experiment type</label>

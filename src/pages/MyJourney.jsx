@@ -238,7 +238,7 @@ export default function MyJourney() {
       <p className="tp-meta pt-2 text-center" style={{ color: 'var(--text-muted)' }}>
         Working on something else? <Link to="/paths" className="font-semibold" style={{ color: 'var(--brand-navy-700)' }}>Compare all paths</Link>
         {' · '}
-        <Link to="/experiments" className="font-semibold" style={{ color: 'var(--brand-navy-700)' }}>All missions</Link>
+        <Link to="/experiments" className="font-semibold" style={{ color: 'var(--brand-navy-700)' }}>All experiments</Link>
         {' · '}
         <Link to="/calendar" className="font-semibold" style={{ color: 'var(--brand-navy-700)' }}>Your week</Link>
         {' · '}

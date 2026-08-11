@@ -219,10 +219,10 @@ export default function ActiveExperiment() {
           >
             <p className="tp-eyebrow" style={{ color: 'var(--brand-gold-700)' }}>Next step</p>
             <h2 className="tp-hero mt-2 flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
-              <Wand2 size={22} style={{ color: 'var(--brand-navy-700)' }} /> Get your mission guide
+              <Wand2 size={22} style={{ color: 'var(--brand-navy-700)' }} /> Build out your experiment
             </h2>
             <p className="tp-lead mt-2" style={{ color: 'var(--text-secondary)' }}>
-              Right now this experiment is a title and a goal. The guide turns it into the actual
+              Right now this experiment is a title and a goal. Building it out turns it into the actual
               moves: who to contact first, the email to send them, and what to keep as proof you
               did it.
             </p>
@@ -231,7 +231,7 @@ export default function ActiveExperiment() {
               className="ui-press tp-body mt-4 inline-flex w-full items-center justify-center gap-2 rounded-[10px] px-6 font-bold text-white sm:w-auto"
               style={{ background: 'var(--brand-navy-900)', minHeight: '48px' }}
             >
-              <Wand2 size={16} /> Generate my mission guide
+              <Wand2 size={16} /> Build my experiment
             </button>
             <p className="tp-meta mt-2" style={{ color: 'var(--text-muted)' }}>
               Takes about forty seconds. If the first one isn't right, generate another.
@@ -240,7 +240,7 @@ export default function ActiveExperiment() {
         ) : (
           <section className="rounded-[16px] bg-white p-5" style={{ border: '1px solid var(--border-light)' }}>
             <h3 className="tp-section mb-3 flex items-center gap-1.5" style={{ color: 'var(--text-primary)' }}>
-              <Wand2 size={14} style={{ color: 'var(--brand-navy-700)' }} /> Mission Guide
+              <Wand2 size={14} style={{ color: 'var(--brand-navy-700)' }} /> My Experiment
               {openGuide && (
                 <span className="tp-meta rounded-full px-2 py-0.5 font-bold" style={{ background: 'var(--success-50)', color: 'var(--success-700)' }}>
                   v{openGuide.version_number}
@@ -267,7 +267,7 @@ export default function ActiveExperiment() {
                   className="ui-press tp-body mt-3 inline-flex w-full items-center justify-center rounded-[10px] px-5 font-bold text-white sm:w-auto"
                   style={{ background: 'var(--brand-navy-900)', minHeight: '48px' }}
                 >
-                  Open my guide
+                  Open my experiment
                 </Link>
               </div>
             )}
@@ -290,7 +290,7 @@ export default function ActiveExperiment() {
                 className="tp-meta mt-3 w-full rounded-xl border border-dashed py-2.5 font-semibold transition"
                 style={{ borderColor: 'var(--border-light)', color: 'var(--text-muted)' }}
               >
-                Generate another guide
+                Generate another experiment
               </button>
             )}
           </section>
@@ -311,8 +311,8 @@ export default function ActiveExperiment() {
               <p className="tp-body font-semibold" style={{ color: 'var(--text-primary)' }}>No missions yet</p>
               <p className="tp-meta mt-1" style={{ color: 'var(--text-muted)' }}>
                 {guides.length
-                  ? 'Your guide has the steps. Add a mission here for anything you want to track separately.'
-                  : 'Start with the mission guide above, or add the first mission yourself.'}
+                  ? 'Your experiment has the steps. Add a mission here for anything you want to track separately.'
+                  : 'Start by building your experiment above, or add the first mission yourself.'}
               </p>
             </div>
           ) : (

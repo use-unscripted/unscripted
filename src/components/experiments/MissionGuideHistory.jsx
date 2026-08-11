@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Clock, CheckCircle2, ChevronDown, ChevronUp, Star, Copy, Trash2, Eye, GitCompare, Loader2, ExternalLink, Pencil, X } from 'lucide-react';
+import { CheckCircle2, ChevronDown, ChevronUp, Star, Copy, Trash2, GitCompare, Loader2, ExternalLink, Pencil, X } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { softDeletePayload } from '@/components/SoftDeleteConfirm';
 import { createGuideOnce, newIdempotencyKey } from './guideIdempotency';
@@ -18,62 +18,6 @@ function fmtDate(d) {
   return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
-// ── Inline guide preview (no modal, expands in place) ────────────────────────
-function GuideInlinePreview({ guide }) {
-  return (
-    <div className="border-t border-[color:var(--ink-200)] bg-white px-4 pt-3 pb-4 space-y-3">
-      {guide.objective && (
-        <div>
-          <p className="tp-eyebrow text-[color:var(--ink-400)] mb-0.5">Objective</p>
-          <p className="tp-body text-[color:var(--ink-700)]">{guide.objective}</p>
-        </div>
-      )}
-      {guide.steps?.length > 0 && (
-        <div>
-          <p className="tp-eyebrow text-[color:var(--ink-400)] mb-1.5">Steps ({guide.steps.length})</p>
-          <ol className="space-y-2">
-            {guide.steps.map((s, i) => (
-              <li key={i} className="tp-body flex gap-2.5">
-                <span className="tp-meta shrink-0 w-5 h-5 rounded-full flex items-center justify-center font-bold text-white mt-0.5"
-                  style={{ background: 'var(--brand-navy-900)' }}>{i + 1}</span>
-                <div>
-                  {s.title && <p className="font-semibold text-[color:var(--surface-dark-900)]">{s.title}</p>}
-                  {s.description && <p className="tp-meta text-[color:var(--ink-500)] mt-0.5">{s.description}</p>}
-                  {s.estimated_time && <p className="tp-meta text-[color:var(--ink-400)] mt-0.5 flex items-center gap-0.5"><Clock size={9} />{s.estimated_time}</p>}
-                </div>
-              </li>
-            ))}
-          </ol>
-        </div>
-      )}
-      {guide.deliverable && (
-        <div className="rounded-lg p-2.5" style={{ background: 'var(--ink-100)', border: '1px solid rgba(31,58,95,0.15)' }}>
-          <p className="tp-eyebrow mb-0.5" style={{ color: 'var(--brand-navy-700)' }}>Deliverable</p>
-          <p className="tp-body text-[color:var(--ink-700)]">{guide.deliverable}</p>
-        </div>
-      )}
-      {guide.proof_requirement && (
-        <div>
-          <p className="tp-eyebrow text-[color:var(--ink-400)] mb-0.5">Proof Required</p>
-          <p className="tp-body text-[color:var(--ink-700)]">{guide.proof_requirement}</p>
-        </div>
-      )}
-      {guide.reflection_questions?.length > 0 && (
-        <div>
-          <p className="tp-eyebrow text-[color:var(--ink-400)] mb-1">Reflection Questions</p>
-          <ul className="space-y-1">
-            {guide.reflection_questions.map((q, i) => (
-              <li key={i} className="tp-body text-[color:var(--ink-700)] flex gap-1.5">
-                <span style={{ color: 'var(--brand-navy-900)' }}>·</span><span>{q}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-    </div>
-  );
-}
-
 // ── Compare modal ─────────────────────────────────────────────────────────────
 function GuideCompareModal({ guideA, guideB, onClose }) {
   const fields = [
@@ -86,7 +30,7 @@ function GuideCompareModal({ guideA, guideB, onClose }) {
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" style={{ background: 'rgba(5,8,22,0.5)' }}>
       <div className="w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-[24px] bg-white p-6 sm:p-8">
         <div className="flex items-center justify-between mb-5">
-          <h2 className="tp-section text-[color:var(--surface-dark-900)]">Compare Guides</h2>
+          <h2 className="tp-section text-[color:var(--surface-dark-900)]">Compare Experiments</h2>
           <button onClick={onClose}><X size={20} className="text-[color:var(--ink-500)]" /></button>
         </div>
         <div className="grid grid-cols-2 gap-4 mb-4">
@@ -197,7 +141,6 @@ function RenameRow({ guide, onRenamed, onCancel }) {
 export default function MissionGuideHistory({ guides = [], onSetActive, onDeleted, onDuplicated, onRenamed, onGenerateAnother }) {
   const navigate = useNavigate();
   const [openId, setOpenId] = useState(null);    // expanded actions row
-  const [previewId, setPreviewId] = useState(null); // inline preview
   const [renameId, setRenameId] = useState(null);
   const [compareIds, setCompareIds] = useState([]);
   const [showCompare, setShowCompare] = useState(false);
@@ -280,7 +223,7 @@ export default function MissionGuideHistory({ guides = [], onSetActive, onDelete
       {compareIds.length > 0 && (
         <div className="tp-meta flex items-center gap-3 rounded-xl bg-blue-50 border border-blue-100 px-4 py-2.5">
           <span className="text-blue-700 font-semibold">
-            {compareIds.length === 1 ? 'Select one more guide to compare' : 'Ready to compare'}
+            {compareIds.length === 1 ? 'Select one more experiment to compare' : 'Ready to compare'}
           </span>
           {compareIds.length === 2 && (
             <button onClick={() => setShowCompare(true)}
@@ -298,7 +241,6 @@ export default function MissionGuideHistory({ guides = [], onSetActive, onDelete
       {sorted.map(guide => {
         const cfg = STATUS_CFG[guide.status] || STATUS_CFG.draft;
         const isOpen = openId === guide.id;
-        const isPreviewing = previewId === guide.id;
         const isRenaming = renameId === guide.id;
         const isSelected = compareIds.includes(guide.id);
 
@@ -307,9 +249,14 @@ export default function MissionGuideHistory({ guides = [], onSetActive, onDelete
             className="rounded-xl border overflow-hidden transition"
             style={{ borderColor: isSelected ? '#93C5FD' : 'var(--ink-200)', background: isSelected ? 'var(--info-50)' : 'white' }}>
 
-            {/* Summary row */}
+            {/* Summary row. The row itself opens the experiment on its own page,
+                rather than unfolding its contents inside this list. */}
             <div className="flex items-center gap-3 px-4 py-3">
-              <div className="flex-1 min-w-0">
+              <button
+                onClick={() => navigate(`/guide?id=${guide.id}`)}
+                className="flex-1 min-w-0 text-left"
+                title="Open this experiment"
+              >
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="tp-meta font-bold text-[color:var(--ink-400)]">v{guide.version_number}</span>
                   <span className="tp-meta rounded-full px-2 py-0.5 font-bold" style={{ background: cfg.bg, color: cfg.text }}>{cfg.label}</span>
@@ -322,24 +269,21 @@ export default function MissionGuideHistory({ guides = [], onSetActive, onDelete
                   <span>· {guide.steps?.length || 0} steps</span>
                 </div>
                 {guide.objective && <p className="tp-meta text-[color:var(--ink-500)] mt-0.5 line-clamp-1">{guide.objective}</p>}
-              </div>
+              </button>
               <div className="flex items-center gap-1 shrink-0">
                 <button
-                  onClick={() => setPreviewId(isPreviewing ? null : guide.id)}
-                  title="Preview guide inline"
-                  className="rounded-lg border border-[color:var(--ink-200)] p-1.5 hover:bg-[color:var(--ink-50)] transition"
+                  onClick={() => navigate(`/guide?id=${guide.id}`)}
+                  className="tp-meta flex items-center gap-1.5 rounded-lg border border-[color:var(--ink-200)] px-3 py-1.5 font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)] transition"
                 >
-                  <Eye size={13} className={isPreviewing ? 'text-[color:var(--brand-navy-900)]' : 'text-[color:var(--ink-400)]'} />
+                  <ExternalLink size={12} /> Open
                 </button>
                 <button onClick={() => setOpenId(isOpen ? null : guide.id)}
+                  title="Options"
                   className="rounded-lg border border-[color:var(--ink-200)] p-1.5 hover:bg-[color:var(--ink-50)]">
                   {isOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                 </button>
               </div>
             </div>
-
-            {/* Inline preview */}
-            {isPreviewing && <GuideInlinePreview guide={guide} />}
 
             {/* Rename row */}
             {isRenaming && (
@@ -353,20 +297,11 @@ export default function MissionGuideHistory({ guides = [], onSetActive, onDelete
             {/* Actions row */}
             {isOpen && (
               <div className="border-t border-[color:var(--ink-200)] bg-[color:var(--ink-50)] px-4 py-3 flex flex-wrap gap-2">
-                {/* Open Guide: navigates to exact record by ID */}
+                {/* Open: navigates to exact record by ID */}
                 <button
                   onClick={() => navigate(`/guide?id=${guide.id}`)}
                   className="tp-meta flex items-center gap-1.5 rounded-lg border border-[color:var(--ink-200)] px-3 py-2 font-semibold text-[color:var(--ink-700)] hover:bg-white transition">
-                  <ExternalLink size={12} /> Open Guide
-                </button>
-
-                <button
-                  onClick={() => setPreviewId(isPreviewing ? null : guide.id)}
-                  className="tp-meta flex items-center gap-1.5 rounded-lg border px-3 py-2 font-semibold transition"
-                  style={isPreviewing
-                    ? { borderColor: 'var(--brand-navy-900)', background: 'var(--ink-100)', color: 'var(--brand-navy-900)' }
-                    : { borderColor: 'var(--ink-200)', background: 'white', color: 'var(--ink-700)' }}>
-                  <Eye size={12} /> {isPreviewing ? 'Hide Preview' : 'Preview'}
+                  <ExternalLink size={12} /> Open Experiment
                 </button>
 
                 <button onClick={() => toggleCompare(guide.id)}
@@ -412,7 +347,7 @@ export default function MissionGuideHistory({ guides = [], onSetActive, onDelete
         <button
           onClick={onGenerateAnother}
           className="tp-meta w-full rounded-xl border border-dashed border-[color:var(--ink-200)] py-3 font-semibold text-[color:var(--ink-500)] hover:border-[color:var(--brand-navy-900)] hover:text-[color:var(--brand-navy-900)] transition mt-1">
-          + Generate Another Mission Guide
+          + Generate Another Experiment
         </button>
       )}
     </div>

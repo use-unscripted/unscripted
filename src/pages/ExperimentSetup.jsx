@@ -147,7 +147,7 @@ function getExperimentOptions(pathName) {
 
 // The rail. "What to Test" is first because the uncertainty a student picks is
 // what every design that follows is built to answer.
-const STEPS = ['What to Test', 'Select Experiment', 'Confirm Details', 'Generate Guide', 'Mission Created'];
+const STEPS = ['What to Test', 'Select Experiment', 'Confirm Details', 'Build Experiment', 'Experiment Created'];
 
 // ─── Step 1: Path context + experiment picker ────────────────────────────────
 function StepPick({ rec, options, selected, onSelect, onCustom, onNext, designing, focus, onChangeFocus }) {
@@ -247,7 +247,7 @@ function StepPick({ rec, options, selected, onSelect, onCustom, onNext, designin
       <button onClick={onNext} disabled={selected === null}
         className="tp-body w-full flex items-center justify-center gap-2 rounded-[12px] py-3.5 font-semibold text-white transition hover:-translate-y-px disabled:opacity-40"
         style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}>
-        Confirm Experiment & Generate Mission Guide <ArrowRight size={16} />
+        Confirm & Build My Experiment <ArrowRight size={16} />
       </button>
     </div>
   );
@@ -290,7 +290,7 @@ function StepCustom({ pathName, data, onChange, onBack, onNext }) {
       <button onClick={onNext} disabled={!data.title || !data.objective}
         className="tp-body w-full flex items-center justify-center gap-2 rounded-[12px] py-3.5 font-semibold text-white transition hover:-translate-y-px disabled:opacity-40"
         style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}>
-        Generate Mission Guide <ArrowRight size={16} />
+        Build My Experiment <ArrowRight size={16} />
       </button>
     </div>
   );
@@ -302,10 +302,10 @@ function StepGenerating({ experiment, missionGuide, error }) {
     return (
       <div className="rounded-[20px] border border-red-200 bg-red-50 p-6 text-center space-y-3">
         <AlertCircle className="mx-auto text-red-500" size={32} />
-        <p className="font-semibold text-red-700">Mission Guide generation failed</p>
+        <p className="font-semibold text-red-700">We could not build your experiment</p>
         <p className="tp-body text-red-600">{error}</p>
-        <p className="tp-meta text-red-500">Your experiment draft was saved. Return to Missions to retry.</p>
-        <Link to="/experiments" className="tp-body inline-block mt-2 font-semibold" style={{ color: 'var(--brand-navy-900)' }}>Go to Missions →</Link>
+        <p className="tp-meta text-red-500">Your experiment draft was saved. Return to My Experiments to retry.</p>
+        <Link to="/experiments" className="tp-body inline-block mt-2 font-semibold" style={{ color: 'var(--brand-navy-900)' }}>Go to My Experiments →</Link>
       </div>
     );
   }
@@ -314,8 +314,8 @@ function StepGenerating({ experiment, missionGuide, error }) {
     return (
       <div className="py-16 text-center space-y-4">
         <Loader2 className="mx-auto animate-spin" size={36} style={{ color: 'var(--brand-navy-900)' }} />
-        <p className="tp-section text-[color:var(--surface-dark-900)]">Generating your Mission Guide...</p>
-        <p className="tp-body text-[color:var(--ink-500)]">Building a step-by-step guide specific to {experiment?.path_name} and your selected experiment.</p>
+        <p className="tp-section text-[color:var(--surface-dark-900)]">Building your experiment...</p>
+        <p className="tp-body text-[color:var(--ink-500)]">Writing the step-by-step experiment specific to {experiment?.path_name} and your selected experiment.</p>
       </div>
     );
   }
@@ -342,7 +342,7 @@ function StepSuccess({ experiment, missionGuide, onViewGuide }) {
 
       <div className="rounded-[20px] text-center p-8 space-y-3" style={{ background: 'var(--success-50)', border: '1px solid #86EFAC' }}>
         <CheckCircle className="mx-auto text-green-600" size={40} />
-        <h2 className="tp-page text-[color:var(--surface-dark-900)]">Mission Created</h2>
+        <h2 className="tp-page text-[color:var(--surface-dark-900)]">Experiment Created</h2>
         <div className="space-y-1">
           <p className="tp-body text-[color:var(--ink-700)]"><span className="font-semibold">You are testing:</span> {experiment.path_name}</p>
           <p className="tp-body text-[color:var(--ink-700)]"><span className="font-semibold">Your experiment:</span> {experiment.title}</p>
@@ -356,7 +356,7 @@ function StepSuccess({ experiment, missionGuide, onViewGuide }) {
 
       {missionGuide?.mission_steps?.length > 0 && (
         <div className="rounded-[16px] border border-[color:var(--ink-200)] bg-white p-5">
-          <p className="tp-eyebrow text-[color:var(--ink-500)] mb-3">Mission Guide Preview</p>
+          <p className="tp-eyebrow text-[color:var(--ink-500)] mb-3">Experiment Preview</p>
           <ol className="space-y-2">
             {missionGuide.mission_steps.slice(0, 5).map((s, i) => (
               <li key={i} className="tp-body flex gap-3 text-[color:var(--ink-700)]">
@@ -365,7 +365,7 @@ function StepSuccess({ experiment, missionGuide, onViewGuide }) {
               </li>
             ))}
             {missionGuide.mission_steps.length > 5 && (
-              <li className="tp-meta text-[color:var(--ink-400)] pl-6">+ {missionGuide.mission_steps.length - 5} more steps in the full guide</li>
+              <li className="tp-meta text-[color:var(--ink-400)] pl-6">+ {missionGuide.mission_steps.length - 5} more steps in the full experiment</li>
             )}
           </ol>
         </div>
@@ -375,7 +375,7 @@ function StepSuccess({ experiment, missionGuide, onViewGuide }) {
         <button onClick={onViewGuide}
           className="tp-body rounded-[12px] py-3 font-semibold text-white"
           style={{ background: 'var(--brand-navy-900)' }}>
-          View Full Mission Guide
+          View My Full Experiment
         </button>
         <button onClick={() => setShowCal(true)}
           className="tp-body rounded-[12px] border py-3 font-semibold transition hover:bg-[color:var(--ink-50)]"
@@ -697,7 +697,7 @@ ${PLAIN_PROSE_RULES}${correction}`,
       // guide with no usable steps stays retryable instead. The model has
       // already been asked a second time with the reason in hand by this point.
       if (!guideResult.ok) {
-        setGenError('The Mission Guide came back empty both times we asked. Your experiment draft was saved. You can retry from the Missions page.');
+        setGenError('The experiment came back empty both times we asked. Your experiment draft was saved. You can retry from My Experiments.');
         await base44.entities.Experiments.update(saved.id, { status: 'planned', mission_guide_status: 'not_generated' })
           .catch(() => {});
         return;
@@ -732,7 +732,7 @@ ${PLAIN_PROSE_RULES}${correction}`,
         path_id: rec.id,
         experiment_id: saved.id,
       });
-      setGenError('Mission Guide generation failed. Your experiment draft was saved. You can retry from the Missions page.');
+      setGenError('We could not build your experiment. Your experiment draft was saved. You can retry from My Experiments.');
       await base44.entities.Experiments.update(saved.id, { status: 'planned', mission_guide_status: 'not_generated' })
         .catch(() => {});
     }
@@ -892,7 +892,7 @@ ${PLAIN_PROSE_RULES}${correction}`,
             <StepSuccess
               experiment={experiment}
               missionGuide={missionGuide}
-              onViewGuide={() => navigate('/experiments')}
+              onViewGuide={() => navigate(`/experiment?experimentId=${experiment.id}`)}
             />
           )}
         </div>

@@ -31,7 +31,7 @@ export default function GuideDetailPage() {
   const [settingActive, setSettingActive] = useState(false);
 
   useEffect(() => {
-    if (!guideId) { setError('No guide ID provided.'); setLoading(false); return; }
+    if (!guideId) { setError('No experiment was specified.'); setLoading(false); return; }
     base44.entities.MissionGuides.get(guideId)
       .then(g => {
         setGuide(g);
@@ -40,7 +40,7 @@ export default function GuideDetailPage() {
           experiment_id: g.experiment_id, mission_id: g.mission_id, path_id: g.path_id, dedupe_key: g.id,
         });
       })
-      .catch(() => { setError('Guide not found.'); setLoading(false); });
+      .catch(() => { setError('Experiment not found.'); setLoading(false); });
   }, [guideId]);
 
   // Anything onboarding already asked for is filled into the artifacts, so the
@@ -102,9 +102,9 @@ export default function GuideDetailPage() {
   if (error || !guide) {
     return (
       <div className="app-page text-center">
-        <p className="tp-lead mx-auto mb-5 text-[color:var(--ink-500)]">{error || 'Guide not found.'}</p>
+        <p className="tp-lead mx-auto mb-5 text-[color:var(--ink-500)]">{error || 'Experiment not found.'}</p>
         <button onClick={() => navigate('/experiments')} className="touch-reach tp-body font-semibold text-[var(--brand-navy-900)] underline">
-          Back to Missions
+          Back to My Experiments
         </button>
       </div>
     );
@@ -134,7 +134,7 @@ export default function GuideDetailPage() {
           <span className="tp-meta rounded-full px-2.5 py-1 font-bold" style={{ background: cfg.bg, color: cfg.text }}>{cfg.label}</span>
           {guide.is_active && (
             <span className="tp-meta flex items-center gap-1 rounded-full px-2.5 py-1 font-bold" style={{ background: 'var(--success-50)', color: 'var(--success-700)' }}>
-              <CheckCircle2 size={13} /> Active Guide
+              <CheckCircle2 size={13} /> Active Experiment
             </span>
           )}
         </div>
@@ -154,7 +154,7 @@ export default function GuideDetailPage() {
           className="tp-body mb-8 flex items-center gap-2 rounded-[10px] border border-[color:var(--ink-200)] px-5 py-3 font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)] transition disabled:opacity-60"
         >
           {settingActive ? <Loader2 size={15} className="animate-spin" /> : <Star size={15} />}
-          Set as Active Guide
+          Set as Active Experiment
         </button>
       )}
 

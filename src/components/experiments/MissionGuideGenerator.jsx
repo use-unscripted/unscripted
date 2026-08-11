@@ -292,7 +292,7 @@ export default function MissionGuideGenerator({ experiment, existingGuides = [],
       // row exists, we never saw it, and the honest thing is that the retry
       // finds it by key and adopts it rather than writing a second copy.
       console.error('[MissionGuide] save failed:', err);
-      setError("We couldn't save your guide. Nothing was lost. Choose an option above to try again.");
+      setError("We couldn't save your experiment. Nothing was lost. Choose an option above to try again.");
       setActiveDecision(null);
       setSaving(false);
     }
@@ -305,7 +305,7 @@ export default function MissionGuideGenerator({ experiment, existingGuides = [],
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(5,8,22,0.5)' }}>
         <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-[24px] bg-white p-6 sm:p-8">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="tp-section text-[color:var(--surface-dark-900)]">Guide generated</h2>
+            <h2 className="tp-section text-[color:var(--surface-dark-900)]">Experiment generated</h2>
             <button onClick={onClose}><X size={20} className="text-[color:var(--ink-500)]" /></button>
           </div>
 
@@ -337,7 +337,7 @@ export default function MissionGuideGenerator({ experiment, existingGuides = [],
           </div>
 
           <p className="tp-body font-semibold text-[color:var(--ink-700)] mb-3">
-            {hasActive ? 'You already have an active guide. What would you like to do?' : 'Set this as your active guide?'}
+            {hasActive ? 'You already have an active experiment. What would you like to do?' : 'Set this as your active experiment?'}
           </p>
 
           <div className="space-y-2 mb-5">
@@ -346,22 +346,22 @@ export default function MissionGuideGenerator({ experiment, existingGuides = [],
               disabled={saving}
               className="tp-body w-full rounded-xl border-2 px-4 py-3 font-semibold text-left transition hover:bg-[#F8ECEF] disabled:opacity-60"
               style={{ borderColor: 'var(--brand-navy-700)', color: 'var(--brand-navy-700)' }}>
-              Make this the active guide
-              {hasActive && <span className="tp-meta block font-normal text-[color:var(--warning-700)] mt-0.5">Will deactivate your current guide</span>}
+              Make this the active experiment
+              {hasActive && <span className="tp-meta block font-normal text-[color:var(--warning-700)] mt-0.5">Will deactivate your current experiment</span>}
             </button>
             <button
               onClick={() => { setActiveDecision('keep_current'); handleSave(false); }}
               disabled={saving}
               className="tp-body w-full rounded-xl border border-[color:var(--ink-200)] px-4 py-3 font-semibold text-[color:var(--ink-700)] text-left transition hover:bg-[color:var(--ink-50)] disabled:opacity-60">
-              {hasActive ? 'Keep my current active guide' : 'Save as draft'}
-              <span className="tp-meta block font-normal text-[color:var(--ink-400)] mt-0.5">New guide saved as draft</span>
+              {hasActive ? 'Keep my current active experiment' : 'Save as draft'}
+              <span className="tp-meta block font-normal text-[color:var(--ink-400)] mt-0.5">New experiment saved as draft</span>
             </button>
             {hasActive && (
               <button
                 onClick={() => { setActiveDecision('compare'); handleSave(false); }}
                 disabled={saving}
                 className="tp-body w-full rounded-xl border border-[color:var(--ink-200)] px-4 py-3 font-semibold text-[color:var(--ink-500)] text-left transition hover:bg-[color:var(--ink-50)] disabled:opacity-60">
-                Compare guides first
+                Compare experiments first
                 <span className="tp-meta block font-normal text-[color:var(--ink-400)] mt-0.5">Opens comparison view after saving</span>
               </button>
             )}
@@ -369,7 +369,7 @@ export default function MissionGuideGenerator({ experiment, existingGuides = [],
 
           {saving && (
             <div className="tp-body flex items-center justify-center gap-2 text-[color:var(--ink-500)]">
-              <Loader2 size={15} className="animate-spin" /> Saving guide...
+              <Loader2 size={15} className="animate-spin" /> Saving experiment...
             </div>
           )}
           {error && <p className="tp-body text-red-600 mt-2">{error}</p>}
@@ -394,7 +394,7 @@ export default function MissionGuideGenerator({ experiment, existingGuides = [],
           </div>
 
           <h2 className="tp-section mt-5 text-[color:var(--surface-dark-900)]">
-            {attempt > 0 ? 'Rewriting a section that came back short' : 'Writing your Mission Guide'}
+            {attempt > 0 ? 'Rewriting a section that came back short' : 'Writing your experiment'}
           </h2>
           <p className="tp-body mx-auto mt-2 max-w-sm text-[color:var(--ink-500)]">
             {experiment.title}
@@ -412,7 +412,7 @@ export default function MissionGuideGenerator({ experiment, existingGuides = [],
           <p className="tp-meta mt-5 text-[color:var(--ink-400)]">
             {attempt > 0
               ? 'This one needs a second pass, so it will take about another forty seconds.'
-              : 'This usually takes about forty seconds. It writes the whole guide in one go: steps, the email, and what counts as proof.'}
+              : 'This usually takes about forty seconds. It writes the whole experiment in one go: steps, the email, and what counts as proof.'}
           </p>
 
           {/* A way out. Forty seconds with no exit is a trap, and the previous
@@ -445,14 +445,14 @@ export default function MissionGuideGenerator({ experiment, existingGuides = [],
       <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-[24px] bg-white p-6 sm:p-8">
         <div className="flex items-center justify-between mb-1">
           <h2 className="tp-section text-[color:var(--surface-dark-900)]">
-            {hasExisting ? 'Generate Another Mission Guide' : 'Generate Mission Guide'}
+            {hasExisting ? 'Generate Another Experiment' : 'Generate Experiment'}
           </h2>
           <button onClick={onClose} disabled={generating}><X size={20} className="text-[color:var(--ink-500)]" /></button>
         </div>
         <p className="tp-lead text-[color:var(--ink-500)] mb-5">
           {hasExisting
-            ? `Version ${nextVersion} will be created. Previous guides are preserved.`
-            : 'AI will generate a step-by-step guide for this experiment.'}
+            ? `Version ${nextVersion} will be created. Previous experiments are preserved.`
+            : 'AI will generate the step-by-step experiment for you to run.'}
         </p>
 
         {/* Experiment context */}
@@ -542,7 +542,7 @@ export default function MissionGuideGenerator({ experiment, existingGuides = [],
             ) : (
               <><Wand2 size={15} /> {waitingOnCalendar
                 ? 'Generate without an event'
-                : hasExisting ? 'Generate Another Mission Guide' : 'Generate Mission Guide'}</>
+                : hasExisting ? 'Generate Another Experiment' : 'Generate Experiment'}</>
             )}
           </button>
         </div>
