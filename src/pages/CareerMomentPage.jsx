@@ -17,7 +17,7 @@ import MomentReaction from '@/components/moments/MomentReaction';
 import MomentLearned from '@/components/moments/MomentLearned';
 import {
   loadMomentTarget, generateCareerMoment, saveCareerMoment, feedbackFor, completeCareerMoment,
-  loadMeasurementPlan,
+  loadMeasurementPlan, nextQuickTest,
 } from '@/lib/career-moment';
 import { createTracker, recordMomentSignals } from '@/lib/behavioral-signals';
 
@@ -48,6 +48,11 @@ export default function CareerMomentPage() {
 
   useEffect(() => {
     let alive = true;
+    // A second Moment is a fresh Moment: everything the last one held is cleared
+    // before the next one is built.
+    setRow(null); setStage('hook'); setSelected(''); setRationale('');
+    setPreAnswers({}); setAnswers({}); setChanges([]); setError(null);
+    finishedRef.current = false;
     (async () => {
       const { path, focus } = await loadMomentTarget({ recId, variable }).catch(() => ({ path: null }));
       if (!alive) return;
@@ -93,6 +98,13 @@ export default function CareerMomentPage() {
     if (!result) { setError('Your answers could not be saved. Nothing was lost — try Save again.'); return; }
     setChanges(result.changes || []);
     setStage('done');
+  };
+
+  // The next test, chosen by the recommendation engine from the evidence that
+  // now includes this Moment — never a reload of the one just completed.
+  const goAnother = async () => {
+    const to = await nextQuickTest({ excludeVariable: row?.unresolved_question_id }).catch(() => '/moment');
+    navigate(to, { replace: true });
   };
 
   if (error) {
@@ -182,7 +194,7 @@ export default function CareerMomentPage() {
             />
           )}
           {stage === 'done' && (
-            <MomentLearned moment={row} changes={changes} onAnother={() => navigate(0)} />
+            <MomentLearned moment={row} changes={changes} onAnother={goAnother} />
           )}
         </div>
       </div>

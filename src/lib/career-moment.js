@@ -16,6 +16,7 @@ import { toText, toTextList } from '@/lib/ai-validation';
 import { generateValidated } from '@/lib/ai-generate';
 import { deriveHypothesis } from '@/lib/career-hypothesis';
 import { loadRecalculationContext, recalculateAfterReflection } from '@/lib/hypothesis-recalculation';
+import nextBestExperiment, { evidenceState } from '@/lib/next-best-experiment';
 import { savePreMeasurement, savePostMeasurement, loadMeasurements } from '@/lib/experiment-measurement';
 import { planMeasurements } from '@/lib/measurement-rotation';
 import { recordMomentSignals } from '@/lib/behavioral-signals';
@@ -172,12 +173,36 @@ export async function loadMomentTarget({ recId, variable } = {}) {
 
   const h = deriveHypothesis(path, ctx);
   const variables = h.uncertainty?.variables || [];
-  const unknownIds = new Set((h.uncertainty?.top_unknowns || []).map(v => v.variable));
-  const focus = variables.find(v => v.variable === variable)
-    || variables.find(v => unknownIds.has(v.variable))
-    || variables[0]
-    || null;
-  return { path, focus };
+  const explicit = variables.find(v => v.variable === variable);
+  if (explicit) return { path, focus: explicit };
+
+  // No dimension was named, so pick the one we know least about rather than
+  // whatever sits at the top of the map. Without this, two Moments in a row on
+  // the same career test the same characteristic twice.
+  const byId = new Map((ctx.signals || []).map(s => [s.id, s]));
+  const open = variables
+    .filter(v => v.relevance !== 'low')
+    .map(v => ({ v, state: evidenceState(byId.get(v.variable)) }))
+    .filter(x => !x.state.settled || x.state.contradicted)
+    .sort((a, b) => a.state.rated - b.state.rated);
+
+  return { path, focus: open[0]?.v || variables[0] || null };
+}
+
+/**
+ * Where "recommended next test" goes after a Moment. This is the same Next Best
+ * Experiment engine the dashboard uses, re-run against the evidence the Moment
+ * just produced, so the dimension just tested is not handed straight back.
+ */
+export async function nextQuickTest({ excludeVariable } = {}) {
+  const ctx = await loadRecalculationContext();
+  const rec = nextBestExperiment(ctx);
+  if (!rec) return '/moment';
+  if (excludeVariable && rec.candidate?.variable === excludeVariable) {
+    const alt = (rec.alternatives || [])[0];
+    if (alt) return `/moment?recId=${alt.attached.path_id}&variable=${encodeURIComponent(alt.variable)}`;
+  }
+  return rec.quick_to || '/moment';
 }
 
 /**

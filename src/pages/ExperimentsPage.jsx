@@ -728,8 +728,11 @@ export default function ExperimentsPage() {
   const updateStatus = async (id, status) => {
     const exp = experiments.find(e => e.id === id);
     const m = measurements[id];
-    if (exp && status === 'in_progress' && !hasPre(m)) { setPreTarget(exp); return; }
-    if (exp && status === 'completed' && !hasPost(m)) {
+    // Quick Tests carry their own short measurement, so the long check-ins are
+    // only ever asked of Deep Dives.
+    const longForm = exp ? depthOf(exp) === 'deep_dive' : false;
+    if (exp && longForm && status === 'in_progress' && !hasPre(m)) { setPreTarget(exp); return; }
+    if (exp && longForm && status === 'completed' && !hasPost(m)) {
       await applyStatus(id, status);
       setPostTarget(exp);
       return;

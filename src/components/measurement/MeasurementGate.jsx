@@ -3,6 +3,7 @@ import { Gauge, Loader2 } from 'lucide-react';
 import PreExperimentCheckIn from '@/components/measurement/PreExperimentCheckIn';
 import PostExperimentCheckIn from '@/components/measurement/PostExperimentCheckIn';
 import { evaluateExperimentWork } from '@/lib/experiment-evaluation';
+import { isQuickTest } from '@/lib/experiment-depth';
 
 /**
  * The measurement step, wherever the loop actually passes through.
@@ -48,6 +49,10 @@ export default function MeasurementGate({ phase, exp, measurement, onSaved, auto
   }, [done, autoOpen, exp?.id, phase]);
 
   if (done) return null;
+  // A Quick Test measures itself, with one or two rotating questions inside the
+  // Moment. Asking a five-question expectation form about a three minute task is
+  // the long survey coming back through a side door.
+  if (phase === 'pre' && isQuickTest(exp)) return null;
 
   const copy = phase === 'pre'
     ? {

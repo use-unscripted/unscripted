@@ -18,6 +18,15 @@
  */
 import { evidenceState } from '@/lib/next-best-experiment';
 import { depthOf } from '@/lib/experiment-depth';
+import { WORK_VARIABLES } from '@/lib/uncertainty-model';
+
+/**
+ * Only characteristics the uncertainty model actually knows about count as
+ * career dimensions. A generated test may tag itself with its own wording, and
+ * that wording is kept as evidence but is not allowed to invent a dimension.
+ */
+const KNOWN_DIMENSIONS = new Set(WORK_VARIABLES.map(v => v.id));
+const isDimension = (signal) => KNOWN_DIMENSIONS.has(signal?.id);
 
 /** How much evidence a characteristic needs before we call it tested. */
 export const TESTED_OBSERVATIONS = 2;
@@ -124,6 +133,7 @@ export function crossCareerPatterns({ signals = [], minCharacteristics = 2, minC
   const careers = new Set();
 
   signals.forEach(s => {
+    if (!isDimension(s)) return;
     const state = evidenceState(s);
     if (state.rated < TESTED_OBSERVATIONS || state.contradicted || state.direction !== 'positive') return;
     const names = new Set((s.experiments || []).map(e => e.career_name || e.path_name).filter(Boolean));
@@ -156,7 +166,7 @@ export function weeklyEvidence({ experiments = [], measurements = {}, signals = 
 
   const dimensions = new Set();
   signals.forEach(s => {
-    if ((s.sources || []).some(src => withinDays(src.date, days))) dimensions.add(s.id);
+    if (isDimension(s) && (s.sources || []).some(src => withinDays(src.date, days))) dimensions.add(s.id);
   });
 
   const moreConfident = Object.values(recalculations || {})
