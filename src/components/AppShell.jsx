@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Outlet, NavLink } from 'react-router-dom';
-import { Compass, CalendarDays, FolderOpen, FileText, Settings, LogOut, BarChart3, Inbox } from 'lucide-react';
+import { Compass, CalendarDays, FolderOpen, FileText, Settings, LogOut, Inbox } from 'lucide-react';
 import { MotionConfig } from 'framer-motion';
 import { base44 } from '@/api/base44Client';
 import RouteTransition from '@/components/RouteTransition';
@@ -39,7 +39,7 @@ const NAV = [
 ];
 
 export default function AppShell() {
-  // Pilot reporting is an admin destination, so the link only exists for admins.
+  // Admin-only nav (the campus feed queue below) is hidden from students.
   const [isAdmin, setIsAdmin] = useState(false);
   useEffect(() => { loadPilotAccess().then(a => setIsAdmin(!!a.isAdmin)).catch(() => setIsAdmin(false)); }, []);
 
@@ -96,19 +96,6 @@ export default function AppShell() {
               {label}
             </NavLink>
           ))}
-          {isAdmin && (
-            <NavLink to="/pilot"
-              className={({ isActive }) =>
-                `nav-link mb-1 flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold ${isActive ? 'text-white' : 'text-[color:var(--ink-300)] hover:text-white'}`
-              }
-              style={({ isActive }) => isActive
-                ? { background: 'var(--brand-navy-700)', borderLeft: '3px solid var(--brand-gold-500)', paddingLeft: '13px' }
-                : { borderLeft: '3px solid transparent' }
-              }>
-              <BarChart3 size={17} />
-              Pilot report
-            </NavLink>
-          )}
           {isAdmin && pendingFeeds > 0 && (
             <NavLink to="/admin/campus-feeds"
               className={({ isActive }) =>

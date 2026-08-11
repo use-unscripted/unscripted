@@ -57,7 +57,6 @@ import GoalsPage from '@/pages/GoalsPage';
 import ResumeBuilder from '@/pages/ResumeBuilder';
 import RecentlyDeleted from '@/pages/RecentlyDeleted';
 import GuideDetailPage from '@/pages/GuideDetailPage';
-import PilotDashboard from '@/pages/PilotDashboard';
 import AnswerNudge from '@/pages/AnswerNudge';
 import AdminCampusFeeds from '@/pages/AdminCampusFeeds';
 import AdminAiFailures from '@/pages/AdminAiFailures';
@@ -145,8 +144,6 @@ const AuthenticatedApp = () => {
           <Route path="/resume" element={<ResumeBuilder />} />
           <Route path="/recently-deleted" element={<RecentlyDeleted />} />
           <Route path="/guide" element={<GuideDetailPage />} />
-          {/* Admin-only aggregate pilot reporting; the page itself re-checks the role. */}
-          <Route path="/pilot" element={<PilotDashboard />} />
           {/* Team-only. The page checks the role, and so does the function behind it. */}
           <Route path="/admin/campus-feeds" element={<AdminCampusFeeds />} />
           {/* Team-only. The page checks the role, and so does the entity's RLS. */}
