@@ -69,14 +69,17 @@
 /* Horizontal padding is 24px at every width, the same as the landing page's
    px-6 container, so the left edge of a heading does not move when a student
    crosses from the marketing page into the product. */
+/* The top padding carries env(safe-area-inset-top) so that on a notched iPhone
+   the page title and the back arrow clear the status bar instead of sliding
+   under it. The inset is 0 in a browser, so desktop and Android are unchanged. */
 .app-page {
   width: 100%;
   max-width: var(--app-measure);
   margin-inline: auto;
-  padding: 3rem 1.5rem 6rem;
+  padding: calc(3rem + env(safe-area-inset-top)) 1.5rem 6rem;
 }
 @media (min-width: 640px) {
-  .app-page { padding: 4rem 1.5rem 8rem; }
+  .app-page { padding: calc(4rem + env(safe-area-inset-top)) 1.5rem 8rem; }
 }
 
 /* Section rhythm. One value between major sections, bigger than the spacing

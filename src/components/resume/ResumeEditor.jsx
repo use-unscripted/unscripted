@@ -8,6 +8,15 @@ import {
   newEntry, newEducationCF, newCert, newAward, newResearch,
   MONTH_OPTIONS, CF_SKILL_GROUP_LABELS, CF_SKILL_GROUP_IDS,
 } from './resumeTemplates';
+import FieldSelect from '@/components/ui/FieldSelect';
+
+// The editor's dropdowns are the app's control now rather than the platform's,
+// so a month is picked the same way on a phone and on a laptop.
+const selectCls = 'w-full rounded-lg border border-[color:var(--ink-200)] bg-white px-2.5 py-1.5 md:text-[13px]';
+const monthOpts = (emptyLabel) => [
+  { value: '', label: emptyLabel },
+  ...MONTH_OPTIONS.map(m => ({ value: m.val, label: m.label })),
+];
 
 // ── AI Bullet Helper ─────────────────────────────────────────────────────────
 function BulletAIPopover({ bullet, onApply, onClose }) {
@@ -301,11 +310,9 @@ function EducationCFEditor({ entries, onChange }) {
           <div className="grid grid-cols-2 gap-2">
             <div>
               <label className="block tp-meta font-semibold text-[color:var(--ink-500)] mb-1">Expected Grad Month *</label>
-              <select value={e.gradMonth || ''} onChange={ev => set('gradMonth', ev.target.value)}
-                className="w-full rounded-lg border border-[color:var(--ink-200)] px-2 py-1.5 text-base md:text-[13px] outline-none focus:border-[color:var(--brand-navy-900)] bg-white">
-                <option value="">Month</option>
-                {MONTH_OPTIONS.map(m => <option key={m.val} value={m.val}>{m.label}</option>)}
-              </select>
+              <FieldSelect value={e.gradMonth || ''} onChange={v => set('gradMonth', v)}
+                ariaLabel="Expected graduation month" placeholder="Month"
+                className={selectCls} options={monthOpts('Month')} />
             </div>
             <div>
               <label className="block tp-meta font-semibold text-[color:var(--ink-500)] mb-1">Expected Grad Year *</label>
@@ -416,13 +423,10 @@ function EntryEditor({ entry, onChange, onRemove, onDuplicate, isActivity = fals
             {!isActivity && (
               <div>
                 <label className="block tp-meta font-semibold text-[color:var(--ink-500)] mb-1">Arrangement</label>
-                <select value={entry.arrangement || ''} onChange={e => set('arrangement', e.target.value)}
-                  className="w-full rounded-lg border border-[color:var(--ink-200)] px-2.5 py-1.5 text-base md:text-[13px] outline-none focus:border-[color:var(--brand-navy-900)] bg-white">
-                  <option value="">Select</option>
-                  <option value="On-site">On-site</option>
-                  <option value="Hybrid">Hybrid</option>
-                  <option value="Remote">Remote</option>
-                </select>
+                <FieldSelect value={entry.arrangement || ''} onChange={v => set('arrangement', v)}
+                  ariaLabel="Work arrangement" placeholder="Select" className={selectCls}
+                  options={[{ value: '', label: 'Select' }, { value: 'On-site', label: 'On-site' },
+                    { value: 'Hybrid', label: 'Hybrid' }, { value: 'Remote', label: 'Remote' }]} />
               </div>
             )}
             <div>
@@ -536,11 +540,9 @@ function CertificationsEditor({ entries, onChange }) {
               <div className="grid grid-cols-2 gap-2">
                 <div>
                   <label className="block tp-meta font-semibold text-[color:var(--ink-500)] mb-1">Month Earned</label>
-                  <select value={c.month || ''} onChange={e => set('month', e.target.value)}
-                    className="w-full rounded-lg border border-[color:var(--ink-200)] px-2 py-1.5 text-base md:text-[13px] outline-none bg-white">
-                    <option value="">Month</option>
-                    {MONTH_OPTIONS.map(m => <option key={m.val} value={m.val}>{m.label}</option>)}
-                  </select>
+                  <FieldSelect value={c.month || ''} onChange={v => set('month', v)}
+                    ariaLabel="Month earned" placeholder="Month"
+                    className={selectCls} options={monthOpts('Month')} />
                 </div>
                 <div>
                   <label className="block tp-meta font-semibold text-[color:var(--ink-500)] mb-1">Year Earned</label>
@@ -615,11 +617,9 @@ function AwardsEditor({ entries, educationHonors = '', onChange }) {
               <div className="grid grid-cols-2 gap-2">
                 <div>
                   <label className="block tp-meta font-semibold text-[color:var(--ink-500)] mb-1">Month</label>
-                  <select value={a.month || ''} onChange={e => set('month', e.target.value)}
-                    className="w-full rounded-lg border border-[color:var(--ink-200)] px-2 py-1.5 text-base md:text-[13px] outline-none bg-white">
-                    <option value="">Month</option>
-                    {MONTH_OPTIONS.map(m => <option key={m.val} value={m.val}>{m.label}</option>)}
-                  </select>
+                  <FieldSelect value={a.month || ''} onChange={v => set('month', v)}
+                    ariaLabel="Award month" placeholder="Month"
+                    className={selectCls} options={monthOpts('Month')} />
                 </div>
                 <div>
                   <label className="block tp-meta font-semibold text-[color:var(--ink-500)] mb-1">Year</label>
@@ -699,11 +699,10 @@ function ResearchEntryEditor({ entry: r, onUpdate, onRemove }) {
             <div>
               <label className="block tp-meta font-semibold text-[color:var(--ink-500)] mb-1">Start (Month/Year)</label>
               <div className="flex gap-1">
-                <select value={r.startMonth || ''} onChange={e => set('startMonth', e.target.value)}
-                  className="min-w-[3.5rem] flex-1 rounded-lg border border-[color:var(--ink-200)] px-1 py-1.5 text-base md:text-[13px] outline-none bg-white">
-                  <option value="">Mo</option>
-                  {MONTH_OPTIONS.map(m => <option key={m.val} value={m.val}>{m.label}</option>)}
-                </select>
+                <FieldSelect value={r.startMonth || ''} onChange={v => set('startMonth', v)}
+                  ariaLabel="Research start month" placeholder="Mo"
+                  className={`min-w-[3.5rem] flex-1 rounded-lg border border-[color:var(--ink-200)] bg-white px-1.5 py-1.5 md:text-[13px]`}
+                  options={monthOpts('Mo')} />
                 <input value={r.startYear || ''} onChange={e => set('startYear', e.target.value)} placeholder="YYYY"
                   className="min-w-0 w-16 rounded-lg border border-[color:var(--ink-200)] px-2 py-1.5 text-base md:text-[13px] outline-none" />
               </div>
@@ -711,11 +710,10 @@ function ResearchEntryEditor({ entry: r, onUpdate, onRemove }) {
             <div>
               <label className="block tp-meta font-semibold text-[color:var(--ink-500)] mb-1">End (Month/Year)</label>
               <div className="flex gap-1 items-center">
-                <select value={r.endMonth || ''} onChange={e => set('endMonth', e.target.value)} disabled={r.current}
-                  className="min-w-[3.5rem] flex-1 rounded-lg border border-[color:var(--ink-200)] px-1 py-1.5 text-base md:text-[13px] outline-none bg-white disabled:opacity-40">
-                  <option value="">Mo</option>
-                  {MONTH_OPTIONS.map(m => <option key={m.val} value={m.val}>{m.label}</option>)}
-                </select>
+                <FieldSelect value={r.endMonth || ''} onChange={v => set('endMonth', v)} disabled={r.current}
+                  ariaLabel="Research end month" placeholder="Mo"
+                  className={`min-w-[3.5rem] flex-1 rounded-lg border border-[color:var(--ink-200)] bg-white px-1.5 py-1.5 md:text-[13px] disabled:opacity-40`}
+                  options={monthOpts('Mo')} />
                 <input value={r.endYear || ''} onChange={e => set('endYear', e.target.value)} placeholder="YYYY" disabled={r.current}
                   className="min-w-0 w-16 rounded-lg border border-[color:var(--ink-200)] px-2 py-1.5 text-base md:text-[13px] outline-none disabled:opacity-40" />
                 <label className="flex items-center gap-1 tp-meta text-[color:var(--ink-500)] cursor-pointer whitespace-nowrap">

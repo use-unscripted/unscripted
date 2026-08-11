@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { SlidersHorizontal, X, Search, ChevronDown } from 'lucide-react';
 import { DEFAULT_FILTERS, typeLabel, VISIBILITY_LABELS, RESUME_STATUS } from '@/lib/evidence-library';
+import FieldSelect from '@/components/ui/FieldSelect';
 
 // w-full inside the grid below: on a phone each control takes its own cell instead
 // of pushing the page sideways.
@@ -11,6 +12,8 @@ const sel = 'w-full min-w-0 rounded-[var(--r-control)] border border-[color:var(
 export default function EvidenceFilters({ filters, setFilters, options, shown, total }) {
   const [open, setOpen] = useState(false);
   const set = (key) => (e) => setFilters((f) => ({ ...f, [key]: e.target.value }));
+  // The dropdowns hand back a value rather than an event.
+  const setValue = (key) => (value) => setFilters((f) => ({ ...f, [key]: value }));
 
   // The search box is always visible, so it never counts toward the hidden badge.
   const activeCount = Object.keys(DEFAULT_FILTERS)
@@ -57,10 +60,14 @@ export default function EvidenceFilters({ filters, setFilters, options, shown, t
         <div className="mt-2 rounded-[var(--r-surface)] border border-[color:var(--ink-200)] bg-white p-4">
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
             {drops.map(([key, allLabel, opts]) => (
-              <select key={key} value={filters[key]} onChange={set(key)} aria-label={allLabel} className={sel}>
-                <option value="all">{allLabel}</option>
-                {opts.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
-              </select>
+              <FieldSelect
+                key={key}
+                value={filters[key]}
+                onChange={setValue(key)}
+                ariaLabel={allLabel}
+                className={sel}
+                options={[{ value: 'all', label: allLabel }, ...opts.map(([value, label]) => ({ value, label }))]}
+              />
             ))}
 
           </div>

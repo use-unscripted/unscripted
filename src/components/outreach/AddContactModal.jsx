@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { X, Loader2, CheckCircle } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { linksForExperiment } from '@/lib/career-cycle';
+import FieldSelect from '@/components/ui/FieldSelect';
 import { trackPilotEvent } from '@/lib/pilot-metrics';
 
 const inputCls = 'w-full rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-2.5 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]';
@@ -243,9 +244,13 @@ export default function AddContactModal({ contact, onClose, onSaved }) {
               </div>
               <div>
                 <label className="tp-meta block mb-1.5 font-semibold text-[color:var(--ink-700)]">Contact type</label>
-                <select name="contact_type" value={data.contact_type} onChange={ch} className={inputCls}>
-                  {CONTACT_TYPES.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
-                </select>
+                <FieldSelect
+                  value={data.contact_type}
+                  onChange={(v) => setData(d => ({ ...d, contact_type: v }))}
+                  ariaLabel="Contact type"
+                  className={inputCls}
+                  options={CONTACT_TYPES.map(([v, l]) => ({ value: v, label: l }))}
+                />
               </div>
             </div>
 
@@ -281,14 +286,17 @@ export default function AddContactModal({ contact, onClose, onSaved }) {
               <label className="tp-meta block mb-1.5 font-semibold text-[color:var(--ink-700)]">Experiment <span className="text-red-500">*</span></label>
               {experiments.length === 0
                 ? <p className="tp-body rounded-[var(--r-control)] border border-[color:var(--ink-200)] px-4 py-3 text-[color:var(--ink-500)]">No experiments found. Create one first.</p>
-                : <select value={selectedExpId} onChange={e => handleExpChange(e.target.value)} className={inputCls}>
-                    <option value="">Select an experiment…</option>
-                    {experiments.map(exp => (
-                      <option key={exp.id} value={exp.id}>
-                        {exp.title}{exp.status ? ` (${EXP_STATUS_LABELS[exp.status] || exp.status})` : ''}
-                      </option>
-                    ))}
-                  </select>
+                : <FieldSelect
+                    value={selectedExpId}
+                    onChange={handleExpChange}
+                    placeholder="Select an experiment…"
+                    ariaLabel="Experiment"
+                    className={inputCls}
+                    options={experiments.map(exp => ({
+                      value: exp.id,
+                      label: `${exp.title}${exp.status ? ` (${EXP_STATUS_LABELS[exp.status] || exp.status})` : ''}`,
+                    }))}
+                  />
               }
               {errors.experiment && <p className="tp-meta mt-1.5 text-red-600">{errors.experiment}</p>}
             </div>
@@ -307,10 +315,17 @@ export default function AddContactModal({ contact, onClose, onSaved }) {
                 <label className="tp-meta block mb-1.5 font-semibold text-[color:var(--ink-700)]">Mission <span className="font-normal text-[color:var(--ink-400)]">(optional)</span></label>
                 {expMissions.length === 0
                   ? <p className="tp-body rounded-[var(--r-control)] border border-[color:var(--ink-200)] px-4 py-3 text-[color:var(--ink-400)]">No missions are currently linked to this experiment.</p>
-                  : <select value={selectedMissionId} onChange={e => setSelectedMissionId(e.target.value)} className={inputCls}>
-                      <option value="">No specific mission (overall experiment)</option>
-                      {expMissions.map(m => <option key={m.id} value={m.id}>{m.title}</option>)}
-                    </select>
+                  : <FieldSelect
+                      value={selectedMissionId}
+                      onChange={setSelectedMissionId}
+                      placeholder="No specific mission (overall experiment)"
+                      ariaLabel="Mission"
+                      className={inputCls}
+                      options={[
+                        { value: '', label: 'No specific mission (overall experiment)' },
+                        ...expMissions.map(m => ({ value: m.id, label: m.title })),
+                      ]}
+                    />
                 }
                 {errors.mission && <p className="tp-meta mt-1.5 text-red-600">{errors.mission}</p>}
               </div>
@@ -321,9 +336,13 @@ export default function AddContactModal({ contact, onClose, onSaved }) {
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
                 <label className="tp-meta block mb-1.5 font-semibold text-[color:var(--ink-700)]">Outreach status</label>
-                <select name="response_status" value={data.response_status} onChange={ch} className={inputCls}>
-                  {STATUS_OPTIONS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
-                </select>
+                <FieldSelect
+                  value={data.response_status}
+                  onChange={(v) => setData(d => ({ ...d, response_status: v }))}
+                  ariaLabel="Outreach status"
+                  className={inputCls}
+                  options={STATUS_OPTIONS.map(([v, l]) => ({ value: v, label: l }))}
+                />
               </div>
               <div>
                 <label className="tp-meta block mb-1.5 font-semibold text-[color:var(--ink-700)]">Date first contacted</label>

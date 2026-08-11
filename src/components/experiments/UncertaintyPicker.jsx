@@ -10,7 +10,8 @@
  * shown, because a student is allowed to retest something the system thinks it
  * knows.
  */
-import { HelpCircle, ArrowRight, ChevronDown } from 'lucide-react';
+import { HelpCircle, ArrowRight } from 'lucide-react';
+import FieldSelect from '@/components/ui/FieldSelect';
 
 const STATE_LABEL = (v) =>
   v.evidence_strength >= 60 ? 'Already well tested'
@@ -39,26 +40,14 @@ export default function UncertaintyPicker({ pathName, variables, value, onChange
         <span className="tp-body mb-1.5 block font-semibold" style={{ color: 'var(--ink-700)' }}>
           The question you want answered
         </span>
-        <div className="relative">
-          <select
-            className="field-select w-full appearance-none rounded-[var(--r-control)] border px-4 py-3 pr-10 text-base outline-none md:text-sm"
-            style={{ borderColor: 'var(--ink-200)', background: 'var(--page-surface)', color: 'var(--ink-900)' }}
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
-          >
-            <option value="">Choose what to test…</option>
-            {variables.map(v => (
-              <option key={v.variable} value={v.variable}>
-                {v.label} — {STATE_LABEL(v)}
-              </option>
-            ))}
-          </select>
-          <ChevronDown
-            size={16}
-            className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2"
-            style={{ color: 'var(--ink-400)' }}
-          />
-        </div>
+        <FieldSelect
+          value={value}
+          onChange={onChange}
+          placeholder="Choose what to test…"
+          ariaLabel="The question you want answered"
+          className="w-full rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-[color:var(--ink-900)]"
+          options={variables.map(v => ({ value: v.variable, label: `${v.label} — ${STATE_LABEL(v)}` }))}
+        />
       </label>
 
       {chosen && (
