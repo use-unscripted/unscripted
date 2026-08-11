@@ -117,6 +117,9 @@ export async function loadEvidenceProfile() {
   return {
     user, profile, graph, hypotheses, abilities, preferences, energisers, drains, history,
     proof, experiments, measurements,
+    // The rated work characteristics, so callers can read per-dimension evidence
+    // without recomputing a second, slightly different version of it.
+    signals,
     // The last recorded change per career, so no score has moved invisibly.
     recalculations,
     openQuestions: openQuestions.slice(0, 10),

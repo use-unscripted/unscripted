@@ -11,21 +11,31 @@
 import { loadEvidenceProfile } from '@/lib/evidence-profile';
 import { HYPOTHESIS_STATUS_LABELS } from '@/lib/career-hypothesis';
 import { MEANINGFUL_CHANGE } from '@/lib/hypothesis-recalculation';
+import {
+  dimensionProgress, nextTestForPath, crossCareerPatterns, weeklyEvidence, evidenceMilestones,
+} from '@/lib/dimension-progress';
 
 export { HYPOTHESIS_STATUS_LABELS };
 
 export async function loadJourneyEvidence() {
   const p = await loadEvidenceProfile();
 
-  const hypotheses = p.hypotheses.map(({ path, hypothesis }) => ({
-    id: path.id,
-    name: path.path_name,
-    category: path.path_category || '',
-    fit: hypothesis.career_fit_score,
-    confidence: hypothesis.fit_confidence_score,
-    status: hypothesis.hypothesis_status,
-    statusLabel: HYPOTHESIS_STATUS_LABELS[hypothesis.hypothesis_status] || 'Testing',
-  }));
+  const hypotheses = p.hypotheses.map(({ path, hypothesis }) => {
+    // What has and has not been tested, read from the uncertainty map and the
+    // rated characteristic signals. Nothing new is modelled here.
+    const progress = dimensionProgress({ hypothesis, signals: p.signals || [] });
+    return {
+      id: path.id,
+      name: path.path_name,
+      category: path.path_category || '',
+      fit: hypothesis.career_fit_score,
+      confidence: hypothesis.fit_confidence_score,
+      status: hypothesis.hypothesis_status,
+      statusLabel: HYPOTHESIS_STATUS_LABELS[hypothesis.hypothesis_status] || 'Testing',
+      progress,
+      nextTest: progress ? nextTestForPath({ path, hypothesis, progress }) : null,
+    };
+  });
 
   // Only careers whose estimate actually moved, most recent first.
   const changes = Object.values(p.recalculations || {})
@@ -44,6 +54,19 @@ export async function loadJourneyEvidence() {
   return {
     hypotheses,
     changes,
+    // Only shown when several careers share the same measured characteristic.
+    crossCareer: crossCareerPatterns({ signals: p.signals || [] }),
+    week: weeklyEvidence({
+      experiments: p.experiments,
+      measurements: p.measurements,
+      signals: p.signals || [],
+      recalculations: p.recalculations,
+    }),
+    milestones: evidenceMilestones({
+      progressList: hypotheses,
+      recalculations: p.recalculations,
+      completedExperiments: p.counts.completedExperiments,
+    }),
     counts: {
       // Completed experiments, not started ones.
       experiments: p.counts.completedExperiments,

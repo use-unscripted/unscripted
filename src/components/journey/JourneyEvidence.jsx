@@ -3,6 +3,9 @@ import { loadJourneyEvidence } from '@/lib/journey-evidence';
 import CareersWorthTesting from '@/components/journey/CareersWorthTesting';
 import FitChanges from '@/components/journey/FitChanges';
 import EvidenceSnapshotCard from '@/components/journey/EvidenceSnapshotCard';
+import EvidenceThisWeek from '@/components/journey/EvidenceThisWeek';
+import CrossCareerInsight from '@/components/journey/CrossCareerInsight';
+import EvidenceMilestones from '@/components/journey/EvidenceMilestones';
 import { Sk } from '@/components/PageSkeleton';
 
 /**
@@ -36,7 +39,10 @@ export default function JourneyEvidence() {
   return (
     <>
       <CareersWorthTesting hypotheses={data.hypotheses} />
+      <EvidenceThisWeek week={data.week} />
+      <CrossCareerInsight pattern={data.crossCareer} />
       <FitChanges changes={data.changes} />
+      <EvidenceMilestones milestones={data.milestones} />
       <EvidenceSnapshotCard counts={data.counts} />
     </>
   );

@@ -106,7 +106,7 @@ function PausedPathPanel({ path, experiments, missions, proof, contacts, reflect
 }
 
 // ── Path card ─────────────────────────────────────────────────────────────────
-function PathCard({ path, experiments, missions, proof, contacts, reflections, profile, measurements, onAction, expanded, onToggle, onBuildOutreachPlan, onAutoAssess, assessing }) {
+function PathCard({ path, experiments, missions, proof, contacts, reflections, profile, measurements, signals = [], onAction, expanded, onToggle, onBuildOutreachPlan, onAutoAssess, assessing }) {
   const cfg = statusCfg(path.status);
   const d = path.generated_detail || {};
 
@@ -114,7 +114,7 @@ function PathCard({ path, experiments, missions, proof, contacts, reflections, p
   const completedExps = pathExps.filter(e => e.status === 'completed');
   const pct = pathExps.length ? Math.round(completedExps.length / pathExps.length * 100) : 0;
   const isPausedOrCompleted = ['paused', 'completed'].includes(path.status);
-  const hyp = deriveHypothesis(path, { experiments, proof, reflections, profile, measurements });
+  const hyp = deriveHypothesis(path, { experiments, proof, reflections, profile, measurements, signals });
 
   return (
     <div className="rounded-[20px] border border-[color:var(--ink-200)] bg-white overflow-hidden">
@@ -228,6 +228,8 @@ function PathCard({ path, experiments, missions, proof, contacts, reflections, p
           <CareerHypothesisPanel
             pathName={path.path_name}
             hypothesis={hyp}
+            path={path}
+            signals={signals}
           />
 
           {isPausedOrCompleted && (
@@ -476,6 +478,9 @@ export default function PathComparison() {
   const [reflections, setReflections] = useState([]);
   const [profile, setProfile] = useState({});
   const [measurements, setMeasurements] = useState({});
+  // Rated work characteristics, so each card can show which dimensions of that
+  // career already have evidence.
+  const [signals, setSignals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadFailed, setLoadFailed] = useState(false);
   const [submission, setSubmission] = useState(null);
@@ -559,6 +564,7 @@ export default function PathComparison() {
         reflections: Array.isArray(refs) ? refs : [],
       }),
     };
+    setSignals(ctx.signals);
     const wrote = await backfillHypotheses(ownedPaths, ctx).catch(() => false);
     // Ability and enjoyment are stored as their own fields, so they stay
     // separate from the overall score and from each other.
@@ -633,7 +639,7 @@ export default function PathComparison() {
     }
   };
 
-  const cardProps = { experiments, missions, proof, contacts, reflections, profile, measurements, onAction: handleAction };
+  const cardProps = { experiments, missions, proof, contacts, reflections, profile, measurements, signals, onAction: handleAction };
 
   return (
     <main className="app-page">

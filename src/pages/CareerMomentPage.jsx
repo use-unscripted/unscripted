@@ -8,12 +8,13 @@
  */
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, Loader2, AlertCircle } from 'lucide-react';
 import { Sk, SkCards } from '@/components/PageSkeleton';
 import MomentHook from '@/components/moments/MomentHook';
 import MomentTask from '@/components/moments/MomentTask';
 import MomentFeedback from '@/components/moments/MomentFeedback';
 import MomentReaction from '@/components/moments/MomentReaction';
+import MomentLearned from '@/components/moments/MomentLearned';
 import {
   loadMomentTarget, generateCareerMoment, saveCareerMoment, feedbackFor, completeCareerMoment,
   loadMeasurementPlan,
@@ -181,37 +182,7 @@ export default function CareerMomentPage() {
             />
           )}
           {stage === 'done' && (
-            <div className="space-y-5 text-center">
-              <CheckCircle2 className="mx-auto text-green-600" size={36} />
-              <h2 className="tp-page" style={{ color: 'var(--surface-dark-900)' }}>Evidence saved</h2>
-              <p className="tp-body" style={{ color: 'var(--ink-700)' }}>
-                That counted. {row.career_name} has been updated with what this told us.
-              </p>
-              {changes.length > 0 && (
-                <div className="rounded-[16px] border p-4 text-left" style={{ borderColor: 'var(--ink-200)', background: 'var(--ink-50)' }}>
-                  <p className="tp-eyebrow" style={{ color: 'var(--ink-500)' }}>What moved</p>
-                  <ul className="mt-2 space-y-1">
-                    {changes.slice(0, 3).map((c, i) => (
-                      <li key={i} className="tp-body" style={{ color: 'var(--ink-700)' }}>
-                        {c.path.path_name}: fit {c.after.career_fit_score}% · confidence {c.after.fit_confidence_score}%
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-              <div className="grid gap-3 sm:grid-cols-2">
-                <button onClick={() => navigate(0)}
-                  className="tp-body ui-press rounded-[12px] py-3 font-semibold text-white"
-                  style={{ background: 'var(--brand-navy-900)' }}>
-                  Try another moment
-                </button>
-                <Link to="/career-profile"
-                  className="tp-body rounded-[12px] border py-3 text-center font-semibold"
-                  style={{ borderColor: 'var(--ink-200)', color: 'var(--ink-700)' }}>
-                  See my evidence
-                </Link>
-              </div>
-            </div>
+            <MomentLearned moment={row} changes={changes} onAnother={() => navigate(0)} />
           )}
         </div>
       </div>

@@ -2,6 +2,9 @@ import { FlaskConical, HelpCircle } from 'lucide-react';
 import { HYPOTHESIS_STATUS_LABELS } from '@/lib/career-hypothesis';
 import CareerUncertaintyMap from '@/components/paths/CareerUncertaintyMap';
 import FitBreakdown from '@/components/paths/FitBreakdown';
+import DimensionProgress from '@/components/paths/DimensionProgress';
+import NextTestCard from '@/components/paths/NextTestCard';
+import { dimensionProgress, nextTestForPath } from '@/lib/dimension-progress';
 
 function ScoreBar({ label, value, hint, color }) {
   return (
@@ -39,8 +42,12 @@ function Bullets({ title, items, render }) {
  * The hypothesis view of a path: what we think, how sure we are, and what we
  * still need to learn. Deliberately written as an open question, not a verdict.
  */
-export default function CareerHypothesisPanel({ pathName, hypothesis }) {
+export default function CareerHypothesisPanel({ pathName, hypothesis, path, signals = [] }) {
   const h = hypothesis;
+  // Which dimensions of this career already have evidence, and which one is
+  // worth testing next. Both read the uncertainty map that already exists.
+  const progress = dimensionProgress({ hypothesis: h, signals });
+  const nextTest = progress ? nextTestForPath({ path, hypothesis: h, progress }) : null;
   return (
     <section className="rounded-[20px] p-5" style={{ background: 'var(--background-tertiary)', border: '1px solid var(--border-light)' }}>
       <div className="flex flex-wrap items-center gap-2">
@@ -74,6 +81,13 @@ export default function CareerHypothesisPanel({ pathName, hypothesis }) {
 
       {/* Ability and enjoyment, kept separate from the overall number above. */}
       <FitBreakdown fit={h.fit} overall={h.career_fit_score} evidenceShare={h.fit_evidence_share} />
+
+      {progress && (
+        <div className="mt-4 space-y-4">
+          <DimensionProgress progress={progress} />
+          <NextTestCard next={nextTest} careerName={pathName} />
+        </div>
+      )}
 
       <div className="mt-5 space-y-4">
         {h.why_this_may_fit && (

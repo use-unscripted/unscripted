@@ -1,5 +1,7 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
+import DimensionProgress from '@/components/paths/DimensionProgress';
+import NextTestCard from '@/components/paths/NextTestCard';
 
 /**
  * Careers worth testing — the student's current career hypotheses.
@@ -10,6 +12,9 @@ import { ArrowRight } from 'lucide-react';
  */
 export default function CareersWorthTesting({ hypotheses }) {
   if (!hypotheses?.length) return null;
+  // The next test is shown once, on the career it belongs to, rather than three
+  // competing calls to action.
+  const lead = hypotheses.find(h => h.nextTest);
 
   return (
     <section className="rounded-[20px] border border-[color:var(--ink-200)] bg-white p-6">
@@ -33,10 +38,24 @@ export default function CareersWorthTesting({ hypotheses }) {
             <div className="tp-meta mt-2 flex flex-wrap gap-x-4 gap-y-1" style={{ color: 'var(--text-secondary)' }}>
               <span>Current fit <strong style={{ color: 'var(--text-primary)' }}>{h.fit}%</strong></span>
               <span>Confidence <strong style={{ color: 'var(--text-primary)' }}>{h.confidence}%</strong></span>
+              {h.progress && (
+                <span>Evidence <strong style={{ color: 'var(--text-primary)' }}>{h.progress.evidenceStatus.label}</strong></span>
+              )}
             </div>
+            {h.progress && (
+              <div className="mt-3">
+                <DimensionProgress progress={h.progress} compact />
+              </div>
+            )}
           </li>
         ))}
       </ul>
+
+      {lead && (
+        <div className="mt-5">
+          <NextTestCard next={lead.nextTest} careerName={lead.name} />
+        </div>
+      )}
 
       <Link
         to="/paths"
