@@ -12,6 +12,7 @@ import { Sk, SkPills, SkCards } from '@/components/PageSkeleton';
 import AddMissionModal from '@/components/experiments/AddMissionModal';
 import AddProofModal, { ProofSuccessToast } from '@/components/experiments/AddProofModal';
 import PathSwitcher from '@/components/PathSwitcher';
+import FocusOverlay from '@/components/FocusOverlay';
 import SoftDeleteConfirm, { softDeletePayload } from '@/components/SoftDeleteConfirm';
 import ExperimentActionsMenu from '@/components/experiments/ExperimentActionsMenu';
 import ResumeExperimentModal from '@/components/experiments/ResumeExperimentModal';
@@ -237,8 +238,12 @@ function ExperimentCard({ exp, measurement, onStatusChange, onExpand, expanded, 
               onResumed={onResumed}
               onEdited={onEdited}
             />
-            <button onClick={onExpand} className="rounded-xl border border-[color:var(--ink-200)] p-2 hover:bg-[color:var(--ink-50)]">
-              {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+            <button onClick={onExpand}
+              className="tp-meta touch-target flex items-center gap-1.5 rounded-xl border px-3 py-2 font-semibold transition"
+              style={expanded
+                ? { borderColor: 'var(--ink-200)', color: 'var(--ink-700)', background: 'white' }
+                : { borderColor: 'var(--brand-navy-900)', color: 'var(--brand-navy-900)', background: 'white' }}>
+              {expanded ? <>Close <ChevronUp size={14} /></> : <>Open experiment <ChevronDown size={14} /></>}
             </button>
           </div>
         </div>
@@ -885,6 +890,17 @@ export default function ExperimentsPage() {
         />
       )}
       {showNew && <NewExperimentModal onClose={() => setShowNew(false)} onSave={save} paths={paths} />}
+      {/* One experiment at a time: the list stays behind, and clicking outside
+          the panel returns to it. */}
+      {expandedId && (() => {
+        const exp = experiments.find(e => e.id === expandedId);
+        if (!exp) return null;
+        return (
+          <FocusOverlay onClose={() => setExpandedId(null)} label="Back to all experiments">
+            <ExperimentCard {...sharedCardProps(exp)} expanded />
+          </FocusOverlay>
+        );
+      })()}
       {preTarget && (
         <PreExperimentCheckIn
           exp={preTarget}
@@ -1027,7 +1043,7 @@ export default function ExperimentsPage() {
           ) : (
             <div className="space-y-5">
               {activeFiltered.map(exp => (
-                <ExperimentCard key={exp.id} {...sharedCardProps(exp)} />
+                <ExperimentCard key={exp.id} {...sharedCardProps(exp)} expanded={false} />
               ))}
             </div>
           )}

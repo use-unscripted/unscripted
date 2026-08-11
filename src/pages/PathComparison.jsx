@@ -8,6 +8,7 @@ import CreatePathModal from '@/components/paths/CreatePathModal';
 import EditPathModal from '@/components/paths/EditPathModal';
 import ReactivationModal from '@/components/paths/ReactivationModal';
 import PathRecoveryPanel from '@/components/paths/PathRecoveryPanel';
+import FocusOverlay from '@/components/FocusOverlay';
 import { loadOwnedPaths, authoritativeSet, loadOnboardingSubmission } from '@/lib/path-set';
 import { selectPathForCycle } from '@/lib/career-cycle';
 import { RiskBadge, ConfidenceBadge, RiskNotAssessed } from '@/components/paths/RiskConfidenceBadges';
@@ -157,8 +158,12 @@ function PathCard({ path, experiments, missions, proof, contacts, reflections, p
             )}
           </div>
 
-          <button onClick={onToggle} className="touch-target-square flex shrink-0 items-center justify-center rounded-xl border border-[color:var(--ink-200)] p-2 hover:bg-[color:var(--ink-50)]">
-            {expanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+          <button onClick={onToggle}
+            className="tp-meta touch-target flex shrink-0 items-center gap-1.5 rounded-xl border px-3 py-2 font-semibold transition"
+            style={expanded
+              ? { borderColor: 'var(--ink-200)', color: 'var(--ink-700)', background: 'white' }
+              : { borderColor: 'var(--brand-navy-900)', color: 'var(--brand-navy-900)', background: 'white' }}>
+            {expanded ? <>Close <ChevronUp size={14} /></> : <>Open path <ChevronDown size={14} /></>}
           </button>
         </div>
 
@@ -661,6 +666,25 @@ export default function PathComparison() {
           onContactSaved={() => {}}
         />
       )}
+      {/* One path at a time: the comparison list stays behind, and clicking
+          outside the panel returns to it. */}
+      {expandedId && (() => {
+        const p = paths.find(x => x.id === expandedId);
+        if (!p) return null;
+        return (
+          <FocusOverlay onClose={() => setExpandedId(null)} label="Back to all paths">
+            <PathCard
+              path={p}
+              {...cardProps}
+              expanded
+              onToggle={() => setExpandedId(null)}
+              onBuildOutreachPlan={() => setOutreachPlanTarget(p)}
+              onAutoAssess={() => handleAutoAssess(p)}
+              assessing={assessingIds.has(p.id)}
+            />
+          </FocusOverlay>
+        );
+      })()}
 
       <PageHeader
         title="Careers worth testing."
@@ -758,8 +782,8 @@ export default function PathComparison() {
                   key={p.id}
                   path={p}
                   {...cardProps}
-                  expanded={expandedId === p.id}
-                  onToggle={() => setExpandedId(expandedId === p.id ? null : p.id)}
+                  expanded={false}
+                  onToggle={() => setExpandedId(p.id)}
                   onBuildOutreachPlan={() => setOutreachPlanTarget(p)}
                   onAutoAssess={() => handleAutoAssess(p)}
                   assessing={assessingIds.has(p.id)}
