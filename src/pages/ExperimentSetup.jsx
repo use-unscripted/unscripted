@@ -10,6 +10,7 @@ import { LogoWordmark } from '@/components/UnscriptedLogo';
 import { Sk, SkCards } from '@/components/PageSkeleton';
 import AddToCalendarModal from '@/components/calendar/AddToCalendarModal';
 import ExperimentDesignOption from '@/components/experiments/ExperimentDesignOption';
+import UncertaintyPicker from '@/components/experiments/UncertaintyPicker';
 import { designExperiments } from '@/lib/experiment-design';
 import { deriveHypothesis } from '@/lib/career-hypothesis';
 import {
@@ -144,8 +145,12 @@ function getExperimentOptions(pathName) {
   ];
 }
 
+// The rail. "What to Test" is first because the uncertainty a student picks is
+// what every design that follows is built to answer.
+const STEPS = ['What to Test', 'Select Experiment', 'Confirm Details', 'Generate Guide', 'Mission Created'];
+
 // ─── Step 1: Path context + experiment picker ────────────────────────────────
-function StepPick({ rec, options, selected, onSelect, onCustom, onNext, designing }) {
+function StepPick({ rec, options, selected, onSelect, onCustom, onNext, designing, focus, onChangeFocus }) {
   return (
     <div className="space-y-6">
       {/* Path context card */}
@@ -176,14 +181,29 @@ function StepPick({ rec, options, selected, onSelect, onCustom, onNext, designin
         )}
       </div>
 
+      {/* What the student chose to test, and a way back to change it */}
+      {focus && (
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-[16px] border p-4"
+          style={{ borderColor: 'var(--ink-200)', background: 'var(--ink-50)' }}>
+          <div>
+            <p className="tp-eyebrow mb-1" style={{ color: 'var(--ink-500)' }}>You are testing</p>
+            <p className="tp-body font-semibold text-[color:var(--surface-dark-900)]">{focus.label}</p>
+            <p className="tp-meta mt-0.5" style={{ color: 'var(--ink-500)' }}>{focus.question}</p>
+          </div>
+          <button onClick={onChangeFocus} className="tp-meta font-bold" style={{ color: 'var(--brand-navy-700)' }}>
+            Change
+          </button>
+        </div>
+      )}
+
       {/* Experiment options */}
       <div>
         <p className="tp-body font-bold text-[color:var(--surface-dark-900)] mb-1">Choose your experiment:</p>
-        <p className="tp-meta text-[color:var(--ink-500)] mb-3">Each one is a short piece of real work, built to answer one open question about whether this career fits you.</p>
+        <p className="tp-meta text-[color:var(--ink-500)] mb-3">Each one is a short piece of real work, built to answer the question you chose.</p>
         {designing && (
           <div className="mb-3 space-y-3">
             <div className="flex items-center gap-2 tp-body text-[color:var(--ink-500)]">
-              <Loader2 size={15} className="animate-spin" /> Designing experiments for {rec.path_name}…
+              <Loader2 size={15} className="animate-spin" /> Designing experiments to answer {focus ? focus.label.toLowerCase() : `this question about ${rec.path_name}`}…
             </div>
             <SkCards count={3} h={132} gap={12} r={16} />
           </div>
@@ -413,7 +433,11 @@ export default function ExperimentSetup() {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
 
-  const [step, setStep] = useState('pick'); // pick | custom | generating | success
+  // uncertainty | pick | custom | generating | success
+  const [step, setStep] = useState('uncertainty');
+  // The uncertainty map for this career, and the one unknown the student chose.
+  const [variables, setVariables] = useState([]);
+  const [focusId, setFocusId] = useState(variableParam || '');
   const [options, setOptions] = useState([]);
   const [designing, setDesigning] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(null);
@@ -450,7 +474,7 @@ export default function ExperimentSetup() {
       setRec(resolved);
       setOptions(getExperimentOptions(resolved.path_name));
       setLoading(false);
-      await designForPath(resolved);
+      await loadUncertainty(resolved);
       return;
     } catch (e) {
       setLoadError('We could not identify the path you selected. Return to Path Comparison and select the path again.');
@@ -459,13 +483,12 @@ export default function ExperimentSetup() {
   };
 
   /**
-   * Build experiments against the career hypothesis' uncertainty map, so each
-   * option answers one open question about fit. If the design step cannot run,
-   * the older activity suggestions stay in place rather than blocking the page.
+   * The uncertainty map for this career, which is what the student chooses from
+   * before anything is designed. A recommended next test arrives with the
+   * unknown it exists to answer already in the URL, so that one is preselected.
    */
-  const designForPath = async (resolved) => {
+  const loadUncertainty = async (resolved) => {
     if (!resolved?.path_name) return;
-    setDesigning(true);
     try {
       const [profs, exps, prf, refs] = await Promise.all([
         base44.entities.StudentProfile.list('-created_date', 1).catch(() => []),
@@ -477,25 +500,44 @@ export default function ExperimentSetup() {
         profile: (Array.isArray(profs) ? profs[0] : null) || {},
         experiments: exps || [], proof: prf || [], reflections: refs || [],
       });
-      // A recommended next test names the question to answer, so that unknown is
-      // moved to the front of the map before designs are generated. Everything
-      // else about the map is left alone.
-      const uncertainty = variableParam
-        ? {
-            ...hyp.uncertainty,
-            top_unknowns: [
-              ...(hyp.uncertainty.variables || []).filter(v => v.variable === variableParam),
-              ...(hyp.uncertainty.top_unknowns || []).filter(v => v.variable !== variableParam),
-            ].slice(0, 3),
-          }
-        : hyp.uncertainty;
-      const result = await designExperiments(resolved, uncertainty);
+      // Unknowns first, since those are what an experiment can still move.
+      const vars = (hyp.uncertainty?.variables || []);
+      const unknownIds = new Set((hyp.uncertainty?.top_unknowns || []).map(v => v.variable));
+      setVariables([...vars.filter(v => unknownIds.has(v.variable)), ...vars.filter(v => !unknownIds.has(v.variable))]);
+      // Nothing to choose between: don't show an empty dropdown.
+      if (!vars.length) setStep('pick');
+    } catch (_) {
+      // With no map the student goes straight to the activity suggestions.
+      setVariables([]);
+      setStep('pick');
+    }
+  };
+
+  /**
+   * Design experiments for the one uncertainty the student chose, so all three
+   * options answer that question through different kinds of work. If the design
+   * step cannot run, the older activity suggestions stay in place rather than
+   * blocking the page.
+   */
+  const designForFocus = async (focus) => {
+    if (!rec?.path_name) return;
+    setDesigning(true);
+    try {
+      const result = await designExperiments(rec, null, { focus });
       if (result?.ok && result.data?.length) setOptions(result.data);
     } catch (_) {
       // Static suggestions remain.
     } finally {
       setDesigning(false);
     }
+  };
+
+  const focus = variables.find(v => v.variable === focusId) || null;
+
+  const handleConfirmFocus = () => {
+    setSelectedIndex(null);
+    setStep('pick');
+    designForFocus(focus);
   };
 
   const handleSelectOption = (opt) => {
@@ -731,14 +773,14 @@ ${PLAIN_PROSE_RULES}${correction}`,
 
           <div className="mb-8">
             <div className="mb-2 flex items-center gap-2">
-              {['Select Experiment', 'Confirm Details', 'Generate Guide', 'Mission Created'].map((label, i) => (
+              {STEPS.map((label, i) => (
                 <div key={i} className="flex items-center gap-2">
                   <div className="flex items-center gap-1.5">
                     <div className="h-2 w-2 rounded-full" style={{ background: i === 0 ? 'var(--brand-navy-900)' : 'var(--ink-300)' }} />
                     <span className="tp-meta hidden font-semibold sm:block"
                       style={{ color: i === 0 ? 'var(--brand-navy-900)' : 'var(--ink-400)' }}>{label}</span>
                   </div>
-                  {i < 3 && <div className="h-px w-4 bg-[color:var(--ink-200)]" />}
+                  {i < STEPS.length - 1 && <div className="h-px w-4 bg-[color:var(--ink-200)]" />}
                 </div>
               ))}
             </div>
@@ -771,7 +813,7 @@ ${PLAIN_PROSE_RULES}${correction}`,
     );
   }
 
-  const progressStep = step === 'pick' ? 1 : step === 'custom' ? 2 : step === 'generating' ? 3 : 4;
+  const progressStep = step === 'uncertainty' ? 1 : step === 'pick' ? 2 : step === 'custom' ? 3 : step === 'generating' ? 4 : 5;
 
   return (
     <main className="min-h-[100svh]" style={{ background: 'var(--page-surface)' }}>
@@ -796,7 +838,7 @@ ${PLAIN_PROSE_RULES}${correction}`,
         {/* Progress */}
         <div className="mb-8">
           <div className="flex items-center gap-2 mb-2">
-            {['Select Experiment', 'Confirm Details', 'Generate Guide', 'Mission Created'].map((label, i) => (
+            {STEPS.map((label, i) => (
               <div key={i} className="flex items-center gap-2">
                 <div className="flex items-center gap-1.5">
                   <div className="h-2 w-2 rounded-full transition-colors"
@@ -804,7 +846,7 @@ ${PLAIN_PROSE_RULES}${correction}`,
                   <span className="tp-meta font-semibold hidden sm:block"
                     style={{ color: progressStep === i + 1 ? 'var(--brand-navy-900)' : 'var(--ink-400)' }}>{label}</span>
                 </div>
-                {i < 3 && <div className="h-px w-4 bg-[color:var(--ink-200)]" />}
+                {i < STEPS.length - 1 && <div className="h-px w-4 bg-[color:var(--ink-200)]" />}
               </div>
             ))}
           </div>
@@ -812,6 +854,15 @@ ${PLAIN_PROSE_RULES}${correction}`,
 
         {/* Content */}
         <div className="rounded-[24px] border border-[color:var(--ink-200)] bg-white p-6 sm:p-8">
+          {step === 'uncertainty' && (
+            <UncertaintyPicker
+              pathName={rec.path_name}
+              variables={variables}
+              value={focusId}
+              onChange={setFocusId}
+              onNext={handleConfirmFocus}
+            />
+          )}
           {step === 'pick' && (
             <StepPick
               rec={rec}
@@ -821,6 +872,8 @@ ${PLAIN_PROSE_RULES}${correction}`,
               onCustom={() => setStep('custom')}
               onNext={handleConfirmPick}
               designing={designing}
+              focus={focus}
+              onChangeFocus={() => setStep('uncertainty')}
             />
           )}
           {step === 'custom' && (

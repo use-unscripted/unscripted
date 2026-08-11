@@ -68,13 +68,22 @@ function validateDesigns(raw, unknowns, path) {
  * Design up to 3 experiments for a career hypothesis, each testing one of the
  * highest-value unknowns from its uncertainty map.
  */
-export async function designExperiments(path, uncertainty) {
-  const unknowns = (uncertainty?.top_unknowns || []).slice(0, 3);
+/**
+ * `focus` is the single unknown the student chose to test. When it is given,
+ * all three designs answer that one question in different ways, so the choice
+ * they just made is what the experiments are actually about.
+ */
+export async function designExperiments(path, uncertainty, { focus } = {}) {
+  const unknowns = focus
+    ? [focus, focus, focus]
+    : (uncertainty?.top_unknowns || []).slice(0, 3);
   if (!unknowns.length) return { ok: false, data: null };
 
-  const asked = unknowns
-    .map((u, i) => `${i + 1}. ${u.label} — the open question is: ${u.question}`)
-    .join('\n');
+  const asked = focus
+    ? `${focus.label} — the open question is: ${focus.question}\n\nAll ${unknowns.length} experiments must answer this same question, each through a clearly different kind of work.`
+    : unknowns
+        .map((u, i) => `${i + 1}. ${u.label} — the open question is: ${u.question}`)
+        .join('\n');
 
   return generateValidated({
     feature: 'experiment_design',
@@ -88,7 +97,7 @@ export async function designExperiments(path, uncertainty) {
 CAREER BEING TESTED: ${path.path_name}${path.path_category ? ` (${path.path_category})` : ''}
 ${path.why_it_fits || path.fit_reason || ''}
 
-Design exactly ${unknowns.length} experiments. Experiment i must be built to answer unknown i below, and nothing else:
+Design exactly ${unknowns.length} experiments. ${focus ? 'Every experiment must be built to answer the single open question below, and nothing else:' : 'Experiment i must be built to answer unknown i below, and nothing else:'}
 ${asked}
 
 Rules:
