@@ -11,7 +11,7 @@ export default function ExperimentTestPanel({ exp }) {
   if (!exp.unresolved_question && !exp.realistic_scenario && !chars.length) return null;
 
   return (
-    <section className="rounded-[16px] p-4 space-y-3" style={{ background: 'var(--background-tertiary)', border: '1px solid var(--border-light)' }}>
+    <section className="rounded-[var(--r-surface)] p-4 space-y-3" style={{ background: 'var(--background-tertiary)', border: '1px solid var(--border-light)' }}>
       <p className="tp-eyebrow flex items-center gap-1.5" style={{ color: 'var(--brand-navy-700)' }}>
         <FlaskConical size={12} /> What this tests
       </p>
@@ -32,7 +32,7 @@ export default function ExperimentTestPanel({ exp }) {
       )}
 
       {exp.realistic_scenario && (
-        <div className="rounded-xl bg-white p-3" style={{ border: '1px solid var(--border-light)' }}>
+        <div className="rounded-[var(--r-control)] bg-white p-3" style={{ border: '1px solid var(--border-light)' }}>
           <p className="tp-eyebrow text-[color:var(--ink-500)] mb-1">The situation</p>
           <p className="tp-body whitespace-pre-line text-[color:var(--ink-700)]">{exp.realistic_scenario}</p>
         </div>

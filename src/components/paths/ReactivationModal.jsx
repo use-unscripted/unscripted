@@ -5,7 +5,7 @@ import { unwrapLLM, PLAIN_PROSE_RULES } from '@/lib/llm';
 import { toText, toTextList } from '@/lib/ai-validation';
 import { reportAiFailure } from '@/lib/ai-failures';
 
-const inputCls = 'w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-base md:text-sm text-[color:var(--surface-dark-900)] placeholder-[color:var(--ink-400)] outline-none focus:border-[color:var(--brand-navy-900)] resize-none';
+const inputCls = 'w-full rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-base md:text-sm text-[color:var(--surface-dark-900)] placeholder-[color:var(--ink-400)] outline-none focus:border-[color:var(--brand-navy-900)] resize-none';
 
 const SURVEY_QUESTIONS = [
   { name: 'since_last_exploration', label: 'What have you done since you last explored this path?', placeholder: 'Classes, projects, conversations, internships, etc.' },
@@ -163,7 +163,7 @@ ${PLAIN_PROSE_RULES}`,
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(5,8,22,0.6)' }}>
-      <div className="w-full max-w-2xl max-h-[92vh] overflow-y-auto rounded-[24px] bg-white p-6 sm:p-8">
+      <div className="w-full max-w-2xl max-h-[92vh] overflow-y-auto rounded-[var(--r-surface)] bg-white p-6 sm:p-8">
         <div className="flex items-center justify-between mb-1">
           <h2 className="tp-section text-[color:var(--surface-dark-900)]">
             {step === 'survey' ? 'Reactivation Survey' : 'Updated Plan'}
@@ -177,7 +177,7 @@ ${PLAIN_PROSE_RULES}`,
         </p>
 
         {error && (
-          <div className="tp-body mb-4 mt-2 p-3 rounded-xl bg-red-50 border border-red-100 text-red-700">{error}</div>
+          <div className="tp-body mb-4 mt-2 p-3 rounded-[var(--r-control)] bg-red-50 border border-red-100 text-red-700">{error}</div>
         )}
 
         {step === 'survey' && (
@@ -199,7 +199,7 @@ ${PLAIN_PROSE_RULES}`,
                   <button
                     key={opt.val}
                     onClick={() => setForm(f => ({ ...f, continue_old_or_new: opt.val }))}
-                    className="flex-1 rounded-xl border p-3 text-left transition"
+                    className="flex-1 rounded-[var(--r-control)] border p-3 text-left transition"
                     style={form.continue_old_or_new === opt.val
                       ? { borderColor: 'var(--brand-navy-900)', background: 'var(--ink-100)' }
                       : { borderColor: 'var(--ink-200)', background: 'white' }}
@@ -212,9 +212,9 @@ ${PLAIN_PROSE_RULES}`,
             </div>
 
             <div className="flex gap-3 mt-6">
-              <button onClick={onClose} className="flex-1 rounded-[10px] border border-[color:var(--ink-200)] py-3 text-sm font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)]">Cancel</button>
+              <button onClick={onClose} className="flex-1 rounded-[var(--r-control)] border border-[color:var(--ink-200)] py-3 text-sm font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)]">Cancel</button>
               <button onClick={handleSubmitSurvey} disabled={generating}
-                className="flex-1 rounded-[10px] py-3 text-sm font-semibold text-white transition disabled:opacity-60"
+                className="flex-1 rounded-[var(--r-control)] py-3 text-sm font-semibold text-white transition disabled:opacity-60"
                 style={{ background: 'var(--brand-navy-900)' }}>
                 {generating ? <span className="flex items-center justify-center gap-2"><Loader2 size={15} className="animate-spin" />Generating plan…</span>
                   : <span className="flex items-center justify-center gap-2">Generate Updated Plan <ArrowRight size={14} /></span>}
@@ -226,25 +226,25 @@ ${PLAIN_PROSE_RULES}`,
         {step === 'primary' && (
           <div className="space-y-5 mt-5">
             {generatedPlan && (
-              <div className="rounded-[20px] p-5" style={{ background: 'var(--surface-dark-700)', border: '1px solid rgba(31,58,95,0.4)' }}>
+              <div className="rounded-[var(--r-surface)] p-5" style={{ background: 'var(--surface-dark-700)', border: '1px solid rgba(31,58,95,0.4)' }}>
                 <p className="tp-eyebrow mb-3" style={{ color: 'var(--brand-gold-500)' }}>Your Updated Plan</p>
                 <pre className="tp-body text-[color:var(--ink-300)] whitespace-pre-wrap font-body">{generatedPlan}</pre>
               </div>
             )}
 
-            <div className="rounded-[20px] border border-[color:var(--ink-200)] bg-white p-5">
+            <div className="rounded-[var(--r-surface)] border border-[color:var(--ink-200)] bg-white p-5">
               <p className="tp-body font-semibold text-[color:var(--surface-dark-900)] mb-3">Make this your Primary Focus?</p>
               <p className="tp-meta text-[color:var(--ink-500)] mb-4">Your Primary Focus path gets the highest visibility on the dashboard. You can change this at any time.</p>
               <div className="flex gap-3">
                 <button
                   onClick={() => setMakePrimary(true)}
-                  className="flex-1 rounded-xl border p-3 text-sm font-semibold transition"
+                  className="flex-1 rounded-[var(--r-control)] border p-3 text-sm font-semibold transition"
                   style={makePrimary ? { borderColor: 'var(--brand-navy-900)', background: 'var(--ink-100)', color: 'var(--brand-navy-900)' } : { borderColor: 'var(--ink-200)', background: 'white', color: 'var(--ink-700)' }}>
                   Yes, make it Primary Focus
                 </button>
                 <button
                   onClick={() => setMakePrimary(false)}
-                  className="flex-1 rounded-xl border p-3 text-sm font-semibold transition"
+                  className="flex-1 rounded-[var(--r-control)] border p-3 text-sm font-semibold transition"
                   style={!makePrimary ? { borderColor: 'var(--brand-navy-900)', background: 'var(--ink-100)', color: 'var(--brand-navy-900)' } : { borderColor: 'var(--ink-200)', background: 'white', color: 'var(--ink-700)' }}>
                   No, keep current primary
                 </button>
@@ -252,9 +252,9 @@ ${PLAIN_PROSE_RULES}`,
             </div>
 
             <div className="flex gap-3">
-              <button onClick={onClose} disabled={saving} className="flex-1 rounded-[10px] border border-[color:var(--ink-200)] py-3 text-sm font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)] disabled:opacity-50">Cancel</button>
+              <button onClick={onClose} disabled={saving} className="flex-1 rounded-[var(--r-control)] border border-[color:var(--ink-200)] py-3 text-sm font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)] disabled:opacity-50">Cancel</button>
               <button onClick={handleFinish} disabled={saving}
-                className="flex-1 rounded-[10px] py-3 text-sm font-semibold text-white transition disabled:opacity-60"
+                className="flex-1 rounded-[var(--r-control)] py-3 text-sm font-semibold text-white transition disabled:opacity-60"
                 style={{ background: 'var(--brand-navy-900)' }}>
                 {saving ? <span className="flex items-center justify-center gap-2"><Loader2 size={15} className="animate-spin" />Saving…</span> : 'Resume This Path'}
               </button>

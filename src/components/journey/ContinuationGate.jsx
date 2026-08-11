@@ -48,7 +48,7 @@ export default function ContinuationGate() {
 
   if (saved) {
     return (
-      <section className="rounded-[20px] bg-white p-6 text-center sm:p-8" style={{ border: '1px solid var(--border-light)' }}>
+      <section className="app-card p-6 text-center sm:p-8">
         <CheckCircle2 size={22} className="mx-auto" style={{ color: 'var(--success-700)' }} />
         <h2 className="tp-section mt-4" style={{ color: 'var(--text-primary)' }}>
           Thanks, that&apos;s recorded.
@@ -67,7 +67,7 @@ export default function ContinuationGate() {
   }
 
   return (
-    <section className="rounded-[20px] bg-white p-6 sm:p-8" style={{ border: '1px solid var(--border-light)' }}>
+    <section className="app-card p-6 sm:p-8">
       <h2 className="tp-section" style={{ color: 'var(--text-primary)' }}>
         {CONTINUATION_MESSAGE}
       </h2>
@@ -82,7 +82,7 @@ export default function ContinuationGate() {
           const on = wants === val;
           return (
             <button key={String(val)} type="button" onClick={() => { setWants(val); setError(''); }}
-              aria-pressed={on} className="ui-press tp-body rounded-[12px] p-3 text-left font-bold"
+              aria-pressed={on} className="ui-press tp-body rounded-[var(--r-control)] p-3 text-left font-bold"
               style={on
                 ? { background: 'var(--brand-navy-900)', color: '#fff', minHeight: '48px' }
                 : { background: 'var(--background-secondary)', border: '1px solid var(--border-light)', color: 'var(--text-primary)', minHeight: '48px' }}>
@@ -100,7 +100,7 @@ export default function ContinuationGate() {
               const on = preference === val;
               return (
                 <button key={val} type="button" onClick={() => { setPreference(val); setError(''); }}
-                  aria-pressed={on} className="ui-press rounded-[12px] p-3 text-left"
+                  aria-pressed={on} className="ui-press rounded-[var(--r-control)] p-3 text-left"
                   style={on
                     ? { background: 'var(--brand-navy-900)', color: '#fff', minHeight: '48px' }
                     : { background: 'var(--background-secondary)', border: '1px solid var(--border-light)', color: 'var(--text-primary)', minHeight: '48px' }}>
@@ -120,7 +120,7 @@ export default function ContinuationGate() {
       )}
 
       <button type="button" onClick={submit} disabled={busy || wants == null}
-        className="ui-press tp-body mt-5 flex w-full items-center justify-center gap-2 rounded-[10px] font-bold text-white disabled:opacity-50"
+        className="ui-press tp-body mt-5 flex w-full items-center justify-center gap-2 rounded-[var(--r-control)] font-bold text-white disabled:opacity-50"
         style={{ background: 'var(--brand-navy-900)', minHeight: '50px' }}>
         {busy ? <><Loader2 size={15} className="animate-spin" /> Recording…</> : 'Record my answer'}
       </button>

@@ -49,7 +49,7 @@ export default function CareerHypothesisPanel({ pathName, hypothesis, path, sign
   const progress = dimensionProgress({ hypothesis: h, signals });
   const nextTest = progress ? nextTestForPath({ path, hypothesis: h, progress }) : null;
   return (
-    <section className="rounded-[20px] p-5" style={{ background: 'var(--background-tertiary)', border: '1px solid var(--border-light)' }}>
+    <section className="rounded-[var(--r-surface)] p-5" style={{ background: 'var(--background-tertiary)', border: '1px solid var(--border-light)' }}>
       <div className="flex flex-wrap items-center gap-2">
         <span className="tp-eyebrow flex items-center gap-1.5" style={{ color: 'var(--brand-navy-700)' }}>
           <FlaskConical size={12} /> Career hypothesis
@@ -120,7 +120,7 @@ export default function CareerHypothesisPanel({ pathName, hypothesis, path, sign
         />
 
         {h.unresolved_questions?.length > 0 && (
-          <div className="rounded-xl bg-white p-4" style={{ border: '1px solid var(--border-light)' }}>
+          <div className="rounded-[var(--r-control)] bg-white p-4" style={{ border: '1px solid var(--border-light)' }}>
             <p className="tp-eyebrow mb-2 flex items-center gap-1.5" style={{ color: 'var(--brand-navy-700)' }}>
               <HelpCircle size={12} /> What we still need to learn
             </p>

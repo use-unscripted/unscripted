@@ -17,7 +17,7 @@ export default function PatternCard({ pattern, flagged }) {
   ].filter(m => m && m[1] !== null);
 
   return (
-    <div className="rounded-[16px] border bg-white p-5" style={{ borderColor: 'var(--ink-200)' }}>
+    <div className="rounded-[var(--r-surface)] border bg-white p-5" style={{ borderColor: 'var(--ink-200)' }}>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h3 className="tp-card" style={{ color: 'var(--surface-dark-900)' }}>{pattern.label}</h3>
         <EvidenceBadge summary={pattern.summary} overrideLabel={pattern.preliminary ? 'Preliminary' : undefined} />

@@ -303,14 +303,14 @@ export default function MissionGuideGenerator({ experiment, existingGuides = [],
     const hasActive = existingGuides.some(g => g.is_active);
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(5,8,22,0.5)' }}>
-        <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-[24px] bg-white p-6 sm:p-8">
+        <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-[var(--r-surface)] bg-white p-6 sm:p-8">
           <div className="flex items-center justify-between mb-4">
             <h2 className="tp-section text-[color:var(--surface-dark-900)]">Experiment generated</h2>
             <button onClick={onClose}><X size={20} className="text-[color:var(--ink-500)]" /></button>
           </div>
 
           {/* Preview */}
-          <div className="rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] p-4 mb-5">
+          <div className="rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] p-4 mb-5">
             <p className="tp-eyebrow text-[color:var(--ink-500)] mb-1">Version {pendingGuide.version_number}</p>
             <p className="tp-card text-[color:var(--surface-dark-900)]">{pendingGuide.guide_title}</p>
             <p className="tp-body text-[color:var(--ink-500)] mt-1">{pendingGuide.objective}</p>
@@ -344,7 +344,7 @@ export default function MissionGuideGenerator({ experiment, existingGuides = [],
             <button
               onClick={() => { setActiveDecision('make_active'); handleSave(true); }}
               disabled={saving}
-              className="tp-body w-full rounded-xl border-2 px-4 py-3 font-semibold text-left transition hover:bg-[#F8ECEF] disabled:opacity-60"
+              className="tp-body w-full rounded-[var(--r-control)] border-2 px-4 py-3 font-semibold text-left transition hover:bg-[#F8ECEF] disabled:opacity-60"
               style={{ borderColor: 'var(--brand-navy-700)', color: 'var(--brand-navy-700)' }}>
               Make this the active experiment
               {hasActive && <span className="tp-meta block font-normal text-[color:var(--warning-700)] mt-0.5">Will deactivate your current experiment</span>}
@@ -352,7 +352,7 @@ export default function MissionGuideGenerator({ experiment, existingGuides = [],
             <button
               onClick={() => { setActiveDecision('keep_current'); handleSave(false); }}
               disabled={saving}
-              className="tp-body w-full rounded-xl border border-[color:var(--ink-200)] px-4 py-3 font-semibold text-[color:var(--ink-700)] text-left transition hover:bg-[color:var(--ink-50)] disabled:opacity-60">
+              className="tp-body w-full rounded-[var(--r-control)] border border-[color:var(--ink-200)] px-4 py-3 font-semibold text-[color:var(--ink-700)] text-left transition hover:bg-[color:var(--ink-50)] disabled:opacity-60">
               {hasActive ? 'Keep my current active experiment' : 'Save as draft'}
               <span className="tp-meta block font-normal text-[color:var(--ink-400)] mt-0.5">New experiment saved as draft</span>
             </button>
@@ -360,7 +360,7 @@ export default function MissionGuideGenerator({ experiment, existingGuides = [],
               <button
                 onClick={() => { setActiveDecision('compare'); handleSave(false); }}
                 disabled={saving}
-                className="tp-body w-full rounded-xl border border-[color:var(--ink-200)] px-4 py-3 font-semibold text-[color:var(--ink-500)] text-left transition hover:bg-[color:var(--ink-50)] disabled:opacity-60">
+                className="tp-body w-full rounded-[var(--r-control)] border border-[color:var(--ink-200)] px-4 py-3 font-semibold text-[color:var(--ink-500)] text-left transition hover:bg-[color:var(--ink-50)] disabled:opacity-60">
                 Compare experiments first
                 <span className="tp-meta block font-normal text-[color:var(--ink-400)] mt-0.5">Opens comparison view after saving</span>
               </button>
@@ -388,7 +388,7 @@ export default function MissionGuideGenerator({ experiment, existingGuides = [],
   if (generating) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(5,8,22,0.5)' }}>
-        <div className="w-full max-w-lg rounded-[24px] bg-white p-6 text-center sm:p-8" role="status" aria-live="polite">
+        <div className="w-full max-w-lg rounded-[var(--r-surface)] bg-white p-6 text-center sm:p-8" role="status" aria-live="polite">
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full" style={{ background: 'var(--ink-100)' }}>
             <Wand2 size={24} style={{ color: 'var(--brand-navy-700)' }} aria-hidden="true" />
           </div>
@@ -442,7 +442,7 @@ export default function MissionGuideGenerator({ experiment, existingGuides = [],
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(5,8,22,0.5)' }}>
-      <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-[24px] bg-white p-6 sm:p-8">
+      <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-[var(--r-surface)] bg-white p-6 sm:p-8">
         <div className="flex items-center justify-between mb-1">
           <h2 className="tp-section text-[color:var(--surface-dark-900)]">
             {hasExisting ? 'Generate Another Experiment' : 'Generate Experiment'}
@@ -456,7 +456,7 @@ export default function MissionGuideGenerator({ experiment, existingGuides = [],
         </p>
 
         {/* Experiment context */}
-        <div className="rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] p-3 mb-5">
+        <div className="rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] p-3 mb-5">
           <p className="tp-eyebrow text-[color:var(--ink-500)] mb-0.5">Experiment</p>
           <p className="tp-body font-semibold text-[color:var(--surface-dark-900)]">{experiment.title}</p>
           {experiment.path_name && <p className="tp-meta" style={{ color: 'var(--brand-navy-700)' }}>{experiment.path_name}</p>}
@@ -480,7 +480,7 @@ export default function MissionGuideGenerator({ experiment, existingGuides = [],
                 <button
                   key={opt.value}
                   onClick={() => setVariation(variation === opt.value ? '' : opt.value)}
-                  className="tp-body w-full rounded-xl border px-4 py-3 text-left transition"
+                  className="tp-body w-full rounded-[var(--r-control)] border px-4 py-3 text-left transition"
                   style={variation === opt.value
                     ? { borderColor: 'var(--brand-navy-700)', background: 'var(--background-tertiary)', color: 'var(--brand-navy-700)' }
                     : { borderColor: 'var(--ink-200)', background: 'white', color: 'var(--ink-700)' }}>
@@ -495,14 +495,14 @@ export default function MissionGuideGenerator({ experiment, existingGuides = [],
                 placeholder="Describe what you want to change or focus on..."
                 value={customInstruction}
                 onChange={e => setCustomInstruction(e.target.value)}
-                className="mt-3 w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]"
+                className="mt-3 w-full rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]"
               />
             )}
           </div>
         )}
 
         {error && (
-          <div className="tp-body mb-4 flex items-start gap-2 rounded-xl bg-red-50 px-4 py-3 text-red-700">
+          <div className="tp-body mb-4 flex items-start gap-2 rounded-[var(--r-control)] bg-red-50 px-4 py-3 text-red-700">
             <AlertCircle size={15} className="mt-0.5 shrink-0" />
             <div>
               <p>{error}</p>
@@ -529,13 +529,13 @@ export default function MissionGuideGenerator({ experiment, existingGuides = [],
 
         <div className="flex gap-3">
           <button onClick={onClose} disabled={generating}
-            className="tp-body flex-1 rounded-[10px] border border-[color:var(--ink-200)] py-3 font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)] disabled:opacity-60">
+            className="tp-body flex-1 rounded-[var(--r-control)] border border-[color:var(--ink-200)] py-3 font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)] disabled:opacity-60">
             Cancel
           </button>
           <button
             onClick={handleGenerate}
             disabled={generating || (variation === 'custom' && !customInstruction.trim())}
-            className="tp-body flex-1 rounded-[10px] py-3 font-semibold text-white transition disabled:opacity-60 flex items-center justify-center gap-2"
+            className="tp-body flex-1 rounded-[var(--r-control)] py-3 font-semibold text-white transition disabled:opacity-60 flex items-center justify-center gap-2"
             style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}>
             {generating ? (
               <><Loader2 size={15} className="animate-spin" /> Generating...</>

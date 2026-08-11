@@ -4,7 +4,7 @@ import { base44 } from '@/api/base44Client';
 import { linksForExperiment } from '@/lib/career-cycle';
 import { trackPilotEvent } from '@/lib/pilot-metrics';
 
-const inputCls = 'w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-2.5 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]';
+const inputCls = 'w-full rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-2.5 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]';
 
 const CONTACT_TYPES = [
   ['informational_interview','Informational Interview'],['networking','Networking Contact'],
@@ -43,7 +43,7 @@ function isValidUrl(val) {
 export function ContactSuccessToast({ contact, experimentTitle, missionTitle, onViewContact, onOpenExperiment, onDismiss }) {
   return (
     <div role="alert" aria-live="polite"
-      className="fixed bottom-6 right-6 z-[100] max-w-sm w-full rounded-[20px] bg-white border border-green-100 shadow-2xl p-5 flex flex-col gap-3"
+      className="fixed bottom-6 right-6 z-[100] max-w-sm w-full rounded-[var(--r-surface)] bg-white border border-green-100 shadow-2xl p-5 flex flex-col gap-3"
       style={{ boxShadow: '0 20px 60px rgba(0,0,0,0.15)' }}>
       <div className="flex items-start gap-3">
         <div className="shrink-0 w-9 h-9 rounded-full flex items-center justify-center" style={{ background: 'var(--success-50)' }}>
@@ -60,9 +60,9 @@ export function ContactSuccessToast({ contact, experimentTitle, missionTitle, on
         </button>
       </div>
       <div className="flex gap-2">
-        <button onClick={onViewContact} className="tp-meta flex-1 rounded-[8px] py-2.5 font-semibold text-white"
+        <button onClick={onViewContact} className="tp-meta flex-1 rounded-[var(--r-control)] py-2.5 font-semibold text-white"
           style={{ background: 'var(--brand-navy-900)' }}>View Contact</button>
-        <button onClick={onOpenExperiment} className="tp-meta flex-1 rounded-[8px] border border-[color:var(--ink-200)] py-2.5 font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)]">
+        <button onClick={onOpenExperiment} className="tp-meta flex-1 rounded-[var(--r-control)] border border-[color:var(--ink-200)] py-2.5 font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)]">
           Open Experiment
         </button>
       </div>
@@ -211,7 +211,7 @@ export default function AddContactModal({ contact, onClose, onSaved }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(5,8,22,0.55)' }}>
-      <div className="w-full max-w-2xl max-h-[92vh] overflow-y-auto rounded-[24px] bg-white p-6 sm:p-8">
+      <div className="w-full max-w-2xl max-h-[92vh] overflow-y-auto rounded-[var(--r-surface)] bg-white p-6 sm:p-8">
         <div className="flex items-center justify-between mb-1">
           <h2 className="tp-section text-[color:var(--surface-dark-900)]">{isEdit ? 'Edit Contact' : 'Add Contact'}</h2>
           <button onClick={onClose} disabled={saving} aria-label="Close"><X size={20} className="text-[color:var(--ink-500)]" /></button>
@@ -280,7 +280,7 @@ export default function AddContactModal({ contact, onClose, onSaved }) {
             <div>
               <label className="tp-meta block mb-1.5 font-semibold text-[color:var(--ink-700)]">Experiment <span className="text-red-500">*</span></label>
               {experiments.length === 0
-                ? <p className="tp-body rounded-xl border border-[color:var(--ink-200)] px-4 py-3 text-[color:var(--ink-500)]">No experiments found. Create one first.</p>
+                ? <p className="tp-body rounded-[var(--r-control)] border border-[color:var(--ink-200)] px-4 py-3 text-[color:var(--ink-500)]">No experiments found. Create one first.</p>
                 : <select value={selectedExpId} onChange={e => handleExpChange(e.target.value)} className={inputCls}>
                     <option value="">Select an experiment…</option>
                     {experiments.map(exp => (
@@ -294,7 +294,7 @@ export default function AddContactModal({ contact, onClose, onSaved }) {
             </div>
 
             {selectedExp && (
-              <div className="rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] px-4 py-3">
+              <div className="rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] px-4 py-3">
                 <p className="tp-eyebrow mb-1.5 text-[color:var(--ink-500)]">Path</p>
                 <p className="tp-body font-semibold text-[color:var(--surface-dark-900)]">
                   {selectedExp.path_name || <span className="text-[color:var(--ink-400)] font-normal">No path connected to this experiment</span>}
@@ -306,7 +306,7 @@ export default function AddContactModal({ contact, onClose, onSaved }) {
               <div>
                 <label className="tp-meta block mb-1.5 font-semibold text-[color:var(--ink-700)]">Mission <span className="font-normal text-[color:var(--ink-400)]">(optional)</span></label>
                 {expMissions.length === 0
-                  ? <p className="tp-body rounded-xl border border-[color:var(--ink-200)] px-4 py-3 text-[color:var(--ink-400)]">No missions are currently linked to this experiment.</p>
+                  ? <p className="tp-body rounded-[var(--r-control)] border border-[color:var(--ink-200)] px-4 py-3 text-[color:var(--ink-400)]">No missions are currently linked to this experiment.</p>
                   : <select value={selectedMissionId} onChange={e => setSelectedMissionId(e.target.value)} className={inputCls}>
                       <option value="">No specific mission (overall experiment)</option>
                       {expMissions.map(m => <option key={m.id} value={m.id}>{m.title}</option>)}
@@ -354,11 +354,11 @@ export default function AddContactModal({ contact, onClose, onSaved }) {
 
         <div className="mt-6 flex gap-3">
           <button onClick={onClose} disabled={saving}
-            className="tp-body flex-1 rounded-[10px] border border-[color:var(--ink-200)] py-3 font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)] disabled:opacity-50">
+            className="tp-body flex-1 rounded-[var(--r-control)] border border-[color:var(--ink-200)] py-3 font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)] disabled:opacity-50">
             Cancel
           </button>
           <button onClick={handleSave} disabled={saving || loadingData}
-            className="tp-body flex-1 rounded-[10px] py-3 font-semibold text-white transition disabled:opacity-60"
+            className="tp-body flex-1 rounded-[var(--r-control)] py-3 font-semibold text-white transition disabled:opacity-60"
             style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}>
             {saving
               ? <span className="flex items-center justify-center gap-2"><Loader2 size={15} className="animate-spin" />Saving…</span>

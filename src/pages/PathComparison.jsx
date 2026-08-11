@@ -52,8 +52,8 @@ function PausedPathPanel({ path, experiments, missions, proof, contacts, reflect
   const pathReflections = reflections.filter(r => r.path_name === path.path_name || pathExps.some(e => e.id === r.experiment_id));
 
   return (
-    <div className="rounded-[20px] border-2 p-6 space-y-5" style={{ borderColor: 'rgba(180,83,9,0.3)', background: '#FFFDF7' }}>
-      <div className="rounded-xl p-4" style={{ background: 'var(--warning-50)', border: '1px solid rgba(180,83,9,0.2)' }}>
+    <div className="rounded-[var(--r-surface)] border-2 p-6 space-y-5" style={{ borderColor: 'rgba(180,83,9,0.3)', background: '#FFFDF7' }}>
+      <div className="rounded-[var(--r-control)] p-4" style={{ background: 'var(--warning-50)', border: '1px solid rgba(180,83,9,0.2)' }}>
         <p className="tp-body font-bold text-[color:var(--warning-700)]">You previously explored this path.</p>
         {path.last_active_at && <p className="tp-meta text-[color:var(--ink-700)] mt-1">Last active: {fmtDate(path.last_active_at)}</p>}
       </div>
@@ -65,7 +65,7 @@ function PausedPathPanel({ path, experiments, missions, proof, contacts, reflect
           { label: 'Proof submitted', val: pathProof.length },
           { label: 'Contacts', val: pathContacts.length },
         ].map(({ label, val }) => (
-          <div key={label} className="rounded-xl border border-[color:var(--ink-200)] bg-white p-3">
+          <div key={label} className="rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-white p-3">
             <p className="font-heading text-2xl font-bold text-[color:var(--surface-dark-900)]">{val}</p>
             <p className="tp-meta text-[color:var(--ink-500)] mt-1">{label}</p>
           </div>
@@ -92,12 +92,12 @@ function PausedPathPanel({ path, experiments, missions, proof, contacts, reflect
 
       <div className="flex flex-wrap gap-3">
         <button onClick={onResume}
-          className="touch-target flex items-center gap-2 rounded-[10px] px-5 py-2.5 text-sm font-semibold text-white"
+          className="touch-target flex items-center gap-2 rounded-[var(--r-control)] px-5 py-2.5 text-sm font-semibold text-white"
           style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}>
           <RotateCcw size={14} /> Resume This Path
         </button>
         <button onClick={onArchive}
-          className="flex items-center gap-2 rounded-[10px] border border-[color:var(--ink-200)] px-5 py-2.5 text-sm font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)]">
+          className="flex items-center gap-2 rounded-[var(--r-control)] border border-[color:var(--ink-200)] px-5 py-2.5 text-sm font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)]">
           <Archive size={14} /> Archive Path
         </button>
       </div>
@@ -117,7 +117,7 @@ function PathCard({ path, experiments, missions, proof, contacts, reflections, p
   const hyp = deriveHypothesis(path, { experiments, proof, reflections, profile, measurements, signals });
 
   return (
-    <div className="rounded-[20px] border border-[color:var(--ink-200)] bg-white overflow-hidden">
+    <div className="rounded-[var(--r-surface)] border border-[color:var(--ink-200)] bg-white overflow-hidden">
       <div className="p-6">
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1 min-w-0">
@@ -159,7 +159,7 @@ function PathCard({ path, experiments, missions, proof, contacts, reflections, p
           </div>
 
           <button onClick={onToggle}
-            className="tp-meta touch-target flex shrink-0 items-center gap-1.5 rounded-xl border px-3 py-2 font-semibold transition"
+            className="tp-meta touch-target flex shrink-0 items-center gap-1.5 rounded-[var(--r-control)] border px-3 py-2 font-semibold transition"
             style={expanded
               ? { borderColor: 'var(--ink-200)', color: 'var(--ink-700)', background: 'white' }
               : { borderColor: 'var(--brand-navy-900)', color: 'var(--brand-navy-900)', background: 'white' }}>
@@ -246,7 +246,7 @@ function PathCard({ path, experiments, missions, proof, contacts, reflections, p
           )}
 
           {(path.why_it_may_not_fit || path.concern) && (
-            <div className="rounded-xl p-3" style={{ background: 'var(--warning-50)', border: '1px solid rgba(180,83,9,0.2)' }}>
+            <div className="rounded-[var(--r-control)] p-3" style={{ background: 'var(--warning-50)', border: '1px solid rgba(180,83,9,0.2)' }}>
               <p className="tp-eyebrow text-[color:var(--warning-700)] mb-1.5">Potential concern</p>
               <p className="tp-body text-[color:var(--ink-700)]">{path.why_it_may_not_fit || path.concern}</p>
             </div>
@@ -287,7 +287,7 @@ function PathCard({ path, experiments, missions, proof, contacts, reflections, p
           {(path.first_experiment || d.day_to_day) && (
             <div className="grid gap-4 sm:grid-cols-2">
               {path.first_experiment && (
-                <div className="rounded-xl p-4" style={{ background: 'var(--background-tertiary)', border: '1px solid var(--border-light)' }}>
+                <div className="rounded-[var(--r-control)] p-4" style={{ background: 'var(--background-tertiary)', border: '1px solid var(--border-light)' }}>
                    <p className="tp-eyebrow mb-2" style={{ color: 'var(--brand-navy-900)' }}>Suggested first experiment</p>
                   <p className="tp-body text-[color:var(--ink-700)]">{path.first_experiment}</p>
                 </div>
@@ -347,7 +347,7 @@ function PathCard({ path, experiments, missions, proof, contacts, reflections, p
 }
 
 // ── Sort + Filter bar ─────────────────────────────────────────────────────────
-const sel = 'field-select rounded-xl border border-[color:var(--ink-200)] bg-white px-3 py-2 text-base md:text-sm text-[color:var(--ink-700)] focus:border-[color:var(--brand-navy-900)] focus:outline-none';
+const sel = 'field-select rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-white px-3 py-2 text-base md:text-sm text-[color:var(--ink-700)] focus:border-[color:var(--brand-navy-900)] focus:outline-none';
 
 // A real select, because the iOS wheel picker beats anything we would build.
 // The wrapper only exists to hold the chevron, which stands in for the platform
@@ -377,7 +377,7 @@ function SortFilterBar({ paths, sortBy, setSortBy, filters, setFilters }) {
   const clearFilters = () => setFilters(DEFAULT_FILTERS);
 
   return (
-    <div className="mb-5 rounded-[16px] border border-[color:var(--ink-200)] bg-white p-4">
+    <div className="mb-5 rounded-[var(--r-surface)] border border-[color:var(--ink-200)] bg-white p-4">
       <div className="flex flex-wrap items-center gap-3">
         <div className="flex items-center gap-2 shrink-0">
           <SlidersHorizontal size={14} className="text-[color:var(--ink-500)]" />
@@ -697,7 +697,7 @@ export default function PathComparison() {
         description="Each path here is a career hypothesis, not a recommendation. Current evidence suggests which may fit; testing them is what settles it."
         action={
           <button onClick={() => setShowCreate(true)}
-            className="touch-target flex items-center gap-2 rounded-[10px] px-5 py-2.5 text-sm font-semibold text-white shrink-0"
+            className="touch-target flex items-center gap-2 rounded-[var(--r-control)] px-5 py-2.5 text-sm font-semibold text-white shrink-0"
             style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}>
             <Plus size={16} /> Create Another Path
           </button>
@@ -705,7 +705,7 @@ export default function PathComparison() {
       />
 
       {assessError && (
-        <div className="tp-body mb-4 flex items-start justify-between gap-3 rounded-xl px-4 py-3"
+        <div className="tp-body mb-4 flex items-start justify-between gap-3 rounded-[var(--r-control)] px-4 py-3"
           style={{ background: 'var(--warning-50)', border: '1px solid var(--warning-700)', color: 'var(--warning-700)' }}>
           <span>{assessError}</span>
           <button onClick={() => setAssessError('')} className="shrink-0 font-semibold underline">Dismiss</button>
@@ -723,11 +723,11 @@ export default function PathComparison() {
         // and never silently regenerated.
         <PathRecoveryPanel variant="missing" onRestored={load} />
       ) : paths.length === 0 ? (
-        <div className="rounded-[24px] border border-dashed border-[color:var(--ink-200)] p-16 text-center">
+        <div className="rounded-[var(--r-surface)] border border-dashed border-[color:var(--ink-200)] p-16 text-center">
           <h3 className="tp-section text-[color:var(--surface-dark-900)]">No paths yet.</h3>
           <p className="tp-body mt-2.5 text-[color:var(--ink-500)]">Create your first path to start tracking experiments, reflections, and progress.</p>
           <button onClick={() => setShowCreate(true)}
-            className="mt-6 inline-flex items-center gap-2 rounded-[10px] px-6 py-3 text-sm font-semibold text-white"
+            className="mt-6 inline-flex items-center gap-2 rounded-[var(--r-control)] px-6 py-3 text-sm font-semibold text-white"
             style={{ background: 'var(--brand-navy-900)' }}>
             <Plus size={16} /> Create a Path
           </button>
@@ -747,7 +747,7 @@ export default function PathComparison() {
               value={search}
               onChange={e => setSearch(e.target.value)}
               placeholder="Search paths by name, category, or description…"
-              className="w-full rounded-xl border border-[color:var(--ink-200)] bg-white pl-9 pr-4 py-2.5 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]"
+              className="w-full rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-white pl-9 pr-4 py-2.5 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]"
             />
             {search && (
               <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-[color:var(--ink-400)] hover:text-[color:var(--ink-700)]">
@@ -771,12 +771,12 @@ export default function PathComparison() {
           </p>
 
           {displayedPaths.length === 0 ? (
-            <div className="rounded-[24px] border border-dashed border-[color:var(--ink-200)] py-16 text-center">
+            <div className="rounded-[var(--r-surface)] border border-dashed border-[color:var(--ink-200)] py-16 text-center">
               <p className="tp-body font-semibold text-[color:var(--surface-dark-900)]">No paths match these filters.</p>
               <p className="tp-meta text-[color:var(--ink-400)] mt-1.5">Try adjusting your sort or filter options.</p>
               <button
                 onClick={() => setFilters(DEFAULT_FILTERS)}
-                className="tp-meta mt-4 inline-flex items-center gap-1.5 rounded-[10px] border border-[color:var(--ink-200)] px-4 py-2 font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)]"
+                className="tp-meta mt-4 inline-flex items-center gap-1.5 rounded-[var(--r-control)] border border-[color:var(--ink-200)] px-4 py-2 font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)]"
               >
                 <X size={12} /> Clear Filters
               </button>
@@ -798,7 +798,7 @@ export default function PathComparison() {
             </div>
           )}
 
-          <div className="tp-body mt-8 rounded-[20px] p-5 text-center text-[color:var(--ink-500)]"
+          <div className="tp-body mt-8 rounded-[var(--r-surface)] p-5 text-center text-[color:var(--ink-500)]"
             style={{ background: 'var(--background-tertiary)', border: '1px solid var(--border-light)' }}>
             These paths are recommendations and tests, not permanent commitments. Your goal is to learn what fits you, not to pick one and stay forever.
           </div>

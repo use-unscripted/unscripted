@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { loadNextBestExperiment } from '@/lib/next-best-experiment';
 import RecommendedNextTest from '@/components/next-test/RecommendedNextTest';
 import { Sk } from '@/components/PageSkeleton';
+import { Reveal } from '@/components/motion';
 
 /**
  * Loads the recommendation and renders it. Stays silent when there is nothing
@@ -19,11 +20,14 @@ export default function NextBestExperimentPanel() {
     return () => { alive = false; };
   }, []);
 
-  if (state.loading) return <Sk h={268} r={22} />;
+  if (state.loading) return <Sk h={268} r={16} />;
   if (!state.recommendation) return null;
+  /* The reveal lives here rather than around this component on the page: it
+     renders nothing at all for a student with no open questions left, and a
+     wrapper out there would space out an empty box. */
   return (
-    <div className="content-in">
+    <Reveal y={20}>
       <RecommendedNextTest recommendation={state.recommendation} />
-    </div>
+    </Reveal>
   );
 }

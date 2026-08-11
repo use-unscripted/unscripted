@@ -35,7 +35,7 @@ function PathCard({ rec, index, onStart, starting, disabled }) {
   const labelStyle = LABEL_STYLES[index] || LABEL_STYLES[2];
 
   return (
-    <div className="rounded-[22px] border border-[color:var(--ink-200)] bg-white overflow-hidden">
+    <div className="rounded-[var(--r-surface)] border border-[color:var(--ink-200)] bg-white overflow-hidden">
       <div className="p-6">
         <div className="flex items-start justify-between gap-4 mb-4">
           <div>
@@ -60,14 +60,14 @@ function PathCard({ rec, index, onStart, starting, disabled }) {
             <ReadinessBar score={rec.readiness_score} />
 
             <div className="grid gap-4 sm:grid-cols-2">
-              <div className="rounded-xl p-4" style={{ background: 'var(--success-50)', border: '1px solid rgba(21,128,61,0.2)' }}>
+              <div className="rounded-[var(--r-control)] p-4" style={{ background: 'var(--success-50)', border: '1px solid rgba(21,128,61,0.2)' }}>
                 <div className="flex items-center gap-2 mb-2">
                   <TrendingUp size={14} style={{ color: 'var(--success-700)' }} />
                   <p className="tp-eyebrow" style={{ color: 'var(--success-700)' }}>Why it may fit</p>
                 </div>
                 <p className="tp-body text-[color:var(--ink-700)]">{rec.fit_reason}</p>
               </div>
-              <div className="rounded-xl p-4" style={{ background: 'var(--warning-50)', border: '1px solid rgba(180,83,9,0.2)' }}>
+              <div className="rounded-[var(--r-control)] p-4" style={{ background: 'var(--warning-50)', border: '1px solid rgba(180,83,9,0.2)' }}>
                 <div className="flex items-center gap-2 mb-2">
                   <AlertTriangle size={14} style={{ color: 'var(--warning-700)' }} />
                   <p className="tp-eyebrow" style={{ color: 'var(--warning-700)' }}>Why it may not</p>
@@ -97,7 +97,7 @@ function PathCard({ rec, index, onStart, starting, disabled }) {
               </div>
             )}
             {rec.first_experiment && (
-              <div className="rounded-xl p-4" style={{ background: 'var(--ink-100)', border: '1px solid rgba(31,58,95,0.15)' }}>
+              <div className="rounded-[var(--r-control)] p-4" style={{ background: 'var(--ink-100)', border: '1px solid rgba(31,58,95,0.15)' }}>
                 <div className="flex items-center gap-2 mb-1">
                   <Zap size={13} style={{ color: 'var(--brand-navy-900)' }} />
                   <p className="tp-eyebrow" style={{ color: 'var(--brand-navy-900)' }}>One low-risk experiment to start</p>
@@ -111,7 +111,7 @@ function PathCard({ rec, index, onStart, starting, disabled }) {
         <button
           onClick={onStart}
           disabled={disabled}
-          className="mt-5 w-full inline-flex items-center justify-center gap-2 rounded-[10px] px-6 py-3.5 text-sm font-semibold text-white transition hover:-translate-y-px disabled:opacity-60 disabled:hover:translate-y-0"
+          className="mt-5 w-full inline-flex items-center justify-center gap-2 rounded-[var(--r-control)] px-6 py-3.5 text-sm font-semibold text-white transition hover:-translate-y-px disabled:opacity-60 disabled:hover:translate-y-0"
           style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}
         >
           {starting
@@ -225,12 +225,12 @@ export default function PathResults() {
         {startError && <p className="tp-body mb-6 font-semibold text-red-600">{startError}</p>}
 
         {recs.length === 0 && (
-          <div className="tp-body rounded-[20px] border border-dashed border-[color:var(--ink-200)] p-12 text-center text-[color:var(--ink-500)]">
+          <div className="tp-body rounded-[var(--r-surface)] border border-dashed border-[color:var(--ink-200)] p-12 text-center text-[color:var(--ink-500)]">
             No path recommendations found. <Link to="/generating" style={{ color: 'var(--brand-navy-900)' }} className="font-semibold">Regenerate →</Link>
           </div>
         )}
 
-        <div className="rounded-[20px] p-6" style={{ background: 'var(--surface-dark-700)', border: '1px solid rgba(31,58,95,0.3)' }}>
+        <div className="rounded-[var(--r-surface)] p-6" style={{ background: 'var(--surface-dark-700)', border: '1px solid rgba(31,58,95,0.3)' }}>
           {/* Gold, not navy: navy-900 on this surface measures 1.63:1 and the
               label was effectively invisible. Same treatment as the dashboard's
               dark panel, which carries the same kind of label. */}

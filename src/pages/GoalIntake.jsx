@@ -20,7 +20,7 @@ const BLOCK_TYPES = [
 
 function GoalRow({ goal, onChange, onRemove }) {
   return (
-    <div className="rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] p-4 space-y-3">
+    <div className="rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] p-4 space-y-3">
       <div className="grid gap-3 sm:grid-cols-2">
         <input
           className="rounded-lg border border-[color:var(--ink-200)] bg-white px-3 py-2.5 text-base md:text-sm text-[color:var(--surface-dark-900)] placeholder-[color:var(--ink-400)] outline-none focus:border-[color:var(--brand-navy-900)] sm:col-span-2"
@@ -64,7 +64,7 @@ function GoalRow({ goal, onChange, onRemove }) {
 
 function ScheduleBlockRow({ block, onChange, onRemove }) {
   return (
-    <div className="grid gap-2 rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] p-3 sm:grid-cols-5">
+    <div className="grid gap-2 rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] p-3 sm:grid-cols-5">
       <select className="rounded-lg border border-[color:var(--ink-200)] bg-white px-2 py-2 text-base md:text-sm text-[color:var(--ink-700)] outline-none focus:border-[color:var(--brand-navy-900)]"
         value={block.block_type} onChange={e => onChange({ ...block, block_type: e.target.value })}>
         {BLOCK_TYPES.map(b => <option key={b.value} value={b.value}>{b.label}</option>)}
@@ -142,7 +142,7 @@ export default function GoalIntake() {
         </div>
 
         {/* Tabs */}
-        <div className="mb-6 flex gap-2 rounded-xl border border-[color:var(--ink-200)] bg-white p-1.5">
+        <div className="mb-6 flex gap-2 rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-white p-1.5">
           {tabs.map(({ id, label, icon: Icon }) => (
             <button key={id} onClick={() => setTab(id)}
               className="flex flex-1 items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-semibold transition"
@@ -152,7 +152,7 @@ export default function GoalIntake() {
           ))}
         </div>
 
-        <div className="rounded-[24px] border border-[color:var(--ink-200)] bg-white p-6 sm:p-8">
+        <div className="rounded-[var(--r-surface)] border border-[color:var(--ink-200)] bg-white p-6 sm:p-8">
           {tab !== 'weekly' ? (
             <div className="space-y-4">
               <p className="tp-body text-[color:var(--ink-500)]">
@@ -204,20 +204,20 @@ export default function GoalIntake() {
                   <span className="text-sm font-semibold text-[color:var(--ink-700)]">Available hours/week for growth</span>
                   <input type="number" min="1" max="40" value={availableHours}
                     onChange={e => setAvailableHours(Number(e.target.value))}
-                    className="mt-2 w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]" />
+                    className="mt-2 w-full rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]" />
                   <p className="tp-meta mt-1 text-[color:var(--ink-400)]">Be conservative and honest.</p>
                 </label>
                 <label className="block">
                   <span className="text-sm font-semibold text-[color:var(--ink-700)]">High-energy times</span>
                   <input type="text" value={highEnergyTimes} onChange={e => setHighEnergyTimes(e.target.value)}
                     placeholder="e.g. 7-10am, after gym"
-                    className="mt-2 w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]" />
+                    className="mt-2 w-full rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]" />
                 </label>
                 <label className="block">
                   <span className="text-sm font-semibold text-[color:var(--ink-700)]">Low-energy times</span>
                   <input type="text" value={lowEnergyTimes} onChange={e => setLowEnergyTimes(e.target.value)}
                     placeholder="e.g. 2-4pm after lunch"
-                    className="mt-2 w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]" />
+                    className="mt-2 w-full rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]" />
                 </label>
               </div>
             </div>
@@ -231,13 +231,13 @@ export default function GoalIntake() {
           </button>
           {tab !== 'weekly' ? (
             <button onClick={() => setTab(tab === 'annual' ? 'monthly' : 'weekly')}
-              className="flex items-center gap-2 rounded-[10px] px-6 py-3 text-sm font-semibold text-white transition hover:-translate-y-px"
+              className="flex items-center gap-2 rounded-[var(--r-control)] px-6 py-3 text-sm font-semibold text-white transition hover:-translate-y-px"
               style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}>
               Next <ArrowRight size={16} />
             </button>
           ) : (
             <button onClick={submit} disabled={saving}
-              className="flex items-center gap-2 rounded-[10px] px-6 py-3 text-sm font-semibold text-white transition hover:-translate-y-px disabled:opacity-60"
+              className="flex items-center gap-2 rounded-[var(--r-control)] px-6 py-3 text-sm font-semibold text-white transition hover:-translate-y-px disabled:opacity-60"
               style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}>
               {saving ? 'Building your profile...' : 'Build My Unscripted Profile'} <ArrowRight size={16} />
             </button>

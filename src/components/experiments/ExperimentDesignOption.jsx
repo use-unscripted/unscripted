@@ -7,7 +7,7 @@ import { DIFFICULTY_LABELS } from '@/lib/experiment-design';
 export default function ExperimentDesignOption({ design, selected, onSelect }) {
   return (
     <button onClick={onSelect}
-      className="w-full text-left rounded-[16px] border p-4 transition"
+      className="w-full text-left rounded-[var(--r-surface)] border p-4 transition"
       style={selected
         ? { background: 'var(--ink-100)', borderColor: 'var(--brand-navy-900)' }
         : { background: 'white', borderColor: 'var(--ink-200)' }}>

@@ -25,7 +25,7 @@ export default function ConclusionGate({ availability, experiment, onEndEarly })
   };
 
   return (
-    <section className="rounded-[20px] bg-white p-5 sm:p-6" style={{ border: '1px solid var(--border-light)' }}>
+    <section className="rounded-[var(--r-surface)] bg-white p-5 sm:p-6" style={{ border: '1px solid var(--border-light)' }}>
       <h2 className="tp-section" style={{ color: 'var(--text-primary)' }}>
         Reflection opens once the work is done
       </h2>
@@ -38,7 +38,7 @@ export default function ConclusionGate({ availability, experiment, onEndEarly })
       <div className="mt-4 flex flex-wrap gap-3">
         <Link
           to={`/experiment?experimentId=${experiment.id}`}
-          className="ui-press inline-flex items-center gap-2 rounded-[10px] px-5 text-sm font-bold text-white"
+          className="ui-press inline-flex items-center gap-2 rounded-[var(--r-control)] px-5 text-sm font-bold text-white"
           style={{ background: 'var(--brand-navy-900)', minHeight: '48px', paddingTop: 12, paddingBottom: 12 }}
         >
           <ListChecks size={15} /> Back to my missions
@@ -47,7 +47,7 @@ export default function ConclusionGate({ availability, experiment, onEndEarly })
           <button
             type="button"
             onClick={() => setOpen(true)}
-            className="rounded-[10px] border px-5 text-sm font-bold"
+            className="rounded-[var(--r-control)] border px-5 text-sm font-bold"
             style={{ borderColor: 'var(--border-light)', color: 'var(--text-primary)', minHeight: '48px' }}
           >
             End this experiment early
@@ -56,7 +56,7 @@ export default function ConclusionGate({ availability, experiment, onEndEarly })
       </div>
 
       {open && (
-        <div className="anim-slide-up mt-4 rounded-[14px] p-4" style={{ background: 'var(--background-secondary)', border: '1px solid var(--border-light)' }}>
+        <div className="anim-slide-up mt-4 rounded-[var(--r-control)] p-4" style={{ background: 'var(--background-secondary)', border: '1px solid var(--border-light)' }}>
           <label className="block text-sm font-bold" style={{ color: 'var(--text-primary)' }}>
             Why are you ending it early?
           </label>
@@ -66,7 +66,7 @@ export default function ConclusionGate({ availability, experiment, onEndEarly })
             onChange={e => setReason(e.target.value)}
             autoFocus
             placeholder="e.g. two weeks of outreach with no replies. I've learned what I needed to."
-            className="mt-2 w-full rounded-[10px] border bg-white px-3 py-2.5 text-base md:text-sm outline-none"
+            className="mt-2 w-full rounded-[var(--r-control)] border bg-white px-3 py-2.5 text-base md:text-sm outline-none"
             style={{ borderColor: 'var(--border-light)' }}
           />
           {error && (
@@ -79,7 +79,7 @@ export default function ConclusionGate({ availability, experiment, onEndEarly })
               type="button"
               onClick={submit}
               disabled={busy}
-              className="ui-press rounded-[10px] px-5 text-sm font-bold text-white disabled:opacity-50"
+              className="ui-press rounded-[var(--r-control)] px-5 text-sm font-bold text-white disabled:opacity-50"
               style={{ background: 'var(--brand-navy-900)', minHeight: '48px' }}
             >
               {busy ? 'Ending…' : 'End early and reflect'}

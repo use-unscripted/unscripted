@@ -116,7 +116,7 @@ export function RecommendedEvent({ event, college, timeOnly = false }) {
 
   return (
     <div
-      className="overflow-hidden rounded-xl border-2"
+      className="overflow-hidden rounded-[var(--r-control)] border-2"
       style={{ borderColor: 'rgba(214,182,106,0.55)', background: 'var(--background-primary)' }}
     >
       <div
@@ -174,7 +174,7 @@ export function CompactEvent({ event, college, timeOnly = false, showCountdown =
   return (
     <div>
       <div
-        className="rounded-xl p-4"
+        className="rounded-[var(--r-control)] p-4"
         style={{
           background: open ? 'var(--background-tertiary)' : 'var(--background-secondary)',
           border: '1px solid var(--border-light)',

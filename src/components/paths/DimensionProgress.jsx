@@ -20,9 +20,18 @@ export default function DimensionProgress({ progress, compact = false }) {
   );
 
   return (
-    <div className="rounded-[14px] border p-4" style={{ borderColor: 'var(--border-light)', background: 'white' }}>
+    /* Compact means this is already sitting inside a bordered row inside a
+       card. A third outline there is three boxes deep, which the marketing
+       page never does: its inset blocks are a flat tint with no border at all.
+       Standalone, on the paths screen, it is still a box of its own. */
+    <div
+      className={compact ? 'app-inset p-4' : 'rounded-[var(--r-control)] border p-4'}
+      style={compact
+        ? { background: 'var(--ink-50)' }
+        : { borderColor: 'var(--border-light)', background: 'white' }}
+    >
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <p className="tp-eyebrow" style={{ color: 'var(--brand-navy-700)' }}>Your evidence progress</p>
+        <p className="tp-label" style={{ color: 'var(--ink-500)' }}>Your evidence progress</p>
         <span className="tp-meta rounded-full px-2.5 py-0.5 font-bold"
           style={{ background: 'var(--ink-100)', color: 'var(--brand-navy-900)' }}>
           Evidence status: {evidenceStatus.label}
@@ -40,7 +49,7 @@ export default function DimensionProgress({ progress, compact = false }) {
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
           {tested.length > 0 && (
             <div>
-              <p className="tp-eyebrow mb-2" style={{ color: 'var(--success-700)' }}>Tested</p>
+              <p className="tp-label mb-2" style={{ color: 'var(--success-700)' }}>Tested</p>
               <ul className="space-y-1.5">
                 {tested.map(r => <Row key={r.id} row={r} color="var(--ink-700)"
                   icon={<Check size={14} style={{ color: 'var(--success-700)' }} aria-hidden="true" />} />)}
@@ -49,7 +58,7 @@ export default function DimensionProgress({ progress, compact = false }) {
           )}
           {(untested.length > 0 || partial.length > 0) && (
             <div>
-              <p className="tp-eyebrow mb-2" style={{ color: 'var(--ink-500)' }}>Still to test</p>
+              <p className="tp-label mb-2" style={{ color: 'var(--ink-500)' }}>Still to test</p>
               <ul className="space-y-1.5">
                 {partial.map(r => <Row key={r.id} row={r} color="var(--ink-500)"
                   icon={<MinusCircle size={14} style={{ color: 'var(--warning-700)' }} aria-hidden="true" />} />)}

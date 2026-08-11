@@ -2,7 +2,7 @@ import { useState, useRef } from 'react';
 import { X, Loader2, Trash2 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 
-const inputCls = 'w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-base md:text-sm text-[color:var(--surface-dark-900)] placeholder-[color:var(--ink-400)] outline-none focus:border-[color:var(--brand-navy-900)]';
+const inputCls = 'w-full rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-base md:text-sm text-[color:var(--surface-dark-900)] placeholder-[color:var(--ink-400)] outline-none focus:border-[color:var(--brand-navy-900)]';
 
 export default function EditPathModal({ path, onClose, onSaved, onDeleted }) {
   const submittingRef = useRef(false);
@@ -58,13 +58,13 @@ export default function EditPathModal({ path, onClose, onSaved, onDeleted }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(5,8,22,0.6)' }}>
-      <div className="w-full max-w-2xl max-h-[92vh] overflow-y-auto rounded-[24px] bg-white p-6 sm:p-8">
+      <div className="w-full max-w-2xl max-h-[92vh] overflow-y-auto rounded-[var(--r-surface)] bg-white p-6 sm:p-8">
         <div className="flex items-center justify-between mb-1">
           <h2 className="tp-section text-[color:var(--surface-dark-900)]">Edit Path</h2>
           <button onClick={onClose} disabled={saving}><X size={20} className="text-[color:var(--ink-500)]" /></button>
         </div>
         <p className="text-sm text-[color:var(--ink-500)] mb-5">Changes to this path will not affect other paths.</p>
-        {error && <div className="mb-4 p-3 rounded-xl bg-red-50 border border-red-100 text-sm text-red-700">{error}</div>}
+        {error && <div className="mb-4 p-3 rounded-[var(--r-control)] bg-red-50 border border-red-100 text-sm text-red-700">{error}</div>}
 
         <div className="space-y-4">
           <div>
@@ -78,27 +78,27 @@ export default function EditPathModal({ path, onClose, onSaved, onDeleted }) {
           <div>
             <label className="block text-sm font-semibold text-[color:var(--ink-700)] mb-1.5">Goals for this path</label>
             <textarea rows={2} name="goals" value={form.goals} onChange={ch} placeholder="What do you want to learn or prove?"
-              className="w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)] resize-none placeholder-[color:var(--ink-400)]" />
+              className="w-full rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)] resize-none placeholder-[color:var(--ink-400)]" />
           </div>
           <div>
             <label className="block text-sm font-semibold text-[color:var(--ink-700)] mb-1.5">Why it fits you</label>
             <textarea rows={2} name="why_it_fits" value={form.why_it_fits} onChange={ch} placeholder="Your strengths, interests, or alignment..."
-              className="w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)] resize-none placeholder-[color:var(--ink-400)]" />
+              className="w-full rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)] resize-none placeholder-[color:var(--ink-400)]" />
           </div>
           <div>
             <label className="block text-sm font-semibold text-[color:var(--ink-700)] mb-1.5">Why it may not fit</label>
             <textarea rows={2} name="why_it_may_not_fit" value={form.why_it_may_not_fit} onChange={ch} placeholder="Honest concerns or potential mismatches..."
-              className="w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)] resize-none placeholder-[color:var(--ink-400)]" />
+              className="w-full rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)] resize-none placeholder-[color:var(--ink-400)]" />
           </div>
           <div>
             <label className="block text-sm font-semibold text-[color:var(--ink-700)] mb-1.5">Lifestyle implications</label>
             <textarea rows={2} name="lifestyle_implications" value={form.lifestyle_implications} onChange={ch} placeholder="Work hours, income, location, autonomy..."
-              className="w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)] resize-none placeholder-[color:var(--ink-400)]" />
+              className="w-full rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)] resize-none placeholder-[color:var(--ink-400)]" />
           </div>
           <div>
             <label className="block text-sm font-semibold text-[color:var(--ink-700)] mb-1.5">Notes</label>
             <textarea rows={2} name="notes" value={form.notes} onChange={ch} placeholder="Anything else to track..."
-              className="w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)] resize-none placeholder-[color:var(--ink-400)]" />
+              className="w-full rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)] resize-none placeholder-[color:var(--ink-400)]" />
           </div>
           <div className="grid gap-4 sm:grid-cols-3">
             <div>
@@ -121,15 +121,15 @@ export default function EditPathModal({ path, onClose, onSaved, onDeleted }) {
         </div>
 
         {confirmDelete ? (
-          <div className="mt-6 rounded-xl border border-red-200 bg-red-50 p-4">
+          <div className="mt-6 rounded-[var(--r-control)] border border-red-200 bg-red-50 p-4">
             <p className="text-sm font-semibold text-red-700 mb-3">Permanently delete "{path.path_name}"? This cannot be undone.</p>
             <div className="flex gap-3">
               <button onClick={() => setConfirmDelete(false)} disabled={deleting}
-                className="flex-1 rounded-[10px] border border-[color:var(--ink-200)] py-2.5 text-sm font-semibold text-[color:var(--ink-700)] bg-white">
+                className="flex-1 rounded-[var(--r-control)] border border-[color:var(--ink-200)] py-2.5 text-sm font-semibold text-[color:var(--ink-700)] bg-white">
                 Cancel
               </button>
               <button onClick={handleDelete} disabled={deleting}
-                className="flex-1 rounded-[10px] py-2.5 text-sm font-semibold text-white bg-red-600 disabled:opacity-60">
+                className="flex-1 rounded-[var(--r-control)] py-2.5 text-sm font-semibold text-white bg-red-600 disabled:opacity-60">
                 {deleting ? <span className="flex items-center justify-center gap-2"><Loader2 size={14} className="animate-spin" />Deleting…</span> : 'Yes, Delete'}
               </button>
             </div>
@@ -137,12 +137,12 @@ export default function EditPathModal({ path, onClose, onSaved, onDeleted }) {
         ) : (
           <div className="mt-6 flex gap-3">
             <button onClick={() => setConfirmDelete(true)} disabled={saving}
-              className="flex items-center gap-1.5 rounded-[10px] border border-red-200 px-4 py-3 text-sm font-semibold text-red-600 hover:bg-red-50 transition">
+              className="flex items-center gap-1.5 rounded-[var(--r-control)] border border-red-200 px-4 py-3 text-sm font-semibold text-red-600 hover:bg-red-50 transition">
               <Trash2 size={14} /> Delete
             </button>
-            <button onClick={onClose} disabled={saving} className="flex-1 rounded-[10px] border border-[color:var(--ink-200)] py-3 text-sm font-semibold text-[color:var(--ink-700)] disabled:opacity-50">Cancel</button>
+            <button onClick={onClose} disabled={saving} className="flex-1 rounded-[var(--r-control)] border border-[color:var(--ink-200)] py-3 text-sm font-semibold text-[color:var(--ink-700)] disabled:opacity-50">Cancel</button>
             <button onClick={handleSave} disabled={saving}
-              className="flex-1 rounded-[10px] py-3 text-sm font-semibold text-white disabled:opacity-60"
+              className="flex-1 rounded-[var(--r-control)] py-3 text-sm font-semibold text-white disabled:opacity-60"
               style={{ background: 'var(--brand-navy-900)' }}>
               {saving ? <span className="flex items-center justify-center gap-2"><Loader2 size={15} className="animate-spin" />Saving…</span> : 'Save Changes'}
             </button>

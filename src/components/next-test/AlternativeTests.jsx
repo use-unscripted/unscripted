@@ -15,7 +15,7 @@ export default function AlternativeTests({ alternatives = [] }) {
         These would also teach us something new, just less than the one above.
       </p>
       {alternatives.map(alt => (
-        <div key={alt.variable} className="rounded-[14px] border bg-white p-4" style={{ borderColor: 'var(--ink-200)' }}>
+        <div key={alt.variable} className="rounded-[var(--r-control)] border bg-white p-4" style={{ borderColor: 'var(--ink-200)' }}>
           <p className="tp-card font-semibold" style={{ color: 'var(--ink-900)' }}>{alt.blueprint.title}</p>
           <p className="tp-body mt-1" style={{ color: 'var(--ink-500)' }}>{alt.blueprint.summary}</p>
           <p className="tp-meta mt-2" style={{ color: 'var(--ink-400)' }}>

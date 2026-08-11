@@ -154,7 +154,7 @@ function StepPick({ rec, options, selected, onSelect, onCustom, onNext, designin
   return (
     <div className="space-y-6">
       {/* Path context card */}
-      <div className="rounded-[20px] p-5 space-y-3" style={{ background: 'var(--surface-dark-700)', color: 'white' }}>
+      <div className="rounded-[var(--r-surface)] p-5 space-y-3" style={{ background: 'var(--surface-dark-700)', color: 'white' }}>
         <p className="tp-eyebrow opacity-60">Testing Path</p>
         <h2 className="tp-page">{rec.path_name}</h2>
         {rec.fit_reason && (
@@ -183,7 +183,7 @@ function StepPick({ rec, options, selected, onSelect, onCustom, onNext, designin
 
       {/* What the student chose to test, and a way back to change it */}
       {focus && (
-        <div className="flex flex-wrap items-center justify-between gap-2 rounded-[16px] border p-4"
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-[var(--r-surface)] border p-4"
           style={{ borderColor: 'var(--ink-200)', background: 'var(--ink-50)' }}>
           <div>
             <p className="tp-eyebrow mb-1" style={{ color: 'var(--ink-500)' }}>You are testing</p>
@@ -199,7 +199,7 @@ function StepPick({ rec, options, selected, onSelect, onCustom, onNext, designin
       {/* The default: a few minutes of the actual work. The long simulations
           below stay available as Deep Dives. */}
       <Link to={`/moment?recId=${rec.id || ''}&variable=${encodeURIComponent(focus?.variable || '')}`}
-        className="block rounded-[20px] border p-5 transition hover:-translate-y-px"
+        className="block rounded-[var(--r-surface)] border p-5 transition hover:-translate-y-px"
         style={{ borderColor: 'var(--brand-navy-900)', background: 'white', boxShadow: '0 8px 24px rgba(31,58,95,0.12)' }}>
         <p className="tp-eyebrow" style={{ color: 'var(--brand-gold-700)' }}>Recommended · about 4 minutes</p>
         <p className="tp-card mt-2 text-[color:var(--surface-dark-900)]">Try 4 minutes of {rec.path_name}</p>
@@ -230,7 +230,7 @@ function StepPick({ rec, options, selected, onSelect, onCustom, onNext, designin
             />
           ) : (
             <button key={i} onClick={() => onSelect(opt)}
-              className="w-full text-left rounded-[16px] border p-4 transition"
+              className="w-full text-left rounded-[var(--r-surface)] border p-4 transition"
               style={selected === i
                 ? { background: 'var(--ink-100)', borderColor: 'var(--brand-navy-900)' }
                 : { background: 'white', borderColor: 'var(--ink-200)' }}>
@@ -249,7 +249,7 @@ function StepPick({ rec, options, selected, onSelect, onCustom, onNext, designin
             </button>
           ))}
           <button onClick={onCustom}
-            className="tp-body w-full text-left rounded-[16px] border border-dashed p-4 font-semibold text-[color:var(--ink-500)] transition hover:border-[color:var(--brand-navy-700)] hover:text-[color:var(--brand-navy-700)]"
+            className="tp-body w-full text-left rounded-[var(--r-surface)] border border-dashed p-4 font-semibold text-[color:var(--ink-500)] transition hover:border-[color:var(--brand-navy-700)] hover:text-[color:var(--brand-navy-700)]"
             style={{ background: 'white' }}>
             + Create a custom experiment
           </button>
@@ -257,7 +257,7 @@ function StepPick({ rec, options, selected, onSelect, onCustom, onNext, designin
       </div>
 
       <button onClick={onNext} disabled={selected === null}
-        className="tp-body w-full flex items-center justify-center gap-2 rounded-[12px] py-3.5 font-semibold text-white transition hover:-translate-y-px disabled:opacity-40"
+        className="tp-body w-full flex items-center justify-center gap-2 rounded-[var(--r-control)] py-3.5 font-semibold text-white transition hover:-translate-y-px disabled:opacity-40"
         style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}>
         Confirm & Build My Experiment <ArrowRight size={16} />
       </button>
@@ -280,27 +280,27 @@ function StepCustom({ pathName, data, onChange, onBack, onNext }) {
       ].map(f => (
         <label key={f.name} className="block">
           <span className="tp-body font-semibold text-[color:var(--ink-700)] block mb-1">{f.label}</span>
-          <input className="w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]"
+          <input className="w-full rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]"
             placeholder={f.placeholder} value={data[f.name] || ''} onChange={e => onChange(f.name, e.target.value)} />
         </label>
       ))}
       <label className="block">
         <span className="tp-body font-semibold text-[color:var(--ink-700)] block mb-1">Path being tested</span>
-        <input className="w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--ink-100)] px-4 py-3 text-base md:text-sm outline-none text-[color:var(--ink-700)]"
+        <input className="w-full rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-[color:var(--ink-100)] px-4 py-3 text-base md:text-sm outline-none text-[color:var(--ink-700)]"
           value={pathName} readOnly />
       </label>
       <label className="block">
         <span className="tp-body font-semibold text-[color:var(--ink-700)] block mb-1">Estimated hours</span>
-        <input type="number" min="1" max="40" className="w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]"
+        <input type="number" min="1" max="40" className="w-full rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]"
           value={data.estimated_hours || 5} onChange={e => onChange('estimated_hours', Number(e.target.value))} />
       </label>
       <label className="block">
         <span className="tp-body font-semibold text-[color:var(--ink-700)] block mb-1">Deadline (optional)</span>
-        <input type="date" className="w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]"
+        <input type="date" className="w-full rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]"
           value={data.deadline || ''} onChange={e => onChange('deadline', e.target.value)} />
       </label>
       <button onClick={onNext} disabled={!data.title || !data.objective}
-        className="tp-body w-full flex items-center justify-center gap-2 rounded-[12px] py-3.5 font-semibold text-white transition hover:-translate-y-px disabled:opacity-40"
+        className="tp-body w-full flex items-center justify-center gap-2 rounded-[var(--r-control)] py-3.5 font-semibold text-white transition hover:-translate-y-px disabled:opacity-40"
         style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}>
         Build My Experiment <ArrowRight size={16} />
       </button>
@@ -312,7 +312,7 @@ function StepCustom({ pathName, data, onChange, onBack, onNext }) {
 function StepGenerating({ experiment, missionGuide, error }) {
   if (error) {
     return (
-      <div className="rounded-[20px] border border-red-200 bg-red-50 p-6 text-center space-y-3">
+      <div className="rounded-[var(--r-surface)] border border-red-200 bg-red-50 p-6 text-center space-y-3">
         <AlertCircle className="mx-auto text-red-500" size={32} />
         <p className="font-semibold text-red-700">We could not build your experiment</p>
         <p className="tp-body text-red-600">{error}</p>
@@ -352,7 +352,7 @@ function StepSuccess({ experiment, missionGuide, onViewGuide }) {
         />
       )}
 
-      <div className="rounded-[20px] text-center p-8 space-y-3" style={{ background: 'var(--success-50)', border: '1px solid #86EFAC' }}>
+      <div className="rounded-[var(--r-surface)] text-center p-8 space-y-3" style={{ background: 'var(--success-50)', border: '1px solid #86EFAC' }}>
         <CheckCircle className="mx-auto text-green-600" size={40} />
         <h2 className="tp-page text-[color:var(--surface-dark-900)]">Experiment Created</h2>
         <div className="space-y-1">
@@ -361,13 +361,13 @@ function StepSuccess({ experiment, missionGuide, onViewGuide }) {
         </div>
       </div>
 
-      <div className="rounded-[16px] border border-[color:var(--ink-200)] bg-white p-5">
+      <div className="rounded-[var(--r-surface)] border border-[color:var(--ink-200)] bg-white p-5">
         <p className="tp-eyebrow text-[color:var(--ink-500)] mb-2">Your first action</p>
         <p className="tp-body font-semibold text-[color:var(--surface-dark-900)]">{firstStepText}</p>
       </div>
 
       {missionGuide?.mission_steps?.length > 0 && (
-        <div className="rounded-[16px] border border-[color:var(--ink-200)] bg-white p-5">
+        <div className="rounded-[var(--r-surface)] border border-[color:var(--ink-200)] bg-white p-5">
           <p className="tp-eyebrow text-[color:var(--ink-500)] mb-3">Experiment Preview</p>
           <ol className="space-y-2">
             {missionGuide.mission_steps.slice(0, 5).map((s, i) => (
@@ -385,12 +385,12 @@ function StepSuccess({ experiment, missionGuide, onViewGuide }) {
 
       <div className="grid grid-cols-2 gap-3">
         <button onClick={onViewGuide}
-          className="tp-body rounded-[12px] py-3 font-semibold text-white"
+          className="tp-body rounded-[var(--r-control)] py-3 font-semibold text-white"
           style={{ background: 'var(--brand-navy-900)' }}>
           View My Full Experiment
         </button>
         <button onClick={() => setShowCal(true)}
-          className="tp-body rounded-[12px] border py-3 font-semibold transition hover:bg-[color:var(--ink-50)]"
+          className="tp-body rounded-[var(--r-control)] border py-3 font-semibold transition hover:bg-[color:var(--ink-50)]"
           style={{ borderColor: 'var(--ink-200)', color: 'var(--ink-700)' }}>
           Add to Calendar
         </button>
@@ -406,19 +406,19 @@ function StepSuccess({ experiment, missionGuide, onViewGuide }) {
 function DuplicateModal({ existing, onContinue, onCreateNew, onCancel }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(5,8,22,0.5)' }}>
-      <div className="w-full max-w-md rounded-[24px] bg-white p-6 space-y-4">
+      <div className="w-full max-w-md rounded-[var(--r-surface)] bg-white p-6 space-y-4">
         <h3 className="tp-section text-[color:var(--surface-dark-900)]">You already have an experiment for this path</h3>
         <p className="tp-body text-[color:var(--ink-700)]">
           <span className="font-semibold">"{existing.title}"</span> is {existing.status === 'draft' ? 'a saved draft' : 'currently active'} for <span className="font-semibold">{existing.path_name}</span>.
         </p>
         <div className="space-y-2">
           <button onClick={onContinue}
-            className="tp-body w-full rounded-[10px] py-3 font-semibold text-white"
+            className="tp-body w-full rounded-[var(--r-control)] py-3 font-semibold text-white"
             style={{ background: 'var(--brand-navy-900)' }}>
             Continue Existing Experiment
           </button>
           <button onClick={onCreateNew}
-            className="tp-body w-full rounded-[10px] border py-3 font-semibold transition hover:bg-[color:var(--ink-50)]"
+            className="tp-body w-full rounded-[var(--r-control)] border py-3 font-semibold transition hover:bg-[color:var(--ink-50)]"
             style={{ borderColor: 'var(--ink-200)', color: 'var(--ink-700)' }}>
             Create a New Experiment
           </button>
@@ -798,7 +798,7 @@ ${PLAIN_PROSE_RULES}${correction}`,
             </div>
           </div>
 
-          <div className="rounded-[24px] border border-[color:var(--ink-200)] bg-white p-6 sm:p-8">
+          <div className="rounded-[var(--r-surface)] border border-[color:var(--ink-200)] bg-white p-6 sm:p-8">
             <div className="flex h-8 items-center"><Sk h={24} w="70%" r={7} /></div>
             <div className="mt-2 flex h-6 items-center"><Sk h={13} w="92%" r={5} /></div>
             <div className="mt-6"><SkCards count={3} h={92} gap={12} r={16} /></div>
@@ -816,7 +816,7 @@ ${PLAIN_PROSE_RULES}${correction}`,
           <AlertCircle className="mx-auto text-red-500" size={40} />
           <h2 className="tp-section text-[color:var(--surface-dark-900)]">{loadError}</h2>
           <Link to="/paths"
-            className="tp-body inline-flex items-center gap-2 rounded-[10px] px-5 py-3 font-semibold text-white"
+            className="tp-body inline-flex items-center gap-2 rounded-[var(--r-control)] px-5 py-3 font-semibold text-white"
             style={{ background: 'var(--brand-navy-900)' }}>
             Return to Path Comparison
           </Link>
@@ -865,7 +865,7 @@ ${PLAIN_PROSE_RULES}${correction}`,
         </div>
 
         {/* Content */}
-        <div className="rounded-[24px] border border-[color:var(--ink-200)] bg-white p-6 sm:p-8">
+        <div className="rounded-[var(--r-surface)] border border-[color:var(--ink-200)] bg-white p-6 sm:p-8">
           {step === 'uncertainty' && (
             <UncertaintyPicker
               pathName={rec.path_name}

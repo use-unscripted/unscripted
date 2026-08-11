@@ -19,7 +19,7 @@ export default function MomentReaction({ fields, answers, onAnswer, onFinish, sa
               <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
                 {REACTIONS.map(r => (
                   <button key={r.value} onClick={() => onAnswer(f.key, r.score)}
-                    className="rounded-[14px] border px-3 py-4 text-center transition"
+                    className="rounded-[var(--r-control)] border px-3 py-4 text-center transition"
                     style={answers[f.key] === r.score
                       ? { borderColor: 'var(--brand-navy-900)', background: 'var(--ink-100)' }
                       : { borderColor: 'var(--ink-200)', background: 'white' }}>
@@ -39,7 +39,7 @@ export default function MomentReaction({ fields, answers, onAnswer, onFinish, sa
               <div className="mt-3 flex gap-2">
                 {AGAIN_OPTIONS.map(o => (
                   <button key={o.value} onClick={() => onAnswer(f.key, o.score)}
-                    className="tp-body flex-1 rounded-[12px] border py-3 font-semibold transition"
+                    className="tp-body flex-1 rounded-[var(--r-control)] border py-3 font-semibold transition"
                     style={answers[f.key] === o.score
                       ? { borderColor: 'var(--brand-navy-900)', background: 'var(--ink-100)', color: 'var(--brand-navy-900)' }
                       : { borderColor: 'var(--ink-200)', background: 'white', color: 'var(--ink-700)' }}>
@@ -64,7 +64,7 @@ export default function MomentReaction({ fields, answers, onAnswer, onFinish, sa
       })}
 
       <button onClick={onFinish} disabled={!answered || saving}
-        className="tp-body ui-press w-full rounded-[12px] py-3.5 font-semibold text-white disabled:opacity-40"
+        className="tp-body ui-press w-full rounded-[var(--r-control)] py-3.5 font-semibold text-white disabled:opacity-40"
         style={{ background: 'var(--brand-navy-900)' }}>
         {saving ? 'Saving your evidence…' : 'Save my evidence'}
       </button>

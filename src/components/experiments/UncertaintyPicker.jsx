@@ -41,7 +41,7 @@ export default function UncertaintyPicker({ pathName, variables, value, onChange
         </span>
         <div className="relative">
           <select
-            className="field-select w-full appearance-none rounded-xl border px-4 py-3 pr-10 text-base outline-none md:text-sm"
+            className="field-select w-full appearance-none rounded-[var(--r-control)] border px-4 py-3 pr-10 text-base outline-none md:text-sm"
             style={{ borderColor: 'var(--ink-200)', background: 'var(--page-surface)', color: 'var(--ink-900)' }}
             value={value}
             onChange={(e) => onChange(e.target.value)}
@@ -62,7 +62,7 @@ export default function UncertaintyPicker({ pathName, variables, value, onChange
       </label>
 
       {chosen && (
-        <div className="rounded-[16px] border p-4" style={{ borderColor: 'var(--ink-200)', background: 'var(--ink-50)' }}>
+        <div className="rounded-[var(--r-surface)] border p-4" style={{ borderColor: 'var(--ink-200)', background: 'var(--ink-50)' }}>
           <p className="tp-eyebrow mb-1" style={{ color: 'var(--ink-500)' }}>What this will answer</p>
           <p className="tp-body font-semibold" style={{ color: 'var(--surface-dark-900)' }}>{chosen.question}</p>
           {chosen.tendency && (
@@ -76,7 +76,7 @@ export default function UncertaintyPicker({ pathName, variables, value, onChange
       <button
         onClick={onNext}
         disabled={!value}
-        className="tp-body flex w-full items-center justify-center gap-2 rounded-[12px] py-3.5 font-semibold text-white transition disabled:opacity-40"
+        className="tp-body flex w-full items-center justify-center gap-2 rounded-[var(--r-control)] py-3.5 font-semibold text-white transition disabled:opacity-40"
         style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}
       >
         Design experiments for this <ArrowRight size={16} />

@@ -42,7 +42,7 @@ export default class AppErrorBoundary extends Component {
           <div className="mt-8 flex flex-col items-center gap-3">
             <button
               onClick={() => window.location.reload()}
-              className="flex items-center gap-2 rounded-[10px] px-6 py-3 text-sm font-semibold text-white transition hover:-translate-y-px"
+              className="flex items-center gap-2 rounded-[var(--r-control)] px-6 py-3 text-sm font-semibold text-white transition hover:-translate-y-px"
               style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}
             >
               <RefreshCw size={15} /> Reload the page

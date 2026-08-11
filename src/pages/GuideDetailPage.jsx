@@ -151,7 +151,7 @@ export default function GuideDetailPage() {
         <button
           onClick={handleSetActive}
           disabled={settingActive}
-          className="tp-body mb-8 flex items-center gap-2 rounded-[10px] border border-[color:var(--ink-200)] px-5 py-3 font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)] transition disabled:opacity-60"
+          className="tp-body mb-8 flex items-center gap-2 rounded-[var(--r-control)] border border-[color:var(--ink-200)] px-5 py-3 font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)] transition disabled:opacity-60"
         >
           {settingActive ? <Loader2 size={15} className="animate-spin" /> : <Star size={15} />}
           Set as Active Experiment
@@ -225,7 +225,7 @@ export default function GuideDetailPage() {
 
       {/* Deliverable */}
       {guide.deliverable && (
-        <section className="mb-5 rounded-xl p-5" style={{ background: 'var(--ink-100)', border: '1px solid rgba(31,58,95,0.15)' }}>
+        <section className="mb-5 rounded-[var(--r-control)] p-5" style={{ background: 'var(--ink-100)', border: '1px solid rgba(31,58,95,0.15)' }}>
           <p className="tp-eyebrow mb-2" style={{ color: 'var(--brand-navy-900)' }}>Deliverable</p>
           <p className="tp-prose text-[color:var(--ink-700)]">{guide.deliverable}</p>
         </section>
@@ -233,7 +233,7 @@ export default function GuideDetailPage() {
 
       {/* Proof required */}
       {guide.proof_requirement && (
-        <section className="mb-5 rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] p-5">
+        <section className="mb-5 rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] p-5">
           <p className="tp-eyebrow text-[color:var(--ink-500)] mb-2">Proof Required</p>
           <p className="tp-prose text-[color:var(--ink-700)]">{guide.proof_requirement}</p>
         </section>
@@ -257,7 +257,7 @@ export default function GuideDetailPage() {
       {/* The page used to end on the last reflection question, which left a
           student who had just read the whole guide with nothing to press. */}
       <section
-        className="mt-9 rounded-[20px] bg-white p-5 sm:p-6"
+        className="mt-9 rounded-[var(--r-surface)] bg-white p-5 sm:p-6"
         style={{ border: '1px solid var(--brand-gold-500)', boxShadow: '0 10px 30px rgba(31,58,95,0.08)' }}
       >
         <p className="tp-eyebrow" style={{ color: 'var(--brand-gold-700)' }}>Next step</p>
@@ -271,14 +271,14 @@ export default function GuideDetailPage() {
         <div className="mt-5 flex flex-col gap-3 sm:flex-row">
           <button
             onClick={() => navigate('/evidence?tab=proof')}
-            className="ui-press tp-body inline-flex items-center justify-center rounded-[10px] px-6 font-bold text-white"
+            className="ui-press tp-body inline-flex items-center justify-center rounded-[var(--r-control)] px-6 font-bold text-white"
             style={{ background: 'var(--brand-navy-900)', minHeight: '48px' }}
           >
             Log what I did
           </button>
           <button
             onClick={() => navigate(backToExperiment)}
-            className="ui-press tp-body inline-flex items-center justify-center rounded-[10px] border px-6 font-bold"
+            className="ui-press tp-body inline-flex items-center justify-center rounded-[var(--r-control)] border px-6 font-bold"
             style={{ borderColor: 'var(--ink-200)', color: 'var(--ink-700)', minHeight: '48px' }}
           >
             Back to my experiment

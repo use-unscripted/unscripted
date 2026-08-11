@@ -4,7 +4,7 @@ import { CheckCircle2, ArrowRight } from 'lucide-react';
 export default function MomentFeedback({ feedback, onNext }) {
   return (
     <div className="space-y-6">
-      <div className="rounded-[20px] border p-5"
+      <div className="rounded-[var(--r-surface)] border p-5"
         style={{ borderColor: feedback.strongest ? '#86EFAC' : 'var(--ink-200)', background: feedback.strongest ? 'var(--success-50)' : 'white' }}>
         <p className="tp-eyebrow flex items-center gap-1.5" style={{ color: 'var(--brand-navy-700)' }}>
           <CheckCircle2 size={13} /> What this showed
@@ -25,7 +25,7 @@ export default function MomentFeedback({ feedback, onNext }) {
       )}
 
       <button onClick={onNext}
-        className="tp-body ui-press flex w-full items-center justify-center gap-2 rounded-[12px] py-3.5 font-semibold text-white"
+        className="tp-body ui-press flex w-full items-center justify-center gap-2 rounded-[var(--r-control)] py-3.5 font-semibold text-white"
         style={{ background: 'var(--brand-navy-900)' }}>
         Continue <ArrowRight size={16} />
       </button>

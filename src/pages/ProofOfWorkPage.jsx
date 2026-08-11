@@ -8,7 +8,7 @@ class CardErrorBoundary extends Component {
   componentDidCatch(err) { console.error('[ProofOfWorkPage] Card render error:', err?.message || err); }
   render() {
     if (this.state.hasError)
-      return <div className="tp-meta rounded-[20px] border border-dashed border-[color:var(--ink-200)] p-6 text-center text-[color:var(--ink-400)]">This record could not be displayed.</div>;
+      return <div className="tp-meta rounded-[var(--r-surface)] border border-dashed border-[color:var(--ink-200)] p-6 text-center text-[color:var(--ink-400)]">This record could not be displayed.</div>;
     return this.props.children;
   }
 }
@@ -61,26 +61,26 @@ function FilePreviewModal({ entry, onClose }) {
   const vid = isVideoFile(entry.file_name, entry.mime_type);
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" style={{ background: 'rgba(5,8,22,0.85)' }}>
-      <div className="w-full max-w-3xl rounded-[20px] bg-white overflow-hidden">
+      <div className="w-full max-w-3xl rounded-[var(--r-surface)] bg-white overflow-hidden">
         <div className="flex items-center justify-between px-5 py-4 border-b border-[color:var(--ink-200)]">
           <p className="tp-card truncate text-[color:var(--surface-dark-900)]">{entry.file_name || entry.title}</p>
           <button onClick={onClose} aria-label="Close preview"><X size={20} className="text-[color:var(--ink-500)]" /></button>
         </div>
         <div className="p-5 bg-[color:var(--ink-50)] flex items-center justify-center min-h-[300px]">
           {vid && entry.file_url ? (
-            <video src={entry.file_url} controls className="max-w-full max-h-[60vh] rounded-xl"
+            <video src={entry.file_url} controls className="max-w-full max-h-[60vh] rounded-[var(--r-control)]"
               preload="metadata" aria-label={entry.file_name}>
               Your browser does not support video playback.
             </video>
           ) : entry.file_url ? (
             <div className="text-center">
-              <div className="mx-auto w-16 h-16 rounded-2xl flex items-center justify-center mb-4" style={{ background: 'var(--ink-100)' }}>
+              <div className="mx-auto w-16 h-16 rounded-[var(--r-surface)] flex items-center justify-center mb-4" style={{ background: 'var(--ink-100)' }}>
                 <FileIcon name={entry.file_name} mime={entry.mime_type} size={28} />
               </div>
               <p className="tp-card mb-1 text-[color:var(--surface-dark-900)]">{entry.file_name}</p>
               {entry.file_size && <p className="tp-meta mb-4 text-[color:var(--ink-500)]">{fmtSize(entry.file_size)}</p>}
               <a href={entry.file_url} target="_blank" rel="noopener noreferrer"
-                className="tp-body inline-flex items-center gap-2 rounded-[10px] px-5 py-2.5 font-semibold text-white"
+                className="tp-body inline-flex items-center gap-2 rounded-[var(--r-control)] px-5 py-2.5 font-semibold text-white"
                 style={{ background: 'var(--brand-navy-900)' }}>
                 <ExternalLink size={14} /> Open File
               </a>
@@ -126,7 +126,7 @@ function ProofCard({ entry, missionsMap, experimentsMap, onDelete, onNavigateToP
   // min-w-0: grid items default to min-width:auto, so a long filename or URL
   // stretches the card past its track and scrolls the whole page sideways.
   return (
-    <div className="tp-card-body min-w-0 rounded-[20px] border border-[color:var(--ink-200)] bg-white">
+    <div className="tp-card-body min-w-0 rounded-[var(--r-surface)] border border-[color:var(--ink-200)] bg-white">
       {showPreview && <FilePreviewModal entry={safeEntry} onClose={() => setShowPreview(false)} />}
 
       {/* Header */}
@@ -152,7 +152,7 @@ function ProofCard({ entry, missionsMap, experimentsMap, onDelete, onNavigateToP
             <ChevronDown size={16} />
           </button>
           {menuOpen && (
-            <div className="absolute right-0 top-8 z-10 w-36 rounded-xl border border-[color:var(--ink-200)] bg-white shadow-lg py-1">
+            <div className="absolute right-0 top-8 z-10 w-36 rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-white shadow-lg py-1">
               <button onClick={() => { setMenuOpen(false); onDelete(entry); }}
                 className="tp-meta w-full flex items-center gap-2 px-4 py-2.5 text-red-600 hover:bg-red-50">
                 <Trash2 size={13} /> Delete
@@ -164,7 +164,7 @@ function ProofCard({ entry, missionsMap, experimentsMap, onDelete, onNavigateToP
 
       {/* File preview row */}
       {safeEntry.file_url && (
-        <div className="mb-3 flex items-center gap-3 rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] px-3 py-2.5">
+        <div className="mb-3 flex items-center gap-3 rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] px-3 py-2.5">
           <div className="shrink-0 w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'var(--ink-100)' }}>
             <FileIcon name={safeEntry.file_name} mime={safeEntry.mime_type} size={16} />
           </div>
@@ -391,7 +391,7 @@ export default function ProofOfWorkPage() {
         action={
           <button
             onClick={() => setShowNew(true)}
-            className="tp-body inline-flex items-center gap-2 rounded-[10px] px-6 py-3 font-semibold text-white shrink-0"
+            className="tp-body inline-flex items-center gap-2 rounded-[var(--r-control)] px-6 py-3 font-semibold text-white shrink-0"
             style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}>
             <Plus size={16} /> Add Proof of Work
           </button>
@@ -411,24 +411,24 @@ export default function ProofOfWorkPage() {
           <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[color:var(--ink-400)]" />
           <input value={search} onChange={e => setSearch(e.target.value)}
             placeholder="Search by title, mission, experiment, or filename…"
-            className="w-full rounded-xl border border-[color:var(--ink-200)] bg-white pl-9 pr-4 py-2.5 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-700)]" />
+            className="w-full rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-white pl-9 pr-4 py-2.5 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-700)]" />
         </div>
         {paths.length > 1 && (
           <select value={filterPath} onChange={e => setFilterPath(e.target.value)}
-            className="w-full max-w-full truncate rounded-xl border border-[color:var(--ink-200)] bg-white px-3 py-2.5 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)] sm:w-[220px]">
+            className="w-full max-w-full truncate rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-white px-3 py-2.5 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)] sm:w-[220px]">
             <option value="all">All paths</option>
             {paths.filter(p => p !== 'all').map(p => <option key={p} value={p}>{p}</option>)}
           </select>
         )}
         {experiments.length > 0 && (
           <select value={filterExp} onChange={e => setFilterExp(e.target.value)}
-            className="w-full max-w-full truncate rounded-xl border border-[color:var(--ink-200)] bg-white px-3 py-2.5 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)] sm:w-[220px]">
+            className="w-full max-w-full truncate rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-white px-3 py-2.5 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)] sm:w-[220px]">
             <option value="all">All experiments</option>
             {experiments.map(ex => <option key={ex.id} value={ex.id}>{ex.title}</option>)}
           </select>
         )}
         <select value={filterVis} onChange={e => setFilterVis(e.target.value)}
-          className="rounded-xl border border-[color:var(--ink-200)] bg-white px-3 py-2.5 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]">
+          className="rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-white px-3 py-2.5 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]">
           <option value="all">All visibility</option>
           <option value="private">Private</option>
           <option value="public">Public</option>
@@ -442,23 +442,23 @@ export default function ProofOfWorkPage() {
           <SkGrid count={4} h={218} cols={2} r={24} />
         </>
       ) : loadError ? (
-        <div className="rounded-[24px] border border-dashed border-red-200 p-16 text-center">
+        <div className="rounded-[var(--r-surface)] border border-dashed border-red-200 p-16 text-center">
           <h3 className="tp-section text-[color:var(--surface-dark-900)]">We couldn't load your proof of work.</h3>
           <p className="tp-body mx-auto mt-2.5 max-w-[46ch] text-[color:var(--ink-500)]">There was a problem fetching your records. Please try again.</p>
           <div className="mt-6 flex justify-center gap-3">
             <button onClick={load}
-              className="tp-body inline-flex items-center gap-2 rounded-[10px] px-5 py-2.5 font-semibold text-white"
+              className="tp-body inline-flex items-center gap-2 rounded-[var(--r-control)] px-5 py-2.5 font-semibold text-white"
               style={{ background: 'var(--brand-navy-900)' }}>
               Retry
             </button>
             <button onClick={() => navigate('/journey')}
-              className="tp-body inline-flex items-center gap-2 rounded-[10px] border border-[color:var(--ink-200)] px-5 py-2.5 font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)]">
+              className="tp-body inline-flex items-center gap-2 rounded-[var(--r-control)] border border-[color:var(--ink-200)] px-5 py-2.5 font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)]">
               Return to My Journey
             </button>
           </div>
         </div>
       ) : filtered.length === 0 ? (
-        <div className="rounded-[24px] border border-dashed border-[color:var(--ink-200)] p-16 text-center">
+        <div className="rounded-[var(--r-surface)] border border-dashed border-[color:var(--ink-200)] p-16 text-center">
           <h3 className="tp-section text-[color:var(--surface-dark-900)]">
             {entries.length === 0 ? 'No proof submitted yet.' : 'No results match your filters.'}
           </h3>
@@ -469,7 +469,7 @@ export default function ProofOfWorkPage() {
           </p>
           {entries.length === 0 && (
             <button onClick={() => setShowNew(true)}
-              className="tp-body mt-6 inline-flex items-center gap-2 rounded-[10px] px-6 py-3 font-semibold text-white"
+              className="tp-body mt-6 inline-flex items-center gap-2 rounded-[var(--r-control)] px-6 py-3 font-semibold text-white"
               style={{ background: 'var(--brand-navy-900)' }}>
               <Plus size={16} /> Add Proof of Work
             </button>

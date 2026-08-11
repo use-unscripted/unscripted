@@ -10,7 +10,7 @@ import { X } from 'lucide-react';
 export default function SoftDeleteConfirm({ itemName, onConfirm, onCancel }) {
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" style={{ background: 'rgba(5,8,22,0.5)' }}>
-      <div className="anim-modal w-full max-w-sm rounded-[20px] bg-white p-6 shadow-2xl">
+      <div className="anim-modal w-full max-w-sm rounded-[var(--r-surface)] bg-white p-6 shadow-2xl">
         <div className="flex items-start justify-between gap-3 mb-3">
           <h3 className="tp-section text-[color:var(--surface-dark-900)]">Move to Recently Deleted?</h3>
           <button onClick={onCancel}><X size={18} className="text-[color:var(--ink-400)]" /></button>
@@ -23,11 +23,11 @@ export default function SoftDeleteConfirm({ itemName, onConfirm, onCancel }) {
         </p>
         <div className="flex gap-3">
           <button onClick={onCancel}
-            className="tp-body flex-1 rounded-[10px] border border-[color:var(--ink-200)] py-3 font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)] transition">
+            className="tp-body flex-1 rounded-[var(--r-control)] border border-[color:var(--ink-200)] py-3 font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)] transition">
             Cancel
           </button>
           <button onClick={onConfirm}
-            className="tp-body flex-1 rounded-[10px] py-3 font-semibold text-white transition"
+            className="tp-body flex-1 rounded-[var(--r-control)] py-3 font-semibold text-white transition"
             style={{ background: 'var(--brand-navy-900)' }}>
             Move to Recently Deleted
           </button>

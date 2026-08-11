@@ -153,7 +153,7 @@ export default function CareerMomentPage() {
           ))}
         </div>
 
-        <div className="rounded-[24px] border bg-white p-6 sm:p-8" style={{ borderColor: 'var(--ink-200)' }}>
+        <div className="rounded-[var(--r-surface)] border bg-white p-6 sm:p-8" style={{ borderColor: 'var(--ink-200)' }}>
           {stage === 'hook' && (
             <MomentHook
               moment={row}

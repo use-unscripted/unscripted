@@ -10,7 +10,7 @@ import WhyThisChanged from '@/components/paths/WhyThisChanged';
 export default function HypothesisCard({ item, flagged, recalculation }) {
   const { path, hypothesis, summary } = item;
   return (
-    <div className="rounded-[16px] border bg-white p-5" style={{ borderColor: 'var(--ink-200)' }}>
+    <div className="rounded-[var(--r-surface)] border bg-white p-5" style={{ borderColor: 'var(--ink-200)' }}>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <h3 className="tp-card" style={{ color: 'var(--surface-dark-900)' }}>{path.path_name}</h3>

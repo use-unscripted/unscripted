@@ -36,8 +36,7 @@ export default function RecommendedNextTest({ recommendation }) {
 
   return (
     <section
-      className="rounded-[22px] border bg-white p-6 sm:p-8"
-      style={{ borderColor: 'var(--ink-200)' }}
+      className="app-card p-6 sm:p-8"
       aria-labelledby="next-test-title"
     >
       <div className="flex items-center gap-2">
@@ -55,12 +54,12 @@ export default function RecommendedNextTest({ recommendation }) {
       )}
 
       <div className="mt-4">
-        <h3 className="tp-eyebrow" style={{ color: 'var(--brand-navy-700)' }}>Why we are recommending this</h3>
+        <h3 className="tp-label" style={{ color: 'var(--ink-500)' }}>Why we are recommending this</h3>
         <p className="tp-body mt-2" style={{ color: 'var(--ink-700)' }}>{why}</p>
       </div>
 
       <div className="mt-4">
-        <h3 className="tp-eyebrow" style={{ color: 'var(--brand-navy-700)' }}>This will help us test</h3>
+        <h3 className="tp-label" style={{ color: 'var(--ink-500)' }}>This will help us test</h3>
         <ul className="mt-2 flex flex-wrap gap-2">
           {tests.map(t => (
             <li key={t} className="tp-meta rounded-full px-2.5 py-1 font-semibold" style={{ background: 'var(--ink-100)', color: 'var(--ink-700)' }}>{t}</li>
@@ -76,7 +75,7 @@ export default function RecommendedNextTest({ recommendation }) {
       {/* The optional upgrade in depth, once a run of short tests exists. Never
           a requirement: the short test stays right beside it. */}
       {unlock && (
-        <div className="mt-4 rounded-[14px] border p-4" style={{ borderColor: 'var(--brand-gold-500)', background: 'var(--warning-50)' }}>
+        <div className="mt-4 rounded-[var(--r-control)] border p-4" style={{ borderColor: 'var(--brand-gold-500)', background: 'var(--warning-50)' }}>
           <p className="tp-body font-semibold" style={{ color: 'var(--ink-900)' }}>{unlock.headline}</p>
           <p className="tp-meta mt-1" style={{ color: 'var(--ink-700)' }}>{unlock.prompt}</p>
           <Link to={deep_to || start_to} className="tp-body mt-2 inline-block font-bold" style={{ color: 'var(--brand-gold-700)' }}>
@@ -88,25 +87,16 @@ export default function RecommendedNextTest({ recommendation }) {
       <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
         {/* Quick Test is the default level. Deep Dive stays one tap away and is
             never required. */}
-        <Link
-          to={primary.to}
-          className="ui-press tp-card inline-flex items-center justify-center gap-2 rounded-[12px] px-6 py-3 font-semibold text-white"
-          style={{ background: 'var(--brand-navy-900)' }}
-        >
+        <Link to={primary.to} className="ui-press app-cta tp-control">
           Start the {primary.meta.label} · {primary.meta.duration_label} <ArrowRight size={17} aria-hidden="true" />
         </Link>
-        <Link
-          to={secondary.to}
-          className="tp-body rounded-[12px] border px-5 py-3 font-semibold"
-          style={{ borderColor: 'var(--ink-200)', color: 'var(--ink-700)' }}
-        >
+        <Link to={secondary.to} className="app-cta-secondary tp-control">
           {secondary.meta.label} instead · {secondary.meta.duration_label}
         </Link>
         <button
           type="button"
           onClick={() => setShowWhy(v => !v)}
-          className="tp-body rounded-[12px] border px-5 py-3 font-semibold"
-          style={{ borderColor: 'var(--ink-200)', color: 'var(--ink-700)' }}
+          className="app-cta-secondary tp-control"
           aria-expanded={showWhy}
         >
           {showWhy ? 'Hide why this matters' : 'Why this matters'}
@@ -114,7 +104,7 @@ export default function RecommendedNextTest({ recommendation }) {
         <button
           type="button"
           onClick={() => setShowOthers(v => !v)}
-          className="tp-body px-2 py-3 font-semibold"
+          className="tp-control px-2 py-3.5"
           style={{ color: 'var(--brand-navy-700)' }}
           aria-expanded={showOthers}
         >

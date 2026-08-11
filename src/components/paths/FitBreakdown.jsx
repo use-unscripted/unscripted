@@ -61,7 +61,7 @@ export default function FitBreakdown({ fit, overall, evidenceShare, compact = fa
           hint="Enjoyment is still uncertain until you rate how the work actually felt." />
       </div>
 
-      <div className="mt-3 rounded-xl p-3.5" style={{ background: 'white', border: '1px solid var(--border-light)' }}>
+      <div className="mt-3 rounded-[var(--r-control)] p-3.5" style={{ background: 'white', border: '1px solid var(--border-light)' }}>
         <p className="tp-body font-semibold" style={{ color: 'var(--surface-dark-900)' }}>{narrative.headline}</p>
         <p className="tp-meta mt-1" style={{ color: 'var(--ink-500)' }}>{narrative.body}</p>
       </div>
@@ -74,7 +74,7 @@ export default function FitBreakdown({ fit, overall, evidenceShare, compact = fa
       </button>
 
       {open && (
-        <div className="mt-3 space-y-4 rounded-xl p-4" style={{ background: 'white', border: '1px solid var(--border-light)' }}>
+        <div className="mt-3 space-y-4 rounded-[var(--r-control)] p-4" style={{ background: 'white', border: '1px solid var(--border-light)' }}>
           {!compact && typeof overall === 'number' && (
             <p className="tp-meta" style={{ color: 'var(--ink-500)' }}>
               Overall fit of {overall}% blends these dimensions with this path's starting estimate, weighted by how much
@@ -97,7 +97,7 @@ export default function FitBreakdown({ fit, overall, evidenceShare, compact = fa
           </div>
 
           {self.discrepancy !== null && (
-            <div className="rounded-xl p-3" style={{ background: 'var(--ink-50)' }}>
+            <div className="rounded-[var(--r-control)] p-3" style={{ background: 'var(--ink-50)' }}>
               <p className="tp-eyebrow mb-1" style={{ color: 'var(--ink-500)' }}>How you rated yourself versus what was observed</p>
               <p className="tp-body" style={{ color: 'var(--ink-700)' }}>
                 You rated your own performance at {self.self_rated_ability}%, and reviewed performance came out at {self.observed_ability}%.

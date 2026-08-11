@@ -8,7 +8,7 @@ const accents = {
 export default function MetricCard({ label, value, detail, accent = 'blue' }) {
   const a = accents[accent] || accents.blue;
   return (
-    <div className="rounded-[20px] border border-[color:var(--ink-200)] bg-white p-5 shadow-sm">
+    <div className="rounded-[var(--r-surface)] border border-[color:var(--ink-200)] bg-white p-5 shadow-sm">
       <p className="tp-eyebrow text-[color:var(--ink-500)]">{label}</p>
       <p className="font-heading mt-4 text-3xl font-bold text-[color:var(--surface-dark-900)]">{value}</p>
       <span

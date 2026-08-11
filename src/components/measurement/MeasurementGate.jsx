@@ -85,7 +85,7 @@ export default function MeasurementGate({ phase, exp, measurement, onSaved, auto
       )}
 
       {reviewing && (
-        <section className="rounded-[20px] bg-white p-5 sm:p-6" style={{ border: '1px solid var(--border-light)' }}>
+        <section className="rounded-[var(--r-surface)] bg-white p-5 sm:p-6" style={{ border: '1px solid var(--border-light)' }}>
           <p className="tp-body flex items-center gap-2 font-semibold" style={{ color: 'var(--text-primary)' }}>
             <Loader2 size={15} className="animate-spin" /> Reviewing the work you produced
           </p>
@@ -96,7 +96,7 @@ export default function MeasurementGate({ phase, exp, measurement, onSaved, auto
       )}
 
       <section
-        className="rounded-[20px] bg-white p-5 sm:p-6"
+        className="rounded-[var(--r-surface)] bg-white p-5 sm:p-6"
         style={{ border: '1px solid var(--brand-gold-500)' }}
       >
         <p className="tp-eyebrow flex items-center gap-1.5" style={{ color: 'var(--brand-gold-700)' }}>
@@ -107,7 +107,7 @@ export default function MeasurementGate({ phase, exp, measurement, onSaved, auto
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="ui-press tp-body mt-4 inline-flex w-full items-center justify-center gap-2 rounded-[10px] px-6 font-bold text-white sm:w-auto"
+          className="ui-press tp-body mt-4 inline-flex w-full items-center justify-center gap-2 rounded-[var(--r-control)] px-6 font-bold text-white sm:w-auto"
           style={{ background: 'var(--brand-navy-900)', minHeight: '48px' }}
         >
           {copy.cta}

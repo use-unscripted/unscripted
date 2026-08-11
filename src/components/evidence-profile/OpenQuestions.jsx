@@ -8,7 +8,7 @@ export default function OpenQuestions({ questions }) {
   const partial = questions.filter(q => q.tested);
 
   const group = (label, items) => items.length > 0 && (
-    <div className="rounded-[16px] border bg-white p-5" style={{ borderColor: 'var(--ink-200)' }}>
+    <div className="rounded-[var(--r-surface)] border bg-white p-5" style={{ borderColor: 'var(--ink-200)' }}>
       <p className="tp-eyebrow mb-3" style={{ color: 'var(--ink-500)' }}>{label}</p>
       <ul className="space-y-3">
         {items.map(q => (

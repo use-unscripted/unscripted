@@ -39,13 +39,13 @@ export default function DisagreeButton({ type, conclusionKey, label, alreadyFlag
   }
 
   return (
-    <div className="rounded-xl border p-3" style={{ borderColor: 'var(--ink-200)', background: 'var(--ink-50)' }}>
+    <div className="rounded-[var(--r-control)] border p-3" style={{ borderColor: 'var(--ink-200)', background: 'var(--ink-50)' }}>
       <p className="tp-meta font-semibold" style={{ color: 'var(--ink-700)' }}>
         Tell us what feels off. Nothing gets deleted, and we will test this again.
       </p>
       <textarea rows={2} value={note} onChange={e => setNote(e.target.value)}
         placeholder="Optional. What does not match your experience?"
-        className="mt-2 w-full rounded-xl border bg-white px-3 py-2 text-base outline-none md:text-sm"
+        className="mt-2 w-full rounded-[var(--r-control)] border bg-white px-3 py-2 text-base outline-none md:text-sm"
         style={{ borderColor: 'var(--ink-200)' }} />
       <div className="mt-2 flex gap-2">
         <button onClick={submit} disabled={saving}

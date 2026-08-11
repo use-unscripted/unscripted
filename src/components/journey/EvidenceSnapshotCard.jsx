@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
+import { Reveal } from '@/components/motion';
 
 /**
  * Your career evidence — the way into the Career Evidence Profile.
@@ -19,28 +20,30 @@ export default function EvidenceSnapshotCard({ counts }) {
   if (!rows.length) return null;
 
   return (
-    <section className="rounded-[20px] border border-[color:var(--ink-200)] bg-white p-6">
-      <h2 className="tp-section" style={{ color: 'var(--text-primary)' }}>Your career evidence</h2>
-      <p className="tp-meta mt-1.5" style={{ color: 'var(--text-muted)' }}>
-        What we have learned about you so far, and what we are still learning.
-      </p>
+    <Reveal y={20}>
+      <section className="app-card p-6 sm:p-8">
+        <h2 className="tp-section" style={{ color: 'var(--text-primary)' }}>Your career evidence</h2>
+        <p className="tp-meta mt-1.5" style={{ color: 'var(--text-muted)' }}>
+          What we have learned about you so far, and what we are still learning.
+        </p>
 
-      <dl className="mt-5 grid grid-cols-2 gap-4 sm:grid-cols-4">
-        {rows.map(r => (
-          <div key={r.label}>
-            <dt className="font-heading text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>{r.n}</dt>
-            <dd className="tp-meta mt-1" style={{ color: 'var(--text-secondary)' }}>{r.label}</dd>
-          </div>
-        ))}
-      </dl>
+        <dl className="mt-5 grid grid-cols-2 gap-4 sm:grid-cols-4">
+          {rows.map(r => (
+            <div key={r.label}>
+              <dt className="font-heading text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>{r.n}</dt>
+              <dd className="tp-meta mt-1" style={{ color: 'var(--text-secondary)' }}>{r.label}</dd>
+            </div>
+          ))}
+        </dl>
 
-      <Link
-        to="/career-profile"
-        className="tp-meta mt-5 inline-flex items-center gap-1.5 font-semibold"
-        style={{ color: 'var(--brand-navy-700)' }}
-      >
-        View Career Evidence Profile <ArrowRight size={14} aria-hidden="true" />
-      </Link>
-    </section>
+        <Link
+          to="/career-profile"
+          className="tp-meta mt-5 inline-flex items-center gap-1.5 font-semibold"
+          style={{ color: 'var(--brand-navy-700)' }}
+        >
+          View Career Evidence Profile <ArrowRight size={14} aria-hidden="true" />
+        </Link>
+      </section>
+    </Reveal>
   );
 }

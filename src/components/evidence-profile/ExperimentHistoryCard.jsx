@@ -17,7 +17,7 @@ export default function ExperimentHistoryCard({ entry }) {
   ].filter(r => r[1]);
 
   return (
-    <div className="rounded-[16px] border bg-white p-5" style={{ borderColor: 'var(--ink-200)' }}>
+    <div className="rounded-[var(--r-surface)] border bg-white p-5" style={{ borderColor: 'var(--ink-200)' }}>
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div className="min-w-0">
           <h3 className="tp-card" style={{ color: 'var(--surface-dark-900)' }}>{e.title}</h3>
@@ -55,7 +55,7 @@ export default function ExperimentHistoryCard({ entry }) {
       )}
 
       {m?.surprise_reflection && (
-        <p className="tp-body mt-3 rounded-xl px-3 py-2.5" style={{ background: 'var(--ink-50)', color: 'var(--ink-700)' }}>
+        <p className="tp-body mt-3 rounded-[var(--r-control)] px-3 py-2.5" style={{ background: 'var(--ink-50)', color: 'var(--ink-700)' }}>
           <span className="font-semibold">What surprised you:</span> {m.surprise_reflection}
         </p>
       )}

@@ -61,7 +61,7 @@ export default function ExperimentPermanentDeleteModal({ exp, onDeleted, onCance
 
   return (
     <div className="fixed inset-0 z-[70] flex items-center justify-center p-4" style={{ background: 'rgba(5,8,22,0.65)' }}>
-      <div className="w-full max-w-md rounded-[20px] bg-white p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+      <div className="w-full max-w-md rounded-[var(--r-surface)] bg-white p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
         <div className="flex items-start justify-between gap-3 mb-4">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-full bg-red-50 flex items-center justify-center shrink-0">
@@ -81,7 +81,7 @@ export default function ExperimentPermanentDeleteModal({ exp, onDeleted, onCance
             <Loader2 size={14} className="animate-spin" /> Loading linked records…
           </div>
         ) : (
-          <div className="rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] p-4 mb-4 space-y-1">
+          <div className="rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] p-4 mb-4 space-y-1">
             <p className="tp-eyebrow text-[color:var(--ink-500)] mb-2">Linked records</p>
             {[
               { label: 'Missions', count: counts.missions },
@@ -102,14 +102,14 @@ export default function ExperimentPermanentDeleteModal({ exp, onDeleted, onCance
         <div className="space-y-2 mb-4">
           <button
             onClick={() => { setMode('unlink'); setTyped(''); }}
-            className={`w-full text-left rounded-xl border p-3 transition ${mode === 'unlink' ? 'border-[color:var(--brand-navy-900)] bg-[color:var(--ink-100)]' : 'border-[color:var(--ink-200)] hover:border-[color:var(--ink-300)]'}`}
+            className={`w-full text-left rounded-[var(--r-control)] border p-3 transition ${mode === 'unlink' ? 'border-[color:var(--brand-navy-900)] bg-[color:var(--ink-100)]' : 'border-[color:var(--ink-200)] hover:border-[color:var(--ink-300)]'}`}
           >
             <p className="tp-body font-semibold text-[color:var(--surface-dark-900)]">Delete only this experiment</p>
             <p className="tp-meta text-[color:var(--ink-500)] mt-0.5">Missions, proof, contacts, and reflections are kept as unlinked records.</p>
           </button>
           <button
             onClick={() => { setMode('cascade'); setTyped(''); }}
-            className={`w-full text-left rounded-xl border p-3 transition ${mode === 'cascade' ? 'border-red-400 bg-red-50' : 'border-[color:var(--ink-200)] hover:border-[color:var(--ink-300)]'}`}
+            className={`w-full text-left rounded-[var(--r-control)] border p-3 transition ${mode === 'cascade' ? 'border-red-400 bg-red-50' : 'border-[color:var(--ink-200)] hover:border-[color:var(--ink-300)]'}`}
           >
             <p className="tp-body font-semibold text-red-700">Delete experiment and all linked records</p>
             <p className="tp-meta text-red-500 mt-0.5">This cannot be undone. All missions, proof, contacts, and reflections for this experiment will be permanently removed.</p>
@@ -127,7 +127,7 @@ export default function ExperimentPermanentDeleteModal({ exp, onDeleted, onCance
               value={typed}
               onChange={e => setTyped(e.target.value)}
               placeholder={cascadeConfirmWord}
-              className="w-full rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-base md:text-sm font-mono outline-none focus:border-red-400"
+              className="w-full rounded-[var(--r-control)] border border-red-200 bg-red-50 px-4 py-2.5 text-base md:text-sm font-mono outline-none focus:border-red-400"
             />
           </div>
         )}
@@ -135,13 +135,13 @@ export default function ExperimentPermanentDeleteModal({ exp, onDeleted, onCance
         {/* Actions: Cancel is the default / leftmost */}
         <div className="flex gap-3">
           <button onClick={onCancel}
-            className="tp-body flex-1 rounded-[10px] border border-[color:var(--ink-200)] py-2.5 font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)] transition">
+            className="tp-body flex-1 rounded-[var(--r-control)] border border-[color:var(--ink-200)] py-2.5 font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)] transition">
             Cancel
           </button>
           <button
             onClick={handleDelete}
             disabled={!canConfirm || deleting || counts === null}
-            className="tp-body flex-1 rounded-[10px] py-2.5 font-semibold text-white transition disabled:opacity-40 disabled:cursor-not-allowed bg-red-600 hover:bg-red-700"
+            className="tp-body flex-1 rounded-[var(--r-control)] py-2.5 font-semibold text-white transition disabled:opacity-40 disabled:cursor-not-allowed bg-red-600 hover:bg-red-700"
           >
             {deleting ? <span className="flex items-center justify-center gap-1"><Loader2 size={13} className="animate-spin" /> Deleting…</span> : 'Permanently Delete'}
           </button>

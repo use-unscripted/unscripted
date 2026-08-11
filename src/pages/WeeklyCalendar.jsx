@@ -67,7 +67,7 @@ function BlockModal({ block, onClose, onSave }) {
   const ch = e => setData(d => ({ ...d, [e.target.name]: e.target.type === 'checkbox' ? e.target.checked : e.target.value }));
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(5,8,22,0.5)' }}>
-      <div className="w-full max-w-md rounded-[24px] bg-white p-6">
+      <div className="w-full max-w-md rounded-[var(--r-surface)] bg-white p-6">
         <div className="flex justify-between mb-5">
           <h2 className="tp-section text-[color:var(--surface-dark-900)]">{block ? 'Edit Commitment' : 'Add Fixed Commitment'}</h2>
           <button onClick={onClose}><X size={18} className="text-[color:var(--ink-500)]" /></button>
@@ -76,26 +76,26 @@ function BlockModal({ block, onClose, onSave }) {
           <label className="block sm:col-span-2">
             <span className="tp-meta font-semibold text-[color:var(--ink-700)] block mb-1.5">Type</span>
             <select name="block_type" value={data.block_type} onChange={ch}
-              className="w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-3 py-2.5 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]">
+              className="w-full rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-3 py-2.5 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]">
               {BLOCK_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
             </select>
           </label>
           <label className="block sm:col-span-2">
             <span className="tp-meta font-semibold text-[color:var(--ink-700)] block mb-1.5">Label (optional)</span>
             <input name="title" value={data.title || ''} onChange={ch} placeholder="e.g. BIO 301, Morning workout"
-              className="w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-3 py-2.5 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]" />
+              className="w-full rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-3 py-2.5 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]" />
           </label>
           <label className="block">
             <span className="tp-meta font-semibold text-[color:var(--ink-700)] block mb-1.5">Day</span>
             <select name="day" value={data.day} onChange={ch}
-              className="w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-3 py-2.5 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]">
+              className="w-full rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-3 py-2.5 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]">
               {DAYS.map(d => <option key={d} value={d}>{d}</option>)}
             </select>
           </label>
           <label className="block">
             <span className="tp-meta font-semibold text-[color:var(--ink-700)] block mb-1.5">Energy level</span>
             <select name="energy_level" value={data.energy_level || 'medium'} onChange={ch}
-              className="w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-3 py-2.5 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]">
+              className="w-full rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-3 py-2.5 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]">
               <option value="high">High</option>
               <option value="medium">Medium</option>
               <option value="low">Low</option>
@@ -104,17 +104,17 @@ function BlockModal({ block, onClose, onSave }) {
           <label className="block">
             <span className="tp-meta font-semibold text-[color:var(--ink-700)] block mb-1.5">Start time</span>
             <input type="time" name="start_time" value={data.start_time || ''} onChange={ch}
-              className="w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-3 py-2.5 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]" />
+              className="w-full rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-3 py-2.5 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]" />
           </label>
           <label className="block">
             <span className="tp-meta font-semibold text-[color:var(--ink-700)] block mb-1.5">End time</span>
             <input type="time" name="end_time" value={data.end_time || ''} onChange={ch}
-              className="w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-3 py-2.5 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]" />
+              className="w-full rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-3 py-2.5 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]" />
           </label>
         </div>
         <div className="mt-5 flex gap-3">
-          <button onClick={onClose} className="tp-body flex-1 rounded-[10px] border border-[color:var(--ink-200)] py-3 font-semibold text-[color:var(--ink-700)]">Cancel</button>
-          <button onClick={() => onSave(data)} className="tp-body flex-1 rounded-[10px] py-3 font-semibold text-white"
+          <button onClick={onClose} className="tp-body flex-1 rounded-[var(--r-control)] border border-[color:var(--ink-200)] py-3 font-semibold text-[color:var(--ink-700)]">Cancel</button>
+          <button onClick={() => onSave(data)} className="tp-body flex-1 rounded-[var(--r-control)] py-3 font-semibold text-white"
             style={{ background: 'var(--brand-navy-900)' }}>Save</button>
         </div>
       </div>
@@ -128,7 +128,7 @@ function TaskModal({ task, experiments, blocks, onClose, onSave }) {
   const conflict = overlapsBlock(data.time, data.day, blocks);
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(5,8,22,0.5)' }}>
-      <div className="w-full max-w-md rounded-[24px] bg-white p-6">
+      <div className="w-full max-w-md rounded-[var(--r-surface)] bg-white p-6">
         <div className="flex justify-between mb-5">
           <h2 className="tp-section text-[color:var(--surface-dark-900)]">{task ? 'Edit Task' : 'Add Mission Task'}</h2>
           <button onClick={onClose}><X size={18} className="text-[color:var(--ink-500)]" /></button>
@@ -137,19 +137,19 @@ function TaskModal({ task, experiments, blocks, onClose, onSave }) {
           <label className="block sm:col-span-2">
             <span className="tp-meta font-semibold text-[color:var(--ink-700)] block mb-1.5">Task title *</span>
             <input name="task_title" value={data.task_title || ''} onChange={ch} placeholder="What will you do?"
-              className="w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-3 py-2.5 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]" />
+              className="w-full rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-3 py-2.5 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]" />
           </label>
           <label className="block">
             <span className="tp-meta font-semibold text-[color:var(--ink-700)] block mb-1.5">Type</span>
             <select name="task_type" value={data.task_type || 'career'} onChange={ch}
-              className="w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-3 py-2.5 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]">
+              className="w-full rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-3 py-2.5 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]">
               {TASK_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
             </select>
           </label>
           <label className="block">
             <span className="tp-meta font-semibold text-[color:var(--ink-700)] block mb-1.5">Linked mission</span>
             <select name="roadmap_id" value={data.roadmap_id || ''} onChange={ch}
-              className="w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-3 py-2.5 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]">
+              className="w-full rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-3 py-2.5 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]">
               <option value="">None</option>
               {experiments.map(e => <option key={e.id} value={e.id}>{e.title}</option>)}
             </select>
@@ -157,14 +157,14 @@ function TaskModal({ task, experiments, blocks, onClose, onSave }) {
           <label className="block">
             <span className="tp-meta font-semibold text-[color:var(--ink-700)] block mb-1.5">Day</span>
             <select name="day" value={data.day || 'Monday'} onChange={ch}
-              className="w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-3 py-2.5 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]">
+              className="w-full rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-3 py-2.5 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]">
               {DAYS.map(d => <option key={d} value={d}>{d}</option>)}
             </select>
           </label>
           <label className="block">
             <span className="tp-meta font-semibold text-[color:var(--ink-700)] block mb-1.5">Time (optional)</span>
             <input type="time" name="time" value={data.time || ''} onChange={ch}
-              className={`w-full rounded-xl border px-3 py-2.5 text-sm outline-none focus:border-[color:var(--brand-navy-900)] ${conflict ? 'border-[color:var(--danger-700)] bg-[color:var(--danger-50)]' : 'border-[color:var(--ink-200)] bg-[color:var(--page-surface)]'}`} />
+              className={`w-full rounded-[var(--r-control)] border px-3 py-2.5 text-sm outline-none focus:border-[color:var(--brand-navy-900)] ${conflict ? 'border-[color:var(--danger-700)] bg-[color:var(--danger-50)]' : 'border-[color:var(--ink-200)] bg-[color:var(--page-surface)]'}`} />
           </label>
         </div>
         {conflict && (
@@ -174,9 +174,9 @@ function TaskModal({ task, experiments, blocks, onClose, onSave }) {
         )}
         {!data.task_title?.trim() && <p className="tp-meta mt-3 text-[color:var(--danger-700)] font-semibold">Title is required.</p>}
         <div className="mt-5 flex gap-3">
-          <button onClick={onClose} className="tp-body flex-1 rounded-[10px] border border-[color:var(--ink-200)] py-3 font-semibold text-[color:var(--ink-700)]">Cancel</button>
+          <button onClick={onClose} className="tp-body flex-1 rounded-[var(--r-control)] border border-[color:var(--ink-200)] py-3 font-semibold text-[color:var(--ink-700)]">Cancel</button>
           <button onClick={() => { if (data.task_title?.trim()) onSave(data); }} disabled={conflict}
-            className="tp-body flex-1 rounded-[10px] py-3 font-semibold text-white disabled:opacity-50"
+            className="tp-body flex-1 rounded-[var(--r-control)] py-3 font-semibold text-white disabled:opacity-50"
             style={{ background: 'var(--brand-navy-900)' }}>Save</button>
         </div>
       </div>
@@ -280,11 +280,11 @@ export default function WeeklyCalendar() {
         action={
           <div className="flex gap-2">
             <button onClick={() => setBlockModal('new')}
-              className="tp-body flex items-center gap-1.5 rounded-[10px] border border-[color:var(--ink-200)] px-5 py-3 font-semibold text-[color:var(--ink-700)] hover:bg-white transition">
+              className="tp-body flex items-center gap-1.5 rounded-[var(--r-control)] border border-[color:var(--ink-200)] px-5 py-3 font-semibold text-[color:var(--ink-700)] hover:bg-white transition">
               <Plus size={15} /> Add Commitment
             </button>
             <button onClick={() => setTaskModal('new')}
-              className="tp-body flex items-center gap-1.5 rounded-[10px] px-5 py-3 font-semibold text-white transition hover:-translate-y-px"
+              className="tp-body flex items-center gap-1.5 rounded-[var(--r-control)] px-5 py-3 font-semibold text-white transition hover:-translate-y-px"
               style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}>
               <Plus size={15} /> Add Task
             </button>
@@ -294,17 +294,17 @@ export default function WeeklyCalendar() {
 
       {/* Capacity summary */}
       <div className="mb-8 grid gap-4 sm:grid-cols-3">
-        <div className="rounded-[16px] border border-[color:var(--ink-200)] bg-white p-5">
+        <div className="rounded-[var(--r-surface)] border border-[color:var(--ink-200)] bg-white p-5">
           <p className="tp-eyebrow text-[color:var(--ink-500)] mb-2">Fixed commitments</p>
           <p className="font-heading text-2xl font-bold text-[color:var(--surface-dark-900)]">{fixedHours.toFixed(1)}h</p>
           <p className="tp-meta text-[color:var(--ink-500)]">blocked per week</p>
         </div>
-        <div className="rounded-[16px] border border-[color:var(--ink-200)] bg-white p-5">
+        <div className="rounded-[var(--r-surface)] border border-[color:var(--ink-200)] bg-white p-5">
           <p className="tp-eyebrow text-[color:var(--ink-500)] mb-2">Available hours</p>
           <p className="font-heading text-2xl font-bold" style={{ color: availableHours < 10 ? 'var(--danger-700)' : 'var(--success-700)' }}>{availableHours.toFixed(1)}h</p>
           <p className="tp-meta text-[color:var(--ink-500)]">remaining this week</p>
         </div>
-        <div className="rounded-[16px] border border-[color:var(--ink-200)] bg-white p-5">
+        <div className="rounded-[var(--r-surface)] border border-[color:var(--ink-200)] bg-white p-5">
           <p className="tp-eyebrow text-[color:var(--ink-500)] mb-2">Tasks complete</p>
           <p className="font-heading text-2xl font-bold text-[color:var(--surface-dark-900)]">{done}/{tasks.length}</p>
           <div className="mt-3 h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--ink-200)' }}>
@@ -315,7 +315,7 @@ export default function WeeklyCalendar() {
 
       {/* Over-capacity warning */}
       {overCapacity && (
-        <div className="mb-6 flex items-start gap-3 rounded-[16px] p-5" style={{ background: 'var(--warning-50)', border: '1px solid rgba(180,83,9,0.25)' }}>
+        <div className="mb-6 flex items-start gap-3 rounded-[var(--r-surface)] p-5" style={{ background: 'var(--warning-50)', border: '1px solid rgba(180,83,9,0.25)' }}>
           <AlertTriangle size={17} className="shrink-0 text-[color:var(--warning-700)] mt-0.5" />
           <div>
             <p className="tp-card text-[color:var(--warning-700)]">You may be over capacity</p>
@@ -328,7 +328,7 @@ export default function WeeklyCalendar() {
       <div className="mb-7 flex gap-2 flex-wrap">
         {[['plan', 'Mission Tasks'], ['commitments', 'Fixed Commitments'], ['export', 'Export to Calendar']].map(([val, label]) => (
           <button key={val} onClick={() => setTab(val)}
-            className="tp-body rounded-[10px] px-5 py-3 font-semibold transition"
+            className="tp-body rounded-[var(--r-control)] px-5 py-3 font-semibold transition"
             style={tab === val ? { background: 'var(--brand-navy-900)', color: '#fff' } : { background: 'var(--ink-100)', color: 'var(--ink-700)' }}>
             {label}
           </button>
@@ -343,7 +343,7 @@ export default function WeeklyCalendar() {
             const dayTasks = tasks.filter(t => t.day === day);
             const expanded = expandedDay === day || dayTasks.length > 0;
             return (
-              <section key={day} className="rounded-[20px] border border-[color:var(--ink-200)] bg-white overflow-hidden">
+              <section key={day} className="rounded-[var(--r-surface)] border border-[color:var(--ink-200)] bg-white overflow-hidden">
                 <button className="w-full flex items-center justify-between px-5 py-4 text-left"
                   onClick={() => setExpandedDay(expandedDay === day ? null : day)}>
                   <div className="flex items-center gap-3">
@@ -366,7 +366,7 @@ export default function WeeklyCalendar() {
                       {dayTasks.map(t => {
                         const conflict = overlapsBlock(t.time, day, blocks);
                         return (
-                          <div key={t.id} className={`flex items-center gap-3 rounded-xl px-3 py-2.5 ${conflict ? 'border border-[#FECACA]' : 'border border-[color:var(--ink-100)]'}`}
+                          <div key={t.id} className={`flex items-center gap-3 rounded-[var(--r-control)] px-3 py-2.5 ${conflict ? 'border border-[#FECACA]' : 'border border-[color:var(--ink-100)]'}`}
                             style={{ background: t.completed ? 'var(--success-50)' : conflict ? 'var(--danger-50)' : 'var(--page-surface)' }}>
                             <button onClick={() => toggleTask(t)} className="shrink-0">
                               {t.completed
@@ -414,11 +414,11 @@ export default function WeeklyCalendar() {
       ) : (
         <div>
           {blocks.length === 0 ? (
-            <div className="rounded-[24px] border border-dashed border-[color:var(--ink-200)] px-8 py-14 text-center">
+            <div className="rounded-[var(--r-surface)] border border-dashed border-[color:var(--ink-200)] px-8 py-14 text-center">
               <p className="tp-section text-[color:var(--surface-dark-900)]">No fixed commitments yet</p>
               <p className="tp-prose mx-auto mt-2.5 text-[color:var(--ink-500)]">Add your classes, work shifts, sleep, and other recurring blocks so your available hours are calculated correctly.</p>
               <button onClick={() => setBlockModal('new')}
-                className="tp-body mt-6 inline-flex items-center gap-2 rounded-[10px] px-6 py-3 font-semibold text-white"
+                className="tp-body mt-6 inline-flex items-center gap-2 rounded-[var(--r-control)] px-6 py-3 font-semibold text-white"
                 style={{ background: 'var(--brand-navy-900)' }}>
                 <Plus size={15} /> Add first commitment
               </button>
@@ -433,7 +433,7 @@ export default function WeeklyCalendar() {
                     <h3 className="tp-section text-[color:var(--surface-dark-900)] mb-3">{day}</h3>
                     <div className="space-y-2">
                       {dayBlocks.map(b => (
-                        <div key={b.id} className="flex items-center gap-3 rounded-[16px] border border-[color:var(--ink-200)] bg-white px-4 py-3">
+                        <div key={b.id} className="flex items-center gap-3 rounded-[var(--r-surface)] border border-[color:var(--ink-200)] bg-white px-4 py-3">
                           <div className="h-3 w-3 rounded-full shrink-0" style={{ background: BLOCK_COLORS[b.block_type] || 'var(--ink-400)' }} />
                           <div className="flex-1 min-w-0">
                             <p className="tp-body font-semibold text-[color:var(--surface-dark-900)]">{b.title || b.block_type.replace(/_/g, ' ')}</p>

@@ -251,7 +251,7 @@ const SECTIONS = [
 const sectionFor = (i) => (SECTIONS.find(sn => i < sn.until) || SECTIONS[SECTIONS.length - 1]).label;
 
 const inputCls =
-  'w-full rounded-[10px] border px-3 py-2.5 text-base md:text-sm outline-none transition focus:border-[color:var(--brand-navy-900)]';
+  'w-full rounded-[var(--r-control)] border px-3 py-2.5 text-base md:text-sm outline-none transition focus:border-[color:var(--brand-navy-900)]';
 const inputStyle = { borderColor: 'var(--border-light)', background: 'var(--background-secondary)' };
 
 // A pill for the chip grids: paths, vision themes, school year, graduation year.
@@ -300,7 +300,7 @@ function PathField({ step, value, onChange }) {
         // one, so the hint is still there but nothing is animating under a
         // student who is mid-sentence.
         placeholder={animating ? `${typed}▌` : step.examples[0]}
-        className="w-full rounded-[14px] border px-4 py-4 text-lg outline-none transition focus:border-[color:var(--brand-navy-900)]"
+        className="w-full rounded-[var(--r-control)] border px-4 py-4 text-lg outline-none transition focus:border-[color:var(--brand-navy-900)]"
         style={{ borderColor: 'var(--border-light)', background: 'var(--background-secondary)' }}
       />
       <span className="tp-meta mt-2 block" style={{ color: 'var(--text-muted)' }}>
@@ -571,23 +571,23 @@ export default function Onboarding() {
             student used to meet their own old answer with no explanation and no
             way to clear it. Say it, and give them the out. */}
         {resumed && (
-          <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-[12px] px-4 py-3"
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-[var(--r-control)] px-4 py-3"
             style={{ background: 'var(--background-secondary)', border: '1px solid var(--border-light)' }}>
             <p className="tp-body" style={{ color: 'var(--text-secondary)' }}>
               Your answers from last time are still here.
             </p>
             <button onClick={startOver}
-              className="ui-press tp-meta rounded-[10px] border px-3.5 py-2 font-bold"
+              className="ui-press tp-meta rounded-[var(--r-control)] border px-3.5 py-2 font-bold"
               style={{ borderColor: 'var(--border-light)', color: 'var(--text-primary)', background: 'white' }}>
               Start over
             </button>
           </div>
         )}
 
-        <section className="rounded-[20px] bg-white p-6 pb-0 sm:p-8 sm:pb-0" style={{ border: '1px solid var(--border-light)' }}>
+        <section className="rounded-[var(--r-surface)] bg-white p-6 pb-0 sm:p-8 sm:pb-0" style={{ border: '1px solid var(--border-light)' }}>
           {children}
           {error && (
-            <p className="tp-body mt-4 rounded-[12px] px-3 py-2.5" role="alert"
+            <p className="tp-body mt-4 rounded-[var(--r-control)] px-3 py-2.5" role="alert"
               style={{ background: 'var(--danger-50, #FEF2F2)', color: 'var(--danger-700, #B91C1C)' }}>
               {error}
             </p>
@@ -620,7 +620,7 @@ export default function Onboarding() {
             const value = summarise(s, data);
             return (
               <button key={s.key} type="button" onClick={() => go(i, 'back')}
-                className="opt-row flex w-full items-start gap-3 rounded-xl border px-3.5 py-2.5 text-left"
+                className="opt-row flex w-full items-start gap-3 rounded-[var(--r-control)] border px-3.5 py-2.5 text-left"
                 style={{ animationDelay: `${i * 30}ms`, borderColor: 'var(--border-light)', background: 'var(--brand-white)' }}>
                 <span className="min-w-0 flex-1">
                   <span className="tp-eyebrow block" style={{ color: 'var(--text-secondary)' }}>
@@ -639,12 +639,12 @@ export default function Onboarding() {
       <div className={footerCls}>
         <div className="flex items-center gap-3">
           <button onClick={() => go(STEPS.length - 1, 'back')}
-            className="ui-press flex items-center gap-1 rounded-[10px] border px-4 text-sm font-bold"
+            className="ui-press flex items-center gap-1 rounded-[var(--r-control)] border px-4 text-sm font-bold"
             style={{ borderColor: 'var(--border-light)', color: 'var(--text-primary)', minHeight: '48px' }}>
             <ChevronLeft size={15} /> Back
           </button>
           <button onClick={finish}
-            className="ui-press flex flex-1 items-center justify-center gap-2 rounded-[10px] text-sm font-bold text-white"
+            className="ui-press flex flex-1 items-center justify-center gap-2 rounded-[var(--r-control)] text-sm font-bold text-white"
             style={{ background: 'var(--brand-navy-900)', minHeight: '48px', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}>
             See my path test <ChevronRight size={15} />
           </button>
@@ -812,12 +812,12 @@ export default function Onboarding() {
     <div className={footerCls}>
       <div className="flex items-center gap-3">
         <button onClick={back}
-          className="ui-press flex items-center gap-1 rounded-[10px] border px-4 text-sm font-bold"
+          className="ui-press flex items-center gap-1 rounded-[var(--r-control)] border px-4 text-sm font-bold"
           style={{ borderColor: 'var(--border-light)', color: 'var(--text-primary)', minHeight: '48px' }}>
           <ChevronLeft size={15} /> Back
         </button>
         <button onClick={next}
-          className="ui-press flex flex-1 items-center justify-center gap-2 rounded-[10px] text-sm font-bold text-white"
+          className="ui-press flex flex-1 items-center justify-center gap-2 rounded-[var(--r-control)] text-sm font-bold text-white"
           style={{ background: 'var(--brand-navy-900)', minHeight: '48px', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}>
           {ctaLabel} <ChevronRight size={15} />
         </button>

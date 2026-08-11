@@ -6,7 +6,7 @@ import BasedOnSources from '@/components/evidence-profile/BasedOnSources';
 export default function AbilityCard({ ability, flagged }) {
   const { summary } = ability;
   return (
-    <div className="rounded-[16px] border bg-white p-5" style={{ borderColor: 'var(--ink-200)' }}>
+    <div className="rounded-[var(--r-surface)] border bg-white p-5" style={{ borderColor: 'var(--ink-200)' }}>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h3 className="tp-card" style={{ color: 'var(--surface-dark-900)' }}>{ability.label}</h3>
         <EvidenceBadge summary={summary} />

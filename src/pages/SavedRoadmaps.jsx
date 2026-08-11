@@ -19,10 +19,10 @@ export default function SavedRoadmaps() {
           <Link
             to="/roadmap"
             key={r.id}
-            className="flex items-center gap-5 rounded-[20px] border border-[color:var(--ink-200)] bg-white p-6 transition hover:-translate-y-0.5 hover:shadow-md hover:border-[rgba(31,58,95,0.25)]"
+            className="flex items-center gap-5 rounded-[var(--r-surface)] border border-[color:var(--ink-200)] bg-white p-6 transition hover:-translate-y-0.5 hover:shadow-md hover:border-[rgba(31,58,95,0.25)]"
           >
             <span
-              className="grid h-12 w-12 place-items-center rounded-xl shrink-0"
+              className="grid h-12 w-12 place-items-center rounded-[var(--r-control)] shrink-0"
               style={{ background: '#F8ECEF' }}
             >
               <Map style={{ color: 'var(--brand-navy-900)' }} size={20} />
@@ -38,7 +38,7 @@ export default function SavedRoadmaps() {
           </Link>
         ))}
         {!items.length && (
-          <div className="tp-body rounded-[20px] border border-dashed border-[color:var(--ink-200)] px-8 py-14 text-center text-[color:var(--ink-400)]">
+          <div className="tp-body rounded-[var(--r-surface)] border border-dashed border-[color:var(--ink-200)] px-8 py-14 text-center text-[color:var(--ink-400)]">
             Your first roadmap will appear here.
           </div>
         )}

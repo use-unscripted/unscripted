@@ -49,7 +49,7 @@ export default function WhatYouLearned({ m, compact = false }) {
   if (!m?.post_completed_at) return null;
 
   return (
-    <div className={compact ? '' : 'rounded-[16px] border border-[color:var(--ink-200)] bg-white p-4'}>
+    <div className={compact ? '' : 'rounded-[var(--r-surface)] border border-[color:var(--ink-200)] bg-white p-4'}>
       <p className="tp-eyebrow mb-1" style={{ color: 'var(--brand-navy-700)' }}>What you learned</p>
 
       <div className="mt-2">
@@ -69,7 +69,7 @@ export default function WhatYouLearned({ m, compact = false }) {
       </div>
 
       {m.surprise_reflection && (
-        <p className="tp-body mt-3 rounded-xl px-3.5 py-2.5" style={{ background: 'var(--ink-50)', color: 'var(--ink-700)' }}>
+        <p className="tp-body mt-3 rounded-[var(--r-control)] px-3.5 py-2.5" style={{ background: 'var(--ink-50)', color: 'var(--ink-700)' }}>
           <span className="font-semibold">What surprised you: </span>{m.surprise_reflection}
         </p>
       )}

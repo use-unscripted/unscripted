@@ -14,7 +14,7 @@ const UserNotRegisteredError = () => {
           <p className="tp-lead mx-auto text-[color:var(--ink-600)] mb-8">
             You are not registered to use this application. Please contact the app administrator to request access.
           </p>
-          <div className="tp-body p-4 bg-[color:var(--ink-50)] rounded-md text-[color:var(--ink-600)]">
+          <div className="tp-body p-4 bg-[color:var(--ink-50)] rounded-[var(--r-control)] text-[color:var(--ink-600)]">
             <p>If you believe this is an error, you can:</p>
             <ul className="list-disc list-inside mt-2 space-y-1">
               <li>Verify you are logged in with the correct account</li>

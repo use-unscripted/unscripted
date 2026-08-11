@@ -27,7 +27,7 @@ export default function ExperimentStatusPanel({ proofs, reflections, cycle }) {
   const decision = cycle?.final_decision;
 
   return (
-    <section className="rounded-[16px] bg-white p-5" style={{ border: '1px solid var(--border-light)' }}>
+    <section className="rounded-[var(--r-surface)] bg-white p-5" style={{ border: '1px solid var(--border-light)' }}>
       <h3 className="tp-card mb-4" style={{ color: 'var(--text-primary)' }}>
         Evidence, reflection and decision
       </h3>

@@ -16,7 +16,7 @@ export default function ScaleInput({ label, value, onChange, low, high }) {
               aria-label={`${label}: ${n} out of 10`}
               aria-pressed={on}
               onClick={() => onChange(n)}
-              className="tp-body h-10 min-w-[2.25rem] flex-1 rounded-[10px] border font-semibold transition-colors"
+              className="tp-body h-10 min-w-[2.25rem] flex-1 rounded-[var(--r-control)] border font-semibold transition-colors"
               style={on
                 ? { background: 'var(--brand-navy-900)', borderColor: 'var(--brand-navy-900)', color: '#fff' }
                 : { background: '#fff', borderColor: 'var(--ink-200)', color: 'var(--ink-700)' }}

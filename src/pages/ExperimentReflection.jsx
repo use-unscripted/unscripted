@@ -31,12 +31,12 @@ function Shell({ children }) {
 
 function Notice({ title, body, to, cta }) {
   return (
-    <section className="rounded-[20px] bg-white p-6" style={{ border: '1px solid var(--border-light)' }}>
+    <section className="rounded-[var(--r-surface)] bg-white p-6" style={{ border: '1px solid var(--border-light)' }}>
       <p className="tp-body flex items-center gap-2 font-bold" style={{ color: 'var(--text-primary)' }}>
         <AlertCircle size={15} style={{ color: 'var(--brand-navy-700)' }} /> {title}
       </p>
       <p className="tp-prose mt-2" style={{ color: 'var(--text-secondary)' }}>{body}</p>
-      <Link to={to} className="ui-press tp-body mt-4 inline-flex items-center rounded-[10px] px-5 py-3 font-bold text-white"
+      <Link to={to} className="ui-press tp-body mt-4 inline-flex items-center rounded-[var(--r-control)] px-5 py-3 font-bold text-white"
         style={{ background: 'var(--brand-navy-900)', minHeight: '48px' }}>
         {cta}
       </Link>
@@ -96,9 +96,9 @@ export default function ExperimentReflection() {
   if (loadError) {
     return (
       <Shell>
-        <section className="rounded-[20px] bg-white p-6" style={{ border: '1px solid var(--border-light)' }}>
+        <section className="rounded-[var(--r-surface)] bg-white p-6" style={{ border: '1px solid var(--border-light)' }}>
           <p className="tp-body font-bold" style={{ color: 'var(--text-primary)' }}>{loadError}</p>
-          <button onClick={load} className="ui-press tp-body mt-4 inline-flex items-center gap-2 rounded-[10px] px-5 font-bold text-white"
+          <button onClick={load} className="ui-press tp-body mt-4 inline-flex items-center gap-2 rounded-[var(--r-control)] px-5 font-bold text-white"
             style={{ background: 'var(--brand-navy-900)', minHeight: '48px' }}>
             <RotateCcw size={15} /> Try again
           </button>

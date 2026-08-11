@@ -10,7 +10,7 @@ import DepthBadge from '@/components/experiments/DepthBadge';
 export default function MomentHook({ moment, onStart, preField, preValue, onPre }) {
   return (
     <div className="space-y-6">
-      <div className="rounded-[20px] p-6" style={{ background: 'var(--surface-dark-700)', color: 'white' }}>
+      <div className="rounded-[var(--r-surface)] p-6" style={{ background: 'var(--surface-dark-700)', color: 'white' }}>
         <p className="tp-eyebrow opacity-60">Quick Test · {moment.career_name}</p>
         <p className="tp-lead mt-3">{moment.hook}</p>
       </div>
@@ -27,7 +27,7 @@ export default function MomentHook({ moment, onStart, preField, preValue, onPre 
       )}
 
       <button onClick={onStart}
-        className="tp-body ui-press flex w-full items-center justify-center gap-2 rounded-[12px] py-3.5 font-semibold text-white"
+        className="tp-body ui-press flex w-full items-center justify-center gap-2 rounded-[var(--r-control)] py-3.5 font-semibold text-white"
         style={{ background: 'var(--brand-navy-900)' }}>
         Start <ArrowRight size={16} />
       </button>

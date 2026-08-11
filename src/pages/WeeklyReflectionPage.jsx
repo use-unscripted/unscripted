@@ -69,8 +69,8 @@ function dedupe(list) {
   return Array.from(new Set(list.filter(Boolean)));
 }
 
-const inputCls = 'w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-base md:text-sm text-[color:var(--surface-dark-900)] placeholder-[color:var(--ink-400)] outline-none focus:border-[color:var(--brand-navy-900)]';
-const bigInputCls = 'w-full rounded-2xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-4 text-base text-[color:var(--surface-dark-900)] placeholder-[color:var(--ink-400)] outline-none focus:border-[color:var(--brand-navy-900)]';
+const inputCls = 'w-full rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-base md:text-sm text-[color:var(--surface-dark-900)] placeholder-[color:var(--ink-400)] outline-none focus:border-[color:var(--brand-navy-900)]';
+const bigInputCls = 'w-full rounded-[var(--r-surface)] border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-4 text-base text-[color:var(--surface-dark-900)] placeholder-[color:var(--ink-400)] outline-none focus:border-[color:var(--brand-navy-900)]';
 
 // ── Step 1 options ─────────────────────────────────────────────────────────────
 // Asked, never asserted. The page cannot substantiate "nothing got logged this
@@ -181,7 +181,7 @@ function clearDraft() {
 // ── Success Toast ──────────────────────────────────────────────────────────────
 function SuccessToast({ experiment, mission, onOpenExp, onDismiss }) {
   return (
-    <div role="alert" className="fixed bottom-24 right-4 z-[100] max-w-sm w-[calc(100%-2rem)] sm:bottom-6 sm:right-6 sm:w-full rounded-[20px] bg-white border border-green-100 shadow-2xl p-5 flex flex-col gap-3"
+    <div role="alert" className="fixed bottom-24 right-4 z-[100] max-w-sm w-[calc(100%-2rem)] sm:bottom-6 sm:right-6 sm:w-full rounded-[var(--r-surface)] bg-white border border-green-100 shadow-2xl p-5 flex flex-col gap-3"
       style={{ boxShadow: '0 20px 60px rgba(0,0,0,0.15)' }}>
       <div className="flex items-start gap-3">
         <div className="shrink-0 w-9 h-9 rounded-full flex items-center justify-center" style={{ background: 'var(--success-50)' }}>
@@ -199,7 +199,7 @@ function SuccessToast({ experiment, mission, onOpenExp, onDismiss }) {
       {/* No "View Reflection" button: saving already switches to History with
           the row on screen, so it did nothing at all when pressed. */}
       {experiment && (
-        <button onClick={onOpenExp} className="tp-meta w-full rounded-[8px] border border-[color:var(--ink-200)] py-2.5 font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)]">
+        <button onClick={onOpenExp} className="tp-meta w-full rounded-[var(--r-control)] border border-[color:var(--ink-200)] py-2.5 font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)]">
           Open Experiment
         </button>
       )}
@@ -697,7 +697,7 @@ function ReflectionFlow({ experiments, missions, proofs, outreach, initialData, 
   // ── Buttons ──────────────────────────────────────────────────────────────────
   const backButton = (
     <button onClick={back} disabled={saving}
-      className="flex items-center gap-1 rounded-[10px] border px-4 py-3 text-sm font-semibold disabled:opacity-50"
+      className="flex items-center gap-1 rounded-[var(--r-control)] border px-4 py-3 text-sm font-semibold disabled:opacity-50"
       style={{ borderColor: 'var(--ink-200)', color: 'var(--text-primary)' }}>
       <ChevronLeft size={15} /> Back
     </button>
@@ -705,7 +705,7 @@ function ReflectionFlow({ experiments, missions, proofs, outreach, initialData, 
 
   const continueButton = (enabled, label = 'Continue') => (
     <button onClick={next} disabled={!enabled}
-      className="flex flex-1 items-center justify-center gap-2 rounded-[10px] py-3 text-sm font-semibold text-white disabled:opacity-40"
+      className="flex flex-1 items-center justify-center gap-2 rounded-[var(--r-control)] py-3 text-sm font-semibold text-white disabled:opacity-40"
       style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}>
       {label} <ChevronRight size={15} />
     </button>
@@ -717,7 +717,7 @@ function ReflectionFlow({ experiments, missions, proofs, outreach, initialData, 
   // where three buttons side by side wraps the label onto two lines.
   const doneForNow = (primary) => (
     <button onClick={save} disabled={!canSave}
-      className={`flex items-center justify-center gap-2 rounded-[10px] py-3 text-sm font-semibold disabled:opacity-40 ${primary ? 'flex-1 text-white' : 'basis-full px-4 border sm:basis-auto'}`}
+      className={`flex items-center justify-center gap-2 rounded-[var(--r-control)] py-3 text-sm font-semibold disabled:opacity-40 ${primary ? 'flex-1 text-white' : 'basis-full px-4 border sm:basis-auto'}`}
       style={primary
         ? { background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }
         : { borderColor: 'var(--ink-200)', color: 'var(--text-primary)', background: 'var(--brand-white)' }}>
@@ -925,7 +925,7 @@ function ReflectionFlow({ experiments, missions, proofs, outreach, initialData, 
         )}
 
         {summary && (
-          <div className="rounded-[20px] p-5" style={{ background: 'var(--surface-dark-700)', border: '1px solid rgba(31,58,95,0.5)' }}>
+          <div className="rounded-[var(--r-surface)] p-5" style={{ background: 'var(--surface-dark-700)', border: '1px solid rgba(31,58,95,0.5)' }}>
             <p className="tp-eyebrow mb-2.5" style={{ color: 'var(--brand-gold-500)' }}>Unscripted&apos;s analysis</p>
             <p className="tp-prose text-[color:var(--ink-300)]">{summary}</p>
             {adjustments.length > 0 && (
@@ -948,7 +948,7 @@ function ReflectionFlow({ experiments, missions, proofs, outreach, initialData, 
           {doneForNow(true)}
         </div>
         <button onClick={generate} disabled={generating || !expId || !hasContent}
-          className="mt-3 flex w-full items-center justify-center gap-2 rounded-[10px] border py-3 text-sm font-semibold disabled:opacity-50"
+          className="mt-3 flex w-full items-center justify-center gap-2 rounded-[var(--r-control)] border py-3 text-sm font-semibold disabled:opacity-50"
           style={{ borderColor: 'var(--brand-navy-700)', color: 'var(--brand-navy-700)', background: 'white' }}>
           {generating
             ? <><Loader2 size={15} className="animate-spin" />Generating…</>
@@ -967,7 +967,7 @@ function ReflectionFlow({ experiments, missions, proofs, outreach, initialData, 
           : 'Confirm or change one thing above and this will save.';
 
   return (
-    <div ref={cardRef} className="rounded-[24px] border bg-white px-5 py-6 sm:px-8 sm:py-7" style={{ borderColor: 'var(--border-light)' }}>
+    <div ref={cardRef} className="rounded-[var(--r-surface)] border bg-white px-5 py-6 sm:px-8 sm:py-7" style={{ borderColor: 'var(--border-light)' }}>
       <GuidedStyles />
 
       <div className="mb-6">
@@ -990,7 +990,7 @@ function ReflectionFlow({ experiments, missions, proofs, outreach, initialData, 
 
         <div className="mt-5 min-h-[220px]">
           {error && (
-            <div className="tp-body mb-4 flex items-start gap-2 rounded-xl bg-red-50 p-3 text-red-700" role="alert">
+            <div className="tp-body mb-4 flex items-start gap-2 rounded-[var(--r-control)] bg-red-50 p-3 text-red-700" role="alert">
               <AlertCircle size={14} className="mt-0.5 shrink-0" />{error}
             </div>
           )}
@@ -1189,12 +1189,12 @@ export default function WeeklyReflectionPage() {
         action={
           <div className="flex gap-2">
             <button onClick={startReflection}
-              className="tp-body rounded-[10px] px-4 py-2.5 font-semibold transition"
+              className="tp-body rounded-[var(--r-control)] px-4 py-2.5 font-semibold transition"
               style={tabCls(view === 'form')}>
               {currentWeekRow ? 'This week' : 'New reflection'}
             </button>
             <button onClick={() => setView('history')}
-              className="tp-body rounded-[10px] px-4 py-2.5 font-semibold transition"
+              className="tp-body rounded-[var(--r-control)] px-4 py-2.5 font-semibold transition"
               style={tabCls(view === 'history')}>
               History {reflections.length > 0 && `(${reflections.length})`}
             </button>
@@ -1206,10 +1206,10 @@ export default function WeeklyReflectionPage() {
         <SkCards count={3} h={172} gap={16} r={24} />
       ) : view === 'form' ? (
         experiments.length === 0 ? (
-          <div className="rounded-[24px] border border-dashed p-12 text-center" style={{ borderColor: 'var(--border-light)' }}>
+          <div className="rounded-[var(--r-surface)] border border-dashed p-12 text-center" style={{ borderColor: 'var(--border-light)' }}>
             <p className="tp-body text-[color:var(--ink-500)]">There is nothing to reflect on yet. Start an experiment first.</p>
             <button onClick={() => navigate('/experiments')}
-              className="tp-body mt-5 rounded-[10px] px-5 py-3 font-semibold text-white"
+              className="tp-body mt-5 rounded-[var(--r-control)] px-5 py-3 font-semibold text-white"
               style={{ background: 'var(--brand-navy-900)' }}>
               Go to Missions
             </button>
@@ -1218,17 +1218,17 @@ export default function WeeklyReflectionPage() {
           <>
             {/* Offered, never applied on its own. */}
             {draftOffer && !activeDraft && !editingReflection && (
-              <div className="anim-slide-up mb-4 flex flex-wrap items-center gap-3 rounded-[16px] border px-4 py-3"
+              <div className="anim-slide-up mb-4 flex flex-wrap items-center gap-3 rounded-[var(--r-surface)] border px-4 py-3"
                 style={{ borderColor: 'var(--border-light)', background: 'var(--background-tertiary)' }}>
                 <p className="tp-body flex-1 text-[color:var(--ink-700)]">
                   You started a reflection for the week of <strong>{fmtWeek(draftOffer.week_start)}</strong> and didn&apos;t save it.
                 </p>
                 <button onClick={() => setActiveDraft(draftOffer)}
-                  className="tp-meta rounded-[8px] px-3.5 py-2 font-semibold text-white" style={{ background: 'var(--brand-navy-900)' }}>
+                  className="tp-meta rounded-[var(--r-control)] px-3.5 py-2 font-semibold text-white" style={{ background: 'var(--brand-navy-900)' }}>
                   Pick it up
                 </button>
                 <button onClick={() => { clearDraft(); setDraftOffer(null); }}
-                  className="tp-meta rounded-[8px] border border-[color:var(--ink-200)] px-3.5 py-2 font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)]">
+                  className="tp-meta rounded-[var(--r-control)] border border-[color:var(--ink-200)] px-3.5 py-2 font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)]">
                   Start fresh
                 </button>
               </div>
@@ -1281,24 +1281,24 @@ export default function WeeklyReflectionPage() {
               <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[color:var(--ink-400)]" />
               <input value={search} onChange={e => setSearch(e.target.value)}
                 placeholder="Search reflections…"
-                className="w-full rounded-xl border border-[color:var(--ink-200)] bg-white py-2.5 pl-9 pr-4 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]" />
+                className="w-full rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-white py-2.5 pl-9 pr-4 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]" />
             </div>
             {experiments.length > 0 && (
               <select value={filterExp} onChange={e => setFilterExp(e.target.value)}
-                className="max-w-full rounded-xl border border-[color:var(--ink-200)] bg-white px-3 py-2.5 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]">
+                className="max-w-full rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-white px-3 py-2.5 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]">
                 <option value="all">All experiments</option>
                 {experiments.map(exp => <option key={exp.id} value={exp.id}>{exp.title}</option>)}
               </select>
             )}
             <button onClick={startReflection}
-              className="tp-body inline-flex shrink-0 items-center gap-2 rounded-[10px] px-4 py-2.5 font-semibold text-white"
+              className="tp-body inline-flex shrink-0 items-center gap-2 rounded-[var(--r-control)] px-4 py-2.5 font-semibold text-white"
               style={{ background: 'var(--brand-navy-900)' }}>
               <Plus size={15} /> Add
             </button>
           </div>
 
           {filteredReflections.length === 0 ? (
-            <div className="tp-body rounded-[24px] border border-dashed border-[color:var(--ink-200)] p-12 text-center text-[color:var(--ink-500)]">
+            <div className="tp-body rounded-[var(--r-surface)] border border-dashed border-[color:var(--ink-200)] p-12 text-center text-[color:var(--ink-500)]">
               {reflections.length === 0
                 ? 'No reflections yet. The first one takes about a minute.'
                 : 'No reflections match your search or filter.'}
@@ -1311,7 +1311,7 @@ export default function WeeklyReflectionPage() {
                 const preview = r.generated_summary || r.lessons || r.next_changes
                   || toStringArray(r.completed_items).join(' · ') || toStringArray(r.avoided_items).join(' · ');
                 return (
-                  <div key={r.id} className="tp-card-body rounded-[20px] border border-[color:var(--ink-200)] bg-white">
+                  <div key={r.id} className="tp-card-body rounded-[var(--r-surface)] border border-[color:var(--ink-200)] bg-white">
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0 flex-1">
                         <p className="tp-card text-[color:var(--surface-dark-900)]">
@@ -1334,17 +1334,17 @@ export default function WeeklyReflectionPage() {
 
                     <div className="mt-4 flex flex-wrap gap-2">
                       <button onClick={() => { setEditingReflection(r); setView('form'); }}
-                        className="tp-meta rounded-[8px] border border-[color:var(--ink-200)] px-3.5 py-2 font-semibold text-[color:var(--ink-700)] transition hover:bg-[color:var(--ink-50)]">
+                        className="tp-meta rounded-[var(--r-control)] border border-[color:var(--ink-200)] px-3.5 py-2 font-semibold text-[color:var(--ink-700)] transition hover:bg-[color:var(--ink-50)]">
                         View / Edit
                       </button>
                       {linkedExp && (
                         <button onClick={() => navigate('/experiments')}
-                          className="tp-meta flex items-center gap-1.5 rounded-[8px] border border-[color:var(--ink-200)] px-3.5 py-2 font-semibold text-[color:var(--ink-700)] transition hover:bg-[color:var(--ink-50)]">
+                          className="tp-meta flex items-center gap-1.5 rounded-[var(--r-control)] border border-[color:var(--ink-200)] px-3.5 py-2 font-semibold text-[color:var(--ink-700)] transition hover:bg-[color:var(--ink-50)]">
                           <ExternalLink size={13} /> Open Experiment
                         </button>
                       )}
                       <button onClick={() => setDeleteTarget(r)}
-                        className="tp-meta flex items-center gap-1.5 rounded-[8px] border border-red-100 px-3.5 py-2 font-semibold text-red-400 transition hover:border-red-400 hover:text-red-600">
+                        className="tp-meta flex items-center gap-1.5 rounded-[var(--r-control)] border border-red-100 px-3.5 py-2 font-semibold text-red-400 transition hover:border-red-400 hover:text-red-600">
                         <Trash2 size={13} /> Delete
                       </button>
                     </div>

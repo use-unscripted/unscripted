@@ -22,7 +22,7 @@ export default function ProfileSection({ index, title, description, count, child
 /** The shared empty state: never a forced conclusion. */
 export function StillLearning({ children }) {
   return (
-    <div className="tp-body rounded-[16px] border border-dashed p-5"
+    <div className="tp-body rounded-[var(--r-surface)] border border-dashed p-5"
       style={{ borderColor: 'var(--ink-200)', color: 'var(--ink-500)' }}>
       {children}
     </div>

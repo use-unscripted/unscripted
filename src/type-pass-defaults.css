@@ -55,29 +55,40 @@
      app sat as a narrow column with an empty strip down both sides of any
      laptop, and the two screens that had already broken out of it to do their
      job, the resume builder and the campus calendar, were the two that looked
-     right. This is that width, for everything. */
-  --app-measure: 76rem;   /* 1216px */
+     right.
+
+     Now 80rem, which is the marketing page's own container (max-w-7xl). The
+     app sitting 64px narrower than the front page is not something anyone can
+     name on sight, but it is why the two never quite lined up. */
+  --app-measure: 80rem;   /* 1280px, the same as the landing container */
   /* Prose never runs the full width of a wide card. */
   --prose-measure: 68ch;
 }
 
 /* ── Page furniture ──────────────────────────────────────────────────────── */
+/* Horizontal padding is 24px at every width, the same as the landing page's
+   px-6 container, so the left edge of a heading does not move when a student
+   crosses from the marketing page into the product. */
 .app-page {
   width: 100%;
   max-width: var(--app-measure);
   margin-inline: auto;
-  padding: 2rem 1.25rem 4rem;
+  padding: 3rem 1.5rem 6rem;
 }
 @media (min-width: 640px) {
-  .app-page { padding: 2.5rem 2rem 5rem; }
+  .app-page { padding: 4rem 1.5rem 8rem; }
 }
 
 /* Section rhythm. One value between major sections, bigger than the spacing
    inside them, which is what makes a page read as a few groups rather than a
-   list of everything. */
-.app-stack > * + * { margin-top: 2.5rem; }
+   list of everything.
+
+   Opened up to the landing page's spacing. Its sections sit 80–128px apart
+   and the app's sat 40–48px apart: same content, twice the density, which is
+   most of why one reads as considered and the other as a control panel. */
+.app-stack > * + * { margin-top: 3.5rem; }
 @media (min-width: 640px) {
-  .app-stack > * + * { margin-top: 3rem; }
+  .app-stack > * + * { margin-top: 5rem; }
 }
 
 /* Card padding. The interior needs to breathe more than the gap between cards
@@ -127,9 +138,38 @@
 
 .tp-meta { font-weight: 500; }
 
+/* Small caps labels.
+   Body face, not the display face. The marketing page has two of these on the
+   whole page and both are set in Switzer; the app had ten on the dashboard
+   alone and set every one in Cabinet Grotesk, which is what made the product
+   read as a console. The face is the fix — a display face at 11px with wide
+   letterspacing is the most recognisable generated-interface tell there is,
+   and it was the app's default label. */
 .tp-eyebrow {
-  font-family: var(--font-heading);
+  font-family: var(--font-body);
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.12em;
+}
+
+/* A heading inside a card: "Why we are recommending this", "Your evidence
+   progress". These were all eyebrows, which is why the dashboard had ten
+   shouting caps labels on one screen against the marketing page's two. The
+   marketing page sets this kind of thing in sentence case at 14/600 and keeps
+   caps for the two status chips it has. */
+.tp-label {
+  font-family: var(--font-body);
+  font-weight: 600;
+  letter-spacing: normal;
+}
+
+/* Buttons, and anything else with a label rather than a heading in it.
+   The landing page sets every control at 14px semibold in the body face. The
+   app was reaching for tp-card, which is a card *title* — display face, bold,
+   17px — so its buttons were shouting a size and a half louder than the
+   marketing page's. */
+.tp-control {
+  font-family: var(--font-body);
+  font-weight: 600;
+  letter-spacing: normal;
 }

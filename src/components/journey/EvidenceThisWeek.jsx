@@ -1,3 +1,5 @@
+import { Reveal } from '@/components/motion';
+
 /**
  * Career evidence this week. Real counts only, and nothing is lost by not
  * coming back: this is a record of learning, not a streak.
@@ -14,13 +16,15 @@ export default function EvidenceThisWeek({ week }) {
   if (!lines.length) return null;
 
   return (
-    <section className="rounded-[20px] border bg-white p-6" style={{ borderColor: 'var(--ink-200)' }}>
-      <h2 className="tp-section" style={{ color: 'var(--text-primary)' }}>Career evidence this week</h2>
-      <ul className="mt-3 space-y-1.5">
-        {lines.map(line => (
-          <li key={line} className="tp-body" style={{ color: 'var(--ink-700)' }}>{line}</li>
-        ))}
-      </ul>
-    </section>
+    <Reveal y={20}>
+      <section className="app-card p-6 sm:p-8">
+        <h2 className="tp-section" style={{ color: 'var(--text-primary)' }}>Career evidence this week</h2>
+        <ul className="mt-3 space-y-1.5">
+          {lines.map(line => (
+            <li key={line} className="tp-body" style={{ color: 'var(--ink-700)' }}>{line}</li>
+          ))}
+        </ul>
+      </section>
+    </Reveal>
   );
 }

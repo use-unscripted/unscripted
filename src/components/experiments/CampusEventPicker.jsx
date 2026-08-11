@@ -195,7 +195,7 @@ export default function CampusEventPicker({ pathName, selected, onSelect, disabl
                 onClick={() => onSelect(isSelected ? null : event)}
                 disabled={disabled}
                 aria-pressed={isSelected}
-                className="w-full rounded-xl border-2 p-2 text-left transition disabled:opacity-60"
+                className="w-full rounded-[var(--r-control)] border-2 p-2 text-left transition disabled:opacity-60"
                 style={{
                   borderColor: isSelected ? 'var(--brand-navy-700)' : 'transparent',
                   background: isSelected ? 'var(--background-tertiary, var(--ink-100))' : 'transparent',
@@ -216,7 +216,7 @@ export default function CampusEventPicker({ pathName, selected, onSelect, disabl
               </button>
 
               {isSelected && event.guidance?.what_to_do?.length > 0 && (
-                <div className="mt-1.5 rounded-xl border border-[color:var(--ink-200)] bg-white px-3 py-2.5">
+                <div className="mt-1.5 rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-white px-3 py-2.5">
                   <p className="tp-eyebrow mb-1.5 text-[color:var(--ink-500)]">
                     What to do there
                   </p>
@@ -245,7 +245,7 @@ export default function CampusEventPicker({ pathName, selected, onSelect, disabl
         onClick={() => onSelect(null)}
         disabled={disabled}
         aria-pressed={!selected}
-        className="tp-meta mt-2 w-full rounded-xl border px-4 py-3 text-left font-semibold transition disabled:opacity-60"
+        className="tp-meta mt-2 w-full rounded-[var(--r-control)] border px-4 py-3 text-left font-semibold transition disabled:opacity-60"
         style={{
           borderColor: !selected ? 'var(--brand-navy-700)' : 'var(--ink-200)',
           color: !selected ? 'var(--brand-navy-700)' : 'var(--ink-500)',
@@ -271,7 +271,7 @@ export default function CampusEventPicker({ pathName, selected, onSelect, disabl
 function EmptyPanel({ icon: Icon, title, children }) {
   return (
     <div
-      className="mb-5 overflow-hidden rounded-xl border px-4 py-3.5"
+      className="mb-5 overflow-hidden rounded-[var(--r-control)] border px-4 py-3.5"
       style={{ borderColor: 'var(--ink-200)', background: 'var(--ink-50)' }}
     >
       <p className="tp-body flex items-center gap-1.5 font-semibold text-[color:var(--ink-700)]">
@@ -570,7 +570,7 @@ function WrongCalendarButton({ college }) {
   }
 
   return (
-    <div className="mt-3 rounded-xl border px-3 py-2.5" style={{ borderColor: 'var(--ink-200)' }}>
+    <div className="mt-3 rounded-[var(--r-control)] border px-3 py-2.5" style={{ borderColor: 'var(--ink-200)' }}>
       <label htmlFor="wrong-calendar-note" className="tp-meta font-semibold text-[color:var(--ink-700)]">
         What&apos;s wrong with it? Optional.
       </label>

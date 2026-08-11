@@ -28,14 +28,14 @@ function GuideCompareModal({ guideA, guideB, onClose }) {
   ];
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" style={{ background: 'rgba(5,8,22,0.5)' }}>
-      <div className="w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-[24px] bg-white p-6 sm:p-8">
+      <div className="w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-[var(--r-surface)] bg-white p-6 sm:p-8">
         <div className="flex items-center justify-between mb-5">
           <h2 className="tp-section text-[color:var(--surface-dark-900)]">Compare Experiments</h2>
           <button onClick={onClose}><X size={20} className="text-[color:var(--ink-500)]" /></button>
         </div>
         <div className="grid grid-cols-2 gap-4 mb-4">
           {[guideA, guideB].map((g, i) => (
-            <div key={i} className="rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] p-3">
+            <div key={i} className="rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] p-3">
               <p className="tp-eyebrow text-[color:var(--ink-500)]">Version {g.version_number}</p>
               <p className="tp-card text-[color:var(--surface-dark-900)] mt-0.5">{g.guide_title}</p>
               {g.is_active && <span className="tp-meta font-bold text-green-700 bg-green-50 rounded-full px-2 py-0.5 mt-1 inline-block">Active</span>}
@@ -52,7 +52,7 @@ function GuideCompareModal({ guideA, guideB, onClose }) {
               </p>
               <div className="grid grid-cols-2 gap-4">
                 {[f.keyA, f.keyB].map((val, i) => (
-                  <div key={i} className="tp-body rounded-xl p-3 text-[color:var(--ink-700)]"
+                  <div key={i} className="tp-body rounded-[var(--r-control)] p-3 text-[color:var(--ink-700)]"
                     style={{ background: differ ? (i === 0 ? '#FFF7ED' : 'var(--success-50)') : 'var(--ink-50)', border: '1px solid var(--ink-200)' }}>
                     {val || <span className="text-[color:var(--ink-400)] italic">Not specified</span>}
                   </div>
@@ -93,7 +93,7 @@ function GuideCompareModal({ guideA, guideB, onClose }) {
             ))}
           </div>
         </div>
-        <button onClick={onClose} className="tp-body w-full rounded-[10px] border border-[color:var(--ink-200)] py-2.5 font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)]">Close</button>
+        <button onClick={onClose} className="tp-body w-full rounded-[var(--r-control)] border border-[color:var(--ink-200)] py-2.5 font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)]">Close</button>
       </div>
     </div>
   );
@@ -221,7 +221,7 @@ export default function MissionGuideHistory({ guides = [], onSetActive, onDelete
 
       {/* Compare toolbar */}
       {compareIds.length > 0 && (
-        <div className="tp-meta flex items-center gap-3 rounded-xl bg-blue-50 border border-blue-100 px-4 py-2.5">
+        <div className="tp-meta flex items-center gap-3 rounded-[var(--r-control)] bg-blue-50 border border-blue-100 px-4 py-2.5">
           <span className="text-blue-700 font-semibold">
             {compareIds.length === 1 ? 'Select one more experiment to compare' : 'Ready to compare'}
           </span>
@@ -246,7 +246,7 @@ export default function MissionGuideHistory({ guides = [], onSetActive, onDelete
 
         return (
           <div key={guide.id}
-            className="rounded-xl border overflow-hidden transition"
+            className="rounded-[var(--r-control)] border overflow-hidden transition"
             style={{ borderColor: isSelected ? '#93C5FD' : 'var(--ink-200)', background: isSelected ? 'var(--info-50)' : 'white' }}>
 
             {/* Summary row. The row itself opens the experiment on its own page,
@@ -346,7 +346,7 @@ export default function MissionGuideHistory({ guides = [], onSetActive, onDelete
       {onGenerateAnother && (
         <button
           onClick={onGenerateAnother}
-          className="tp-meta w-full rounded-xl border border-dashed border-[color:var(--ink-200)] py-3 font-semibold text-[color:var(--ink-500)] hover:border-[color:var(--brand-navy-900)] hover:text-[color:var(--brand-navy-900)] transition mt-1">
+          className="tp-meta w-full rounded-[var(--r-control)] border border-dashed border-[color:var(--ink-200)] py-3 font-semibold text-[color:var(--ink-500)] hover:border-[color:var(--brand-navy-900)] hover:text-[color:var(--brand-navy-900)] transition mt-1">
           + Generate Another Experiment
         </button>
       )}

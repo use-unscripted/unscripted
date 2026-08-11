@@ -74,7 +74,7 @@ function ContactCard({ c, experimentsMap, missionsMap, onEdit, onStatusChange, o
   const websiteHref = safeExternalUrl(c.website_url) || safeExternalUrl('https://' + (c.website_url || ''));
 
   return (
-    <div className="tp-card-body rounded-[20px] border border-[color:var(--ink-200)] bg-white">
+    <div className="tp-card-body rounded-[var(--r-surface)] border border-[color:var(--ink-200)] bg-white">
       {confirmDelete && (
         <SoftDeleteConfirm
           itemName={c.name}
@@ -112,7 +112,7 @@ function ContactCard({ c, experimentsMap, missionsMap, onEdit, onStatusChange, o
             <ChevronDown size={16} />
           </button>
           {menuOpen && (
-            <div className="absolute right-0 top-8 z-10 w-44 rounded-xl border border-[color:var(--ink-200)] bg-white shadow-lg py-1">
+            <div className="absolute right-0 top-8 z-10 w-44 rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-white shadow-lg py-1">
               <button onClick={() => { setMenuOpen(false); onEdit(c); }}
                 className="tp-meta w-full flex items-center gap-2 px-4 py-2.5 text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)]">
                 <Pencil size={13} /> Edit contact
@@ -323,7 +323,7 @@ export default function OutreachTracker() {
         description="Track every professional conversation. Follow up on time. Build real relationships."
         action={
           <button onClick={() => setModal('new')}
-            className="tp-body inline-flex items-center gap-2 rounded-[10px] px-6 py-3 font-semibold text-white shrink-0"
+            className="tp-body inline-flex items-center gap-2 rounded-[var(--r-control)] px-6 py-3 font-semibold text-white shrink-0"
             style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}>
             <Plus size={16} /> Add Contact
           </button>
@@ -365,7 +365,7 @@ export default function OutreachTracker() {
       )}
 
       {overdue.length > 0 && (
-        <div className="mb-6 rounded-[16px] p-4" style={{ background: 'var(--warning-50)', border: '1px solid rgba(180,83,9,0.25)' }}>
+        <div className="mb-6 rounded-[var(--r-surface)] p-4" style={{ background: 'var(--warning-50)', border: '1px solid rgba(180,83,9,0.25)' }}>
           <p className="tp-eyebrow text-[color:var(--warning-700)] mb-1.5">Follow-ups overdue</p>
           <p className="tp-body text-[color:var(--ink-700)]">{overdue.length} contact{overdue.length > 1 ? 's' : ''} need follow-up. Reschedule or mark complete.</p>
         </div>
@@ -378,17 +378,17 @@ export default function OutreachTracker() {
           <Mail size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[color:var(--ink-400)]" />
           <input value={search} onChange={e => setSearch(e.target.value)}
             placeholder="Search by name, company, email, experiment…"
-            className="w-full rounded-xl border border-[color:var(--ink-200)] bg-white pl-9 pr-4 py-2.5 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]" />
+            className="w-full rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-white pl-9 pr-4 py-2.5 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]" />
         </div>
         {experiments.length > 0 && (
           <select value={filterExp} onChange={e => setFilterExp(e.target.value)}
-            className="rounded-xl border border-[color:var(--ink-200)] bg-white px-3 py-2.5 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]">
+            className="rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-white px-3 py-2.5 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]">
             <option value="all">All experiments</option>
             {experiments.map(exp => <option key={exp.id} value={exp.id}>{exp.title}</option>)}
           </select>
         )}
         <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)}
-          className="rounded-xl border border-[color:var(--ink-200)] bg-white px-3 py-2.5 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]">
+          className="rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-white px-3 py-2.5 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]">
           <option value="all">All statuses</option>
           {ALL_STATUS_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
         </select>
@@ -409,7 +409,7 @@ export default function OutreachTracker() {
               { label: 'Follow-up', body: 'Hi [Name],\n\nI wanted to follow up on my previous note. I completely understand you\'re busy, and I appreciate your time. If a 20-minute call doesn\'t work, even a brief email with one piece of advice would be incredibly helpful.\n\nThank you again.\n\n[Your Name]' },
               { label: 'Thank-you note', body: 'Hi [Name],\n\nThank you for taking the time to speak with me. Your insight about [specific thing they said] was genuinely valuable and I\'ve already begun [action taken].\n\nI\'ll keep you updated on my progress. Thank you again for your generosity.\n\n[Your Name]' },
             ].map(t => (
-              <div key={t.label} className="rounded-[16px] border border-[color:var(--ink-200)] bg-white p-4">
+              <div key={t.label} className="rounded-[var(--r-surface)] border border-[color:var(--ink-200)] bg-white p-4">
                 <p className="tp-eyebrow mb-2.5" style={{ color: 'var(--brand-navy-900)' }}>{t.label}</p>
                 <pre className="tp-meta text-[color:var(--ink-700)] whitespace-pre-wrap font-body">{t.body}</pre>
               </div>
@@ -421,24 +421,24 @@ export default function OutreachTracker() {
       {loading ? (
         <SkCards count={4} h={150} r={20} />
       ) : loadError ? (
-        <div className="rounded-[24px] border border-dashed border-red-200 p-16 text-center">
+        <div className="rounded-[var(--r-surface)] border border-dashed border-red-200 p-16 text-center">
           <h3 className="tp-section text-[color:var(--surface-dark-900)]">We couldn't load your outreach contacts.</h3>
           <p className="tp-body mx-auto mt-2.5 max-w-[46ch] text-[color:var(--ink-500)]">There was a problem fetching your records. Please try again.</p>
           <div className="mt-6 flex justify-center gap-3">
-            <button onClick={load} className="tp-body inline-flex items-center gap-2 rounded-[10px] px-5 py-2.5 font-semibold text-white" style={{ background: 'var(--brand-navy-900)' }}>Retry</button>
-            <button onClick={() => navigate('/journey')} className="tp-body inline-flex items-center gap-2 rounded-[10px] border border-[color:var(--ink-200)] px-5 py-2.5 font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)]">Return to Dashboard</button>
+            <button onClick={load} className="tp-body inline-flex items-center gap-2 rounded-[var(--r-control)] px-5 py-2.5 font-semibold text-white" style={{ background: 'var(--brand-navy-900)' }}>Retry</button>
+            <button onClick={() => navigate('/journey')} className="tp-body inline-flex items-center gap-2 rounded-[var(--r-control)] border border-[color:var(--ink-200)] px-5 py-2.5 font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)]">Return to Dashboard</button>
           </div>
         </div>
       ) : contacts.length === 0 ? (
-        <div className="rounded-[24px] border border-dashed border-[color:var(--ink-200)] p-16 text-center">
+        <div className="rounded-[var(--r-surface)] border border-dashed border-[color:var(--ink-200)] p-16 text-center">
           <Mail size={32} className="mx-auto mb-4 text-[color:var(--ink-300)]" />
           <h3 className="tp-section text-[color:var(--surface-dark-900)]">No contacts added yet.</h3>
           <p className="tp-body mx-auto mt-2.5 max-w-[52ch] text-[color:var(--ink-500)]">Add people connected to your experiments so you can track outreach, conversations, and follow-ups.</p>
-          <button onClick={() => setModal('new')} className="tp-body mt-6 inline-flex items-center gap-2 rounded-[10px] px-6 py-3 font-semibold text-white"
+          <button onClick={() => setModal('new')} className="tp-body mt-6 inline-flex items-center gap-2 rounded-[var(--r-control)] px-6 py-3 font-semibold text-white"
             style={{ background: 'var(--brand-navy-900)' }}><Plus size={16} /> Add Contact</button>
         </div>
       ) : filtered.length === 0 ? (
-        <div className="rounded-[24px] border border-dashed border-[color:var(--ink-200)] p-12 text-center">
+        <div className="rounded-[var(--r-surface)] border border-dashed border-[color:var(--ink-200)] p-12 text-center">
           <p className="tp-section text-[color:var(--surface-dark-900)]">No results match your filters.</p>
           <p className="tp-body mt-2.5 text-[color:var(--ink-500)]">Try adjusting your search or filter.</p>
         </div>

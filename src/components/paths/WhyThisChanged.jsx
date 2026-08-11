@@ -49,7 +49,7 @@ export default function WhyThisChanged({ change, defaultOpen = false, compact = 
   const confidenceRose = c.confidenceBefore !== null && c.confidenceAfter !== null && c.confidenceAfter > c.confidenceBefore;
 
   return (
-    <section className={`rounded-[16px] border ${compact ? 'mt-3 p-4' : 'p-5'}`} style={{ borderColor: 'var(--ink-200)', background: 'var(--ink-50)' }}>
+    <section className={`rounded-[var(--r-surface)] border ${compact ? 'mt-3 p-4' : 'p-5'}`} style={{ borderColor: 'var(--ink-200)', background: 'var(--ink-50)' }}>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="tp-body flex items-center gap-2 font-bold" style={{ color: 'var(--surface-dark-900)' }}>
           <Scale size={15} style={{ color: 'var(--brand-navy-700)' }} />

@@ -148,7 +148,7 @@ export default function AdminCampusFeeds() {
       />
 
       {error && (
-        <p className="mb-5 flex items-start gap-2 rounded-xl border px-4 py-3 text-sm"
+        <p className="mb-5 flex items-start gap-2 rounded-[var(--r-control)] border px-4 py-3 text-sm"
           style={{ borderColor: '#FECACA', background: 'var(--danger-50)', color: 'var(--danger-700)' }} role="alert">
           <AlertCircle size={15} className="mt-0.5 shrink-0" aria-hidden="true" /> {error}
         </p>
@@ -229,7 +229,7 @@ function FeedHealth({ feeds, broken, checking, note, onCheck }) {
 
   return (
     <div>
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border px-4 py-3"
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-[var(--r-control)] border px-4 py-3"
         style={{
           borderColor: broken.length ? '#FECACA' : 'var(--ink-200)',
           background: broken.length ? 'var(--danger-50)' : 'var(--ink-50)',
@@ -262,7 +262,7 @@ function FeedHealth({ feeds, broken, checking, note, onCheck }) {
         this is for. It is a nudge to go and look, not a verdict.
       */}
       {repetitive.length > 0 && (
-        <p className="mb-4 flex items-start gap-2 rounded-xl border px-4 py-3 text-sm"
+        <p className="mb-4 flex items-start gap-2 rounded-[var(--r-control)] border px-4 py-3 text-sm"
           style={{ borderColor: '#FDE68A', background: '#FFFBEB', color: '#92400E' }}>
           <TriangleAlert size={15} className="mt-0.5 shrink-0" aria-hidden="true" />
           <span>
@@ -304,7 +304,7 @@ function FeedRow({ feed }) {
   const windowed = Number.isFinite(windowDays) && windowDays > 0;
 
   return (
-    <div className="rounded-xl border bg-white px-4 py-3"
+    <div className="rounded-[var(--r-control)] border bg-white px-4 py-3"
       style={{ borderColor: failing ? '#FECACA' : repetitive ? '#FDE68A' : 'var(--ink-200)' }}>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="flex items-center gap-1.5 text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
@@ -400,7 +400,7 @@ function EmptyQueue({ tab }) {
   }[tab];
 
   return (
-    <div className="rounded-xl border px-5 py-8 text-center" style={{ borderColor: 'var(--ink-200)', background: 'var(--ink-50)' }}>
+    <div className="rounded-[var(--r-control)] border px-5 py-8 text-center" style={{ borderColor: 'var(--ink-200)', background: 'var(--ink-50)' }}>
       <Inbox size={20} className="mx-auto mb-2" style={{ color: 'var(--ink-400)' }} aria-hidden="true" />
       <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{copy[0]}</p>
       <p className="mx-auto mt-1 max-w-sm text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{copy[1]}</p>
@@ -427,7 +427,7 @@ function SubmissionCard({ row, busy, onDecide }) {
   const titles = Array.isArray(row.sample_titles) ? row.sample_titles : [];
 
   return (
-    <div className="overflow-hidden rounded-xl border bg-white" style={{ borderColor: 'var(--ink-200)' }}>
+    <div className="overflow-hidden rounded-[var(--r-control)] border bg-white" style={{ borderColor: 'var(--ink-200)' }}>
       <div className="flex flex-wrap items-center justify-between gap-2 border-b px-4 py-2.5"
         style={{ borderColor: 'var(--ink-200)', background: 'var(--ink-50)' }}>
         <p className="flex items-center gap-1.5 text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>

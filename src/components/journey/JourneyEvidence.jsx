@@ -30,12 +30,19 @@ export default function JourneyEvidence() {
   if (!data) {
     return (
       <div className="space-y-4">
-        <Sk h={180} r={20} />
-        <Sk h={150} r={20} />
+        <Sk h={180} r={16} />
+        <Sk h={150} r={16} />
       </div>
     );
   }
 
+  /* Each card below reveals itself, and that placement is deliberate rather
+     than tidy. Wrapping the six from out here would put a Reveal around a card
+     that renders nothing — every one of them returns null when it has no
+     evidence to show — and the page would space out an empty box. It would
+     also swallow the section rhythm, since app-stack only spaces its own
+     direct children, and hand the observer one block taller than the viewport
+     to decide about. */
   return (
     <>
       <CareersWorthTesting hypotheses={data.hypotheses} />

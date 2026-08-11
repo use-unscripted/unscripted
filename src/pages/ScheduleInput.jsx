@@ -38,7 +38,7 @@ export default function ScheduleInput() {
             <LogoWordmark />
           </div>
           <div
-            className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl text-white"
+            className="mb-4 flex h-11 w-11 items-center justify-center rounded-[var(--r-control)] text-white"
             style={{ background: 'var(--brand-navy-900)' }}
           >
             <Clock3 size={20} />
@@ -47,7 +47,7 @@ export default function ScheduleInput() {
           <p className="tp-lead mt-3 text-[color:var(--ink-700)]">Your roadmap should fit your life, not compete with it.</p>
         </div>
 
-        <section className="grid gap-5 rounded-[24px] border border-[color:var(--ink-200)] bg-white p-7 shadow-sm sm:grid-cols-2 sm:p-10">
+        <section className="grid gap-5 rounded-[var(--r-surface)] border border-[color:var(--ink-200)] bg-white p-7 shadow-sm sm:grid-cols-2 sm:p-10">
           {fields.map(([name, label, ph]) => (
             <Field key={name} name={name} label={label} placeholder={ph} value={data[name]} onChange={change} />
           ))}
@@ -58,7 +58,7 @@ export default function ScheduleInput() {
           <button
             onClick={submit}
             disabled={saving}
-            className="mt-4 flex items-center justify-center gap-2 rounded-[10px] px-6 py-3.5 font-semibold text-white transition hover:-translate-y-px sm:col-span-2 disabled:opacity-60"
+            className="mt-4 flex items-center justify-center gap-2 rounded-[var(--r-control)] px-6 py-3.5 font-semibold text-white transition hover:-translate-y-px sm:col-span-2 disabled:opacity-60"
             style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}
           >
             {saving ? 'Saving your week...' : 'Build My Unscripted Profile'} <ArrowRight size={18} />

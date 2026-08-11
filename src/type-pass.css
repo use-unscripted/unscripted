@@ -3,57 +3,97 @@
    whole stylesheet. That is deliberate: a stray text-xs left beside a tp-meta
    used to win silently and reopen the 13px floor with nothing to show for it.
    Size and line-height only. Anything else belongs in type-pass-defaults.css,
-   or you take away a caller's ability to override it. */
+   or you take away a caller's ability to override it.
 
+   ## These numbers are the landing page's numbers
+
+   Measured off the rendered marketing page 2026-08-11, not invented here. The
+   signed-in app had its own smaller ladder, which is why moving from the front
+   page into the product felt like moving between two products:
+
+     landing h1     60px   ← tp-hero
+     landing hero   48px   ← tp-page
+     landing h2     30px   ← tp-section
+     landing h3     18px   ← tp-card
+     landing lead   18/32  ← tp-lead
+     landing body   16/28  ← tp-body, tp-prose
+     landing small  14/20  ← tp-meta, tp-control
+
+   The app was running 38 / 36 / 19 / 17 / 16 / 15 / 13 against those. Every
+   level was one to three steps short, which is the whole of "the dashboard
+   looks cheaper than the front page" in one table.
+
+   Change a number here and you have moved the app off the marketing page
+   again. If the landing page moves, re-measure it and follow. */
+
+/* The one instruction on a screen — the dashboard's own hero. Same clamp as
+   the landing headline, so the first thing a student reads after signing in is
+   set at the same size as the first thing they read before. */
+.tp-hero {
+  font-size: clamp(2.25rem, 4.2vw + 0.5rem, 3.75rem);
+  line-height: 1.02;
+}
+
+/* The page's own name. The landing page's section heroes, not its headline —
+   a screen title is a label, and two things on one screen cannot both be the
+   biggest. */
 .tp-page {
-  font-size: 2rem;
-  line-height: 1.12;
+  font-size: clamp(2.25rem, 2.4vw + 1.25rem, 3rem);
+  line-height: 1.06;
 }
 
 .tp-section {
-  font-size: 1.1875rem;
-  line-height: 1.3;
+  font-size: 1.875rem;
+  line-height: 1.2;
 }
 
 .tp-card {
-  font-size: 1.0625rem;
-  line-height: 1.35;
+  font-size: 1.125rem;
+  line-height: 1.55;
 }
 
 .tp-lead {
-  font-size: 1rem;
-  line-height: 1.6;
+  font-size: 1.125rem;
+  line-height: 1.78;
 }
 
 .tp-body {
-  font-size: 0.9375rem;
-  line-height: 1.6;
+  font-size: 1rem;
+  line-height: 1.75;
 }
 
 .tp-prose {
-  font-size: 0.9375rem;
-  line-height: 1.6;
+  font-size: 1rem;
+  line-height: 1.75;
 }
 
 .tp-meta {
-  font-size: 0.8125rem;
-  line-height: 1.45;
+  font-size: 0.875rem;
+  line-height: 1.5;
 }
 
 .tp-eyebrow {
   font-size: 0.6875rem;
-  line-height: 1.2;
+  line-height: 1.4;
 }
 
-.tp-hero {
-  font-size: 1.75rem;
-  line-height: 1.14;
+.tp-label {
+  font-size: 0.875rem;
+  line-height: 1.4;
 }
 
-@media (min-width: 640px) {
-  .tp-page { font-size: 2.375rem; }
+/* Button and control labels. The landing page sets every button at 14/600 in
+   the body face; the app was setting them at 17/700 in the display face, which
+   is a heading sitting inside a button. */
+.tp-control {
+  font-size: 0.875rem;
+  line-height: 1.25rem;
 }
 
-@media (min-width: 640px) {
-  .tp-hero { font-size: 2.25rem; }
+/* Section headings step down on a phone the way the landing page's do. The
+   hero and the page title carry their own clamps and need nothing here. */
+@media (max-width: 639px) {
+  .tp-section { font-size: 1.5rem; }
+  .tp-card { font-size: 1.0625rem; }
+  .tp-lead { font-size: 1.0625rem; line-height: 1.7; }
 }

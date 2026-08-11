@@ -28,7 +28,7 @@ export default function EvidenceUpdatePanel({ reflection, experiment }) {
   if (state === 'failed') return null;
 
   return (
-    <section className="rounded-[20px] bg-white p-6" style={{ border: '1px solid var(--border-light)' }}>
+    <section className="rounded-[var(--r-surface)] bg-white p-6" style={{ border: '1px solid var(--border-light)' }}>
       <p className="tp-card" style={{ color: 'var(--text-primary)' }}>What this reflection changed</p>
       <p className="tp-prose mt-2" style={{ color: 'var(--text-secondary)' }}>
         Your reflection was added to your pre and post check-ins, your deliverables and everything you had already recorded, and the careers it affects were recalculated.

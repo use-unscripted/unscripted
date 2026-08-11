@@ -39,7 +39,7 @@ export default function AppShellSkeleton() {
         </div>
         <nav className="flex-1">
           {[0, 1, 2, 3].map(i => (
-            <div key={i} className="mb-1 flex items-center gap-3 rounded-xl px-4 py-3">
+            <div key={i} className="mb-1 flex items-center gap-3 rounded-[var(--r-control)] px-4 py-3">
               <Sk h={17} w={17} r={5} style={{ opacity: 0.18 }} />
               <Sk h={12} w={i === 3 ? 122 : 88} r={4} style={{ opacity: 0.18 }} />
             </div>

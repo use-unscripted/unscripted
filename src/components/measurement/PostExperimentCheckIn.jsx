@@ -30,7 +30,7 @@ export default function PostExperimentCheckIn({ exp, measurement, onClose, onSav
 
   return (
     <div className="anim-overlay fixed inset-0 z-50 flex items-end justify-center p-0 sm:items-center sm:p-4" style={{ background: 'rgba(5,8,22,0.55)' }}>
-      <div className="anim-modal w-full max-w-lg max-h-[94vh] overflow-y-auto rounded-t-[24px] bg-white p-6 sm:rounded-[24px] sm:p-8">
+      <div className="anim-modal w-full max-w-lg max-h-[94vh] overflow-y-auto rounded-t-[var(--r-surface)] bg-white p-6 sm:rounded-[var(--r-surface)] sm:p-8">
         <div className="mb-1 flex items-start justify-between gap-3">
           <h2 className="tp-section" style={{ color: 'var(--surface-dark-900)' }}>How did that actually go?</h2>
           <button onClick={onClose} aria-label="Close" style={{ color: 'var(--ink-500)' }}><X size={18} /></button>
@@ -61,7 +61,7 @@ export default function PostExperimentCheckIn({ exp, measurement, onClose, onSav
               value={values.surprise_reflection || ''}
               onChange={(e) => setValues(v => ({ ...v, surprise_reflection: e.target.value }))}
               placeholder="A sentence is plenty."
-              className="w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-2.5 text-base outline-none focus:border-[color:var(--brand-navy-900)] md:text-sm"
+              className="w-full rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-2.5 text-base outline-none focus:border-[color:var(--brand-navy-900)] md:text-sm"
             />
           </label>
         </div>
@@ -69,7 +69,7 @@ export default function PostExperimentCheckIn({ exp, measurement, onClose, onSav
         {error && <p className="tp-body mt-4" style={{ color: 'var(--danger-700)' }}>{error}</p>}
 
         <button onClick={submit} disabled={!complete || saving}
-          className="tp-body mt-6 flex w-full items-center justify-center gap-2 rounded-[10px] py-3.5 font-semibold text-white disabled:opacity-50"
+          className="tp-body mt-6 flex w-full items-center justify-center gap-2 rounded-[var(--r-control)] py-3.5 font-semibold text-white disabled:opacity-50"
           style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}>
           {saving && <Loader2 size={15} className="animate-spin" />}
           {saving ? 'Saving…' : 'See what you learned'}

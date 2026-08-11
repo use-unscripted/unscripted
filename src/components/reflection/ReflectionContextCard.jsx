@@ -7,7 +7,7 @@ import { Target, Users, FileText, Compass } from 'lucide-react';
 
 function Stat({ Icon, label, value }) {
   return (
-    <div className="rounded-[12px] p-3" style={{ background: 'var(--background-secondary)', border: '1px solid var(--border-light)' }}>
+    <div className="rounded-[var(--r-control)] p-3" style={{ background: 'var(--background-secondary)', border: '1px solid var(--border-light)' }}>
       <p className="tp-eyebrow flex items-center gap-1.5" style={{ color: 'var(--text-muted)' }}>
         <Icon size={11} /> {label}
       </p>
@@ -19,7 +19,7 @@ function Stat({ Icon, label, value }) {
 export default function ReflectionContextCard({ ctx }) {
   const { experiment, path, completedMissions, missions, proof, outreach, baselineClarity, endedEarly } = ctx;
   return (
-    <section className="rounded-[20px] bg-white p-5 sm:p-6" style={{ border: '1px solid var(--border-light)' }}>
+    <section className="rounded-[var(--r-surface)] bg-white p-5 sm:p-6" style={{ border: '1px solid var(--border-light)' }}>
       <p className="tp-eyebrow" style={{ color: 'var(--brand-navy-700)' }}>
         Concluding your experiment{path?.path_name ? ` · ${path.path_name}` : ''}
       </p>

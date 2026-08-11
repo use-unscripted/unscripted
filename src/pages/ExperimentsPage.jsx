@@ -62,7 +62,7 @@ function PathDropdown({ paths, value, onChange, error }) {
 
   if (paths.filter(p => !['archived', 'deprioritized'].includes(p.status)).length === 0) {
     return (
-      <div className="rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] p-4 text-center">
+      <div className="rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] p-4 text-center">
         <p className="tp-body font-semibold text-[color:var(--ink-700)] mb-1">No paths available</p>
         <p className="tp-meta text-[color:var(--ink-500)]">You need to create or activate a path before creating an experiment.</p>
         <div className="mt-3 flex gap-2 justify-center flex-wrap">
@@ -87,12 +87,12 @@ function PathDropdown({ paths, value, onChange, error }) {
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Search paths..."
-            className="w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] pl-8 pr-4 py-2.5 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]"
+            className="w-full rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] pl-8 pr-4 py-2.5 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]"
           />
         </div>
       )}
       <select
-        className={`w-full rounded-xl border bg-[color:var(--page-surface)] px-4 py-3 text-sm outline-none focus:border-[color:var(--brand-navy-900)] ${error ? 'border-red-400' : 'border-[color:var(--ink-200)]'}`}
+        className={`w-full rounded-[var(--r-control)] border bg-[color:var(--page-surface)] px-4 py-3 text-sm outline-none focus:border-[color:var(--brand-navy-900)] ${error ? 'border-red-400' : 'border-[color:var(--ink-200)]'}`}
         value={value}
         onChange={e => onChange(e.target.value)}
       >
@@ -126,7 +126,7 @@ function MissionRow({ mission, experiment, onProofAdded, onDeleted }) {
   };
 
   return (
-    <div className="flex items-center justify-between gap-3 rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] px-4 py-3">
+    <div className="flex items-center justify-between gap-3 rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] px-4 py-3">
       {confirmDelete && (
         <SoftDeleteConfirm
           itemName={mission.title}
@@ -218,7 +218,7 @@ function ExperimentCard({ exp, measurement, onStatusChange, onExpand, expanded, 
   const isPaused = exp.status === 'paused';
 
   return (
-    <div className={`rounded-[20px] border bg-white overflow-hidden ${isPaused ? 'border-amber-200' : 'border-[color:var(--ink-200)]'}`}>
+    <div className={`rounded-[var(--r-surface)] border bg-white overflow-hidden ${isPaused ? 'border-amber-200' : 'border-[color:var(--ink-200)]'}`}>
       <div className="tp-card-body">
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1">
@@ -242,7 +242,7 @@ function ExperimentCard({ exp, measurement, onStatusChange, onExpand, expanded, 
               onEdited={onEdited}
             />
             <button onClick={onExpand}
-              className="tp-meta touch-target flex items-center gap-1.5 rounded-xl border px-3 py-2 font-semibold transition"
+              className="tp-meta touch-target flex items-center gap-1.5 rounded-[var(--r-control)] border px-3 py-2 font-semibold transition"
               style={expanded
                 ? { borderColor: 'var(--ink-200)', color: 'var(--ink-700)', background: 'white' }
                 : { borderColor: 'var(--brand-navy-900)', color: 'var(--brand-navy-900)', background: 'white' }}>
@@ -280,7 +280,7 @@ function ExperimentCard({ exp, measurement, onStatusChange, onExpand, expanded, 
       {expanded && (
         <div className="border-t border-[color:var(--ink-200)] p-5 space-y-4">
           {isPaused && (
-            <div className="rounded-xl p-3 flex items-start gap-3" style={{ background: 'var(--warning-50)', border: '1px solid rgba(180,83,9,0.2)' }}>
+            <div className="rounded-[var(--r-control)] p-3 flex items-start gap-3" style={{ background: 'var(--warning-50)', border: '1px solid rgba(180,83,9,0.2)' }}>
               <PauseCircle size={16} className="text-[color:var(--warning-700)] shrink-0 mt-0.5" />
               <div>
                 <p className="tp-body font-bold text-[color:var(--warning-700)]">This experiment is paused</p>
@@ -316,7 +316,7 @@ function ExperimentCard({ exp, measurement, onStatusChange, onExpand, expanded, 
             </div>
           )}
           {exp.proof_required && (
-            <div className="rounded-xl p-3" style={{ background: 'var(--background-tertiary)', border: '1px solid var(--border-light)' }}>
+            <div className="rounded-[var(--r-control)] p-3" style={{ background: 'var(--background-tertiary)', border: '1px solid var(--border-light)' }}>
               <p className="tp-eyebrow mb-1" style={{ color: 'var(--brand-navy-900)' }}>Proof required</p>
               <p className="tp-body text-[color:var(--ink-700)]">{exp.proof_required}</p>
             </div>
@@ -398,7 +398,7 @@ function PausedSection({ experiments, missions, guides, onResumed, onDelete, onE
           {open ? <ChevronUp size={14} className="text-[color:var(--ink-400)]" /> : <ChevronDown size={14} className="text-[color:var(--ink-400)]" />}
         </button>
         {open && (
-          <div className="tp-empty-note rounded-[16px] border border-dashed border-amber-200 bg-amber-50/40">
+          <div className="tp-empty-note rounded-[var(--r-surface)] border border-dashed border-amber-200 bg-amber-50/40">
             <p className="tp-body font-semibold text-[color:var(--ink-700)]">No paused experiments.</p>
             <p className="tp-meta text-[color:var(--ink-400)] mt-1">Experiments you pause will appear here so you can return to them later.</p>
           </div>
@@ -427,7 +427,7 @@ function PausedSection({ experiments, missions, guides, onResumed, onDelete, onE
             const activeGuide = expGuides.find(g => g.is_active);
             const s = STATUS_STYLES.paused;
             return (
-              <div key={exp.id} className="rounded-[20px] border border-amber-200 bg-white overflow-hidden">
+              <div key={exp.id} className="rounded-[var(--r-surface)] border border-amber-200 bg-white overflow-hidden">
                 <div className="p-5">
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1 min-w-0">
@@ -454,7 +454,7 @@ function PausedSection({ experiments, missions, guides, onResumed, onDelete, onE
                         onResumed={onResumed}
                         onEdited={onEdited}
                       />
-                      <button onClick={() => setExpandedId(isExpanded ? null : exp.id)} className="rounded-xl border border-[color:var(--ink-200)] p-2 hover:bg-[color:var(--ink-50)]">
+                      <button onClick={() => setExpandedId(isExpanded ? null : exp.id)} className="rounded-[var(--r-control)] border border-[color:var(--ink-200)] p-2 hover:bg-[color:var(--ink-50)]">
                         {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                       </button>
                     </div>
@@ -550,13 +550,13 @@ function NewExperimentModal({ onClose, onSave, paths }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(5,8,22,0.5)' }}>
-      <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-[24px] bg-white p-6 sm:p-8">
+      <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-[var(--r-surface)] bg-white p-6 sm:p-8">
         <h2 className="tp-section text-[color:var(--surface-dark-900)] mb-1">New Experiment</h2>
         <p className="tp-lead text-[color:var(--ink-500)] mb-6">Define what you want to test. Open it after saving to generate the full experiment.</p>
         <div className="space-y-4">
           <div>
             <label className="tp-body font-semibold text-[color:var(--ink-700)] block mb-1">Choose an experiment type</label>
-            <select className="w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]"
+            <select className="w-full rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]"
               value={data.experiment_type} onChange={e => setData(d => ({ ...d, experiment_type: e.target.value, title: d.title || e.target.value }))}>
               <option value="">Select or type your own below</option>
               {EXPERIMENT_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
@@ -565,7 +565,7 @@ function NewExperimentModal({ onClose, onSave, paths }) {
 
           <label className="block">
             <span className="tp-body font-semibold text-[color:var(--ink-700)] block mb-1">Experiment title</span>
-            <input className="w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]"
+            <input className="w-full rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]"
               placeholder="e.g. Interview 3 investment bankers" value={data.title || ''} onChange={e => setData(d => ({ ...d, title: e.target.value }))} />
           </label>
 
@@ -580,20 +580,20 @@ function NewExperimentModal({ onClose, onSave, paths }) {
           ].map(f => (
             <label key={f.name} className="block">
               <span className="tp-body font-semibold text-[color:var(--ink-700)] block mb-1">{f.label}</span>
-              <input className="w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]"
+              <input className="w-full rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]"
                 placeholder={f.placeholder} value={data[f.name] || ''} onChange={e => setData(d => ({ ...d, [f.name]: e.target.value }))} />
             </label>
           ))}
           <label className="block">
             <span className="tp-body font-semibold text-[color:var(--ink-700)] block mb-1">Deadline</span>
-            <input type="date" className="w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]"
+            <input type="date" className="w-full rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]"
               value={data.deadline || ''} onChange={e => setData(d => ({ ...d, deadline: e.target.value }))} />
           </label>
         </div>
         <div className="mt-6 flex gap-3">
-          <button onClick={onClose} className="tp-body flex-1 rounded-[10px] border border-[color:var(--ink-200)] py-3 font-semibold text-[color:var(--ink-700)] transition hover:bg-[color:var(--ink-50)]">Cancel</button>
+          <button onClick={onClose} className="tp-body flex-1 rounded-[var(--r-control)] border border-[color:var(--ink-200)] py-3 font-semibold text-[color:var(--ink-700)] transition hover:bg-[color:var(--ink-50)]">Cancel</button>
           <button onClick={handleSave} disabled={saving}
-            className="tp-body flex-1 rounded-[10px] py-3 font-semibold text-white transition hover:-translate-y-px disabled:opacity-60"
+            className="tp-body flex-1 rounded-[var(--r-control)] py-3 font-semibold text-white transition hover:-translate-y-px disabled:opacity-60"
             style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}>
             {saving ? 'Saving...' : 'Save Experiment'}
           </button>
@@ -927,10 +927,10 @@ export default function ExperimentsPage() {
       )}
       {learnedTarget && (
         <div className="anim-overlay fixed inset-0 z-50 flex items-end justify-center p-0 sm:items-center sm:p-4" style={{ background: 'rgba(5,8,22,0.55)' }}>
-          <div className="anim-modal w-full max-w-lg max-h-[94vh] overflow-y-auto rounded-t-[24px] bg-white p-6 sm:rounded-[24px] sm:p-8">
+          <div className="anim-modal w-full max-w-lg max-h-[94vh] overflow-y-auto rounded-t-[var(--r-surface)] bg-white p-6 sm:rounded-[var(--r-surface)] sm:p-8">
             <WhatYouLearned m={learnedTarget} compact />
             <button onClick={() => setLearnedTarget(null)}
-              className="tp-body mt-6 w-full rounded-[10px] py-3.5 font-semibold text-white"
+              className="tp-body mt-6 w-full rounded-[var(--r-control)] py-3.5 font-semibold text-white"
               style={{ background: 'var(--brand-navy-900)' }}>
               Done
             </button>
@@ -959,7 +959,7 @@ export default function ExperimentsPage() {
         description="Every experiment is a controlled test. You are not committing to a path. You are gathering evidence."
         action={
           <button onClick={() => setShowNew(true)}
-            className="tp-body flex items-center gap-2 rounded-[10px] px-6 py-3.5 font-semibold text-white transition hover:-translate-y-px"
+            className="tp-body flex items-center gap-2 rounded-[var(--r-control)] px-6 py-3.5 font-semibold text-white transition hover:-translate-y-px"
             style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}>
             <Plus size={16} /> New Experiment
           </button>
@@ -1047,7 +1047,7 @@ export default function ExperimentsPage() {
           </div>
 
           {activeFiltered.length === 0 ? (
-            <div className="rounded-[24px] border border-dashed border-[color:var(--ink-200)] px-8 py-14 text-center">
+            <div className="rounded-[var(--r-surface)] border border-dashed border-[color:var(--ink-200)] px-8 py-14 text-center">
               {filter !== 'all' ? (
                 <>
                   <h3 className="tp-section text-[color:var(--surface-dark-900)]">No {filter.replace('_', ' ')} experiments.</h3>
@@ -1058,7 +1058,7 @@ export default function ExperimentsPage() {
                   <h3 className="tp-section text-[color:var(--surface-dark-900)]">No experiments yet.</h3>
                   <p className="tp-body mt-2.5 text-[color:var(--ink-500)]">Start your first experiment to test a path in the real world.</p>
                   <button onClick={() => setShowNew(true)}
-                    className="tp-body mt-6 inline-flex items-center gap-2 rounded-[10px] px-6 py-3 font-semibold text-white"
+                    className="tp-body mt-6 inline-flex items-center gap-2 rounded-[var(--r-control)] px-6 py-3 font-semibold text-white"
                     style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}>
                                       <Plus size={16} /> Create first experiment
                   </button>

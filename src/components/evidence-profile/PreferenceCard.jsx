@@ -14,7 +14,7 @@ export default function PreferenceCard({ preference, flagged }) {
   const stillLearning = status === 'still_learning';
 
   return (
-    <div className="rounded-[16px] border p-5"
+    <div className="rounded-[var(--r-surface)] border p-5"
       style={{ borderColor: 'var(--ink-200)', background: stillLearning ? 'var(--ink-50)' : 'white' }}>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h3 className="tp-card" style={{ color: 'var(--surface-dark-900)' }}>{preference.headline}</h3>

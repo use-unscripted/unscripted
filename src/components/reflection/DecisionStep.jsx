@@ -73,7 +73,7 @@ export default function DecisionStep({ ctx, reflection, onDecided }) {
   };
 
   return (
-    <section id="decision" className="rounded-[20px] bg-white p-5 sm:p-6" style={{ border: '1px solid var(--border-light)' }}>
+    <section id="decision" className="rounded-[var(--r-surface)] bg-white p-5 sm:p-6" style={{ border: '1px solid var(--border-light)' }}>
       <h2 className="tp-section" style={{ color: 'var(--text-primary)' }}>One decision closes this cycle</h2>
       <p className="tp-lead mt-2" style={{ color: 'var(--text-secondary)' }}>
         You tested {ctx.path?.path_name || ctx.experiment.path_name || 'this path'} and wrote it up. All three answers are progress. Nothing you built goes away.
@@ -92,7 +92,7 @@ export default function DecisionStep({ ctx, reflection, onDecided }) {
             type="button"
             onClick={() => decide(key)}
             disabled={!!busy}
-            className="ui-press rounded-[14px] p-4 text-left disabled:opacity-60"
+            className="ui-press rounded-[var(--r-control)] p-4 text-left disabled:opacity-60"
             style={{ background: 'var(--background-secondary)', border: '1px solid var(--border-light)', minHeight: '48px' }}
           >
             <Icon size={16} style={{ color: 'var(--brand-navy-700)' }} />

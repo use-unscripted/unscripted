@@ -28,7 +28,7 @@ const INTEREST = [
   { value: 'less', label: 'Less interested', desc: 'Worth saying out loud early.' },
 ];
 
-const field = 'w-full rounded-[10px] border px-3 py-2.5 text-base md:text-sm outline-none';
+const field = 'w-full rounded-[var(--r-control)] border px-3 py-2.5 text-base md:text-sm outline-none';
 const fieldStyle = { borderColor: 'var(--border-light)', background: 'var(--background-secondary)' };
 
 export default function ReflectionForm({ ctx, onSaved, onSubmit }) {
@@ -98,7 +98,7 @@ export default function ReflectionForm({ ctx, onSaved, onSubmit }) {
   };
 
   return (
-    <section className="rounded-[20px] bg-white p-5 sm:p-6" style={{ border: '1px solid var(--border-light)' }}>
+    <section className="rounded-[var(--r-surface)] bg-white p-5 sm:p-6" style={{ border: '1px solid var(--border-light)' }}>
       <h2 className="tp-section" style={{ color: 'var(--text-primary)' }}>
         {ctx.existing ? 'Your reflection' : 'What did this experiment tell you?'}
       </h2>
@@ -137,7 +137,7 @@ export default function ReflectionForm({ ctx, onSaved, onSubmit }) {
                   type="button"
                   onClick={() => set('interest', o.value)}
                   aria-pressed={on}
-                  className="ui-press rounded-[12px] p-3 text-left"
+                  className="ui-press rounded-[var(--r-control)] p-3 text-left"
                   style={on
                     ? { background: 'var(--brand-navy-900)', color: 'var(--brand-white)', minHeight: '48px' }
                     : { background: 'var(--background-secondary)', border: '1px solid var(--border-light)', color: 'var(--text-primary)', minHeight: '48px' }}
@@ -184,7 +184,7 @@ export default function ReflectionForm({ ctx, onSaved, onSubmit }) {
                 type="button"
                 onClick={() => set('clarity', n)}
                 aria-pressed={answers.clarity === n}
-                className="tp-body h-12 w-12 rounded-[10px] font-bold"
+                className="tp-body h-12 w-12 rounded-[var(--r-control)] font-bold"
                 style={answers.clarity === n
                   ? { background: 'var(--brand-navy-900)', color: 'var(--brand-white)' }
                   : { background: 'var(--background-secondary)', border: '1px solid var(--border-light)', color: 'var(--text-primary)' }}
@@ -206,7 +206,7 @@ export default function ReflectionForm({ ctx, onSaved, onSubmit }) {
         type="button"
         onClick={submit}
         disabled={saving}
-        className="ui-press tp-body mt-5 flex w-full items-center justify-center gap-2 rounded-[10px] font-bold text-white disabled:opacity-50"
+        className="ui-press tp-body mt-5 flex w-full items-center justify-center gap-2 rounded-[var(--r-control)] font-bold text-white disabled:opacity-50"
         style={{ background: 'var(--brand-navy-900)', minHeight: '52px' }}
       >
         {saving

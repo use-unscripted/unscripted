@@ -41,7 +41,7 @@ export default function CareerUncertaintyMap({ map }) {
   if (!map?.variables?.length) return null;
 
   return (
-    <div className="rounded-xl bg-white" style={{ border: '1px solid var(--border-light)' }}>
+    <div className="rounded-[var(--r-control)] bg-white" style={{ border: '1px solid var(--border-light)' }}>
       <button
         onClick={() => setOpen(o => !o)}
         aria-expanded={open}

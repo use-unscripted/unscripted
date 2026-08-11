@@ -9,7 +9,7 @@ const fmt = (d) => (d ? new Date(d).toLocaleDateString('en-US', { month: 'short'
  */
 export default function ProofEvidenceCard({ proof, experiment, career, abilities = [] }) {
   return (
-    <div className="rounded-[16px] border bg-white p-5" style={{ borderColor: 'var(--ink-200)' }}>
+    <div className="rounded-[var(--r-surface)] border bg-white p-5" style={{ borderColor: 'var(--ink-200)' }}>
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div className="min-w-0">
           <h3 className="tp-card" style={{ color: 'var(--surface-dark-900)' }}>{proof.title}</h3>

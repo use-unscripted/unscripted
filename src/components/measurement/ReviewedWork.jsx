@@ -7,7 +7,7 @@
 import { ClipboardCheck } from 'lucide-react';
 
 const Stat = ({ label, value }) => (
-  <div className="rounded-[14px] p-3 text-center" style={{ background: 'var(--background-secondary)', border: '1px solid var(--border-light)' }}>
+  <div className="rounded-[var(--r-control)] p-3 text-center" style={{ background: 'var(--background-secondary)', border: '1px solid var(--border-light)' }}>
     <p className="font-heading text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>{value}<span className="tp-meta font-body font-semibold" style={{ color: 'var(--text-muted)' }}>/10</span></p>
     <p className="tp-meta mt-1" style={{ color: 'var(--text-secondary)' }}>{label}</p>
   </div>
@@ -33,7 +33,7 @@ export default function ReviewedWork({ m }) {
   const gap = self !== null && sys !== null ? Math.round((sys - self) * 10) / 10 : null;
 
   return (
-    <section className="rounded-[20px] bg-white p-5 sm:p-6" style={{ border: '1px solid var(--border-light)' }}>
+    <section className="rounded-[var(--r-surface)] bg-white p-5 sm:p-6" style={{ border: '1px solid var(--border-light)' }}>
       <p className="tp-eyebrow flex items-center gap-1.5" style={{ color: 'var(--brand-navy-700)' }}>
         <ClipboardCheck size={12} /> The work you produced
       </p>
@@ -63,7 +63,7 @@ export default function ReviewedWork({ m }) {
         <div className="mt-4 space-y-2">
           <p className="tp-eyebrow" style={{ color: 'var(--text-muted)' }}>Against this experiment's criteria</p>
           {m.system_rubric_results.map((r, i) => (
-            <div key={i} className="rounded-[10px] p-3" style={{ background: 'var(--background-secondary)' }}>
+            <div key={i} className="rounded-[var(--r-control)] p-3" style={{ background: 'var(--background-secondary)' }}>
               <p className="tp-body font-semibold" style={{ color: 'var(--text-primary)' }}>
                 {r.criterion}{typeof r.score === 'number' ? ` — ${r.score}/10` : ''}
               </p>

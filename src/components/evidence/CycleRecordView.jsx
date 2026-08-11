@@ -14,7 +14,7 @@ export default function CycleRecordView({ record, onBack, onReview }) {
         <ArrowLeft size={15} /> Back to the library
       </button>
 
-      <header className="tp-card-body rounded-[20px] border border-[color:var(--ink-200)] bg-white">
+      <header className="tp-card-body rounded-[var(--r-surface)] border border-[color:var(--ink-200)] bg-white">
         <p className="tp-eyebrow mb-2" style={{ color: 'var(--brand-navy-700)' }}>
           {cycle.status === 'completed' ? 'Completed cycle' : 'Cycle in progress'}
         </p>
@@ -71,7 +71,7 @@ export default function CycleRecordView({ record, onBack, onReview }) {
           {evidence.map((i) => {
             const rs = RESUME_STATUS[i.resumeStatus] || RESUME_STATUS.not_reviewed;
             return (
-              <div key={i.id} className="flex flex-wrap items-center gap-2.5 rounded-xl border border-[color:var(--ink-200)] p-4">
+              <div key={i.id} className="flex flex-wrap items-center gap-2.5 rounded-[var(--r-control)] border border-[color:var(--ink-200)] p-4">
                 <div className="min-w-0 flex-1">
                   <p className="tp-card truncate text-[color:var(--surface-dark-900)]">{i.title}</p>
                   <p className="tp-meta mt-1 text-[color:var(--ink-400)]">

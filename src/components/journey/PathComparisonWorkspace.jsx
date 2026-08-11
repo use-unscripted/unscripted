@@ -24,7 +24,7 @@ function Cell({ label, value }) {
 function PathColumn({ path, busy, busyId, onSelect }) {
   return (
     <article
-      className="flex flex-col rounded-[18px] bg-white p-5"
+      className="flex flex-col rounded-[var(--r-surface)] bg-white p-5"
       style={{ border: '1px solid var(--border-light)' }}
     >
       <header>
@@ -44,8 +44,8 @@ function PathColumn({ path, busy, busyId, onSelect }) {
         type="button"
         onClick={() => onSelect(path)}
         disabled={busy}
-        className="ui-press mt-5 w-full rounded-[10px] px-4 font-heading font-bold text-white disabled:opacity-60"
-        style={{ background: 'var(--brand-navy-900)', minHeight: '48px' }}
+        className="ui-press app-cta tp-control mt-5 w-full disabled:opacity-60"
+        style={{ minHeight: '48px' }}
       >
         {busyId === path.id ? 'Setting this up…' : 'Test this path'}
       </button>
@@ -73,7 +73,7 @@ export default function PathComparisonWorkspace({ paths, onSelect, busyId, error
   }, [three, seen]);
 
   return (
-    <section className="rounded-[20px] p-5 sm:p-6" style={{ background: 'var(--background-secondary)', border: '1px solid var(--border-light)' }}>
+    <section className="rounded-[var(--r-surface)] p-5 sm:p-6" style={{ background: 'var(--background-secondary)', border: '1px solid var(--border-light)' }}>
       <h2 className="tp-section" style={{ color: 'var(--text-primary)' }}>
         Compare your three paths
       </h2>
@@ -83,7 +83,7 @@ export default function PathComparisonWorkspace({ paths, onSelect, busyId, error
       </p>
 
       {error && (
-        <div className="mt-4 flex items-start gap-3 rounded-[12px] p-4" style={{ background: 'var(--danger-50)', border: '1px solid #FECACA' }}>
+        <div className="mt-4 flex items-start gap-3 rounded-[var(--r-control)] p-4" style={{ background: 'var(--danger-50)', border: '1px solid #FECACA' }}>
           <AlertTriangle size={16} className="mt-0.5 shrink-0" style={{ color: 'var(--danger-700)' }} />
           <div>
             <p className="tp-body font-bold" style={{ color: '#991B1B' }}>We couldn't set that path up.</p>
@@ -104,7 +104,7 @@ export default function PathComparisonWorkspace({ paths, onSelect, busyId, error
             key={p.id}
             type="button"
             onClick={() => { setMobileIdx(i); setSeen(prev => new Set(prev).add(i)); }}
-            className="tp-meta flex-1 truncate rounded-[10px] px-2 py-2.5 font-bold"
+            className="tp-meta flex-1 truncate rounded-[var(--r-control)] px-2 py-2.5 font-bold"
             style={i === mobileIdx
               ? { background: 'var(--brand-navy-900)', color: '#fff' }
               : { background: '#fff', color: 'var(--text-secondary)', border: '1px solid var(--border-light)' }}

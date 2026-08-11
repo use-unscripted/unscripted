@@ -17,7 +17,7 @@ export default function InterestPicker({ selected, onToggle }) {
             type="button"
             key={x}
             onClick={() => onToggle(x)}
-            className="tp-body rounded-[16px] border p-5 text-left font-semibold transition"
+            className="tp-body rounded-[var(--r-surface)] border p-5 text-left font-semibold transition"
             style={
               selected.includes(x)
                 ? { borderColor: 'var(--brand-navy-900)', background: 'var(--ink-100)', color: 'var(--brand-navy-900)' }

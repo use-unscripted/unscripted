@@ -15,11 +15,11 @@ export default function TaskRow({ task, onToggle }) {
   return (
     <button
       onClick={() => onToggle(task)}
-      className="w-full rounded-[16px] border border-[color:var(--ink-200)] bg-white p-4 text-left transition hover:border-[rgba(31,58,95,0.25)] hover:-translate-y-0.5 hover:shadow-sm"
+      className="w-full rounded-[var(--r-surface)] border border-[color:var(--ink-200)] bg-white p-4 text-left transition hover:border-[rgba(31,58,95,0.25)] hover:-translate-y-0.5 hover:shadow-sm"
     >
       <div className="flex items-start gap-3">
         <span
-          className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-md border transition"
+          className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-[var(--r-control)] border transition"
           style={
             task.completed
               ? { background: 'var(--success-700)', borderColor: 'var(--success-700)' }

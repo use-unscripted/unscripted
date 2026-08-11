@@ -86,10 +86,10 @@ export default function JourneyStages({ stage, detail }) {
 
   return (
     <section aria-label="Your journey so far">
-      <h2
-        className="tp-eyebrow"
-        style={{ color: 'var(--text-muted)' }}
-      >
+      {/* A section heading, in the marketing page's own words and at its own
+          size. This was an 11px caps label, which is how a section title ends
+          up quieter than the rows underneath it. */}
+      <h2 className="tp-section" style={{ color: 'var(--text-primary)' }}>
         Your cycle
       </h2>
 
@@ -152,7 +152,7 @@ export default function JourneyStages({ stage, detail }) {
               </span>
 
               {to ? (
-                <Link to={to} className="journey-stage-row -mx-3 flex min-w-0 flex-1 rounded-[12px] px-3 py-3.5">
+                <Link to={to} className="journey-stage-row -mx-3 flex min-w-0 flex-1 rounded-[var(--r-control)] px-3 py-3.5">
                   {body}
                 </Link>
               ) : (

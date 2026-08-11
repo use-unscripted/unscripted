@@ -71,7 +71,7 @@ export default function EvidenceLibrary() {
           <div className="mb-5 flex gap-2">
             {[['all', 'All evidence', Library], ['cycles', 'By career cycle', Layers]].map(([key, label, Icon]) => (
               <button key={key} onClick={() => setView(key)}
-                className="touch-target ui-press flex items-center gap-1.5 rounded-[10px] px-4 py-2.5 text-sm font-bold"
+                className="touch-target ui-press flex items-center gap-1.5 rounded-[var(--r-control)] px-4 py-2.5 text-sm font-bold"
                 style={key === view
                   ? { background: 'var(--brand-navy-900)', color: '#fff' }
                   : { background: 'var(--background-tertiary)', color: 'var(--text-secondary)' }}>
@@ -80,7 +80,7 @@ export default function EvidenceLibrary() {
             ))}
           </div>
 
-          <p className="tp-meta mb-5 flex items-center gap-2 rounded-xl px-4 py-3 text-[color:var(--ink-700)]" style={{ background: 'var(--background-tertiary)' }}>
+          <p className="tp-meta mb-5 flex items-center gap-2 rounded-[var(--r-control)] px-4 py-3 text-[color:var(--ink-700)]" style={{ background: 'var(--background-tertiary)' }}>
             <Lock size={13} className="shrink-0" /> Everything here is yours alone. Private evidence is never shown to other students.
           </p>
 
@@ -91,13 +91,13 @@ export default function EvidenceLibrary() {
                 <EvidenceFilters filters={filters} setFilters={setFilters} options={options} shown={shown.length} total={evidence.length} />
               )}
               {evidence.length === 0 ? (
-                <div className="rounded-[24px] border border-dashed border-[color:var(--ink-200)] py-16 text-center">
+                <div className="rounded-[var(--r-surface)] border border-dashed border-[color:var(--ink-200)] py-16 text-center">
                   <FileText size={30} className="mx-auto mb-3 text-[color:var(--ink-200)]" />
                   <p className="tp-section text-[color:var(--surface-dark-900)]">No evidence yet.</p>
                   <p className="tp-body mx-auto mt-2 max-w-[46ch] text-[color:var(--ink-500)]">Complete a mission inside your experiment and submit proof. It lands here.</p>
                 </div>
               ) : shown.length === 0 ? (
-                <div className="rounded-[24px] border border-dashed border-[color:var(--ink-200)] py-16 text-center">
+                <div className="rounded-[var(--r-surface)] border border-dashed border-[color:var(--ink-200)] py-16 text-center">
                   <p className="tp-section text-[color:var(--surface-dark-900)]">No evidence matches these filters.</p>
                   <button onClick={() => setFilters(DEFAULT_FILTERS)}
                     className="tp-body mt-3 font-semibold text-[color:var(--brand-navy-700)] underline underline-offset-2">
@@ -113,7 +113,7 @@ export default function EvidenceLibrary() {
               )}
             </>
           ) : cycleRecords.length === 0 ? (
-            <div className="rounded-[24px] border border-dashed border-[color:var(--ink-200)] py-16 text-center">
+            <div className="rounded-[var(--r-surface)] border border-dashed border-[color:var(--ink-200)] py-16 text-center">
               <p className="tp-section text-[color:var(--surface-dark-900)]">No career cycles yet.</p>
               <p className="tp-body mx-auto mt-2 max-w-[46ch] text-[color:var(--ink-500)]">Choose a path and begin an experiment to start your first cycle.</p>
             </div>
@@ -121,7 +121,7 @@ export default function EvidenceLibrary() {
             <div className="space-y-3">
               {cycleRecords.map((r) => (
                 <button key={r.cycle.id} onClick={() => setOpenCycleId(r.cycle.id)}
-                  className="ui-lift tp-card-body w-full rounded-[16px] border border-[color:var(--ink-200)] bg-white text-left">
+                  className="ui-lift tp-card-body w-full rounded-[var(--r-surface)] border border-[color:var(--ink-200)] bg-white text-left">
                   <div className="flex items-center gap-3">
                     <div className="min-w-0 flex-1">
                       <p className="tp-eyebrow mb-1.5" style={{ color: r.cycle.status === 'completed' ? 'var(--success-700)' : 'var(--brand-navy-700)' }}>

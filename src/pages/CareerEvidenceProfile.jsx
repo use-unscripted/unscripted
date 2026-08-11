@@ -58,7 +58,7 @@ export default function CareerEvidenceProfile() {
         description="What Unscripted has learned about you so far, and how sure it is. Every conclusion here is built from your own experiments, ratings, reflections and proof, and it gets sharper as you do more."
       />
 
-      <div className="tp-meta mb-8 flex flex-wrap items-center gap-x-4 gap-y-2 rounded-[16px] border p-4"
+      <div className="tp-meta mb-8 flex flex-wrap items-center gap-x-4 gap-y-2 rounded-[var(--r-surface)] border p-4"
         style={{ borderColor: 'var(--ink-200)', background: 'white', color: 'var(--ink-500)' }}>
         <span className="flex items-center gap-1.5 font-semibold" style={{ color: 'var(--brand-navy-700)' }}>
           <Lock size={12} /> Private to you
@@ -181,7 +181,7 @@ export default function CareerEvidenceProfile() {
         )}
       </ProfileSection>
 
-      <p className="tp-meta rounded-[16px] p-5 text-center"
+      <p className="tp-meta rounded-[var(--r-surface)] p-5 text-center"
         style={{ background: 'var(--background-tertiary)', border: '1px solid var(--border-light)', color: 'var(--ink-500)' }}>
         Nothing here is a verdict. Confidence never reaches certainty, and anything you flag as inaccurate stays on file next to the evidence so a future experiment can settle it.
       </p>

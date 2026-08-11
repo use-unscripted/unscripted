@@ -9,7 +9,7 @@ import { generatePathTest } from '@/lib/path-generator';
 import { buildOptOut, optBackInPatch, isOptedOut, mergeOptOutRows } from '@/lib/nudge-response';
 import { clearCampusStore } from '@/lib/campus-store';
 
-const textareaCls = 'mt-1 w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] px-4 py-3 text-base md:text-sm text-[color:var(--surface-dark-900)] placeholder-[color:var(--ink-400)] outline-none focus:border-[color:var(--brand-navy-700)] resize-none';
+const textareaCls = 'mt-1 w-full rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] px-4 py-3 text-base md:text-sm text-[color:var(--surface-dark-900)] placeholder-[color:var(--ink-400)] outline-none focus:border-[color:var(--brand-navy-700)] resize-none';
 
 const NOTES_FIELDS = [
   { name: 'personal_notes', label: 'Personal notes and context', placeholder: 'Anything about your situation or background that should personalize your recommendations...', maxLength: 3000 },
@@ -172,7 +172,7 @@ export default function Settings() {
         title="Keep your context current."
         description="Your direction can change. Update the facts that shape future roadmaps."
       />
-      <section className="mb-8 grid gap-5 rounded-[24px] border border-[color:var(--ink-200)] bg-white p-7 shadow-sm sm:grid-cols-2">
+      <section className="mb-8 grid gap-5 rounded-[var(--r-surface)] border border-[color:var(--ink-200)] bg-white p-7 shadow-sm sm:grid-cols-2">
         <Field label="Full name" value={user.full_name} name="full_name" onChange={change} />
         <Field label="Email" value={user.email} name="email" onChange={change} />
         <Field label="College" value={user.college} name="college" onChange={change} />
@@ -184,7 +184,7 @@ export default function Settings() {
             on the wider one it was a 1000px bar. */}
         <button
           onClick={save}
-          className="rounded-[10px] px-5 py-3 font-semibold text-white transition hover:-translate-y-px sm:col-span-2 sm:justify-self-start sm:px-10"
+          className="rounded-[var(--r-control)] px-5 py-3 font-semibold text-white transition hover:-translate-y-px sm:col-span-2 sm:justify-self-start sm:px-10"
           style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}
         >
           {saved ? 'Saved' : 'Save changes'}
@@ -201,7 +201,7 @@ export default function Settings() {
         <h2 className="tp-section text-[color:var(--surface-dark-900)] mb-1.5">Personal context</h2>
         <p className="tp-prose text-[color:var(--ink-700)] mb-5">Add context, ambitions, constraints, or priorities that personalize your path recommendations. Changes influence future recommendations but do not rewrite past ones.</p>
       </div>
-      <section className="mb-10 rounded-[24px] border border-[color:var(--ink-200)] bg-white p-7 shadow-sm space-y-5">
+      <section className="mb-10 rounded-[var(--r-surface)] border border-[color:var(--ink-200)] bg-white p-7 shadow-sm space-y-5">
         {NOTES_FIELDS.map(f => (
           <label key={f.name} className="tp-body block font-semibold text-[color:var(--ink-700)]">
             {f.label}
@@ -213,28 +213,28 @@ export default function Settings() {
             )}
           </label>
         ))}
-        <p className="tp-meta rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] px-4 py-3.5 text-[color:var(--ink-500)]">
+        <p className="tp-meta rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] px-4 py-3.5 text-[color:var(--ink-500)]">
           Your notes are private to your account and are used only to personalize your Unscripted experience.
         </p>
         <button onClick={saveNotes} disabled={!profile}
-          className="w-full rounded-[10px] px-5 py-3 font-semibold text-white transition hover:-translate-y-px disabled:opacity-60"
+          className="w-full rounded-[var(--r-control)] px-5 py-3 font-semibold text-white transition hover:-translate-y-px disabled:opacity-60"
           style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}>
           {notesSaved ? 'Saved' : 'Save personal context'}
         </button>
 
         {showRegenPrompt && !regenDone && (
-          <div className="rounded-[16px] border border-[color:var(--brand-navy-700)] bg-[color:var(--ink-100)] p-5">
+          <div className="rounded-[var(--r-surface)] border border-[color:var(--brand-navy-700)] bg-[color:var(--ink-100)] p-5">
             <p className="tp-card text-[color:var(--brand-navy-900)] mb-1.5">Want to refresh your recommended paths?</p>
             <p className="tp-prose text-[color:var(--ink-700)] mb-5">Your personal context has been updated. Unscripted can generate new path recommendations tailored to your updated preferences. For example, if you now want to focus only on law-related roles.</p>
             <div className="flex flex-wrap gap-2">
               <button onClick={handleRegenerate} disabled={regenerating}
-                className="tp-body flex items-center gap-2 rounded-[10px] px-5 py-3 font-semibold text-white disabled:opacity-60 transition"
+                className="tp-body flex items-center gap-2 rounded-[var(--r-control)] px-5 py-3 font-semibold text-white disabled:opacity-60 transition"
                 style={{ background: 'var(--brand-navy-900)' }}>
                 <RefreshCw size={15} className={regenerating ? 'animate-spin' : ''} />
                 {regenerating ? 'Generating new paths…' : 'Yes, refresh my paths'}
               </button>
               <button onClick={() => setShowRegenPrompt(false)} disabled={regenerating}
-                className="tp-body rounded-[10px] border border-[color:var(--ink-200)] px-5 py-3 font-semibold text-[color:var(--ink-700)] hover:bg-white transition">
+                className="tp-body rounded-[var(--r-control)] border border-[color:var(--ink-200)] px-5 py-3 font-semibold text-[color:var(--ink-700)] hover:bg-white transition">
                 No, keep existing paths
               </button>
             </div>
@@ -243,7 +243,7 @@ export default function Settings() {
         )}
 
         {regenDone && (
-          <div className="rounded-[16px] border border-green-200 bg-green-50 p-5 flex items-start gap-3">
+          <div className="rounded-[var(--r-surface)] border border-green-200 bg-green-50 p-5 flex items-start gap-3">
             <CheckCircle size={18} className="text-green-600 shrink-0 mt-0.5" />
             <div>
               <p className="tp-card text-green-800">New paths generated!</p>
@@ -268,18 +268,18 @@ export default function Settings() {
         <h2 className="tp-section text-[color:var(--surface-dark-900)] mb-1.5">Emails from us</h2>
         <p className="tp-prose text-[color:var(--ink-700)]">At most one email a week, with one thing to do or one question to answer. Turning them off does not change anything else on your account.</p>
       </div>
-      <section className="rounded-[24px] border border-[color:var(--ink-200)] bg-white p-7 shadow-sm">
+      <section className="rounded-[var(--r-surface)] border border-[color:var(--ink-200)] bg-white p-7 shadow-sm">
         {emailsOff ? (
           <>
             <p className="tp-body font-semibold text-[color:var(--surface-dark-900)] mb-4">These emails are off.</p>
             <button onClick={startEmails} disabled={emailBusy}
-              className="tp-body rounded-[10px] border border-[color:var(--ink-200)] px-5 py-3 font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)] transition disabled:opacity-60">
+              className="tp-body rounded-[var(--r-control)] border border-[color:var(--ink-200)] px-5 py-3 font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)] transition disabled:opacity-60">
               Start sending them again
             </button>
           </>
         ) : (
           <button onClick={stopEmails} disabled={emailBusy || !user?.id}
-            className="tp-body rounded-[10px] border border-[color:var(--ink-200)] px-5 py-3 font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)] transition disabled:opacity-60">
+            className="tp-body rounded-[var(--r-control)] border border-[color:var(--ink-200)] px-5 py-3 font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)] transition disabled:opacity-60">
             Stop these emails
           </button>
         )}
@@ -289,7 +289,7 @@ export default function Settings() {
         <h2 className="tp-section text-[color:var(--surface-dark-900)] mb-1.5">Recently deleted</h2>
         <p className="tp-prose text-[color:var(--ink-700)] mb-4">Mission Guides, contacts, reflections, and proof of work you've deleted are kept for 30 days before permanent removal.</p>
         <Link to="/recently-deleted"
-          className="tp-body inline-flex items-center gap-2 rounded-[10px] border border-[color:var(--ink-200)] px-5 py-3 font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)] transition">
+          className="tp-body inline-flex items-center gap-2 rounded-[var(--r-control)] border border-[color:var(--ink-200)] px-5 py-3 font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)] transition">
           <Trash2 size={16} /> View Recently Deleted
         </Link>
       </div>

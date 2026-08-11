@@ -25,7 +25,7 @@ export default function MomentLearned({ moment, changes = [], onAnother }) {
         <p className="tp-body mt-2" style={{ color: 'var(--ink-700)' }}>{outcomeFraming(delta)}</p>
       </div>
 
-      <div className="rounded-[16px] border p-4" style={{ borderColor: 'var(--ink-200)', background: 'var(--ink-50)' }}>
+      <div className="rounded-[var(--r-surface)] border p-4" style={{ borderColor: 'var(--ink-200)', background: 'var(--ink-50)' }}>
         <p className="tp-eyebrow" style={{ color: 'var(--ink-500)' }}>From this test</p>
         <ul className="mt-2 space-y-1.5">
           <li className="tp-body" style={{ color: 'var(--ink-700)' }}>
@@ -40,19 +40,19 @@ export default function MomentLearned({ moment, changes = [], onAnother }) {
         </ul>
       </div>
 
-      <div className="rounded-[16px] border p-4" style={{ borderColor: 'var(--border-light)' }}>
+      <div className="rounded-[var(--r-surface)] border p-4" style={{ borderColor: 'var(--border-light)' }}>
         <p className="tp-body font-semibold" style={{ color: 'var(--surface-dark-900)' }}>Want to test one more thing?</p>
         <p className="tp-meta mt-1" style={{ color: 'var(--ink-500)' }}>
           Only if you have the time. Nothing is lost by stopping here.
         </p>
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
           <button onClick={onAnother}
-            className="tp-body ui-press rounded-[12px] py-3 font-semibold text-white"
+            className="tp-body ui-press rounded-[var(--r-control)] py-3 font-semibold text-white"
             style={{ background: 'var(--brand-navy-900)' }}>
             Recommended next test
           </button>
           <Link to="/journey"
-            className="tp-body rounded-[12px] border py-3 text-center font-semibold"
+            className="tp-body rounded-[var(--r-control)] border py-3 text-center font-semibold"
             style={{ borderColor: 'var(--ink-200)', color: 'var(--ink-700)' }}>
             Return to dashboard
           </Link>

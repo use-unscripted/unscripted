@@ -9,7 +9,7 @@ export default function ExperimentOverview({ experiment, path, missions }) {
   const pct = missions.length ? Math.round((done / missions.length) * 100) : 0;
 
   return (
-    <section className="rounded-[20px] bg-white p-5 sm:p-6" style={{ border: '1px solid var(--border-light)' }}>
+    <section className="rounded-[var(--r-surface)] bg-white p-5 sm:p-6" style={{ border: '1px solid var(--border-light)' }}>
       <p className="tp-eyebrow" style={{ color: 'var(--brand-navy-700)' }}>
         Active experiment{path?.path_name ? ` · ${path.path_name}` : ''}
       </p>

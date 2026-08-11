@@ -86,7 +86,7 @@ export default function AppShell() {
           {NAV.map(([to, label, , Icon]) => (
             <NavLink key={to} to={to}
               className={({ isActive }) =>
-                `nav-link mb-1 flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold ${isActive ? 'text-white' : 'text-[color:var(--ink-300)] hover:text-white'}`
+                `nav-link app-navlink tp-control mb-1 flex items-center gap-3 rounded-[var(--r-control)] px-4 py-3 ${isActive ? 'text-white' : 'text-[color:var(--ink-300)] hover:text-white'}`
               }
               style={({ isActive }) => isActive
                 ? { background: 'var(--brand-navy-700)', borderLeft: '3px solid var(--brand-gold-500)', paddingLeft: '13px' }
@@ -99,7 +99,7 @@ export default function AppShell() {
           {isAdmin && pendingFeeds > 0 && (
             <NavLink to="/admin/campus-feeds"
               className={({ isActive }) =>
-                `nav-link mb-1 flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold ${isActive ? 'text-white' : 'text-[color:var(--ink-300)] hover:text-white'}`
+                `nav-link app-navlink tp-control mb-1 flex items-center gap-3 rounded-[var(--r-control)] px-4 py-3 ${isActive ? 'text-white' : 'text-[color:var(--ink-300)] hover:text-white'}`
               }
               style={({ isActive }) => isActive
                 ? { background: 'var(--brand-navy-700)', borderLeft: '3px solid var(--brand-gold-500)', paddingLeft: '13px' }
@@ -111,14 +111,14 @@ export default function AppShell() {
           )}
         </nav>
 
-        <p className="tp-meta rounded-xl p-3.5 text-[color:var(--ink-400)] mt-4" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
+        <p className="tp-meta rounded-[var(--r-control)] p-3.5 text-[color:var(--ink-400)] mt-4" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
           Write your unscripted path.
         </p>
         {/* The stored calendar goes with the session. It is public listings
             rather than anything private, but it names a school, and the next
             person to sign in on this browser is not owed someone else's. */}
         <button onClick={() => { clearCampusStore(); base44.auth.logout('/'); }}
-          className="mt-3 flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium text-[color:var(--ink-400)] transition hover:bg-white/5 hover:text-white">
+          className="mt-3 flex items-center gap-2 rounded-[var(--r-control)] px-4 py-2.5 text-sm font-medium text-[color:var(--ink-400)] transition hover:bg-white/5 hover:text-white">
           <LogOut size={15} /> Log out
         </button>
       </aside>

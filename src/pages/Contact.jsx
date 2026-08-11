@@ -14,7 +14,7 @@ export default function Contact() {
       }
     >
       <div
-        className="flex flex-col items-center gap-4 rounded-2xl border p-8 text-center"
+        className="flex flex-col items-center gap-4 rounded-[var(--r-surface)] border p-8 text-center"
         style={{ borderColor: 'var(--border-light)', background: 'var(--background-primary)' }}
       >
         <span

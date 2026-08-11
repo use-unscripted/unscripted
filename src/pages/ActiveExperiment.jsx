@@ -156,7 +156,7 @@ export default function ActiveExperiment() {
 
       <div className="space-y-5">
         {justDone && (
-          <section className="rounded-[16px] p-5" role="status" style={{ background: 'var(--success-50)', border: '1px solid #BBF7D0' }}>
+          <section className="rounded-[var(--r-surface)] p-5" role="status" style={{ background: 'var(--success-50)', border: '1px solid #BBF7D0' }}>
             <p className="tp-body flex items-center gap-2 font-bold" style={{ color: '#14532D' }}>
               <CheckCircle2 size={16} /> Evidence attached to this mission{justDone.reused ? ' (already recorded)' : ''}.
             </p>
@@ -170,7 +170,7 @@ export default function ActiveExperiment() {
             <div className="mt-3 flex flex-wrap gap-3">
               {(justDone.experimentCompleted || !nextMission) && (
                 <Link to="/evidence?tab=reflect"
-                  className="ui-press tp-body inline-flex items-center rounded-[10px] px-5 font-bold text-white"
+                  className="ui-press tp-body inline-flex items-center rounded-[var(--r-control)] px-5 font-bold text-white"
                   style={{ background: 'var(--brand-navy-900)', minHeight: '48px' }}>
                   Reflect on this experiment
                 </Link>
@@ -214,7 +214,7 @@ export default function ActiveExperiment() {
             beside a heading, which is why 253 of 266 experiments never got one. */}
         {!guides.length ? (
           <section
-            className="rounded-[20px] bg-white p-5 sm:p-6"
+            className="rounded-[var(--r-surface)] bg-white p-5 sm:p-6"
             style={{ border: '1px solid var(--brand-gold-500)', boxShadow: '0 10px 30px rgba(31,58,95,0.08)' }}
           >
             <p className="tp-eyebrow" style={{ color: 'var(--brand-gold-700)' }}>Next step</p>
@@ -228,7 +228,7 @@ export default function ActiveExperiment() {
             </p>
             <button
               onClick={() => setShowGuideGen(true)}
-              className="ui-press tp-body mt-4 inline-flex w-full items-center justify-center gap-2 rounded-[10px] px-6 font-bold text-white sm:w-auto"
+              className="ui-press tp-body mt-4 inline-flex w-full items-center justify-center gap-2 rounded-[var(--r-control)] px-6 font-bold text-white sm:w-auto"
               style={{ background: 'var(--brand-navy-900)', minHeight: '48px' }}
             >
               <Wand2 size={16} /> Build my experiment
@@ -238,7 +238,7 @@ export default function ActiveExperiment() {
             </p>
           </section>
         ) : (
-          <section className="rounded-[16px] bg-white p-5" style={{ border: '1px solid var(--border-light)' }}>
+          <section className="rounded-[var(--r-surface)] bg-white p-5" style={{ border: '1px solid var(--border-light)' }}>
             <h3 className="tp-section mb-3 flex items-center gap-1.5" style={{ color: 'var(--text-primary)' }}>
               <Wand2 size={14} style={{ color: 'var(--brand-navy-700)' }} /> My Experiment
               {openGuide && (
@@ -251,7 +251,7 @@ export default function ActiveExperiment() {
             {/* The guide itself, one click away and showing its first move, so
                 the section reads as something to open rather than a file list. */}
             {openGuide && (
-              <div className="rounded-[14px] p-4" style={{ background: 'var(--background-tertiary)', border: '1px solid var(--border-light)' }}>
+              <div className="rounded-[var(--r-control)] p-4" style={{ background: 'var(--background-tertiary)', border: '1px solid var(--border-light)' }}>
                 <p className="tp-card" style={{ color: 'var(--text-primary)' }}>{openGuide.guide_title}</p>
                 <p className="tp-meta mt-0.5" style={{ color: 'var(--text-muted)' }}>
                   {openGuide.steps?.length || 0} steps{openGuide.estimated_time ? ` · ${openGuide.estimated_time}` : ''}
@@ -264,7 +264,7 @@ export default function ActiveExperiment() {
                 )}
                 <Link
                   to={`/guide?id=${openGuide.id}`}
-                  className="ui-press tp-body mt-3 inline-flex w-full items-center justify-center rounded-[10px] px-5 font-bold text-white sm:w-auto"
+                  className="ui-press tp-body mt-3 inline-flex w-full items-center justify-center rounded-[var(--r-control)] px-5 font-bold text-white sm:w-auto"
                   style={{ background: 'var(--brand-navy-900)', minHeight: '48px' }}
                 >
                   Open my experiment
@@ -287,7 +287,7 @@ export default function ActiveExperiment() {
             ) : (
               <button
                 onClick={() => setShowGuideGen(true)}
-                className="tp-meta mt-3 w-full rounded-xl border border-dashed py-2.5 font-semibold transition"
+                className="tp-meta mt-3 w-full rounded-[var(--r-control)] border border-dashed py-2.5 font-semibold transition"
                 style={{ borderColor: 'var(--border-light)', color: 'var(--text-muted)' }}
               >
                 Generate another experiment
@@ -307,7 +307,7 @@ export default function ActiveExperiment() {
             </button>
           </div>
           {missions.length === 0 ? (
-            <div className="rounded-[14px] bg-white p-6 text-center" style={{ border: '1px dashed var(--border-light)' }}>
+            <div className="rounded-[var(--r-control)] bg-white p-6 text-center" style={{ border: '1px dashed var(--border-light)' }}>
               <p className="tp-body font-semibold" style={{ color: 'var(--text-primary)' }}>No missions yet</p>
               <p className="tp-meta mt-1" style={{ color: 'var(--text-muted)' }}>
                 {guides.length
