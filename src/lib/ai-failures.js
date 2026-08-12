@@ -46,6 +46,8 @@ export const AI_FEATURES = [
   'resume_bullet',
   'weekly_reflection',
   'campus_event_ranking',
+  'language_transform',
+  'glossary_term',
 ];
 
 /**

@@ -4,6 +4,7 @@
  * steps, not here.
  */
 import { Clock, ListChecks, Target, FileText } from 'lucide-react';
+import LanguageLevelControl from '@/components/language/LanguageLevelControl';
 
 function Fact({ icon: Icon, label, value }) {
   if (!value) return null;
@@ -17,7 +18,7 @@ function Fact({ icon: Icon, label, value }) {
   );
 }
 
-export default function GuidedOverview({ guide, experiment, path, progress, onBegin }) {
+export default function GuidedOverview({ guide, experiment, path, progress, onBegin, level, onLevelChange }) {
   const { total, completed, pct, started, resumeStep } = progress;
   const label = !started ? 'Begin experiment' : completed.length ? 'Continue where you left off' : 'Continue experiment';
 
@@ -35,6 +36,14 @@ export default function GuidedOverview({ guide, experiment, path, progress, onBe
         <Fact icon={ListChecks} label="Steps" value={total ? `${total} short steps, one at a time` : null} />
         <Fact icon={FileText} label="What you end up with" value={guide.deliverable || guide.proof_requirement} />
       </div>
+
+      {onLevelChange && (
+        <LanguageLevelControl
+          level={level}
+          onChange={onLevelChange}
+          className="mt-5 border-t pt-4"
+        />
+      )}
 
       <div className="mt-5">
         <div className="h-2 w-full overflow-hidden rounded-full" style={{ background: 'var(--background-tertiary)' }}>

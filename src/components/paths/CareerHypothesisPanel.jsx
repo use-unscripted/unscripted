@@ -5,6 +5,8 @@ import FitBreakdown from '@/components/paths/FitBreakdown';
 import DimensionProgress from '@/components/paths/DimensionProgress';
 import NextTestCard from '@/components/paths/NextTestCard';
 import { dimensionProgress, nextTestForPath } from '@/lib/dimension-progress';
+import LanguageLevelControl from '@/components/language/LanguageLevelControl';
+import useLanguageLevel from '@/hooks/useLanguageLevel';
 
 function ScoreBar({ label, value, hint, color }) {
   return (
@@ -46,6 +48,9 @@ export default function CareerHypothesisPanel({ pathName, hypothesis, path, sign
   const h = hypothesis;
   // Which dimensions of this career already have evidence, and which one is
   // worth testing next. Both read the uncertainty map that already exists.
+  // Language level for this path specifically, so a student can be fluent in one
+  // field and new to another.
+  const language = useLanguageLevel({ path });
   const progress = dimensionProgress({ hypothesis: h, signals });
   const nextTest = progress ? nextTestForPath({ path, hypothesis: h, progress }) : null;
   return (
@@ -78,6 +83,8 @@ export default function CareerHypothesisPanel({ pathName, hypothesis, path, sign
           color="var(--brand-gold-600)"
         />
       </div>
+
+      <LanguageLevelControl level={language.level} onChange={language.setLevel} className="mt-4" />
 
       {/* Ability and enjoyment, kept separate from the overall number above. */}
       <FitBreakdown fit={h.fit} overall={h.career_fit_score} evidenceShare={h.fit_evidence_share} />

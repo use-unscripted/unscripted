@@ -20,6 +20,8 @@ import GuidedProgress from '@/components/guided/GuidedProgress';
 import GuidedStepPanel from '@/components/guided/GuidedStepPanel';
 import GuidedNav from '@/components/guided/GuidedNav';
 import GuidedCompletion from '@/components/guided/GuidedCompletion';
+import LanguageFamiliarityPrompt from '@/components/language/LanguageFamiliarityPrompt';
+import useLanguageLevel from '@/hooks/useLanguageLevel';
 import {
   readProgress, openStep, completeStep, saveStepNote,
   stepBlockers, stepEvidenceKey, minutesSpent,
@@ -44,7 +46,16 @@ export default function GuideDetailPage() {
   const [note, setNote] = useState('');
   const [showBlockers, setShowBlockers] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [askDismissed, setAskDismissed] = useState(false);
   const noteTimer = useRef(null);
+
+  /* Display language for this path. Held here so the overview and the step share
+     one value, and stored per path, never per site. */
+  const language = useLanguageLevel({
+    pathId: guide?.path_id || ctx.experiment?.path_id || ctx.path?.id || null,
+    path: ctx.path,
+    experiment: ctx.experiment,
+  });
 
   // ── Load ──
   const loadContext = useCallback(async (g) => {
@@ -190,12 +201,21 @@ export default function GuideDetailPage() {
       <div className="space-y-5">
         {view === 'overview' && (
           <>
+            {language.askFamiliarity && !askDismissed && (
+              <LanguageFamiliarityPrompt
+                careerName={language.careerName}
+                onChoose={(lvl) => { language.setLevel(lvl, 'asked'); setAskDismissed(true); }}
+                onSkip={() => setAskDismissed(true)}
+              />
+            )}
             <GuidedOverview
               guide={guide}
               experiment={experiment}
               path={path}
               progress={progress}
               onBegin={() => goToStep(progress.resumeStep)}
+              level={language.level}
+              onLevelChange={language.setLevel}
             />
             {progress.allDone && (
               <button
@@ -265,6 +285,9 @@ export default function GuideDetailPage() {
               onNote={onNote}
               onEvidenceSaved={async () => { await loadContext(guide); setShowBlockers(false); }}
               onContactsChanged={async () => { await loadContext(guide); }}
+              level={language.level}
+              onLevelChange={language.setLevel}
+              careerName={language.careerName}
             />
             <GuidedNav
               stepNumber={stepNumber}

@@ -1,0 +1,77 @@
+{
+  "name": "LanguagePreference",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string"
+    },
+    "scope": {
+      "type": "string",
+      "enum": [
+        "global",
+        "path"
+      ],
+      "default": "path"
+    },
+    "path_id": {
+      "type": "string"
+    },
+    "path_name": {
+      "type": "string"
+    },
+    "career_name": {
+      "type": "string"
+    },
+    "level": {
+      "type": "string",
+      "enum": [
+        "plain",
+        "balanced",
+        "industry"
+      ],
+      "default": "balanced"
+    },
+    "source": {
+      "type": "string",
+      "enum": [
+        "asked",
+        "manual",
+        "default"
+      ],
+      "default": "manual"
+    },
+    "prefer_professional_terms": {
+      "type": "boolean",
+      "default": false
+    },
+    "explain_terms_on_request": {
+      "type": "boolean",
+      "default": true
+    },
+    "asked_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "level"
+  ],
+  "rls": {
+    "create": {
+      "created_by_id": "{{user.id}}"
+    },
+    "read": {
+      "created_by_id": "{{user.id}}"
+    },
+    "update": {
+      "created_by_id": "{{user.id}}"
+    },
+    "delete": {
+      "created_by_id": "{{user.id}}"
+    }
+  }
+}

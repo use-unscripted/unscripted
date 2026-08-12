@@ -4,6 +4,9 @@
  * explanations fold away underneath.
  */
 import { Clock, CheckCircle2 } from 'lucide-react';
+import LanguageLevelControl from '@/components/language/LanguageLevelControl';
+import StepGlossary from '@/components/language/StepGlossary';
+import useStepLanguage from '@/hooks/useStepLanguage';
 import StepArtifact from '@/components/experiments/StepArtifact';
 import CampusEventCard from '@/components/experiments/CampusEventCard';
 import MissionOutreachPanel from '@/components/experiment/MissionOutreachPanel';
@@ -23,8 +26,19 @@ function split(text) {
 export default function GuidedStepPanel({
   step, stepNumber, isDone, guide, experiment, mission, path, profile,
   contacts, evidence, note, onNote, onEvidenceSaved, onContactsChanged,
+  level = 'balanced', onLevelChange, careerName,
 }) {
-  const { purpose, rest } = split(step.description);
+  /* Wording only. The step number, `done_when`, the proof requirement, the
+     outreach requirement and the artifact below are read straight off the guide
+     at every level, so switching level cannot change what has to be done. */
+  const worded = useStepLanguage({
+    step,
+    level,
+    careerName,
+    objective: guide.objective || experiment?.expected_learning,
+    context: { path_id: path?.id || experiment?.path_id, experiment_id: experiment?.id },
+  });
+  const { purpose, rest } = split(worded.description);
   const minutes = step.estimated_minutes ? `${step.estimated_minutes} min` : step.estimated_time;
 
   return (
@@ -45,8 +59,15 @@ export default function GuidedStepPanel({
         )}
       </div>
 
-      <h2 className="tp-hero mt-3" style={{ color: 'var(--text-primary)' }}>{step.title || `Step ${stepNumber}`}</h2>
+      {onLevelChange && (
+        <LanguageLevelControl level={level} onChange={onLevelChange} hint={false} className="mt-3" />
+      )}
+
+      <h2 className="tp-hero mt-3" style={{ color: 'var(--text-primary)' }}>{worded.title || `Step ${stepNumber}`}</h2>
       {purpose && <p className="tp-lead mt-2" style={{ color: 'var(--text-secondary)' }}>{purpose}</p>}
+      {worded.loading && (
+        <p className="tp-meta mt-1" style={{ color: 'var(--text-muted)' }} role="status">Rewording this step…</p>
+      )}
 
       {step.campus_event && (
         <div className="mt-4">
@@ -68,6 +89,13 @@ export default function GuidedStepPanel({
         {guide.objective || experiment?.expected_learning || experiment?.objective || null}
       </StepDisclosure>
       {rest && <StepDisclosure label="Need more detail?">{rest}</StepDisclosure>}
+
+      <StepGlossary
+        terms={worded.terms}
+        careerName={careerName}
+        step={step}
+        context={{ path, experiment, guideId: guide.id, stepNumber, field: careerName }}
+      />
 
       {/* Outreach, inside the step that needs it, using the existing outreach records. */}
       {isOutreachStep(step) && mission && (

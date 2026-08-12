@@ -9,6 +9,7 @@ import { generatePathTest } from '@/lib/path-generator';
 import { buildOptOut, optBackInPatch, isOptedOut, mergeOptOutRows } from '@/lib/nudge-response';
 import { clearCampusStore } from '@/lib/campus-store';
 import DeleteAccountModal from '@/components/settings/DeleteAccountModal';
+import MyCareerVocabulary from '@/components/language/MyCareerVocabulary';
 
 const textareaCls = 'mt-1 w-full rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] px-4 py-3 text-base md:text-sm text-[color:var(--surface-dark-900)] placeholder-[color:var(--ink-400)] outline-none focus:border-[color:var(--brand-navy-700)] resize-none';
 
@@ -265,6 +266,12 @@ export default function Settings() {
         <p className="tp-prose text-[color:var(--ink-700)]">Download .ics files to add your Unscripted schedule to Google Calendar, Apple Calendar, Outlook, or any standard calendar app.</p>
       </div>
       <ICSExportPanel showHeading={false} />
+
+      <div className="mt-10 mb-3">
+        <h2 className="tp-section text-[color:var(--surface-dark-900)] mb-1.5">My Career Vocabulary</h2>
+        <p className="tp-prose text-[color:var(--ink-700)]">Terms you saved while running experiments. Language level itself is set per path, inside the path and the experiment.</p>
+      </div>
+      <MyCareerVocabulary />
 
       <div className="mt-10 mb-3">
         <h2 className="tp-section text-[color:var(--surface-dark-900)] mb-1.5">Emails from us</h2>
