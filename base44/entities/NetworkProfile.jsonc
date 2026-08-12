@@ -1,3 +1,26 @@
+// A student's public-facing directory profile.
+//
+// `read` was `null` until 2026-08-12, which in Base44 means every signed-in
+// account could list every row. That is the whole table, including rows whose
+// owner set `profile_visibility: "private"` and left `discoverable` false. The
+// privacy controls below were therefore decorative: they described an intent
+// that nothing on the server enforced.
+//
+// Now own-row-or-admin. Deliberately tighter than the fields imply, because
+// nothing reads this entity yet: no file in `src/` or `base44/` references
+// `entities.NetworkProfile`, and the table held 1 row when this was written.
+// So there is no directory to break, and the closed rule is the honest
+// starting point for one.
+//
+// Whoever builds the directory has to widen this on purpose, and the two wider
+// settings are not equally easy. `all_unscripted` is expressible here as a
+// plain match on the row's own fields. `my_university` is not: it compares the
+// row's university against the CALLER's, and these rules can only test the
+// caller's id and role, not an arbitrary field on their account. Do not fake it
+// with a client-side filter after a wide read, which is exactly the bug this
+// comment exists to record. Read the directory through a backend function that
+// resolves the caller's university server-side, the way the campus functions
+// already do.
 {
   "name": "NetworkProfile",
   "type": "object",
@@ -83,7 +106,12 @@
     "create": {
       "created_by_id": "{{user.id}}"
     },
-    "read": null,
+    "read": {
+      "$or": [
+        { "created_by_id": "{{user.id}}" },
+        { "user_condition": { "role": "admin" } }
+      ]
+    },
     "update": {
       "created_by_id": "{{user.id}}"
     },

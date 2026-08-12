@@ -1,3 +1,19 @@
+// Free-text reflection a student writes against a roadmap.
+//
+// Until 2026-08-12 this entity declared no `rls` block at all, which in Base44
+// means every row is readable, writable and deletable by every signed-in
+// account. Same failure mode `User` had, and the same fix: own rows only.
+//
+// Closing it was free. Nothing in `src/` or `base44/` references
+// `entities.Reflection` at all, and the table held 0 rows when this was
+// written, so there is no caller to break and no data that was ever exposed in
+// practice. It is locked now so that whoever wires up the first reader inherits
+// a closed door instead of an open one.
+//
+// The reflection UI a student actually uses writes `WeeklyReflections` and
+// `ExperimentReflection`, not this. If this entity is still unused the next
+// time someone reads the schema, delete it rather than keeping a third
+// reflection table around.
 {
   "name": "Reflection",
   "type": "object",
@@ -11,5 +27,19 @@
   },
   "required": [
     "reflection_text"
-  ]
+  ],
+  "rls": {
+    "create": {
+      "created_by_id": "{{user.id}}"
+    },
+    "read": {
+      "created_by_id": "{{user.id}}"
+    },
+    "update": {
+      "created_by_id": "{{user.id}}"
+    },
+    "delete": {
+      "created_by_id": "{{user.id}}"
+    }
+  }
 }
