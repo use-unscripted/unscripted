@@ -158,6 +158,10 @@ ${LEVEL_RULES[level]}
 
 HARD RULES
 - Preserve the meaning and the scope exactly. Same task, same effort.
+- Match the original length. The explanation must be no longer than the original
+  plus one short sentence, and must never exceed 90 words.
+- Do not turn the explanation into a checklist, sub-steps, or a list of data to
+  collect. If the original does not name a detail, you must not name it either.
 - Do not add a requirement, a deliverable, a deadline, a tool, or a person to contact.
 - Do not remove a requirement or soften what has to be produced.
 - Do not invent facts about the industry, companies, numbers, or people.
