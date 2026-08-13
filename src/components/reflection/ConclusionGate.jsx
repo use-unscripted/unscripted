@@ -1,10 +1,10 @@
 /**
- * The gate: the reflection opens when the required missions are complete, or when
- * the student deliberately ends the experiment early and says why.
+ * The gate: the reflection opens when the experiment itself is finished, or when
+ * the student deliberately ends it early and says why.
  */
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { AlertCircle, ListChecks } from 'lucide-react';
+import { AlertCircle, FlaskConical } from 'lucide-react';
 
 export default function ConclusionGate({ availability, experiment, onEndEarly }) {
   const [open, setOpen] = useState(false);
@@ -30,9 +30,9 @@ export default function ConclusionGate({ availability, experiment, onEndEarly })
         Reflection opens once the work is done
       </h2>
       <p className="tp-lead mt-2.5" style={{ color: 'var(--text-secondary)' }}>
-        {availability.reason === 'no_missions'
-          ? 'This experiment has no missions yet, so there is nothing to conclude. Add or generate missions first.'
-          : `${availability.openCount} mission${availability.openCount === 1 ? '' : 's'} still open on ${experiment.title}. Finish them, or end this experiment early and tell us why.`}
+        {availability.stepsTotal > 0
+          ? `${availability.stepsDone} of ${availability.stepsTotal} steps done on ${experiment.title}. Finish the experiment, or end it early and tell us why.`
+          : `${experiment.title} is not finished yet. Work through it, or end it early and tell us why.`}
       </p>
 
       <div className="mt-4 flex flex-wrap gap-3">
@@ -41,7 +41,7 @@ export default function ConclusionGate({ availability, experiment, onEndEarly })
           className="ui-press inline-flex items-center gap-2 rounded-[var(--r-control)] px-5 text-sm font-bold text-white"
           style={{ background: 'var(--brand-navy-900)', minHeight: '48px', paddingTop: 12, paddingBottom: 12 }}
         >
-          <ListChecks size={15} /> Back to my missions
+          <FlaskConical size={15} /> Back to my experiment
         </Link>
         {!open && (
           <button

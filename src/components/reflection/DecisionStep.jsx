@@ -1,6 +1,6 @@
 /**
  * The one decision that closes the cycle. Nothing is deleted: the path,
- * experiment, missions, outreach, proof and reflection all stay in Journey
+ * experiment, outreach, proof and reflection all stay in Journey
  * History, and the next cycle is opened linked back to this one.
  */
 import { useState } from 'react';

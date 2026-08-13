@@ -3,7 +3,7 @@
  * outreach, proof, baseline clarity. Shown so the student can see nothing had to
  * be re-selected by hand.
  */
-import { Target, Users, FileText, Compass } from 'lucide-react';
+import { FlaskConical, Users, FileText, Compass } from 'lucide-react';
 
 function Stat({ Icon, label, value }) {
   return (
@@ -17,7 +17,7 @@ function Stat({ Icon, label, value }) {
 }
 
 export default function ReflectionContextCard({ ctx }) {
-  const { experiment, path, completedMissions, missions, proof, outreach, baselineClarity, endedEarly } = ctx;
+  const { experiment, path, completedExperiments, proof, outreach, baselineClarity, endedEarly } = ctx;
   return (
     <section className="rounded-[var(--r-surface)] bg-white p-5 sm:p-6" style={{ border: '1px solid var(--border-light)' }}>
       <p className="tp-eyebrow" style={{ color: 'var(--brand-navy-700)' }}>
@@ -32,7 +32,7 @@ export default function ReflectionContextCard({ ctx }) {
         </p>
       )}
       <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <Stat Icon={Target} label="Missions" value={`${completedMissions.length}/${missions.length}`} />
+        <Stat Icon={FlaskConical} label="Experiments completed" value={completedExperiments.length} />
         <Stat Icon={FileText} label="Evidence" value={proof.length} />
         <Stat Icon={Users} label="Conversations" value={outreach.length} />
         <Stat Icon={Compass} label="Baseline clarity" value={baselineClarity ?? 'Not set'} />

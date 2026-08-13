@@ -1,5 +1,5 @@
 /**
- * The cycle in one place: Path → Experiment → Missions → Outreach → Evidence →
+ * The cycle in one place: Path → Experiment → Steps → Outreach → Evidence →
  * Reflection → Decision, with dates, counts, clarity movement and the decision.
  */
 import { Link } from 'react-router-dom';
@@ -25,7 +25,7 @@ function Line({ label, value }) {
 export default function CycleSummary({ ctx, reflection, decision, closedCycle }) {
   const d = DECISION_COPY[decision] || null;
   const pathName = ctx.path?.path_name || ctx.experiment.path_name || 'Your path';
-  const chain = [pathName, ctx.experiment.title, `${ctx.completedMissions.length} missions`, `${ctx.outreach.length} conversations`, `${ctx.proof.length} evidence`, 'Reflection', d?.label || 'Decision'];
+  const chain = [pathName, ctx.experiment.title, `${ctx.stepsDone} steps`, `${ctx.outreach.length} conversations`, `${ctx.proof.length} evidence`, 'Reflection', d?.label || 'Decision'];
   const started = closedCycle?.started_at || ctx.cycle?.started_at || ctx.experiment.created_date;
   const completed = closedCycle?.completed_at || new Date().toISOString();
   const baseline = reflection?.baseline_clarity_score ?? ctx.baselineClarity;
@@ -47,7 +47,8 @@ export default function CycleSummary({ ctx, reflection, decision, closedCycle })
       <div className="mt-4">
         <Line label="Started" value={fmt(started)} />
         <Line label="Completed" value={fmt(completed)} />
-        <Line label="Missions completed" value={`${ctx.completedMissions.length} of ${ctx.missions.length}`} />
+        <Line label="Steps completed" value={ctx.stepsTotal ? `${ctx.stepsDone} of ${ctx.stepsTotal}` : ctx.stepsDone} />
+        <Line label="Experiments completed" value={ctx.completedExperiments.length} />
         <Line label="Proof created" value={ctx.proof.length} />
         <Line label="Professional conversations" value={ctx.outreach.length} />
         <Line label="Clarity" value={`${baseline ?? 'Not set'} → ${final ?? 'Not set'}`} />

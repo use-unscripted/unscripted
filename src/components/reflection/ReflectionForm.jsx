@@ -7,10 +7,12 @@ import { useEffect, useState } from 'react';
 import { AlertCircle, Loader2, Save } from 'lucide-react';
 import { loadDraft, saveDraft } from '@/lib/experiment-conclusion';
 import { trackPilotEvent } from '@/lib/pilot-metrics';
+import ReferencedExperiments from '@/components/reflection/ReferencedExperiments';
 
 const EMPTY = {
   lessons: '', surprises: '', enjoyed: '', disliked: '', assumptions: '',
   evidence: '', interest: '', interestNote: '', next: '', clarity: null,
+  references: [],
 };
 
 const QUESTIONS = [
@@ -42,6 +44,7 @@ export default function ReflectionForm({ ctx, onSaved, onSubmit }) {
         evidence: e.supporting_evidence || '', interest: e.interest_direction || '',
         interestNote: '', next: e.next_changes || '',
         clarity: typeof e.clarity_score === 'number' ? e.clarity_score : null,
+        references: e.referenced_experiment_ids || [],
       };
     }
     return { ...EMPTY, ...(loadDraft(experimentId) || {}) };
@@ -50,6 +53,13 @@ export default function ReflectionForm({ ctx, onSaved, onSubmit }) {
   const [error, setError] = useState('');
 
   const set = (key, value) => { setAnswers(a => ({ ...a, [key]: value })); setError(''); };
+
+  /* Completed experiments only, and never the one being concluded here. */
+  const referenceable = (ctx.completedExperiments || []).filter(e => e.id !== experimentId);
+  const toggleReference = (id) => set(
+    'references',
+    answers.references.includes(id) ? answers.references.filter(r => r !== id) : [...answers.references, id],
+  );
 
   // Opening the conclusion form is the start of the reflection stage.
   useEffect(() => {
@@ -156,6 +166,12 @@ export default function ReflectionForm({ ctx, onSaved, onSubmit }) {
             style={fieldStyle}
           />
         </div>
+
+        <ReferencedExperiments
+          experiments={referenceable}
+          selected={answers.references}
+          onToggle={toggleReference}
+        />
 
         <label className="block">
           <span className="tp-body font-bold" style={{ color: 'var(--text-primary)' }}>8. What should you do next?</span>
