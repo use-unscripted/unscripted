@@ -87,7 +87,7 @@ export default function MissionOutreachPanel({ mission, experiment, path, contac
     try {
       await saveMissionOutreach({
         mission, experiment, path,
-        contact: { ...form, archetype: mission.outreach_archetype, purpose: mission.outreach_purpose, status: 'planned' },
+        contact: { ...form, archetype: mission?.outreach_archetype || form.role, purpose: mission?.outreach_purpose, status: 'planned' },
       });
       setForm({ name: '', role: '', company: '', profile_url: '', profile_verified: false });
       setAdding(false);
@@ -111,14 +111,14 @@ export default function MissionOutreachPanel({ mission, experiment, path, contac
   return (
     <div className="mt-4 rounded-[var(--r-control)] p-4" style={{ background: 'var(--background-secondary)', border: '1px solid var(--border-light)' }}>
       <p className="tp-eyebrow" style={{ color: 'var(--brand-navy-700)' }}>
-        Outreach required for this mission
+        {mission ? 'Outreach required for this mission' : 'Who you contacted for this step'}
       </p>
-      {mission.outreach_archetype && (
+      {mission?.outreach_archetype && (
         <p className="tp-body mt-1.5" style={{ color: 'var(--text-primary)' }}>
           Who to contact: <strong>{mission.outreach_archetype}</strong>
         </p>
       )}
-      {mission.outreach_purpose && (
+      {mission?.outreach_purpose && (
         <p className="tp-body mt-1.5" style={{ color: 'var(--text-secondary)' }}>{mission.outreach_purpose}</p>
       )}
 

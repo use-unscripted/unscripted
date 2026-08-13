@@ -283,6 +283,7 @@ export default function GuideDetailPage() {
               evidence={evidence}
               note={note}
               onNote={onNote}
+              isLastStep={stepNumber >= progress.total}
               onEvidenceSaved={async () => { await loadContext(guide); setShowBlockers(false); }}
               onContactsChanged={async () => { await loadContext(guide); }}
               level={language.level}

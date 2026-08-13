@@ -111,8 +111,10 @@ async function persist(guide, patch, key) {
  * Evidence for one step, filed against the same cycle → path → experiment →
  * mission chain everything else uses, so the student never maps it by hand.
  */
-export function saveStepEvidence({ guide, stepNumber, step, experiment, mission, path, evidence }) {
-  const key = stepEvidenceKey(guide.id, stepNumber);
+export function saveStepEvidence({ guide, stepNumber, step, experiment, mission, path, evidence, keySuffix }) {
+  // A suffix is how the last step can file a second, additional piece of
+  // evidence without overwriting the step's own record.
+  const key = stepEvidenceKey(guide.id, stepNumber) + (keySuffix ? `:${keySuffix}` : '');
   return onceInFlight(`guide-evidence:${key}`, async () => {
     const links = await linksForExperiment(experiment, mission);
     const payload = {

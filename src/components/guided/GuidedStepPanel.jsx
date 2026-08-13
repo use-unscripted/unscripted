@@ -12,6 +12,7 @@ import CampusEventCard from '@/components/experiments/CampusEventCard';
 import MissionOutreachPanel from '@/components/experiment/MissionOutreachPanel';
 import StepDisclosure from '@/components/guided/StepDisclosure';
 import StepEvidencePanel from '@/components/guided/StepEvidencePanel';
+import StepExtraEvidence from '@/components/guided/StepExtraEvidence';
 import { isOutreachStep, needsEvidence } from '@/lib/guide-progress';
 
 /** First sentence is the purpose; the rest is detail the student can open. */
@@ -25,7 +26,7 @@ function split(text) {
 
 export default function GuidedStepPanel({
   step, stepNumber, isDone, guide, experiment, mission, path, profile,
-  contacts, evidence, note, onNote, onEvidenceSaved, onContactsChanged,
+  contacts, evidence, note, onNote, onEvidenceSaved, onContactsChanged, isLastStep,
   level = 'balanced', onLevelChange, careerName,
 }) {
   /* Wording only. The step number, `done_when`, the proof requirement, the
@@ -97,8 +98,11 @@ export default function GuidedStepPanel({
         context={{ path, experiment, guideId: guide.id, stepNumber, field: careerName }}
       />
 
-      {/* Outreach, inside the step that needs it, using the existing outreach records. */}
-      {isOutreachStep(step) && mission && (
+      {/* Outreach, inside the step that needs it, using the existing outreach
+          records. Rendered whether or not the guide has a mission behind it:
+          without this the step could ask for a contact and give nowhere to add
+          one, which left the "add the person you contacted" note unclearable. */}
+      {isOutreachStep(step) && (
         <MissionOutreachPanel
           mission={mission}
           experiment={experiment}
@@ -118,6 +122,21 @@ export default function GuidedStepPanel({
           path={path}
           existing={evidence}
           onSaved={onEvidenceSaved}
+        />
+      )}
+
+      {/* Last step only: one more contact, file, link or summary before the
+          experiment is logged. */}
+      {isLastStep && (
+        <StepExtraEvidence
+          guide={guide}
+          stepNumber={stepNumber}
+          step={step}
+          experiment={experiment}
+          mission={mission}
+          path={path}
+          onContactsChanged={onContactsChanged}
+          onEvidenceSaved={onEvidenceSaved}
         />
       )}
 

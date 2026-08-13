@@ -15,7 +15,7 @@ const field = {
   background: 'var(--background-secondary)',
 };
 
-export default function StepEvidencePanel({ guide, stepNumber, step, experiment, mission, path, existing, onSaved }) {
+export default function StepEvidencePanel({ guide, stepNumber, step, experiment, mission, path, existing, onSaved, keySuffix, heading }) {
   const [type, setType] = useState(null);
   const [title, setTitle] = useState(step?.title || '');
   const [description, setDescription] = useState('');
@@ -47,7 +47,7 @@ export default function StepEvidencePanel({ guide, stepNumber, step, experiment,
     setError('');
     try {
       const proof = await saveStepEvidence({
-        guide, stepNumber, step, experiment, mission, path,
+        guide, stepNumber, step, experiment, mission, path, keySuffix,
         evidence: { type: type || 'other', title, description, external_url: url, file },
       });
       onSaved(proof);
@@ -76,9 +76,9 @@ export default function StepEvidencePanel({ guide, stepNumber, step, experiment,
   return (
     <div className="mt-4 rounded-[var(--r-control)] p-4" style={{ background: 'var(--background-secondary)', border: '1px solid var(--border-light)' }}>
       <p className="tp-body font-bold" style={{ color: 'var(--text-primary)' }}>
-        What demonstrates that you completed this step?
+        {heading || 'What demonstrates that you completed this step?'}
       </p>
-      {step?.proof_capture && (
+      {!heading && step?.proof_capture && (
         <p className="tp-meta mt-1" style={{ color: 'var(--text-muted)' }}>{step.proof_capture}</p>
       )}
 
