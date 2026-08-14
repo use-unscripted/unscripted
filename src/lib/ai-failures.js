@@ -48,6 +48,7 @@ export const AI_FEATURES = [
   'campus_event_ranking',
   'language_transform',
   'glossary_term',
+  'work_sim_review',
 ];
 
 /**
