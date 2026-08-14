@@ -126,7 +126,7 @@ function recentlyTested(ctx) {
  * Every unresolved question across every live career hypothesis, collapsed so
  * that one characteristic appears once with all of the careers it affects.
  */
-export function deriveOpenQuestions(ctx, { suppressed = new Map(), skip = [] } = {}) {
+export function deriveOpenQuestions(ctx, { suppressed = new Map(), skip = [], pathId = null } = {}) {
   const skipSet = new Set(skip);
   const paths = (ctx.paths || []).filter(p => p.status !== 'archived' && p.hypothesis_status !== 'archived');
   if (!paths.length) return { candidates: [], hypotheses: [], leading: [] };
@@ -178,7 +178,12 @@ export function deriveOpenQuestions(ctx, { suppressed = new Map(), skip = [] } =
     // for a while; anything else only pushes it down the order. Nothing stored
     // about the uncertainty itself is touched either way.
     .filter(c => !skipSet.has(c.variable) && !suppressed.get(c.variable)?.hard)
-    .map(c => score(c, { signalsById, recent, leading, suppressed }))
+    // Pinned to one career hypothesis: a student who just finished an experiment
+    // on a path they created is asking what to test next ON THAT PATH, so only
+    // questions that path actually turns on are candidates, and the test is
+    // designed against it rather than against whichever path scores best.
+    .filter(c => !pathId || c.careers.some(x => x.path_id === pathId))
+    .map(c => score(c, { signalsById, recent, leading, suppressed, pathId }))
     // Already answered, consistently, more than once: taken off the table
     // rather than ranked low, so it can never resurface as the best option.
     .filter(c => !(c.evidence.settled && !c.evidence.contradicted))
@@ -188,7 +193,7 @@ export function deriveOpenQuestions(ctx, { suppressed = new Map(), skip = [] } =
 }
 
 /** The learning value of answering one question, and the reasons behind it. */
-function score(candidate, { signalsById, recent, leading, suppressed = new Map() }) {
+function score(candidate, { signalsById, recent, leading, suppressed = new Map(), pathId = null }) {
   const W = LEARNING_VALUE_WEIGHTS;
   const evidence = evidenceState(signalsById.get(candidate.variable));
   const careers = candidate.careers;
@@ -223,7 +228,8 @@ function score(candidate, { signalsById, recent, leading, suppressed = new Map()
   // The career this test attaches to. Fit matters, but an unsettled career with
   // real open questions outranks a well-tested favourite, which is what stops
   // the top-ranked path collecting every recommendation.
-  const attached = [...careers].sort((a, b) => opportunity(b) - opportunity(a))[0];
+  const attached = (pathId && careers.find(c => c.path_id === pathId))
+    || [...careers].sort((a, b) => opportunity(b) - opportunity(a))[0];
   if (norm(attached.confidence, 0.5) < 0.45) { total += W.exploration_bonus; factors.push('a path we still know little about'); }
   if (isRecent) total -= W.recent_repeat_penalty;
   if (evidence.settled) total -= W.saturated_penalty;
@@ -354,6 +360,17 @@ export function nextBestExperiment(ctx, opts = {}) {
     quick_test_count: quickTests,
     deep_dive_count: deepDives,
     unlock,
+    // The dimensions the student can choose between before starting, all on the
+    // career this test is attached to. The recommended one is first.
+    dimension_options: candidates
+      .filter(c => c.careers.some(x => x.path_id === top.attached.path_id))
+      .slice(0, 8)
+      .map(c => ({
+        variable: c.variable,
+        label: c.label,
+        question: c.question,
+        recommended: c.variable === top.variable,
+      })),
     quick_to: `/moment?recId=${top.attached.path_id}&variable=${encodeURIComponent(top.variable)}`,
     deep_to: `/experiments/new?recId=${top.attached.path_id}&variable=${encodeURIComponent(top.variable)}`,
     start_to: `/experiments/new?recId=${top.attached.path_id}&variable=${encodeURIComponent(top.variable)}`,
@@ -416,13 +433,17 @@ function whyThisMatters(candidate, { knows, hypotheses, mode }) {
  * for something else is honoured within a session, on top of the overrides they
  * have already recorded.
  */
-export async function loadNextBestExperiment({ skip = [] } = {}) {
+export async function loadNextBestExperiment({ skip = [], pathId = null } = {}) {
   const [ctx, overrides] = await Promise.all([
     loadNextBestContext(),
     loadOverrides().catch(() => []),
   ]);
   const suppressed = suppressionFrom(overrides);
-  return { ctx, recommendation: nextBestExperiment(ctx, { suppressed, skip }), overrides };
+  // Pinned first. If that career has no open question left, fall back to the
+  // cross-path recommendation rather than showing nothing.
+  const rec = (pathId && nextBestExperiment(ctx, { suppressed, skip, pathId }))
+    || nextBestExperiment(ctx, { suppressed, skip });
+  return { ctx, recommendation: rec, overrides };
 }
 
 export default nextBestExperiment;

@@ -14,16 +14,16 @@ import { Reveal } from '@/components/motion';
  * uncertainty itself is never deleted: it is only held back, and the choice is
  * recorded as product-learning data.
  */
-export default function NextBestExperimentPanel() {
+export default function NextBestExperimentPanel({ pathId = null }) {
   const [state, setState] = useState({ loading: true, recommendation: null });
   const [skip, setSkip] = useState([]);
   const [busy, setBusy] = useState(false);
   const [exhausted, setExhausted] = useState(false);
 
   const load = useCallback(async (skipList) => {
-    const { recommendation } = await loadNextBestExperiment({ skip: skipList }).catch(() => ({ recommendation: null }));
+    const { recommendation } = await loadNextBestExperiment({ skip: skipList, pathId }).catch(() => ({ recommendation: null }));
     return recommendation;
-  }, []);
+  }, [pathId]);
 
   useEffect(() => {
     let alive = true;

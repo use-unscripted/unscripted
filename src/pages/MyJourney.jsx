@@ -241,7 +241,7 @@ export default function MyJourney() {
           under the one instruction because for most students it IS the next
           action, and burying it inside the Experiments page would make it a
           feature rather than the way the loop continues. */}
-      <NextBestExperimentPanel />
+      <NextBestExperimentPanel pathId={currentPath?.id} />
 
       {/* Thirty minutes of one job, offered to every student rather than only
           the ones whose paths happen to be product shaped. Whether the mechanic

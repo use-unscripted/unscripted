@@ -209,7 +209,9 @@ export default function ExperimentReflection() {
             decision={decisionMeta(decision)?.cycle_decision}
             closedCycle={closedCycle}
           />
-          <NextBestExperimentPanel />
+          {/* Pinned to the hypothesis this experiment tested, so the next test
+              continues the same path rather than jumping to another one. */}
+          <NextBestExperimentPanel pathId={ctx.path?.id} />
         </>
       ) : !availability.ready ? (
         <ConclusionGate availability={availability} experiment={ctx.experiment} onEndEarly={handleEndEarly} />
