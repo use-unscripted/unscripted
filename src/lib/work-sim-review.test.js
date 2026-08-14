@@ -286,6 +286,91 @@ describe('the model answers badly', () => {
   });
 });
 
+/**
+ * The two `detail` sentences are the only student-facing strings in the slice
+ * that nobody on this team wrote. The read-out enforces rule 4 on its own copy
+ * and quotes student writing verbatim, so without this these sentences were the
+ * one way "this shows real strategic instinct" reached a student's screen, with
+ * only the prompt standing in the way.
+ */
+describe('a flattering sentence about the student', () => {
+  const flattery = (detail) => ({
+    criteria: [
+      { criterion: 'problem_not_feature', passed: true, detail },
+      goodResponse.criteria[1],
+    ],
+  });
+
+  [
+    'This shows real strategic instinct.',
+    'You are a natural at seeing what matters here.',
+    'The problem statement is thoughtful and shows a methodical mindset.',
+    'Your problem statement is about 80% of the way there.',
+  ].forEach(detail => {
+    it(`never reaches the student: ${detail}`, async () => {
+      InvokeLLM.mockResolvedValue(flattery(detail));
+      const rows = await reviewSimulationWork(completedRun());
+
+      expect(rows).toBeNull();
+      expect(InvokeLLM).toHaveBeenCalledTimes(2);
+      expect(logged[0].codes).toContain('review_detail_banned_language');
+    });
+  });
+
+  it('tells the retry which words to drop, and takes the rewrite', async () => {
+    InvokeLLM
+      .mockResolvedValueOnce(flattery('This shows real strategic instinct.'))
+      .mockResolvedValueOnce(goodResponse);
+
+    const rows = await reviewSimulationWork(completedRun());
+
+    expect(rows).toHaveLength(2);
+    expect(InvokeLLM.mock.calls[1][0].prompt).toMatch(/strategic/);
+    expect(InvokeLLM.mock.calls[1][0].prompt).toMatch(/instinct/);
+  });
+
+  it('leaves the run with three counted checks rather than a repaired sentence', async () => {
+    InvokeLLM.mockResolvedValue(flattery('This shows real strategic instinct.'));
+    const scored = await scoreSimulationRun(completedRun());
+
+    expect(scored.model_scored).toBe(false);
+    expect(scored.check_results).toHaveLength(3);
+    expect(scored.check_results.every(r => r.scored_by === 'checks')).toBe(true);
+
+    const readout = buildWorkSimReadout(
+      { ...completedRun(), check_results: scored.check_results }, {},
+    );
+    expect(readout.blocks.checks.not_scored.map(x => x.id)).toEqual(MODEL_SCORED_CRITERIA);
+  });
+
+  it('is dropped by the read-out as well, for a row written before this guard existed', () => {
+    const readout = buildWorkSimReadout({
+      ...completedRun(),
+      check_results: [{
+        criterion: 'problem_not_feature',
+        passed: true,
+        detail: 'This shows real strategic instinct.',
+        scored_by: 'model',
+      }],
+    }, {});
+
+    const everything = JSON.stringify(readout);
+    expect(everything).not.toContain('strategic instinct');
+    expect(readout.blocks.checks.model_notes).toEqual([]);
+    expect(readout.blocks.checks.not_scored.map(x => x.id)).toContain('problem_not_feature');
+  });
+
+  it('still takes a sentence about the writing rather than the person', () => {
+    const r = validateReview({
+      criteria: [
+        { criterion: 'problem_not_feature', passed: true, detail: 'You named duplicates on technician schedules, which is what is going wrong and who it lands on.' },
+        { criterion: 'honest_reply', passed: false, detail: 'You told Mark it slips to Q3, which is a date this sprint cannot support.' },
+      ],
+    });
+    expect(r.ok).toBe(true);
+  });
+});
+
 describe('nothing to judge', () => {
   it('spends no call when the student wrote neither piece', async () => {
     const rows = await reviewSimulationWork(completedRun({ problem_statement: '', sales_reply: '' }));

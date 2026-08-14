@@ -33,13 +33,13 @@
  * still lands on the row if it answers late.
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, AlertCircle } from 'lucide-react';
 import { Sk } from '@/components/PageSkeleton';
 import { NORTHGATE_PM } from '@/lib/work-sims/northgate-pm';
 import {
   startRun, saveStep, recordSample, abandonRun, completeRun, saveSimPredictions,
-  loadRuns, closeStaleRuns, REVIEW_WAIT_MS,
+  loadRuns, loadCompletedRun, closeStaleRuns, STEP_OF, REVIEW_WAIT_MS,
 } from '@/lib/work-sim';
 import SimSetup from '@/components/worksim/SimSetup';
 import SimInbox from '@/components/worksim/SimInbox';
@@ -54,24 +54,12 @@ import SimReadout from '@/components/worksim/SimReadout';
 
 const SIM = NORTHGATE_PM;
 
-/**
- * Which of the five steps a screen belongs to. The sample screens and the two
- * halves of the revision are not steps of their own: somebody who closes the tab
- * on the second sample left during step 4, and grouping it any other way would
- * make `abandoned_at_step` say something that is not true.
- */
-const STEP_OF = {
-  step1: 1,
-  step2: 2, sample1: 2,
-  step3: 3,
-  step4a: 4, sample2: 4, step4b: 4,
-  step5: 5, after: 5, scoring: 5,
-};
-
 const now = () => Date.now();
 const since = (from) => (from ? (now() - from) / 1000 : undefined);
 
 export default function WorkSimulationPage() {
+  const [params] = useSearchParams();
+  const openRunId = params.get('run');
   const [ready, setReady] = useState(false);
   const [priorRuns, setPriorRuns] = useState([]);
   const [stage, setStage] = useState('setup');
@@ -123,20 +111,42 @@ export default function WorkSimulationPage() {
     [cut, notes],
   );
 
+  /**
+   * The clock the read-out is allowed to use, read once.
+   *
+   * Only the want-more row looks at it, and only to tell "has not started
+   * another one yet" apart from "did not start another one". Taken at mount so
+   * nothing re-decides itself under somebody who is reading.
+   */
+  const viewedAt = useMemo(() => new Date().toISOString(), []);
+
   // Close out anything an earlier visit left open before offering a new run.
   // This is the half of abandonment that a closed tab cannot be trusted to do
   // for itself.
+  //
+  // `?run=` opens a finished run's read-out instead of the setup screen. That
+  // address is the whole reason the want-more row can ever be answered: at the
+  // end of a run, starting another one has not been possible yet, so the
+  // comparison only exists on a later visit.
   useEffect(() => {
     let alive = true;
     (async () => {
       const rows = await loadRuns();
       await closeStaleRuns(rows).catch(() => null);
+      const opened = openRunId ? await loadCompletedRun(openRunId, rows).catch(() => null) : null;
       if (!alive) return;
       setPriorRuns(rows);
+      if (opened) {
+        setRun(opened.run);
+        setMeasurement(opened.measurement);
+        setStage('done');
+      } else if (openRunId) {
+        setError('We could not find that read-out. Either it belongs to another account or that run never finished.');
+      }
       setReady(true);
     })();
     return () => { alive = false; };
-  }, []);
+  }, [openRunId]);
 
   // Leaving. `pagehide` covers a closed tab or a reload as far as a browser
   // allows; the cleanup covers navigating away inside the app, which is the
@@ -173,8 +183,11 @@ export default function WorkSimulationPage() {
     setStage('step1');
   });
 
+  // Both of these hand the next stage down so the row records the screen the
+  // student is on, not the one they just left. That is what the sweep reads
+  // when a closed tab never got to say anything. See STEP_OF in work-sim.js.
   const advance = (step, patch, next, seconds) => guard(async () => {
-    const updated = await saveStep(runRef.current, step, patch, seconds);
+    const updated = await saveStep(runRef.current, step, patch, seconds, next);
     setRun(updated);
     setStage(next);
   });
@@ -184,7 +197,7 @@ export default function WorkSimulationPage() {
       at_step,
       score: typeof value === 'number' ? value : undefined,
       skipped: value == null,
-    });
+    }, next);
     setRun(updated);
     setStage(next);
   });
@@ -277,7 +290,7 @@ export default function WorkSimulationPage() {
         {/* The read-out is four panels rather than one step, so it draws at the
             page's own level instead of inside the card the steps share. */}
         {stage === 'done' ? (
-          <SimReadout run={run} measurement={measurement} sim={SIM} />
+          <SimReadout run={run} measurement={measurement} sim={SIM} now={viewedAt} />
         ) : (
         <div className="app-card p-6 sm:p-8">
           {stage === 'setup' && (
@@ -287,6 +300,7 @@ export default function WorkSimulationPage() {
               onAnswer={(k, v) => setPre(a => ({ ...a, [k]: v }))}
               onStart={begin}
               busy={busy}
+              lastReadoutId={priorRuns.find(r => r.status === 'completed')?.id || null}
             />
           )}
 

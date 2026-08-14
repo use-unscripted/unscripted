@@ -13,6 +13,17 @@
  * these two are presented as a reader's note in the read-out and never as a
  * score, and they are the two that vanish when the model is gone.
  *
+ * ## The two sentences are held to the read-out's rules
+ *
+ * They are the only strings in the whole slice that a student reads and nobody
+ * on this team wrote, and they land in the same block as copy the read-out
+ * enforces rule 4 on. So `validateReview` runs each `detail` through
+ * `bannedLanguageIn` from work-sim-readout.js, the same list, and a hit is a
+ * rejection rather than a repair. The retry is told which words to drop; a
+ * second failure takes the degraded path, which is three counted checks and a
+ * read-out that names the two it could not score. The prompt asks for the same
+ * thing, and a prompt is not a guarantee.
+ *
  * ## What happens when the model is unavailable
  *
  * This is called after the run row is already saved, never before, so a failure
@@ -39,6 +50,7 @@ import { toText } from '@/lib/ai-validation';
 import { generateValidated } from '@/lib/ai-generate';
 import { NORTHGATE_PM } from '@/lib/work-sims/northgate-pm';
 import { runWorkSimChecks, pointsFor } from '@/lib/work-sim-checks';
+import { bannedLanguageIn } from '@/lib/work-sim-readout';
 
 /** Must be in AI_FEATURES in ai-failures.js and in the enum in AiFailure.jsonc. */
 export const REVIEW_FEATURE = 'work_sim_review';
@@ -169,15 +181,32 @@ export function validateReview(raw, sim = NORTHGATE_PM) {
     }
 
     const detail = stripLongDashes(toText(row.detail));
+    let banned = [];
     if (!detail) {
       errors.push(`"detail" for "${id}" is empty. Write one or two sentences to the student about what they wrote.`);
       codes.push('review_detail_missing');
     } else if (detail.length > MAX_DETAIL) {
       errors.push(`"detail" for "${id}" runs to ${detail.length} characters. Keep it to one or two sentences.`);
       codes.push('review_detail_too_long');
+    } else {
+      // Rule 4 of the read-out, applied to the model's own sentences.
+      // "This shows real strategic instinct" answers the question and is still
+      // a horoscope, and the prompt asking for it not to happen is not a
+      // guarantee. A hit is a rejection: the retry is told which words to drop,
+      // and a second failure leaves the run with its three counted checks and
+      // the read-out saying plainly that two are missing. Nothing is trimmed or
+      // reworded, because a sentence we edited is no longer the review and
+      // still gets printed to a student as though it were.
+      banned = bannedLanguageIn(detail);
+      if (banned.length) {
+        errors.push(
+          `"detail" for "${id}" describes the student rather than what they wrote, or carries something the read-out will not print. Rewrite it without these: ${[...new Set(banned.map(b => b.term))].join(', ')}.`
+        );
+        codes.push('review_detail_banned_language');
+      }
     }
 
-    if (passed !== null && detail && detail.length <= MAX_DETAIL) {
+    if (passed !== null && detail && detail.length <= MAX_DETAIL && !banned.length) {
       data.push({ criterion: id, passed, detail, scored_by: 'model' });
     }
   });

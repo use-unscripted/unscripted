@@ -14,6 +14,8 @@ import { cleanup, render, screen, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import SimReadout from './SimReadout';
 import { runWorkSimChecks } from '@/lib/work-sim-checks';
+import { REACTION_SCALE } from '@/lib/work-sim-readout';
+import { REACTIONS } from '@/lib/career-moment';
 import { NORTHGATE_PM } from '@/lib/work-sims/northgate-pm';
 
 afterEach(cleanup);
@@ -290,6 +292,18 @@ describe('an abandoned run', () => {
 
 // ---------------------------------------------------------------------------
 
+/**
+ * The read-out compares enjoyment on the four answers the check-in offered
+ * rather than in points, so it holds its own copy of that row: it is a pure
+ * module and career-moment.js drags in the SDK. This is the only place both
+ * can be imported cheaply, so this is where the copy is held to the original.
+ */
+describe('the four answers the read-out reasons about', () => {
+  it('is the same row the sampling screen draws', () => {
+    expect(REACTION_SCALE).toEqual(REACTIONS.map(r => ({ score: r.score, label: r.label })));
+  });
+});
+
 describe('a gap under the threshold, which is a result and not a null state', () => {
   it('prints both numbers and then says they called it', () => {
     draw(baseRun(), measurement({ expected_energy: 4 }));
@@ -300,9 +314,10 @@ describe('a gap under the threshold, which is a result and not a null state', ()
   });
 
   it('draws it at the same weight as a gap row and gives it no absence label', () => {
-    // Enjoyment averages 6 against a prediction of 2, so it is a gap. Energy is
-    // 3 against 4, so it is not. Both are claims and both should draw the same.
-    draw(baseRun(), measurement({ expected_energy: 4, expected_enjoyment: 2 }));
+    // Enjoyment averages 6, which is "Neutral", against a prediction of 10,
+    // which is "Loved it": two answers apart, so it is a gap. Energy is 3
+    // against 4, so it is not. Both are claims and both should draw the same.
+    draw(baseRun(), measurement({ expected_energy: 4, expected_enjoyment: 10 }));
     const energy = screen.getByTestId('prediction-energy');
     const gapRow = screen.getByTestId('prediction-enjoyment');
     expect(energy.getAttribute('data-status')).toBe('no_gap');

@@ -527,49 +527,107 @@ describe('an abandoned run', () => {
 });
 
 describe('wanting another one, where what you did outranks what you said', () => {
-  it('reports predicted yes against never starting another, and does not scold', () => {
-    const w = rowById(buildWorkSimReadout(baseRun(), measurement()), 'want_more');
-    expect(w.predicted_text).toBe('yes');
-    expect(w.facts.started_another).toBe(false);
-    expect(w.status).toBe('gap');
-    expect(w.threshold_applies).toBe(false);
-    expect(w.clears_threshold).toBeNull();
-    expect(w.lines).toContain('You predicted yes.');
-    expect(w.lines).toContain('You have not started another one.');
-    expect(w.lines).toContain('That is not a criticism. It is why this counts what you did rather than what you said.');
+  /** The completion screen: the run has just been put down. */
+  const atTheEnd = '2026-08-14T13:29:30.000Z';
+  /** A later visit, past the window, with no second run in between. */
+  const muchLater = '2026-08-30T09:00:00.000Z';
+  /** Later, but not late enough for silence to mean anything. */
+  const nextMorning = '2026-08-15T09:00:00.000Z';
+
+  const wantMore = (run, m, now) => rowById(buildWorkSimReadout(run, m, { now }), 'want_more');
+
+  // The row this describes is the one the research calls the hardest to game,
+  // and the easiest to turn into a horoscope: at the end of a run, starting
+  // another one has not been possible, so scoring it there hands everybody who
+  // said yes a surprise and everybody who said no a compliment, both of them
+  // decided before the student did anything.
+  describe('at the end of the run, where there is no outcome yet', () => {
+    [
+      ['yes', 9],
+      ['not sure', 5],
+      ['no', 2],
+    ].forEach(([word, score]) => {
+      it(`says the answer is not in yet, whether they predicted ${word} or anything else`, () => {
+        const w = wantMore(baseRun(), measurement({ expected_want_more: score }), atTheEnd);
+        expect(w.predicted_text).toBe(word);
+        expect(w.status).toBe('no_outcome');
+        expect(w.facts.outcome_known).toBe(false);
+        expect(w.actual_text).toBeNull();
+        expect(w.lines).toContain(`You predicted ${word}.`);
+        expect(w.lines.join(' ')).toContain('There is nothing to count yet.');
+        // The two sentences that would be a horoscope here.
+        expect(w.lines.join(' ')).not.toContain('You called this one.');
+        expect(w.lines.join(' ')).not.toContain('not a criticism');
+      });
+    });
+
+    it('says the same thing when the caller gives it no clock at all', () => {
+      const w = rowById(buildWorkSimReadout(baseRun(), measurement()), 'want_more');
+      expect(w.status).toBe('no_outcome');
+      expect(w.facts.outcome_known).toBe(false);
+    });
+
+    it('is still not scored the next morning, because silence is not an answer yet', () => {
+      const w = wantMore(baseRun(), measurement(), nextMorning);
+      expect(w.status).toBe('no_outcome');
+      expect(w.lines.join(' ')).toContain('Open this read-out again');
+    });
+
+    it('keeps the stated answer and the behaviour apart and never averages them', () => {
+      const w = wantMore(baseRun(), measurement(), atTheEnd);
+      expect(w.facts.predicted).toBe(9);
+      expect(w.facts.stated_afterwards).toBe(5);
+      expect(w.facts.stated_afterwards_word).toBe('not sure');
+      expect(w.lines).toContain('Afterwards you said not sure.');
+      expect(w.actual).toBeNull();
+    });
   });
 
-  it('keeps the stated answer and the behaviour apart and never averages them', () => {
-    const w = rowById(buildWorkSimReadout(baseRun(), measurement()), 'want_more');
-    expect(w.facts.predicted).toBe(9);
-    expect(w.facts.stated_afterwards).toBe(5);
-    expect(w.facts.stated_afterwards_word).toBe('not sure');
-    expect(w.lines).toContain('Afterwards you said not sure.');
-    expect(w.actual).toBeNull();
-  });
+  describe('later, when there is something to compare', () => {
+    it('reports predicted yes against never starting another, and does not scold', () => {
+      const w = wantMore(baseRun(), measurement(), muchLater);
+      expect(w.predicted_text).toBe('yes');
+      expect(w.facts.started_another).toBe(false);
+      expect(w.facts.outcome_known).toBe(true);
+      expect(w.status).toBe('gap');
+      expect(w.threshold_applies).toBe(false);
+      expect(w.clears_threshold).toBeNull();
+      expect(w.lines).toContain('You predicted yes.');
+      expect(w.lines).toContain('You have not started another one since.');
+      expect(w.lines).toContain('That is not a criticism. It is why this counts what you did rather than what you said.');
+    });
 
-  it('reports predicted yes and started another as no gap, with the date', () => {
-    const run = baseRun({ started_another_at: '2026-08-18T09:00:00.000Z' });
-    const w = rowById(buildWorkSimReadout(run, measurement()), 'want_more');
-    expect(w.status).toBe('no_gap');
-    expect(w.facts.started_another).toBe(true);
-    expect(w.lines).toContain('You started another one on August 18.');
-    expect(w.lines).toContain('You called this one.');
-  });
+    it('reports predicted yes and started another as no gap, with the date', () => {
+      const run = baseRun({ started_another_at: '2026-08-18T09:00:00.000Z' });
+      const w = wantMore(run, measurement(), muchLater);
+      expect(w.status).toBe('no_gap');
+      expect(w.facts.started_another).toBe(true);
+      expect(w.lines).toContain('You started another one on August 18.');
+      expect(w.lines).toContain('You called this one.');
+    });
 
-  it('reports predicted no and started another anyway', () => {
-    const run = baseRun({ started_another_at: '2026-08-18T09:00:00.000Z' });
-    const w = rowById(buildWorkSimReadout(run, measurement({ expected_want_more: 2 })), 'want_more');
-    expect(w.predicted_text).toBe('no');
-    expect(w.status).toBe('gap');
-    expect(w.lines).toContain('You did it anyway. What you did is the half we count.');
-  });
+    it('reports a second run the moment one exists, without waiting out the window', () => {
+      const run = baseRun({ started_another_at: '2026-08-15T09:00:00.000Z' });
+      const w = wantMore(run, measurement(), nextMorning);
+      expect(w.facts.outcome_known).toBe(true);
+      expect(w.status).toBe('no_gap');
+      expect(w.lines).toContain('You started another one on August 15.');
+    });
 
-  it('reads not sure as its own answer, so a middling prediction is not a yes', () => {
-    const w = rowById(buildWorkSimReadout(baseRun(), measurement({ expected_want_more: 5 })), 'want_more');
-    expect(w.predicted_text).toBe('not sure');
-    expect(w.status).toBe('no_gap');
-    expect(w.lines).toContain('You have not started another one.');
+    it('reports predicted no and started another anyway', () => {
+      const run = baseRun({ started_another_at: '2026-08-18T09:00:00.000Z' });
+      const w = wantMore(run, measurement({ expected_want_more: 2 }), muchLater);
+      expect(w.predicted_text).toBe('no');
+      expect(w.status).toBe('gap');
+      expect(w.lines).toContain('You did it anyway. What you did is the half we count.');
+    });
+
+    it('reads not sure as its own answer, so a middling prediction is not a yes', () => {
+      const w = wantMore(baseRun(), measurement({ expected_want_more: 5 }), muchLater);
+      expect(w.predicted_text).toBe('not sure');
+      expect(w.status).toBe('no_gap');
+      expect(w.lines).toContain('You have not started another one since.');
+    });
   });
 });
 

@@ -206,7 +206,25 @@ describe('whether the revision changed the plan or only restated it', () => {
     });
     const r = checkRevisionChanged({ spec_v1: v1, spec_v2: reworked });
     expect(r.passed).toBe(true);
-    expect(r.detail).toMatch(/About \d+% of the spec changed/);
+    expect(r.detail).toMatch(/\d+ words of the spec changed/);
+  });
+
+  // The read-out bans percentages, and a check detail is the one place copy we
+  // wrote reaches a student without going through that guard, because the same
+  // string may be quoting the student's own spec back at them.
+  it('puts no percentage in front of a student, on any branch', () => {
+    const cases = [
+      checkRevisionChanged({ spec_v1: v1, spec_v2: '' }),
+      checkRevisionChanged({ spec_v1: v1, spec_v2: v1 }),
+      checkRevisionChanged({ spec_v1: v1, spec_v2: spec({ doing: 'Only the duplicate job bug, nothing else at all this sprint.' }) }),
+      checkRevisionChanged({
+        spec_v1: v1,
+        spec_v2: spec({ doing: 'Fixing the duplicate job bug in the sync job, and nothing else.' }),
+        selected_items: ['duplicate_jobs', 'bulk_reschedule'],
+        selected_items_final: ['duplicate_jobs'],
+      }),
+    ];
+    cases.forEach(r => expect(r.detail).not.toContain('%'));
   });
 
   it('passes on a changed sprint and names what came out of it', () => {

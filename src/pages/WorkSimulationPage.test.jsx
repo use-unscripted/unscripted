@@ -27,7 +27,7 @@ import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-libra
 import { MemoryRouter } from 'react-router-dom';
 import { NORTHGATE_PM } from '@/lib/work-sims/northgate-pm';
 import { SIM_PRE_FIELDS } from '@/lib/experiment-measurement';
-import { REVIEW_WAIT_MS } from '@/lib/work-sim';
+import { REVIEW_WAIT_MS, closeStaleRuns } from '@/lib/work-sim';
 
 const { me, runList, runCreate, runUpdate, measFilter, measList, measCreate, measUpdate,
   expCreate, proofCreate, signalCreate, track, invoke } = vi.hoisted(() => ({
@@ -114,8 +114,8 @@ beforeEach(() => {
 
 afterEach(cleanup);
 
-function draw() {
-  return render(<MemoryRouter><WorkSimulationPage /></MemoryRouter>);
+function draw(at = '/simulation') {
+  return render(<MemoryRouter initialEntries={[at]}><WorkSimulationPage /></MemoryRouter>);
 }
 
 const click = (name) => fireEvent.click(screen.getByRole('button', { name }));
@@ -416,6 +416,86 @@ describe('waiting for the two model-scored checks', () => {
   });
 });
 
+/**
+ * What the want-more row says at the moment the read-out first draws.
+ *
+ * Starting another simulation has not been possible yet, so there is no
+ * behaviour to compare the prediction against. Scoring it here would hand
+ * everybody who tapped Yes a manufactured surprise and everybody who tapped No
+ * or Maybe an unearned "you called this one", on the one row in Block A that is
+ * behavioural rather than self reported.
+ */
+describe('the want-more row at the end of a run', () => {
+  it('says the answer is not in yet rather than scoring it', async () => {
+    // The pre row the setup screen wrote, found again at the end. Without it
+    // there is no prediction on this row to get wrong.
+    measFilter.mockResolvedValue([{ id: 'meas_1', expected_want_more: 9, expected_enjoyment: 7 }]);
+    await toTheEnd();
+    await screen.findByText('Your read-out');
+
+    const row = screen.getByTestId('prediction-want_more');
+    expect(row.getAttribute('data-status')).toBe('no_outcome');
+    expect(row.textContent).toContain('You predicted yes.');
+    expect(row.textContent).toContain('There is nothing to count yet.');
+    expect(row.textContent).not.toContain('You called this one.');
+    expect(row.textContent).not.toContain('not a criticism');
+  });
+});
+
+describe('opening a finished read-out again', () => {
+  const finished = {
+    id: 'run_done',
+    status: 'completed',
+    simulation_key: NORTHGATE_PM.key,
+    simulation_version: NORTHGATE_PM.version,
+    experiment_id: 'exp_done',
+    started_at: '2026-08-01T13:00:00.000Z',
+    completed_at: '2026-08-01T13:29:00.000Z',
+    started_another_at: '2026-08-06T09:00:00.000Z',
+    problem_statement: 'Duplicate jobs land on technician schedules.',
+    selected_items: ['duplicate_jobs', 'save_error_copy'],
+    selected_items_final: ['duplicate_jobs'],
+    spec_v1: 'The problem\nDuplicates.\n\nWhat we are not doing\nRecurring jobs.',
+    spec_v2: 'The problem\nDuplicate jobs reach technicians twice.\n\nWhat we are not doing\nRecurring jobs, and the date bug.',
+    sales_reply: 'Not this sprint.',
+    check_results: [],
+    experience_samples: [{ at_step: 2, score: 8, skipped: false, sampled_at: '2026-08-01T13:11:00.000Z' }],
+  };
+
+  it('draws the read-out at its own address, with the row that could not be answered before', async () => {
+    runList.mockResolvedValue([finished]);
+    measFilter.mockResolvedValue([{
+      id: 'meas_done', experiment_id: 'exp_done', expected_want_more: 9, desire_to_repeat: 5,
+    }]);
+
+    draw('/simulation?run=run_done');
+    await screen.findByText('Your read-out');
+
+    const row = screen.getByTestId('prediction-want_more');
+    expect(row.getAttribute('data-status')).toBe('no_gap');
+    expect(row.textContent).toContain('You started another one on August 6.');
+    expect(row.textContent).toContain('You called this one.');
+
+    // Reading an old run starts nothing and re-scores nothing.
+    expect(runCreate).not.toHaveBeenCalled();
+    expect(invoke).not.toHaveBeenCalled();
+  });
+
+  it('puts the way back to it on the screen a student would look at', async () => {
+    runList.mockResolvedValue([finished]);
+    draw();
+
+    const link = await screen.findByRole('link', { name: /Open your last read-out/ });
+    expect(link.getAttribute('href')).toContain('run=run_done');
+  });
+
+  it('says so plainly when the run in the address is not there to open', async () => {
+    runList.mockResolvedValue([]);
+    draw('/simulation?run=someone_elses_run');
+    expect(await screen.findByText(/could not find that read-out/)).toBeTruthy();
+  });
+});
+
 describe('leaving part way through', () => {
   it('records the step, keeps the samples, and creates no experiment', async () => {
     await begin();
@@ -438,6 +518,47 @@ describe('leaving part way through', () => {
     expect(rowSoFar().experience_samples).toHaveLength(1);
     expect(expCreate).not.toHaveBeenCalled();
     expect(track).toHaveBeenCalledWith('simulation_abandoned', expect.objectContaining({ value: 3 }));
+  });
+
+  /**
+   * The two routes out of a run have to write the same number.
+   *
+   * The page marks the run abandoned on its way out when it can, and the sweep
+   * on the next visit catches everything a closed tab dropped, which is most of
+   * them. The page reads the stage; the sweep reads `current_step` off the row.
+   * If the row is holding the last step submitted rather than the step on
+   * screen, every abandon that goes through the sweep lands one low, and the
+   * field that exists to say whether the revision is what loses people quietly
+   * under-reports the revision.
+   */
+  it('writes the step whose screen is in front of the student, so both routes agree', async () => {
+    await begin();
+    expect(rowSoFar().current_step).toBeUndefined();
+
+    await throughReadIn();
+    expect(rowSoFar().current_step).toBe(2);
+
+    await cutTheList();
+    await screen.findByText(SAMPLE_QUESTION);
+    expect(rowSoFar().current_step).toBe(2);
+
+    // The sample is a stage change too, and the screen after it is step 3.
+    click('Enjoyed it');
+    await screen.findByText(NORTHGATE_PM.steps[2].blurb);
+    expect(rowSoFar().current_step).toBe(3);
+
+    // What the sweep would make of that row on the next visit, and what the
+    // page itself writes on the way out. Same step, both times.
+    const asTheSweepSeesIt = { id: 'run_1', status: 'in_progress', current_step: rowSoFar().current_step };
+    await closeStaleRuns([asTheSweepSeesIt]);
+    expect(runUpdate).toHaveBeenCalledWith('run_1', { status: 'abandoned', abandoned_at_step: 3 });
+
+    cleanup();
+    await waitFor(() => {
+      const abandon = runUpdate.mock.calls.filter(([, p]) => p.status === 'abandoned');
+      expect(abandon.length).toBeGreaterThan(0);
+      abandon.forEach(([, p]) => expect(p.abandoned_at_step).toBe(3));
+    });
   });
 
   it('closes out a run an earlier visit left open, with the step it stopped at', async () => {

@@ -11,12 +11,13 @@
  * is the three way answer the Career Moment reaction already uses, scored on the
  * same 2 / 5 / 9 so the two flows write comparable numbers.
  */
+import { Link } from 'react-router-dom';
 import ScaleInput from '@/components/measurement/ScaleInput';
 import { AGAIN_OPTIONS } from '@/lib/career-moment';
 import { SIM_PRE_FIELDS } from '@/lib/experiment-measurement';
 import { SimNext } from '@/components/worksim/controls';
 
-export default function SimSetup({ sim, answers, onAnswer, onStart, busy }) {
+export default function SimSetup({ sim, answers, onAnswer, onStart, busy, lastReadoutId = null }) {
   const answered = SIM_PRE_FIELDS.every(f => answers[f.key] != null);
 
   return (
@@ -27,6 +28,19 @@ export default function SimSetup({ sim, answers, onAnswer, onStart, busy }) {
         </p>
         <h1 className="tp-section mt-2" style={{ color: 'var(--text-primary)' }}>{sim.title}</h1>
         <p className="tp-lead mt-4" style={{ color: 'var(--text-secondary)' }}>{sim.entry_note}</p>
+
+        {/* The way back into a read-out from a run that is already finished.
+            Without it the last visit is the only one, and the row that compares
+            what a student said they would do against what they did could never
+            be answered: at the end of a run, doing another one has not been
+            possible yet. */}
+        {lastReadoutId && (
+          <p className="tp-meta mt-4">
+            <Link to={`/simulation?run=${lastReadoutId}`} className="font-semibold underline" style={{ color: 'var(--brand-navy-700)' }}>
+              Open your last read-out
+            </Link>
+          </p>
+        )}
       </div>
 
       <div className="app-inset p-5" style={{ background: 'var(--background-secondary)' }}>

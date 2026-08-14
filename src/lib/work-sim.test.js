@@ -50,7 +50,8 @@ vi.mock('@/lib/career-cycle', () => ({ cycleLinks: vi.fn().mockResolvedValue({ u
 vi.mock('@/lib/pilot-metrics', () => ({ trackPilotEvent: vi.fn(), PILOT_EVENTS: [] }));
 vi.mock('@/lib/ai-failures', () => ({ reportAiFailure: vi.fn().mockResolvedValue(null) }));
 
-const { completeRun, reviewCompletedRun, REVIEW_WAIT_MS } = await import('@/lib/work-sim');
+const { completeRun, reviewCompletedRun, saveStep, recordSample, abandonRun, REVIEW_WAIT_MS } =
+  await import('@/lib/work-sim');
 
 /** A run with enough in it that all five criteria have something to judge. */
 const savedRun = (overrides = {}) => ({
@@ -196,6 +197,40 @@ describe('the review does not land', () => {
 
     expect(settled).toBe('still waiting');
     expect(runPatches().filter(p => p.check_results).pop().check_results).toHaveLength(3);
+  });
+});
+
+/**
+ * `current_step` is what the sweep reads when a closed tab never got to say
+ * anything, and a closed tab is the ordinary way a run ends. One definition,
+ * written down at STEP_OF: the step whose screen the student was on.
+ */
+describe('the step a row says it is on', () => {
+  it('records the screen the student is moving to, not the one just submitted', async () => {
+    const after = await saveStep(savedRun({ current_step: 2 }), 2, { problem_statement: 'x' }, 30, 'step3');
+
+    expect(runUpdate).toHaveBeenCalledWith('run_1', expect.objectContaining({ current_step: 3 }));
+    expect(after.current_step).toBe(3);
+    // Timing still belongs to the step that was just finished.
+    expect(runUpdate.mock.calls[0][1].step_seconds).toContainEqual({ step: 2, seconds: 30 });
+  });
+
+  it('moves it on a sample tap too, because the screen after a sample is a step', async () => {
+    await recordSample(savedRun({ current_step: 2 }), { at_step: 2, score: 8 }, 'step3');
+    expect(runUpdate).toHaveBeenCalledWith('run_1', expect.objectContaining({ current_step: 3 }));
+  });
+
+  it('leaves the number alone when a sample is not moving the student on', async () => {
+    await recordSample(savedRun({ current_step: 4 }), { at_step: 4, score: 5 });
+    expect(runUpdate.mock.calls[0][1].current_step).toBeUndefined();
+  });
+
+  it('is what the sweep abandons on when the page never got to speak', async () => {
+    const swept = await saveStep(savedRun({ current_step: 2, status: 'in_progress' }), 2, {}, 12, 'step3');
+    runUpdate.mockClear();
+
+    await abandonRun({ ...swept, status: 'in_progress' });
+    expect(runUpdate).toHaveBeenCalledWith('run_1', { status: 'abandoned', abandoned_at_step: 3 });
   });
 });
 

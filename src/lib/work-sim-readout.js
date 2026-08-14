@@ -44,6 +44,7 @@
  *     actual: number | null, actual_text: string | null,
  *     gap: number | null,          // actual minus predicted, signed
  *     gap_size: number | null,     // the same, unsigned
+ *     scale: 'points' | 'answers' | null,  // what `gap` is counted in
  *     threshold_applies: boolean,  // false on the want-more row, which is not numeric
  *     clears_threshold: boolean | null,
  *     lines: [string],             // our copy, in reading order
@@ -64,13 +65,23 @@
  *    row that makes a claim is built from numbers that exist, and `assertRules`
  *    throws if a claim row ships with nothing in `facts`.
  * 2. A gap under PREDICTION_GAP_THRESHOLD points is reported as no gap and takes
- *    the "you called this one" branch. One constant, one edit.
+ *    the "you called this one" branch. One constant, one edit. Enjoyment is the
+ *    exception and is compared on the four answers the check-in actually
+ *    offered, because subtracting a 1 to 10 prediction from a four button
+ *    reading invents a gap out of the spacing of the buttons. The reasoning is
+ *    written out at ENJOYMENT_STEP_THRESHOLD and it is worth reading before
+ *    anyone puts that subtraction back.
  * 3. Every claim carries what would overturn it. `falsifier` is not optional on a
  *    claim row.
  * 4. No trait nouns, no fit score, no percentage, no verdict, and the word "fit"
  *    never appears. `findBannedLanguage` walks every string this module authored
  *    and `assertRules` throws on a hit. Student text and check details are exempt,
  *    because a student may write whatever they like and we quote it verbatim.
+ *    A sentence a model wrote is not exempt: `scoreChecks` runs it through
+ *    `bannedLanguageIn` and drops the whole row into the not-scored list if it
+ *    fails, which is the same hole a missing review leaves. The first guard is
+ *    in work-sim-review.js, where such an answer is rejected before it is
+ *    stored at all.
  * 5. It can say we do not know. When the two model-scored criteria are absent the
  *    performance row says so, keeps its place, and carries no number. It never
  *    fabricates one and never passes three checks off as five.
@@ -84,8 +95,78 @@ import { entityDate } from '@/lib/dates';
  *
  * Product call 6 in docs/simulation-mvp-plan.md: a working default, not agreed.
  * It is one constant on purpose, so changing it is one edit and not a hunt.
+ *
+ * It applies to energy and to performance, which are both predicted and
+ * measured on the same 10 point scale. Enjoyment is not one of them. See
+ * ENJOYMENT_STEP_THRESHOLD.
  */
 export const PREDICTION_GAP_THRESHOLD = 2;
+
+/**
+ * ENJOYMENT IS NOT COMPARED IN POINTS, AND HERE IS WHY.
+ *
+ * The prediction is a 1 to 10 tap. The outcome is not: it is two taps on the
+ * four button reaction row, which writes 2, 5, 8 or 10 and nothing in between.
+ * Those four are 3, 3 and 2 apart, so the smallest move the instrument can
+ * express is already at or over PREDICTION_GAP_THRESHOLD. Subtracting one from
+ * the other manufactures a gap out of the spacing of the buttons: a student who
+ * predicts 7 and then taps the top button twice reads as 10, which is a 3 point
+ * miss for having enjoyed it slightly more than the button below.
+ *
+ * So both halves are put on the instrument that actually measured the outcome.
+ * The prediction is placed on whichever of the four answers it sits closest to,
+ * the readings are already on it, and the distance is counted in answers rather
+ * than in points. One answer apart is the smallest difference these four
+ * buttons can show, so it cannot clear the threshold and cannot be told apart
+ * from rounding. Two apart is a real move: predicting you would enjoy it and
+ * then tapping "Not for me" is exactly the finding this product exists to
+ * surface, and it still reports.
+ *
+ * The cost, stated so nobody rediscovers it as a bug: a 3 point drop that lands
+ * one answer away, say a predicted 8 against a tapped "Neutral", reports as no
+ * gap. That is the instrument being honest about its own resolution. If a finer
+ * reading is wanted, the fix is to ask for enjoyment on the same 1 to 10 scale
+ * during the task, not to go back to subtracting two different scales.
+ *
+ * The raw numbers are all still on the row: `facts.average`, every sample, and
+ * `actual_enjoyment` on the measurement. The offline analysis in section 7 of
+ * the plan reads those, and it inherits this same caveat.
+ */
+export const ENJOYMENT_STEP_THRESHOLD = 2;
+
+/**
+ * The four answers the during-task check-in offers, ordered, with the score
+ * each one writes.
+ *
+ * A copy of REACTIONS from career-moment.js, deliberately. That module pulls in
+ * the SDK, the hypothesis engine and half the app, and this one is pure by
+ * design and tested without a browser. The copy is held to the original by a
+ * test in SimReadout.test.jsx, which runs where importing both is free, so the
+ * two cannot drift without something going red.
+ */
+export const REACTION_SCALE = [
+  { score: 2, label: 'Not for me' },
+  { score: 5, label: 'Neutral' },
+  { score: 8, label: 'Enjoyed it' },
+  { score: 10, label: 'Loved it' },
+];
+
+/**
+ * Which of the four answers a 1 to 10 number sits on, by whichever score it is
+ * closest to. Ties go to the lower answer, which is the conservative direction:
+ * it never reports a student as having enjoyed something more than they said.
+ */
+function answerIndex(score) {
+  const n = num(score);
+  if (n === null) return null;
+  let best = 0;
+  REACTION_SCALE.forEach((option, i) => {
+    if (Math.abs(n - option.score) < Math.abs(n - REACTION_SCALE[best].score)) best = i;
+  });
+  return best;
+}
+
+const answerLabel = (index) => REACTION_SCALE[index]?.label || null;
 
 /** The label the UI puts above every `falsifier` string. */
 export const FALSIFIER_LABEL = 'What would change this';
@@ -188,6 +269,10 @@ function row(id, label, falsifier, extra) {
     actual_text: null,
     gap: null,
     gap_size: null,
+    // What `gap` is counted in. Energy and performance are points on the 1 to
+    // 10 scale. Enjoyment is answers on the four button row, for the reason
+    // written out at ENJOYMENT_STEP_THRESHOLD. Wanting another is neither.
+    scale: 'points',
     threshold_applies: true,
     clears_threshold: null,
     lines: [],
@@ -272,18 +357,39 @@ function enjoymentRow(run, measurement) {
     return r;
   }
 
-  Object.assign(r, grade(predicted, actual));
+  // Both halves on the four answers the check-in offered, never one minus the
+  // other. The long comment on ENJOYMENT_STEP_THRESHOLD is the reasoning.
+  const predictedIndex = answerIndex(predicted);
+  const actualIndex = answerIndex(actual);
+  const steps = actualIndex - predictedIndex;
+  const stepSize = Math.abs(steps);
+
+  r.scale = 'answers';
+  r.gap = steps;
+  r.gap_size = stepSize;
+  r.clears_threshold = stepSize >= ENJOYMENT_STEP_THRESHOLD;
+  r.status = r.clears_threshold ? 'gap' : 'no_gap';
+  r.facts.predicted_answer = answerLabel(predictedIndex);
+  r.facts.answers_apart = steps;
+  r.facts.step_threshold = ENJOYMENT_STEP_THRESHOLD;
+
   r.lines = [`You predicted ${predicted}.`, ...readings];
 
   if (taken.length === 1) {
     r.lines.push('You skipped one of the two check-ins, so this is one reading and not an average.');
   }
+  if (taken.length > 1) r.lines.push(`Across the two you averaged ${actual}.`);
 
-  if (r.status === 'no_gap') {
-    if (taken.length > 1) r.lines.push(`Across the two you averaged ${actual}.`);
+  const predictedAnswer = answerLabel(predictedIndex);
+  const lands = `Your ${predicted} lands on "${predictedAnswer}", one of the four answers you had during the task.`;
+  if (r.status === 'gap') {
+    r.lines.push(
+      `${lands} What you tapped was ${countWord(stepSize)} ${stepSize === 1 ? 'answer' : 'answers'} ${gapWord(steps, 'below', 'above')} that.`
+    );
+  } else if (stepSize > 0) {
+    r.lines.push(`${lands} What you tapped was the answer next to it, and one either way is as close as these four get.`);
   } else {
-    const middle = taken.length > 1 ? `Across the two you averaged ${actual}, which is` : 'That is';
-    r.lines.push(`${middle} ${r.gap_size} ${r.gap_size === 1 ? 'point' : 'points'} ${gapWord(r.gap, 'below', 'above')} your prediction.`);
+    r.lines.push(`${lands} That is what you tapped.`);
   }
 
   // The move between the two readings is its own fact. It is the number nobody
@@ -409,17 +515,55 @@ function performanceRow(measurement, scoring) {
 const WANT_MORE_FALSIFIER =
   'Starting another one. This counts whether a second run exists, so it changes the moment you begin one.';
 
-function wantMoreRow(run, measurement) {
-  const r = row('want_more', 'Wanting another', WANT_MORE_FALSIFIER, { threshold_applies: false });
+/**
+ * How long "you have not started another one" has to hold before it counts as
+ * an answer rather than as the clock not having run yet.
+ *
+ * This row is the only behavioural one in Block A, and it is the one the
+ * research calls the hardest to game. That is exactly why it must not be
+ * scored at the end of the run. At that moment starting another one was not
+ * possible, so "you have not started another one" is not something the student
+ * did. Printing it as an outcome is manufactured surprise for everybody who
+ * said yes and unearned agreement for everybody who said no, on a row where
+ * both readings are a foregone conclusion.
+ *
+ * So until a second run exists or this window has passed, the row says the
+ * answer is not in yet and scores nothing. The read-out is reachable again
+ * from its own address, which is what makes the later reading possible: see
+ * WorkSimulationPage and the `now` option below.
+ *
+ * Seven days matches the follow up window the plan and the research already
+ * use for whether a student did anything afterwards.
+ */
+export const WANT_MORE_WINDOW_DAYS = 7;
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+function wantMoreRow(run, measurement, now) {
+  const r = row('want_more', 'Wanting another', WANT_MORE_FALSIFIER, {
+    threshold_applies: false,
+    scale: null,
+  });
   const predicted = num(measurement?.expected_want_more);
   const predictedWord = wantWord(predicted);
   const statedWord = wantWord(measurement?.desire_to_repeat);
   const startedAnother = !!entityDate(run?.started_another_at);
   const startedOn = dayText(run?.started_another_at);
 
+  // The clock is the caller's, never this module's. Absent means unknown, and
+  // unknown is treated as "too early to say" rather than as "they did not".
+  const viewedAt = entityDate(now);
+  const finishedAt = entityDate(run?.completed_at);
+  const waited = viewedAt && finishedAt
+    ? viewedAt.getTime() - finishedAt.getTime() >= WANT_MORE_WINDOW_DAYS * DAY_MS
+    : false;
+  const outcomeKnown = startedAnother || waited;
+
   r.predicted = predicted;
   r.predicted_text = predictedWord;
-  r.actual_text = startedAnother ? 'started another one' : 'has not started another one';
+  r.actual_text = outcomeKnown
+    ? (startedAnother ? 'started another one' : 'has not started another one')
+    : null;
   r.facts = {
     predicted,
     predicted_word: predictedWord,
@@ -427,18 +571,33 @@ function wantMoreRow(run, measurement) {
     stated_afterwards_word: statedWord,
     started_another: startedAnother,
     started_another_at: text(run?.started_another_at) || null,
+    outcome_known: outcomeKnown,
+    window_days: WANT_MORE_WINDOW_DAYS,
   };
 
   const statedLine = statedWord ? [`Afterwards you said ${statedWord}.`] : [];
 
   if (predictedWord === null) {
     r.status = 'no_prediction';
+    const outcomeLine = outcomeKnown
+      ? [startedAnother ? `You started another one on ${startedOn}.` : 'You have not started another one since.']
+      : [];
     r.lines = [
       ...statedLine,
-      startedAnother
-        ? `You started another one on ${startedOn}.`
-        : 'You have not started another one.',
+      ...outcomeLine,
       'You started without answering the four questions, so there is nothing to put this against.',
+    ];
+    return r;
+  }
+
+  // Nothing has happened yet, and saying so is the whole point of the row.
+  if (!outcomeKnown) {
+    r.status = 'no_outcome';
+    r.lines = [
+      `You predicted ${predictedWord}.`,
+      ...statedLine,
+      'This row counts whether you start another one, and you have only just finished this one. There is nothing to count yet.',
+      'Open this read-out again in a week and it will say what you did.',
     ];
     return r;
   }
@@ -460,7 +619,7 @@ function wantMoreRow(run, measurement) {
     return r;
   }
 
-  r.lines.push('You have not started another one.');
+  r.lines.push('You have not started another one since.');
   if (!agrees) {
     r.lines.push('That is not a criticism. It is why this counts what you did rather than what you said.');
   } else {
@@ -505,13 +664,30 @@ function scoreChecks(run, sim) {
       missing.push({ id: entry.id, criterion: entry.criterion });
       return;
     }
+
+    // A sentence a model wrote is held to rule 4 like anything else. The
+    // validator in work-sim-review.js rejects it before it is ever stored, and
+    // this is the same check at the other end, for a row written before that
+    // guard existed or by anything that bypassed it. A row that fails is
+    // dropped whole into the not-scored list, which is the honest hole the
+    // degraded copy already describes, rather than being edited into something
+    // the model did not say.
+    //
+    // Only model text. A check's detail quotes the student's own writing back
+    // at them verbatim, and a student may write whatever they like.
+    const fromModel = text(res.scored_by) === 'model';
+    if (fromModel && bannedLanguageIn(res.detail).length) {
+      missing.push({ id: entry.id, criterion: entry.criterion });
+      return;
+    }
+
     rows.push({
       id: entry.id,
       criterion: entry.criterion,
       passed: res.passed,
       scored_by: text(res.scored_by) || entry.scored_by || 'checks',
       evidence: text(res.detail)
-        ? { source: text(res.scored_by) === 'model' ? 'model' : 'checks', text: text(res.detail) }
+        ? { source: fromModel ? 'model' : 'checks', text: text(res.detail) }
         : null,
       falsifier: CHECK_FALSIFIERS[entry.id] || null,
     });
@@ -635,6 +811,28 @@ export const LIMITS_BLOCK = Object.freeze({
 // Rule enforcement.
 // ---------------------------------------------------------------------------
 
+/**
+ * Rule 4 against one string, whoever wrote it.
+ *
+ * Exported because the model's two `detail` sentences have to pass the same
+ * check before they are stored, and a second list of banned words in
+ * work-sim-review.js would be a second list to keep in step. Returns every hit,
+ * so a rejection can say which words to avoid.
+ */
+export function bannedLanguageIn(value) {
+  const s = text(value);
+  const found = [];
+  if (!s) return found;
+  BANNED_TRAIT_WORDS.forEach(word => {
+    const re = new RegExp(`\\b${word.replace(/[-\s]/g, '[-\\s]')}\\b`, 'i');
+    if (re.test(s)) found.push({ term: word, string: s });
+  });
+  BANNED_PATTERNS.forEach(p => {
+    if (p.re.test(s)) found.push({ term: p.id, string: s });
+  });
+  return found;
+}
+
 /** Keys whose strings came from somebody other than us, so they are quoted, not written. */
 const QUOTED_KEYS = new Set(['text', 'quote', 'author', 'role']);
 
@@ -663,15 +861,7 @@ export function copyStrings(node, out = [], quoted = false) {
  */
 export function findBannedLanguage(readout) {
   const found = [];
-  copyStrings(readout).forEach(s => {
-    BANNED_TRAIT_WORDS.forEach(word => {
-      const re = new RegExp(`\\b${word.replace(/[-\s]/g, '[-\\s]')}\\b`, 'i');
-      if (re.test(s)) found.push({ term: word, string: s });
-    });
-    BANNED_PATTERNS.forEach(p => {
-      if (p.re.test(s)) found.push({ term: p.id, string: s });
-    });
-  });
+  copyStrings(readout).forEach(s => found.push(...bannedLanguageIn(s)));
   return found;
 }
 
@@ -721,6 +911,11 @@ export function assertRules(readout) {
  * @param {object} [options]
  * @param {object} [options.sim] The simulation content. Defaults to the Northgate sprint.
  * @param {object} [options.reference] The practitioner reference spec, when one exists.
+ * @param {string|Date|number} [options.now] When this read-out is being looked
+ *   at. Supplied by the caller, never read from a clock in here, so this stays
+ *   pure. Only the want-more row uses it, to tell "they have not started
+ *   another one" apart from "they finished ten seconds ago". Leave it out and
+ *   that row says the answer is not in yet.
  */
 export function buildWorkSimReadout(run, measurement, options = {}) {
   const sim = options.sim || NORTHGATE_PM;
@@ -759,12 +954,13 @@ export function buildWorkSimReadout(run, measurement, options = {}) {
         id: 'A',
         heading: 'What you expected, and what happened',
         threshold: PREDICTION_GAP_THRESHOLD,
+        answer_threshold: ENJOYMENT_STEP_THRESHOLD,
         falsifier_label: FALSIFIER_LABEL,
         rows: [
           enjoymentRow(run, measurement),
           energyRow(run, measurement),
           performanceRow(measurement, { ...checks, ...score }),
-          wantMoreRow(run, measurement),
+          wantMoreRow(run, measurement, options.now),
         ],
       },
       checks: checksBlock(checks),

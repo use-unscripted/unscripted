@@ -150,17 +150,17 @@ function Fallback() {
   );
 }
 
-export default function SimReadout({ run, measurement, sim = null, reference = null }) {
+export default function SimReadout({ run, measurement, sim = null, reference = null, now = null }) {
   const readout = useMemo(() => {
     try {
-      return buildWorkSimReadout(run, measurement, { sim, reference });
+      return buildWorkSimReadout(run, measurement, { sim, reference, now });
     } catch {
       // The module throws when its own rules are broken, which is a code defect
       // and not anything a student typed. Better an honest empty screen than a
       // white one.
       return null;
     }
-  }, [run, measurement, sim, reference]);
+  }, [run, measurement, sim, reference, now]);
 
   if (!readout) return <Fallback />;
 

@@ -249,7 +249,15 @@ export function checkRevisionChanged(run, sim = NORTHGATE_PM) {
   const changed = unmatched(w1, w2) + unmatched(w2, w1);
   const size = w1.length + w2.length;
   const ratio = size ? changed / size : 0;
-  const percent = Math.round(ratio * 100);
+
+  // The ratio decides. It never prints. The read-out bans percentages for the
+  // same reason it bans a fit score: a number out of 100 beside a student's
+  // writing reads as a mark, whatever sentence it sits in, and this one is a
+  // count of words that did not pair up rather than a measure of how much the
+  // plan moved. The word count underneath is the honest version of the same
+  // fact, and the falsifier next to it already says this compares words and
+  // not meaning.
+  const wordsMoved = `${changed} ${changed === 1 ? 'word' : 'words'}`;
 
   const moves = [];
   if (dropped.length) moves.push(`took out ${joinList(dropped.map(titleOf))}`);
@@ -259,7 +267,7 @@ export function checkRevisionChanged(run, sim = NORTHGATE_PM) {
     return {
       criterion: 'revision_changed_plan',
       passed: true,
-      detail: `After Priya's message you ${joinList(moves)}. About ${percent}% of the words in the spec changed with it.`,
+      detail: `After Priya's message you ${joinList(moves)}, and ${wordsMoved} of the spec changed with it.`,
       scored_by: 'checks',
     };
   }
@@ -278,8 +286,8 @@ export function checkRevisionChanged(run, sim = NORTHGATE_PM) {
     criterion: 'revision_changed_plan',
     passed,
     detail: passed
-      ? `About ${percent}% of the spec changed between the two versions, and the sprint kept the same items.`
-      : `About ${percent}% of the spec changed between the two versions, and the sprint kept the same items. The wording moved more than the plan did.`,
+      ? `The sprint kept the same items, and ${wordsMoved} of the spec changed between the two versions.`
+      : `The sprint kept the same items, and ${wordsMoved} of the spec changed between the two versions. The wording moved more than the plan did.`,
     scored_by: 'checks',
   };
 }
