@@ -314,9 +314,10 @@ describe('a gap under the threshold, which is a result and not a null state', ()
   });
 
   it('draws it at the same weight as a gap row and gives it no absence label', () => {
-    // Enjoyment averages 6, which is "Neutral", against a prediction of 10,
-    // which is "Loved it": two answers apart, so it is a gap. Energy is 3
-    // against 4, so it is not. Both are claims and both should draw the same.
+    // The two enjoyment readings sit on "Enjoyed it" and "Neutral", which
+    // average out between 5 and 7.75, against a prediction of 10: 2.25 points
+    // outside, so it is a gap. Energy is 3 against 4, so it is not. Both are
+    // claims and both should draw the same.
     draw(baseRun(), measurement({ expected_energy: 4, expected_enjoyment: 10 }));
     const energy = screen.getByTestId('prediction-energy');
     const gapRow = screen.getByTestId('prediction-enjoyment');

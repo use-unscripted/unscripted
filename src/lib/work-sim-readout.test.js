@@ -1,10 +1,12 @@
 import { describe, it, expect } from 'vitest';
 import {
   buildWorkSimReadout,
+  bannedLanguageIn,
   copyStrings,
   findBannedLanguage,
   BANNED_TRAIT_WORDS,
   PREDICTION_GAP_THRESHOLD,
+  REACTION_SCALE,
   FALSIFIER_LABEL,
   LIMITS_BLOCK,
 } from './work-sim-readout';
@@ -266,6 +268,91 @@ describe('the enjoyment row, which is sampled during rather than recalled after'
     const e = rowById(buildWorkSimReadout(run, measurement()), 'enjoyment');
     expect(e.facts.samples.map(s => s.score)).toEqual([8, 4]);
     expect(e.facts.drop_between_samples).toBe(4);
+  });
+});
+
+/**
+ * The prediction is a 1 to 10 tap and the outcome is one of four buttons, so
+ * the comparison has to be honest in both directions at once: it must not
+ * invent a gap out of the spacing of the buttons, and it must not swallow a
+ * real one. An earlier version only managed the first and printed "you called
+ * this one" at a 5.5 point miss, which is the finding the whole slice exists to
+ * report. The reasoning and the sensitivity are written out at REACTION_BANDS.
+ */
+describe('the enjoyment gap, which has to be honest in both directions', () => {
+  const sampled = (a, b) => baseRun({
+    experience_samples: [
+      { at_step: 2, score: a, skipped: false, sampled_at: '2026-08-14T13:11:00.000Z' },
+      { at_step: 4, score: b, skipped: false, sampled_at: '2026-08-14T13:22:00.000Z' },
+    ],
+  });
+  const enjoyment = (predicted, a, b) =>
+    rowById(buildWorkSimReadout(sampled(a, b), measurement({ expected_enjoyment: predicted })), 'enjoyment');
+
+  it('tells a student who predicted 9 and then tapped Neutral twice', () => {
+    const e = enjoyment(9, 5, 5);
+    expect(e.status).toBe('gap');
+    expect(e.scale).toBe('points');
+    expect(e.gap).toBe(-2.5);
+    expect(e.lines).not.toContain('You called this one.');
+    expect(e.lines.join(' ')).toContain('"Neutral" means somewhere between 3.5 and 6.5');
+    expect(e.lines).toContain('Your 9 is 2.5 points above the top of that.');
+  });
+
+  it('tells a student who predicted 6 and then tapped Not for me twice', () => {
+    const e = enjoyment(6, 2, 2);
+    expect(e.status).toBe('gap');
+    expect(e.gap).toBe(-2.5);
+    expect(e.facts.band).toEqual({ low: 1, high: 3.5, answers: ['Not for me', 'Not for me'] });
+    expect(e.lines).not.toContain('You called this one.');
+  });
+
+  it('tells a student who predicted 1 and then enjoyed it more than that', () => {
+    const e = enjoyment(1, 5, 8);
+    expect(e.status).toBe('gap');
+    expect(e.gap).toBe(4);
+    expect(e.actual).toBe(6.5);
+    expect(e.lines).toContain('Your 1 is 4 points below the bottom of that.');
+    expect(e.lines).not.toContain('You called this one.');
+  });
+
+  it('invents no gap out of the spacing of the four buttons', () => {
+    const e = enjoyment(7, 8, 8);
+    expect(e.status).toBe('no_gap');
+    expect(e.gap).toBe(0);
+    expect(e.lines).toContain('Your 7 is inside that.');
+    expect(e.lines).toContain('You called this one.');
+  });
+
+  it('counts the smallest miss the taps can support, never the largest', () => {
+    // "Loved it" cannot mean less than 9, so a predicted 7 is out by 2 and not
+    // by the 3 that subtracting the button's own number would give.
+    const e = enjoyment(7, 10, 10);
+    expect(e.status).toBe('gap');
+    expect(e.gap).toBe(2);
+  });
+
+  it('says it is holding back when a real miss lands under the threshold', () => {
+    const e = enjoyment(8, 5, 5);
+    expect(e.status).toBe('no_gap');
+    expect(e.gap).toBe(-1.5);
+    expect(e.lines.join(' ')).toContain('which is under the 2 points this read-out counts as a gap');
+    expect(e.lines).toContain('You called this one.');
+  });
+
+  it('buries no miss of more than 3 points, on any prediction against any pair of taps', () => {
+    const buried = [];
+    for (let predicted = 1; predicted <= 10; predicted += 1) {
+      REACTION_SCALE.forEach(first => {
+        REACTION_SCALE.forEach(second => {
+          const e = enjoyment(predicted, first.score, second.score);
+          if (e.status === 'no_gap') buried.push(Math.abs(e.actual - predicted));
+        });
+      });
+    }
+    // 3 is the worst case in the comment at REACTION_BANDS: predict 8, tap
+    // "Neutral" twice. The comparison this replaced could bury 5.5.
+    expect(Math.max(...buried)).toBe(3);
   });
 });
 
@@ -695,6 +782,56 @@ describe('rule 4, no trait adjective and no fit score anywhere in the copy', () 
     const r = buildWorkSimReadout(run, measurement());
     expect(findBannedLanguage(r)).toEqual([]);
     expect(r.blocks.comparison.student_spec.text).toContain('good fit for me');
+  });
+
+  /**
+   * The hole a model walks through: none of these four carries a banned word,
+   * a percentage or a verdict, and every one of them was accepted before the
+   * claim patterns existed. The first was accepted for the punctuation alone,
+   * because this project keeps curly apostrophes and the guard only knew the
+   * straight form.
+   */
+  const FLATTERY = [
+    'You’re clearly the kind of person who thinks in systems',
+    'You would be great at this job',
+    'This is the work of a future leader',
+    'This shows real maturity for someone at your stage',
+  ];
+
+  FLATTERY.forEach(sentence => {
+    it(`refuses to print: ${sentence}`, () => {
+      expect(bannedLanguageIn(sentence).length).toBeGreaterThan(0);
+    });
+  });
+
+  /**
+   * And the other direction, which matters just as much: a guard that also
+   * rejects specific feedback about what the student wrote takes the two
+   * model-scored criteria with it. The first two are the criteria themselves,
+   * in the words the rubric uses.
+   */
+  const SPECIFIC = [
+    'you named a problem rather than a feature',
+    'your reply gives a date you cannot keep',
+    'You cut four items in under two minutes and did not go back to them.',
+    'The reply says no clearly and then offers "sometime after this sprint", which is a date it cannot keep.',
+    LIMITS_BLOCK.body,
+  ];
+
+  SPECIFIC.forEach(sentence => {
+    it(`still prints: ${sentence.slice(0, 56)}`, () => {
+      expect(bannedLanguageIn(sentence)).toEqual([]);
+    });
+  });
+
+  it('reads a curly apostrophe as the straight one it stands for', () => {
+    expect(bannedLanguageIn('You’re decisive.').map(x => x.term)).toContain("you're");
+    expect(bannedLanguageIn("You're decisive.").map(x => x.term)).toContain("you're");
+  });
+
+  it('names the construction, so a retry can be told what to drop', () => {
+    expect(bannedLanguageIn('You would be great at this job').map(x => x.term)).toContain('what you would be');
+    expect(bannedLanguageIn('This shows real maturity').map(x => x.term)).toContain('maturity');
   });
 
   it('exempts a check detail, which quotes the student back at them', () => {

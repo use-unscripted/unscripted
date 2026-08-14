@@ -306,6 +306,13 @@ describe('a flattering sentence about the student', () => {
     'You are a natural at seeing what matters here.',
     'The problem statement is thoughtful and shows a methodical mindset.',
     'Your problem statement is about 80% of the way there.',
+    // The four the guard used to let through. The first carries a curly
+    // apostrophe, which is the form a model actually writes and the form this
+    // project keeps, and none of the four carries a banned word at all.
+    'You’re clearly the kind of person who thinks in systems.',
+    'You would be great at this job.',
+    'This is the work of a future leader.',
+    'This shows real maturity for someone at your stage.',
   ].forEach(detail => {
     it(`never reaches the student: ${detail}`, async () => {
       InvokeLLM.mockResolvedValue(flattery(detail));

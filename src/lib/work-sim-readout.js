@@ -44,7 +44,7 @@
  *     actual: number | null, actual_text: string | null,
  *     gap: number | null,          // actual minus predicted, signed
  *     gap_size: number | null,     // the same, unsigned
- *     scale: 'points' | 'answers' | null,  // what `gap` is counted in
+ *     scale: 'points' | null,      // what `gap` is counted in
  *     threshold_applies: boolean,  // false on the want-more row, which is not numeric
  *     clears_threshold: boolean | null,
  *     lines: [string],             // our copy, in reading order
@@ -65,12 +65,12 @@
  *    row that makes a claim is built from numbers that exist, and `assertRules`
  *    throws if a claim row ships with nothing in `facts`.
  * 2. A gap under PREDICTION_GAP_THRESHOLD points is reported as no gap and takes
- *    the "you called this one" branch. One constant, one edit. Enjoyment is the
- *    exception and is compared on the four answers the check-in actually
- *    offered, because subtracting a 1 to 10 prediction from a four button
- *    reading invents a gap out of the spacing of the buttons. The reasoning is
- *    written out at ENJOYMENT_STEP_THRESHOLD and it is worth reading before
- *    anyone puts that subtraction back.
+ *    the "you called this one" branch. One constant, one edit. Enjoyment uses
+ *    the same threshold but measures the gap to the near edge of the range the
+ *    four buttons stand for, because subtracting a 1 to 10 prediction from a
+ *    four button reading invents a gap out of the spacing of the buttons. The
+ *    reasoning, and what a no gap can still be hiding, is written out at
+ *    REACTION_BANDS. Read it before changing either half of that comparison.
  * 3. Every claim carries what would overturn it. `falsifier` is not optional on a
  *    claim row.
  * 4. No trait nouns, no fit score, no percentage, no verdict, and the word "fit"
@@ -96,43 +96,16 @@ import { entityDate } from '@/lib/dates';
  * Product call 6 in docs/simulation-mvp-plan.md: a working default, not agreed.
  * It is one constant on purpose, so changing it is one edit and not a hunt.
  *
- * It applies to energy and to performance, which are both predicted and
- * measured on the same 10 point scale. Enjoyment is not one of them. See
- * ENJOYMENT_STEP_THRESHOLD.
+ * It applies to energy, to performance and to enjoyment. Enjoyment measures the
+ * distance differently, for the reason written out at REACTION_BANDS, but the
+ * number it compares against this threshold is points on the same 1 to 10
+ * scale.
  */
 export const PREDICTION_GAP_THRESHOLD = 2;
 
-/**
- * ENJOYMENT IS NOT COMPARED IN POINTS, AND HERE IS WHY.
- *
- * The prediction is a 1 to 10 tap. The outcome is not: it is two taps on the
- * four button reaction row, which writes 2, 5, 8 or 10 and nothing in between.
- * Those four are 3, 3 and 2 apart, so the smallest move the instrument can
- * express is already at or over PREDICTION_GAP_THRESHOLD. Subtracting one from
- * the other manufactures a gap out of the spacing of the buttons: a student who
- * predicts 7 and then taps the top button twice reads as 10, which is a 3 point
- * miss for having enjoyed it slightly more than the button below.
- *
- * So both halves are put on the instrument that actually measured the outcome.
- * The prediction is placed on whichever of the four answers it sits closest to,
- * the readings are already on it, and the distance is counted in answers rather
- * than in points. One answer apart is the smallest difference these four
- * buttons can show, so it cannot clear the threshold and cannot be told apart
- * from rounding. Two apart is a real move: predicting you would enjoy it and
- * then tapping "Not for me" is exactly the finding this product exists to
- * surface, and it still reports.
- *
- * The cost, stated so nobody rediscovers it as a bug: a 3 point drop that lands
- * one answer away, say a predicted 8 against a tapped "Neutral", reports as no
- * gap. That is the instrument being honest about its own resolution. If a finer
- * reading is wanted, the fix is to ask for enjoyment on the same 1 to 10 scale
- * during the task, not to go back to subtracting two different scales.
- *
- * The raw numbers are all still on the row: `facts.average`, every sample, and
- * `actual_enjoyment` on the measurement. The offline analysis in section 7 of
- * the plan reads those, and it inherits this same caveat.
- */
-export const ENJOYMENT_STEP_THRESHOLD = 2;
+/** The scale every prediction in Block A is made on. */
+const SCALE_MIN = 1;
+const SCALE_MAX = 10;
 
 /**
  * The four answers the during-task check-in offers, ordered, with the score
@@ -152,9 +125,76 @@ export const REACTION_SCALE = [
 ];
 
 /**
+ * ENJOYMENT IS COMPARED AGAINST A RANGE, NOT A POINT, AND HERE IS WHY.
+ *
+ * The prediction is a 1 to 10 tap. The outcome is not: it is a tap on the four
+ * button reaction row, which writes 2, 5, 8 or 10 and nothing in between.
+ * Subtracting one from the other manufactures a gap out of the spacing of the
+ * buttons, because the smallest move those buttons can express is already 2 or
+ * 3 points. Predict 7, tap "Enjoyed it" twice, and a subtraction calls that a
+ * 1 point miss for having enjoyed it exactly as much as you said you would.
+ *
+ * So the outcome is read as what it is, a range. "Enjoyed it" means somewhere
+ * between 6.5 and 9 on the same 1 to 10 scale, the edges sitting halfway
+ * between neighbouring buttons. Two taps give the average of the two ranges,
+ * which is the set of averages those two answers are consistent with. The gap
+ * is the distance from the prediction to the near edge of that range, so it is
+ * the smallest miss the data can support:
+ *
+ *   prediction inside the range        no gap, and it is honest to say so
+ *   outside it by under 2 points       under the threshold, "you called this one"
+ *   outside it by 2 points or more     a gap, in points, on the predicted scale
+ *
+ * BOTH DIRECTIONS MATTER, AND AN EARLIER VERSION OF THIS ONLY GOT ONE OF THEM.
+ * It put the prediction on the nearest of the four answers and counted how many
+ * answers apart the two were. That never invented a gap and it buried real
+ * ones: predicted 9 against two taps of "Neutral" is one answer apart, so it
+ * printed "you called this one" at a 4 point miss, and predicted 1 against
+ * readings averaging 6.5 printed the same at 5.5. Burying that is worse than
+ * the artefact it was solving. The drop between the two readings is the number
+ * this whole slice exists to produce, and a student who predicted 9 and hated
+ * it has to be told so.
+ *
+ * THE SENSITIVITY, so nobody has to rediscover it.
+ *
+ * A no gap here means every value the buttons could have meant is within
+ * PREDICTION_GAP_THRESHOLD of the prediction. Measured against the button's own
+ * number the miss can be larger, by at most the half width of the range it sits
+ * in, which is 1.5 points on the widest of the four. So the arithmetic ceiling
+ * on what "you called this one" can hide is just under 3.5 points, and since
+ * predictions are whole numbers the worst real case is 3: predict 8, tap
+ * "Neutral" twice, a range that stops at 6.5. Nothing wider than that is ever
+ * buried, against 5.5 under the comparison this replaced.
+ *
+ * The other direction is bounded too. The gap printed is the smallest one the
+ * taps are consistent with and never the largest, so 2.5 points reported means
+ * at least 2.5. It is never the button spacing on its own: predict 7, tap
+ * "Loved it" twice, and the gap is 2 points, because the lowest reading that
+ * button can mean is 9.
+ *
+ * If a finer reading is wanted the fix is to ask for enjoyment on the same 1 to
+ * 10 scale during the task. It is not to go back to subtracting two different
+ * scales, and it is not to widen the ranges until nothing reports.
+ *
+ * The raw numbers are all still on the row: `facts.average`, `facts.band` and
+ * every sample. The offline analysis in section 7 of the plan reads those and
+ * inherits this same caveat.
+ */
+export const REACTION_BANDS = REACTION_SCALE.map((option, i) => ({
+  score: option.score,
+  label: option.label,
+  low: i === 0 ? SCALE_MIN : (REACTION_SCALE[i - 1].score + option.score) / 2,
+  high: i === REACTION_SCALE.length - 1 ? SCALE_MAX : (option.score + REACTION_SCALE[i + 1].score) / 2,
+}));
+
+/**
  * Which of the four answers a 1 to 10 number sits on, by whichever score it is
  * closest to. Ties go to the lower answer, which is the conservative direction:
  * it never reports a student as having enjoyed something more than they said.
+ *
+ * The sampling screen only ever writes one of the four scores. This handles
+ * anything else because old rows exist and because a stored number is not a
+ * promise.
  */
 function answerIndex(score) {
   const n = num(score);
@@ -166,7 +206,39 @@ function answerIndex(score) {
   return best;
 }
 
-const answerLabel = (index) => REACTION_SCALE[index]?.label || null;
+/**
+ * The range on the 1 to 10 scale that the readings are consistent with.
+ *
+ * One tap is the range of the button that was tapped. Two taps is the average
+ * of the two ranges, which is exactly the set of averages those two answers
+ * could have produced. A number read off the measurement row rather than off
+ * the buttons is already on the 1 to 10 scale, so its range is the point
+ * itself and the comparison collapses to plain subtraction.
+ */
+function outcomeBand(taken, actual) {
+  if (taken.length) {
+    const bands = taken.map(s => REACTION_BANDS[answerIndex(s.score)]);
+    return {
+      low: round2(bands.reduce((t, b) => t + b.low, 0) / bands.length),
+      high: round2(bands.reduce((t, b) => t + b.high, 0) / bands.length),
+      answers: bands.map(b => b.label),
+    };
+  }
+  if (actual === null) return null;
+  return { low: actual, high: actual, answers: [] };
+}
+
+/**
+ * How far the prediction sits outside the range, signed the way every other row
+ * signs a gap: the outcome minus the prediction, so negative means they enjoyed
+ * it less than they said. Inside the range is zero, because inside the range
+ * there is nothing the buttons can tell apart.
+ */
+function pointsOutside(predicted, band) {
+  if (predicted < band.low) return round2(band.low - predicted);
+  if (predicted > band.high) return round2(band.high - predicted);
+  return 0;
+}
 
 /** The label the UI puts above every `falsifier` string. */
 export const FALSIFIER_LABEL = 'What would change this';
@@ -178,18 +250,24 @@ export const FALSIFIER_LABEL = 'What would change this';
  * is not.
  */
 export const BANNED_TRAIT_WORDS = [
-  'analytical', 'aptitude', 'born', 'creative', 'decisive', 'detail-oriented',
-  'detail oriented', 'diligent', 'driven', 'empathetic', 'gifted', 'instinct',
-  'instincts', 'intuitive', 'methodical', 'meticulous', 'mindset', 'natural',
-  'naturally', 'organised', 'organized', 'personality', 'pragmatic', 'resilient',
-  'strategic', 'strength', 'strengths', 'suited', 'talented', 'temperament',
-  'thoughtful', 'visionary', 'weakness', 'weaknesses', 'well-suited', 'well suited',
+  'admirable', 'analytical', 'aptitude', 'born', 'brilliant', 'calibre',
+  'caliber', 'creative', 'decisive', 'detail-oriented', 'detail oriented',
+  'diligent', 'driven', 'empathetic', 'exceptional', 'exemplary', 'flair',
+  'genius', 'gifted', 'impressive', 'instinct', 'instincts', 'intuitive',
+  'knack', 'leader', 'maturity', 'methodical', 'meticulous', 'mindset',
+  'natural', 'naturally', 'organised', 'organized', 'outstanding',
+  'personality', 'phenomenal', 'pragmatic', 'prodigy', 'remarkable',
+  'resilient', 'stellar', 'strategic', 'strength', 'strengths', 'suited',
+  'superb', 'talented', 'temperament', 'thinker', 'thoughtful', 'visionary',
+  'weakness', 'weaknesses', 'well-suited', 'well suited',
 ];
 
 /**
- * The rest of rule 4, as patterns. The word "fit" is matched on its own only:
- * a sprint that fits its capacity is arithmetic, and a person who fits a career
- * is the claim this product exists to not make.
+ * The rest of rule 4, as patterns, matched on the normalised text.
+ *
+ * The word "fit" is matched on its own only: a sprint that fits its capacity is
+ * arithmetic, and a person who fits a career is the claim this product exists
+ * to not make.
  */
 const BANNED_PATTERNS = [
   { id: 'the word fit', re: /\bfit\b/i },
@@ -205,10 +283,77 @@ const BANNED_PATTERNS = [
   { id: 'an em dash or en dash', re: new RegExp('[\\u2014\\u2013]') },
 ];
 
+/**
+ * FLATTERY THE WORD LIST CANNOT SEE, WHICH IS THE HOLE A MODEL WALKS THROUGH.
+ *
+ * "You would be great at this job" carries no banned word, no percentage and no
+ * verdict, and it is the purest horoscope in the set. So does "this is the work
+ * of a future leader" and "this shows real maturity for someone at your stage".
+ * Every one of those was accepted before these patterns existed and would have
+ * printed to a student verbatim.
+ *
+ * The test is the one the rest of the read-out already runs on itself: a
+ * statement about the student needs a number or a quote attached to it. These
+ * patterns catch the constructions that make a statement about the student with
+ * neither, and they are deliberately shaped around the construction rather than
+ * around the compliment, because the compliments are infinite and the sentence
+ * shapes are not.
+ *
+ * They must not swallow specific feedback about what the student wrote. "You
+ * named a problem rather than a feature" and "your reply gives a date you
+ * cannot keep" are the whole point of the two model-scored criteria, and both
+ * pass. That is why none of these match a bare verb about what somebody did.
+ *
+ * Matched on the normalised text with disclaimer clauses taken out first: Block
+ * D says "it does not tell you whether you would be good at the job", which is
+ * this module promising not to make the claim rather than making it.
+ */
+const BANNED_CLAIM_PATTERNS = [
+  { id: 'what you would be', re: /\byou\s+(?:would|will|could|'d)\s+(?:be|make|become)\b/i },
+  { id: 'how far you would go', re: /\byou\s+(?:would|will|could|'d)\s+(?:excel|thrive|flourish|go\s+far|do\s+well|do\s+great)\b/i },
+  { id: 'the kind of person', re: /\bthe\s+(?:kind|sort|type)\s+of\s+(?:person|student|people|someone|one)\b/i },
+  { id: 'the work of somebody', re: /\bthe\s+work\s+of\s+(?:a|an|someone|somebody)\b/i },
+  { id: 'what this shows about you', re: /\b(?:shows|showed|demonstrates|demonstrated|reveals|revealed|reflects|speaks\s+to)\s+(?:real|genuine|true|serious|clear|strong|a\s+lot\s+of|how\s+much)\b/i },
+  { id: 'good for somebody at your stage', re: /\bfor\s+(?:someone|somebody|a\s+student|anyone)\s+(?:at|of|in|with)\s+(?:your|this)\b/i },
+  { id: 'what you have in you', re: /\byou\s+have\s+(?:real|genuine|natural|serious|great|rare|strong|clear)\b/i },
+  { id: 'what you have an eye for', re: /\byou\s+have\s+(?:a|an)\s+(?:real|natural|genuine|rare|great|good|strong|clear|keen|sharp)\b/i },
+];
+
+/**
+ * Clauses that say what is NOT being claimed, which is the opposite of a claim
+ * and has to be readable without tripping the guard. Taken out before the claim
+ * patterns run, and only before those: a trait word inside a disclaimer is
+ * still a trait word on the screen.
+ */
+const HEDGE_CLAUSE = /\b(?:whether|if)\b[^.,;:!?]*/gi;
+
+/**
+ * Curly punctuation, normalised to its straight form before anything is matched.
+ *
+ * This project keeps curly apostrophes on purpose, so "you're" written properly
+ * is what a model actually produces, and a guard that only knew the straight
+ * form let the single most common horoscope opener through. The dashes are left
+ * alone: they are banned rather than normalised, and the pattern above is what
+ * catches them.
+ */
+const CURLY_APOSTROPHES = /[‘’‛ʼʹ′´`]/g;
+const CURLY_QUOTES = /[“”„‟″«»]/g;
+
+/** One spelling and one spacing, so the patterns only have to know one form. */
+export function normaliseForMatching(value) {
+  return text(value)
+    .replace(CURLY_APOSTROPHES, "'")
+    .replace(CURLY_QUOTES, '"')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 const num = (v) => (typeof v === 'number' && Number.isFinite(v) ? v : null);
 const text = (v) => (typeof v === 'string' ? v : '');
 const list = (v) => (Array.isArray(v) ? v : []);
 const round1 = (v) => Math.round(v * 10) / 10;
+/** Band edges land on quarters once two ranges are averaged, so they get two places. */
+const round2 = (v) => Math.round(v * 100) / 100;
 const cap = (s) => (s ? s[0].toUpperCase() + s.slice(1) : s);
 
 /** Small numbers as words, so a sentence does not open on a numeral. */
@@ -269,9 +414,10 @@ function row(id, label, falsifier, extra) {
     actual_text: null,
     gap: null,
     gap_size: null,
-    // What `gap` is counted in. Energy and performance are points on the 1 to
-    // 10 scale. Enjoyment is answers on the four button row, for the reason
-    // written out at ENJOYMENT_STEP_THRESHOLD. Wanting another is neither.
+    // What `gap` is counted in. Points on the 1 to 10 scale for enjoyment,
+    // energy and performance, though enjoyment measures the distance to a
+    // range rather than to a number: see REACTION_BANDS. Wanting another is
+    // neither, and says so with `scale: null`.
     scale: 'points',
     threshold_applies: true,
     clears_threshold: null,
@@ -357,21 +503,19 @@ function enjoymentRow(run, measurement) {
     return r;
   }
 
-  // Both halves on the four answers the check-in offered, never one minus the
-  // other. The long comment on ENJOYMENT_STEP_THRESHOLD is the reasoning.
-  const predictedIndex = answerIndex(predicted);
-  const actualIndex = answerIndex(actual);
-  const steps = actualIndex - predictedIndex;
-  const stepSize = Math.abs(steps);
+  // The prediction against the range the taps stand for, never against their
+  // midpoint. The long comment on REACTION_BANDS is the reasoning, and it also
+  // says what a "you called this one" here can still be hiding.
+  const band = outcomeBand(taken, actual);
+  const gap = pointsOutside(predicted, band);
+  const size = Math.abs(gap);
 
-  r.scale = 'answers';
-  r.gap = steps;
-  r.gap_size = stepSize;
-  r.clears_threshold = stepSize >= ENJOYMENT_STEP_THRESHOLD;
+  r.gap = gap;
+  r.gap_size = size;
+  r.clears_threshold = size >= PREDICTION_GAP_THRESHOLD;
   r.status = r.clears_threshold ? 'gap' : 'no_gap';
-  r.facts.predicted_answer = answerLabel(predictedIndex);
-  r.facts.answers_apart = steps;
-  r.facts.step_threshold = ENJOYMENT_STEP_THRESHOLD;
+  r.facts.band = band;
+  r.facts.points_outside_band = gap;
 
   r.lines = [`You predicted ${predicted}.`, ...readings];
 
@@ -380,16 +524,30 @@ function enjoymentRow(run, measurement) {
   }
   if (taken.length > 1) r.lines.push(`Across the two you averaged ${actual}.`);
 
-  const predictedAnswer = answerLabel(predictedIndex);
-  const lands = `Your ${predicted} lands on "${predictedAnswer}", one of the four answers you had during the task.`;
-  if (r.status === 'gap') {
-    r.lines.push(
-      `${lands} What you tapped was ${countWord(stepSize)} ${stepSize === 1 ? 'answer' : 'answers'} ${gapWord(steps, 'below', 'above')} that.`
-    );
-  } else if (stepSize > 0) {
-    r.lines.push(`${lands} What you tapped was the answer next to it, and one either way is as close as these four get.`);
+  const answers = [...new Set(band.answers)];
+  const range = `between ${band.low} and ${band.high} on the 1 to 10 scale you used`;
+  if (answers.length === 1) {
+    r.lines.push(`"${answers[0]}" means somewhere ${range}.`);
+  } else if (answers.length > 1) {
+    r.lines.push(`${band.answers.map(a => `"${a}"`).join(' and then ')} average out somewhere ${range}.`);
+  }
+
+  const where = gap > 0 ? 'below the bottom' : 'above the top';
+  const points = `${size} ${size === 1 ? 'point' : 'points'}`;
+  if (!band.answers.length) {
+    // No taps, so the reading came off the measurement row as a plain number
+    // and there is no range to talk about.
+    if (r.status === 'gap') {
+      r.lines.push(`That is ${points} ${gapWord(gap, 'lower', 'higher')} than you expected.`);
+    }
+  } else if (size === 0) {
+    r.lines.push(`Your ${predicted} is inside that.`);
+  } else if (r.status === 'gap') {
+    r.lines.push(`Your ${predicted} is ${points} ${where} of that.`);
   } else {
-    r.lines.push(`${lands} That is what you tapped.`);
+    r.lines.push(
+      `Your ${predicted} is ${points} ${where} of that, which is under the ${PREDICTION_GAP_THRESHOLD} points this read-out counts as a gap.`
+    );
   }
 
   // The move between the two readings is its own fact. It is the number nobody
@@ -820,15 +978,20 @@ export const LIMITS_BLOCK = Object.freeze({
  * so a rejection can say which words to avoid.
  */
 export function bannedLanguageIn(value) {
-  const s = text(value);
+  const raw = text(value);
   const found = [];
-  if (!s) return found;
+  if (!raw) return found;
+  const s = normaliseForMatching(raw);
+  const claims = s.replace(HEDGE_CLAUSE, ' ');
   BANNED_TRAIT_WORDS.forEach(word => {
     const re = new RegExp(`\\b${word.replace(/[-\s]/g, '[-\\s]')}\\b`, 'i');
-    if (re.test(s)) found.push({ term: word, string: s });
+    if (re.test(s)) found.push({ term: word, string: raw });
   });
   BANNED_PATTERNS.forEach(p => {
-    if (p.re.test(s)) found.push({ term: p.id, string: s });
+    if (p.re.test(s)) found.push({ term: p.id, string: raw });
+  });
+  BANNED_CLAIM_PATTERNS.forEach(p => {
+    if (p.re.test(claims)) found.push({ term: p.id, string: raw });
   });
   return found;
 }
@@ -954,7 +1117,7 @@ export function buildWorkSimReadout(run, measurement, options = {}) {
         id: 'A',
         heading: 'What you expected, and what happened',
         threshold: PREDICTION_GAP_THRESHOLD,
-        answer_threshold: ENJOYMENT_STEP_THRESHOLD,
+        answer_bands: REACTION_BANDS,
         falsifier_label: FALSIFIER_LABEL,
         rows: [
           enjoymentRow(run, measurement),
