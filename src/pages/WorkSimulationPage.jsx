@@ -23,6 +23,14 @@
  * dropped the next time the page is opened. Either way the row keeps the step
  * they left at and every sample they had already given, and no Experiments row
  * is ever created for it.
+ *
+ * **The one model call happens after the run is saved, and this page waits for
+ * it rather than for anything the student typed.** `completeRun` writes
+ * everything and hands back a promise for the two model-scored checks. The
+ * short screen between the last question and the read-out is that wait, capped
+ * at `REVIEW_WAIT_MS` and skippable. Missing the deadline is not a failure: the
+ * read-out draws with three checks and says which two are absent, and the call
+ * still lands on the row if it answers late.
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
@@ -31,7 +39,7 @@ import { Sk } from '@/components/PageSkeleton';
 import { NORTHGATE_PM } from '@/lib/work-sims/northgate-pm';
 import {
   startRun, saveStep, recordSample, abandonRun, completeRun, saveSimPredictions,
-  loadRuns, closeStaleRuns,
+  loadRuns, closeStaleRuns, REVIEW_WAIT_MS,
 } from '@/lib/work-sim';
 import SimSetup from '@/components/worksim/SimSetup';
 import SimInbox from '@/components/worksim/SimInbox';
@@ -41,6 +49,7 @@ import SimRevision from '@/components/worksim/SimRevision';
 import SimReply from '@/components/worksim/SimReply';
 import SimSample from '@/components/worksim/SimSample';
 import SimAfter from '@/components/worksim/SimAfter';
+import SimScoring from '@/components/worksim/SimScoring';
 import SimReadout from '@/components/worksim/SimReadout';
 
 const SIM = NORTHGATE_PM;
@@ -56,7 +65,7 @@ const STEP_OF = {
   step2: 2, sample1: 2,
   step3: 3,
   step4a: 4, sample2: 4, step4b: 4,
-  step5: 5, after: 5,
+  step5: 5, after: 5, scoring: 5,
 };
 
 const now = () => Date.now();
@@ -90,9 +99,16 @@ export default function WorkSimulationPage() {
   const runRef = useRef(null);
   const stageRef = useRef('setup');
   const finishedRef = useRef(false);
+  // Set once the page is gone, so a review that answers after the student has
+  // navigated away does not write into a component nobody is looking at.
+  const aliveRef = useRef(true);
+  // The one-shot that ends the wait for the review, whichever of the three
+  // things ends it: the answer arriving, the deadline, or the student's button.
+  const stopWaitingRef = useRef(null);
 
   useEffect(() => { runRef.current = run; }, [run]);
   useEffect(() => { stageRef.current = stage; }, [stage]);
+  useEffect(() => () => { aliveRef.current = false; }, []);
 
   const selected = useMemo(
     () => SIM.backlog.items.filter(i => decisions[i.id] === 'in').map(i => i.id),
@@ -173,12 +189,44 @@ export default function WorkSimulationPage() {
     setStage(next);
   });
 
+  /**
+   * Wait for the two model-scored checks, then draw the read-out.
+   *
+   * Whichever of the three ends the wait, the read-out that follows is final
+   * for this visit. A late answer is deliberately not swapped in underneath
+   * somebody who is already reading: it still lands on the row, so it is there
+   * the next time the run is opened, and no second call is ever bought for it.
+   */
+  const waitForReview = useCallback((review) => {
+    if (!review?.then) { setStage('done'); return; }
+
+    let settled = false;
+    let deadline = null;
+    const stop = (upgraded) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(deadline);
+      stopWaitingRef.current = null;
+      if (!aliveRef.current) return;
+      if (upgraded?.run) {
+        setRun(upgraded.run);
+        setMeasurement(upgraded.measurement);
+      }
+      setStage('done');
+    };
+
+    stopWaitingRef.current = () => stop(null);
+    deadline = setTimeout(() => stop(null), REVIEW_WAIT_MS);
+    review.then(stop, () => stop(null));
+  }, []);
+
   const finish = () => guard(async () => {
     const result = await completeRun({ run: runRef.current, answers: post, sim: SIM });
     finishedRef.current = true;
     setRun(result.run);
     setMeasurement(result.measurement);
-    setStage('done');
+    setStage('scoring');
+    waitForReview(result.review);
   });
 
   const decide = (itemId, value) => setDecisions(d => ({ ...d, [itemId]: value }));
@@ -196,7 +244,9 @@ export default function WorkSimulationPage() {
   }
 
   const step = STEP_OF[stage];
-  const stepMeta = SIM.steps.find(s => s.number === step);
+  // The wait for the review is not a step and must not be labelled as one. The
+  // student has finished; nothing more is being asked of them.
+  const stepMeta = stage === 'scoring' ? null : SIM.steps.find(s => s.number === step);
 
   return (
     <main className="app-page">
@@ -348,6 +398,10 @@ export default function WorkSimulationPage() {
               onFinish={finish}
               busy={busy}
             />
+          )}
+
+          {stage === 'scoring' && (
+            <SimScoring onSkip={() => stopWaitingRef.current?.()} />
           )}
         </div>
         )}

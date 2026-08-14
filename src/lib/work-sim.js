@@ -29,12 +29,24 @@
 import { base44 } from '@/api/base44Client';
 import { NORTHGATE_PM } from '@/lib/work-sims/northgate-pm';
 import { runWorkSimChecks } from '@/lib/work-sim-checks';
+import { scoreSimulationRun } from '@/lib/work-sim-review';
 import { cycleLinks } from '@/lib/career-cycle';
 import { savePreMeasurement, savePostMeasurement } from '@/lib/experiment-measurement';
 import { trackPilotEvent } from '@/lib/pilot-metrics';
 
 /** The five steps, so a caller can ask "is this the last one" without a magic number. */
 export const LAST_STEP = 5;
+
+/**
+ * How long the page holds the read-out back waiting for the review.
+ *
+ * The review is one model call with a small prompt, and `generateValidated` is
+ * allowed one retry, so the realistic worst case is somewhere in the twenties.
+ * This is set below that on purpose: past twenty seconds the read-out is worth
+ * more to the student than the two extra checks are, and the call keeps running
+ * either way, so a late answer still lands on the row.
+ */
+export const REVIEW_WAIT_MS = 20000;
 
 const list = (v) => (Array.isArray(v) ? v : []);
 
@@ -205,13 +217,64 @@ export function sampledEnjoyment(run) {
 }
 
 /**
+ * The two model-scored criteria, added to a run that is already saved.
+ *
+ * Called by `completeRun` and by nothing else, at the very end, after every
+ * write that holds a student's work has already landed. That order is the
+ * point of this function existing separately: a model that is unreachable, slow
+ * or hanging costs two criteria and nothing more. Put the call in front of the
+ * save and a closed tab costs somebody thirty minutes of work.
+ *
+ * **Idempotent, on the same guard the rest of the app uses.**
+ * `system_evaluated_at` on the measurement row is what `evaluateExperimentWork`
+ * already treats as "already done", and it means the same thing here: set, and
+ * this returns without calling anything. The model rows on `check_results` are
+ * the second guard, for the case where the measurement write failed and there
+ * was nowhere to stamp. Reloading a finished read-out, or opening it twice,
+ * therefore buys no second call.
+ *
+ * Returns the upgraded rows, or `null` when nothing changed: the review failed,
+ * timed out inside the SDK, returned nothing usable, or had already run. `null`
+ * leaves the run holding exactly its three computed checks and the measurement
+ * with no `system_evaluated_at`, which is the state a later backfill reads.
+ * Never rejects.
+ */
+export async function reviewCompletedRun({ run, measurement = null, sim = NORTHGATE_PM }) {
+  if (!run?.id || run.status !== 'completed') return null;
+  if (measurement?.system_evaluated_at) return null;
+  if (list(run.check_results).some(r => r?.scored_by === 'model')) return null;
+
+  let scored;
+  try {
+    scored = await scoreSimulationRun(run, { sim });
+  } catch {
+    return null;
+  }
+  if (!scored?.model_scored) return null;
+
+  const at = new Date().toISOString();
+  await base44.entities.WorkSimulationRun
+    .update(run.id, { check_results: scored.check_results }).catch(() => null);
+
+  let stamped = measurement;
+  if (measurement?.id) {
+    stamped = { ...measurement, system_evaluated_at: at };
+    await base44.entities.ExperimentMeasurement
+      .update(measurement.id, { system_evaluated_at: at }).catch(() => null);
+  }
+
+  return { run: { ...run, check_results: scored.check_results }, measurement: stamped };
+}
+
+/**
  * The end of a run: the three model-free checks, the Experiments row this
  * becomes, the measurement, the proof of work, and the passive signal.
  *
- * The two model-scored criteria are not merged here. `work-sim-review.js` runs
- * after this resolves, against the saved row, so a model that is unreachable
- * costs the student nothing and loses none of their work. Until it exists,
- * `check_results` holds three rows and the read-out says three of five.
+ * The two model-scored criteria are not merged in here. They are started on the
+ * last line, once every write above has landed, and handed back as the `review`
+ * promise so the page can draw the read-out without waiting on a model. The
+ * work is durable before the call is made, and that ordering is the whole
+ * reason this function returns a promise instead of awaiting one.
  */
 export async function completeRun({ run, answers = /** @type {any} */ ({}), sim = NORTHGATE_PM }) {
   const checks = runWorkSimChecks(run, sim);
@@ -298,5 +361,11 @@ export async function completeRun({ run, answers = /** @type {any} */ ({}), sim 
     dedupe_key: run.id,
   });
 
-  return { run: completedRun, experiment, measurement };
+  // Last line, deliberately. Everything a student typed is on the server by the
+  // time this starts, so the call below can fail, hang or never answer and the
+  // only thing lost is two of the five checks. Not awaited: the caller gets the
+  // saved run straight away and decides for itself how long to wait.
+  const review = reviewCompletedRun({ run: completedRun, measurement, sim }).catch(() => null);
+
+  return { run: completedRun, experiment, measurement, review };
 }
