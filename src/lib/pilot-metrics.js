@@ -19,6 +19,13 @@ export const PILOT_EVENTS = [
   'proof_submitted', 'reflection_started', 'reflection_completed',
   'final_decision_submitted', 'cycle_completed', 'second_cycle_attempted',
   'continuation_interest_recorded', 'seven_day_return', 'thirty_day_return',
+  // Work simulations. These four are the completion count, and they are read
+  // off PilotEvent rather than off WorkSimulationRun because that entity is
+  // student owned with no admin read and should stay that way. `value` on the
+  // abandoned event carries the step they left at, which is what says whether a
+  // low completion rate is the concept or one hard step.
+  'simulation_started', 'simulation_completed', 'simulation_abandoned',
+  'simulation_second_started',
 ];
 
 /** Cheap in-tab guard so a re-render cannot double-write the same once-only event. */

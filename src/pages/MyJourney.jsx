@@ -17,6 +17,7 @@ import PathComparisonWorkspace from '@/components/journey/PathComparisonWorkspac
 import PathSelectedConfirm from '@/components/journey/PathSelectedConfirm';
 import JourneyEmptyState from '@/components/journey/JourneyEmptyState';
 import NextBestExperimentPanel from '@/components/next-test/NextBestExperimentPanel';
+import SimEntryCard from '@/components/worksim/SimEntryCard';
 import JourneyEvidence from '@/components/journey/JourneyEvidence';
 import CampusEventsPanel from '@/components/campus/CampusEventsPanel';
 import ContinuationGate from '@/components/journey/ContinuationGate';
@@ -226,6 +227,14 @@ export default function MyJourney() {
           action, and burying it inside the Experiments page would make it a
           feature rather than the way the loop continues. */}
       <NextBestExperimentPanel />
+
+      {/* Thirty minutes of one job, offered to every student rather than only
+          the ones whose paths happen to be product shaped. Whether the mechanic
+          works at all is the thing being tested, and gating it leaves too few
+          students to find out. The card carries the framing itself. */}
+      <Reveal y={20}>
+        <SimEntryCard />
+      </Reveal>
 
       {/* Then the evidence: which careers currently look worth testing, what
           moved since last time, and what we are still learning. It sits under
