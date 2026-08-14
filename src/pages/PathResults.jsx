@@ -40,7 +40,7 @@ function PathCard({ rec, index, onStart, starting, disabled }) {
         <div className="flex items-start justify-between gap-4 mb-4">
           <div>
             <div className="flex flex-wrap items-center gap-2 mb-2">
-              <span className="tp-meta rounded-full px-3 py-1 font-bold" style={labelStyle}>{LABELS[index] || 'Path option'}</span>
+              <span className="tp-meta rounded-full px-3 py-1 font-bold" style={labelStyle}>{rec.contrast_role || LABELS[index] || 'Hypothesis'}</span>
               {rec.confidence_level && (
                 <span className="tp-meta font-semibold" style={{ color: CONFIDENCE_COLOR[rec.confidence_level] }}>
                   {CONFIDENCE_LABEL[rec.confidence_level]}
@@ -88,6 +88,45 @@ function PathCard({ rec, index, onStart, starting, disabled }) {
                 <p className="tp-prose text-[color:var(--ink-700)]">{rec.main_tradeoffs}</p>
               </div>
             )}
+            {rec.what_we_know?.length > 0 && (
+              <div>
+                <p className="tp-eyebrow text-[color:var(--ink-500)] mb-1.5">What we know</p>
+                <ul className="space-y-1">
+                  {rec.what_we_know.map((k, i) => (
+                    <li key={i} className="tp-body text-[color:var(--ink-700)]">· {k.text || k}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {rec.unresolved_questions?.length > 0 && (
+              <div className="rounded-[var(--r-control)] p-4" style={{ background: 'var(--ink-50)', border: '1px solid var(--border-light)' }}>
+                <p className="tp-eyebrow text-[color:var(--ink-500)] mb-1.5">What we do not know yet</p>
+                <ul className="space-y-1.5">
+                  {rec.unresolved_questions.map((q, i) => (
+                    <li key={i}>
+                      <p className="tp-body font-semibold text-[color:var(--ink-700)]">{q.question}</p>
+                      {q.why_it_matters && <p className="tp-meta text-[color:var(--ink-400)]">{q.why_it_matters}</p>}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {rec.assumptions?.length > 0 && (
+              <div>
+                <p className="tp-eyebrow text-[color:var(--ink-500)] mb-1.5">Assumptions being made</p>
+                <ul className="space-y-1">
+                  {rec.assumptions.map((a, i) => (
+                    <li key={i} className="tp-body text-[color:var(--ink-700)]">· {a}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {rec.confidence_explanation && (
+              <div>
+                <p className="tp-eyebrow text-[color:var(--ink-500)] mb-1.5">Why confidence is where it is</p>
+                <p className="tp-prose text-[color:var(--ink-700)]">{rec.confidence_explanation}</p>
+              </div>
+            )}
             {rec.current_gaps?.length > 0 && (
               <div>
                 <p className="tp-eyebrow text-[color:var(--ink-500)] mb-2">Main skill gaps</p>
@@ -116,7 +155,7 @@ function PathCard({ rec, index, onStart, starting, disabled }) {
         >
           {starting
             ? <><Loader2 size={16} className="animate-spin" /> Starting…</>
-            : <><Rocket size={16} /> Start This 30-Day Test</>}
+            : <><Rocket size={16} /> Test This Hypothesis</>}
         </button>
       </div>
     </div>
@@ -203,9 +242,9 @@ export default function PathResults() {
         </div>
 
         <div className="mb-3">
-          <h1 className="tp-page mt-2 text-[color:var(--surface-dark-900)]">Three paths worth testing.</h1>
+          <h1 className="tp-page mt-2 text-[color:var(--surface-dark-900)]">Three career hypotheses.</h1>
           <p className="tp-lead mt-3 text-[color:var(--ink-500)]">
-            These are working hypotheses, not conclusions. None of them is objectively correct. Your job is to test the primary one and use what you learn to update your assessment.
+            A career hypothesis is a direction worth testing, not a prediction of what you should become. Each one below says why it may fit, why it may not, and what only real experience can tell you.
           </p>
         </div>
 

@@ -1,5 +1,5 @@
 import { FlaskConical, HelpCircle } from 'lucide-react';
-import { HYPOTHESIS_STATUS_LABELS } from '@/lib/career-hypothesis';
+import { HYPOTHESIS_STATUS_LABELS, HYPOTHESIS_STATUS_MEANING, NOT_YET_ASSESSED } from '@/lib/career-hypothesis';
 import CareerUncertaintyMap from '@/components/paths/CareerUncertaintyMap';
 import FitBreakdown from '@/components/paths/FitBreakdown';
 import DimensionProgress from '@/components/paths/DimensionProgress';
@@ -60,13 +60,18 @@ export default function CareerHypothesisPanel({ pathName, hypothesis, path, sign
           <FlaskConical size={12} /> Career hypothesis
         </span>
         <span className="tp-meta rounded-full px-2.5 py-0.5 font-bold" style={{ background: 'white', color: 'var(--brand-navy-900)' }}>
-          {HYPOTHESIS_STATUS_LABELS[h.hypothesis_status] || 'Suggested'}
+          {HYPOTHESIS_STATUS_LABELS[h.hypothesis_status] || 'Untested'}
         </span>
       </div>
 
       <p className="tp-body mt-2 font-semibold text-[color:var(--surface-dark-900)]">{pathName}</p>
       <p className="tp-meta mt-1 text-[color:var(--ink-500)]">
-        This looks worth testing based on what we know about you so far. It is not a verdict.
+        A career hypothesis is a direction worth testing, not a prediction of what you should become.
+        {' '}{HYPOTHESIS_STATUS_MEANING[h.hypothesis_status] || ''}
+      </p>
+      <p className="tp-meta mt-1 text-[color:var(--ink-400)]">
+        {h.experiments_completed} experiment{h.experiments_completed === 1 ? '' : 's'} completed
+        {' · '}{h.evidence_collected} piece{h.evidence_collected === 1 ? '' : 's'} of evidence collected
       </p>
 
       <div className="mt-4 flex flex-wrap gap-5">
@@ -114,6 +119,58 @@ export default function CareerHypothesisPanel({ pathName, hypothesis, path, sign
             </>
           )}
         />
+
+        <Bullets
+          title="What we know"
+          items={h.what_we_know}
+          render={(it) => (
+            <>
+              {it.text}
+              {it.source && <span className="tp-meta text-[color:var(--ink-400)]"> ({it.source})</span>}
+            </>
+          )}
+        />
+
+        {!h.what_we_know?.length && (
+          <p className="tp-meta text-[color:var(--ink-400)]">What we know: {NOT_YET_ASSESSED}.</p>
+        )}
+
+        <Bullets title="Assumptions being made" items={h.assumptions} render={(it) => it} />
+
+        <Bullets
+          title="What people in this work have told you"
+          items={h.human_reality_insights}
+          render={(it) => (
+            <>
+              {it.insight}
+              {it.source && <span className="tp-meta text-[color:var(--ink-400)]"> ({it.source})</span>}
+            </>
+          )}
+        />
+
+        {(path?.main_tradeoffs || path?.lifestyle_implications) && (
+          <div className="grid gap-4 sm:grid-cols-2">
+            {path.main_tradeoffs && (
+              <div>
+                <p className="tp-eyebrow text-[color:var(--ink-500)] mb-2">Important tradeoffs</p>
+                <p className="tp-body text-[color:var(--ink-700)]">{path.main_tradeoffs}</p>
+              </div>
+            )}
+            {path.lifestyle_implications && (
+              <div>
+                <p className="tp-eyebrow text-[color:var(--ink-500)] mb-2">Lifestyle considerations</p>
+                <p className="tp-body text-[color:var(--ink-700)]">{path.lifestyle_implications}</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {path?.confidence_explanation && (
+          <div>
+            <p className="tp-eyebrow text-[color:var(--ink-500)] mb-2">Why confidence is where it is</p>
+            <p className="tp-body text-[color:var(--ink-700)]">{path.confidence_explanation}</p>
+          </div>
+        )}
 
         <Bullets
           title="Evidence against this"

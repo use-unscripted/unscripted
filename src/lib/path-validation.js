@@ -93,6 +93,40 @@ export const missionStepSchema = {
   }
 };
 
+/** A hypothesis needs at least this many unknowns, and at most this many. */
+export const MIN_UNKNOWNS = 3;
+export const MAX_UNKNOWNS = 6;
+
+/**
+ * How similar two hypothesis names may be before the set stops offering real
+ * contrast. Measured as shared significant words over total distinct words.
+ */
+const MAX_NAME_OVERLAP = 0.6;
+
+const NAME_STOPWORDS = new Set(['and', 'or', 'the', 'a', 'an', 'of', 'for', 'in', 'at', 'to', 'with', 'on']);
+
+function nameTokens(name) {
+  return new Set(
+    name.toLowerCase().replace(/[^a-z0-9\s]/g, ' ').split(/\s+/)
+      .filter(w => w.length > 2 && !NAME_STOPWORDS.has(w))
+  );
+}
+
+function nameOverlap(a, b) {
+  const [x, y] = [nameTokens(a), nameTokens(b)];
+  if (!x.size || !y.size) return 0;
+  const shared = [...x].filter(w => y.has(w)).length;
+  return shared / new Set([...x, ...y]).size;
+}
+
+export const unknownSchema = {
+  type: 'object',
+  properties: {
+    question: { type: 'string' },
+    why_it_matters: { type: 'string' },
+  }
+};
+
 export const pathRecSchema = {
   type: 'object',
   properties: {
@@ -101,6 +135,14 @@ export const pathRecSchema = {
     concern: str,
     lifestyle_implications: str,
     main_tradeoffs: str,
+    // The hypothesis structure. what_we_know is what the student's own answers
+    // establish; assumptions are the untested beliefs it rests on; unknowns are
+    // the questions only real experience can answer.
+    contrast_role: str,
+    what_we_know: strArr,
+    assumptions: strArr,
+    unknowns: { type: 'array', items: unknownSchema, minItems: MIN_UNKNOWNS, maxItems: MAX_UNKNOWNS },
+    confidence_explanation: str,
     // Bounded here as well as in the validator. The schema is the cheap ask —
     // it costs a retry only when the model ignores it — and 261 live rows were
     // written before anything stated the scale at all.
@@ -211,10 +253,41 @@ function validateRecommendation(rec, index, ctx) {
     return null;
   }
 
-  const confidence = cleanString(rec.confidence_level).toLowerCase();
+  // Unknowns are the whole point of a hypothesis: without them there is nothing
+  // to test, and the card would read as a recommendation.
+  const unknowns = (Array.isArray(rec.unknowns) ? rec.unknowns : [])
+    .map(u => (typeof u === 'string'
+      ? { question: cleanString(u), why_it_matters: '' }
+      : { question: cleanString(u?.question), why_it_matters: cleanString(u?.why_it_matters) }))
+    .filter(u => u.question);
+
+  if (unknowns.length < MIN_UNKNOWNS) {
+    ctx.fail(
+      'rec_too_few_unknowns',
+      `${label}: only ${unknowns.length} usable entries in "unknowns". Give ${MIN_UNKNOWNS} to ${MAX_UNKNOWNS} questions that can only be answered by real experience, not by another questionnaire. Each needs a "question" and a "why_it_matters".`
+    );
+    return null;
+  }
+
+  if (!cleanString(rec.concern)) {
+    ctx.fail(
+      'rec_missing_concern',
+      `${label}: missing "concern". Every hypothesis must say why it may NOT fit as well as why it may.`
+    );
+    return null;
+  }
+
   const risk = cleanString(rec.risk_level).toLowerCase();
+  let confidence = cleanString(rec.confidence_level).toLowerCase();
   if (!LEVELS.includes(confidence)) {
-    ctx.warn(`${label}: unusable confidence_level; defaulted to medium.`);
+    ctx.warn(`${label}: unusable confidence_level; defaulted to low.`);
+    confidence = 'low';
+  }
+  // Onboarding self-report is not behavioural proof, so an initial hypothesis
+  // cannot claim high confidence however convincing the answers looked.
+  if (confidence === 'high') {
+    ctx.warn(`${label}: initial confidence_level "high" reduced to moderate; no experiments have been run yet.`);
+    confidence = 'medium';
   }
   if (!LEVELS.includes(risk)) {
     ctx.warn(`${label}: unusable risk_level; defaulted to medium.`);
@@ -224,10 +297,15 @@ function validateRecommendation(rec, index, ctx) {
     path_name: name,
     fit_reason: cleanString(rec.fit_reason),
     concern: cleanString(rec.concern),
+    contrast_role: cleanString(rec.contrast_role),
+    what_we_know: stringArray(rec.what_we_know),
+    assumptions: stringArray(rec.assumptions),
+    unknowns: unknowns.slice(0, MAX_UNKNOWNS),
+    confidence_explanation: cleanString(rec.confidence_explanation),
     lifestyle_implications: cleanString(rec.lifestyle_implications),
     main_tradeoffs: cleanString(rec.main_tradeoffs),
     readiness_score: score,
-    confidence_level: LEVELS.includes(confidence) ? confidence : 'medium',
+    confidence_level: confidence,
     risk_level: LEVELS.includes(risk) ? risk : 'medium',
     current_gaps: stringArray(rec.current_gaps),
     first_experiment: cleanString(rec.first_experiment),
@@ -345,6 +423,21 @@ export function validatePathSet(raw) {
       codes.push('recs_wrong_count');
     }
     return bail();
+  }
+
+  // ── Contrast ──
+  // Three variations on one job title is the failure mode this catches: the set
+  // exists so the student can compare genuinely different kinds of work.
+  for (let i = 0; i < recommendations.length; i++) {
+    for (let j = i + 1; j < recommendations.length; j++) {
+      if (nameOverlap(recommendations[i].path_name, recommendations[j].path_name) >= MAX_NAME_OVERLAP) {
+        ctx.fail(
+          'recs_not_contrasting',
+          `"${recommendations[i].path_name}" and "${recommendations[j].path_name}" are near-identical job titles. The three hypotheses must contrast on real dimensions: work style, environment, level of structure, people versus analytical orientation, or risk profile.`
+        );
+        return bail();
+      }
+    }
   }
 
   // ── Experiments ──

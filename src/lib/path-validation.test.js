@@ -18,6 +18,15 @@ function rec(overrides = {}) {
     current_gaps: ['SQL', 'A portfolio project'],
     first_experiment: 'Interview two analysts.',
     path_fit_signals: ['You rated impact highly.'],
+    contrast_role: 'Structured, analytical, people-adjacent',
+    what_we_know: ['You chose statistics coursework twice.'],
+    assumptions: ['That you enjoy analysis when it is someone else\u2019s question.'],
+    unknowns: [
+      { question: 'Do you enjoy cleaning a messy dataset?', why_it_matters: 'It is most of the job.' },
+      { question: 'How do you react to a deadline you did not set?', why_it_matters: 'The work is request-driven.' },
+      { question: 'Do you like defending a number to someone who disagrees?', why_it_matters: 'Analysts present.' },
+    ],
+    confidence_explanation: 'Nothing has been tested yet, so this rests on your answers alone.',
     ...overrides,
   };
 }
@@ -150,6 +159,81 @@ describe('validatePathSet: required recommendation fields', () => {
   });
 });
 
+describe('validatePathSet: the hypothesis structure', () => {
+  it('rejects a hypothesis with fewer than three unknowns', () => {
+    const v = validatePathSet(payload({
+      path_recommendations: [
+        rec({ unknowns: [{ question: 'Do you like it?' }] }),
+        rec({ path_name: 'B' }),
+        rec({ path_name: 'C' }),
+      ],
+    }));
+    expect(v.ok).toBe(false);
+    expect(v.codes).toContain('rec_too_few_unknowns');
+  });
+
+  it('rejects a hypothesis with no concern, so "why it may not fit" is never missing', () => {
+    const v = validatePathSet(payload({
+      path_recommendations: [rec({ concern: '' }), rec({ path_name: 'B' }), rec({ path_name: 'C' })],
+    }));
+    expect(v.ok).toBe(false);
+    expect(v.codes).toContain('rec_missing_concern');
+  });
+
+  it('caps unknowns at six', () => {
+    const many = Array.from({ length: 9 }, (_, i) => ({ question: `Question ${i}?`, why_it_matters: 'Because.' }));
+    const v = validatePathSet(payload({
+      path_recommendations: [rec({ unknowns: many }), rec({ path_name: 'B' }), rec({ path_name: 'C' })],
+    }));
+    expect(v.ok).toBe(true);
+    expect(v.data.path_recommendations[0].unknowns).toHaveLength(6);
+  });
+
+  it('accepts unknowns returned as bare questions', () => {
+    const v = validatePathSet(payload({
+      path_recommendations: [
+        rec({ unknowns: ['Do you enjoy the modelling?', 'Can you take the pace?', 'Would investing suit you better?'] }),
+        rec({ path_name: 'B' }),
+        rec({ path_name: 'C' }),
+      ],
+    }));
+    expect(v.ok).toBe(true);
+    expect(v.data.path_recommendations[0].unknowns[0].question).toMatch(/modelling/);
+  });
+
+  it('reduces an initial high confidence to moderate, because nothing is tested yet', () => {
+    const v = validatePathSet(payload({
+      path_recommendations: [rec({ confidence_level: 'high' }), rec({ path_name: 'B' }), rec({ path_name: 'C' })],
+    }));
+    expect(v.ok).toBe(true);
+    expect(v.data.path_recommendations[0].confidence_level).toBe('medium');
+    expect(v.warnings.join(' ')).toMatch(/high/);
+  });
+
+  it('rejects three near-identical job titles, however similar the answers were', () => {
+    const v = validatePathSet(payload({
+      path_recommendations: [
+        rec({ path_name: 'Investment Banking Analyst' }),
+        rec({ path_name: 'Investment Banking Associate' }),
+        rec({ path_name: 'Clinical Research Coordinator' }),
+      ],
+    }));
+    expect(v.ok).toBe(false);
+    expect(v.codes).toContain('recs_not_contrasting');
+  });
+
+  it('accepts three genuinely contrasting hypotheses', () => {
+    const v = validatePathSet(payload({
+      path_recommendations: [
+        rec({ path_name: 'Investment Banking Analyst' }),
+        rec({ path_name: 'Community Health Programme Coordinator' }),
+        rec({ path_name: 'Independent Design Studio Founder' }),
+      ],
+    }));
+    expect(v.ok).toBe(true);
+  });
+});
+
 describe('validatePathSet: readiness score', () => {
   it('rejects a score above the scale instead of writing it', () => {
     const v = validatePathSet(payload({
@@ -196,7 +280,7 @@ describe('validatePathSet: readiness score', () => {
 });
 
 describe('validatePathSet: repairs that should not block a save', () => {
-  it('defaults an unusable confidence or risk level to medium and warns', () => {
+  it('defaults an unusable confidence level to low and an unusable risk to medium', () => {
     const v = validatePathSet(payload({
       path_recommendations: [
         rec({ confidence_level: 'extremely high', risk_level: null }),
@@ -205,7 +289,9 @@ describe('validatePathSet: repairs that should not block a save', () => {
       ],
     }));
     expect(v.ok).toBe(true);
-    expect(v.data.path_recommendations[0].confidence_level).toBe('medium');
+    // Confidence means "how much evidence supports this", and at generation time
+    // the answer is always "almost none".
+    expect(v.data.path_recommendations[0].confidence_level).toBe('low');
     expect(v.data.path_recommendations[0].risk_level).toBe('medium');
     expect(v.warnings.length).toBeGreaterThan(0);
   });

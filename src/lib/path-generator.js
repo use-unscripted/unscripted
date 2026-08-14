@@ -113,6 +113,35 @@ ${profile.responsibilities_constraints ? `- Responsibilities/constraints: ${prof
 ${profile.things_to_avoid ? `- Things to avoid: ${profile.things_to_avoid}` : ''}
 ${profile.priorities_for_recommendations ? `- Priorities for recommendations: ${profile.priorities_for_recommendations}` : ''}` : '';
 
+  // Everything the intake collects about uncertainty and self-report. Named as
+  // self-report in the prompt too, so the model cannot treat a stated
+  // preference as demonstrated behaviour.
+  const list = (v) => (Array.isArray(v) ? v : []);
+  const drains = list(profile.self_reported_drains)
+    .map(d => `${d.activity} (${String(d.response || '').replace(/_/g, ' ')})`);
+  const values = list(profile.values_importance)
+    .map(v => `${v.factor}: ${v.importance}/4`);
+  const priors = list(profile.prior_experiences)
+    .map(p => [p.kind, p.enjoyed && `enjoyed: ${p.enjoyed}`, p.disliked && `disliked: ${p.disliked}`, p.again && `would do again: ${p.again}`]
+      .filter(Boolean).join('; '));
+
+  const uncertaintySection = `
+Where this student actually is (self-reported at intake, not measured):
+- Certainty about what they want to do: ${profile.baseline_career_clarity ?? 'not recorded'}/10${typeof profile.baseline_confidence === 'number' ? ` (confidence in that answer: ${profile.baseline_confidence}/10)` : ''}
+- Careers they are considering: ${list(profile.current_careers_considered).join(', ') || 'none named, which is normal and supported'}
+- Careers they have ruled out: ${list(profile.careers_ruled_out).join(', ') || 'none named'}
+- What they say they are most unsure about: ${list(profile.major_uncertainties).join(', ') || 'not recorded'}${profile.major_uncertainties_other ? ` (also: ${profile.major_uncertainties_other})` : ''}
+- Decisions pressing on them now: ${list(profile.current_decision_pressure).join(', ') || 'not recorded'}
+- Work setting they think they want: ${profile.work_setting_preference ? String(profile.work_setting_preference).replace(/_/g, ' ') : 'not recorded'}
+
+Stated preferences (self-report, weak evidence, never treat as proven):
+- Says these give energy: ${list(profile.self_reported_energizers).join(', ') || 'not recorded'}
+- Reaction to specific activities: ${drains.join(' | ') || 'not recorded'}
+- What they say matters, 1 to 4: ${values.join(', ') || 'not recorded'}
+- Prior experience they have described: ${priors.join(' || ') || 'none described'}
+
+Where an activity is marked "never experienced", that is an UNKNOWN, not a dislike.`;
+
   const stageGuidance = `This student is an undergraduate (typically first-year or sophomore). Experiments may assume campus resources, alumni networks, coursework, clubs, and internship-adjacent access.`;
 
   const buildPrompt = (correction = '') => `You are Unscripted, a path-experimentation platform for undergraduate students. Your only job is to help this student test whether their chosen paths actually fit them.
@@ -134,19 +163,45 @@ Student profile:
 - Available hours/week: ${availableHours}
 - Priority scores: autonomy=${profile.priority_autonomy || 3}, stability=${profile.priority_stability || 3}, impact=${profile.priority_impact || 3}, creativity=${profile.priority_creativity || 3}, ownership=${profile.priority_ownership || 3}
 - Willing to take financial risk: ${profile.willing_financial_risk ? 'yes' : 'no'}
-- Willing to work long hours early: ${profile.willing_long_hours ? 'yes' : 'no'}${personalNotesSection}
+- Willing to work long hours early: ${profile.willing_long_hours ? 'yes' : 'no'}${uncertaintySection}${personalNotesSection}
 
-TASK: Generate exactly 3 path recommendations:
-1. Best apparent fit (based on their profile)
-2. Strong alternative (different but viable)
-3. Contrarian option (challenges their default assumptions)
+TASK: Generate exactly 3 CAREER HYPOTHESES. A career hypothesis is a direction
+worth testing, never a prediction of what this student should become.
 
-All three are required, all three must have a distinct path_name, and each needs a fit_reason.
+Synthesise all of it: interests, apparent strengths, stated values, dislikes,
+lifestyle preferences, constraints, prior experience, how uncertain they are, and
+what they do not know about themselves yet.
 
-The pressured path and the privately curious path are the two answers that make
-the contrarian recommendation worth reading. Where a student named both, the
-contrarian option should engage with the gap between them rather than ignore it.
-Where they named neither, treat this as a normal contrarian pick.
+The three must offer real contrast. Vary them along at least two of these:
+work style, working environment, level of structure, people-facing versus
+analytical orientation, risk profile. Three variations on the same job title is a
+failed answer, even when the student's answers all point one way. Use
+"contrast_role" to state the contrast each one provides in a few words.
+
+Every hypothesis needs BOTH:
+- "fit_reason": why this may fit, tied to specific things they told us.
+- "concern": why this may NOT fit. Never omit it and never soften it.
+
+Also for every hypothesis:
+- "what_we_know": 2 to 4 things their own answers establish. Say where each comes
+  from in the sentence itself. Never state anything they did not tell us.
+- "assumptions": 2 to 4 untested beliefs this hypothesis rests on.
+- "unknowns": 3 to 6 questions that can only be answered by real experience, not
+  by another questionnaire. Each needs "question" and "why_it_matters". Write
+  them about this student ("Do you actually enjoy…"), about the specific work,
+  and make each one testable in a few hours.
+- "confidence_level" plus "confidence_explanation". Confidence means HOW MUCH
+  EVIDENCE currently supports this hypothesis, not how likely they are to
+  succeed. Nothing has been tested yet, so use "low" unless their prior
+  experience genuinely covers this work, in which case "medium". Never "high".
+
+Banned, because none of it is defensible before any evidence exists: perfect
+career, best career, ideal profession, guaranteed fit, and any percentage match.
+
+Where they named a pressured path and a privately curious path, one hypothesis
+should engage with the gap between them rather than ignore it. Where they named
+no career at all, that is a normal starting point: build all three from their
+energy, values, dislikes and unknowns instead.
 
 "readiness_score" is on a ${READINESS_MIN}-${READINESS_MAX} scale, where ${READINESS_MAX} means the student could credibly pursue this path today and ${READINESS_MIN} means they are starting from nothing. It is not a fraction and not a percentage. A student who is roughly half-ready scores 5, never 0.5.
 
@@ -279,8 +334,19 @@ ${PLAIN_PROSE_RULES}`;
     // straight off is_primary_focus, so without this every student who has just finished
     // generating lands on "No primary path set / No path selected yet".
     const savedRecs = await base44.entities.PathRecommendations.bulkCreate(
-      incoming.map((r, i) => ({
+      incoming.map(({ unknowns, ...r }, i) => ({
         ...r,
+        // The hypothesis view of the same row: why it may and may not fit, and
+        // the questions testing is meant to answer. Stored once, at generation,
+        // so a returning student sees the hypotheses they were given.
+        why_this_may_fit: r.fit_reason,
+        why_it_may_not_fit: r.concern,
+        // The model returns plain sentences; the field stores each one with the
+        // source it came from, which is the intake in every case here.
+        what_we_know: (r.what_we_know || []).map(text => ({ text, source: 'Your onboarding answers' })),
+        unresolved_questions: unknowns,
+        hypothesis_status: 'untested',
+        hypothesis_status_changed_at: generatedAt,
         status: 'exploring',
         is_primary_focus: i === 0,
         user_id: user.id,

@@ -246,6 +246,43 @@
         }
       }
     },
+    "what_we_know": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "assumptions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "human_reality_insights": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "insight": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "contrast_role": {
+      "type": "string"
+    },
     "unresolved_questions": {
       "type": "array",
       "items": {
@@ -263,14 +300,25 @@
     "hypothesis_status": {
       "type": "string",
       "enum": [
-        "suggested",
+        "untested",
         "testing",
-        "strong_evidence",
+        "strengthened",
         "mixed_evidence",
+        "modified",
+        "eliminated",
+        "suggested",
+        "strong_evidence",
         "low_fit",
         "archived"
       ],
-      "default": "suggested"
+      "default": "untested"
+    },
+    "hypothesis_status_changed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "hypothesis_modification_note": {
+      "type": "string"
     },
     "last_recalculated_at": {
       "type": "string",

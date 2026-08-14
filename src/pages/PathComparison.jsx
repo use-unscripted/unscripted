@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
-import { Plus, Star, Pencil, Pause, Play, Archive, ArchiveRestore, ChevronDown, ChevronUp, Clock, CheckCircle2, History, ArrowRight, RotateCcw, SlidersHorizontal, X, Users } from 'lucide-react';
+import { Plus, Star, Pencil, Pause, Play, Archive, ArchiveRestore, ChevronDown, ChevronUp, Clock, CheckCircle2, History, ArrowRight, RotateCcw, SlidersHorizontal, X, Users, FlaskConical } from 'lucide-react';
 import PageHeader from '@/components/PageHeader';
 import { Sk, SkCards } from '@/components/PageSkeleton';
 import CreatePathModal from '@/components/paths/CreatePathModal';
@@ -22,7 +22,9 @@ import {
 } from '@/lib/path-sort-filter';
 import { autoAssessPathRisk } from '@/lib/risk-assessor';
 import CareerHypothesisPanel from '@/components/paths/CareerHypothesisPanel';
-import { deriveHypothesis, backfillHypotheses, syncFitDimensions } from '@/lib/career-hypothesis';
+import HypothesisCompareSummary from '@/components/paths/HypothesisCompareSummary';
+import { deriveHypothesis, backfillHypotheses, syncFitDimensions, HYPOTHESIS_STATUS_LABELS, HYPOTHESIS_STATUS_MEANING } from '@/lib/career-hypothesis';
+import { dimensionProgress, nextTestForPath } from '@/lib/dimension-progress';
 import { loadMeasurements } from '@/lib/experiment-measurement';
 import { characteristicSignals } from '@/lib/evidence-patterns';
 
@@ -114,7 +116,10 @@ function PathCard({ path, experiments, missions, proof, contacts, reflections, p
   const completedExps = pathExps.filter(e => e.status === 'completed');
   const pct = pathExps.length ? Math.round(completedExps.length / pathExps.length * 100) : 0;
   const isPausedOrCompleted = ['paused', 'completed'].includes(path.status);
-  const hyp = deriveHypothesis(path, { experiments, proof, reflections, profile, measurements, signals });
+  const hyp = deriveHypothesis(path, { experiments, proof, reflections, contacts, profile, measurements, signals });
+  const progress = dimensionProgress({ hypothesis: hyp, signals });
+  const nextTest = progress ? nextTestForPath({ path, hypothesis: hyp, progress }) : null;
+  const statusLabel = HYPOTHESIS_STATUS_LABELS[hyp.hypothesis_status] || 'Untested';
 
   return (
     <div className="rounded-[var(--r-surface)] border border-[color:var(--ink-200)] bg-white overflow-hidden">
@@ -128,18 +133,30 @@ function PathCard({ path, experiments, missions, proof, contacts, reflections, p
                 </span>
               )}
               <span className="tp-meta rounded-full px-3 py-1 font-bold" style={{ background: cfg.bg, color: cfg.text }}>{cfg.label}</span>
+              {/* The hypothesis' own state, in the controlled vocabulary. */}
+              <span className="tp-meta rounded-full px-3 py-1 font-bold" title={HYPOTHESIS_STATUS_MEANING[hyp.hypothesis_status] || ''}
+                style={{ background: 'var(--ink-100)', color: 'var(--brand-navy-900)' }}>
+                {statusLabel}
+              </span>
+              {path.contrast_role && (
+                <span className="tp-meta rounded-full px-3 py-1 font-semibold" style={{ background: 'var(--info-50)', color: 'var(--info-700)' }}>{path.contrast_role}</span>
+              )}
               {path.risk_level ? <RiskBadge riskLevel={path.risk_level} /> : <RiskNotAssessed onAutoAssess={onAutoAssess} onAssess={() => onAction('edit', path)} assessing={assessing} />}
               {path.confidence_level && <ConfidenceBadge confidenceLevel={path.confidence_level} />}
             </div>
             <h2 className="tp-section text-[color:var(--surface-dark-900)]">{path.path_name}</h2>
             {path.path_category && <p className="tp-meta text-[color:var(--ink-400)] mt-1">{path.path_category}</p>}
-            <p className="tp-body mt-2 text-[color:var(--ink-700)] line-clamp-2">{path.why_it_fits || path.fit_reason}</p>
 
             {/* The hypothesis headline: two separate numbers, never combined. */}
             <div className="tp-meta mt-2.5 flex flex-wrap gap-x-4 gap-y-1 text-[color:var(--ink-500)]">
               <span>Current fit <strong className="text-[color:var(--surface-dark-900)]">{hyp.career_fit_score}%</strong></span>
               <span>Confidence in estimate <strong className="text-[color:var(--surface-dark-900)]">{hyp.fit_confidence_score}%</strong></span>
+              <span>Experiments completed <strong className="text-[color:var(--surface-dark-900)]">{hyp.experiments_completed}</strong></span>
+              <span>Evidence collected <strong className="text-[color:var(--surface-dark-900)]">{hyp.evidence_collected}</strong></span>
             </div>
+
+            {/* The six things needed to compare hypotheses, same order every card. */}
+            <HypothesisCompareSummary hypothesis={hyp} path={path} nextTest={nextTest} />
 
             {pathExps.length > 0 && (
               <div className="mt-3">
@@ -163,11 +180,18 @@ function PathCard({ path, experiments, missions, proof, contacts, reflections, p
             style={expanded
               ? { borderColor: 'var(--ink-200)', color: 'var(--ink-700)', background: 'white' }
               : { borderColor: 'var(--brand-navy-900)', color: 'var(--brand-navy-900)', background: 'white' }}>
-            {expanded ? <>Close <ChevronUp size={14} /></> : <>Open path <ChevronDown size={14} /></>}
+            {expanded ? <>Close <ChevronUp size={14} /></> : <>Explore <ChevronDown size={14} /></>}
           </button>
         </div>
 
         <div className="mt-4 flex flex-wrap gap-2">
+          {/* The one primary action. Choosing a career is not what happens here;
+              testing one is. */}
+          <a href={`/experiments/new?pathId=${encodeURIComponent(path.id)}&pathName=${encodeURIComponent(path.path_name)}`}
+            className="tp-meta touch-target flex items-center gap-1.5 rounded-[var(--r-control)] px-4 py-2 font-semibold text-white"
+            style={{ background: 'var(--brand-navy-900)', boxShadow: '0 6px 18px rgba(31,58,95,0.22)' }}>
+            <FlaskConical size={12} /> Test This Hypothesis
+          </a>
           <button onClick={onBuildOutreachPlan}
             className="tp-meta touch-target flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-semibold transition"
             style={{ background: 'var(--background-tertiary)', color: 'var(--brand-navy-700)', border: '1px solid var(--border-light)' }}>
@@ -335,10 +359,10 @@ function PathCard({ path, experiments, missions, proof, contacts, reflections, p
             </div>
           </div>
 
-          <a href={`/experiments/new?pathName=${encodeURIComponent(path.path_name)}`}
+          <a href={`/experiments/new?pathId=${encodeURIComponent(path.id)}&pathName=${encodeURIComponent(path.path_name)}`}
             className="inline-flex items-center gap-2 text-sm font-semibold transition hover:opacity-80"
             style={{ color: 'var(--brand-navy-900)' }}>
-            Start an Experiment for This Path <ArrowRight size={15} />
+            Test This Hypothesis <ArrowRight size={15} />
           </a>
         </div>
       )}
@@ -693,13 +717,13 @@ export default function PathComparison() {
       })()}
 
       <PageHeader
-        title="Careers worth testing."
-        description="Each path here is a career hypothesis, not a recommendation. Current evidence suggests which may fit; testing them is what settles it."
+        title="Your career hypotheses."
+        description="A career hypothesis is a direction worth testing, not a prediction of what you should become. Compare them on what is known, what is still unknown, and how much evidence sits behind each one."
         action={
           <button onClick={() => setShowCreate(true)}
             className="touch-target flex items-center gap-2 rounded-[var(--r-control)] px-5 py-2.5 text-sm font-semibold text-white shrink-0"
             style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}>
-            <Plus size={16} /> Create Another Path
+            <Plus size={16} /> Add a Hypothesis
           </button>
         }
       />
@@ -724,12 +748,12 @@ export default function PathComparison() {
         <PathRecoveryPanel variant="missing" onRestored={load} />
       ) : paths.length === 0 ? (
         <div className="rounded-[var(--r-surface)] border border-dashed border-[color:var(--ink-200)] p-16 text-center">
-          <h3 className="tp-section text-[color:var(--surface-dark-900)]">No paths yet.</h3>
-          <p className="tp-body mt-2.5 text-[color:var(--ink-500)]">Create your first path to start tracking experiments, reflections, and progress.</p>
+          <h3 className="tp-section text-[color:var(--surface-dark-900)]">No hypotheses yet.</h3>
+          <p className="tp-body mt-2.5 text-[color:var(--ink-500)]">Add your first career hypothesis to start testing it and collecting evidence.</p>
           <button onClick={() => setShowCreate(true)}
             className="mt-6 inline-flex items-center gap-2 rounded-[var(--r-control)] px-6 py-3 text-sm font-semibold text-white"
             style={{ background: 'var(--brand-navy-900)' }}>
-            <Plus size={16} /> Create a Path
+            <Plus size={16} /> Add a Hypothesis
           </button>
         </div>
       ) : (
@@ -746,7 +770,7 @@ export default function PathComparison() {
             <input
               value={search}
               onChange={e => setSearch(e.target.value)}
-              placeholder="Search paths by name, category, or description…"
+              placeholder="Search hypotheses by name, category, or description…"
               className="w-full rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-white pl-9 pr-4 py-2.5 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]"
             />
             {search && (
@@ -766,13 +790,13 @@ export default function PathComparison() {
 
           {/* Result count */}
           <p className="tp-meta mb-4 text-[color:var(--ink-400)]">
-            {displayedPaths.length} path{displayedPaths.length !== 1 ? 's' : ''} shown
+            {displayedPaths.length} hypothes{displayedPaths.length !== 1 ? 'es' : 'is'} shown
             {paths.length !== displayedPaths.length ? ` of ${paths.length}` : ''}
           </p>
 
           {displayedPaths.length === 0 ? (
             <div className="rounded-[var(--r-surface)] border border-dashed border-[color:var(--ink-200)] py-16 text-center">
-              <p className="tp-body font-semibold text-[color:var(--surface-dark-900)]">No paths match these filters.</p>
+              <p className="tp-body font-semibold text-[color:var(--surface-dark-900)]">No hypotheses match these filters.</p>
               <p className="tp-meta text-[color:var(--ink-400)] mt-1.5">Try adjusting your sort or filter options.</p>
               <button
                 onClick={() => setFilters(DEFAULT_FILTERS)}
@@ -800,7 +824,7 @@ export default function PathComparison() {
 
           <div className="tp-body mt-8 rounded-[var(--r-surface)] p-5 text-center text-[color:var(--ink-500)]"
             style={{ background: 'var(--background-tertiary)', border: '1px solid var(--border-light)' }}>
-            These paths are recommendations and tests, not permanent commitments. Your goal is to learn what fits you, not to pick one and stay forever.
+            These are hypotheses to test, not commitments to make. A hypothesis you rule out is as useful as one you strengthen.
           </div>
         </>
       )}

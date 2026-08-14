@@ -16,14 +16,53 @@ import { characteristicSignals } from '@/lib/evidence-patterns';
 import { evidenceConfidence, detectContradictions } from '@/lib/evidence-contradictions';
 import { extractReflectionSignals } from '@/lib/reflection-signals';
 
-export const HYPOTHESIS_STATUS_LABELS = {
-  suggested: 'Suggested',
-  testing: 'Testing',
-  strong_evidence: 'Strong Evidence',
-  mixed_evidence: 'Mixed Evidence',
-  low_fit: 'Low Fit',
-  archived: 'Archived',
+/**
+ * The controlled hypothesis vocabulary.
+ *
+ * The four older values (suggested / strong_evidence / low_fit / archived) are
+ * still on live rows and are mapped rather than rewritten, so no historical
+ * record is lost and nothing downstream breaks.
+ */
+export const HYPOTHESIS_STATUSES = [
+  'untested', 'testing', 'strengthened', 'mixed_evidence', 'modified', 'eliminated',
+];
+
+const LEGACY_STATUS = {
+  suggested: 'untested',
+  strong_evidence: 'strengthened',
+  low_fit: 'mixed_evidence',
+  archived: 'eliminated',
 };
+
+export const HYPOTHESIS_STATUS_LABELS = {
+  untested: 'Untested',
+  testing: 'Testing',
+  strengthened: 'Strengthened',
+  mixed_evidence: 'Mixed Evidence',
+  modified: 'Modified',
+  eliminated: 'Eliminated',
+  // Legacy stored values, shown in the new vocabulary.
+  suggested: 'Untested',
+  strong_evidence: 'Strengthened',
+  low_fit: 'Mixed Evidence',
+  archived: 'Eliminated',
+};
+
+/** What a status means, so a label never reads as a verdict on the student. */
+export const HYPOTHESIS_STATUS_MEANING = {
+  untested: 'Nothing has been tested through real work yet.',
+  testing: 'You are gathering evidence on this one right now.',
+  strengthened: 'What you have done so far supports this direction.',
+  mixed_evidence: 'Your evidence points both ways. That is useful, not a failure.',
+  modified: 'You changed this hypothesis after what you learned.',
+  eliminated: 'You ruled this one out. The record of why stays.',
+};
+
+export const canonicalStatus = (status) =>
+  LEGACY_STATUS[status] || (HYPOTHESIS_STATUSES.includes(status) ? status : 'untested');
+
+/** Shown wherever a field has no evidence behind it yet. Never invented. */
+export const NOT_YET_ASSESSED = 'Not yet assessed';
 
 const clamp = (n) => Math.max(0, Math.min(100, Math.round(n)));
 
@@ -138,18 +177,82 @@ function unresolved(path, act) {
 }
 
 /**
- * Status is a description of the evidence, not a verdict. A career is never
- * archived here just because its fit fell: that is the student's decision.
+ * What we already know about this hypothesis: the work characteristics that
+ * have real evidence behind them. Anything the student only told us about is an
+ * assumption, not knowledge, and is listed as one below.
+ */
+function whatWeKnow(path, act, uncertainty) {
+  if (path.what_we_know?.length) return path.what_we_know;
+  const items = [];
+  (uncertainty.known || []).slice(0, 4).forEach(v => items.push({
+    text: v.tendency ? `${v.label}: ${v.tendency.toLowerCase()}.` : `${v.label} has been tested here.`,
+    source: (v.sources || []).includes('Your experiments') ? 'Your experiments' : 'Your evidence so far',
+  }));
+  if (act.completedExps.length) items.push({
+    text: `You completed ${act.completedExps.length} experiment${act.completedExps.length > 1 ? 's' : ''} on this direction.`,
+    source: 'Your experiments',
+  });
+  if (act.proof.length) items.push({
+    text: `You produced ${act.proof.length} piece${act.proof.length > 1 ? 's' : ''} of real work here.`,
+    source: 'Your proof of work',
+  });
+  return items;
+}
+
+/**
+ * The assumptions this hypothesis rests on — stated preferences that have not
+ * been tested yet. Nothing is invented: each line names something the student
+ * actually told us, or the fact that the whole direction is still untested.
+ */
+function assumptionsFor(path, act, uncertainty) {
+  if (path.assumptions?.length) return path.assumptions;
+  const items = [];
+  (uncertainty.variables || [])
+    .filter(v => v.tendency && v.evidence_strength < 60 && v.relevance !== 'low')
+    .slice(0, 4)
+    .forEach(v => items.push(`${v.tendency}. That is what you told us, and it has not been tested here yet.`));
+  if (!act.completedExps.length && !act.proof.length) {
+    items.push('This direction is built from what you said about yourself, not from work you have done in it.');
+  }
+  return items;
+}
+
+/**
+ * What people actually doing the work have told the student. Only real
+ * conversations count, so this stays empty until an outreach contact replies.
+ */
+function humanReality(path, act, contacts = []) {
+  if (path.human_reality_insights?.length) return path.human_reality_insights;
+  const expIds = new Set(act.exps.map(e => e.id));
+  return contacts
+    .filter(c => (c.path_being_tested === path.path_name || expIds.has(c.experiment_id))
+      && ['responded', 'call_scheduled', 'completed'].includes(c.response_status)
+      && (c.notes || '').trim())
+    .slice(0, 3)
+    .map(c => ({
+      insight: c.notes.trim(),
+      source: [c.role, c.company].filter(Boolean).join(' at ') || c.name || 'A conversation you had',
+    }));
+}
+
+/**
+ * Status is a description of the evidence, not a verdict. A hypothesis is never
+ * eliminated here just because its fit fell: that is the student's decision,
+ * recorded when they archive or deprioritise it.
  */
 function hypothesisStatus(path, { fit, confidence, act, against, contradictions = [] }) {
-  if (path.status === 'archived') return 'archived';
+  const stored = canonicalStatus(path.hypothesis_status);
+  // Two states only the student can put a hypothesis into.
+  if (path.status === 'archived' || path.status === 'deprioritized' || stored === 'eliminated') return 'eliminated';
+  if (stored === 'modified' && !contradictions.length) return 'modified';
+
   const tested = act.completedExps.length || act.proof.length || act.reflections.length;
-  if (!tested) return 'suggested';
+  if (!tested) return 'untested';
   // Directly conflicting evidence outranks everything else: nothing is settled
   // while the same characteristic has been rated both ways.
   if (contradictions.length) return 'mixed_evidence';
-  if (fit < 45 && confidence >= 50) return 'low_fit';
-  if (confidence >= 65 && fit >= 70) return 'strong_evidence';
+  if (fit < 45 && confidence >= 50) return 'mixed_evidence';
+  if (confidence >= 65 && fit >= 70) return 'strengthened';
   if (against.length) return 'mixed_evidence';
   return 'testing';
 }
@@ -209,7 +312,17 @@ export function deriveHypothesis(path, ctx = {}) {
     why_this_may_fit: path.why_this_may_fit || path.why_it_fits || path.fit_reason || '',
     supporting_evidence: path.supporting_evidence?.length ? path.supporting_evidence : supporting(path, act),
     contradicting_evidence: against,
-    unresolved_questions: fromUncertainty.length ? fromUncertainty : unresolved(path, act),
+    // The hypothesis structure: what is known, what is assumed, what people in
+    // the work have said, and what is still open.
+    what_we_know: whatWeKnow(path, act, uncertainty),
+    assumptions: assumptionsFor(path, act, uncertainty),
+    human_reality_insights: humanReality(path, act, ctx.contacts || []),
+    unresolved_questions: path.unresolved_questions?.length
+      ? path.unresolved_questions
+      : (fromUncertainty.length ? fromUncertainty : unresolved(path, act)),
+    // Counts, so a card can say how much testing sits behind the numbers above.
+    experiments_completed: act.completedExps.length,
+    evidence_collected: act.proof.length + act.reflections.length,
     hypothesis_status: hypothesisStatus(path, { fit, confidence, act, against, contradictions }),
   };
 }
@@ -219,12 +332,22 @@ export function deriveHypothesis(path, ctx = {}) {
  * Only writes the new fields; nothing existing is touched or removed.
  */
 export async function backfillHypotheses(paths, ctx) {
-  const stale = paths.filter(p => typeof p.career_fit_score !== 'number');
+  // A path is enriched once: either it predates the fit score, or it predates
+  // the controlled hypothesis vocabulary. Writing a canonical status is what
+  // marks it done, so this cannot loop on later renders.
+  const stale = paths.filter(p =>
+    typeof p.career_fit_score !== 'number' || !HYPOTHESIS_STATUSES.includes(p.hypothesis_status)
+  );
   if (!stale.length) return false;
   await Promise.all(stale.map(p => {
     // `uncertainty`, `fit` and the evidence share are derived on every render
     // and are not stored fields.
-    const { uncertainty, fit, fit_evidence_share, contradictions, ...fields } = deriveHypothesis(p, ctx);
+    // Derived-on-render values are not stored fields.
+    const {
+      uncertainty, fit, fit_evidence_share, contradictions,
+      experiments_completed, evidence_collected,
+      ...fields
+    } = deriveHypothesis(p, ctx);
     return base44.entities.PathRecommendations
       .update(p.id, { ...fields, last_recalculated_at: new Date().toISOString() })
       .catch(() => null);
