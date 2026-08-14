@@ -35,5 +35,21 @@ export default defineConfig({
     // calendar value can land on the wrong day, and a green run on a UTC box
     // would hide exactly that.
     env: { TZ: 'America/New_York' },
+    // Both of these are already the vitest default. They are pinned here
+    // because flipping either one turns a broken suite into a green one, and
+    // the repo has been bitten by exactly that.
+    //
+    // A test file whose environment cannot be resolved (a missing `jsdom`,
+    // say) never reaches the runner at all: the worker fails to start, so the
+    // file is reported as an unhandled error and then dropped from the file
+    // list entirely. The summary line still reads "N passed (N)" over whatever
+    // did load, and only the exit code says otherwise. Keeping
+    // dangerouslyIgnoreUnhandledErrors false is what preserves that exit code,
+    // so trust `npm test`'s status, not its last line.
+    //
+    // passWithNoTests false covers the other half: if the include globs above
+    // ever stop matching, the run fails instead of passing over nothing.
+    dangerouslyIgnoreUnhandledErrors: false,
+    passWithNoTests: false,
   },
 });
