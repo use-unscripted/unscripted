@@ -20,6 +20,8 @@ export const PRE_FIELDS = [
   { key: 'pre_career_interest', label: 'Current interest in this career', low: 'Low', high: 'High' },
   { key: 'pre_career_fit_confidence', label: 'How strongly do you think this career fits you?', low: 'Not sure', high: 'Very sure' },
   { key: 'expected_energy', label: 'Expected energy / excitement', low: 'Flat', high: 'Energised' },
+  { key: 'expected_performance', label: 'How well do you think you will do?', low: 'Poorly', high: 'Very well' },
+  { key: 'expected_want_more', label: 'Do you think you will want to do another one after this?', low: 'No', high: 'Yes' },
 ];
 
 export const POST_FIELDS = [

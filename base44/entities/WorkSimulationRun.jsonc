@@ -1,0 +1,166 @@
+{
+  "name": "WorkSimulationRun",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string"
+    },
+    "simulation_key": {
+      "type": "string"
+    },
+    "simulation_version": {
+      "type": "number"
+    },
+    "experiment_id": {
+      "type": "string"
+    },
+    "path_id": {
+      "type": "string"
+    },
+    "career_name": {
+      "type": "string"
+    },
+    "cycle_id": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "in_progress",
+        "completed",
+        "abandoned"
+      ],
+      "default": "in_progress"
+    },
+    "current_step": {
+      "type": "number"
+    },
+    "abandoned_at_step": {
+      "type": "number"
+    },
+    "started_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "completed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "step_seconds": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "step": {
+            "type": "number"
+          },
+          "seconds": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "problem_statement": {
+      "type": "string"
+    },
+    "selected_items": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "cut_notes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "item_id": {
+            "type": "string"
+          },
+          "note": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "spec_v1": {
+      "type": "string"
+    },
+    "spec_v2": {
+      "type": "string"
+    },
+    "selected_items_final": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "engineer_reply": {
+      "type": "string"
+    },
+    "sales_reply": {
+      "type": "string"
+    },
+    "experience_samples": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "at_step": {
+            "type": "number"
+          },
+          "score": {
+            "type": "number"
+          },
+          "skipped": {
+            "type": "boolean"
+          },
+          "sampled_at": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "check_results": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "criterion": {
+            "type": "string"
+          },
+          "passed": {
+            "type": "boolean"
+          },
+          "detail": {
+            "type": "string"
+          },
+          "scored_by": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "started_another_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "simulation_key"
+  ],
+  "rls": {
+    "create": {
+      "created_by_id": "{{user.id}}"
+    },
+    "read": {
+      "created_by_id": "{{user.id}}"
+    },
+    "update": {
+      "created_by_id": "{{user.id}}"
+    },
+    "delete": {
+      "created_by_id": "{{user.id}}"
+    }
+  }
+}

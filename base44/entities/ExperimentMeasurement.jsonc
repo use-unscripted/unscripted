@@ -38,6 +38,12 @@
     "expected_energy": {
       "type": "number"
     },
+    "expected_performance": {
+      "type": "number"
+    },
+    "expected_want_more": {
+      "type": "number"
+    },
     "pre_completed_at": {
       "type": "string",
       "format": "date-time"
