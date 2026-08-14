@@ -118,7 +118,7 @@ export default function AdminAiFailures() {
   if (!admin) {
     return (
       <main className="mx-auto max-w-3xl px-5 py-10 sm:px-8">
-        <div className="rounded-[16px] border border-[color:var(--ink-200)] bg-white p-6 text-sm text-[color:var(--ink-700)]">
+        <div className="rounded-[var(--r-surface)] border border-[color:var(--ink-200)] bg-white p-6 text-sm text-[color:var(--ink-700)]">
           This page is for the team only.
         </div>
       </main>
@@ -138,14 +138,14 @@ export default function AdminAiFailures() {
         description="Every generation that failed or was rejected. Diagnostics only: no prompts, no model output, nothing a student wrote."
         action={
           <button onClick={load} disabled={loading}
-            className="flex items-center gap-2 rounded-[10px] border border-[color:var(--ink-200)] px-4 py-2.5 text-sm font-semibold text-[color:var(--ink-700)] disabled:opacity-60">
+            className="flex items-center gap-2 rounded-[var(--r-control)] border border-[color:var(--ink-200)] px-4 py-2.5 text-sm font-semibold text-[color:var(--ink-700)] disabled:opacity-60">
             {loading ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />} Refresh
           </button>
         }
       />
 
       {error && (
-        <div className="mb-4 flex items-center gap-2 rounded-xl px-4 py-3 text-sm"
+        <div className="mb-4 flex items-center gap-2 rounded-[var(--r-control)] px-4 py-3 text-sm"
           style={{ background: 'var(--warning-50)', border: '1px solid var(--warning-700)', color: 'var(--warning-700)' }}>
           <AlertCircle size={14} /> {error}
         </div>
@@ -158,7 +158,7 @@ export default function AdminAiFailures() {
           {summary.length > 0 && (
             <div className="mb-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {summary.map(entry => (
-                <div key={entry.feature} className="rounded-[16px] border border-[color:var(--ink-200)] bg-white p-4">
+                <div key={entry.feature} className="rounded-[var(--r-surface)] border border-[color:var(--ink-200)] bg-white p-4">
                   <p className="text-sm font-semibold capitalize text-[color:var(--surface-dark-900)]">
                     {featureLabel(entry.feature)}
                   </p>
@@ -188,14 +188,14 @@ export default function AdminAiFailures() {
           </div>
 
           {tab === 'recovered' && counts.recovered > 0 && (
-            <p className="mb-3 flex items-start gap-2 rounded-xl px-4 py-3 text-xs text-[color:var(--ink-700)]"
+            <p className="mb-3 flex items-start gap-2 rounded-[var(--r-control)] px-4 py-3 text-xs text-[color:var(--ink-700)]"
               style={{ background: 'var(--ink-50)', border: '1px solid var(--ink-200)' }}>
               <Wand2 size={13} className="mt-0.5 shrink-0" /> {RECOVERED_HELP}
             </p>
           )}
 
           {visible.length === 0 ? (
-            <div className="rounded-[16px] border border-dashed border-[color:var(--ink-200)] p-10 text-center">
+            <div className="rounded-[var(--r-surface)] border border-dashed border-[color:var(--ink-200)] p-10 text-center">
               <Inbox size={22} className="mx-auto mb-2 text-[color:var(--ink-400)]" />
               <p className="text-sm font-semibold text-[color:var(--surface-dark-900)]">Nothing here.</p>
               <p className="mt-1 text-xs text-[color:var(--ink-500)]">
@@ -206,7 +206,7 @@ export default function AdminAiFailures() {
             <div className="space-y-2">
               {visible.map(row => (
                 <div key={row.id}
-                  className="flex flex-wrap items-center justify-between gap-3 rounded-[14px] border border-[color:var(--ink-200)] bg-white px-4 py-3">
+                  className="flex flex-wrap items-center justify-between gap-3 rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-white px-4 py-3">
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="text-sm font-semibold capitalize text-[color:var(--surface-dark-900)]">

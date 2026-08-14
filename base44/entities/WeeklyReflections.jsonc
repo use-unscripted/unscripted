@@ -67,6 +67,18 @@
     "outreach_count": {
       "type": "number"
     },
+    "referenced_experiment_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "referenced_experiment_titles": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
     "completed_items": {
       "type": "array",
       "items": {

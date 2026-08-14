@@ -1,7 +1,7 @@
 import { ArrowLeft, CheckCircle2 } from 'lucide-react';
 
 const Section = ({ label, children }) => (
-  <section className="rounded-[20px] border border-[color:var(--ink-200)] bg-white p-6 shadow-sm">
+  <section className="rounded-[var(--r-surface)] border border-[color:var(--ink-200)] bg-white p-6 shadow-sm">
     <p className="tp-eyebrow text-[color:var(--info-600)]">{label}</p>
     <div className="mt-3">{children}</div>
   </section>
@@ -29,7 +29,7 @@ const List = ({ items, accent = false }) => (
 const Skeleton = () => (
   <div className="grid gap-4 md:grid-cols-2 animate-pulse">
     {[...Array(8)].map((_, i) => (
-      <div key={i} className="rounded-[20px] border border-[color:var(--ink-200)] bg-white p-6">
+      <div key={i} className="rounded-[var(--r-surface)] border border-[color:var(--ink-200)] bg-white p-6">
         <div className="h-3 w-28 rounded bg-[color:var(--ink-200)] mb-4" />
         <div className="space-y-2">
           <div className="h-3 w-full rounded bg-[color:var(--ink-100)]" />
@@ -60,7 +60,7 @@ export default function BlueprintDetail({ bp, detail, loading, error, onBack }) 
       {loading && <Skeleton />}
 
       {!loading && error && (
-        <div className="tp-body rounded-[16px] px-5 py-4"
+        <div className="tp-body rounded-[var(--r-surface)] px-5 py-4"
           style={{ background: 'var(--warning-50)', border: '1px solid var(--warning-700)', color: 'var(--warning-700)' }}>
           {error}
         </div>
@@ -99,7 +99,7 @@ export default function BlueprintDetail({ bp, detail, loading, error, onBack }) 
             <Section label="30-day starter plan">
               <div className="grid gap-4 sm:grid-cols-2 mt-2">
                 {detail.thirty_day_plan?.map((week, i) => (
-                  <div key={i} className="rounded-xl p-4" style={{ background: 'var(--ink-50)', border: '1px solid var(--ink-200)' }}>
+                  <div key={i} className="rounded-[var(--r-control)] p-4" style={{ background: 'var(--ink-50)', border: '1px solid var(--ink-200)' }}>
                     <p className="tp-meta font-bold text-[color:var(--info-600)]">{week.week}</p>
                     <p className="tp-card mt-1 text-[color:var(--surface-dark-800)]">{week.focus}</p>
                     <ul className="mt-3 space-y-1.5">

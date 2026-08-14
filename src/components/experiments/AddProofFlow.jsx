@@ -19,8 +19,8 @@ import { base44 } from '@/api/base44Client';
 import { ProgressBar, OptionRow, GuidedStyles, footerCls } from '@/components/guided/GuidedPieces';
 import { linksForExperiment } from '@/lib/career-cycle';
 
-const inputCls = 'w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]';
-const bigInputCls = 'w-full rounded-2xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-4 text-base outline-none focus:border-[color:var(--brand-navy-900)]';
+const inputCls = 'w-full rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]';
+const bigInputCls = 'w-full rounded-[var(--r-surface)] border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-4 text-base outline-none focus:border-[color:var(--brand-navy-900)]';
 
 // footerCls comes from GuidedPieces. The panel below drops its own bottom
 // padding (pb-0) so that bar can stick to the panel's edge, and its -mx values
@@ -79,7 +79,7 @@ function FileDropZone({ file, uploadState, onSelect, onRemove }) {
   if (file) {
     const vid = isVideo(file);
     return (
-      <div className="rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] p-4">
+      <div className="rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] p-4">
         <div className="flex items-start gap-3">
           <div className="shrink-0 w-9 h-9 rounded-lg flex items-center justify-center" style={{ background: 'var(--ink-100)' }}>
             {vid ? <Film size={18} style={{ color: 'var(--brand-navy-700)' }} /> : <FileText size={18} style={{ color: 'var(--brand-navy-700)' }} />}
@@ -116,7 +116,7 @@ function FileDropZone({ file, uploadState, onSelect, onRemove }) {
       onDragOver={e => { e.preventDefault(); setDragging(true); }}
       onDragLeave={() => setDragging(false)}
       onClick={() => inputRef.current?.click()}
-      className={`rounded-xl border-2 border-dashed px-6 py-7 text-center cursor-pointer transition ${dragging ? 'border-[color:var(--brand-navy-900)] bg-[color:var(--ink-100)]' : 'border-[color:var(--ink-200)] bg-[color:var(--ink-50)] hover:border-[color:var(--brand-navy-900)] hover:bg-[color:var(--ink-100)]'}`}>
+      className={`rounded-[var(--r-control)] border-2 border-dashed px-6 py-7 text-center cursor-pointer transition ${dragging ? 'border-[color:var(--brand-navy-900)] bg-[color:var(--ink-100)]' : 'border-[color:var(--ink-200)] bg-[color:var(--ink-50)] hover:border-[color:var(--brand-navy-900)] hover:bg-[color:var(--ink-100)]'}`}>
       <input ref={inputRef} type="file"
         accept=".pdf,.doc,.docx,.ppt,.pptx,.txt,.html,.png,.jpg,.jpeg,.webp,.svg,.csv,.xls,.xlsx,.json,.mp3,.wav,.mp4,.webm,.mov,.avi,.mkv,.m4v,.wmv,.ogv,.3gp,.3g2"
         className="hidden" onChange={e => { if (e.target.files[0]) onSelect(e.target.files[0]); }} />
@@ -469,7 +469,7 @@ export default function AddProofFlow({ onClose, onSaved, preselectedMission, pre
 
   const backButton = (
     <button onClick={back} disabled={saving}
-      className="tp-body flex items-center gap-1 rounded-[10px] border px-4 py-3 font-semibold disabled:opacity-50"
+      className="tp-body flex items-center gap-1 rounded-[var(--r-control)] border px-4 py-3 font-semibold disabled:opacity-50"
       style={{ borderColor: 'var(--ink-200)', color: 'var(--text-primary)' }}>
       <ChevronLeft size={15} /> Back
     </button>
@@ -477,7 +477,7 @@ export default function AddProofFlow({ onClose, onSaved, preselectedMission, pre
 
   const cancelButton = (
     <button onClick={requestClose} disabled={saving}
-      className="tp-body rounded-[10px] border px-4 py-3 font-semibold disabled:opacity-50"
+      className="tp-body rounded-[var(--r-control)] border px-4 py-3 font-semibold disabled:opacity-50"
       style={{ borderColor: 'var(--ink-200)', color: 'var(--text-primary)' }}>
       Cancel
     </button>
@@ -485,7 +485,7 @@ export default function AddProofFlow({ onClose, onSaved, preselectedMission, pre
 
   const continueButton = (enabled) => (
     <button onClick={next} disabled={!enabled}
-      className="tp-body flex flex-1 items-center justify-center gap-2 rounded-[10px] py-3 font-semibold text-white disabled:opacity-40"
+      className="tp-body flex flex-1 items-center justify-center gap-2 rounded-[var(--r-control)] py-3 font-semibold text-white disabled:opacity-40"
       style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}>
       Continue <ChevronRight size={15} />
     </button>
@@ -502,7 +502,7 @@ export default function AddProofFlow({ onClose, onSaved, preselectedMission, pre
         <Loader2 size={20} className="animate-spin mx-auto mb-2" />Loading your experiments…
       </div>
     ) : noExperiments ? (
-      <div className="tp-body rounded-2xl border px-4 py-5" style={{ borderColor: 'var(--ink-200)', background: 'var(--ink-50)', color: 'var(--text-secondary)' }}>
+      <div className="tp-body rounded-[var(--r-surface)] border px-4 py-5" style={{ borderColor: 'var(--ink-200)', background: 'var(--ink-50)', color: 'var(--text-secondary)' }}>
         No experiments found. Create one first, then come back and log what you did.
       </div>
     ) : (
@@ -523,7 +523,7 @@ export default function AddProofFlow({ onClose, onSaved, preselectedMission, pre
         {cancelButton}
         {noExperiments ? (
           <button onClick={requestClose}
-            className="tp-body flex flex-1 items-center justify-center gap-2 rounded-[10px] py-3 font-semibold text-white"
+            className="tp-body flex flex-1 items-center justify-center gap-2 rounded-[var(--r-control)] py-3 font-semibold text-white"
             style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}>
             Close
           </button>
@@ -617,7 +617,7 @@ export default function AddProofFlow({ onClose, onSaved, preselectedMission, pre
         <button
           onClick={() => setDetailOpen(o => !o)}
           aria-expanded={detailOpen}
-          className="mt-5 flex w-full items-center justify-between rounded-2xl border px-4 py-3 text-left"
+          className="mt-5 flex w-full items-center justify-between rounded-[var(--r-surface)] border px-4 py-3 text-left"
           style={{ borderColor: 'var(--ink-200)', background: 'var(--brand-white)' }}
         >
           <span className="tp-body font-semibold" style={{ color: 'var(--text-primary)' }}>
@@ -627,7 +627,7 @@ export default function AddProofFlow({ onClose, onSaved, preselectedMission, pre
         </button>
 
         {detailOpen && (
-          <div className="anim-slide-up mt-2 space-y-4 rounded-2xl border p-4" style={{ borderColor: 'var(--ink-200)', background: '#FAFBFC' }}>
+          <div className="anim-slide-up mt-2 space-y-4 rounded-[var(--r-surface)] border p-4" style={{ borderColor: 'var(--ink-200)', background: '#FAFBFC' }}>
             {!preselectedMission && expMissions.length > 0 && (
               <label className="block">
                 <span className="tp-meta mb-1 block font-semibold" style={{ color: 'var(--text-secondary)' }}>Mission</span>
@@ -679,7 +679,7 @@ export default function AddProofFlow({ onClose, onSaved, preselectedMission, pre
         <div className="flex items-center gap-3">
           {index > 0 ? backButton : cancelButton}
           <button onClick={handleSave} disabled={!canSave}
-            className="tp-body flex flex-1 items-center justify-center gap-2 rounded-[10px] py-3 font-semibold text-white transition disabled:opacity-40"
+            className="tp-body flex flex-1 items-center justify-center gap-2 rounded-[var(--r-control)] py-3 font-semibold text-white transition disabled:opacity-40"
             style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}>
             {saving && uploadState === 'uploading'
               ? <><Loader2 size={15} className="animate-spin" />Uploading…</>
@@ -706,7 +706,7 @@ export default function AddProofFlow({ onClose, onSaved, preselectedMission, pre
           Changing either breaks something silently. */}
       <div
         data-modal-scroll
-        className="anim-modal w-full max-w-xl max-h-[94vh] overflow-y-auto rounded-[24px] bg-white px-6 pb-0 pt-6 sm:px-8 sm:pt-8"
+        className="anim-modal w-full max-w-xl max-h-[94vh] overflow-y-auto rounded-[var(--r-surface)] bg-white px-6 pb-0 pt-6 sm:px-8 sm:pt-8"
         style={{ boxShadow: '0 30px 80px rgba(5,8,22,0.28)' }}
       >
         <div ref={rootRef}>
@@ -736,7 +736,7 @@ export default function AddProofFlow({ onClose, onSaved, preselectedMission, pre
 
             <div className="mt-5 min-h-[220px]">
               {error && (
-                <div className="tp-body mb-4 rounded-xl bg-red-50 p-3 text-red-700" role="alert">
+                <div className="tp-body mb-4 rounded-[var(--r-control)] bg-red-50 p-3 text-red-700" role="alert">
                   <div className="flex items-start gap-2">
                     <AlertCircle size={14} className="mt-0.5 shrink-0" />{error}
                   </div>

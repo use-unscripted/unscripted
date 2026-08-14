@@ -18,7 +18,7 @@ export default function ExperimentNotesPanel({ experiment }) {
   };
 
   return (
-    <section className="rounded-[16px] bg-white p-5" style={{ border: '1px solid var(--border-light)' }}>
+    <section className="rounded-[var(--r-surface)] bg-white p-5" style={{ border: '1px solid var(--border-light)' }}>
       <div className="flex items-center justify-between">
         <h3 className="tp-card" style={{ color: 'var(--text-primary)' }}>Notes</h3>
         <span className="tp-meta" style={{ color: 'var(--text-muted)' }}>
@@ -31,7 +31,7 @@ export default function ExperimentNotesPanel({ experiment }) {
         onChange={e => { setValue(e.target.value); setState('idle'); }}
         onBlur={save}
         placeholder="Anything you want to remember about this experiment…"
-        className="mt-3 w-full rounded-[10px] border px-3 py-2.5 text-base md:text-sm outline-none"
+        className="mt-3 w-full rounded-[var(--r-control)] border px-3 py-2.5 text-base md:text-sm outline-none"
         style={{ borderColor: 'var(--border-light)', background: 'var(--background-secondary)' }}
       />
     </section>

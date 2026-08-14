@@ -96,7 +96,7 @@ export default function StepArtifact({ artifact: raw, profile }) {
     : items.join('\n');
 
   return (
-    <div className="mt-3 overflow-hidden rounded-xl border border-[color:var(--ink-200)] bg-white">
+    <div className="mt-3 overflow-hidden rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-white">
       <div className="flex items-center justify-between gap-3 border-b border-[color:var(--ink-200)] bg-[color:var(--ink-50)] px-3 py-2">
         <span className="tp-eyebrow flex items-center gap-1.5 text-[color:var(--ink-500)]">
           <Icon size={12} /> {meta.label}

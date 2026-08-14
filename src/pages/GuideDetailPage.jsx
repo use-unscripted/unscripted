@@ -1,100 +1,112 @@
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+/**
+ * Opening an experiment: an overview, then one step at a time, then a short
+ * completion screen that hands the student to reflection.
+ *
+ * Nothing here is a second system. The steps are the existing Mission Guide's
+ * own steps, the outreach is the existing OutreachContacts records, the evidence
+ * is ProofOfWork on the same cycle → path → experiment → mission chain, and the
+ * progress lives on the guide record so a refresh, a logout or another phone
+ * lands on the same step.
+ */
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
-import StepArtifact from '@/components/experiments/StepArtifact';
-import { trackPilotEvent } from '@/lib/pilot-metrics';
-import CampusEventCard from '@/components/experiments/CampusEventCard';
+import { Loader2, Star } from 'lucide-react';
 import { Sk, SkCards } from '@/components/PageSkeleton';
-import { ArrowLeft, Clock, CheckCircle2, Star, Loader2 } from 'lucide-react';
+import PageHeader from '@/components/PageHeader';
+import { trackPilotEvent } from '@/lib/pilot-metrics';
+import GuidedOverview from '@/components/guided/GuidedOverview';
+import GuidedProgress from '@/components/guided/GuidedProgress';
+import GuidedStepPanel from '@/components/guided/GuidedStepPanel';
+import GuidedNav from '@/components/guided/GuidedNav';
+import GuidedCompletion from '@/components/guided/GuidedCompletion';
+import LanguageFamiliarityPrompt from '@/components/language/LanguageFamiliarityPrompt';
+import useLanguageLevel from '@/hooks/useLanguageLevel';
+import {
+  readProgress, openStep, completeStep, saveStepNote,
+  stepBlockers, stepEvidenceKey, minutesSpent,
+} from '@/lib/guide-progress';
 
-const STATUS_CFG = {
-  active:    { bg: 'var(--success-50)', text: 'var(--success-700)', label: 'Active' },
-  draft:     { bg: 'var(--ink-100)', text: 'var(--ink-500)', label: 'Draft' },
-  inactive:  { bg: 'var(--ink-100)', text: 'var(--ink-500)', label: 'Inactive' },
-  completed: { bg: 'var(--info-50)', text: 'var(--info-700)', label: 'Completed' },
-};
-
-function fmtDate(d) {
-  if (!d) return 'Not set';
-  return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-}
+const alive = (rows) => (Array.isArray(rows) ? rows : []).filter(r => r?.deletion_status !== 'deleted');
+const RESPONDED = ['responded', 'call_scheduled', 'completed'];
 
 export default function GuideDetailPage() {
   const navigate = useNavigate();
-  const params = new URLSearchParams(window.location.search);
-  const guideId = params.get('id');
+  const guideId = new URLSearchParams(window.location.search).get('id');
 
   const [guide, setGuide] = useState(null);
+  const [ctx, setCtx] = useState({ experiment: null, mission: null, path: null, proofs: [], contacts: [] });
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [settingActive, setSettingActive] = useState(false);
 
+  const [view, setView] = useState('overview');   // overview | step | done
+  const [stepNumber, setStepNumber] = useState(1);
+  const [note, setNote] = useState('');
+  const [showBlockers, setShowBlockers] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [askDismissed, setAskDismissed] = useState(false);
+  const noteTimer = useRef(null);
+
+  /* Display language for this path. Held here so the overview and the step share
+     one value, and stored per path, never per site. */
+  const language = useLanguageLevel({
+    pathId: guide?.path_id || ctx.experiment?.path_id || ctx.path?.id || null,
+    path: ctx.path,
+    experiment: ctx.experiment,
+  });
+
+  // ── Load ──
+  const loadContext = useCallback(async (g) => {
+    const [experiment, missions, proofs, contacts, paths] = await Promise.all([
+      g.experiment_id ? base44.entities.Experiments.get(g.experiment_id).catch(() => null) : null,
+      g.experiment_id ? base44.entities.Missions.filter({ experiment_id: g.experiment_id }, 'created_date', 100).catch(() => []) : [],
+      g.experiment_id ? base44.entities.ProofOfWork.filter({ experiment_id: g.experiment_id }, '-created_date', 100).catch(() => []) : [],
+      g.experiment_id ? base44.entities.OutreachContacts.filter({ experiment_id: g.experiment_id }, '-created_date', 100).catch(() => []) : [],
+      base44.entities.PathRecommendations.list('-created_date', 200).catch(() => []),
+    ]);
+    const missionList = alive(missions);
+    const mission = missionList.find(m => m.id === g.mission_id)
+      || missionList.find(m => !['completed', 'skipped'].includes(m.status))
+      || missionList[0]
+      || null;
+    const path = (Array.isArray(paths) ? paths : []).find(
+      p => p.id === (experiment?.path_id || g.path_id) || p.path_name === experiment?.path_name
+    ) || null;
+    setCtx({ experiment, mission, path, proofs: alive(proofs), contacts: alive(contacts) });
+  }, []);
+
   useEffect(() => {
-    if (!guideId) { setError('No guide ID provided.'); setLoading(false); return; }
+    if (!guideId) { setError('No experiment was specified.'); setLoading(false); return; }
     base44.entities.MissionGuides.get(guideId)
-      .then(g => {
+      .then(async (g) => {
         setGuide(g);
+        const p = readProgress(g);
+        setStepNumber(p.resumeStep);
         setLoading(false);
+        await loadContext(g);
         trackPilotEvent('mission_guide_opened', {
           experiment_id: g.experiment_id, mission_id: g.mission_id, path_id: g.path_id, dedupe_key: g.id,
         });
       })
-      .catch(() => { setError('Guide not found.'); setLoading(false); });
-  }, [guideId]);
+      .catch(() => { setError('Experiment not found.'); setLoading(false); });
+  }, [guideId, loadContext]);
 
-  // Anything onboarding already asked for is filled into the artifacts, so the
-  // student only completes what we genuinely don't know. Failing to load it just
-  // means the tokens stay visible — never blocks the guide.
   useEffect(() => {
     base44.auth.me()
-      // created_by_id, not user_id: StudentProfile has no user_id field, so the
-      // old filter matched nothing. This is what substitutes the student's name,
-      // college and major into a guide, so every guide rendered with the raw
-      // placeholder tokens still showing.
       .then(user => base44.entities.StudentProfile.filter({ created_by_id: user.id }, '-created_date', 1))
       .then(rows => setProfile(rows?.[0] || null))
       .catch(() => setProfile(null));
   }, []);
 
-  const handleSetActive = async () => {
-    if (!guide || settingActive) return;
-    setSettingActive(true);
-    try {
-      // Deactivate siblings
-      const siblings = await base44.entities.MissionGuides.filter({ experiment_id: guide.experiment_id }, '-version_number', 50).catch(() => []);
-      await Promise.all(
-        siblings.filter(g => g.is_active && g.id !== guide.id)
-          .map(g => base44.entities.MissionGuides.update(g.id, { is_active: false, status: 'inactive' }))
-      );
-      await base44.entities.MissionGuides.update(guide.id, { is_active: true, status: 'active' });
-      setGuide(g => ({ ...g, is_active: true, status: 'active' }));
-    } finally {
-      setSettingActive(false);
-    }
-  };
-
+  // ── Loading / not found ──
   if (loading) {
-    // Back link · badge row · guide title · meta · steps — the real page's
-    // shape, so the guide fills the frame rather than replacing a spinner.
     return (
       <main className="app-page">
         <Sk h={15} w={150} r={5} className="mb-6" />
-        <div className="mb-6">
-          <div className="mb-2 flex flex-wrap gap-2">
-            <Sk h={22} w={78} r={999} />
-            <Sk h={22} w={64} r={999} />
-          </div>
-          <div className="flex h-11 items-center"><Sk h={34} w="76%" r={8} /></div>
-          <div className="mt-3 flex h-5 flex-wrap items-center gap-4">
-            <Sk h={13} w={130} r={4} />
-            <Sk h={13} w={70} r={4} />
-            <Sk h={13} w={54} r={4} />
-          </div>
-        </div>
-        <Sk h={42} w={196} r={10} className="mb-6" />
-        <Sk h={112} r={20} className="mb-6" />
-        <SkCards count={4} h={132} r={20} />
+        <Sk h={210} r={20} className="mb-5" />
+        <SkCards count={2} h={132} r={20} />
       </main>
     );
   }
@@ -102,152 +114,219 @@ export default function GuideDetailPage() {
   if (error || !guide) {
     return (
       <div className="app-page text-center">
-        <p className="tp-lead mx-auto mb-5 text-[color:var(--ink-500)]">{error || 'Guide not found.'}</p>
-        <button onClick={() => navigate('/experiments')} className="tp-body font-semibold text-[var(--brand-navy-900)] underline">
-          Back to Missions
+        <p className="tp-lead mx-auto mb-5 text-[color:var(--ink-500)]">{error || 'Experiment not found.'}</p>
+        <button onClick={() => navigate('/experiments')} className="touch-reach tp-body font-semibold text-[var(--brand-navy-900)] underline">
+          Back to My Experiments
         </button>
       </div>
     );
   }
 
-  const cfg = STATUS_CFG[guide.status] || STATUS_CFG.draft;
+  const progress = readProgress(guide);
+  const { experiment, mission, path, proofs, contacts } = ctx;
+  const backToExperiment = experiment?.id ? `/experiment?experimentId=${experiment.id}` : '/experiments';
+
+  // A guide with no steps keeps its old reading view rather than an empty wizard.
+  if (progress.total === 0) {
+    return (
+      <main className="app-page">
+        <PageHeader showBack backLabel="Back to my experiment" title={guide.guide_title} />
+        <p className="tp-prose" style={{ color: 'var(--text-secondary)' }}>
+          {guide.objective || 'This experiment has no steps recorded yet.'}
+        </p>
+        <Link to={backToExperiment} className="tp-body mt-6 inline-flex font-semibold" style={{ color: 'var(--brand-navy-700)' }}>
+          Back to my experiment
+        </Link>
+      </main>
+    );
+  }
+
+  const step = progress.steps[stepNumber - 1] || progress.steps[0];
+  const isDone = progress.completed.includes(stepNumber);
+  const evidence = proofs.find(p => p.submission_key === stepEvidenceKey(guide.id, stepNumber)) || null;
+  const stepContacts = mission ? contacts.filter(c => c.mission_id === mission.id) : contacts;
+  const blockers = stepBlockers(step, { note, evidence, contacts: stepContacts });
+
+  // ── Actions ──
+  const goToStep = async (n) => {
+    const target = Math.min(Math.max(n, 1), progress.total);
+    setStepNumber(target);
+    setShowBlockers(false);
+    const row = (guide.step_progress || []).find(r => r?.step_number === target);
+    setNote(row?.note || '');
+    setView('step');
+    setGuide(await openStep(guide, target).catch(() => guide));
+  };
+
+  const onNote = (value) => {
+    setNote(value);
+    if (noteTimer.current) clearTimeout(noteTimer.current);
+    noteTimer.current = setTimeout(async () => {
+      const saved = await saveStepNote(guide, stepNumber, value).catch(() => null);
+      if (saved) setGuide(saved);
+    }, 900);
+  };
+
+  const onNext = async () => {
+    if (busy) return;
+    if (!isDone && blockers.length) { setShowBlockers(true); return; }
+    setBusy(true);
+    try {
+      let next = guide;
+      if (!isDone) next = await completeStep(guide, stepNumber);
+      setGuide(next);
+      const after = readProgress(next);
+      if (stepNumber >= progress.total) {
+        if (after.allDone) { setView('done'); return; }
+        // Something earlier is still open, so send them there rather than to a
+        // completion screen the experiment has not earned.
+        await goToStep(after.resumeStep);
+        return;
+      }
+      await goToStep(stepNumber + 1);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const onBack = () => {
+    if (stepNumber === 1) { setView('overview'); return; }
+    goToStep(stepNumber - 1);
+  };
+
+  const conversations = contacts.filter(c => RESPONDED.includes(c.response_status)).length;
 
   return (
     <main className="app-page">
-      {/* Back */}
-      <button
-        onClick={() => navigate('/experiments')}
-        className="tp-body flex items-center gap-2 font-semibold text-[color:var(--ink-500)] hover:text-[color:var(--ink-700)] mb-7 transition"
-      >
-        <ArrowLeft size={16} /> Back to Missions
-      </button>
+      <div className="space-y-5">
+        {view === 'overview' && (
+          <>
+            {language.askFamiliarity && !askDismissed && (
+              <LanguageFamiliarityPrompt
+                careerName={language.careerName}
+                onChoose={(lvl) => { language.setLevel(lvl, 'asked'); setAskDismissed(true); }}
+                onSkip={() => setAskDismissed(true)}
+              />
+            )}
+            <GuidedOverview
+              guide={guide}
+              experiment={experiment}
+              path={path}
+              progress={progress}
+              onBegin={() => goToStep(progress.resumeStep)}
+              level={language.level}
+              onLevelChange={language.setLevel}
+            />
+            {progress.allDone && (
+              <button
+                type="button"
+                onClick={() => setView('done')}
+                className="tp-body w-full rounded-[var(--r-control)] border px-5 font-semibold"
+                style={{ borderColor: 'var(--border-light)', color: 'var(--brand-navy-700)', minHeight: '48px' }}
+              >
+                See what you finished
+              </button>
+            )}
+            {!guide.is_active && (
+              <button
+                onClick={async () => {
+                  if (settingActive) return;
+                  setSettingActive(true);
+                  try {
+                    const siblings = await base44.entities.MissionGuides
+                      .filter({ experiment_id: guide.experiment_id }, '-version_number', 50).catch(() => []);
+                    await Promise.all(
+                      siblings.filter(g => g.is_active && g.id !== guide.id)
+                        .map(g => base44.entities.MissionGuides.update(g.id, { is_active: false, status: 'inactive' }))
+                    );
+                    await base44.entities.MissionGuides.update(guide.id, { is_active: true, status: 'active' });
+                    setGuide(g => ({ ...g, is_active: true, status: 'active' }));
+                  } finally {
+                    setSettingActive(false);
+                  }
+                }}
+                disabled={settingActive}
+                className="tp-body inline-flex items-center gap-2 rounded-[var(--r-control)] border px-5 font-semibold disabled:opacity-60"
+                style={{ borderColor: 'var(--border-light)', color: 'var(--text-primary)', minHeight: '48px' }}
+              >
+                {settingActive ? <Loader2 size={15} className="animate-spin" /> : <Star size={15} />}
+                Set as my active experiment
+              </button>
+            )}
+            <p className="tp-meta text-center" style={{ color: 'var(--text-muted)' }}>
+              <Link to={backToExperiment} className="touch-reach font-semibold" style={{ color: 'var(--brand-navy-700)' }}>
+                Back to my experiment
+              </Link>
+            </p>
+          </>
+        )}
 
-      {/* Header */}
-      <div className="mb-8">
-        <div className="flex flex-wrap items-center gap-2 mb-3">
-          <span className="tp-meta font-bold text-[color:var(--ink-400)]">Version {guide.version_number}</span>
-          <span className="tp-meta rounded-full px-2.5 py-1 font-bold" style={{ background: cfg.bg, color: cfg.text }}>{cfg.label}</span>
-          {guide.is_active && (
-            <span className="tp-meta flex items-center gap-1 rounded-full px-2.5 py-1 font-bold" style={{ background: 'var(--success-50)', color: 'var(--success-700)' }}>
-              <CheckCircle2 size={13} /> Active Guide
-            </span>
-          )}
-        </div>
-        <h1 className="tp-page text-[color:var(--surface-dark-900)]">{guide.guide_title}</h1>
-        <div className="tp-meta flex flex-wrap gap-4 mt-3 text-[color:var(--ink-400)]">
-          <span>Generated {fmtDate(guide.created_date)}</span>
-          {guide.estimated_time && <span className="flex items-center gap-1"><Clock size={13} /> {guide.estimated_time}</span>}
-          <span>{guide.steps?.length || 0} steps</span>
-        </div>
+        {view === 'step' && step && (
+          <>
+            <GuidedProgress
+              steps={progress.steps}
+              stepNumber={stepNumber}
+              completed={progress.completed}
+              maxReachable={progress.maxReachable}
+              onJump={goToStep}
+            />
+            <GuidedStepPanel
+              step={step}
+              stepNumber={stepNumber}
+              isDone={isDone}
+              guide={guide}
+              experiment={experiment}
+              mission={mission}
+              path={path}
+              profile={profile}
+              contacts={stepContacts}
+              evidence={evidence}
+              note={note}
+              onNote={onNote}
+              isLastStep={stepNumber >= progress.total}
+              onEvidenceSaved={async () => { await loadContext(guide); setShowBlockers(false); }}
+              onContactsChanged={async () => { await loadContext(guide); }}
+              level={language.level}
+              onLevelChange={language.setLevel}
+              careerName={language.careerName}
+            />
+            <GuidedNav
+              stepNumber={stepNumber}
+              total={progress.total}
+              isDone={isDone}
+              blockers={blockers}
+              showBlockers={showBlockers}
+              onBack={onBack}
+              onExit={() => navigate(backToExperiment)}
+              onNext={onNext}
+              busy={busy}
+            />
+          </>
+        )}
+
+        {view === 'done' && (
+          <>
+            <GuidedCompletion
+              guide={guide}
+              experiment={experiment}
+              stepsDone={progress.completed.length}
+              total={progress.total}
+              conversations={conversations}
+              evidenceCount={proofs.length}
+              minutes={minutesSpent(guide)}
+            />
+            <p className="touch-reach-line tp-meta justify-center text-center" style={{ color: 'var(--text-muted)' }}>
+              <button onClick={() => setView('overview')} className="touch-reach font-semibold" style={{ color: 'var(--brand-navy-700)' }}>
+                Review the steps
+              </button>
+              {' · '}
+              <Link to={backToExperiment} className="touch-reach font-semibold" style={{ color: 'var(--brand-navy-700)' }}>
+                Back to my experiment
+              </Link>
+            </p>
+          </>
+        )}
       </div>
-
-      {/* Set as Active */}
-      {!guide.is_active && (
-        <button
-          onClick={handleSetActive}
-          disabled={settingActive}
-          className="tp-body mb-8 flex items-center gap-2 rounded-[10px] border border-[color:var(--ink-200)] px-5 py-3 font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)] transition disabled:opacity-60"
-        >
-          {settingActive ? <Loader2 size={15} className="animate-spin" /> : <Star size={15} />}
-          Set as Active Guide
-        </button>
-      )}
-
-      {/* Objective */}
-      {guide.objective && (
-        <section className="mb-8">
-          <p className="tp-eyebrow text-[color:var(--ink-500)] mb-2">Objective</p>
-          <p className="tp-prose text-[color:var(--ink-700)]">{guide.objective}</p>
-        </section>
-      )}
-
-      {/* Steps */}
-      {guide.steps?.length > 0 && (
-        <section className="mb-8">
-          <p className="tp-eyebrow text-[color:var(--ink-500)] mb-4">Steps</p>
-          <ol className="space-y-7">
-            {guide.steps.map((s, i) => {
-              // Older guides carry estimated_time as free text; newer ones a number.
-              const time = s.estimated_minutes ? `${s.estimated_minutes} min` : s.estimated_time;
-              const isFirstRep = s.is_first_rep ?? i === 0;
-              return (
-                <li key={i} className="flex gap-4">
-                  <span
-                    className="tp-meta shrink-0 w-7 h-7 rounded-full flex items-center justify-center font-bold text-white mt-0.5"
-                    style={{ background: 'var(--brand-navy-900)' }}
-                  >{i + 1}</span>
-                  <div className="flex-1 min-w-0">
-                    {isFirstRep && (
-                      <p className="tp-eyebrow mb-1" style={{ color: '#7A5B12' }}>
-                        Start here
-                      </p>
-                    )}
-                    {s.title && <p className="tp-card text-[color:var(--surface-dark-900)]">{s.title}</p>}
-                    {s.description && <p className="tp-prose text-[color:var(--ink-500)] mt-1.5">{s.description}</p>}
-                    {time && <p className="tp-meta text-[color:var(--ink-400)] mt-2 flex items-center gap-1"><Clock size={13} /> {time}</p>}
-
-                    {s.campus_event && (
-                      <div className="mt-3">
-                        <CampusEventCard event={s.campus_event} college={profile?.college} />
-                      </div>
-                    )}
-
-                    <StepArtifact artifact={s.artifact} profile={profile} />
-
-                    {(s.done_when || s.proof_capture) && (
-                      <dl className="tp-meta mt-3 space-y-1">
-                        {s.done_when && (
-                          <div className="flex gap-1.5">
-                            <dt className="shrink-0 font-bold text-[color:var(--ink-500)]">Done when</dt>
-                            <dd className="text-[color:var(--ink-500)]">{s.done_when}</dd>
-                          </div>
-                        )}
-                        {s.proof_capture && (
-                          <div className="flex gap-1.5">
-                            <dt className="shrink-0 font-bold text-[color:var(--ink-500)]">Proof</dt>
-                            <dd className="text-[color:var(--ink-500)]">{s.proof_capture}</dd>
-                          </div>
-                        )}
-                      </dl>
-                    )}
-                  </div>
-                </li>
-              );
-            })}
-          </ol>
-        </section>
-      )}
-
-      {/* Deliverable */}
-      {guide.deliverable && (
-        <section className="mb-5 rounded-xl p-5" style={{ background: 'var(--ink-100)', border: '1px solid rgba(31,58,95,0.15)' }}>
-          <p className="tp-eyebrow mb-2" style={{ color: 'var(--brand-navy-900)' }}>Deliverable</p>
-          <p className="tp-prose text-[color:var(--ink-700)]">{guide.deliverable}</p>
-        </section>
-      )}
-
-      {/* Proof required */}
-      {guide.proof_requirement && (
-        <section className="mb-5 rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] p-5">
-          <p className="tp-eyebrow text-[color:var(--ink-500)] mb-2">Proof Required</p>
-          <p className="tp-prose text-[color:var(--ink-700)]">{guide.proof_requirement}</p>
-        </section>
-      )}
-
-      {/* Reflection questions */}
-      {guide.reflection_questions?.length > 0 && (
-        <section className="mb-5">
-          <p className="tp-eyebrow text-[color:var(--ink-500)] mb-3">Reflection Questions</p>
-          <ul className="space-y-2.5">
-            {guide.reflection_questions.map((q, i) => (
-              <li key={i} className="tp-body flex gap-2 text-[color:var(--ink-700)]">
-                <span className="shrink-0 font-bold" style={{ color: 'var(--brand-navy-900)' }}>·</span>
-                <span>{q}</span>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
     </main>
   );
 }

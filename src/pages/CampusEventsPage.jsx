@@ -190,7 +190,7 @@ export default function CampusEventsPage() {
       */}
       {loading && (
         <div
-          className="rounded-[20px] bg-white px-5 py-6"
+          className="rounded-[var(--r-surface)] bg-white px-5 py-6"
           style={{ border: '1px solid var(--border-light)' }}
         >
           <p className="tp-body flex items-center gap-2 font-semibold" style={{ color: 'var(--text-primary)' }}>
@@ -238,7 +238,7 @@ export default function CampusEventsPage() {
           {/* Calendar / list */}
           <ScrollReveal
             as="section"
-            className="rounded-[20px] bg-white p-5"
+            className="rounded-[var(--r-surface)] bg-white p-5"
             style={{ border: '1px solid var(--border-light)' }}
           >
             {view === 'grid' ? (
@@ -326,7 +326,7 @@ function ViewToggle({ view, onChange }) {
 
   return (
     <div
-      className="inline-flex shrink-0 rounded-[10px] p-0.5"
+      className="inline-flex shrink-0 rounded-[var(--r-control)] p-0.5"
       style={{ background: 'var(--background-tertiary)' }}
       role="group"
       aria-label="Calendar view"
@@ -387,7 +387,7 @@ function MonthList({ month, events, college, picks, range, onChangeMonth }) {
       </div>
 
       {days.length === 0 ? (
-        <p className="tp-body tp-empty-note rounded-xl border border-dashed text-center"
+        <p className="tp-body tp-empty-note rounded-[var(--r-control)] border border-dashed text-center"
           style={{ borderColor: 'var(--border-light)', color: 'var(--text-muted)' }}>
           Nothing on this month.
         </p>
@@ -446,11 +446,11 @@ function PanelSkeleton({ college }) {
 
       <div className="space-y-2" aria-hidden="true">
         <div
-          className="animate-pulse rounded-xl border-2"
+          className="animate-pulse rounded-[var(--r-control)] border-2"
           style={{ borderColor: 'rgba(214,182,106,0.35)', height: 176, background: 'var(--background-tertiary)' }}
         />
         <div
-          className="animate-pulse rounded-xl"
+          className="animate-pulse rounded-[var(--r-control)]"
           style={{ border: '1px solid var(--border-light)', height: 40, background: 'var(--background-tertiary)' }}
         />
       </div>
@@ -509,7 +509,7 @@ function DayPanel({ selectedKey, selectedEvents, upcoming, picks, ranking, colle
     : 'Coming up';
 
   return (
-    <div className="rounded-[20px] bg-white p-5" style={{ border: '1px solid var(--border-light)' }}>
+    <div className="rounded-[var(--r-surface)] bg-white p-5" style={{ border: '1px solid var(--border-light)' }}>
       <div className="mb-4 flex items-start justify-between gap-3">
         <h2 className="tp-section" style={{ color: 'var(--text-primary)' }}>
           {heading}
@@ -599,7 +599,7 @@ function DayPanel({ selectedKey, selectedEvents, upcoming, picks, ranking, colle
             <button
               type="button"
               onClick={() => setShowRest(true)}
-              className="tp-meta flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed py-2.5 font-semibold transition hover:bg-[var(--background-secondary)]"
+              className="tp-meta flex w-full items-center justify-center gap-1.5 rounded-[var(--r-control)] border border-dashed py-2.5 font-semibold transition hover:bg-[var(--background-secondary)]"
               style={{ borderColor: 'var(--border-light)', color: 'var(--text-secondary)' }}
             >
               <ChevronDown size={13} aria-hidden="true" />

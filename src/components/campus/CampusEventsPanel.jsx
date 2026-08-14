@@ -190,7 +190,7 @@ function Section({ delay, college, linkToAll, children }) {
     <ScrollReveal as="section" delay={delay} aria-label="Events on your campus" className="">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <h2 className="tp-eyebrow" style={{ color: 'var(--text-muted)' }}>
+          <h2 className="tp-section" style={{ color: 'var(--text-primary)' }}>
             On your campus
           </h2>
           {college && (

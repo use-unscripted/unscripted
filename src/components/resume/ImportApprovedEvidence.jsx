@@ -50,7 +50,7 @@ export default function ImportApprovedEvidence({ resume, onAddEntry, onAddSkills
   if (loading) return null;
 
   return (
-    <div className="mb-5 rounded-[16px] border border-[color:var(--ink-200)] bg-white p-4">
+    <div className="mb-5 rounded-[var(--r-surface)] border border-[color:var(--ink-200)] bg-white p-4">
       <div className="mb-1 flex items-center gap-2">
         <ShieldCheck size={15} style={{ color: 'var(--brand-navy-700)' }} />
         <p className="tp-card text-[color:var(--surface-dark-900)]">Import approved evidence</p>
@@ -69,14 +69,14 @@ export default function ImportApprovedEvidence({ resume, onAddEntry, onAddSkills
           <label className="tp-meta mb-4 flex items-center gap-2 font-semibold text-[color:var(--ink-700)]">
             Import into
             <select value={section} onChange={(e) => setSection(e.target.value)}
-              className="rounded-xl border border-[color:var(--ink-200)] px-3 py-2 text-base md:text-[13px] outline-none focus:border-[color:var(--brand-navy-900)]">
+              className="rounded-[var(--r-control)] border border-[color:var(--ink-200)] px-3 py-2 text-base md:text-[13px] outline-none focus:border-[color:var(--brand-navy-900)]">
               {sections.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}
             </select>
           </label>
 
           <div className="space-y-2">
             {items.map((p) => (
-              <div key={p.id} className="flex items-start gap-3 rounded-xl border border-[color:var(--ink-200)] p-3">
+              <div key={p.id} className="flex items-start gap-3 rounded-[var(--r-control)] border border-[color:var(--ink-200)] p-3">
                 <div className="min-w-0 flex-1">
                   <p className="tp-card text-[color:var(--surface-dark-900)]">{p.approved_title || p.title}</p>
                   {p.approved_bullet && <p className="tp-prose mt-1 text-[color:var(--ink-700)]">{p.approved_bullet}</p>}

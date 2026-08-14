@@ -1,0 +1,148 @@
+{
+  "name": "ExperimentMeasurement",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string"
+    },
+    "experiment_id": {
+      "type": "string"
+    },
+    "experiment_title": {
+      "type": "string"
+    },
+    "career_hypothesis_id": {
+      "type": "string"
+    },
+    "career_name": {
+      "type": "string"
+    },
+    "path_name": {
+      "type": "string"
+    },
+    "cycle_id": {
+      "type": "string"
+    },
+    "expected_enjoyment": {
+      "type": "number"
+    },
+    "expected_difficulty": {
+      "type": "number"
+    },
+    "pre_career_interest": {
+      "type": "number"
+    },
+    "pre_career_fit_confidence": {
+      "type": "number"
+    },
+    "expected_energy": {
+      "type": "number"
+    },
+    "pre_completed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "actual_enjoyment": {
+      "type": "number"
+    },
+    "actual_difficulty": {
+      "type": "number"
+    },
+    "actual_energy": {
+      "type": "number"
+    },
+    "frustration_level": {
+      "type": "number"
+    },
+    "desire_to_repeat": {
+      "type": "number"
+    },
+    "self_rated_performance": {
+      "type": "number"
+    },
+    "post_career_fit_confidence": {
+      "type": "number"
+    },
+    "surprise_reflection": {
+      "type": "string"
+    },
+    "post_completed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "system_performance_score": {
+      "type": "number"
+    },
+    "system_evaluation_summary": {
+      "type": "string"
+    },
+    "system_rubric_results": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "criterion": {
+            "type": "string"
+          },
+          "score": {
+            "type": "number"
+          },
+          "note": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "demonstrated_strengths": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "improvement_areas": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "reasoning_quality": {
+      "type": "number"
+    },
+    "execution_quality": {
+      "type": "number"
+    },
+    "system_evaluated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "enjoyment_expectation_delta": {
+      "type": "number"
+    },
+    "difficulty_expectation_delta": {
+      "type": "number"
+    },
+    "energy_expectation_delta": {
+      "type": "number"
+    },
+    "career_confidence_delta": {
+      "type": "number"
+    }
+  },
+  "required": [
+    "experiment_id"
+  ],
+  "rls": {
+    "create": {
+      "created_by_id": "{{user.id}}"
+    },
+    "read": {
+      "created_by_id": "{{user.id}}"
+    },
+    "update": {
+      "created_by_id": "{{user.id}}"
+    },
+    "delete": {
+      "created_by_id": "{{user.id}}"
+    }
+  }
+}

@@ -19,7 +19,7 @@ import { Check } from 'lucide-react';
 // with a hard edge, which reads as a broken render rather than as "there is
 // more below". Fading the last few pixels out says the list continues.
 export const footerCls =
-  'sticky bottom-0 z-10 -mx-6 mt-6 rounded-b-[24px] border-t border-[color:var(--ink-100)] bg-white px-6 pb-6 pt-4 sm:-mx-8 sm:px-8 ' +
+  'sticky bottom-0 z-10 -mx-6 mt-6 rounded-b-[var(--r-surface)] border-t border-[color:var(--ink-100)] bg-white px-6 pb-6 pt-4 sm:-mx-8 sm:px-8 ' +
   "before:pointer-events-none before:absolute before:inset-x-0 before:bottom-full before:h-7 before:bg-gradient-to-t before:from-white before:to-white/0 before:content-['']";
 
 
@@ -44,7 +44,7 @@ export function OptionRow({ option, selected, index, onSelect, multi }) {
       type="button"
       onClick={onSelect}
       aria-pressed={selected}
-      className="opt-row group flex w-full items-center gap-3 rounded-2xl border px-4 py-3.5 text-left"
+      className="opt-row group flex w-full items-center gap-3 rounded-[var(--r-surface)] border px-4 py-3.5 text-left"
       style={{
         // Capped: an uncapped stagger leaves the tail of a long list invisible
         // for seconds.
@@ -56,7 +56,7 @@ export function OptionRow({ option, selected, index, onSelect, multi }) {
     >
       {/* square indicator when several answers are allowed, round when it's one of N */}
       <span
-        className={`opt-dot flex h-5 w-5 shrink-0 items-center justify-center border ${multi ? 'rounded-[7px]' : 'rounded-full'}`}
+        className={`opt-dot flex h-5 w-5 shrink-0 items-center justify-center border ${multi ? 'rounded-[var(--r-control)]' : 'rounded-full'}`}
         style={{
           borderColor: selected ? 'var(--brand-navy-900)' : 'var(--ink-300)',
           background: selected ? 'var(--brand-navy-900)' : 'transparent',
@@ -70,7 +70,7 @@ export function OptionRow({ option, selected, index, onSelect, multi }) {
       </span>
       {/* only the first nine are reachable by number key, so only those get the hint */}
       {index < 9 && (
-        <span className="opt-key tp-meta hidden shrink-0 rounded-md border px-2 py-0.5 font-semibold sm:block"
+        <span className="opt-key tp-meta hidden shrink-0 rounded-[var(--r-control)] border px-2 py-0.5 font-semibold sm:block"
           style={{ borderColor: 'var(--ink-200)', color: 'var(--ink-500)' }}>
           {index + 1}
         </span>

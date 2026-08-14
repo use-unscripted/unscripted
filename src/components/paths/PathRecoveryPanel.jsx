@@ -29,7 +29,7 @@ export default function PathRecoveryPanel({ variant = 'missing', existingCount =
   };
 
   return (
-    <div className="rounded-[24px] border p-8 sm:p-10" style={{ borderColor: '#FDE68A', background: 'var(--warning-50)' }}>
+    <div className="rounded-[var(--r-surface)] border p-8 sm:p-10" style={{ borderColor: '#FDE68A', background: 'var(--warning-50)' }}>
       <div className="flex items-start gap-4">
         <AlertTriangle size={22} className="mt-0.5 shrink-0" style={{ color: 'var(--warning-700)' }} />
         <div className="flex-1">
@@ -47,13 +47,13 @@ export default function PathRecoveryPanel({ variant = 'missing', existingCount =
           {!confirming ? (
             <button
               onClick={() => setConfirming(true)}
-              className="mt-5 inline-flex items-center gap-2 rounded-[10px] px-5 py-2.5 text-sm font-semibold text-white"
+              className="mt-5 inline-flex items-center gap-2 rounded-[var(--r-control)] px-5 py-2.5 text-sm font-semibold text-white"
               style={{ background: 'var(--brand-navy-900)' }}
             >
               <RefreshCw size={15} /> {incomplete ? 'Retry Path Generation' : 'Restore My Paths'}
             </button>
           ) : (
-            <div className="mt-5 rounded-xl border bg-white p-4" style={{ borderColor: '#FDE68A' }}>
+            <div className="mt-5 rounded-[var(--r-control)] border bg-white p-4" style={{ borderColor: '#FDE68A' }}>
               <p className="tp-body font-semibold" style={{ color: 'var(--surface-dark-900)' }}>
                 Generate a new set of paths from your saved onboarding answers?
               </p>
@@ -64,7 +64,7 @@ export default function PathRecoveryPanel({ variant = 'missing', existingCount =
                 <button
                   onClick={restore}
                   disabled={working}
-                  className="inline-flex items-center gap-2 rounded-[10px] px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
+                  className="inline-flex items-center gap-2 rounded-[var(--r-control)] px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
                   style={{ background: 'var(--brand-navy-900)' }}
                 >
                   <RefreshCw size={15} className={working ? 'animate-spin' : ''} />
@@ -73,7 +73,7 @@ export default function PathRecoveryPanel({ variant = 'missing', existingCount =
                 <button
                   onClick={() => setConfirming(false)}
                   disabled={working}
-                  className="rounded-[10px] border px-5 py-2.5 text-sm font-semibold disabled:opacity-60"
+                  className="rounded-[var(--r-control)] border px-5 py-2.5 text-sm font-semibold disabled:opacity-60"
                   style={{ borderColor: 'var(--border-light)', color: 'var(--text-secondary)', background: '#fff' }}
                 >
                   Cancel

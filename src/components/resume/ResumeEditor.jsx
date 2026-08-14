@@ -8,6 +8,15 @@ import {
   newEntry, newEducationCF, newCert, newAward, newResearch,
   MONTH_OPTIONS, CF_SKILL_GROUP_LABELS, CF_SKILL_GROUP_IDS,
 } from './resumeTemplates';
+import FieldSelect from '@/components/ui/FieldSelect';
+
+// The editor's dropdowns are the app's control now rather than the platform's,
+// so a month is picked the same way on a phone and on a laptop.
+const selectCls = 'w-full rounded-lg border border-[color:var(--ink-200)] bg-white px-2.5 py-1.5 md:text-[13px]';
+const monthOpts = (emptyLabel) => [
+  { value: '', label: emptyLabel },
+  ...MONTH_OPTIONS.map(m => ({ value: m.val, label: m.label })),
+];
 
 // ── AI Bullet Helper ─────────────────────────────────────────────────────────
 function BulletAIPopover({ bullet, onApply, onClose }) {
@@ -70,7 +79,7 @@ function BulletAIPopover({ bullet, onApply, onClose }) {
   };
 
   return (
-    <div className="absolute z-50 left-0 top-full mt-1 w-80 rounded-xl border border-[color:var(--ink-200)] bg-white shadow-lg p-4">
+    <div className="absolute z-50 left-0 top-full mt-1 w-80 rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-white shadow-lg p-4">
       <div className="flex items-center justify-between mb-3">
         <p className="tp-card text-[color:var(--surface-dark-900)] flex items-center gap-1.5">
           <Sparkles size={12} style={{ color: 'var(--brand-navy-700)' }} /> AI Bullet Help
@@ -233,7 +242,7 @@ function EducationCFEditor({ entries, onChange }) {
 
   return (
     <div className="px-2 pb-2">
-      <div className="rounded-xl border border-[color:var(--ink-200)] bg-white mb-3">
+      <div className="rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-white mb-3">
         <div className="flex items-center gap-2 px-3 py-2">
           <p className="tp-card flex-1 truncate text-[color:var(--surface-dark-900)]">{e.institution || 'Current University'}</p>
           <span className="tp-meta text-[color:var(--ink-400)]">Active entry</span>
@@ -301,11 +310,9 @@ function EducationCFEditor({ entries, onChange }) {
           <div className="grid grid-cols-2 gap-2">
             <div>
               <label className="block tp-meta font-semibold text-[color:var(--ink-500)] mb-1">Expected Grad Month *</label>
-              <select value={e.gradMonth || ''} onChange={ev => set('gradMonth', ev.target.value)}
-                className="w-full rounded-lg border border-[color:var(--ink-200)] px-2 py-1.5 text-base md:text-[13px] outline-none focus:border-[color:var(--brand-navy-900)] bg-white">
-                <option value="">Month</option>
-                {MONTH_OPTIONS.map(m => <option key={m.val} value={m.val}>{m.label}</option>)}
-              </select>
+              <FieldSelect value={e.gradMonth || ''} onChange={v => set('gradMonth', v)}
+                ariaLabel="Expected graduation month" placeholder="Month"
+                className={selectCls} options={monthOpts('Month')} />
             </div>
             <div>
               <label className="block tp-meta font-semibold text-[color:var(--ink-500)] mb-1">Expected Grad Year *</label>
@@ -361,7 +368,7 @@ function EntryEditor({ entry, onChange, onRemove, onDuplicate, isActivity = fals
   const set = (k, v) => onChange({ ...entry, [k]: v });
 
   return (
-    <div className={`rounded-xl border ${entry.hidden ? 'border-dashed border-[color:var(--ink-200)] opacity-60' : 'border-[color:var(--ink-200)]'} bg-white mb-3`}>
+    <div className={`rounded-[var(--r-control)] border ${entry.hidden ? 'border-dashed border-[color:var(--ink-200)] opacity-60' : 'border-[color:var(--ink-200)]'} bg-white mb-3`}>
       <div className="flex items-center gap-2 px-3 py-2 cursor-pointer" onClick={() => setExpanded(e => !e)}>
         <p className="tp-card flex-1 truncate text-[color:var(--surface-dark-900)]">{entry.org || entry.title || 'New entry'}</p>
         <button type="button" onClick={e => { e.stopPropagation(); onChange({ ...entry, hidden: !entry.hidden }); }}
@@ -416,13 +423,10 @@ function EntryEditor({ entry, onChange, onRemove, onDuplicate, isActivity = fals
             {!isActivity && (
               <div>
                 <label className="block tp-meta font-semibold text-[color:var(--ink-500)] mb-1">Arrangement</label>
-                <select value={entry.arrangement || ''} onChange={e => set('arrangement', e.target.value)}
-                  className="w-full rounded-lg border border-[color:var(--ink-200)] px-2.5 py-1.5 text-base md:text-[13px] outline-none focus:border-[color:var(--brand-navy-900)] bg-white">
-                  <option value="">Select</option>
-                  <option value="On-site">On-site</option>
-                  <option value="Hybrid">Hybrid</option>
-                  <option value="Remote">Remote</option>
-                </select>
+                <FieldSelect value={entry.arrangement || ''} onChange={v => set('arrangement', v)}
+                  ariaLabel="Work arrangement" placeholder="Select" className={selectCls}
+                  options={[{ value: '', label: 'Select' }, { value: 'On-site', label: 'On-site' },
+                    { value: 'Hybrid', label: 'Hybrid' }, { value: 'Remote', label: 'Remote' }]} />
               </div>
             )}
             <div>
@@ -484,7 +488,7 @@ function SkillsGroupedEditor({ groups, onChange }) {
     <div className="px-2 pb-2">
       <p className="tp-meta text-[color:var(--ink-400)] mb-2">Each category displays as: <strong>Label:</strong> item1, item2. Empty categories are hidden in the resume.</p>
       {ensuredList.map(g => (
-        <div key={g.id} className="rounded-xl border mb-2 bg-white border-[color:var(--ink-200)]">
+        <div key={g.id} className="rounded-[var(--r-control)] border mb-2 bg-white border-[color:var(--ink-200)]">
           <div className="px-3 py-2">
             <label className="block tp-meta font-semibold text-[color:var(--ink-500)] mb-1">{CF_SKILL_GROUP_LABELS[g.id]}</label>
             <input value={g.items || ''} onChange={e => updateGroup(g.id, e.target.value)}
@@ -515,7 +519,7 @@ function CertificationsEditor({ entries, onChange }) {
       {list.map((c, i) => {
         const set = (k, v) => update(i, { ...c, [k]: v });
         return (
-          <div key={c.id || i} className="rounded-xl border border-[color:var(--ink-200)] bg-white mb-3">
+          <div key={c.id || i} className="rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-white mb-3">
             <div className="flex items-center gap-2 px-3 py-2">
               <p className="tp-card flex-1 truncate text-[color:var(--surface-dark-900)]">{c.name || 'New Certification'}</p>
               <button onClick={() => remove(i)} className="text-red-300 hover:text-red-500"><Trash2 size={13} /></button>
@@ -536,11 +540,9 @@ function CertificationsEditor({ entries, onChange }) {
               <div className="grid grid-cols-2 gap-2">
                 <div>
                   <label className="block tp-meta font-semibold text-[color:var(--ink-500)] mb-1">Month Earned</label>
-                  <select value={c.month || ''} onChange={e => set('month', e.target.value)}
-                    className="w-full rounded-lg border border-[color:var(--ink-200)] px-2 py-1.5 text-base md:text-[13px] outline-none bg-white">
-                    <option value="">Month</option>
-                    {MONTH_OPTIONS.map(m => <option key={m.val} value={m.val}>{m.label}</option>)}
-                  </select>
+                  <FieldSelect value={c.month || ''} onChange={v => set('month', v)}
+                    ariaLabel="Month earned" placeholder="Month"
+                    className={selectCls} options={monthOpts('Month')} />
                 </div>
                 <div>
                   <label className="block tp-meta font-semibold text-[color:var(--ink-500)] mb-1">Year Earned</label>
@@ -588,7 +590,7 @@ function AwardsEditor({ entries, educationHonors = '', onChange }) {
         const nameLower = (a.name || '').toLowerCase();
         const possibleDup = nameLower && honorsLower && honorsLower.includes(nameLower.split(' ')[0]);
         return (
-          <div key={a.id || i} className="rounded-xl border border-[color:var(--ink-200)] bg-white mb-3">
+          <div key={a.id || i} className="rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-white mb-3">
             <div className="flex items-center gap-2 px-3 py-2">
               <p className="tp-card flex-1 truncate text-[color:var(--surface-dark-900)]">{a.name || 'New Award'}</p>
               <button onClick={() => remove(i)} className="text-red-300 hover:text-red-500"><Trash2 size={13} /></button>
@@ -615,11 +617,9 @@ function AwardsEditor({ entries, educationHonors = '', onChange }) {
               <div className="grid grid-cols-2 gap-2">
                 <div>
                   <label className="block tp-meta font-semibold text-[color:var(--ink-500)] mb-1">Month</label>
-                  <select value={a.month || ''} onChange={e => set('month', e.target.value)}
-                    className="w-full rounded-lg border border-[color:var(--ink-200)] px-2 py-1.5 text-base md:text-[13px] outline-none bg-white">
-                    <option value="">Month</option>
-                    {MONTH_OPTIONS.map(m => <option key={m.val} value={m.val}>{m.label}</option>)}
-                  </select>
+                  <FieldSelect value={a.month || ''} onChange={v => set('month', v)}
+                    ariaLabel="Award month" placeholder="Month"
+                    className={selectCls} options={monthOpts('Month')} />
                 </div>
                 <div>
                   <label className="block tp-meta font-semibold text-[color:var(--ink-500)] mb-1">Year</label>
@@ -650,7 +650,7 @@ function ResearchEntryEditor({ entry: r, onUpdate, onRemove }) {
   const set = (k, v) => onUpdate({ ...r, [k]: v });
 
   return (
-    <div className="rounded-xl border border-[color:var(--ink-200)] bg-white mb-3">
+    <div className="rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-white mb-3">
       <div className="flex items-center gap-2 px-3 py-2 cursor-pointer" onClick={() => setExpanded(e => !e)}>
         <p className="tp-card flex-1 truncate text-[color:var(--surface-dark-900)]">{r.title || 'New Research'}</p>
         <button type="button" onClick={e => { e.stopPropagation(); onRemove(); }}
@@ -699,11 +699,10 @@ function ResearchEntryEditor({ entry: r, onUpdate, onRemove }) {
             <div>
               <label className="block tp-meta font-semibold text-[color:var(--ink-500)] mb-1">Start (Month/Year)</label>
               <div className="flex gap-1">
-                <select value={r.startMonth || ''} onChange={e => set('startMonth', e.target.value)}
-                  className="min-w-[3.5rem] flex-1 rounded-lg border border-[color:var(--ink-200)] px-1 py-1.5 text-base md:text-[13px] outline-none bg-white">
-                  <option value="">Mo</option>
-                  {MONTH_OPTIONS.map(m => <option key={m.val} value={m.val}>{m.label}</option>)}
-                </select>
+                <FieldSelect value={r.startMonth || ''} onChange={v => set('startMonth', v)}
+                  ariaLabel="Research start month" placeholder="Mo"
+                  className={`min-w-[3.5rem] flex-1 rounded-lg border border-[color:var(--ink-200)] bg-white px-1.5 py-1.5 md:text-[13px]`}
+                  options={monthOpts('Mo')} />
                 <input value={r.startYear || ''} onChange={e => set('startYear', e.target.value)} placeholder="YYYY"
                   className="min-w-0 w-16 rounded-lg border border-[color:var(--ink-200)] px-2 py-1.5 text-base md:text-[13px] outline-none" />
               </div>
@@ -711,11 +710,10 @@ function ResearchEntryEditor({ entry: r, onUpdate, onRemove }) {
             <div>
               <label className="block tp-meta font-semibold text-[color:var(--ink-500)] mb-1">End (Month/Year)</label>
               <div className="flex gap-1 items-center">
-                <select value={r.endMonth || ''} onChange={e => set('endMonth', e.target.value)} disabled={r.current}
-                  className="min-w-[3.5rem] flex-1 rounded-lg border border-[color:var(--ink-200)] px-1 py-1.5 text-base md:text-[13px] outline-none bg-white disabled:opacity-40">
-                  <option value="">Mo</option>
-                  {MONTH_OPTIONS.map(m => <option key={m.val} value={m.val}>{m.label}</option>)}
-                </select>
+                <FieldSelect value={r.endMonth || ''} onChange={v => set('endMonth', v)} disabled={r.current}
+                  ariaLabel="Research end month" placeholder="Mo"
+                  className={`min-w-[3.5rem] flex-1 rounded-lg border border-[color:var(--ink-200)] bg-white px-1.5 py-1.5 md:text-[13px] disabled:opacity-40`}
+                  options={monthOpts('Mo')} />
                 <input value={r.endYear || ''} onChange={e => set('endYear', e.target.value)} placeholder="YYYY" disabled={r.current}
                   className="min-w-0 w-16 rounded-lg border border-[color:var(--ink-200)] px-2 py-1.5 text-base md:text-[13px] outline-none disabled:opacity-40" />
                 <label className="flex items-center gap-1 tp-meta text-[color:var(--ink-500)] cursor-pointer whitespace-nowrap">
@@ -770,7 +768,7 @@ function SectionPanel({ section, data, allContent, onChange, onMoveUp, onMoveDow
   const isCoreSection = section.cf_locked;
 
   return (
-    <div className={`rounded-[16px] border mb-3 ${section.visible === false ? 'border-dashed border-[color:var(--ink-200)] opacity-70' : 'border-[color:var(--ink-200)]'} bg-[color:var(--page-surface)]`}>
+    <div className={`rounded-[var(--r-surface)] border mb-3 ${section.visible === false ? 'border-dashed border-[color:var(--ink-200)] opacity-70' : 'border-[color:var(--ink-200)]'} bg-[color:var(--page-surface)]`}>
       <div className="flex items-center gap-2 px-4 py-2.5">
         <div className="flex flex-col gap-0.5 shrink-0">
           <button onClick={onMoveUp} disabled={isFirst} className="text-[color:var(--ink-400)] hover:text-[color:var(--ink-700)] disabled:opacity-20"><ChevronUp size={13} /></button>
@@ -868,7 +866,7 @@ export default function ResumeEditor({ resume, onChange }) {
 
   return (
     <div>
-      <div className="mb-3 rounded-[14px] p-3 tp-meta" style={{ background: 'var(--ink-100)', border: '1px solid var(--border-light)' }}>
+      <div className="mb-3 rounded-[var(--r-control)] p-3 tp-meta" style={{ background: 'var(--ink-100)', border: '1px solid var(--border-light)' }}>
         {isCF
           ? <><span className="font-bold" style={{ color: 'var(--brand-navy-900)' }}>Classic Finance template</span><span className="text-[color:var(--ink-500)]">: Garamond, centered header, ATS-friendly one-column layout.</span></>
           : <span className="text-[color:var(--ink-500)]">Certifications, Awards, and Research sections are optional. Enable them using the eye icon.</span>

@@ -50,6 +50,49 @@
     "estimated_time": {
       "type": "string"
     },
+    "current_step": {
+      "type": "number"
+    },
+    "last_opened_step": {
+      "type": "number"
+    },
+    "completed_steps": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      }
+    },
+    "step_progress": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "step_number": {
+            "type": "number"
+          },
+          "started_at": {
+            "type": "string"
+          },
+          "completed_at": {
+            "type": "string"
+          },
+          "note": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "progress_percentage": {
+      "type": "number"
+    },
+    "progress_started_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "progress_completed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
     "status": {
       "type": "string",
       "enum": [

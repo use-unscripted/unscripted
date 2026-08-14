@@ -22,7 +22,7 @@ const TIMEZONES = [
   'Australia/Sydney', 'UTC',
 ];
 
-const inputCls = 'w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-3 py-2.5 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]';
+const inputCls = 'w-full rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-3 py-2.5 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]';
 
 export default function AddToCalendarModal({ item, itemType, onClose }) {
   // itemType: 'mission' | 'task' | 'outreach' | 'experiment'
@@ -95,7 +95,7 @@ export default function AddToCalendarModal({ item, itemType, onClose }) {
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" style={{ background: 'rgba(5,8,22,0.5)' }}>
-      <div className="w-full max-w-md rounded-[24px] bg-white p-6 shadow-2xl">
+      <div className="w-full max-w-md rounded-[var(--r-surface)] bg-white p-6 shadow-2xl">
         <div className="flex items-center justify-between mb-5">
           <div className="flex items-center gap-2">
             <Calendar size={18} style={{ color: 'var(--brand-navy-900)' }} />
@@ -112,10 +112,10 @@ export default function AddToCalendarModal({ item, itemType, onClose }) {
             <p className="tp-card text-[color:var(--surface-dark-900)] mb-1.5">Download started!</p>
             <p className="tp-prose mx-auto text-[color:var(--ink-500)] mb-5">Open the .ics file to add it to Google Calendar, Apple Calendar, Outlook, or any calendar app.</p>
             <div className="flex gap-2">
-              <button onClick={() => setDone(false)} className="tp-body flex-1 rounded-[10px] border border-[color:var(--ink-200)] py-3 font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)]">
+              <button onClick={() => setDone(false)} className="tp-body flex-1 rounded-[var(--r-control)] border border-[color:var(--ink-200)] py-3 font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)]">
                 Export Again
               </button>
-              <button onClick={onClose} className="tp-body flex-1 rounded-[10px] py-3 font-semibold text-white" style={{ background: 'var(--brand-navy-900)' }}>
+              <button onClick={onClose} className="tp-body flex-1 rounded-[var(--r-control)] py-3 font-semibold text-white" style={{ background: 'var(--brand-navy-900)' }}>
                 Done
               </button>
             </div>
@@ -177,16 +177,16 @@ export default function AddToCalendarModal({ item, itemType, onClose }) {
 
             {error && <p className="tp-meta mt-3 text-red-600 font-semibold">{error}</p>}
 
-            <div className="tp-meta mt-5 rounded-[12px] p-3.5 text-[color:var(--ink-500)]" style={{ background: 'var(--ink-50)', border: '1px solid var(--ink-200)' }}>
+            <div className="tp-meta mt-5 rounded-[var(--r-control)] p-3.5 text-[color:var(--ink-500)]" style={{ background: 'var(--ink-50)', border: '1px solid var(--ink-200)' }}>
               Downloads an .ics file compatible with Google Calendar, Apple Calendar, Outlook, and all standard calendar apps.
             </div>
 
             <div className="mt-4 flex gap-3">
-              <button onClick={onClose} className="tp-body flex-1 rounded-[10px] border border-[color:var(--ink-200)] py-3 font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)]">
+              <button onClick={onClose} className="tp-body flex-1 rounded-[var(--r-control)] border border-[color:var(--ink-200)] py-3 font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)]">
                 Cancel
               </button>
               <button onClick={handleDownload} disabled={downloading || !form.date}
-                className="tp-body flex-1 flex items-center justify-center gap-2 rounded-[10px] py-3 font-semibold text-white disabled:opacity-60"
+                className="tp-body flex-1 flex items-center justify-center gap-2 rounded-[var(--r-control)] py-3 font-semibold text-white disabled:opacity-60"
                 style={{ background: 'var(--brand-navy-900)' }}>
                 <Download size={15} />
                 {downloading ? 'Preparing…' : 'Download .ics'}

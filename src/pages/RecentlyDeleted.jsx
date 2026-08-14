@@ -39,7 +39,7 @@ function getItemName(item, nameField) {
 function PermanentDeleteConfirm({ itemName, onConfirm, onCancel }) {
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" style={{ background: 'rgba(5,8,22,0.6)' }}>
-      <div className="w-full max-w-sm rounded-[20px] bg-white p-6 shadow-2xl">
+      <div className="w-full max-w-sm rounded-[var(--r-surface)] bg-white p-6 shadow-2xl">
         <div className="flex items-center gap-3 mb-3">
           <div className="w-9 h-9 rounded-full flex items-center justify-center bg-red-50 shrink-0">
             <AlertTriangle size={18} className="text-red-600" />
@@ -50,11 +50,11 @@ function PermanentDeleteConfirm({ itemName, onConfirm, onCancel }) {
         <p className="tp-body text-[color:var(--ink-500)] mb-5">This cannot be recovered.</p>
         <div className="flex gap-3">
           <button onClick={onCancel}
-            className="tp-body flex-1 rounded-[10px] border border-[color:var(--ink-200)] py-2.5 font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)] transition">
+            className="tp-body flex-1 rounded-[var(--r-control)] border border-[color:var(--ink-200)] py-2.5 font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)] transition">
             Cancel
           </button>
           <button onClick={onConfirm}
-            className="tp-body flex-1 rounded-[10px] py-2.5 font-semibold text-white bg-red-600 hover:bg-red-700 transition">
+            className="tp-body flex-1 rounded-[var(--r-control)] py-2.5 font-semibold text-white bg-red-600 hover:bg-red-700 transition">
             Permanently Delete
           </button>
         </div>
@@ -82,7 +82,7 @@ function ExperimentDeletedCard({ exp, onRestore, onPermanentDelete, actionLoadin
   }, [exp.id]);
 
   return (
-    <div className="rounded-[16px] border border-[color:var(--ink-200)] bg-white p-5">
+    <div className="rounded-[var(--r-surface)] border border-[color:var(--ink-200)] bg-white p-5">
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
           <div className="flex flex-wrap items-center gap-2 mb-2">
@@ -146,7 +146,7 @@ function DeletedItemCard({ item, tab, experimentsMap, missionsMap, onRestore, on
   const mission = item.mission_id ? missionsMap[item.mission_id] : null;
 
   return (
-    <div className="rounded-[16px] border border-[color:var(--ink-200)] bg-white p-5">
+    <div className="rounded-[var(--r-surface)] border border-[color:var(--ink-200)] bg-white p-5">
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
           <div className="flex flex-wrap items-center gap-2 mb-2">
@@ -312,7 +312,7 @@ export default function RecentlyDeleted() {
       {loading ? (
         <SkCards count={3} h={128} gap={12} r={20} />
       ) : currentItems.length === 0 ? (
-        <div className="rounded-[24px] border border-dashed border-[color:var(--ink-200)] py-16 text-center">
+        <div className="rounded-[var(--r-surface)] border border-dashed border-[color:var(--ink-200)] py-16 text-center">
           <p className="tp-section text-[color:var(--surface-dark-900)]">No deleted {currentTab?.label.toLowerCase()} found.</p>
           <p className="tp-body mt-2 text-[color:var(--ink-400)]">Items you delete will appear here for 30 days.</p>
         </div>

@@ -21,6 +21,67 @@
     "path_recommendation_id": {
       "type": "string"
     },
+    "career_hypothesis_id": {
+      "type": "string"
+    },
+    "career_name": {
+      "type": "string"
+    },
+    "unresolved_question": {
+      "type": "string"
+    },
+    "unresolved_question_id": {
+      "type": "string"
+    },
+    "work_characteristics_tested": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "work_characteristic_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "difficulty_level": {
+      "type": "string",
+      "enum": [
+        "introductory",
+        "moderate",
+        "challenging"
+      ]
+    },
+    "realistic_scenario": {
+      "type": "string"
+    },
+    "instructions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "evaluation_criteria": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "evidence_expected": {
+      "type": "string"
+    },
+    "evidence_purpose": {
+      "type": "string"
+    },
+    "design_source": {
+      "type": "string",
+      "enum": [
+        "hypothesis_designed",
+        "custom",
+        "legacy"
+      ]
+    },
     "title": {
       "type": "string"
     },

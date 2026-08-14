@@ -27,7 +27,7 @@ export default function PauseExperimentModal({ exp, onClose, onPaused }) {
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" style={{ background: 'rgba(5,8,22,0.55)' }}>
-      <div className="w-full max-w-md rounded-[24px] bg-white p-6 shadow-2xl">
+      <div className="w-full max-w-md rounded-[var(--r-surface)] bg-white p-6 shadow-2xl">
         <div className="flex items-start justify-between gap-3 mb-1">
           <div className="flex items-center gap-2">
             <PauseCircle size={20} className="text-[color:var(--warning-700)]" />
@@ -51,17 +51,17 @@ export default function PauseExperimentModal({ exp, onClose, onPaused }) {
             value={reason}
             onChange={e => setReason(e.target.value)}
             placeholder="e.g. Focusing on a different path for now, need more time..."
-            className="w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)] resize-none"
+            className="w-full rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)] resize-none"
           />
         </label>
 
         <div className="flex gap-3">
           <button onClick={onClose}
-            className="tp-body flex-1 rounded-[10px] border border-[color:var(--ink-200)] py-2.5 font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)] transition">
+            className="tp-body flex-1 rounded-[var(--r-control)] border border-[color:var(--ink-200)] py-2.5 font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)] transition">
             Cancel
           </button>
           <button onClick={handlePause} disabled={saving}
-            className="tp-body flex-1 rounded-[10px] py-2.5 font-semibold text-white transition disabled:opacity-60"
+            className="tp-body flex-1 rounded-[var(--r-control)] py-2.5 font-semibold text-white transition disabled:opacity-60"
             style={{ background: 'var(--warning-700)' }}>
             {saving ? 'Pausing…' : 'Pause Experiment'}
           </button>

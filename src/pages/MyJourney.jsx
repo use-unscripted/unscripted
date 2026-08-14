@@ -16,9 +16,13 @@ import JourneyNow from '@/components/journey/JourneyNow';
 import PathComparisonWorkspace from '@/components/journey/PathComparisonWorkspace';
 import PathSelectedConfirm from '@/components/journey/PathSelectedConfirm';
 import JourneyEmptyState from '@/components/journey/JourneyEmptyState';
+import NextBestExperimentPanel from '@/components/next-test/NextBestExperimentPanel';
+import JourneyEvidence from '@/components/journey/JourneyEvidence';
 import CampusEventsPanel from '@/components/campus/CampusEventsPanel';
 import ContinuationGate from '@/components/journey/ContinuationGate';
 import { Sk } from '@/components/PageSkeleton';
+import PullToRefresh from '@/components/PullToRefresh';
+import { Reveal, WordReveal, EASE_COPY } from '@/components/motion';
 import { loadPilotAccess, CycleLimitError } from '@/lib/pilot-access';
 import { trackPilotEvent } from '@/lib/pilot-metrics';
 
@@ -91,16 +95,16 @@ export default function MyJourney() {
     // depend on data are standing in for anything.
     return (
       <main className="app-page">
-        <header className="mb-10">
+        <header className="mb-14">
           <h1 className="tp-page" style={{ color: 'var(--text-primary)' }}>
             My Journey
           </h1>
-          <div className="mt-3 flex h-7 items-center">
-            <Sk h={13} r={5} w="72%" style={{ maxWidth: 440 }} />
+          <div className="mt-5 flex h-8 items-center">
+            <Sk h={14} r={5} w="72%" style={{ maxWidth: 460 }} />
           </div>
         </header>
         <div className="app-stack">
-          <Sk h={232} r={22} />
+          <Sk h={280} r={16} />
           <div className="space-y-4">
             {[0, 1, 2, 3, 4, 5].map(i => <Sk key={i} h={30} r={8} w={i % 2 ? '58%' : '74%'} />)}
           </div>
@@ -122,15 +126,24 @@ export default function MyJourney() {
     experimentsDone: counts.experimentsDone,
   });
 
+  /* The page header is the landing fold's opening move, at the app's scale:
+     headline out of a clip mask, standfirst fading up behind it. Both degrade
+     to plain text under reduced motion. */
   const shell = (children, sub) => (
     <main className="app-page">
-      <header className="mb-10">
+      <header className="mb-14">
         <h1 className="tp-page" style={{ color: 'var(--text-primary)' }}>
-          My Journey
+          <WordReveal text="My Journey" delay={0.05} />
         </h1>
-        <p className="tp-lead mt-3" style={{ color: 'var(--text-secondary)', maxWidth: '48ch' }}>{sub}</p>
+        <Reveal delay={380} y={14} ease={EASE_COPY}>
+          <p className="tp-lead mt-5" style={{ color: 'var(--text-secondary)', maxWidth: '52ch' }}>{sub}</p>
+        </Reveal>
       </header>
-      <div className="app-stack">{children}</div>
+      {/* Pull down from the top to re-read the journey, the way a native app
+          does. Touch only, so nothing about the desktop page changes. */}
+      <PullToRefresh onRefresh={load}>
+        <div className="app-stack">{children}</div>
+      </PullToRefresh>
     </main>
   );
 
@@ -204,6 +217,23 @@ export default function MyJourney() {
         onAnchorClick={scrollToDecision}
       />
 
+      {/* Every section below the fold arrives on scroll, the way the marketing
+          page's do. One signal, once, and nothing moves again after it lands. */}
+
+      {/* What to test next, decided by which unresolved question would teach us
+          the most — not by which path currently ranks highest. It sits directly
+          under the one instruction because for most students it IS the next
+          action, and burying it inside the Experiments page would make it a
+          feature rather than the way the loop continues. */}
+      <NextBestExperimentPanel />
+
+      {/* Then the evidence: which careers currently look worth testing, what
+          moved since last time, and what we are still learning. It sits under
+          the next action on purpose — the loop is what to do next first, the
+          record of what has been learned second. Each card inside reveals
+          itself; see the note in that file for why it is not wrapped here. */}
+      <JourneyEvidence />
+
       {/* The "no experiment yet" case is not listed here: the panel above is
           already showing that exact call to action, and two buttons pointing at
           the same route is what made this page read as a menu. */}
@@ -216,14 +246,18 @@ export default function MyJourney() {
           "Thursday". The top of the page is what to do; the spine below is the
           record. It stays silent for a student with no college set or a
           calendar we cannot read, so it costs nothing when it has nothing. */}
+      {/* Already reveals itself, and stays silent for a student with no college
+          set, so it must not be wrapped from out here. */}
       <CampusEventsPanel />
 
-      <JourneyStages stage={stage} detail={stageDetail} />
+      <Reveal y={20}>
+        <JourneyStages stage={stage} detail={stageDetail} />
+      </Reveal>
 
       <p className="tp-meta pt-2 text-center" style={{ color: 'var(--text-muted)' }}>
         Working on something else? <Link to="/paths" className="font-semibold" style={{ color: 'var(--brand-navy-700)' }}>Compare all paths</Link>
         {' · '}
-        <Link to="/experiments" className="font-semibold" style={{ color: 'var(--brand-navy-700)' }}>All missions</Link>
+        <Link to="/experiments" className="font-semibold" style={{ color: 'var(--brand-navy-700)' }}>All experiments</Link>
         {' · '}
         <Link to="/calendar" className="font-semibold" style={{ color: 'var(--brand-navy-700)' }}>Your week</Link>
         {' · '}
@@ -231,7 +265,7 @@ export default function MyJourney() {
       </p>
     </>,
     currentPath
-      ? `You're currently testing ${currentPath.path_name}.`
+      ? `You're currently testing ${currentPath.path_name}. Nothing here is settled until the evidence says so.`
       : 'One direction at a time. This page tells you what comes next.'
   );
 }

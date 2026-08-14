@@ -35,7 +35,7 @@ import {
 export function EmptyPanel({ icon: Icon, title, className = 'mb-5', children }) {
   return (
     <div
-      className={`overflow-hidden rounded-xl border px-5 py-4 ${className}`}
+      className={`overflow-hidden rounded-[var(--r-control)] border px-5 py-4 ${className}`}
       style={{ borderColor: '#E2E8F0', background: '#F8FAFC' }}
     >
       <p className="tp-card flex items-center gap-2 text-[#334155]">

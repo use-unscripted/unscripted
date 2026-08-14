@@ -9,6 +9,10 @@ import { ArrowLeft, ArrowRight, CheckCircle, Loader2, AlertCircle } from 'lucide
 import { LogoWordmark } from '@/components/UnscriptedLogo';
 import { Sk, SkCards } from '@/components/PageSkeleton';
 import AddToCalendarModal from '@/components/calendar/AddToCalendarModal';
+import ExperimentDesignOption from '@/components/experiments/ExperimentDesignOption';
+import UncertaintyPicker from '@/components/experiments/UncertaintyPicker';
+import { designExperiments } from '@/lib/experiment-design';
+import { deriveHypothesis } from '@/lib/career-hypothesis';
 import {
   ensureActiveCycle, assertNoActiveExperiment, attachExperimentToCycle,
   ActiveExperimentError, cycleLinks,
@@ -141,12 +145,16 @@ function getExperimentOptions(pathName) {
   ];
 }
 
+// The rail. "What to Test" is first because the uncertainty a student picks is
+// what every design that follows is built to answer.
+const STEPS = ['What to Test', 'Select Experiment', 'Confirm Details', 'Build Experiment', 'Experiment Created'];
+
 // ─── Step 1: Path context + experiment picker ────────────────────────────────
-function StepPick({ rec, options, selected, onSelect, onCustom, onNext }) {
+function StepPick({ rec, options, selected, onSelect, onCustom, onNext, designing, focus, onChangeFocus }) {
   return (
     <div className="space-y-6">
       {/* Path context card */}
-      <div className="rounded-[20px] p-5 space-y-3" style={{ background: 'var(--surface-dark-700)', color: 'white' }}>
+      <div className="rounded-[var(--r-surface)] p-5 space-y-3" style={{ background: 'var(--surface-dark-700)', color: 'white' }}>
         <p className="tp-eyebrow opacity-60">Testing Path</p>
         <h2 className="tp-page">{rec.path_name}</h2>
         {rec.fit_reason && (
@@ -173,13 +181,56 @@ function StepPick({ rec, options, selected, onSelect, onCustom, onNext }) {
         )}
       </div>
 
+      {/* What the student chose to test, and a way back to change it */}
+      {focus && (
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-[var(--r-surface)] border p-4"
+          style={{ borderColor: 'var(--ink-200)', background: 'var(--ink-50)' }}>
+          <div>
+            <p className="tp-eyebrow mb-1" style={{ color: 'var(--ink-500)' }}>You are testing</p>
+            <p className="tp-body font-semibold text-[color:var(--surface-dark-900)]">{focus.label}</p>
+            <p className="tp-meta mt-0.5" style={{ color: 'var(--ink-500)' }}>{focus.question}</p>
+          </div>
+          <button onClick={onChangeFocus} className="tp-meta font-bold" style={{ color: 'var(--brand-navy-700)' }}>
+            Change
+          </button>
+        </div>
+      )}
+
+      {/* The default: a few minutes of the actual work. The long simulations
+          below stay available as Deep Dives. */}
+      <Link to={`/moment?recId=${rec.id || ''}&variable=${encodeURIComponent(focus?.variable || '')}`}
+        className="block rounded-[var(--r-surface)] border p-5 transition hover:-translate-y-px"
+        style={{ borderColor: 'var(--brand-navy-900)', background: 'white', boxShadow: '0 8px 24px rgba(31,58,95,0.12)' }}>
+        <p className="tp-eyebrow" style={{ color: 'var(--brand-gold-700)' }}>Recommended · about 4 minutes</p>
+        <p className="tp-card mt-2 text-[color:var(--surface-dark-900)]">Try 4 minutes of {rec.path_name}</p>
+        <p className="tp-body mt-1 text-[color:var(--ink-500)]">
+          One realistic decision, instant feedback, two quick questions. It updates your evidence the same way a long experiment does.
+        </p>
+      </Link>
+
       {/* Experiment options */}
       <div>
-        <p className="tp-body font-bold text-[color:var(--surface-dark-900)] mb-3">Choose your experiment:</p>
+        <p className="tp-body font-bold text-[color:var(--surface-dark-900)] mb-1">Or go deeper:</p>
+        <p className="tp-meta text-[color:var(--ink-500)] mb-3">Deep Dives are full work simulations that take a few hours, built to answer the question you chose.</p>
+        {designing && (
+          <div className="mb-3 space-y-3">
+            <div className="flex items-center gap-2 tp-body text-[color:var(--ink-500)]">
+              <Loader2 size={15} className="animate-spin" /> Designing experiments to answer {focus ? focus.label.toLowerCase() : `this question about ${rec.path_name}`}…
+            </div>
+            <SkCards count={3} h={132} gap={12} r={16} />
+          </div>
+        )}
         <div className="space-y-3">
-          {options.map((opt, i) => (
+          {!designing && options.map((opt, i) => opt.realistic_scenario ? (
+            <ExperimentDesignOption
+              key={i}
+              design={opt}
+              selected={selected === i}
+              onSelect={() => onSelect(opt)}
+            />
+          ) : (
             <button key={i} onClick={() => onSelect(opt)}
-              className="w-full text-left rounded-[16px] border p-4 transition"
+              className="w-full text-left rounded-[var(--r-surface)] border p-4 transition"
               style={selected === i
                 ? { background: 'var(--ink-100)', borderColor: 'var(--brand-navy-900)' }
                 : { background: 'white', borderColor: 'var(--ink-200)' }}>
@@ -198,7 +249,7 @@ function StepPick({ rec, options, selected, onSelect, onCustom, onNext }) {
             </button>
           ))}
           <button onClick={onCustom}
-            className="tp-body w-full text-left rounded-[16px] border border-dashed p-4 font-semibold text-[color:var(--ink-500)] transition hover:border-[color:var(--brand-navy-700)] hover:text-[color:var(--brand-navy-700)]"
+            className="tp-body w-full text-left rounded-[var(--r-surface)] border border-dashed p-4 font-semibold text-[color:var(--ink-500)] transition hover:border-[color:var(--brand-navy-700)] hover:text-[color:var(--brand-navy-700)]"
             style={{ background: 'white' }}>
             + Create a custom experiment
           </button>
@@ -206,9 +257,9 @@ function StepPick({ rec, options, selected, onSelect, onCustom, onNext }) {
       </div>
 
       <button onClick={onNext} disabled={selected === null}
-        className="tp-body w-full flex items-center justify-center gap-2 rounded-[12px] py-3.5 font-semibold text-white transition hover:-translate-y-px disabled:opacity-40"
+        className="tp-body w-full flex items-center justify-center gap-2 rounded-[var(--r-control)] py-3.5 font-semibold text-white transition hover:-translate-y-px disabled:opacity-40"
         style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}>
-        Confirm Experiment & Generate Mission Guide <ArrowRight size={16} />
+        Confirm & Build My Experiment <ArrowRight size={16} />
       </button>
     </div>
   );
@@ -229,29 +280,29 @@ function StepCustom({ pathName, data, onChange, onBack, onNext }) {
       ].map(f => (
         <label key={f.name} className="block">
           <span className="tp-body font-semibold text-[color:var(--ink-700)] block mb-1">{f.label}</span>
-          <input className="w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]"
+          <input className="w-full rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]"
             placeholder={f.placeholder} value={data[f.name] || ''} onChange={e => onChange(f.name, e.target.value)} />
         </label>
       ))}
       <label className="block">
         <span className="tp-body font-semibold text-[color:var(--ink-700)] block mb-1">Path being tested</span>
-        <input className="w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--ink-100)] px-4 py-3 text-base md:text-sm outline-none text-[color:var(--ink-700)]"
+        <input className="w-full rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-[color:var(--ink-100)] px-4 py-3 text-base md:text-sm outline-none text-[color:var(--ink-700)]"
           value={pathName} readOnly />
       </label>
       <label className="block">
         <span className="tp-body font-semibold text-[color:var(--ink-700)] block mb-1">Estimated hours</span>
-        <input type="number" min="1" max="40" className="w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]"
+        <input type="number" min="1" max="40" className="w-full rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]"
           value={data.estimated_hours || 5} onChange={e => onChange('estimated_hours', Number(e.target.value))} />
       </label>
       <label className="block">
         <span className="tp-body font-semibold text-[color:var(--ink-700)] block mb-1">Deadline (optional)</span>
-        <input type="date" className="w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]"
+        <input type="date" className="w-full rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]"
           value={data.deadline || ''} onChange={e => onChange('deadline', e.target.value)} />
       </label>
       <button onClick={onNext} disabled={!data.title || !data.objective}
-        className="tp-body w-full flex items-center justify-center gap-2 rounded-[12px] py-3.5 font-semibold text-white transition hover:-translate-y-px disabled:opacity-40"
+        className="tp-body w-full flex items-center justify-center gap-2 rounded-[var(--r-control)] py-3.5 font-semibold text-white transition hover:-translate-y-px disabled:opacity-40"
         style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}>
-        Generate Mission Guide <ArrowRight size={16} />
+        Build My Experiment <ArrowRight size={16} />
       </button>
     </div>
   );
@@ -261,12 +312,12 @@ function StepCustom({ pathName, data, onChange, onBack, onNext }) {
 function StepGenerating({ experiment, missionGuide, error }) {
   if (error) {
     return (
-      <div className="rounded-[20px] border border-red-200 bg-red-50 p-6 text-center space-y-3">
+      <div className="rounded-[var(--r-surface)] border border-red-200 bg-red-50 p-6 text-center space-y-3">
         <AlertCircle className="mx-auto text-red-500" size={32} />
-        <p className="font-semibold text-red-700">Mission Guide generation failed</p>
+        <p className="font-semibold text-red-700">We could not build your experiment</p>
         <p className="tp-body text-red-600">{error}</p>
-        <p className="tp-meta text-red-500">Your experiment draft was saved. Return to Missions to retry.</p>
-        <Link to="/experiments" className="tp-body inline-block mt-2 font-semibold" style={{ color: 'var(--brand-navy-900)' }}>Go to Missions →</Link>
+        <p className="tp-meta text-red-500">Your experiment draft was saved. Return to My Experiments to retry.</p>
+        <Link to="/experiments" className="tp-body inline-block mt-2 font-semibold" style={{ color: 'var(--brand-navy-900)' }}>Go to My Experiments →</Link>
       </div>
     );
   }
@@ -275,8 +326,8 @@ function StepGenerating({ experiment, missionGuide, error }) {
     return (
       <div className="py-16 text-center space-y-4">
         <Loader2 className="mx-auto animate-spin" size={36} style={{ color: 'var(--brand-navy-900)' }} />
-        <p className="tp-section text-[color:var(--surface-dark-900)]">Generating your Mission Guide...</p>
-        <p className="tp-body text-[color:var(--ink-500)]">Building a step-by-step guide specific to {experiment?.path_name} and your selected experiment.</p>
+        <p className="tp-section text-[color:var(--surface-dark-900)]">Building your experiment...</p>
+        <p className="tp-body text-[color:var(--ink-500)]">Writing the step-by-step experiment specific to {experiment?.path_name} and your selected experiment.</p>
       </div>
     );
   }
@@ -301,23 +352,23 @@ function StepSuccess({ experiment, missionGuide, onViewGuide }) {
         />
       )}
 
-      <div className="rounded-[20px] text-center p-8 space-y-3" style={{ background: 'var(--success-50)', border: '1px solid #86EFAC' }}>
+      <div className="rounded-[var(--r-surface)] text-center p-8 space-y-3" style={{ background: 'var(--success-50)', border: '1px solid #86EFAC' }}>
         <CheckCircle className="mx-auto text-green-600" size={40} />
-        <h2 className="tp-page text-[color:var(--surface-dark-900)]">Mission Created</h2>
+        <h2 className="tp-page text-[color:var(--surface-dark-900)]">Experiment Created</h2>
         <div className="space-y-1">
           <p className="tp-body text-[color:var(--ink-700)]"><span className="font-semibold">You are testing:</span> {experiment.path_name}</p>
           <p className="tp-body text-[color:var(--ink-700)]"><span className="font-semibold">Your experiment:</span> {experiment.title}</p>
         </div>
       </div>
 
-      <div className="rounded-[16px] border border-[color:var(--ink-200)] bg-white p-5">
+      <div className="rounded-[var(--r-surface)] border border-[color:var(--ink-200)] bg-white p-5">
         <p className="tp-eyebrow text-[color:var(--ink-500)] mb-2">Your first action</p>
         <p className="tp-body font-semibold text-[color:var(--surface-dark-900)]">{firstStepText}</p>
       </div>
 
       {missionGuide?.mission_steps?.length > 0 && (
-        <div className="rounded-[16px] border border-[color:var(--ink-200)] bg-white p-5">
-          <p className="tp-eyebrow text-[color:var(--ink-500)] mb-3">Mission Guide Preview</p>
+        <div className="rounded-[var(--r-surface)] border border-[color:var(--ink-200)] bg-white p-5">
+          <p className="tp-eyebrow text-[color:var(--ink-500)] mb-3">Experiment Preview</p>
           <ol className="space-y-2">
             {missionGuide.mission_steps.slice(0, 5).map((s, i) => (
               <li key={i} className="tp-body flex gap-3 text-[color:var(--ink-700)]">
@@ -326,7 +377,7 @@ function StepSuccess({ experiment, missionGuide, onViewGuide }) {
               </li>
             ))}
             {missionGuide.mission_steps.length > 5 && (
-              <li className="tp-meta text-[color:var(--ink-400)] pl-6">+ {missionGuide.mission_steps.length - 5} more steps in the full guide</li>
+              <li className="tp-meta text-[color:var(--ink-400)] pl-6">+ {missionGuide.mission_steps.length - 5} more steps in the full experiment</li>
             )}
           </ol>
         </div>
@@ -334,12 +385,12 @@ function StepSuccess({ experiment, missionGuide, onViewGuide }) {
 
       <div className="grid grid-cols-2 gap-3">
         <button onClick={onViewGuide}
-          className="tp-body rounded-[12px] py-3 font-semibold text-white"
+          className="tp-body rounded-[var(--r-control)] py-3 font-semibold text-white"
           style={{ background: 'var(--brand-navy-900)' }}>
-          View Full Mission Guide
+          View My Full Experiment
         </button>
         <button onClick={() => setShowCal(true)}
-          className="tp-body rounded-[12px] border py-3 font-semibold transition hover:bg-[color:var(--ink-50)]"
+          className="tp-body rounded-[var(--r-control)] border py-3 font-semibold transition hover:bg-[color:var(--ink-50)]"
           style={{ borderColor: 'var(--ink-200)', color: 'var(--ink-700)' }}>
           Add to Calendar
         </button>
@@ -355,19 +406,19 @@ function StepSuccess({ experiment, missionGuide, onViewGuide }) {
 function DuplicateModal({ existing, onContinue, onCreateNew, onCancel }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(5,8,22,0.5)' }}>
-      <div className="w-full max-w-md rounded-[24px] bg-white p-6 space-y-4">
+      <div className="w-full max-w-md rounded-[var(--r-surface)] bg-white p-6 space-y-4">
         <h3 className="tp-section text-[color:var(--surface-dark-900)]">You already have an experiment for this path</h3>
         <p className="tp-body text-[color:var(--ink-700)]">
           <span className="font-semibold">"{existing.title}"</span> is {existing.status === 'draft' ? 'a saved draft' : 'currently active'} for <span className="font-semibold">{existing.path_name}</span>.
         </p>
         <div className="space-y-2">
           <button onClick={onContinue}
-            className="tp-body w-full rounded-[10px] py-3 font-semibold text-white"
+            className="tp-body w-full rounded-[var(--r-control)] py-3 font-semibold text-white"
             style={{ background: 'var(--brand-navy-900)' }}>
             Continue Existing Experiment
           </button>
           <button onClick={onCreateNew}
-            className="tp-body w-full rounded-[10px] border py-3 font-semibold transition hover:bg-[color:var(--ink-50)]"
+            className="tp-body w-full rounded-[var(--r-control)] border py-3 font-semibold transition hover:bg-[color:var(--ink-50)]"
             style={{ borderColor: 'var(--ink-200)', color: 'var(--ink-700)' }}>
             Create a New Experiment
           </button>
@@ -386,13 +437,21 @@ export default function ExperimentSetup() {
   const recId = searchParams.get('recId');
   const pathId = searchParams.get('pathId');
   const pathNameParam = searchParams.get('pathName');
+  // Set when the student came from a recommended next test: the unknown that
+  // recommendation exists to answer, so the designed experiments test it.
+  const variableParam = searchParams.get('variable');
 
   const [rec, setRec] = useState(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
 
-  const [step, setStep] = useState('pick'); // pick | custom | generating | success
+  // uncertainty | pick | custom | generating | success
+  const [step, setStep] = useState('uncertainty');
+  // The uncertainty map for this career, and the one unknown the student chose.
+  const [variables, setVariables] = useState([]);
+  const [focusId, setFocusId] = useState(variableParam || '');
   const [options, setOptions] = useState([]);
+  const [designing, setDesigning] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(null);
   const [customData, setCustomData] = useState({});
   const [experiment, setExperiment] = useState(null);
@@ -426,10 +485,71 @@ export default function ExperimentSetup() {
       }
       setRec(resolved);
       setOptions(getExperimentOptions(resolved.path_name));
+      setLoading(false);
+      await loadUncertainty(resolved);
+      return;
     } catch (e) {
       setLoadError('We could not identify the path you selected. Return to Path Comparison and select the path again.');
     }
     setLoading(false);
+  };
+
+  /**
+   * The uncertainty map for this career, which is what the student chooses from
+   * before anything is designed. A recommended next test arrives with the
+   * unknown it exists to answer already in the URL, so that one is preselected.
+   */
+  const loadUncertainty = async (resolved) => {
+    if (!resolved?.path_name) return;
+    try {
+      const [profs, exps, prf, refs] = await Promise.all([
+        base44.entities.StudentProfile.list('-created_date', 1).catch(() => []),
+        base44.entities.Experiments.list('-created_date', 200).catch(() => []),
+        base44.entities.ProofOfWork.list('-created_date', 200).catch(() => []),
+        base44.entities.WeeklyReflections.list('-created_date', 200).catch(() => []),
+      ]);
+      const hyp = deriveHypothesis(resolved, {
+        profile: (Array.isArray(profs) ? profs[0] : null) || {},
+        experiments: exps || [], proof: prf || [], reflections: refs || [],
+      });
+      // Unknowns first, since those are what an experiment can still move.
+      const vars = (hyp.uncertainty?.variables || []);
+      const unknownIds = new Set((hyp.uncertainty?.top_unknowns || []).map(v => v.variable));
+      setVariables([...vars.filter(v => unknownIds.has(v.variable)), ...vars.filter(v => !unknownIds.has(v.variable))]);
+      // Nothing to choose between: don't show an empty dropdown.
+      if (!vars.length) setStep('pick');
+    } catch (_) {
+      // With no map the student goes straight to the activity suggestions.
+      setVariables([]);
+      setStep('pick');
+    }
+  };
+
+  /**
+   * Design experiments for the one uncertainty the student chose, so all three
+   * options answer that question through different kinds of work. If the design
+   * step cannot run, the older activity suggestions stay in place rather than
+   * blocking the page.
+   */
+  const designForFocus = async (focus) => {
+    if (!rec?.path_name) return;
+    setDesigning(true);
+    try {
+      const result = await designExperiments(rec, null, { focus });
+      if (result?.ok && result.data?.length) setOptions(result.data);
+    } catch (_) {
+      // Static suggestions remain.
+    } finally {
+      setDesigning(false);
+    }
+  };
+
+  const focus = variables.find(v => v.variable === focusId) || null;
+
+  const handleConfirmFocus = () => {
+    setSelectedIndex(null);
+    setStep('pick');
+    designForFocus(focus);
   };
 
   const handleSelectOption = (opt) => {
@@ -440,13 +560,13 @@ export default function ExperimentSetup() {
   const handleConfirmPick = async () => {
     if (selectedIndex === null) return;
     const opt = options[selectedIndex];
+    const { type, ...designFields } = opt;
     await proceedToGenerate({
-      title: opt.title,
-      experiment_type: opt.type,
-      objective: opt.objective,
-      deliverable: opt.deliverable,
-      estimated_hours: opt.estimated_hours,
+      ...designFields,
+      experiment_type: opt.experiment_type || type,
       path_name: rec.path_name,
+      career_name: opt.career_name || rec.path_name,
+      career_hypothesis_id: rec.id || '',
       path_recommendation_id: rec.id || '',
     });
   };
@@ -455,7 +575,10 @@ export default function ExperimentSetup() {
     await proceedToGenerate({
       ...customData,
       experiment_type: 'Custom',
+      design_source: 'custom',
       path_name: rec.path_name,
+      career_name: rec.path_name,
+      career_hypothesis_id: rec.id || '',
       path_recommendation_id: rec.id || '',
     });
   };
@@ -541,6 +664,8 @@ PATH BEING TESTED: ${experimentData.path_name}
 EXPERIMENT: ${experimentData.title}
 OBJECTIVE: ${experimentData.objective}
 DELIVERABLE: ${experimentData.deliverable}
+${experimentData.unresolved_question ? `THE QUESTION THIS MUST ANSWER: ${experimentData.unresolved_question}` : ''}
+${experimentData.realistic_scenario ? `THE SCENARIO THE STUDENT IS WORKING FROM: ${experimentData.realistic_scenario}` : ''}
 
 The guide must be specific to "${experimentData.path_name}", not generic networking advice. Include:
 1. Mission objective (1 sentence)
@@ -584,7 +709,7 @@ ${PLAIN_PROSE_RULES}${correction}`,
       // guide with no usable steps stays retryable instead. The model has
       // already been asked a second time with the reason in hand by this point.
       if (!guideResult.ok) {
-        setGenError('The Mission Guide came back empty both times we asked. Your experiment draft was saved. You can retry from the Missions page.');
+        setGenError('The experiment came back empty both times we asked. Your experiment draft was saved. You can retry from My Experiments.');
         await base44.entities.Experiments.update(saved.id, { status: 'planned', mission_guide_status: 'not_generated' })
           .catch(() => {});
         return;
@@ -619,7 +744,7 @@ ${PLAIN_PROSE_RULES}${correction}`,
         path_id: rec.id,
         experiment_id: saved.id,
       });
-      setGenError('Mission Guide generation failed. Your experiment draft was saved. You can retry from the Missions page.');
+      setGenError('We could not build your experiment. Your experiment draft was saved. You can retry from My Experiments.');
       await base44.entities.Experiments.update(saved.id, { status: 'planned', mission_guide_status: 'not_generated' })
         .catch(() => {});
     }
@@ -660,20 +785,20 @@ ${PLAIN_PROSE_RULES}${correction}`,
 
           <div className="mb-8">
             <div className="mb-2 flex items-center gap-2">
-              {['Select Experiment', 'Confirm Details', 'Generate Guide', 'Mission Created'].map((label, i) => (
+              {STEPS.map((label, i) => (
                 <div key={i} className="flex items-center gap-2">
                   <div className="flex items-center gap-1.5">
                     <div className="h-2 w-2 rounded-full" style={{ background: i === 0 ? 'var(--brand-navy-900)' : 'var(--ink-300)' }} />
                     <span className="tp-meta hidden font-semibold sm:block"
                       style={{ color: i === 0 ? 'var(--brand-navy-900)' : 'var(--ink-400)' }}>{label}</span>
                   </div>
-                  {i < 3 && <div className="h-px w-4 bg-[color:var(--ink-200)]" />}
+                  {i < STEPS.length - 1 && <div className="h-px w-4 bg-[color:var(--ink-200)]" />}
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="rounded-[24px] border border-[color:var(--ink-200)] bg-white p-6 sm:p-8">
+          <div className="rounded-[var(--r-surface)] border border-[color:var(--ink-200)] bg-white p-6 sm:p-8">
             <div className="flex h-8 items-center"><Sk h={24} w="70%" r={7} /></div>
             <div className="mt-2 flex h-6 items-center"><Sk h={13} w="92%" r={5} /></div>
             <div className="mt-6"><SkCards count={3} h={92} gap={12} r={16} /></div>
@@ -691,7 +816,7 @@ ${PLAIN_PROSE_RULES}${correction}`,
           <AlertCircle className="mx-auto text-red-500" size={40} />
           <h2 className="tp-section text-[color:var(--surface-dark-900)]">{loadError}</h2>
           <Link to="/paths"
-            className="tp-body inline-flex items-center gap-2 rounded-[10px] px-5 py-3 font-semibold text-white"
+            className="tp-body inline-flex items-center gap-2 rounded-[var(--r-control)] px-5 py-3 font-semibold text-white"
             style={{ background: 'var(--brand-navy-900)' }}>
             Return to Path Comparison
           </Link>
@@ -700,7 +825,7 @@ ${PLAIN_PROSE_RULES}${correction}`,
     );
   }
 
-  const progressStep = step === 'pick' ? 1 : step === 'custom' ? 2 : step === 'generating' ? 3 : 4;
+  const progressStep = step === 'uncertainty' ? 1 : step === 'pick' ? 2 : step === 'custom' ? 3 : step === 'generating' ? 4 : 5;
 
   return (
     <main className="min-h-[100svh]" style={{ background: 'var(--page-surface)' }}>
@@ -725,7 +850,7 @@ ${PLAIN_PROSE_RULES}${correction}`,
         {/* Progress */}
         <div className="mb-8">
           <div className="flex items-center gap-2 mb-2">
-            {['Select Experiment', 'Confirm Details', 'Generate Guide', 'Mission Created'].map((label, i) => (
+            {STEPS.map((label, i) => (
               <div key={i} className="flex items-center gap-2">
                 <div className="flex items-center gap-1.5">
                   <div className="h-2 w-2 rounded-full transition-colors"
@@ -733,14 +858,23 @@ ${PLAIN_PROSE_RULES}${correction}`,
                   <span className="tp-meta font-semibold hidden sm:block"
                     style={{ color: progressStep === i + 1 ? 'var(--brand-navy-900)' : 'var(--ink-400)' }}>{label}</span>
                 </div>
-                {i < 3 && <div className="h-px w-4 bg-[color:var(--ink-200)]" />}
+                {i < STEPS.length - 1 && <div className="h-px w-4 bg-[color:var(--ink-200)]" />}
               </div>
             ))}
           </div>
         </div>
 
         {/* Content */}
-        <div className="rounded-[24px] border border-[color:var(--ink-200)] bg-white p-6 sm:p-8">
+        <div className="rounded-[var(--r-surface)] border border-[color:var(--ink-200)] bg-white p-6 sm:p-8">
+          {step === 'uncertainty' && (
+            <UncertaintyPicker
+              pathName={rec.path_name}
+              variables={variables}
+              value={focusId}
+              onChange={setFocusId}
+              onNext={handleConfirmFocus}
+            />
+          )}
           {step === 'pick' && (
             <StepPick
               rec={rec}
@@ -749,6 +883,9 @@ ${PLAIN_PROSE_RULES}${correction}`,
               onSelect={handleSelectOption}
               onCustom={() => setStep('custom')}
               onNext={handleConfirmPick}
+              designing={designing}
+              focus={focus}
+              onChangeFocus={() => setStep('uncertainty')}
             />
           )}
           {step === 'custom' && (
@@ -767,7 +904,7 @@ ${PLAIN_PROSE_RULES}${correction}`,
             <StepSuccess
               experiment={experiment}
               missionGuide={missionGuide}
-              onViewGuide={() => navigate('/experiments')}
+              onViewGuide={() => navigate(`/experiment?experimentId=${experiment.id}`)}
             />
           )}
         </div>

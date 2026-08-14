@@ -3,13 +3,17 @@
  * container everything else hangs off.
  */
 import { Clock, Target } from 'lucide-react';
+import LanguageLevelControl from '@/components/language/LanguageLevelControl';
+import useLanguageLevel from '@/hooks/useLanguageLevel';
 
 export default function ExperimentOverview({ experiment, path, missions }) {
+  // Wording preference for this path. Nothing about the experiment changes with it.
+  const language = useLanguageLevel({ path, experiment });
   const done = missions.filter(m => ['completed', 'skipped'].includes(m.status)).length;
   const pct = missions.length ? Math.round((done / missions.length) * 100) : 0;
 
   return (
-    <section className="rounded-[20px] bg-white p-5 sm:p-6" style={{ border: '1px solid var(--border-light)' }}>
+    <section className="rounded-[var(--r-surface)] bg-white p-5 sm:p-6" style={{ border: '1px solid var(--border-light)' }}>
       <p className="tp-eyebrow" style={{ color: 'var(--brand-navy-700)' }}>
         Active experiment{path?.path_name ? ` · ${path.path_name}` : ''}
       </p>
@@ -25,6 +29,8 @@ export default function ExperimentOverview({ experiment, path, missions }) {
         <span className="flex items-center gap-1"><Target size={12} /> {done}/{missions.length} missions complete</span>
         {experiment.deadline && <span>Due {new Date(experiment.deadline).toLocaleDateString()}</span>}
       </div>
+
+      <LanguageLevelControl level={language.level} onChange={language.setLevel} hint={false} className="mt-4" />
 
       <div className="mt-3 h-2 w-full overflow-hidden rounded-full" style={{ background: 'var(--background-tertiary)' }}>
         <div className="progress-fill h-full rounded-full" style={{ width: `${pct}%`, background: 'var(--brand-gold-500)' }} />

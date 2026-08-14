@@ -74,6 +74,20 @@ const NEGATIVE_RECHECK_DAYS = 30;
  */
 const DOMAIN_RE = /^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$/;
 const ALLOWED_TLDS = ['edu', 'ca', 'uk', 'au', 'nz', 'ie', 'org', 'net', 'com'];
+
+/**
+ * A hostname that belongs to an institution rather than to a CDN, a font
+ * service or the vendor itself.
+ *
+ * Much narrower than ALLOWED_TLDS on purpose, and used for the opposite
+ * question. ALLOWED_TLDS asks "may we fetch this?", where .com and .org have to
+ * be in because schools use them. This asks "does naming this host tell us
+ * whose calendar we are looking at?", and a link to a .com tells us nothing:
+ * every page on the internet has some. Only the suffixes reserved for
+ * education answer it, and every wrong-school hit measured for this fix names
+ * one: franklincollege.edu, imperial.ac.uk, acu.edu.au.
+ */
+const ACADEMIC_HOST_RE = /\.(?:edu|ac\.uk|edu\.au|ac\.nz)$/i;
 /**
  * Names that must never be fetched server-side — matched by host LABEL, never by
  * substring.
@@ -198,6 +212,184 @@ export function normalizeName(value: string): string {
     .trim();
 }
 
+/**
+ * Words so many institutions carry that agreeing on one says nothing.
+ *
+ * Without this list "Rainy River Community College" and "Red Rocks Community
+ * College" share two of their four words and read as the same school, which is
+ * exactly the pair this whole check exists to tell apart.
+ */
+const GENERIC_SCHOOL_WORDS = new Set([
+  'university', 'universities', 'college', 'colleges', 'school', 'schools',
+  'state', 'community', 'technical', 'technology', 'institute', 'institution',
+  'academy', 'seminary', 'campus', 'campuses', 'center', 'centre', 'district',
+  'system', 'main',
+]);
+
+/**
+ * A school's name as words, in the order written, with the spelling differences
+ * vendors introduce folded away.
+ *
+ * "Saint" and "St." are the same word and the vendors disagree about which to
+ * write. Presence returns "St. Olaf College" where our own row says "Saint Olaf
+ * College", and without folding them the two names share nothing but a generic.
+ *
+ * The apostrophe has to go rather than act as a separator. `normalizeName`
+ * treats it as punctuation, so "Saint John's University" comes apart into
+ * "john" plus a junk "s" and stops matching "St Johns University" at all, while
+ * the extra token inflates the word count every rule below measures against.
+ * Every possessive name is exposed to that, and there are a lot of them.
+ *
+ * Accents are folded for the same reason: `normalizeName` keeps ASCII only, so
+ * a name written properly splits where the accent was and refuses its own
+ * unaccented spelling.
+ */
+function schoolNameTokens(name: string): string[] {
+  const folded = String(name || '')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/['\u2018\u2019\u02bc`]/g, '');
+  return normalizeName(folded)
+    .split(' ')
+    .filter(Boolean)
+    .map(word => (word === 'saint' ? 'st' : word));
+}
+
+/** The words in a school's name that actually identify it. */
+function schoolNameWords(name: string): Set<string> {
+  const words = new Set<string>();
+  for (const word of schoolNameTokens(name)) {
+    if (GENERIC_SCHOOL_WORDS.has(word)) continue;
+    words.add(word);
+  }
+  return words;
+}
+
+/**
+ * Is one name written inside the other, word for word and unbroken?
+ *
+ * This is what tells a campus suffix apart from a different school, and the two
+ * are the same shape when only the identifying words are counted. "Washington
+ * State University" against "Washington State University - Pullman" leaves one
+ * identifying word on one side and two on the other, and so does "Georgia State
+ * University" against "Georgia Southern University". The first pair is one
+ * school and the second is two, and the difference is visible only in the full
+ * name: a campus, a school of law or a vendor's page furniture wraps the name
+ * it was given without breaking it up, and a different school does not.
+ *
+ * Generic words are deliberately kept here, because they are the evidence. Drop
+ * them and "georgia" sits inside "georgia southern" as neatly as "washington"
+ * sits inside "washington pullman".
+ */
+function nameWrittenInside(short: string[], long: string[]): boolean {
+  if (!short.length || short.length > long.length) return false;
+  for (let i = 0; i + short.length <= long.length; i++) {
+    let all = true;
+    for (let j = 0; j < short.length; j++) {
+      if (long[i + j] !== short[j]) { all = false; break; }
+    }
+    if (all) return true;
+  }
+  return false;
+}
+
+/**
+ * Do two names refer to the same school?
+ *
+ * Deliberately not string equality. A vendor writes a school's name in whatever
+ * form it was set up under, and on live feeds that is routinely not the form we
+ * hold: "Utica College" against "Utica University" after a renaming, "CSU San
+ * Marcos" against "California State University, San Marcos", "Washington State
+ * University - Pullman" against "Washington State University". Requiring the
+ * strings to match would refuse all of those, and refusing a real school is how
+ * a validator turns into a coverage loss rather than a safety win.
+ *
+ * Three ways in, and they are narrow on purpose. An earlier version of this ran
+ * one rule, "the identifying words agree on more than half of the shorter
+ * name", and described itself as strict. It was not. Half of most school names
+ * is one word, because `<Place> University` carries exactly one word the
+ * generic list does not eat, and "more than half of one" is "share one word".
+ * Run over all 2,348 US institution names it called 3,238 pairs of genuinely
+ * different schools the same school, and 1,353 institutions collided with at
+ * least one other: Columbia University with Columbia College Chicago, Georgia
+ * State with Georgia Southern, and so on down the list.
+ *
+ *   1. The identifying words are the same on both sides. One school, two
+ *      spellings: Utica College and Utica University, St. Olaf and Saint Olaf,
+ *      Copper Mountain College and Copper Mountain Community College.
+ *
+ *   2. One name is written inside the other, in order and unbroken. That is
+ *      what a campus suffix looks like ("Washington State University" inside
+ *      "Washington State University - Pullman") and what a vendor's page
+ *      furniture looks like ("Ohlone College" inside "Campus Calendar- Ohlone
+ *      College"). See `nameWrittenInside` for why the generic words have to be
+ *      counted here and nowhere else.
+ *
+ *   3. Real overlap: at least two shared identifying words, and more than half
+ *      of the shorter name. That is "CSU San Marcos" against "California State
+ *      University, San Marcos", which share San and Marcos and disagree about
+ *      the rest.
+ *
+ * Both halves of the third clause are doing work. More than half rather than at
+ * least half refuses "San Jose State" against "San Diego State". Two shared
+ * words rather than one refuses Columbia University against Columbia College
+ * Chicago, and Georgia State against Georgia Southern. Together the three
+ * clauses take the national collision count from 3,238 pairs of different
+ * schools to 1,362, and the institutions caught up in one from 1,353 to 792.
+ *
+ * Measured against the live feeds it actually gates rather than only against
+ * the name list: all 119 Presence portals that answer at a school's domain
+ * label were re-read on 2026-08-06, and this keeps the same 118 the looser rule
+ * kept and refuses the same one, `rrcc.mnscu.edu` being served Red Rocks.
+ * Tightening clause 3 any further does cost real schools. Requiring an
+ * unmatched word on each side, which would refuse San Diego State University
+ * against San Diego Christian College and 235 pairs like it, also refuses
+ * Bloomsburg University of Pennsylvania against the "Commonwealth University of
+ * Pennsylvania - Bloomsburg" its own feed now says, and Washington University,
+ * Saint Louis against "Washington University in St. Louis". Two real schools
+ * lose their calendar to remove collisions no live feed produces, so it is not
+ * done.
+ *
+ * What is left is genuinely undecidable from the strings and is documented
+ * rather than fixed. Boston College and Boston University, Miami University and
+ * the University of Miami, Trinity College and Trinity University: each pair
+ * reduces to the same single identifying word, and the only thing telling them
+ * apart is the word this list calls generic. Accepting them is the deliberate
+ * side to fail on, because rejecting them would take Utica College and Utica
+ * University with them, which is one school. No live feed hits any of these:
+ * the check is only ever asked whether a feed is the school we already asked
+ * for, so both halves of such a pair have to answer at the same vendor slug
+ * before it matters.
+ *
+ * Either side being empty is a refusal. A name made entirely of generic words
+ * carries no evidence, and inventing agreement out of nothing is the failure
+ * this is here to prevent.
+ */
+export function namesSameSchool(a: string, b: string): boolean {
+  const left = schoolNameWords(a);
+  const right = schoolNameWords(b);
+  if (!left.size || !right.size) return false;
+
+  let shared = 0;
+  for (const word of left) if (right.has(word)) shared++;
+  if (!shared) return false;
+
+  if (shared === left.size && shared === right.size) return true;
+
+  const one = schoolNameTokens(a);
+  const two = schoolNameTokens(b);
+  if (one.length <= two.length ? nameWrittenInside(one, two) : nameWrittenInside(two, one)) {
+    return true;
+  }
+
+  return shared >= 2 && shared * 2 > Math.min(left.size, right.size);
+}
+
+/** Any name we know the school by agreeing is enough. They are all it. */
+function schoolIsCalled(school: SchoolIdentity | undefined, name: string): boolean {
+  if (!name) return false;
+  return (school?.names || []).some(known => namesSameSchool(known, name));
+}
+
 /** Interest terms worth matching on — long enough to mean something. */
 export function termsFrom(...sources: unknown[]): string[] {
   const seen = new Set<string>();
@@ -236,6 +428,52 @@ function domainLabel(domain: string): string {
 // ── Adapter plumbing ────────────────────────────────────────────────────────
 
 /**
+ * Who the school is, for the probes that have to check a calendar is actually
+ * theirs before returning it.
+ *
+ * Three vendors here key a whole school off one short slug in a namespace they
+ * share with every other publisher on the platform, and we derive that slug
+ * from the school's domain label. The label has no relationship to the
+ * namespace, so an answer only means somebody holds that name. Deciding whether
+ * that somebody is this school needs to know who this school is, which a bare
+ * domain does not say: `campusName: "Red Rocks Community College"` is only
+ * recognisable as the wrong answer next to "Rainy River Community College".
+ *
+ * `names` is every string we know the school by: the row's canonical name, its
+ * match keys, and the words the student typed. Any one of them agreeing is
+ * enough, because they are all the same school under different spellings.
+ *
+ * Empty means we know nothing, and a probe that needs this refuses rather than
+ * guessing. In production it is never empty: `resolveFeed` returns early on a
+ * blank college name, so every probe it runs carries at least the string the
+ * student typed.
+ *
+ * Because any one name is enough, the weakest name we hold is the one that
+ * decides, and on a school's first resolve the only name we hold is what one
+ * student typed. A student who types "Miami" gives that school a one-word
+ * identity, and one word is enough for any feed whose name contains it: Miami
+ * University, the University of Miami and Miami Dade College all satisfy it.
+ *
+ * That is deliberate and it stays. Requiring two words would refuse "MIT",
+ * "UCLA", "Bowdoin" and "Fairfield", which is how most students write their own
+ * school, and refusing them costs each one their calendar for the sake of a
+ * collision that cannot happen on its own. This check is never the only gate: a
+ * probe only ever asks it about a vendor slug derived from a domain, and that
+ * domain has already had to be the right school's. For "Miami" to be shown
+ * Miami Dade's calendar, the domain step would have to have produced Miami
+ * Dade's domain first, at which point the student is on the wrong school
+ * entirely and a name check cannot save them. What the identity is for is the
+ * case where the domain is right and the vendor's slug is somebody else's,
+ * which is what `rrcc.mnscu.edu` is, and one word refuses that as firmly as
+ * three do.
+ */
+interface SchoolIdentity {
+  names: string[];
+}
+
+const NO_IDENTITY: SchoolIdentity = { names: [] };
+
+/**
  * One calendar platform. `probe` verifies a school actually runs this platform
  * and returns the URL to remember; `fetch` turns that URL back into raw
  * platform events; `normalize` flattens one of those into the shared shape.
@@ -245,7 +483,10 @@ function domainLabel(domain: string): string {
  */
 interface Adapter {
   name: string;
-  probe(domain: string): Promise<string | null>;
+  // `school` is only read by the probes that derive a vendor identifier from the
+  // domain label and therefore have to prove the calendar is this school's. The
+  // rest take it and ignore it, exactly as they do with `seriesDates` below.
+  probe(domain: string, school?: SchoolIdentity): Promise<string | null>;
   // `seriesDates` is how many dates one repeating event contributes. Only iCal
   // carries repeat rules — every other platform's feed hands us dated instances
   // already — so the rest of the adapters take it and have nothing to do.
@@ -764,9 +1005,19 @@ async function fetchPage(
   url: string,
   maxChars: number,
   guard: HopGuard = null,
+  // Almost every caller wants the two headers below and nothing else. EMS is
+  // the exception and it is not a preference: without `Accept-Language` that
+  // application serves a 200 carrying its own error page, so a reader that
+  // omits the header gets a well-formed document with none of the school's
+  // links in it and concludes the calendar belongs to nobody.
+  extraHeaders: Record<string, string> = {},
 ): Promise<{ finalHost: string; finalUrl: string; html: string }> {
   const res = await guardedFetch(url, {
-    headers: { Accept: 'text/html,application/xhtml+xml,*/*', 'User-Agent': BROWSER_UA },
+    headers: {
+      Accept: 'text/html,application/xhtml+xml,*/*',
+      'User-Agent': BROWSER_UA,
+      ...extraHeaders,
+    },
     signal: AbortSignal.timeout(PROBE_TIMEOUT_MS),
   }, guard);
 
@@ -822,8 +1073,26 @@ function trumbaSlugsFrom(html: string): string[] {
  * A school whose page does not name a slug simply does not resolve. Guessing
  * variants would be brute-forcing someone else's calendar namespace, and a
  * wrong slug means sending a student to another school's events.
+ *
+ * That last sentence used to be a comment sitting above code that did the
+ * opposite. The domain label was pushed on as a last-resort candidate, so
+ * osu.edu asked for the slug `osu`, and `trumba.com/calendars/osu.json` is
+ * Oregon State's development instance: Pacific offsets, permalinks on
+ * dev.trumba.drupal.oregonstate.edu, categories reading "OSU|Women's Center".
+ * Two of our students were shown another university's events for weeks and
+ * nothing downstream could tell, because the feed answers and parses fine.
+ *
+ * The fallback is gone rather than validated. Validating it would mean asking
+ * whether a calendar belongs to a school, and Trumba gives us nothing that
+ * answers it: the only ownership evidence in the payload is `permaLinkUrl`,
+ * which on a correctly matched school is routinely trumba.com's own address
+ * rather than the school's, so the check would refuse real schools while still
+ * accepting any calendar that publishes no permalinks at all. A guess wearing a
+ * validator is still a guess, and the failure it produces is silent. The slug
+ * is either named by the school's own page or the school does not resolve
+ * through Trumba.
  */
-async function probeTrumba(domain: string): Promise<string | null> {
+export async function probeTrumba(domain: string): Promise<string | null> {
   const pages = await Promise.all(trumbaPageCandidates(domain).map(async (url) => {
     try {
       return await fetchHtmlHead(url, TRUMBA_HTML_SCAN_BYTES);
@@ -839,13 +1108,11 @@ async function probeTrumba(domain: string): Promise<string | null> {
     }
   }
 
-  // The domain label goes last, behind anything the page actually named. It is
-  // still a guess, so it only gets to answer when discovery found nothing —
-  // and like every other candidate it has to validate against a real feed
-  // before it is returned.
+  // Only slugs the school's own page named. Nothing derived from the domain:
+  // Trumba's /calendars/<slug> is one flat namespace shared by every publisher
+  // in it, so a label-derived slug answering means somebody owns that name, not
+  // that this school does. See the docstring.
   const candidates = slugs.slice(0, TRUMBA_MAX_SLUGS);
-  const label = domainLabel(domain);
-  if (label && !candidates.includes(label)) candidates.push(label);
 
   for (const slug of candidates) {
     const hit = await firstValidUrl(TRUMBA_HOSTS.map(host => `${host}/${slug}.json`), looksLikeTrumba);
@@ -933,6 +1200,44 @@ function campusLabsSlug(feedUrl: string): string {
   }
 }
 
+/**
+ * Campus Labs keys off the bare domain label, which is the same guess at a
+ * shared namespace that Presence, CampusGroups and EMS's hosted tenancy make,
+ * and it is wrong for real schools right now. It is nevertheless left alone,
+ * and the reason is measured rather than assumed. Do not "fix" it to match its
+ * neighbours without redoing the count below.
+ *
+ * **There is no ownership evidence to check.** Engage publishes nothing that
+ * says whose calendar this is. The event payload carries `institutionId`, an
+ * opaque integer with no public directory behind it. The portal page is a
+ * JavaScript shell that names no `.edu` at all, and it never redirects off
+ * campuslabs.com, so neither of the two signals the CampusGroups check uses
+ * exists here: measured across all 224 portals that still answer, zero
+ * redirect anywhere and zero name a school's domain. The one human-readable
+ * string is the community's *branded* name, and schools brand these hard:
+ * "Mane Connection", "Bobcat Connect", "MyAULife", "GetInvolvedMU", "CSUinvolve".
+ * Requiring that to agree with the school's name refuses **180 of 224 real
+ * schools**. That is a validator that would cost far more than the guess.
+ *
+ * **So the only option is removal, and removal is far too expensive.** 229 of
+ * the 2,348 US institutions in the national sweep resolve through Campus Labs.
+ * It is the single largest platform we read, 30% of every school that resolves
+ * anywhere, and nine of our own students' schools. 225 of the 229 are on the
+ * bare label; the other four came from discovery.
+ *
+ * **What it actually costs us today is four schools**, found by looking for two
+ * institutions whose domain labels collide. Ashland Community and Technical
+ * College in Kentucky is served Ashland University in Ohio (the AU Chapel, the
+ * John C Myers Convocation Center). CUNY Queensborough is served Quinsigamond
+ * Community College in Massachusetts (Polar Park, the West Boylston campus).
+ * The University of Akron's Wayne College is served Wayne State in Detroit,
+ * whose portal is branded "Wayne State University" outright. College of
+ * Southern Idaho is served CUNY's College of Staten Island.
+ *
+ * Four wrong against 229 lost is fifty-seven real schools given up per stranger
+ * removed. Trumba's ratio was under three, which is why that one went. This one
+ * stays until Anthology publishes something that names an institution.
+ */
 async function probeCampusLabs(domain: string): Promise<string | null> {
   const slug = domainLabel(domain);
   if (!slug) return null;
@@ -1129,7 +1434,10 @@ function campusGroupsOrigin(feedUrl: string): string {
  * every redirect hop; dropping it there silently reopens the SSRF this file was
  * patched for.
  */
-async function probeCampusGroupsAt(host: string, guard: HopGuard = null): Promise<string | null> {
+async function campusGroupsFeedAt(
+  host: string,
+  guard: HopGuard = null,
+): Promise<{ feedUrl: string; landedOn: string } | null> {
   const base = `https://${host}${CAMPUS_GROUPS_PATH}`;
   let res: Response;
   try {
@@ -1144,17 +1452,138 @@ async function probeCampusGroupsAt(host: string, guard: HopGuard = null): Promis
     await res.body?.cancel().catch(() => {});
     return null;
   }
+  // Where the request landed is kept, not just what it returned. A school that
+  // has branded the vendor away redirects the whole portal onto its own
+  // hostname, and that redirect is the cheapest ownership evidence this
+  // platform gives. See `campusGroupsBelongsTo`.
+  let landedOn = host;
   try {
-    return looksLikeCampusGroups(JSON.parse(await res.text())) ? base : null;
+    landedOn = stripWww(new URL(res.url).hostname.toLowerCase());
+  } catch (_) { /* Keep the host we asked for. */ }
+
+  try {
+    return looksLikeCampusGroups(JSON.parse(await res.text())) ? { feedUrl: base, landedOn } : null;
   } catch (_) {
     return null; // Really was a web page.
   }
 }
 
-async function probeCampusGroups(domain: string): Promise<string | null> {
+async function probeCampusGroupsAt(host: string, guard: HopGuard = null): Promise<string | null> {
+  return (await campusGroupsFeedAt(host, guard))?.feedUrl ?? null;
+}
+
+/**
+ * How much of a portal page to read while looking for who owns it. These run
+ * 60-100KB and the school's own link is usually in the footer, so a small
+ * budget reads the header and answers "no owner named" every time.
+ */
+const CAMPUS_GROUPS_OWNER_SCAN_BYTES = 250_000;
+
+/** The pages a CampusGroups portal serves signed-out, richest first. */
+const CAMPUS_GROUPS_OWNER_PAGES = ['/', '/events'];
+
+/**
+ * Does this portal point back at the school we are asking about?
+ *
+ * Every figure below was re-read live on 2026-08-06 against all 2,348 US
+ * institutions, because the first set written here was wrong in the direction
+ * that costs schools: it recorded 68 settled by page markup and 32 refused,
+ * where the code as written settles 35 and refuses 65.
+ *
+ * Cheapest evidence first, and the cheapest is free: the API request has
+ * already been made, and a school that has branded the portal onto its own
+ * hostname redirected it there. 146 of the 246 portals answering nationally are
+ * settled on that alone, at no cost.
+ *
+ * The other 100 are read, and the pages say who they belong to two ways.
+ *
+ * A portal that belongs to a school links back to it, because the footer's
+ * terms-of-service and dean-of-students links sit on the school's own domain.
+ * That settles 35.
+ *
+ * The rest print the school's domain as a contact address rather than a link:
+ * getinvolved@sacredheart.edu, inose@lehigh.edu, Student.Activities@marist.edu,
+ * asksalp@pdx.edu. Reading those settles another 27, and only a link was read
+ * at first, which refused every one of them. An address on the school's own
+ * domain is a statement of ownership on exactly the same footing as a link, so
+ * accepting it costs nothing in safety and is worth 27 schools. 13 of the 27
+ * have no other calendar platform anywhere in the sweep, so without this clause
+ * they have no campus events at all: Carroll, Colorado Mesa, Lehigh, Marist,
+ * MICA, Minnesota State Moorhead, Newberry, New Mexico Highlands, Portland
+ * State, Sacred Heart, Cerritos, Oklahoma City Community College and UNT
+ * Dallas.
+ *
+ * Reads are only ever paid by a school whose portal already answered, which is
+ * a hundred schools nationally, once each ever.
+ *
+ * What it will not do is accept a portal that names nobody. 38 are refused. 16
+ * of those are demonstrably somebody else's portal and they are not near
+ * misses: `bates.ctc.edu` is Bates Technical College in Tacoma and `bates` is
+ * Bates College in Maine; `franklin.edu` is Franklin University in Columbus and
+ * `franklin` is Franklin College in Indiana; Marshall University gets USC's
+ * Marshall School of Business, Imperial Valley College gets Imperial College
+ * London, Spelman gets the American University in Cairo, Kellogg Community
+ * College gets Northwestern's Kellogg School, Abilene Christian gets Australian
+ * Catholic, Utah State gets a .edu.au.
+ *
+ * The other 22 name no academic domain at all and most of them look genuine.
+ * 11 of the 22 have no other platform in the sweep, so the honest cost is 11
+ * real schools losing their only calendar against 16 strangers removed. Before
+ * the address clause it was 24 against 16, and Trumba's ratio was three real
+ * schools lost per stranger and it shipped.
+ */
+async function campusGroupsBelongsTo(host: string, landedOn: string, domain: string): Promise<boolean> {
+  if (sameSite(landedOn, domain)) return true;
+
+  for (const path of CAMPUS_GROUPS_OWNER_PAGES) {
+    let html = '';
+    try {
+      html = await fetchHtmlHead(`https://${host}${path}`, CAMPUS_GROUPS_OWNER_SCAN_BYTES);
+    } catch (_) {
+      continue; // A page that will not load is not evidence either way.
+    }
+    for (const match of html.matchAll(CALENDAR_HOST_RE)) {
+      if (sameSite(stripWww(match[1].toLowerCase()), domain)) return true;
+    }
+    // The same statement of ownership, written as a contact address instead of
+    // a link. Two in five of the portals that name nobody in their links are
+    // naming the school in their footer the whole time. See EMAIL_HOST_RE.
+    for (const match of html.matchAll(EMAIL_HOST_RE)) {
+      if (sameSite(stripWww(match[1].toLowerCase()), domain)) return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * `<label>.campusgroups.com` is a guess at a namespace CampusGroups shares
+ * across every school on the platform, so an answer means somebody holds that
+ * label and nothing more. It is the same shape as the Trumba slug that put two
+ * of our students on Oregon State's calendar, and it is live right now: Bates
+ * Technical College in Tacoma resolves to Bates College in Maine, whose feed
+ * names the Olin Arts Center and "The Puddle".
+ *
+ * Validated rather than deleted, because unlike Trumba this platform does say
+ * who it belongs to. Measured against all 2,348 US institutions on 2026-08-06:
+ * 246 answer at their domain label, 208 of them point back at the school's own
+ * domain, and 16 point at a different school's. The remaining 22 name nobody
+ * and are refused. See `campusGroupsBelongsTo` for the three kinds of evidence
+ * and what refusing costs.
+ *
+ * Note the check hangs off this function and not off `probeCampusGroupsAt`,
+ * which is the right boundary rather than an oversight. Discovery reaches the
+ * same endpoint at hosts like `engage.babson.edu` and `bullsconnect.usf.edu`,
+ * which are inside the school's own registrable domain already and are
+ * therefore not guesses at anything. Only the label is.
+ */
+export async function probeCampusGroups(domain: string): Promise<string | null> {
   const slug = domainLabel(domain);
   if (!slug) return null;
-  return await probeCampusGroupsAt(`${slug}.campusgroups.com`);
+  const host = `${slug}.campusgroups.com`;
+
+  const hit = await campusGroupsFeedAt(host);
+  if (!hit) return null;
+  return await campusGroupsBelongsTo(host, hit.landedOn, domain) ? hit.feedUrl : null;
 }
 
 /**
@@ -1411,11 +1840,65 @@ function presenceSlug(feedUrl: string): string {
   }
 }
 
-async function probePresence(domain: string): Promise<string | null> {
+/**
+ * Every school this feed says it belongs to. Normally exactly one.
+ *
+ * Presence stamps `campusName` on every row it serves, which makes it the only
+ * vendor here that answers "whose calendar is this?" outright and in the same
+ * request the probe was already making. Reading it off every row rather than
+ * the first is deliberate: a feed naming two schools is a feed we do not
+ * understand, and the caller refuses it rather than picking one.
+ */
+function presenceCampusNames(payload: unknown): string[] {
+  if (!Array.isArray(payload)) return [];
+  const names = new Set<string>();
+  for (const event of payload) {
+    const name = plainText((event as { campusName?: unknown })?.campusName);
+    if (name) names.add(name);
+  }
+  return [...names];
+}
+
+/**
+ * Presence's slug is the school's domain label, and that is a guess at a global
+ * namespace, the same shape of guess that put Ohio State's students on Oregon
+ * State's Trumba calendar. `api.presence.io/<slug>` answering means somebody
+ * holds that slug, not that this school does, and the wrong answer arrives as a
+ * working calendar full of real events that passes every health check we run.
+ *
+ * It is validated rather than removed, and the difference from the Trumba
+ * decision is evidence. Trumba publishes nothing that names its owner, so a
+ * check there would have refused real schools and still waved strangers
+ * through. Presence puts `campusName` on every single event, and that is not an
+ * assumption: across all 2,348 US institutions in the national sweep, 119
+ * answer at their domain label and all 119 carry it. So the feed is accepted
+ * only when it says it belongs to the school we are asking about, and a feed
+ * that names nobody is refused for want of evidence rather than trusted.
+ *
+ * Measured cost of the check, which is why it is a check and not a deletion:
+ * of those 119 feeds, 118 name the school whose domain we derived the slug
+ * from and are kept. One does not. `rrcc.mnscu.edu` is Rainy River Community
+ * College in Minnesota and the slug `rrcc` belongs to Red Rocks Community
+ * College in Colorado, whose 87 upcoming events were what a Rainy River student
+ * would have been shown. Deleting the guess instead, as Trumba required, would
+ * have cost 118 schools to reach that one.
+ */
+export async function probePresence(domain: string, school: SchoolIdentity = NO_IDENTITY): Promise<string | null> {
   const slug = domainLabel(domain);
   if (!slug) return null;
   const base = `${PRESENCE_API}/${slug}/v1/events`;
-  return await firstValidUrl([base], looksLikePresence) ? base : null;
+
+  let payload: unknown;
+  try {
+    payload = await probeJson(base);
+  } catch (_) {
+    return null;
+  }
+  if (!looksLikePresence(payload)) return null;
+
+  const named = presenceCampusNames(payload);
+  if (named.length !== 1 || !schoolIsCalled(school, named[0])) return null;
+  return base;
 }
 
 async function fetchPresence(feedUrl: string, days: number) {
@@ -1848,14 +2331,131 @@ function normalizeEms(event: any, feedUrl: string): NormalizedEvent {
  * on ems., calendar. or events. under /MasterCalendar — James Madison,
  * Shippensburg, Nassau Community, Southern Illinois.
  */
-function emsCandidates(domain: string): string[] {
+export function emsCandidates(domain: string): string[] {
   const label = domainLabel(domain);
+  // The school's own hosts first, and this order is the point rather than a
+  // detail. `ems.`, `calendar.` and `events.` under the school's own domain
+  // cannot belong to anybody else; `<label>.emscloudservice.com` is a guess at
+  // a namespace the vendor shares with every install it hosts. The guess used
+  // to be first, so a school running its own EMS could be answered by a
+  // stranger's hosted tenancy that happened to hold its domain label, and the
+  // school's own calendar would never be asked for. All four candidates are
+  // still fired at once and only the reading order changes, so this costs
+  // nothing.
   const candidates = ['ems', 'calendar', 'events']
     .map(sub => `https://${sub}.${domain}/MasterCalendar/MasterCalendar.aspx`);
   if (label) {
-    candidates.unshift(`https://${label}.emscloudservice.com/calendar/MasterCalendar.aspx`);
+    candidates.push(`https://${label}.emscloudservice.com/calendar/MasterCalendar.aspx`);
   }
   return candidates;
+}
+
+/** The vendor's shared hosting, as opposed to a host the school controls. */
+function isEmsVendorHost(feedUrl: string): boolean {
+  try {
+    return stripWww(new URL(feedUrl).hostname.toLowerCase()).endsWith('emscloudservice.com');
+  } catch (_) {
+    return false;
+  }
+}
+
+/** Enough of the page to reach its footer, where the school's own links sit. */
+const EMS_OWNER_SCAN_BYTES = 250_000;
+
+/**
+ * Is the hosted tenancy at `<label>.emscloudservice.com` really this school's?
+ *
+ * It has to be asked, because the label is a guess at a namespace shared by
+ * every install the vendor hosts and a wrong one answers with a complete,
+ * parseable, perfectly healthy calendar belonging to someone else. Live right
+ * now: `franklin.edu` is Franklin University, an online school in Columbus
+ * Ohio, and `franklin.emscloudservice.com` is Franklin College in Indiana,
+ * serving the Johnson Center for Fine Arts, Faught Stadium and Grizzlies
+ * athletics. That row only became reachable when the Trumba fix removed the
+ * slug it used to resolve through, which is worth remembering: closing one
+ * label-derived path moves schools onto the next one.
+ *
+ * Two ways in, and the page we read is the same MasterCalendar page the probe
+ * already knows answers.
+ *
+ * The first is a link back to the school. An install belonging to a school
+ * links to it, and Sacred Heart, LeTourneau, Wisconsin-Green Bay, Denison,
+ * Wesleyan, Maryville, Daemen, Wisconsin-Stevens Point and Western Connecticut
+ * State all name their own domain on the page.
+ *
+ * The second is for the installs that link nowhere at all, which Cleveland
+ * State, Ohlone, Florida, Miami, Memphis, Oregon Tech, Texas Southern, Penn
+ * College, Aims, Grambling State and Bridgewater State all do. There the page's
+ * own title is the evidence: EMS renders it as "Campus Calendar- <the
+ * institution>", so it names its owner outright. That clause is allowed only
+ * when the page names no school's domain whatsoever, and Franklin is exactly
+ * why. Its title says "Campus Calendar- Franklin College", which agrees with
+ * "Franklin University" on the only word either name carries, so the title
+ * alone would wave it through. The page also links to franklincollege.edu, and
+ * a page naming a domain that is not this school's has told us whose calendar
+ * it is.
+ *
+ * A generic word in the title like "Calendar" cannot manufacture a match: it
+ * only ever enlarges the vendor's side of the comparison, and "Campus Calendar-
+ * <name>" is the school's own name written whole inside a longer string, which
+ * is the second clause of `namesSameSchool` and not the overlap one.
+ *
+ * One title passes that is worth knowing about, because it is a department and
+ * not a campus. `miami.emscloudservice.com` is titled "Campus Calendar-
+ * University of Miami, School of Law", so what it holds is one school's room
+ * bookings rather than the university's events. It is allowed through
+ * deliberately. This check asks one question, whose institution is this, and
+ * the answer is right: the law school is the University of Miami. Whether a
+ * department's calendar is the right calendar to show a student is the question
+ * the submission review queue exists for, and it is asked about feeds we
+ * already believe belong to the school. Refusing it here would give Miami
+ * students nothing at all, and this address is only ever reached after
+ * `ems.miami.edu`, `calendar.miami.edu` and `events.miami.edu` have all failed
+ * to answer.
+ *
+ * Measured against all 2,348 US institutions, and re-read live on 2026-08-06.
+ * 24 hold a live tenancy at their own domain label. 20 are kept, 9 on a link
+ * back and 11 on the title. Which of the two settles a given school moves
+ * around, because these pages are built per install and a marketing link comes
+ * and goes; the 20 and the 4 do not move. Four are refused and three of those
+ * are strangers: Franklin above, Eastern West Virginia Community and Technical
+ * College getting the Connecticut Community College System, and Grays Harbor
+ * College in Washington getting Granada Hills Charter *High School*.
+ *
+ * The fourth is a real school and it is worth knowing about, because it is the
+ * shape of false refusal this rule produces. Utah Tech University's tenancy is
+ * genuinely its own and its title says so, but the page still links to
+ * calendar.dixie.edu, which is the domain the school used before it was renamed
+ * from Dixie State. A former name reads here as a different institution. That is
+ * one school nationally against three, and it fails in the direction this file
+ * prefers, so it is accepted rather than special-cased: the alternative is a
+ * rule that treats a foreign domain as harmless whenever the title agrees, and
+ * Franklin's title agrees.
+ */
+async function emsBelongsTo(feedUrl: string, domain: string, school: SchoolIdentity): Promise<boolean> {
+  let html = '';
+  try {
+    // EMS_HEADERS, and this is the third place in this file where leaving them
+    // off answers 200 with the wrong document. Without `Accept-Language` the
+    // application serves its own error page, which names no school at all, so
+    // an unheadered read would refuse Sacred Heart, LeTourneau and every other
+    // real install for want of evidence they publish perfectly well.
+    html = await fetchPage(feedUrl, EMS_OWNER_SCAN_BYTES, null, EMS_HEADERS).then(p => p.html);
+  } catch (_) {
+    return false; // A page we cannot read is not evidence of ownership.
+  }
+  if (!html) return false;
+
+  let namesAnySchool = false;
+  for (const match of html.matchAll(CALENDAR_HOST_RE)) {
+    const host = stripWww(match[1].toLowerCase());
+    if (sameSite(host, domain)) return true;
+    if (ACADEMIC_HOST_RE.test(host)) namesAnySchool = true;
+  }
+  if (namesAnySchool) return false;
+
+  const title = plainText((/<title>([^<]*)<\/title>/i.exec(html) || [])[1] || '');
+  return schoolIsCalled(school, title);
 }
 
 /**
@@ -1895,13 +2495,17 @@ async function probeEmsAt(feedUrl: string, guard: HopGuard = null): Promise<stri
  * that will not resolve for most schools, and waiting each one out in turn puts
  * three timeouts in front of a student watching a spinner.
  */
-async function probeEms(domain: string): Promise<string | null> {
+export async function probeEms(domain: string, school: SchoolIdentity = NO_IDENTITY): Promise<string | null> {
   const attempts = emsCandidates(domain).map(candidate =>
     probeEmsAt(candidate).catch(() => null)
   );
   for (const attempt of attempts) {
     const hit = await attempt;
-    if (hit) return hit;
+    if (!hit) continue;
+    // A host under the school's own domain has nothing to prove. Only the
+    // vendor's shared hosting does, because only that one was guessed.
+    if (!isEmsVendorHost(hit)) return hit;
+    if (await emsBelongsTo(hit, domain, school)) return hit;
   }
   return null;
 }
@@ -3589,6 +4193,26 @@ function sameSite(host: string, domain: string): boolean {
 const CALENDAR_HOST_RE = /(?:https?:)?\/\/([a-z0-9.-]+\.[a-z]{2,})/gi;
 
 /**
+ * The domain half of an email address printed in a page.
+ *
+ * CALENDAR_HOST_RE only ever matches a host written after `//`, so it reads
+ * links and nothing else. A lot of portals name the school they belong to as a
+ * contact address instead: getinvolved@sacredheart.edu, inose@lehigh.edu,
+ * Student.Activities@marist.edu. That is at least as strong a statement of
+ * ownership as a link, because only the school hands out addresses on its own
+ * domain, so refusing to read it was throwing evidence away.
+ *
+ * The capture is greedy and takes the whole domain rather than stopping at the
+ * first suffix that looks academic, which is what keeps the check honest. The
+ * pattern the shared namespace produces is a foreign school whose domain merely
+ * ends in ours: `inose@aculife.acu.edu.au` is Australian Catholic University,
+ * and a substring test for `acu.edu` accepts it. Capturing the full
+ * `aculife.acu.edu.au` and handing it to `sameSite` refuses it, exactly as it
+ * refuses the same host written as a link.
+ */
+const EMAIL_HOST_RE = /[a-z0-9._%+-]+@([a-z0-9-]+(?:\.[a-z0-9-]+)*\.[a-z]{2,})/gi;
+
+/**
  * Calendar-looking hosts inside the school's own registrable domain.
  *
  * Both filters are load-bearing and neither is about tidiness. `sameSite` is the
@@ -3700,7 +4324,7 @@ async function discoverCalendarLocations(
  * already in hand, the Modern Campus id is a regex over markup we have, and
  * Trumba costs a request per slug.
  */
-async function probeEmbeddedCalendar(
+export async function probeEmbeddedCalendar(
   pageUrl: string,
   domain: string,
 ): Promise<{ platform: string; feedUrl: string } | null> {
@@ -3718,6 +4342,9 @@ async function probeEmbeddedCalendar(
   const modernCampus = await firstValidModernCampus(modernCampusIdsFrom(page.html));
   if (modernCampus) return { platform: 'moderncampus', feedUrl: modernCampus };
 
+  // Page-named slugs only, the same as `probeTrumba`, and for the same reason:
+  // a slug derived from the domain is a guess at a global namespace and lands
+  // on whichever school happens to hold that name. Do not add a fallback here.
   for (const slug of trumbaSlugsFrom(page.html).slice(0, TRUMBA_MAX_SLUGS)) {
     const hit = await firstValidUrl(TRUMBA_HOSTS.map(h => `${h}/${slug}.json`), looksLikeTrumba);
     if (hit) return { platform: 'trumba', feedUrl: hit };
@@ -3811,12 +4438,14 @@ async function probeKnownHost(
  */
 export async function probeCalendar(
   domain: string,
-  { discover = true }: { discover?: boolean } = {},
+  { discover = true, school = NO_IDENTITY }: { discover?: boolean; school?: SchoolIdentity } = {},
 ): Promise<{ platform: string; feedUrl: string } | null> {
   for (const adapter of ADAPTERS) {
     let feedUrl: string | null = null;
     try {
-      feedUrl = await adapter.probe(domain);
+      // `school` is what lets a probe refuse a calendar that is not this
+      // school's. Only the label-derived ones read it; the rest ignore it.
+      feedUrl = await adapter.probe(domain, school);
     } catch (_) {
       feedUrl = null; // A probe must never take down the request.
     }
@@ -3861,7 +4490,11 @@ export async function probeCalendar(
 
   for (const alias of found.domains) {
     try {
-      const hit = await probeCalendar(alias, { discover: false });
+      // The identity travels to the alias domain too. A school that has renamed
+      // itself is the same school, so it is the same evidence a probe there has
+      // to find. Dropping it here would leave the alias hop as the one way back
+      // into an unvalidated label guess.
+      const hit = await probeCalendar(alias, { discover: false, school });
       if (hit) return hit;
     } catch (_) { /* Next domain. */ }
 
@@ -4262,7 +4895,10 @@ async function submittedFeedFor(base44: any, college: string, userId: string) {
   );
   if (!row) return null;
 
-  return { platform: row.resolved_platform, feedUrl: row.resolved_feed_url };
+  // `submitted` marks this as one student's, not the school's. Nothing about
+  // rendering changes; it stops the shared per-school event cache storing a
+  // list nobody has approved under the school's own id. See `schoolEvents`.
+  return { platform: row.resolved_platform, feedUrl: row.resolved_feed_url, submitted: true };
 }
 
 /**
@@ -4304,17 +4940,32 @@ async function resolveFeed(base44: any, college: string, userId = '') {
     .filter(isProbeableDomain);
   const candidates = [...new Set([...known, ...(await guessDomains(base44, college))])];
 
+  // Everything we know this school is called, for the probes that have to prove
+  // a calendar is theirs before returning it. All three sources go in because
+  // they are all the same school spelled differently and the vendor may hold
+  // any one of the spellings: the row's canonical name, the keys other students
+  // have matched on, and the words this student typed. `college` is never blank
+  // here, because this function returned at the top if it was, so a probe run
+  // from production always has something to check against.
+  const school: SchoolIdentity = {
+    names: [...new Set([
+      String(university?.canonical_name || ''),
+      ...(university?.match_keys || []).map((k: string) => String(k || '')),
+      college,
+    ].filter(Boolean))],
+  };
+
   // Cheap pass over every candidate first. Reading pages to discover a hidden
   // calendar host is worth it once, but not once per guessed domain — a school
   // that runs no calendar at all would otherwise pay for it three times over
   // while a student sits watching a spinner.
   let feed: { platform: string; feedUrl: string } | null = null;
   for (const domain of candidates) {
-    feed = await probeCalendar(domain, { discover: false });
+    feed = await probeCalendar(domain, { discover: false, school });
     if (feed) break;
   }
   if (!feed && candidates.length) {
-    feed = await probeCalendar(candidates[0]);
+    feed = await probeCalendar(candidates[0], { school });
   }
 
   // Last, and only after every real feed has failed to answer. A school with a
@@ -4397,6 +5048,172 @@ export function isAttendable(event: NormalizedEvent): boolean {
     a.includes('alumni') || a.includes('faculty') || a.includes('staff') || a.includes('children') || a.includes('families')
   );
   return studentFacing || !restricted;
+}
+
+// ── One event, listed forty times ───────────────────────────────────────────
+
+/**
+ * A title flattened to the part two listings of the same event would agree on.
+ *
+ * Case and whitespace, and nothing else. Punctuation is deliberately left in:
+ * "Yoga (Beginners)" and "Yoga (Advanced)" are two different sessions, and a
+ * key that strips brackets is how one of them quietly stops being shown. The
+ * repetition this exists to fix is exact repetition, so an exact-after-casing
+ * match already catches it.
+ */
+function repeatTitleKey(title: string): string {
+  return String(title || '').toLowerCase().replace(/\s+/g, ' ').trim();
+}
+
+/**
+ * What counts as "the same listing again" for the purpose of collapsing.
+ *
+ * Title AND place, not title alone, and that is the one judgement in here worth
+ * arguing about. Title alone is the aggressive reading: it is right for Ohio
+ * State, whose feed is 180 copies of one campaign event, and it is wrong for a
+ * school that runs "Drop-in Advising" in four different buildings, or an "Info
+ * Session" per department. Those are genuinely different events that a student
+ * would want to choose between, and title alone hides three of every four.
+ *
+ * Adding the place costs nothing on the failure this is for: a feed publishing
+ * the same event once a day publishes it at the same place every time, so Ohio
+ * State still collapses to one, and so does a weekly club that meets in its
+ * usual room.
+ *
+ * The direction the error runs, stated plainly and without the flattering
+ * version an earlier draft of this comment carried. What it never does is drop
+ * a title: every distinct title in the feed is still in the list afterwards.
+ * What it does do is drop the other DATES of a repeated title, and some of
+ * those are a real choice a student had. Measured on live feeds: a school runs
+ * its academic-skills workshop three times, same room, three separate
+ * registration links, and it now appears once, at the soonest of the three. A
+ * student who cannot make that date is shown no second chance and the later
+ * two are not reachable from this list at all.
+ *
+ * That is a real cost and it is accepted, against 46 rows of one campaign
+ * event. The place in the key is what bounds it: one program running in four
+ * buildings still shows four times, and a series whose place is written two
+ * ways across its instances ("CC 101" one week, "Campus Center 101" the next)
+ * survives as two rows rather than one, which is untidy in the safe direction.
+ *
+ * `location` only, not `room` or `address`. `room` is where the same event
+ * legitimately differs between instances, and the one feed that hands us a
+ * room per booking (EMS) already collapses those before they reach here.
+ */
+function repeatGroupKey(event: NormalizedEvent): string {
+  return `${repeatTitleKey(event.title)}|${repeatTitleKey(event.location)}`;
+}
+
+/** Milliseconds, or +Infinity for a start nothing can read, so a readable one always wins. */
+function repeatStartAt(event: NormalizedEvent): number {
+  const at = stampOf(event?.start);
+  return Number.isFinite(at) ? at : Infinity;
+}
+
+/**
+ * A repeated title appears once, at its soonest upcoming date.
+ *
+ * ## What this is for
+ *
+ * Two of our students' schools resolve to a feed that answers, passes every
+ * health check we run, and is the wrong calendar. Ohio State's holds 180
+ * entries and every one of them is `Campuses Take Charge`, one copy per day
+ * into 2027: it is a single-purpose campaign calendar, not the university's.
+ * The student is shown 46 rows that are 46 copies of one thing. WPI's is milder
+ * and the same shape, four of its seven upcoming events being the same SGA
+ * Senate meeting on four consecutive Mondays.
+ *
+ * This is NOT the recurring-event rule. Both feeds hand back separate dated
+ * instances rather than a repeating rule, so `seriesDates` never sees them and
+ * its cap cannot help. The fix has to be here, on the flat list.
+ *
+ * ## Why it lives here and not in the stored list
+ *
+ * Above the shared cache, in the per-request path, next to the other filtering
+ * and scoring. What is stored is the raw school-wide list, and every piece of
+ * presentation or per-student work runs over it per request. Collapsing before
+ * the write would bake one student's view into the row every other student at
+ * that school is served, which is the exact failure the cache layering was
+ * written to prevent.
+ *
+ * ## Why it runs before the limit slice
+ *
+ * The slice is the last step, so freeing forty slots hands them to genuinely
+ * different events rather than shrinking the list. On Ohio State it makes no
+ * difference, since there is nothing else in that feed. On an ordinary school
+ * with a weekly club in it, it is the whole point.
+ *
+ * ## Which instance is kept
+ *
+ * The soonest, because a student wants to know when the next one is. Ties go to
+ * whichever the feed listed first, and the group keeps the position of its own
+ * first appearance. Order barely matters, since every caller sorts by score and
+ * then by date afterwards, but a stable answer is worth having in a test.
+ *
+ * A blank title is left alone rather than being grouped with every other blank
+ * title, on the same "never hide a real event" reasoning: they are rare, they
+ * carry no evidence that they are the same thing, and the place they are most
+ * likely to appear is a feed we are already parsing badly.
+ */
+export function collapseRepeatedTitles(events: NormalizedEvent[]): NormalizedEvent[] {
+  const soonest = new Map<string, NormalizedEvent>();
+  const kept: NormalizedEvent[] = [];
+
+  for (const event of events || []) {
+    if (!repeatTitleKey(event?.title)) {
+      // No title to repeat. Passed through untouched, in place.
+      kept.push(event);
+      continue;
+    }
+    const key = repeatGroupKey(event);
+    const held = soonest.get(key);
+    if (!held) {
+      soonest.set(key, event);
+      kept.push(event);
+      continue;
+    }
+    if (repeatStartAt(event) < repeatStartAt(held)) soonest.set(key, event);
+  }
+
+  // `kept` holds one placeholder per group in first-appearance order, plus the
+  // untitled events in their own positions. Swapping each placeholder for its
+  // group's soonest instance is what keeps both properties at once.
+  return kept.map(event => (repeatTitleKey(event?.title) ? soonest.get(repeatGroupKey(event)) as NormalizedEvent : event));
+}
+
+/**
+ * How varied a feed actually is, as two numbers a human can read.
+ *
+ * The only thing we have ever recorded about a feed is how many events it
+ * returned, which is exactly the number a campaign calendar looks healthy on.
+ * Ohio State scores 46, the same as a real university calendar with 46 things
+ * on it, and nothing downstream can tell the two apart. A distinct-title count
+ * separates them in one glance: 46 and 1 is not a calendar.
+ *
+ * Counted over the events a student could actually be shown, so the figure on
+ * the admin page matches what is happening to a student rather than what is in
+ * the file. It calls `stillUpcoming` rather than restating it: the standing rule
+ * in this file is that there is one upcoming-window rule and copies of it are
+ * how the 2026-08-03 revert happened.
+ *
+ * Deliberately just a measurement. Nothing acts on it, nothing is hidden or
+ * down-ranked because of it, and no school is marked broken by it. It exists so
+ * a person can look at the page and see which feeds are worth replacing.
+ */
+export function feedVariety(
+  events: NormalizedEvent[],
+  now: number,
+): { upcoming: number; distinct_titles: number } {
+  const upcoming = (events || [])
+    .filter(isAttendable)
+    .filter(e => stillUpcoming(e.start, e.end, e.all_day, now));
+  // Blank titles share one bucket here, unlike in the collapse above. Nothing
+  // is hidden by counting them together, and a feed of nothing but untitled
+  // rows should read as the one repeated thing it is.
+  return {
+    upcoming: upcoming.length,
+    distinct_titles: new Set(upcoming.map(e => repeatTitleKey(e?.title))).size,
+  };
 }
 
 // ── Handler ─────────────────────────────────────────────────────────────────
@@ -4559,7 +5376,13 @@ async function handleSubmission(base44: any, user: any, body: any): Promise<Resp
     platform: feed.platform,
     window_days: days,
     matched_on: terms.slice(0, 25),
-    events: events
+    // Collapsed the same way the ordinary path is. This is a student's list
+    // too, and a pasted club portal is if anything likelier to be a handful of
+    // titles repeated weekly. The queue row written above deliberately keeps
+    // the UNCOLLAPSED count and sample titles: it is the record of what that
+    // feed actually contains, and a reviewer deciding whether to give a whole
+    // school this calendar should see the raw shape of it.
+    events: collapseRepeatedTitles(events)
       .map(e => ({ ...e, match_score: scoreEvent(e, terms) }))
       .sort((a, b) => (b.match_score - a.match_score) || (new Date(a.start).getTime() - new Date(b.start).getTime()))
       .slice(0, limit),
@@ -4607,20 +5430,75 @@ function isAdmin(user: any): boolean {
  *     student and the same job for us. A feed that reads perfectly and returns
  *     nothing is the single most likely way this breaks, because it is what an
  *     expired token, a moved calendar and a finished term all look like.
+ *
+ * ## How the variety figures fit without breaking either rule
+ *
+ * `variety` is the second thing this records: how many upcoming events the feed
+ * returned and how many different titles that was. It rides on this write
+ * rather than getting one of its own, because a second health mechanism would
+ * mean two places that can disagree about the same feed.
+ *
+ * It keeps the transition rule by widening what counts as a transition instead
+ * of dropping it. Nothing is written unless one of the three figures would
+ * actually change, so a school whose calendar is the same today as yesterday
+ * costs no write, exactly as an unchanged health state costs none.
+ *
+ * The window is the third figure, and it is there because without it the other
+ * two are ambiguous. Three callers write these fields and they ask for
+ * different windows: the picker 45 days, the calendar page 60, the admin check
+ * DEFAULT_DAYS. Ohio State reads 46 upcoming at 45 days and 61 at 60, so the
+ * page showed whichever ran last and gave no way to tell which. Recording the
+ * window with the counts makes each observation say what it measured, and a
+ * change of window now counts as a transition in its own right, because it is a
+ * different measurement rather than the same one moving.
+ *
+ * It does not reach the hot path at all. Every caller passing `variety` has
+ * just fetched the feed over the network, and a fetch happens once per school
+ * per window per day thanks to the stored list, plus whenever an admin presses
+ * check, plus a student pressing retry. A cache hit records nothing here, which
+ * is the same reason it records no health: nothing was observed, and a figure
+ * copied off a day-old list is a fabricated observation.
  */
 // deno-lint-ignore no-explicit-any
-async function recordFeedHealth(base44: any, university: any, error: string): Promise<void> {
+async function recordFeedHealth(
+  // deno-lint-ignore no-explicit-any
+  base44: any,
+  // deno-lint-ignore no-explicit-any
+  university: any,
+  error: string,
+  variety: { upcoming: number; distinct_titles: number; days: number } | null = null,
+): Promise<void> {
   if (!university?.id) return;
 
   const wasFailing = Boolean(university.events_last_error);
   const isFailing = Boolean(error);
   // Nothing changed. This is the common case and it costs a boolean.
-  if (wasFailing === isFailing && (!isFailing || university.events_last_error === error)) return;
+  const healthSame = wasFailing === isFailing && (!isFailing || university.events_last_error === error);
 
   const now = new Date().toISOString();
-  const patch = isFailing
-    ? { events_last_error: error.slice(0, 300), events_last_error_at: now }
-    : { events_last_error: '', events_last_error_at: '', events_last_ok_at: now };
+  // deno-lint-ignore no-explicit-any
+  const patch: Record<string, any> = healthSame
+    ? {}
+    : isFailing
+      ? { events_last_error: error.slice(0, 300), events_last_error_at: now }
+      : { events_last_error: '', events_last_error_at: '', events_last_ok_at: now };
+
+  // A row that has never carried these reads back as undefined, which compares
+  // unequal to any number, so the first observation of a school always lands
+  // and every identical one after it costs nothing.
+  if (
+    variety &&
+    (Number(university.events_upcoming_count) !== variety.upcoming ||
+      Number(university.events_distinct_titles) !== variety.distinct_titles ||
+      Number(university.events_variety_days) !== variety.days)
+  ) {
+    patch.events_upcoming_count = variety.upcoming;
+    patch.events_distinct_titles = variety.distinct_titles;
+    patch.events_variety_days = variety.days;
+    patch.events_variety_at = now;
+  }
+
+  if (!Object.keys(patch).length) return;
 
   try {
     await base44.asServiceRole.entities.University.update(university.id, patch);
@@ -4678,7 +5556,14 @@ async function handleCheckFeeds(base44: any, user: any): Promise<Response> {
     const asked = Date.now();
     let error = '';
     let count = 0;
+    let variety: { upcoming: number; distinct_titles: number; days: number } | null = null;
     try {
+      // `fetchEvents` directly, never `schoolEvents`, and that must not be
+      // "tidied up" later. This check asks whether a feed answers RIGHT NOW; a
+      // cache hit would answer a different question and report a school that
+      // died last week as healthy, which is the exact failure this page exists
+      // to catch.
+      //
       // The store goes in here too, or every scraped school reports as a broken
       // feed on the health page and someone goes looking for a fault that is
       // this call not being given what it needs to read one.
@@ -4692,11 +5577,24 @@ async function handleCheckFeeds(base44: any, user: any): Promise<Response> {
         .filter(isAttendable)
         .filter(e => stillUpcoming(e.start, e.end, e.all_day, asked));
       count = events.length;
+      // `events` is already through both filters, and `feedVariety` runs them
+      // again over the same clock, which is a no-op. Handing it the filtered
+      // list rather than restating the counting here is the point: one
+      // definition of "upcoming", one definition of "a different title", and no
+      // way for this page and a student's page to disagree about a school.
+      //
+      // The window goes on the record alongside the two figures. This check
+      // asks for DEFAULT_DAYS and a student's calendar page asks for 60, and
+      // both used to write the same two fields, so the page showed whichever
+      // ran last with nothing saying which window it was. Ohio State reads 46
+      // upcoming at 45 days and 61 at 60: same feed, same shape, two different
+      // numbers, and no way to tell them apart on the page.
+      variety = { ...feedVariety(events, asked), days: DEFAULT_DAYS };
       if (!count) error = 'Returned no upcoming events';
     } catch (err) {
       error = err instanceof Error ? err.message : 'Calendar feed unavailable';
     }
-    await recordFeedHealth(base44, row, error);
+    await recordFeedHealth(base44, row, error, variety);
     checked.push({
       id: row.id,
       college: row.canonical_name,
@@ -4936,6 +5834,432 @@ async function handleReviewSubmission(base44: any, user: any, body: any): Promis
   return Response.json({ ok: true, id, review_status: decision, promoted });
 }
 
+// ── One school's events, fetched once for everybody there ───────────────────
+
+/**
+ * How long a stored list is served before the school is asked again.
+ *
+ * 24 hours, and it is a decision rather than a tuning knob: if anyone at a
+ * college has pulled that calendar today, we do not pull it again today. One
+ * constant, so changing it is a one-line edit.
+ *
+ * What a day costs, said plainly, because the rule this whole file is built on
+ * is that sending a student to an empty room is worse than showing nothing: an
+ * event CANCELLED after we stored it goes on being offered for up to a day.
+ * Nothing here can see a cancellation, since seeing one means asking the
+ * school. That is an accepted trade and not an oversight.
+ *
+ * It is the only staleness this introduces. Everything else is still caught at
+ * read time: the upcoming-window filter runs against the request's own clock,
+ * so an event that has simply happened is dropped out of a day-old list exactly
+ * as it is out of a fresh one.
+ */
+const EVENT_CACHE_TTL_MS = 24 * 3600000;
+
+/**
+ * Most events one row keeps, soonest first.
+ *
+ * Measured against real feeds rather than guessed. A 60 day window is 100 to
+ * 200 events on every hosted platform we read, because each of those adapters
+ * asks for one page and stops: the largest was 200 events at 185kb. The
+ * unbounded path is iCal, and four of the 38 .ics feeds our sweep resolved ran
+ * well past that, at 690, 775, 786 and 1064 events and up to 466kb serialized.
+ *
+ * 400 with descriptions cut to 500 characters holds the worst of those to
+ * 237kb and does not touch a single hosted school, none of which reaches 400.
+ *
+ * The cap is taken off the FORWARD end, and that is not a detail. Those event
+ * counts are mostly history: `fetchEvents` has no lower bound anywhere, so an
+ * .ics file hands back everything the school has ever published. On all four of
+ * those feeds event number 400 by date is years in the past, so a cap applied
+ * to the raw list keeps only history and throws away every event a student
+ * could still attend. The first version of this did exactly that and was caught
+ * in review before it merged: measured against those four feeds over 60 days,
+ * all four went from 7 to 20 live events down to zero for the second student.
+ * Clearly past events are dropped first now, and only then is the cap applied.
+ *
+ * What the cut costs after that, on those four schools only: they publish fewer
+ * than 400 events that are still ahead of the window, so nothing is lost today.
+ * If one ever does pass 400, the events beyond it are the LATEST ones, they are
+ * missing from the stored list however well they would have scored, and they
+ * come back into range as the window advances. `truncated` is set and the
+ * school is named in the log when that happens, so a cap that starts reaching
+ * ordinary schools is visible rather than silent.
+ */
+const EVENT_CACHE_MAX_EVENTS = 400;
+
+/**
+ * How far back a stored list is allowed to reach before the cap is applied.
+ *
+ * A coarse floor, and deliberately COARSER than the read-time window, because
+ * its only job is to stop years of history eating the 400 slots that upcoming
+ * events need. It must never remove something `stillUpcoming` would have kept,
+ * so it is written to be strictly the looser of the two:
+ *
+ *   `stillUpcoming` keeps an event while `max(start, end)` is no more than 24
+ *   hours behind now, since the widest grace it grants is one whole day. This
+ *   drops nothing until `max(start, end)` is 48 hours behind. Everything the
+ *   read-time filter keeps therefore survives this, with a full day to spare,
+ *   and the two never have to be kept in step: widening the read window by
+ *   anything under a day cannot make this floor bite.
+ *
+ * An event whose dates cannot be read at all is KEPT, again in the looser
+ * direction. The read-time filter refuses it anyway, so it costs a cap slot and
+ * nothing else, and guessing the other way would mean a parser change quietly
+ * deleting real events from every stored list.
+ *
+ * Dropping these loses a cached reader nothing, which is why it does not set
+ * `truncated`: every one of them fails the read-time window in the same request.
+ */
+const EVENT_CACHE_PAST_FLOOR_MS = 48 * 3600000;
+
+/**
+ * Every adapter already cuts a description to 600 characters, so this only
+ * trims the last 100 of the longest ones: about 4% of the payload, measured.
+ * Scoring reads far less than that, and so does the ranking prompt the client
+ * hands the model.
+ */
+const EVENT_CACHE_MAX_DESCRIPTION = 500;
+
+/** Enough rows to find the newest one even after a race wrote a duplicate. */
+const EVENT_CACHE_SCAN = 5;
+
+/**
+ * The two request parameters that change what a fetch returns, as whole numbers
+ * inside the ranges this function actually honours.
+ *
+ * Rounded here rather than trusted, because these two values name the row. The
+ * handler clamps `days` but does not floor it, and `seriesDates` is only
+ * clamped further down inside the recurrence expansion, so `{days: 45.0001,
+ * seriesDates: 1.5}` off the wire read as an ordinary request and mint a row of
+ * their own. Any signed-in student could then ask for a few thousand of those
+ * and fill this entity with 237kb rows that nothing deletes.
+ *
+ * Whole numbers make that impossible: every request lands on one of a handful
+ * of keys. They are also what gets fetched, not just what gets stored, so the
+ * key never describes a window other than the one in the row.
+ */
+function eventCacheWindow(days: number, seriesDates: number) {
+  return {
+    days: Math.min(Math.max(Math.floor(Number(days) || DEFAULT_DAYS), 1), MAX_DAYS),
+    // The same clamp `expandRecurrence` applies, moved forward so the key and
+    // the fetch cannot disagree about it.
+    seriesDates: Math.min(
+      Math.max(Math.floor(Number(seriesDates) || RECURRENCE_DEFAULT_DATES), 1),
+      RECURRENCE_MAX_DATES,
+    ),
+  };
+}
+
+/**
+ * The two request parameters that change what a fetch returns.
+ *
+ * Only 45:1 and 60:1 are asked for today, so this is two rows per school.
+ */
+function eventCacheKey(days: number, seriesDates: number): string {
+  return `${days}:${seriesDates}`;
+}
+
+/** Milliseconds, or NaN for anything that is not a readable stamp. */
+function stampOf(value: unknown): number {
+  return new Date(String(value || '')).getTime();
+}
+
+/**
+ * Has this event finished long enough ago that no reader could still see it?
+ *
+ * The end is consulted as well as the start, and combined with `Math.max` for
+ * the same reason `stillUpcoming` does it: an end is the least reliable field
+ * in every feed here, so it is only ever allowed to keep an event alive, never
+ * to bury one early. A three-day fair that started last week is still current.
+ */
+function longFinished(event: NormalizedEvent, now: number): boolean {
+  const at = Math.max(stampOf(event?.start) || -Infinity, stampOf(event?.end) || -Infinity);
+  return Number.isFinite(at) && at < now - EVENT_CACHE_PAST_FLOOR_MS;
+}
+
+/**
+ * The stored list for this school and window, if there is a usable one.
+ *
+ * Four ways to miss, all of them silent and all of them cheap: no row, a row
+ * pointing at a different feed than the one this request would read, a row
+ * older than the TTL, or a row holding an empty list. A miss costs one entity
+ * read and then the fetch that would have happened anyway.
+ *
+ * The empty one is the odd-looking case, and it is deliberate. The row is still
+ * WRITTEN empty, so a school whose calendar has genuinely emptied out stops
+ * being served last week's list within one fetch. But an empty list is not
+ * served BACK, because empty is also what a feed answers when something
+ * transient is wrong with it and nothing here can tell those apart: EMS answers
+ * 200 with no events when it wants a session cookie it did not get, and Iowa
+ * State's WAF does the same to us. Serving that from the row would take one
+ * unlucky request and give it to the whole school for a day. Re-asking costs a
+ * fetch on a school that has nothing, which is the cheap direction to be wrong
+ * in, and the student is not left with an empty page they cannot get out of:
+ * the empty state has no retry button, so nothing else would clear it.
+ */
+// deno-lint-ignore no-explicit-any
+async function readEventCache(
+  // deno-lint-ignore no-explicit-any
+  base44: any,
+  // deno-lint-ignore no-explicit-any
+  university: any,
+  cacheKey: string,
+  feedUrl: string,
+): Promise<NormalizedEvent[] | null> {
+  if (!university?.id) return null;
+
+  // deno-lint-ignore no-explicit-any
+  let rows: any[] = [];
+  try {
+    rows = await base44.asServiceRole.entities.CampusEventCache.filter(
+      { university_id: university.id, cache_key: cacheKey },
+      '-created_date',
+      EVENT_CACHE_SCAN,
+    );
+  } catch (err) {
+    // Never costs a student their events, but say so out loud. "The entity has
+    // not synced yet" and "RLS is refusing the service role" are the same
+    // silence otherwise, and under the second one every school is re-fetched on
+    // every page load exactly as if this feature had never shipped.
+    console.error('[campusEvents] could not read the event cache', {
+      university_id: university.id,
+      cache_key: cacheKey,
+      error: err instanceof Error ? err.message : String(err),
+    });
+    return null;
+  }
+
+  // Newest by when the school was actually asked, not by row age. Two
+  // simultaneous misses can leave a duplicate behind, and after that the older
+  // row may well be the one that keeps being refreshed.
+  const usable = (rows || [])
+    // deno-lint-ignore no-explicit-any
+    .filter((row: any) => row?.feed_url === feedUrl && Array.isArray(row?.events))
+    // deno-lint-ignore no-explicit-any
+    .sort((a: any, b: any) => (stampOf(b.fetched_at) || 0) - (stampOf(a.fetched_at) || 0))[0];
+  if (!usable) return null;
+
+  const age = Date.now() - stampOf(usable.fetched_at);
+  // A row that cannot say when it was fetched is treated as stale, and so is
+  // one stamped in the future: guessing in either row's favour serves a student
+  // a calendar nothing can vouch for.
+  if (!Number.isFinite(age) || age < 0 || age > EVENT_CACHE_TTL_MS) return null;
+
+  // An empty list is a miss. See above: it is written so it can supersede a
+  // stale good list, and not read back so one bad minute at a school cannot
+  // become that school's whole day.
+  if (!usable.events.length) return null;
+
+  return usable.events as NormalizedEvent[];
+}
+
+/**
+ * Store what the school just gave us, for everybody else there.
+ *
+ * Updates the school's existing row for this window rather than appending: a
+ * calendar is a current state, and nothing here is worth keeping once it is
+ * superseded. Two simultaneous misses will both fetch and both write, which is
+ * left alone deliberately. Locking would cost every request to save a duplicate
+ * fetch that only happens on the first hit of a cold school, and reads take the
+ * newest row, so a duplicate cannot break one.
+ *
+ * A failure here must never cost the student the events this request already
+ * has in hand, so everything is wrapped and the caller is told nothing.
+ */
+async function writeEventCache(
+  // deno-lint-ignore no-explicit-any
+  base44: any,
+  // deno-lint-ignore no-explicit-any
+  university: any,
+  cacheKey: string,
+  feedUrl: string,
+  events: NormalizedEvent[],
+): Promise<void> {
+  if (!university?.id) return;
+
+  // History goes first, and it has to be first, or the cap keeps the wrong end
+  // of the list. Nothing in `fetchEvents` has a lower bound: `withinWindow`
+  // tests only how far AHEAD an event is, so an .ics file answers with the
+  // school's entire published past as well as its future. On the largest feeds
+  // we read, hundreds of events sort ahead of today. Cap that list as it stands
+  // and the row holds nothing but old news.
+  //
+  // The floor is deliberately coarse and deliberately looser than the read-time
+  // window, so this can only ever drop events that request would have dropped
+  // anyway. See EVENT_CACHE_PAST_FLOOR_MS.
+  const now = Date.now();
+  const current = events.filter(event => !longFinished(event, now));
+
+  // Sorted on the date as written, never on a parsed instant. Several feeds
+  // hand over a wall clock with no zone at all, and turning those into moments
+  // to sort them means guessing an offset, which is the one thing this file
+  // refuses to do anywhere else. A string compare puts a bare day ahead of that
+  // same day's timed events, which is the right end of the list to be exact
+  // about anyway.
+  const soonestFirst = [...current]
+    .sort((a, b) => String(a.start).localeCompare(String(b.start)))
+    .slice(0, EVENT_CACHE_MAX_EVENTS)
+    .map(event => (
+      String(event.description || '').length > EVENT_CACHE_MAX_DESCRIPTION
+        ? { ...event, description: String(event.description).slice(0, EVENT_CACHE_MAX_DESCRIPTION) }
+        : event
+    ));
+
+  // Measured against the list AFTER the floor, not against everything the feed
+  // sent. Dropping events that finished two days ago costs a reader nothing,
+  // since the same request's window filter refuses them too, and counting that
+  // as truncation would have this fire on every large .ics school forever and
+  // mean nothing when it did. `truncated` says one thing only: real upcoming
+  // events did not fit.
+  const truncated = soonestFirst.length < current.length;
+  if (truncated) {
+    // Named, not counted silently. The cap was measured against four unusually
+    // large .ics schools; the day it starts reaching an ordinary one is the day
+    // it needs raising, and this line is the only way anyone finds out.
+    console.error('[campusEvents] event cache truncated', {
+      college: university.canonical_name || '',
+      cache_key: cacheKey,
+      feed_url: feedUrl,
+      kept: soonestFirst.length,
+      of: current.length,
+    });
+  }
+
+  const row = {
+    university_id: university.id,
+    cache_key: cacheKey,
+    feed_url: feedUrl,
+    fetched_at: new Date().toISOString(),
+    event_count: soonestFirst.length,
+    events: soonestFirst,
+    truncated,
+  };
+
+  try {
+    const db = base44.asServiceRole.entities.CampusEventCache;
+    const existing = await db.filter(
+      { university_id: university.id, cache_key: cacheKey },
+      '-created_date',
+      1,
+    );
+    if (existing?.[0]?.id) await db.update(existing[0].id, row);
+    else await db.create(row);
+  } catch (err) {
+    console.error('[campusEvents] could not store the event cache', {
+      college: university.canonical_name || '',
+      cache_key: cacheKey,
+      error: err instanceof Error ? err.message : String(err),
+    });
+  }
+}
+
+/**
+ * The school's whole calendar: off the stored list if it is current, off the
+ * school's own server if it is not.
+ *
+ * Everything above the per-student layer and nothing below it. What comes back
+ * is the same school-wide list `fetchEvents` returns either way, so the caller
+ * filters, scores and slices it per request exactly as it always did.
+ *
+ * Two things a hit deliberately does NOT do:
+ *
+ *   it does not record feed health. Nothing was observed, and writing "fine"
+ *     off a stored list is a fabricated observation on the one surface whose
+ *     entire job is to notice a school going quiet.
+ *   it does not touch the upcoming-window filter, which is the caller's and
+ *     runs against the request's own clock. That is what stops a day-old list
+ *     offering an event that has already happened.
+ *
+ * `refresh` is the student pressing retry. They are looking at something they
+ * believe is wrong, so handing them the same stored list is the one thing this
+ * must not do: it skips the read, fetches live, and refreshes the row.
+ *
+ * A feed the student pasted in themselves and nobody has approved yet is read
+ * live and never stored. See below.
+ *
+ * A fetch failure is thrown rather than swallowed, so the caller can record the
+ * health failure and answer the student. The success-path health record lives
+ * here because a hit has to be able to skip it.
+ */
+export async function schoolEvents(
+  // deno-lint-ignore no-explicit-any
+  base44: any,
+  // deno-lint-ignore no-explicit-any
+  university: any,
+  feed: { platform: string; feedUrl: string; submitted?: boolean },
+  askedDays: number,
+  askedSeriesDates: number,
+  refresh = false,
+): Promise<{ events: NormalizedEvent[]; cached: boolean }> {
+  // Whole numbers, and the same ones the fetch below uses, so a row can never
+  // be keyed on a window other than the one it holds. See eventCacheWindow.
+  const { days, seriesDates } = eventCacheWindow(askedDays, askedSeriesDates);
+  const cacheKey = eventCacheKey(days, seriesDates);
+
+  if (!refresh) {
+    const stored = await readEventCache(base44, university, cacheKey, feed.feedUrl);
+    if (stored) return { events: stored, cached: true };
+  }
+
+  // Stamped before the fetch, for the reason the handler stamps its own clock
+  // before the fetch: the recurrence expansion reads its own clock inside
+  // `fetchEvents`, so a clock read afterwards is stricter than the expansion by
+  // however long the network took. Only the variety count uses this, and a
+  // count that is stricter than what the student is shown would report a school
+  // as quieter than it is.
+  const asked = Date.now();
+
+  const events = await fetchEvents(
+    feed.platform,
+    feed.feedUrl,
+    days,
+    seriesDates,
+    scrapedStore(base44),
+  );
+
+  // Judged on what the calendar actually held, not on what survives ranking:
+  // the caller cuts this list to one student's interests and to their limit, so
+  // a healthy feed can legitimately leave them with nothing. An empty list HERE
+  // is the feed itself having nothing, which is the failure worth recording.
+  //
+  // Awaited, not fired and forgotten: this runtime can tear the request down
+  // the moment we return, and a health record that loses the race is worse than
+  // none, because it reads as "still fine" on the page whose job is to say
+  // otherwise.
+  //
+  // The variety figures ride along on the same write. They are recorded HERE,
+  // not in the caller, for the same reason health is: a cache hit returns above
+  // this line and must record neither, because nothing was observed on a hit.
+  await recordFeedHealth(
+    base44,
+    university,
+    events.length ? '' : 'Returned no upcoming events',
+    // The window travels with the counts. Two callers reach this line asking
+    // for different ones (45 from the picker, 60 from the calendar page) and
+    // both write the same fields, so without it the admin page shows whichever
+    // fetched last and cannot say which window it was.
+    { ...feedVariety(events, asked), days },
+  );
+
+  // One student's unapproved paste does not get to be the school's answer.
+  //
+  // `resolveFeed` hands back a still-pending submission as the feed while ALSO
+  // handing back the school's University row, because the submitter is served
+  // their own feed immediately and everybody else keeps the school's. Storing
+  // that under the school's id would write one student's link into the shared
+  // row, which is the exact blast radius `submittedFeedFor` was written to
+  // avoid. Reads guard on `feed_url`, so nothing leaks out of it, but the row
+  // ends up thrashing between two feeds and the cache never holds at the one
+  // school where somebody bothered to help us. Approval writes the URL onto the
+  // University row, and from then on it is stored like any other feed.
+  if (!feed.submitted) {
+    await writeEventCache(base44, university, cacheKey, feed.feedUrl, events);
+  }
+
+  return { events, cached: false };
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -4970,9 +6294,17 @@ Deno.serve(async (req) => {
     // the descriptions, gets a fair spread to choose from.
     const limit = Math.min(Math.max(Number(body.limit) || 20, 1), 40);
     // How many dates one repeating event contributes. A list wants the next one
-    // — a weekly club would otherwise take most of the slots to say one thing.
+    // (a weekly club would otherwise take most of the slots to say one thing).
     // A month grid wants every Tuesday it meets on. See RECURRENCE_DEFAULT_DATES.
-    const seriesDates = Number(body.seriesDates) || RECURRENCE_DEFAULT_DATES;
+    //
+    // Clamped here through `eventCacheWindow`, which is the one place that
+    // rounds it, rather than read raw off the wire. Raw is what the fetch never
+    // sees: `{seriesDates: 1.5}` floors to 1 downstream, so the feed emits one
+    // date per series, but `1.5 > 1` read as a month grid and skipped the
+    // collapse, handing any signed-in caller the uncollapsed list this exists
+    // to prevent. Same fractional-input class of bug that helper was written
+    // for, one layer up.
+    const { seriesDates } = eventCacheWindow(days, body.seriesDates);
 
     const profile = await loadProfile(base44, user);
     const college = collegeOf(profile, user);
@@ -4999,13 +6331,17 @@ Deno.serve(async (req) => {
 
     let normalized: NormalizedEvent[];
     try {
-      normalized = await fetchEvents(
-        feed.platform,
-        feed.feedUrl,
+      // The school-wide list, off the shared cache where there is a current
+      // one. Everything below this line stays per student and per request.
+      // `refresh` is the retry button and skips the cache entirely.
+      ({ events: normalized } = await schoolEvents(
+        base44,
+        university,
+        feed,
         days,
         seriesDates,
-        scrapedStore(base44),
-      );
+        Boolean(body.refresh),
+      ));
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Calendar feed unavailable';
       // Awaited, not fired and forgotten: this runtime can tear the request
@@ -5026,22 +6362,30 @@ Deno.serve(async (req) => {
       body.extraInterests
     );
 
-    const events = normalized
+    const upcoming = normalized
       .filter(isAttendable)
-      .filter(e => stillUpcoming(e.start, e.end, e.all_day, asked))
+      .filter(e => stillUpcoming(e.start, e.end, e.all_day, asked));
+
+    // A title that repeats appears once, at its soonest date, and the freed
+    // slots go to genuinely different events because this runs before the
+    // slice. See `collapseRepeatedTitles` for what it is protecting against.
+    //
+    // Skipped when the caller asked for more than one date per series, because
+    // that is a month grid saying so out loud: a weekly club belongs on every
+    // Tuesday square, and one row across a month is as wrong there as six rows
+    // in a list. Nothing in the app asks for that today, so this is the rule
+    // being written down before the first caller trips over it rather than
+    // after. See RECURRENCE_DEFAULT_DATES.
+    const events = (seriesDates > 1 ? upcoming : collapseRepeatedTitles(upcoming))
       .map(e => ({ ...e, match_score: scoreEvent(e, terms) }))
       .sort((a, b) => (b.match_score - a.match_score) || (new Date(a.start).getTime() - new Date(b.start).getTime()))
       .slice(0, limit);
 
-    // Judged on what the calendar actually held, not on what survived ranking:
-    // `events` has been cut to this student's interests and to `limit`, so a
-    // healthy feed can legitimately leave it empty. `normalized` empty is the
-    // feed itself having nothing, which is the failure worth recording.
-    await recordFeedHealth(
-      base44,
-      university,
-      normalized.length ? '' : 'Returned no upcoming events',
-    );
+    // Health for a fetch that worked is recorded inside `schoolEvents`, next to
+    // the fetch it is a record of, because a cache hit has to be able to skip
+    // it: nothing was observed on a hit, and writing "fine" off a stored list
+    // would be a fabricated observation. A fetch that FAILED is still recorded
+    // above, where the error is.
 
     return Response.json({
       status: events.length ? 'ok' : 'no_matches',

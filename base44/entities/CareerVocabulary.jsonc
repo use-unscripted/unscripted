@@ -1,0 +1,64 @@
+{
+  "name": "CareerVocabulary",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string"
+    },
+    "term": {
+      "type": "string"
+    },
+    "term_key": {
+      "type": "string"
+    },
+    "definition": {
+      "type": "string"
+    },
+    "why_it_matters": {
+      "type": "string"
+    },
+    "example": {
+      "type": "string"
+    },
+    "field": {
+      "type": "string"
+    },
+    "path_id": {
+      "type": "string"
+    },
+    "path_name": {
+      "type": "string"
+    },
+    "experiment_id": {
+      "type": "string"
+    },
+    "guide_id": {
+      "type": "string"
+    },
+    "step_number": {
+      "type": "number"
+    },
+    "learned_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "term",
+    "definition"
+  ],
+  "rls": {
+    "create": {
+      "created_by_id": "{{user.id}}"
+    },
+    "read": {
+      "created_by_id": "{{user.id}}"
+    },
+    "update": {
+      "created_by_id": "{{user.id}}"
+    },
+    "delete": {
+      "created_by_id": "{{user.id}}"
+    }
+  }
+}

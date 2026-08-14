@@ -33,7 +33,7 @@ function ContactCard({ contact, onStatus, onNotes }) {
   const link = outreachLink(contact);
   const questions = contact.questions_to_ask || [];
   return (
-    <div className="rounded-[12px] p-4" style={{ background: '#fff', border: '1px solid var(--border-light)' }}>
+    <div className="rounded-[var(--r-control)] p-4" style={{ background: '#fff', border: '1px solid var(--border-light)' }}>
       <p className="tp-card" style={{ color: 'var(--text-primary)' }}>{contact.name}</p>
       <p className="tp-meta" style={{ color: 'var(--text-muted)' }}>
         {[contact.role || contact.archetype, contact.company].filter(Boolean).join(' · ')}
@@ -50,7 +50,7 @@ function ContactCard({ contact, onStatus, onNotes }) {
         </p>
       )}
       {contact.suggested_message && (
-        <p className="tp-body mt-2.5 rounded-[8px] p-2.5" style={{ background: 'var(--background-secondary)', color: 'var(--text-secondary)' }}>
+        <p className="tp-body mt-2.5 rounded-[var(--r-control)] p-2.5" style={{ background: 'var(--background-secondary)', color: 'var(--text-secondary)' }}>
           {contact.suggested_message}
         </p>
       )}
@@ -69,7 +69,7 @@ function ContactCard({ contact, onStatus, onNotes }) {
         defaultValue={contact.notes || ''}
         onBlur={e => onNotes(e.target.value)}
         placeholder="Notes from the conversation…"
-        className="mt-3 w-full rounded-[8px] border px-3 py-2 text-base md:text-sm outline-none"
+        className="mt-3 w-full rounded-[var(--r-control)] border px-3 py-2 text-base md:text-sm outline-none"
         style={{ borderColor: 'var(--border-light)', background: 'var(--background-secondary)' }}
       />
     </div>
@@ -87,7 +87,7 @@ export default function MissionOutreachPanel({ mission, experiment, path, contac
     try {
       await saveMissionOutreach({
         mission, experiment, path,
-        contact: { ...form, archetype: mission.outreach_archetype, purpose: mission.outreach_purpose, status: 'planned' },
+        contact: { ...form, archetype: mission?.outreach_archetype || form.role, purpose: mission?.outreach_purpose, status: 'planned' },
       });
       setForm({ name: '', role: '', company: '', profile_url: '', profile_verified: false });
       setAdding(false);
@@ -103,22 +103,22 @@ export default function MissionOutreachPanel({ mission, experiment, path, contac
       value={form[name]}
       onChange={e => setForm(f => ({ ...f, [name]: e.target.value }))}
       placeholder={placeholder}
-      className="w-full rounded-[8px] border px-3 py-2 text-sm outline-none"
+      className="w-full rounded-[var(--r-control)] border px-3 py-2 text-sm outline-none"
       style={{ borderColor: 'var(--border-light)', background: '#fff' }}
     />
   );
 
   return (
-    <div className="mt-4 rounded-[12px] p-4" style={{ background: 'var(--background-secondary)', border: '1px solid var(--border-light)' }}>
+    <div className="mt-4 rounded-[var(--r-control)] p-4" style={{ background: 'var(--background-secondary)', border: '1px solid var(--border-light)' }}>
       <p className="tp-eyebrow" style={{ color: 'var(--brand-navy-700)' }}>
-        Outreach required for this mission
+        {mission ? 'Outreach required for this mission' : 'Who you contacted for this step'}
       </p>
-      {mission.outreach_archetype && (
+      {mission?.outreach_archetype && (
         <p className="tp-body mt-1.5" style={{ color: 'var(--text-primary)' }}>
           Who to contact: <strong>{mission.outreach_archetype}</strong>
         </p>
       )}
-      {mission.outreach_purpose && (
+      {mission?.outreach_purpose && (
         <p className="tp-body mt-1.5" style={{ color: 'var(--text-secondary)' }}>{mission.outreach_purpose}</p>
       )}
 
@@ -153,10 +153,10 @@ export default function MissionOutreachPanel({ mission, experiment, path, contac
             I confirmed this profile is the right person
           </label>
           <div className="flex gap-2">
-            <button onClick={() => setAdding(false)} className="tp-meta flex-1 rounded-[8px] border py-2.5 font-semibold"
+            <button onClick={() => setAdding(false)} className="tp-meta flex-1 rounded-[var(--r-control)] border py-2.5 font-semibold"
               style={{ borderColor: 'var(--border-light)', color: 'var(--text-primary)' }}>Cancel</button>
             <button onClick={add} disabled={busy}
-              className="tp-meta flex-1 rounded-[8px] py-2.5 font-bold text-white disabled:opacity-60"
+              className="tp-meta flex-1 rounded-[var(--r-control)] py-2.5 font-bold text-white disabled:opacity-60"
               style={{ background: 'var(--brand-navy-900)' }}>{busy ? 'Saving…' : 'Save contact'}</button>
           </div>
         </div>

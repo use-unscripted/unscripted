@@ -73,7 +73,7 @@ export default function ResourceHub() {
           {filtered.map((r, i) => {
             const ps = PRICE_STYLES[r.price_type] || PRICE_STYLES.free;
             return (
-              <div key={r.id || i} className={`rounded-[20px] border bg-white p-5 flex flex-col ${r.featured ? 'border-[rgba(31,58,95,0.35)]' : 'border-[color:var(--ink-200)]'}`}>
+              <div key={r.id || i} className={`rounded-[var(--r-surface)] border bg-white p-5 flex flex-col ${r.featured ? 'border-[rgba(31,58,95,0.35)]' : 'border-[color:var(--ink-200)]'}`}>
                 <div className="flex items-start justify-between gap-3 mb-3">
                   <div>
                     {r.featured && <div className="tp-meta flex items-center gap-1 font-bold mb-1" style={{ color: 'var(--brand-navy-900)' }}><Star size={13} /> Featured</div>}
@@ -86,7 +86,7 @@ export default function ResourceHub() {
                 </div>
                 <p className="tp-body mt-2 text-[color:var(--ink-700)] flex-1">{r.description}</p>
                 {r.recommendation_reason && (
-                  <div className="mt-4 rounded-xl p-4" style={{ background: 'var(--ink-100)', border: '1px solid rgba(31,58,95,0.15)' }}>
+                  <div className="mt-4 rounded-[var(--r-control)] p-4" style={{ background: 'var(--ink-100)', border: '1px solid rgba(31,58,95,0.15)' }}>
                     <p className="tp-meta font-bold mb-1" style={{ color: 'var(--brand-navy-900)' }}>Why Unscripted recommends it</p>
                     <p className="tp-meta text-[color:var(--ink-700)]">{r.recommendation_reason}</p>
                   </div>
@@ -98,7 +98,7 @@ export default function ResourceHub() {
                   {r.last_reviewed && <span className="tp-meta text-[color:var(--ink-400)]">Reviewed {new Date(r.last_reviewed).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}</span>}
                   {r.external_url && (
                     <a href={r.external_url} target="_blank" rel="noopener noreferrer"
-                      className="tp-meta flex items-center gap-1.5 rounded-[10px] px-3.5 py-2 font-semibold text-white transition hover:-translate-y-px"
+                      className="tp-meta flex items-center gap-1.5 rounded-[var(--r-control)] px-3.5 py-2 font-semibold text-white transition hover:-translate-y-px"
                       style={{ background: 'var(--brand-navy-900)' }}>
                       Visit <ExternalLink size={13} />
                     </a>
@@ -111,7 +111,7 @@ export default function ResourceHub() {
       )}
       </div>
 
-      <div className="mt-10 rounded-[20px] p-5" style={{ background: 'var(--ink-100)', border: '1px solid var(--ink-200)' }}>
+      <div className="mt-10 rounded-[var(--r-surface)] p-5" style={{ background: 'var(--ink-100)', border: '1px solid var(--ink-200)' }}>
         <p className="tp-eyebrow text-[color:var(--ink-500)] mb-2">Coming later</p>
         <p className="tp-prose text-[color:var(--ink-700)]">Live labor-market data, Apollo and Hunter integrations, campus-specific resource directories, and an affiliate marketplace are planned for future releases.</p>
       </div>

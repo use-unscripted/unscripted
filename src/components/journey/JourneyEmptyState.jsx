@@ -53,7 +53,7 @@ export default function JourneyEmptyState({ variant, ctaTo }) {
   const { Icon, title, body, cta } = s;
 
   return (
-    <section className="rounded-[20px] bg-white p-6 text-center sm:p-8" style={{ border: '1px solid var(--border-light)' }}>
+    <section className="app-card p-6 text-center sm:p-8">
       <div
         className="mx-auto grid h-12 w-12 place-items-center rounded-full"
         style={{ background: 'var(--background-tertiary)' }}
@@ -64,8 +64,8 @@ export default function JourneyEmptyState({ variant, ctaTo }) {
       <p className="tp-body mx-auto mt-2.5 max-w-md" style={{ color: 'var(--text-secondary)' }}>{body}</p>
       <Link
         to={ctaTo || cta.to}
-        className="ui-press mt-5 inline-flex items-center justify-center rounded-[10px] px-6 font-heading font-bold text-white"
-        style={{ background: 'var(--brand-navy-900)', minHeight: '48px' }}
+        className="ui-press app-cta tp-control mt-5"
+        style={{ minHeight: '48px' }}
       >
         {cta.label}
       </Link>

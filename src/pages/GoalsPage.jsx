@@ -45,7 +45,7 @@ export default function GoalsPage() {
 
       {/* Feasibility summary */}
       {goals.some(g => g.feasibility_status === 'unrealistic') && (
-        <div className="mb-6 rounded-[16px] p-5" style={{ background: 'var(--danger-50)', border: '1px solid rgba(185,28,28,0.2)' }}>
+        <div className="mb-6 rounded-[var(--r-surface)] p-5" style={{ background: 'var(--danger-50)', border: '1px solid rgba(185,28,28,0.2)' }}>
           <p className="tp-eyebrow text-[color:var(--danger-700)] mb-2">Feasibility issue detected</p>
           <p className="tp-prose text-[color:var(--ink-700)]">
             {goals.filter(g => g.feasibility_status === 'unrealistic').length} goal{goals.filter(g => g.feasibility_status === 'unrealistic').length > 1 ? 's were' : ' was'} flagged as unrealistic based on your available time. Consider deferring or reducing scope.
@@ -54,7 +54,7 @@ export default function GoalsPage() {
       )}
 
       {/* Tabs */}
-      <div className="mb-6 flex gap-2 rounded-xl border border-[color:var(--ink-200)] bg-white p-1.5">
+      <div className="mb-6 flex gap-2 rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-white p-1.5">
         {TIMEFRAME_ORDER.map(t => (
           <button key={t} onClick={() => setTab(t)}
             className="tp-body flex-1 rounded-lg py-3 font-semibold transition"
@@ -68,7 +68,7 @@ export default function GoalsPage() {
       {loading ? (
         <SkCards count={3} h={168} gap={12} r={20} />
       ) : filteredGoals.length === 0 ? (
-        <div className="tp-body rounded-[24px] border border-dashed border-[color:var(--ink-200)] px-8 py-14 text-center text-[color:var(--ink-500)]">
+        <div className="tp-body rounded-[var(--r-surface)] border border-dashed border-[color:var(--ink-200)] px-8 py-14 text-center text-[color:var(--ink-500)]">
           No {tab} goals yet. Complete the goal intake or add one manually.
         </div>
       ) : (
@@ -77,7 +77,7 @@ export default function GoalsPage() {
             const fs = FEASIBILITY_STYLES[g.feasibility_status] || FEASIBILITY_STYLES.needs_clarity;
             const FIcon = fs.icon;
             return (
-              <div key={g.id} className="rounded-[20px] border border-[color:var(--ink-200)] bg-white p-5">
+              <div key={g.id} className="rounded-[var(--r-surface)] border border-[color:var(--ink-200)] bg-white p-5">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1">
                     <div className="flex flex-wrap items-center gap-2 mb-2">

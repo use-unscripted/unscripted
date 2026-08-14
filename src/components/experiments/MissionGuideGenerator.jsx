@@ -66,6 +66,9 @@ export default function MissionGuideGenerator({ experiment, existingGuides = [],
   const [saving, setSaving] = useState(false);
   const [profile, setProfile] = useState(null);
   const [campusEvent, setCampusEvent] = useState(null);
+  // The picker saying it still has something coming. Generating is never
+  // blocked on it; the button underneath just stops claiming to be ready.
+  const [pickerBusy, setPickerBusy] = useState(true);
   const generatingRef = useRef(false);
   // Which of the two attempts is running. The second one exists because the
   // model drifts on artifact completeness; when it happens the wait roughly
@@ -289,7 +292,7 @@ export default function MissionGuideGenerator({ experiment, existingGuides = [],
       // row exists, we never saw it, and the honest thing is that the retry
       // finds it by key and adopts it rather than writing a second copy.
       console.error('[MissionGuide] save failed:', err);
-      setError("We couldn't save your guide. Nothing was lost. Choose an option above to try again.");
+      setError("We couldn't save your experiment. Nothing was lost. Choose an option above to try again.");
       setActiveDecision(null);
       setSaving(false);
     }
@@ -300,14 +303,14 @@ export default function MissionGuideGenerator({ experiment, existingGuides = [],
     const hasActive = existingGuides.some(g => g.is_active);
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(5,8,22,0.5)' }}>
-        <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-[24px] bg-white p-6 sm:p-8">
+        <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-[var(--r-surface)] bg-white p-6 sm:p-8">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="tp-section text-[color:var(--surface-dark-900)]">Guide generated</h2>
+            <h2 className="tp-section text-[color:var(--surface-dark-900)]">Experiment generated</h2>
             <button onClick={onClose}><X size={20} className="text-[color:var(--ink-500)]" /></button>
           </div>
 
           {/* Preview */}
-          <div className="rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] p-4 mb-5">
+          <div className="rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] p-4 mb-5">
             <p className="tp-eyebrow text-[color:var(--ink-500)] mb-1">Version {pendingGuide.version_number}</p>
             <p className="tp-card text-[color:var(--surface-dark-900)]">{pendingGuide.guide_title}</p>
             <p className="tp-body text-[color:var(--ink-500)] mt-1">{pendingGuide.objective}</p>
@@ -334,31 +337,31 @@ export default function MissionGuideGenerator({ experiment, existingGuides = [],
           </div>
 
           <p className="tp-body font-semibold text-[color:var(--ink-700)] mb-3">
-            {hasActive ? 'You already have an active guide. What would you like to do?' : 'Set this as your active guide?'}
+            {hasActive ? 'You already have an active experiment. What would you like to do?' : 'Set this as your active experiment?'}
           </p>
 
           <div className="space-y-2 mb-5">
             <button
               onClick={() => { setActiveDecision('make_active'); handleSave(true); }}
               disabled={saving}
-              className="tp-body w-full rounded-xl border-2 px-4 py-3 font-semibold text-left transition hover:bg-[#F8ECEF] disabled:opacity-60"
+              className="tp-body w-full rounded-[var(--r-control)] border-2 px-4 py-3 font-semibold text-left transition hover:bg-[#F8ECEF] disabled:opacity-60"
               style={{ borderColor: 'var(--brand-navy-700)', color: 'var(--brand-navy-700)' }}>
-              Make this the active guide
-              {hasActive && <span className="tp-meta block font-normal text-[color:var(--warning-700)] mt-0.5">Will deactivate your current guide</span>}
+              Make this the active experiment
+              {hasActive && <span className="tp-meta block font-normal text-[color:var(--warning-700)] mt-0.5">Will deactivate your current experiment</span>}
             </button>
             <button
               onClick={() => { setActiveDecision('keep_current'); handleSave(false); }}
               disabled={saving}
-              className="tp-body w-full rounded-xl border border-[color:var(--ink-200)] px-4 py-3 font-semibold text-[color:var(--ink-700)] text-left transition hover:bg-[color:var(--ink-50)] disabled:opacity-60">
-              {hasActive ? 'Keep my current active guide' : 'Save as draft'}
-              <span className="tp-meta block font-normal text-[color:var(--ink-400)] mt-0.5">New guide saved as draft</span>
+              className="tp-body w-full rounded-[var(--r-control)] border border-[color:var(--ink-200)] px-4 py-3 font-semibold text-[color:var(--ink-700)] text-left transition hover:bg-[color:var(--ink-50)] disabled:opacity-60">
+              {hasActive ? 'Keep my current active experiment' : 'Save as draft'}
+              <span className="tp-meta block font-normal text-[color:var(--ink-400)] mt-0.5">New experiment saved as draft</span>
             </button>
             {hasActive && (
               <button
                 onClick={() => { setActiveDecision('compare'); handleSave(false); }}
                 disabled={saving}
-                className="tp-body w-full rounded-xl border border-[color:var(--ink-200)] px-4 py-3 font-semibold text-[color:var(--ink-500)] text-left transition hover:bg-[color:var(--ink-50)] disabled:opacity-60">
-                Compare guides first
+                className="tp-body w-full rounded-[var(--r-control)] border border-[color:var(--ink-200)] px-4 py-3 font-semibold text-[color:var(--ink-500)] text-left transition hover:bg-[color:var(--ink-50)] disabled:opacity-60">
+                Compare experiments first
                 <span className="tp-meta block font-normal text-[color:var(--ink-400)] mt-0.5">Opens comparison view after saving</span>
               </button>
             )}
@@ -366,7 +369,7 @@ export default function MissionGuideGenerator({ experiment, existingGuides = [],
 
           {saving && (
             <div className="tp-body flex items-center justify-center gap-2 text-[color:var(--ink-500)]">
-              <Loader2 size={15} className="animate-spin" /> Saving guide...
+              <Loader2 size={15} className="animate-spin" /> Saving experiment...
             </div>
           )}
           {error && <p className="tp-body text-red-600 mt-2">{error}</p>}
@@ -385,13 +388,13 @@ export default function MissionGuideGenerator({ experiment, existingGuides = [],
   if (generating) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(5,8,22,0.5)' }}>
-        <div className="w-full max-w-lg rounded-[24px] bg-white p-6 text-center sm:p-8" role="status" aria-live="polite">
+        <div className="w-full max-w-lg rounded-[var(--r-surface)] bg-white p-6 text-center sm:p-8" role="status" aria-live="polite">
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full" style={{ background: 'var(--ink-100)' }}>
             <Wand2 size={24} style={{ color: 'var(--brand-navy-700)' }} aria-hidden="true" />
           </div>
 
           <h2 className="tp-section mt-5 text-[color:var(--surface-dark-900)]">
-            {attempt > 0 ? 'Rewriting a section that came back short' : 'Writing your Mission Guide'}
+            {attempt > 0 ? 'Rewriting a section that came back short' : 'Writing your experiment'}
           </h2>
           <p className="tp-body mx-auto mt-2 max-w-sm text-[color:var(--ink-500)]">
             {experiment.title}
@@ -409,7 +412,7 @@ export default function MissionGuideGenerator({ experiment, existingGuides = [],
           <p className="tp-meta mt-5 text-[color:var(--ink-400)]">
             {attempt > 0
               ? 'This one needs a second pass, so it will take about another forty seconds.'
-              : 'This usually takes about forty seconds. It writes the whole guide in one go: steps, the email, and what counts as proof.'}
+              : 'This usually takes about forty seconds. It writes the whole experiment in one go: steps, the email, and what counts as proof.'}
           </p>
 
           {/* A way out. Forty seconds with no exit is a trap, and the previous
@@ -432,23 +435,28 @@ export default function MissionGuideGenerator({ experiment, existingGuides = [],
   }
 
   // ── Step 1 & 2: Generate UI ───────────────────────────────────────────────
+  //
+  // A student who has already chosen an event is not waiting for anything, even
+  // if the picker is still ranking behind them, so the button stays ordinary.
+  const waitingOnCalendar = pickerBusy && !campusEvent;
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(5,8,22,0.5)' }}>
-      <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-[24px] bg-white p-6 sm:p-8">
+      <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-[var(--r-surface)] bg-white p-6 sm:p-8">
         <div className="flex items-center justify-between mb-1">
           <h2 className="tp-section text-[color:var(--surface-dark-900)]">
-            {hasExisting ? 'Generate Another Mission Guide' : 'Generate Mission Guide'}
+            {hasExisting ? 'Generate Another Experiment' : 'Generate Experiment'}
           </h2>
           <button onClick={onClose} disabled={generating}><X size={20} className="text-[color:var(--ink-500)]" /></button>
         </div>
         <p className="tp-lead text-[color:var(--ink-500)] mb-5">
           {hasExisting
-            ? `Version ${nextVersion} will be created. Previous guides are preserved.`
-            : 'AI will generate a step-by-step guide for this experiment.'}
+            ? `Version ${nextVersion} will be created. Previous experiments are preserved.`
+            : 'AI will generate the step-by-step experiment for you to run.'}
         </p>
 
         {/* Experiment context */}
-        <div className="rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] p-3 mb-5">
+        <div className="rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] p-3 mb-5">
           <p className="tp-eyebrow text-[color:var(--ink-500)] mb-0.5">Experiment</p>
           <p className="tp-body font-semibold text-[color:var(--surface-dark-900)]">{experiment.title}</p>
           {experiment.path_name && <p className="tp-meta" style={{ color: 'var(--brand-navy-700)' }}>{experiment.path_name}</p>}
@@ -456,11 +464,11 @@ export default function MissionGuideGenerator({ experiment, existingGuides = [],
 
         {/* Real campus events: gives the first step a date the student didn't set */}
         <CampusEventPicker
-          profile={profile}
           pathName={experiment.path_name}
           selected={campusEvent}
           onSelect={setCampusEvent}
           disabled={generating}
+          onBusy={setPickerBusy}
         />
 
         {/* Variation picker: only for subsequent guides */}
@@ -472,7 +480,7 @@ export default function MissionGuideGenerator({ experiment, existingGuides = [],
                 <button
                   key={opt.value}
                   onClick={() => setVariation(variation === opt.value ? '' : opt.value)}
-                  className="tp-body w-full rounded-xl border px-4 py-3 text-left transition"
+                  className="tp-body w-full rounded-[var(--r-control)] border px-4 py-3 text-left transition"
                   style={variation === opt.value
                     ? { borderColor: 'var(--brand-navy-700)', background: 'var(--background-tertiary)', color: 'var(--brand-navy-700)' }
                     : { borderColor: 'var(--ink-200)', background: 'white', color: 'var(--ink-700)' }}>
@@ -487,14 +495,14 @@ export default function MissionGuideGenerator({ experiment, existingGuides = [],
                 placeholder="Describe what you want to change or focus on..."
                 value={customInstruction}
                 onChange={e => setCustomInstruction(e.target.value)}
-                className="mt-3 w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]"
+                className="mt-3 w-full rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]"
               />
             )}
           </div>
         )}
 
         {error && (
-          <div className="tp-body mb-4 flex items-start gap-2 rounded-xl bg-red-50 px-4 py-3 text-red-700">
+          <div className="tp-body mb-4 flex items-start gap-2 rounded-[var(--r-control)] bg-red-50 px-4 py-3 text-red-700">
             <AlertCircle size={15} className="mt-0.5 shrink-0" />
             <div>
               <p>{error}</p>
@@ -503,20 +511,38 @@ export default function MissionGuideGenerator({ experiment, existingGuides = [],
           </div>
         )}
 
+        {/*
+          Still pressable while the calendar is being read. An event is an
+          enhancement and nothing in this product should hold a student at a
+          disabled button. What changes is that the button says what it will
+          actually do if pressed right now, which is the part that was missing:
+          it read "Generate Mission Guide" in exactly the same words it uses
+          when everything is ready, so a student looking at a loading panel had
+          no reason to think waiting bought them anything.
+        */}
+        {waitingOnCalendar && (
+          <p className="tp-meta mb-2.5 text-center text-[color:var(--ink-500)]">
+            Your campus calendar is still loading. Wait for it and your first step gets a real
+            date, set by somebody other than you.
+          </p>
+        )}
+
         <div className="flex gap-3">
           <button onClick={onClose} disabled={generating}
-            className="tp-body flex-1 rounded-[10px] border border-[color:var(--ink-200)] py-3 font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)] disabled:opacity-60">
+            className="tp-body flex-1 rounded-[var(--r-control)] border border-[color:var(--ink-200)] py-3 font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)] disabled:opacity-60">
             Cancel
           </button>
           <button
             onClick={handleGenerate}
             disabled={generating || (variation === 'custom' && !customInstruction.trim())}
-            className="tp-body flex-1 rounded-[10px] py-3 font-semibold text-white transition disabled:opacity-60 flex items-center justify-center gap-2"
+            className="tp-body flex-1 rounded-[var(--r-control)] py-3 font-semibold text-white transition disabled:opacity-60 flex items-center justify-center gap-2"
             style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}>
             {generating ? (
               <><Loader2 size={15} className="animate-spin" /> Generating...</>
             ) : (
-              <><Wand2 size={15} /> {hasExisting ? 'Generate Another Mission Guide' : 'Generate Mission Guide'}</>
+              <><Wand2 size={15} /> {waitingOnCalendar
+                ? 'Generate without an event'
+                : hasExisting ? 'Generate Another Experiment' : 'Generate Experiment'}</>
             )}
           </button>
         </div>

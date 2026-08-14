@@ -5,7 +5,7 @@ import { unwrapLLM, PLAIN_PROSE_RULES } from '@/lib/llm';
 import { toText, toEnum, LEVELS } from '@/lib/ai-validation';
 import { reportAiFailure } from '@/lib/ai-failures';
 
-const inputCls = 'w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-base md:text-sm text-[color:var(--surface-dark-900)] placeholder-[color:var(--ink-400)] outline-none focus:border-[color:var(--brand-navy-900)]';
+const inputCls = 'w-full rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-base md:text-sm text-[color:var(--surface-dark-900)] placeholder-[color:var(--ink-400)] outline-none focus:border-[color:var(--brand-navy-900)]';
 
 const RISK_LEVELS = ['low', 'medium', 'high'];
 const CONFIDENCE_LEVELS = ['low', 'medium', 'high'];
@@ -157,7 +157,7 @@ ${PLAIN_PROSE_RULES}`,
   if (!mode) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(5,8,22,0.6)' }}>
-        <div className="w-full max-w-lg rounded-[24px] bg-white p-6 sm:p-8">
+        <div className="w-full max-w-lg rounded-[var(--r-surface)] bg-white p-6 sm:p-8">
           <div className="flex items-center justify-between mb-2">
             <h2 className="tp-section text-[color:var(--surface-dark-900)]">Create Another Path</h2>
             <button onClick={onClose}><X size={20} className="text-[color:var(--ink-500)]" /></button>
@@ -170,7 +170,7 @@ ${PLAIN_PROSE_RULES}`,
               ...(unactivatedRecs.length > 0 ? [{ id: 'from_rec', label: 'Activate a prior recommendation', desc: `${unactivatedRecs.length} recommendation${unactivatedRecs.length > 1 ? 's' : ''} not yet activated` }] : []),
             ].map(opt => (
               <button key={opt.id} onClick={() => { setMode(opt.id); setStep(1); }}
-                className="w-full flex items-center justify-between rounded-[16px] border border-[color:var(--ink-200)] bg-white p-4 text-left transition hover:border-[color:var(--brand-navy-900)] hover:bg-[color:var(--ink-100)] group">
+                className="w-full flex items-center justify-between rounded-[var(--r-surface)] border border-[color:var(--ink-200)] bg-white p-4 text-left transition hover:border-[color:var(--brand-navy-900)] hover:bg-[color:var(--ink-100)] group">
                 <div>
                   <p className="tp-body font-bold text-[color:var(--surface-dark-900)] group-hover:text-[color:var(--brand-navy-900)]">{opt.label}</p>
                   <p className="tp-meta text-[color:var(--ink-500)] mt-1">{opt.desc}</p>
@@ -179,7 +179,7 @@ ${PLAIN_PROSE_RULES}`,
               </button>
             ))}
           </div>
-          <button onClick={onClose} className="mt-4 w-full rounded-[10px] border border-[color:var(--ink-200)] py-2.5 text-sm font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)]">Cancel</button>
+          <button onClick={onClose} className="mt-4 w-full rounded-[var(--r-control)] border border-[color:var(--ink-200)] py-2.5 text-sm font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)]">Cancel</button>
         </div>
       </div>
     );
@@ -188,17 +188,17 @@ ${PLAIN_PROSE_RULES}`,
   if (mode === 'from_rec') {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(5,8,22,0.6)' }}>
-        <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-[24px] bg-white p-6 sm:p-8">
+        <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-[var(--r-surface)] bg-white p-6 sm:p-8">
           <div className="flex items-center justify-between mb-1">
             <h2 className="tp-section text-[color:var(--surface-dark-900)]">Prior Recommendations</h2>
             <button onClick={onClose}><X size={20} className="text-[color:var(--ink-500)]" /></button>
           </div>
           <p className="tp-lead text-[color:var(--ink-500)] mb-5">Select a recommendation to activate as a new active path.</p>
-          {error && <div className="tp-body mb-3 p-3 rounded-xl bg-red-50 text-red-700">{error}</div>}
+          {error && <div className="tp-body mb-3 p-3 rounded-[var(--r-control)] bg-red-50 text-red-700">{error}</div>}
           <div className="space-y-3">
             {unactivatedRecs.map(rec => (
               <button key={rec.id} onClick={() => handleSelectRec(rec)} disabled={saving}
-                className="w-full rounded-[16px] border border-[color:var(--ink-200)] p-4 text-left transition hover:border-[color:var(--brand-navy-900)] hover:bg-[color:var(--ink-100)] disabled:opacity-60">
+                className="w-full rounded-[var(--r-surface)] border border-[color:var(--ink-200)] p-4 text-left transition hover:border-[color:var(--brand-navy-900)] hover:bg-[color:var(--ink-100)] disabled:opacity-60">
                 <p className="tp-body font-bold text-[color:var(--surface-dark-900)]">{rec.path_name}</p>
                 <p className="tp-meta text-[color:var(--ink-500)] mt-1 line-clamp-2">{rec.fit_reason}</p>
                 <span className="tp-meta mt-2 inline-block rounded-full px-2.5 py-1 font-bold" style={{ background: 'var(--ink-100)', color: 'var(--ink-500)' }}>{rec.status}</span>
@@ -213,7 +213,7 @@ ${PLAIN_PROSE_RULES}`,
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(5,8,22,0.6)' }}>
-      <div className="w-full max-w-2xl max-h-[92vh] overflow-y-auto rounded-[24px] bg-white p-6 sm:p-8">
+      <div className="w-full max-w-2xl max-h-[92vh] overflow-y-auto rounded-[var(--r-surface)] bg-white p-6 sm:p-8">
         <div className="flex items-center justify-between mb-1">
           <h2 className="tp-section text-[color:var(--surface-dark-900)]">
             {mode === 'survey' && step === 1 ? 'Quick Path Survey' : 'Path Details'}
@@ -226,7 +226,7 @@ ${PLAIN_PROSE_RULES}`,
             : 'Review and edit the path details before saving.'}
         </p>
 
-        {error && <div className="tp-body mb-4 p-3 rounded-xl bg-red-50 border border-red-100 text-red-700">{error}</div>}
+        {error && <div className="tp-body mb-4 p-3 rounded-[var(--r-control)] bg-red-50 border border-red-100 text-red-700">{error}</div>}
 
         {mode === 'survey' && step === 1 ? (
           <div className="space-y-4">
@@ -239,13 +239,13 @@ ${PLAIN_PROSE_RULES}`,
               <div key={q.name}>
                 <label className="block text-sm font-semibold text-[color:var(--ink-700)] mb-1.5">{q.label}</label>
                 <textarea rows={2} name={q.name} value={survey[q.name]} onChange={chSurvey} placeholder={q.placeholder}
-                  className="w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)] resize-none placeholder-[color:var(--ink-400)]" />
+                  className="w-full rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)] resize-none placeholder-[color:var(--ink-400)]" />
               </div>
             ))}
             <div className="flex gap-3 mt-4">
-              <button onClick={() => setMode(null)} className="flex-1 rounded-[10px] border border-[color:var(--ink-200)] py-3 text-sm font-semibold text-[color:var(--ink-700)]">Back</button>
+              <button onClick={() => setMode(null)} className="flex-1 rounded-[var(--r-control)] border border-[color:var(--ink-200)] py-3 text-sm font-semibold text-[color:var(--ink-700)]">Back</button>
               <button onClick={handleGenerateFromSurvey} disabled={generating}
-                className="flex-1 rounded-[10px] py-3 text-sm font-semibold text-white disabled:opacity-60"
+                className="flex-1 rounded-[var(--r-control)] py-3 text-sm font-semibold text-white disabled:opacity-60"
                 style={{ background: 'var(--brand-navy-900)' }}>
                 {generating ? <span className="flex items-center justify-center gap-2"><Loader2 size={15} className="animate-spin" />Generating…</span>
                   : <span className="flex items-center justify-center gap-2">Generate Path Profile <ArrowRight size={14} /></span>}
@@ -268,7 +268,7 @@ ${PLAIN_PROSE_RULES}`,
                 <label className="block text-sm font-semibold text-[color:var(--ink-700)] mb-1.5">{f.label}</label>
                 {f.rows ? (
                   <textarea rows={f.rows} name={f.name} value={form[f.name]} onChange={ch} placeholder={f.placeholder}
-                    className="w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)] resize-none placeholder-[color:var(--ink-400)]" />
+                    className="w-full rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)] resize-none placeholder-[color:var(--ink-400)]" />
                 ) : (
                   <input name={f.name} value={form[f.name]} onChange={ch} placeholder={f.placeholder} className={inputCls} />
                 )}
@@ -296,9 +296,9 @@ ${PLAIN_PROSE_RULES}`,
 
             <div className="flex gap-3 mt-4">
               <button onClick={() => mode === 'survey' ? setStep(1) : setMode(null)}
-                className="flex-1 rounded-[10px] border border-[color:var(--ink-200)] py-3 text-sm font-semibold text-[color:var(--ink-700)]">Back</button>
+                className="flex-1 rounded-[var(--r-control)] border border-[color:var(--ink-200)] py-3 text-sm font-semibold text-[color:var(--ink-700)]">Back</button>
               <button onClick={handleSave} disabled={saving}
-                className="flex-1 rounded-[10px] py-3 text-sm font-semibold text-white disabled:opacity-60"
+                className="flex-1 rounded-[var(--r-control)] py-3 text-sm font-semibold text-white disabled:opacity-60"
                 style={{ background: 'var(--brand-navy-900)' }}>
                 {saving ? <span className="flex items-center justify-center gap-2"><Loader2 size={15} className="animate-spin" />Saving…</span> : 'Save Path'}
               </button>

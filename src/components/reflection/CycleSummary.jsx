@@ -1,5 +1,5 @@
 /**
- * The cycle in one place: Path → Experiment → Missions → Outreach → Evidence →
+ * The cycle in one place: Path → Experiment → Steps → Outreach → Evidence →
  * Reflection → Decision, with dates, counts, clarity movement and the decision.
  */
 import { Link } from 'react-router-dom';
@@ -25,14 +25,14 @@ function Line({ label, value }) {
 export default function CycleSummary({ ctx, reflection, decision, closedCycle }) {
   const d = DECISION_COPY[decision] || null;
   const pathName = ctx.path?.path_name || ctx.experiment.path_name || 'Your path';
-  const chain = [pathName, ctx.experiment.title, `${ctx.completedMissions.length} missions`, `${ctx.outreach.length} conversations`, `${ctx.proof.length} evidence`, 'Reflection', d?.label || 'Decision'];
+  const chain = [pathName, ctx.experiment.title, `${ctx.stepsDone} steps`, `${ctx.outreach.length} conversations`, `${ctx.proof.length} evidence`, 'Reflection', d?.label || 'Decision'];
   const started = closedCycle?.started_at || ctx.cycle?.started_at || ctx.experiment.created_date;
   const completed = closedCycle?.completed_at || new Date().toISOString();
   const baseline = reflection?.baseline_clarity_score ?? ctx.baselineClarity;
   const final = reflection?.clarity_score;
 
   return (
-    <section className="rounded-[20px] bg-white p-5 sm:p-6" style={{ border: '1px solid var(--border-light)' }}>
+    <section className="rounded-[var(--r-surface)] bg-white p-5 sm:p-6" style={{ border: '1px solid var(--border-light)' }}>
       <h2 className="tp-section" style={{ color: 'var(--text-primary)' }}>Cycle summary</h2>
 
       <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1">
@@ -47,7 +47,8 @@ export default function CycleSummary({ ctx, reflection, decision, closedCycle })
       <div className="mt-4">
         <Line label="Started" value={fmt(started)} />
         <Line label="Completed" value={fmt(completed)} />
-        <Line label="Missions completed" value={`${ctx.completedMissions.length} of ${ctx.missions.length}`} />
+        <Line label="Steps completed" value={ctx.stepsTotal ? `${ctx.stepsDone} of ${ctx.stepsTotal}` : ctx.stepsDone} />
+        <Line label="Experiments completed" value={ctx.completedExperiments.length} />
         <Line label="Proof created" value={ctx.proof.length} />
         <Line label="Professional conversations" value={ctx.outreach.length} />
         <Line label="Clarity" value={`${baseline ?? 'Not set'} → ${final ?? 'Not set'}`} />
@@ -55,7 +56,7 @@ export default function CycleSummary({ ctx, reflection, decision, closedCycle })
       </div>
 
       {d && (
-        <div className="mt-4 rounded-[14px] p-4" style={{ background: 'var(--background-secondary)', border: '1px solid var(--border-light)' }}>
+        <div className="mt-4 rounded-[var(--r-control)] p-4" style={{ background: 'var(--background-secondary)', border: '1px solid var(--border-light)' }}>
           <p className="tp-body font-bold" style={{ color: 'var(--text-primary)' }}>Next: {d.next}</p>
           <p className="tp-meta mt-1.5" style={{ color: 'var(--text-muted)' }}>
             Your next cycle starts from what you just learned: clarity, path and records all carried over.
@@ -63,7 +64,7 @@ export default function CycleSummary({ ctx, reflection, decision, closedCycle })
           <div className="mt-3 flex flex-wrap gap-3">
             <Link
               to={decision === 'stop_and_explore' ? '/paths' : `/experiments/new${pathName ? `?pathName=${encodeURIComponent(pathName)}` : ''}`}
-              className="ui-press inline-flex items-center rounded-[10px] px-5 py-3 text-sm font-bold text-white"
+              className="ui-press inline-flex items-center rounded-[var(--r-control)] px-5 py-3 text-sm font-bold text-white"
               style={{ background: 'var(--brand-navy-900)', minHeight: '48px' }}
             >
               {decision === 'stop_and_explore' ? 'Compare my paths' : 'Set up my next experiment'}

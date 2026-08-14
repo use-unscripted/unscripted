@@ -12,9 +12,18 @@ import { Sk, SkPills, SkCards } from '@/components/PageSkeleton';
 import AddMissionModal from '@/components/experiments/AddMissionModal';
 import AddProofModal, { ProofSuccessToast } from '@/components/experiments/AddProofModal';
 import PathSwitcher from '@/components/PathSwitcher';
+import FocusOverlay from '@/components/FocusOverlay';
+import DepthBadge from '@/components/experiments/DepthBadge';
+import { depthOf, DEPTHS } from '@/lib/experiment-depth';
 import SoftDeleteConfirm, { softDeletePayload } from '@/components/SoftDeleteConfirm';
 import ExperimentActionsMenu from '@/components/experiments/ExperimentActionsMenu';
 import ResumeExperimentModal from '@/components/experiments/ResumeExperimentModal';
+import ExperimentTestPanel from '@/components/experiments/ExperimentTestPanel';
+import PreExperimentCheckIn from '@/components/measurement/PreExperimentCheckIn';
+import PostExperimentCheckIn from '@/components/measurement/PostExperimentCheckIn';
+import WhatYouLearned from '@/components/measurement/WhatYouLearned';
+import { loadMeasurements, hasPre, hasPost } from '@/lib/experiment-measurement';
+import { backfillLegacyExperiments } from '@/lib/experiment-design';
 
 const STATUS_STYLES = {
   planned:     { bg: 'var(--ink-100)', text: 'var(--ink-700)', label: 'Planned' },
@@ -53,7 +62,7 @@ function PathDropdown({ paths, value, onChange, error }) {
 
   if (paths.filter(p => !['archived', 'deprioritized'].includes(p.status)).length === 0) {
     return (
-      <div className="rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] p-4 text-center">
+      <div className="rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] p-4 text-center">
         <p className="tp-body font-semibold text-[color:var(--ink-700)] mb-1">No paths available</p>
         <p className="tp-meta text-[color:var(--ink-500)]">You need to create or activate a path before creating an experiment.</p>
         <div className="mt-3 flex gap-2 justify-center flex-wrap">
@@ -78,12 +87,12 @@ function PathDropdown({ paths, value, onChange, error }) {
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Search paths..."
-            className="w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] pl-8 pr-4 py-2.5 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]"
+            className="w-full rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] pl-8 pr-4 py-2.5 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]"
           />
         </div>
       )}
       <select
-        className={`w-full rounded-xl border bg-[color:var(--page-surface)] px-4 py-3 text-sm outline-none focus:border-[color:var(--brand-navy-900)] ${error ? 'border-red-400' : 'border-[color:var(--ink-200)]'}`}
+        className={`w-full rounded-[var(--r-control)] border bg-[color:var(--page-surface)] px-4 py-3 text-sm outline-none focus:border-[color:var(--brand-navy-900)] ${error ? 'border-red-400' : 'border-[color:var(--ink-200)]'}`}
         value={value}
         onChange={e => onChange(e.target.value)}
       >
@@ -117,7 +126,7 @@ function MissionRow({ mission, experiment, onProofAdded, onDeleted }) {
   };
 
   return (
-    <div className="flex items-center justify-between gap-3 rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] px-4 py-3">
+    <div className="flex items-center justify-between gap-3 rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] px-4 py-3">
       {confirmDelete && (
         <SoftDeleteConfirm
           itemName={mission.title}
@@ -202,19 +211,20 @@ function MissionsSection({ experiment, missions, loadingMissions, onMissionAdded
 }
 
 // ── Experiment card ───────────────────────────────────────────────────────────
-function ExperimentCard({ exp, onStatusChange, onExpand, expanded, missions, loadingMissions, onMissionAdded, onProofAdded, onMissionDeleted, onDelete, onEdited, onFindPeople, paths, guides, onGenerateGuide, onGuideSetActive, onGuideDeleted, onGuideDuplicated, onGuideRenamed, onPaused, onResumed }) {
+function ExperimentCard({ exp, measurement, onStatusChange, onExpand, expanded, missions, loadingMissions, onMissionAdded, onProofAdded, onMissionDeleted, onDelete, onEdited, onFindPeople, paths, guides, onGenerateGuide, onGuideSetActive, onGuideDeleted, onGuideDuplicated, onGuideRenamed, onPaused, onResumed }) {
   const s = STATUS_STYLES[exp.status] || STATUS_STYLES.planned;
   const hasGuides = guides && guides.length > 0;
   const activeGuide = guides?.find(g => g.is_active);
   const isPaused = exp.status === 'paused';
 
   return (
-    <div className={`rounded-[20px] border bg-white overflow-hidden ${isPaused ? 'border-amber-200' : 'border-[color:var(--ink-200)]'}`}>
+    <div className={`rounded-[var(--r-surface)] border bg-white overflow-hidden ${isPaused ? 'border-amber-200' : 'border-[color:var(--ink-200)]'}`}>
       <div className="tp-card-body">
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1">
             <div className="flex flex-wrap items-center gap-2 mb-2">
               <span className="tp-meta rounded-full px-3 py-1 font-bold" style={{ background: s.bg, color: s.text }}>{s.label}</span>
+              <DepthBadge depth={depthOf(exp)} />
               {exp.path_name && <span className="tp-meta rounded-full px-3 py-1 font-semibold" style={{ background: 'var(--background-tertiary)', color: 'var(--brand-navy-700)' }}>{exp.path_name}</span>}
               {isPaused && exp.paused_at && (
                 <span className="tp-meta text-[color:var(--ink-400)]">Paused {fmtDate(exp.paused_at)}</span>
@@ -231,8 +241,12 @@ function ExperimentCard({ exp, onStatusChange, onExpand, expanded, missions, loa
               onResumed={onResumed}
               onEdited={onEdited}
             />
-            <button onClick={onExpand} className="rounded-xl border border-[color:var(--ink-200)] p-2 hover:bg-[color:var(--ink-50)]">
-              {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+            <button onClick={onExpand}
+              className="tp-meta touch-target flex items-center gap-1.5 rounded-[var(--r-control)] border px-3 py-2 font-semibold transition"
+              style={expanded
+                ? { borderColor: 'var(--ink-200)', color: 'var(--ink-700)', background: 'white' }
+                : { borderColor: 'var(--brand-navy-900)', color: 'var(--brand-navy-900)', background: 'white' }}>
+              {expanded ? <>Close <ChevronUp size={14} /></> : <>Open experiment <ChevronDown size={14} /></>}
             </button>
           </div>
         </div>
@@ -244,7 +258,7 @@ function ExperimentCard({ exp, onStatusChange, onExpand, expanded, missions, loa
             <span className="flex items-center gap-1"><Target size={12} /> {missions.length} mission{missions.length > 1 ? 's' : ''}</span>
           )}
           {!expanded && guides && guides.length > 0 && (
-            <span className="flex items-center gap-1"><Wand2 size={12} /> {guides.length} guide{guides.length > 1 ? 's' : ''}</span>
+            <span className="flex items-center gap-1"><Wand2 size={12} /> {guides.length} experiment plan{guides.length > 1 ? 's' : ''}</span>
           )}
           {!isPaused && (
             <button onClick={onFindPeople}
@@ -266,7 +280,7 @@ function ExperimentCard({ exp, onStatusChange, onExpand, expanded, missions, loa
       {expanded && (
         <div className="border-t border-[color:var(--ink-200)] p-5 space-y-4">
           {isPaused && (
-            <div className="rounded-xl p-3 flex items-start gap-3" style={{ background: 'var(--warning-50)', border: '1px solid rgba(180,83,9,0.2)' }}>
+            <div className="rounded-[var(--r-control)] p-3 flex items-start gap-3" style={{ background: 'var(--warning-50)', border: '1px solid rgba(180,83,9,0.2)' }}>
               <PauseCircle size={16} className="text-[color:var(--warning-700)] shrink-0 mt-0.5" />
               <div>
                 <p className="tp-body font-bold text-[color:var(--warning-700)]">This experiment is paused</p>
@@ -280,6 +294,10 @@ function ExperimentCard({ exp, onStatusChange, onExpand, expanded, missions, loa
               </div>
             </div>
           )}
+
+          <ExperimentTestPanel exp={exp} />
+
+          {measurement?.post_completed_at && <WhatYouLearned m={measurement} />}
 
           {exp.expected_learning && (
             <div><p className="tp-eyebrow text-[color:var(--ink-500)] mb-1">Expected learning</p><p className="tp-body text-[color:var(--ink-700)]">{exp.expected_learning}</p></div>
@@ -298,7 +316,7 @@ function ExperimentCard({ exp, onStatusChange, onExpand, expanded, missions, loa
             </div>
           )}
           {exp.proof_required && (
-            <div className="rounded-xl p-3" style={{ background: 'var(--background-tertiary)', border: '1px solid var(--border-light)' }}>
+            <div className="rounded-[var(--r-control)] p-3" style={{ background: 'var(--background-tertiary)', border: '1px solid var(--border-light)' }}>
               <p className="tp-eyebrow mb-1" style={{ color: 'var(--brand-navy-900)' }}>Proof required</p>
               <p className="tp-body text-[color:var(--ink-700)]">{exp.proof_required}</p>
             </div>
@@ -327,14 +345,14 @@ function ExperimentCard({ exp, onStatusChange, onExpand, expanded, missions, loa
           <div className="border-t border-[color:var(--ink-200)] pt-4">
             <div className="flex items-center justify-between mb-2">
               <p className="tp-eyebrow text-[color:var(--ink-500)] flex items-center gap-1.5">
-                <Wand2 size={12} /> Mission Guide
+                <Wand2 size={12} /> Experiment
                 {activeGuide && <span className="rounded-full px-2 py-0.5 tp-meta font-bold" style={{ background: 'var(--success-50)', color: 'var(--success-700)' }}>Active: v{activeGuide.version_number}</span>}
               </p>
               <button onClick={onGenerateGuide}
                 className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 tp-meta font-semibold text-white transition hover:-translate-y-px"
                 style={{ background: 'var(--brand-navy-900)', boxShadow: '0 4px 12px rgba(31,58,95,0.25)' }}>
                 <Wand2 size={11} />
-                {hasGuides ? 'Generate Another Mission Guide' : 'Generate Mission Guide'}
+                {hasGuides ? 'Generate Another Experiment' : 'Generate Experiment'}
               </button>
             </div>
             {hasGuides ? (
@@ -347,7 +365,7 @@ function ExperimentCard({ exp, onStatusChange, onExpand, expanded, missions, loa
                 onGenerateAnother={onGenerateGuide}
               />
             ) : (
-              <p className="tp-meta text-[color:var(--ink-400)] italic">No guides yet. Generate one to get step-by-step instructions.</p>
+              <p className="tp-meta text-[color:var(--ink-400)] italic">Nothing generated yet. Generate one to get step-by-step instructions.</p>
             )}
           </div>
 
@@ -374,13 +392,13 @@ function PausedSection({ experiments, missions, guides, onResumed, onDelete, onE
   if (experiments.length === 0) {
     return (
       <div className="mb-8">
-        <button onClick={() => setOpen(v => !v)} className="flex items-center gap-2 mb-3">
+        <button onClick={() => setOpen(v => !v)} className="touch-reach flex items-center gap-2 mb-3">
           <PauseCircle size={15} className="text-[color:var(--warning-700)]" />
           <h2 className="tp-section text-[color:var(--surface-dark-900)]">Paused</h2>
           {open ? <ChevronUp size={14} className="text-[color:var(--ink-400)]" /> : <ChevronDown size={14} className="text-[color:var(--ink-400)]" />}
         </button>
         {open && (
-          <div className="tp-empty-note rounded-[16px] border border-dashed border-amber-200 bg-amber-50/40">
+          <div className="tp-empty-note rounded-[var(--r-surface)] border border-dashed border-amber-200 bg-amber-50/40">
             <p className="tp-body font-semibold text-[color:var(--ink-700)]">No paused experiments.</p>
             <p className="tp-meta text-[color:var(--ink-400)] mt-1">Experiments you pause will appear here so you can return to them later.</p>
           </div>
@@ -394,7 +412,7 @@ function PausedSection({ experiments, missions, guides, onResumed, onDelete, onE
 
   return (
     <div className="mb-8">
-      <button onClick={() => setOpen(v => !v)} className="flex items-center gap-2 mb-3">
+      <button onClick={() => setOpen(v => !v)} className="touch-reach flex items-center gap-2 mb-3">
         <PauseCircle size={15} className="text-[color:var(--warning-700)]" />
         <h2 className="tp-section text-[color:var(--surface-dark-900)]">Paused</h2>
         <span className="tp-meta rounded-full px-2.5 py-0.5 font-bold" style={{ background: 'var(--warning-50)', color: 'var(--warning-700)' }}>{experiments.length}</span>
@@ -409,7 +427,7 @@ function PausedSection({ experiments, missions, guides, onResumed, onDelete, onE
             const activeGuide = expGuides.find(g => g.is_active);
             const s = STATUS_STYLES.paused;
             return (
-              <div key={exp.id} className="rounded-[20px] border border-amber-200 bg-white overflow-hidden">
+              <div key={exp.id} className="rounded-[var(--r-surface)] border border-amber-200 bg-white overflow-hidden">
                 <div className="p-5">
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1 min-w-0">
@@ -424,7 +442,7 @@ function PausedSection({ experiments, missions, guides, onResumed, onDelete, onE
                       <div className="mt-2 flex flex-wrap items-center gap-3 tp-meta text-[color:var(--ink-400)]">
                         {exp.paused_at && <span className="flex items-center gap-1"><PauseCircle size={11} /> Paused {fmtDate(exp.paused_at)}</span>}
                         {totalCount(exp.id) > 0 && <span><Target size={11} className="inline mr-0.5" />{completedCount(exp.id)}/{totalCount(exp.id)} missions done</span>}
-                        {activeGuide && <span className="flex items-center gap-1"><Wand2 size={11} /> Guide v{activeGuide.version_number}</span>}
+                        {activeGuide && <span className="flex items-center gap-1"><Wand2 size={11} /> Experiment v{activeGuide.version_number}</span>}
                       </div>
                       {exp.pause_reason && <p className="mt-1 tp-meta text-[color:var(--ink-500)] italic">"{exp.pause_reason}"</p>}
                     </div>
@@ -436,7 +454,7 @@ function PausedSection({ experiments, missions, guides, onResumed, onDelete, onE
                         onResumed={onResumed}
                         onEdited={onEdited}
                       />
-                      <button onClick={() => setExpandedId(isExpanded ? null : exp.id)} className="rounded-xl border border-[color:var(--ink-200)] p-2 hover:bg-[color:var(--ink-50)]">
+                      <button onClick={() => setExpandedId(isExpanded ? null : exp.id)} className="rounded-[var(--r-control)] border border-[color:var(--ink-200)] p-2 hover:bg-[color:var(--ink-50)]">
                         {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                       </button>
                     </div>
@@ -478,7 +496,7 @@ function PausedSection({ experiments, missions, guides, onResumed, onDelete, onE
                     )}
                     {expGuides.length > 0 && (
                       <div>
-                        <p className="tp-eyebrow text-[color:var(--ink-500)] mb-1">Mission Guides ({expGuides.length})</p>
+                        <p className="tp-eyebrow text-[color:var(--ink-500)] mb-1">Experiments ({expGuides.length})</p>
                         {expGuides.map(g => (
                           <div key={g.id} className="flex items-center gap-2 tp-meta text-[color:var(--ink-700)]">
                             <Wand2 size={11} style={{ color: 'var(--brand-navy-700)' }} />
@@ -532,13 +550,13 @@ function NewExperimentModal({ onClose, onSave, paths }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(5,8,22,0.5)' }}>
-      <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-[24px] bg-white p-6 sm:p-8">
+      <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-[var(--r-surface)] bg-white p-6 sm:p-8">
         <h2 className="tp-section text-[color:var(--surface-dark-900)] mb-1">New Experiment</h2>
-        <p className="tp-lead text-[color:var(--ink-500)] mb-6">Define what you want to test. Open the experiment after saving to generate a Mission Guide.</p>
+        <p className="tp-lead text-[color:var(--ink-500)] mb-6">Define what you want to test. Open it after saving to generate the full experiment.</p>
         <div className="space-y-4">
           <div>
             <label className="tp-body font-semibold text-[color:var(--ink-700)] block mb-1">Choose an experiment type</label>
-            <select className="w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]"
+            <select className="w-full rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]"
               value={data.experiment_type} onChange={e => setData(d => ({ ...d, experiment_type: e.target.value, title: d.title || e.target.value }))}>
               <option value="">Select or type your own below</option>
               {EXPERIMENT_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
@@ -547,7 +565,7 @@ function NewExperimentModal({ onClose, onSave, paths }) {
 
           <label className="block">
             <span className="tp-body font-semibold text-[color:var(--ink-700)] block mb-1">Experiment title</span>
-            <input className="w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]"
+            <input className="w-full rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]"
               placeholder="e.g. Interview 3 investment bankers" value={data.title || ''} onChange={e => setData(d => ({ ...d, title: e.target.value }))} />
           </label>
 
@@ -562,20 +580,20 @@ function NewExperimentModal({ onClose, onSave, paths }) {
           ].map(f => (
             <label key={f.name} className="block">
               <span className="tp-body font-semibold text-[color:var(--ink-700)] block mb-1">{f.label}</span>
-              <input className="w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]"
+              <input className="w-full rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]"
                 placeholder={f.placeholder} value={data[f.name] || ''} onChange={e => setData(d => ({ ...d, [f.name]: e.target.value }))} />
             </label>
           ))}
           <label className="block">
             <span className="tp-body font-semibold text-[color:var(--ink-700)] block mb-1">Deadline</span>
-            <input type="date" className="w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]"
+            <input type="date" className="w-full rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]"
               value={data.deadline || ''} onChange={e => setData(d => ({ ...d, deadline: e.target.value }))} />
           </label>
         </div>
         <div className="mt-6 flex gap-3">
-          <button onClick={onClose} className="tp-body flex-1 rounded-[10px] border border-[color:var(--ink-200)] py-3 font-semibold text-[color:var(--ink-700)] transition hover:bg-[color:var(--ink-50)]">Cancel</button>
+          <button onClick={onClose} className="tp-body flex-1 rounded-[var(--r-control)] border border-[color:var(--ink-200)] py-3 font-semibold text-[color:var(--ink-700)] transition hover:bg-[color:var(--ink-50)]">Cancel</button>
           <button onClick={handleSave} disabled={saving}
-            className="tp-body flex-1 rounded-[10px] py-3 font-semibold text-white transition hover:-translate-y-px disabled:opacity-60"
+            className="tp-body flex-1 rounded-[var(--r-control)] py-3 font-semibold text-white transition hover:-translate-y-px disabled:opacity-60"
             style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}>
             {saving ? 'Saving...' : 'Save Experiment'}
           </button>
@@ -607,6 +625,8 @@ export default function ExperimentsPage() {
   const [showNew, setShowNew] = useState(false);
   const [expandedId, setExpandedId] = useState(null);
   const [filter, setFilter] = useState('active'); // 'active' | 'completed' | 'skipped' | 'all'
+  // Quick Test / Deep Dive, derived from each record rather than stored twice.
+  const [depthFilter, setDepthFilter] = useState('all');
   const [missionsMap, setMissionsMap] = useState({});
   const [loadingMissionsFor, setLoadingMissionsFor] = useState(null);
   const [guidesMap, setGuidesMap] = useState({});
@@ -615,15 +635,35 @@ export default function ExperimentsPage() {
   const toastTimer = useRef(null);
   const [outreachPlanTarget, setOutreachPlanTarget] = useState(null);
   const [resumeTarget, setResumeTarget] = useState(null); // experiment to resume
+  // Expectation vs. reality measurement, keyed by experiment id.
+  const [measurements, setMeasurements] = useState({});
+  const [preTarget, setPreTarget] = useState(null);   // experiment about to start
+  const [postTarget, setPostTarget] = useState(null); // experiment just completed
+  const [learnedTarget, setLearnedTarget] = useState(null);
 
   const load = async () => {
-    const [data, ps] = await Promise.all([
+    const [data, ps, ms] = await Promise.all([
       base44.entities.Experiments.list('-created_date', 100).catch(() => []),
       base44.entities.PathRecommendations.list('-created_date', 100).catch(() => []),
+      loadMeasurements().catch(() => ({})),
     ]);
-    setExperiments(Array.isArray(data) ? data.filter(e => !e.deletion_status || e.deletion_status === 'active') : []);
-    setPaths(Array.isArray(ps) ? ps : []);
+    setMeasurements(ms || {});
+    const active = Array.isArray(data) ? data.filter(e => !e.deletion_status || e.deletion_status === 'active') : [];
+    const pathList = Array.isArray(ps) ? ps : [];
+    setExperiments(active);
+    setPaths(pathList);
     setLoading(false);
+
+    // Older experiments keep their data and are only linked to the career
+    // hypothesis they were run against. Characteristics stay blank unless a
+    // future experiment records them.
+    const wrote = await backfillLegacyExperiments(active, pathList).catch(() => false);
+    if (wrote) {
+      const refreshed = await base44.entities.Experiments.list('-created_date', 100).catch(() => null);
+      if (Array.isArray(refreshed)) {
+        setExperiments(refreshed.filter(e => !e.deletion_status || e.deletion_status === 'active'));
+      }
+    }
   };
 
   useEffect(() => { load(); }, []);
@@ -675,9 +715,42 @@ export default function ExperimentsPage() {
     load();
   };
 
-  const updateStatus = async (id, status) => {
+  const applyStatus = async (id, status) => {
     await base44.entities.Experiments.update(id, { status });
     setExperiments(prev => prev.map(e => e.id === id ? { ...e, status } : e));
+  };
+
+  /**
+   * Starting an experiment asks what the student expects; completing one asks
+   * what actually happened. Both gates only fire once per experiment, so a
+   * historical experiment is never asked to fill in a past expectation.
+   */
+  const updateStatus = async (id, status) => {
+    const exp = experiments.find(e => e.id === id);
+    const m = measurements[id];
+    // Quick Tests carry their own short measurement, so the long check-ins are
+    // only ever asked of Deep Dives.
+    const longForm = exp ? depthOf(exp) === 'deep_dive' : false;
+    if (exp && longForm && status === 'in_progress' && !hasPre(m)) { setPreTarget(exp); return; }
+    if (exp && longForm && status === 'completed' && !hasPost(m)) {
+      await applyStatus(id, status);
+      setPostTarget(exp);
+      return;
+    }
+    await applyStatus(id, status);
+  };
+
+  const handlePreSaved = async (row) => {
+    const exp = preTarget;
+    setMeasurements(prev => ({ ...prev, [exp.id]: row }));
+    setPreTarget(null);
+    await applyStatus(exp.id, 'in_progress');
+  };
+
+  const handlePostSaved = (row) => {
+    setMeasurements(prev => ({ ...prev, [postTarget.id]: row }));
+    setPostTarget(null);
+    setLearnedTarget(row);
   };
 
   const handleMissionAdded = (expId, mission) => {
@@ -762,9 +835,10 @@ export default function ExperimentsPage() {
   const allActive = experiments.filter(e => e.status !== 'paused');
   const allPaused = experiments.filter(e => e.status === 'paused');
 
-  const pathFiltered = (list) => selectedPath
-    ? list.filter(e => e.path_name === selectedPath.path_name)
-    : list;
+  const pathFiltered = (list) => {
+    const byPath = selectedPath ? list.filter(e => e.path_name === selectedPath.path_name) : list;
+    return depthFilter === 'all' ? byPath : byPath.filter(e => depthOf(e) === depthFilter);
+  };
 
   const activeFiltered = filter === 'all'
     ? pathFiltered(allActive)
@@ -776,6 +850,7 @@ export default function ExperimentsPage() {
 
   const sharedCardProps = (exp) => ({
     exp,
+    measurement: measurements[exp.id],
     expanded: expandedId === exp.id,
     onExpand: () => handleExpand(exp.id),
     onStatusChange: updateStatus,
@@ -824,6 +899,44 @@ export default function ExperimentsPage() {
         />
       )}
       {showNew && <NewExperimentModal onClose={() => setShowNew(false)} onSave={save} paths={paths} />}
+      {/* One experiment at a time: the list stays behind, and clicking outside
+          the panel returns to it. */}
+      {expandedId && (() => {
+        const exp = experiments.find(e => e.id === expandedId);
+        if (!exp) return null;
+        return (
+          <FocusOverlay onClose={() => setExpandedId(null)} label="Back to all experiments">
+            <ExperimentCard {...sharedCardProps(exp)} expanded />
+          </FocusOverlay>
+        );
+      })()}
+      {preTarget && (
+        <PreExperimentCheckIn
+          exp={preTarget}
+          onClose={() => setPreTarget(null)}
+          onSaved={handlePreSaved}
+        />
+      )}
+      {postTarget && (
+        <PostExperimentCheckIn
+          exp={postTarget}
+          measurement={measurements[postTarget.id]}
+          onClose={() => setPostTarget(null)}
+          onSaved={handlePostSaved}
+        />
+      )}
+      {learnedTarget && (
+        <div className="anim-overlay fixed inset-0 z-50 flex items-end justify-center p-0 sm:items-center sm:p-4" style={{ background: 'rgba(5,8,22,0.55)' }}>
+          <div className="anim-modal w-full max-w-lg max-h-[94vh] overflow-y-auto rounded-t-[var(--r-surface)] bg-white p-6 sm:rounded-[var(--r-surface)] sm:p-8">
+            <WhatYouLearned m={learnedTarget} compact />
+            <button onClick={() => setLearnedTarget(null)}
+              className="tp-body mt-6 w-full rounded-[var(--r-control)] py-3.5 font-semibold text-white"
+              style={{ background: 'var(--brand-navy-900)' }}>
+              Done
+            </button>
+          </div>
+        </div>
+      )}
       {resumeTarget && (
         <ResumeExperimentModal
           exp={resumeTarget}
@@ -846,7 +959,7 @@ export default function ExperimentsPage() {
         description="Every experiment is a controlled test. You are not committing to a path. You are gathering evidence."
         action={
           <button onClick={() => setShowNew(true)}
-            className="tp-body flex items-center gap-2 rounded-[10px] px-6 py-3.5 font-semibold text-white transition hover:-translate-y-px"
+            className="tp-body flex items-center gap-2 rounded-[var(--r-control)] px-6 py-3.5 font-semibold text-white transition hover:-translate-y-px"
             style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}>
             <Plus size={16} /> New Experiment
           </button>
@@ -897,6 +1010,22 @@ export default function ExperimentsPage() {
           />
 
           {/* Active / filter section */}
+          {/* Two levels of experiment. Quick Test is the default experience;
+              Deep Dive stays available for anyone who wants stronger evidence. */}
+          <div className="mb-3 flex flex-wrap items-center gap-2">
+            {[{ key: 'all', label: 'All levels', duration: '' },
+              { key: 'quick_test', label: DEPTHS.quick_test.label, duration: DEPTHS.quick_test.duration_label },
+              { key: 'deep_dive', label: DEPTHS.deep_dive.label, duration: DEPTHS.deep_dive.duration_label }].map(d => (
+              <button key={d.key} onClick={() => setDepthFilter(d.key)}
+                className="tp-meta rounded-full border px-3.5 py-1.5 font-semibold transition"
+                style={depthFilter === d.key
+                  ? { background: 'var(--brand-navy-900)', color: '#fff', borderColor: 'var(--brand-navy-900)' }
+                  : { background: 'white', color: 'var(--text-secondary)', borderColor: 'var(--border-light)' }}>
+                {d.label}{d.duration ? ` · ${d.duration}` : ''}
+              </button>
+            ))}
+          </div>
+
           <div className="mb-4 flex items-center justify-between gap-3 flex-wrap">
             <SectionHeader label="Active Experiments" count={allActive.length} />
             <div className="flex gap-2 flex-wrap">
@@ -918,7 +1047,7 @@ export default function ExperimentsPage() {
           </div>
 
           {activeFiltered.length === 0 ? (
-            <div className="rounded-[24px] border border-dashed border-[color:var(--ink-200)] px-8 py-14 text-center">
+            <div className="rounded-[var(--r-surface)] border border-dashed border-[color:var(--ink-200)] px-8 py-14 text-center">
               {filter !== 'all' ? (
                 <>
                   <h3 className="tp-section text-[color:var(--surface-dark-900)]">No {filter.replace('_', ' ')} experiments.</h3>
@@ -929,7 +1058,7 @@ export default function ExperimentsPage() {
                   <h3 className="tp-section text-[color:var(--surface-dark-900)]">No experiments yet.</h3>
                   <p className="tp-body mt-2.5 text-[color:var(--ink-500)]">Start your first experiment to test a path in the real world.</p>
                   <button onClick={() => setShowNew(true)}
-                    className="tp-body mt-6 inline-flex items-center gap-2 rounded-[10px] px-6 py-3 font-semibold text-white"
+                    className="tp-body mt-6 inline-flex items-center gap-2 rounded-[var(--r-control)] px-6 py-3 font-semibold text-white"
                     style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}>
                                       <Plus size={16} /> Create first experiment
                   </button>
@@ -939,7 +1068,7 @@ export default function ExperimentsPage() {
           ) : (
             <div className="space-y-5">
               {activeFiltered.map(exp => (
-                <ExperimentCard key={exp.id} {...sharedCardProps(exp)} />
+                <ExperimentCard key={exp.id} {...sharedCardProps(exp)} expanded={false} />
               ))}
             </div>
           )}

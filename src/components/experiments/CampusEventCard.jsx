@@ -25,7 +25,7 @@ export default function CampusEventCard({ event, college = '', compact = false }
 
   return (
     <div
-      className="overflow-hidden rounded-xl border bg-white"
+      className="overflow-hidden rounded-[var(--r-control)] border bg-white"
       style={{ borderColor: 'rgba(31,58,95,0.22)' }}
     >
       <div

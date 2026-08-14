@@ -17,8 +17,13 @@ import ReflectionContextCard from '@/components/reflection/ReflectionContextCard
 import ConclusionGate from '@/components/reflection/ConclusionGate';
 import ReflectionForm from '@/components/reflection/ReflectionForm';
 import DecisionStep from '@/components/reflection/DecisionStep';
+import EvidenceUpdatePanel from '@/components/reflection/EvidenceUpdatePanel';
 import CycleSummary from '@/components/reflection/CycleSummary';
 import JourneyEmptyState from '@/components/journey/JourneyEmptyState';
+import PageHeader from '@/components/PageHeader';
+import NextBestExperimentPanel from '@/components/next-test/NextBestExperimentPanel';
+import MeasurementGate from '@/components/measurement/MeasurementGate';
+import { loadMeasurements } from '@/lib/experiment-measurement';
 import { Sk } from '@/components/PageSkeleton';
 
 function Shell({ children }) {
@@ -27,12 +32,12 @@ function Shell({ children }) {
 
 function Notice({ title, body, to, cta }) {
   return (
-    <section className="rounded-[20px] bg-white p-6" style={{ border: '1px solid var(--border-light)' }}>
+    <section className="rounded-[var(--r-surface)] bg-white p-6" style={{ border: '1px solid var(--border-light)' }}>
       <p className="tp-body flex items-center gap-2 font-bold" style={{ color: 'var(--text-primary)' }}>
         <AlertCircle size={15} style={{ color: 'var(--brand-navy-700)' }} /> {title}
       </p>
       <p className="tp-prose mt-2" style={{ color: 'var(--text-secondary)' }}>{body}</p>
-      <Link to={to} className="ui-press tp-body mt-4 inline-flex items-center rounded-[10px] px-5 py-3 font-bold text-white"
+      <Link to={to} className="ui-press tp-body mt-4 inline-flex items-center rounded-[var(--r-control)] px-5 py-3 font-bold text-white"
         style={{ background: 'var(--brand-navy-900)', minHeight: '48px' }}>
         {cta}
       </Link>
@@ -51,14 +56,24 @@ export default function ExperimentReflection() {
   const [reflection, setReflection] = useState(null);
   const [decision, setDecision] = useState(null);
   const [closedCycle, setClosedCycle] = useState(null);
+  // The outcome check-in for this experiment. The reflection is recalculated
+  // together with it, so it is collected first rather than left optional.
+  const [measurement, setMeasurement] = useState(null);
 
   const load = useCallback(async () => {
     setLoadError('');
     try {
       const next = await loadConclusionContext(experimentIdParam);
       setCtx(next);
+      if (next.experiment?.id) {
+        const ms = await loadMeasurements().catch(() => ({}));
+        setMeasurement(ms[next.experiment.id] || null);
+      }
       // An already-written conclusion means the decision is what is left.
-      if (next.existing && !reflection) setReflection(next.existing);
+      // Set unconditionally: reading the current reflection out of the closure
+      // here made switching to another experiment keep the previous one's state,
+      // which showed the form again over an already-saved conclusion.
+      setReflection(next.existing || null);
     } catch (err) {
       console.error('[reflection] load failed:', err?.message || err);
       // Never leave the page spinning: say what happened and offer a retry.
@@ -75,15 +90,16 @@ export default function ExperimentReflection() {
     setReflection(null);
     setDecision(null);
     setClosedCycle(null);
+    setMeasurement(null);
     load();
   }, [experimentIdParam, load]);
 
   if (loadError) {
     return (
       <Shell>
-        <section className="rounded-[20px] bg-white p-6" style={{ border: '1px solid var(--border-light)' }}>
+        <section className="rounded-[var(--r-surface)] bg-white p-6" style={{ border: '1px solid var(--border-light)' }}>
           <p className="tp-body font-bold" style={{ color: 'var(--text-primary)' }}>{loadError}</p>
-          <button onClick={load} className="ui-press tp-body mt-4 inline-flex items-center gap-2 rounded-[10px] px-5 font-bold text-white"
+          <button onClick={load} className="ui-press tp-body mt-4 inline-flex items-center gap-2 rounded-[var(--r-control)] px-5 font-bold text-white"
             style={{ background: 'var(--brand-navy-900)', minHeight: '48px' }}>
             <RotateCcw size={15} /> Try again
           </button>
@@ -148,14 +164,37 @@ export default function ExperimentReflection() {
 
   return (
     <Shell>
+      {/* The shared back control, so leaving this page is one thumb-sized tap
+          rather than the footer links at the very bottom. */}
+      <PageHeader showBack backLabel="Go back" title="Conclude this experiment" />
       <ReflectionContextCard ctx={ctx} />
 
       {decision ? (
-        <CycleSummary ctx={ctx} reflection={reflection} decision={decision} closedCycle={closedCycle} />
+        <>
+          <CycleSummary ctx={ctx} reflection={reflection} decision={decision} closedCycle={closedCycle} />
+          {/* The loop continues here. By this point the hypotheses have been
+              recalculated, so the recommendation is computed from the evidence
+              this cycle just produced. */}
+          <NextBestExperimentPanel />
+        </>
       ) : !availability.ready ? (
         <ConclusionGate availability={availability} experiment={ctx.experiment} onEndEarly={handleEndEarly} />
+      ) : !measurement?.post_completed_at ? (
+        /* The outcome numbers come before the written reflection: the
+           recalculation reads both together, and text alone is the weakest
+           evidence in the system. */
+        <MeasurementGate
+          phase="post"
+          exp={ctx.experiment}
+          measurement={measurement}
+          autoOpen
+          onSaved={setMeasurement}
+        />
       ) : reflection ? (
         <>
+          {/* The reflection is evidence now: it is folded into the career
+              hypothesis before the student is asked to decide anything. */}
+          <EvidenceUpdatePanel reflection={reflection} experiment={ctx.experiment} />
           <DecisionStep ctx={ctx} reflection={reflection} onDecided={handleDecided} />
           <p className="tp-meta text-center" style={{ color: 'var(--text-muted)' }}>
             Reflection saved.{' '}
@@ -168,14 +207,14 @@ export default function ExperimentReflection() {
         <ReflectionForm ctx={ctx} onSaved={handleSaved} onSubmit={handleSubmit} />
       )}
 
-      <p className="tp-meta pt-1 text-center" style={{ color: 'var(--text-muted)' }}>
-        <Link to="/journey" className="font-semibold" style={{ color: 'var(--brand-navy-700)' }}>My Journey</Link>
+      <p className="touch-reach-line tp-meta justify-center pt-1 text-center" style={{ color: 'var(--text-muted)' }}>
+        <Link to="/journey" className="touch-reach font-semibold" style={{ color: 'var(--brand-navy-700)' }}>My Journey</Link>
         {' · '}
-        <Link to={`/experiment?experimentId=${ctx.experiment.id}`} className="font-semibold" style={{ color: 'var(--brand-navy-700)' }}>
+        <Link to={`/experiment?experimentId=${ctx.experiment.id}`} className="touch-reach font-semibold" style={{ color: 'var(--brand-navy-700)' }}>
           The experiment
         </Link>
         {' · '}
-        <Link to="/evidence?tab=reflect" className="font-semibold" style={{ color: 'var(--brand-navy-700)' }}>Reflection history</Link>
+        <Link to="/evidence?tab=reflect" className="touch-reach font-semibold" style={{ color: 'var(--brand-navy-700)' }}>Reflection history</Link>
       </p>
     </Shell>
   );

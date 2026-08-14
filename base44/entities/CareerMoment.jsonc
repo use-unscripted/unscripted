@@ -1,0 +1,150 @@
+{
+  "name": "CareerMoment",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string"
+    },
+    "path_id": {
+      "type": "string"
+    },
+    "career_hypothesis_id": {
+      "type": "string"
+    },
+    "career_name": {
+      "type": "string"
+    },
+    "unresolved_question": {
+      "type": "string"
+    },
+    "unresolved_question_id": {
+      "type": "string"
+    },
+    "work_characteristics_tested": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "estimated_minutes": {
+      "type": "number"
+    },
+    "title": {
+      "type": "string"
+    },
+    "hook": {
+      "type": "string"
+    },
+    "information": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string"
+          },
+          "value": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "question": {
+      "type": "string"
+    },
+    "options": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          },
+          "strength": {
+            "type": "number"
+          },
+          "feedback": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "best_option_key": {
+      "type": "string"
+    },
+    "rationale_prompt": {
+      "type": "string"
+    },
+    "evidence_dimensions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "selected_option": {
+      "type": "string"
+    },
+    "rationale_text": {
+      "type": "string"
+    },
+    "pre_field_asked": {
+      "type": "string"
+    },
+    "post_fields_asked": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "enjoyment_reaction": {
+      "type": "number"
+    },
+    "want_again": {
+      "type": "string",
+      "enum": [
+        "no",
+        "maybe",
+        "yes"
+      ]
+    },
+    "system_performance_score": {
+      "type": "number"
+    },
+    "experiment_id": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "ready",
+        "completed"
+      ],
+      "default": "ready"
+    },
+    "completed_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "hook",
+    "question"
+  ],
+  "rls": {
+    "create": {
+      "created_by_id": "{{user.id}}"
+    },
+    "read": {
+      "created_by_id": "{{user.id}}"
+    },
+    "update": {
+      "created_by_id": "{{user.id}}"
+    },
+    "delete": {
+      "created_by_id": "{{user.id}}"
+    }
+  }
+}

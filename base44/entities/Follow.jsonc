@@ -1,3 +1,13 @@
+// One student following another.
+//
+// `read` was `null` until 2026-08-12, so any signed-in account could list the
+// entire follow graph: who follows whom, across every school. Now readable only
+// by the two accounts a row actually names, matching `BlockedUser`, which
+// describes the same kind of two-party relationship and already did this.
+//
+// Nothing reads this entity yet and the table held 0 rows when this was
+// written, so nothing breaks. A follower count that has to span other people's
+// rows belongs in a backend function, not in a widened rule here.
 {
   "name": "Follow",
   "type": "object",
@@ -31,7 +41,13 @@
     "create": {
       "created_by_id": "{{user.id}}"
     },
-    "read": null,
+    "read": {
+      "$or": [
+        { "data.follower_user_id": "{{user.id}}" },
+        { "data.followed_user_id": "{{user.id}}" },
+        { "user_condition": { "role": "admin" } }
+      ]
+    },
     "update": {
       "created_by_id": "{{user.id}}"
     },

@@ -4,7 +4,8 @@
  * routes between them, so no feature is duplicated.
  */
 import { useSearchParams } from 'react-router-dom';
-import { FileText, Users, RotateCcw, Library } from 'lucide-react';
+import { FileText, Users, RotateCcw, Library, UserCheck } from 'lucide-react';
+import CareerEvidenceProfile from '@/pages/CareerEvidenceProfile';
 import EvidenceLibrary from '@/pages/EvidenceLibrary';
 import ProofOfWorkPage from '@/pages/ProofOfWorkPage';
 import OutreachTracker from '@/pages/OutreachTracker';
@@ -15,6 +16,7 @@ const TABS = [
   ['proof',    'Proof',       FileText],
   ['outreach', 'Outreach',    Users],
   ['reflect',  'Reflections', RotateCcw],
+  ['career-profile', 'Career Profile', UserCheck],
 ];
 
 export default function Evidence() {
@@ -42,7 +44,7 @@ export default function Evidence() {
                 type="button"
                 onClick={() => select(key)}
                 aria-current={isActive ? 'page' : undefined}
-                className="ui-press tp-body flex flex-1 items-center justify-center gap-1.5 rounded-[10px] px-3.5 font-bold sm:flex-none sm:px-5"
+                className="ui-press tp-body flex flex-1 items-center justify-center gap-1.5 rounded-[var(--r-control)] px-3.5 font-bold sm:flex-none sm:px-5"
                 style={
                   isActive
                     ? { background: 'var(--brand-navy-900)', color: '#fff', minHeight: '44px' }
@@ -60,6 +62,7 @@ export default function Evidence() {
       {active === 'proof' && <ProofOfWorkPage />}
       {active === 'outreach' && <OutreachTracker />}
       {active === 'reflect' && <WeeklyReflectionPage />}
+      {active === 'career-profile' && <CareerEvidenceProfile />}
     </div>
   );
 }

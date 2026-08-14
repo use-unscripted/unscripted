@@ -1,6 +1,6 @@
 export default function CycleStageBlock({ step, label, count, empty, children }) {
   return (
-    <section className="tp-card-body rounded-[16px] border border-[color:var(--ink-200)] bg-white">
+    <section className="tp-card-body rounded-[var(--r-surface)] border border-[color:var(--ink-200)] bg-white">
       <div className="mb-4 flex items-center gap-2.5">
         <span className="tp-meta flex h-7 w-7 shrink-0 items-center justify-center rounded-full font-bold text-white"
           style={{ background: 'var(--brand-navy-900)' }}>{step}</span>

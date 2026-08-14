@@ -25,6 +25,7 @@ import {
   listCampusFeeds,
   checkCampusFeeds,
   reportFeedWrong,
+  feedLooksRepetitive,
 } from './campus-events';
 
 /** Shaped like normalizeEvent() in the campusEvents backend function. */
@@ -411,7 +412,7 @@ describe('fetchCampusEvents', () => {
 
     await fetchCampusEvents({ days: 30, limit: 5, seriesDates: 1 });
 
-    expect(base44.functions.invoke).toHaveBeenCalledWith('campusEvents', { days: 30, limit: 5, seriesDates: 1 });
+    expect(base44.functions.invoke).toHaveBeenCalledWith('campusEvents', { days: 30, limit: 5, seriesDates: 1, refresh: false });
   });
 
   it('defaults the window when called with nothing', async () => {
@@ -419,7 +420,7 @@ describe('fetchCampusEvents', () => {
 
     await fetchCampusEvents();
 
-    expect(base44.functions.invoke).toHaveBeenCalledWith('campusEvents', { days: 45, limit: 20, seriesDates: 1 });
+    expect(base44.functions.invoke).toHaveBeenCalledWith('campusEvents', { days: 45, limit: 20, seriesDates: 1, refresh: false });
   });
 
   it('returns a raw response as-is', async () => {
@@ -498,7 +499,7 @@ describe('not asking twice', () => {
 
     expect(base44.functions.invoke).toHaveBeenCalledTimes(2);
     expect(base44.functions.invoke).toHaveBeenLastCalledWith('campusEvents', {
-      days: 45, limit: 20, seriesDates: 12,
+      days: 45, limit: 20, seriesDates: 12, refresh: false,
     });
   });
 
@@ -521,6 +522,20 @@ describe('not asking twice', () => {
     await fetchCampusEvents({ refresh: true });
 
     expect(base44.functions.invoke).toHaveBeenCalledTimes(2);
+  });
+
+  // Clearing what this browser remembers is only half of it. The server keeps a
+  // per-school list for a day, shared by everyone there, and a retry that does
+  // not say so gets handed the same list back, which is exactly what the
+  // student is pressing the button to escape.
+  it('tells the server to skip its own cache on a retry', async () => {
+    base44.functions.invoke.mockResolvedValue({ status: 'ok', events: [calendarEvent()] });
+
+    await fetchCampusEvents({ refresh: true });
+
+    expect(base44.functions.invoke).toHaveBeenLastCalledWith('campusEvents', {
+      days: 45, limit: 20, seriesDates: 1, refresh: true,
+    });
   });
 
   it('forgets the calendar once a student tells us where it is', async () => {
@@ -1068,5 +1083,33 @@ describe('reportFeedWrong', () => {
       base44.functions.invoke.mockResolvedValue({ data });
       expect((await reportFeedWrong()).status).toBe('report_failed');
     }
+  });
+});
+
+// The one number this page ever had was a count of events, which is exactly the
+// number a campaign calendar looks healthy on. Ohio State is the worked example
+// throughout: 46 upcoming, all of them the same title.
+describe('telling a real calendar from one thing posted over and over', () => {
+  it('flags Ohio State, which every other number says is fine', () => {
+    expect(feedLooksRepetitive({ events_upcoming_count: 46, events_distinct_titles: 1 })).toBe(true);
+  });
+
+  it('leaves a real university calendar alone', () => {
+    expect(feedLooksRepetitive({ events_upcoming_count: 46, events_distinct_titles: 39 })).toBe(false);
+  });
+
+  // WPI is the milder real case and deliberately does not trip this: seven
+  // upcoming with four titles is a small calendar, not a campaign page. A flag
+  // that fires on small calendars is a flag whoever reads this page learns to
+  // scroll past.
+  it('leaves a small calendar alone', () => {
+    expect(feedLooksRepetitive({ events_upcoming_count: 7, events_distinct_titles: 4 })).toBe(false);
+    expect(feedLooksRepetitive({ events_upcoming_count: 3, events_distinct_titles: 1 })).toBe(false);
+  });
+
+  it('says nothing about a school we have not looked at yet', () => {
+    expect(feedLooksRepetitive({})).toBe(false);
+    expect(feedLooksRepetitive({ events_upcoming_count: 0, events_distinct_titles: 0 })).toBe(false);
+    expect(feedLooksRepetitive(null)).toBe(false);
   });
 });

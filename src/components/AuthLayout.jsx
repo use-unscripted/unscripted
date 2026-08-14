@@ -27,7 +27,7 @@ export default function AuthLayout({ title, subtitle, footer, backTo, backLabel 
           <h1 className="tp-page" style={{ color: 'var(--text-primary)' }}>{title}</h1>
           {subtitle && <p className="tp-lead mt-3" style={{ color: 'var(--text-muted)' }}>{subtitle}</p>}
         </div>
-        <div className="bg-white rounded-2xl shadow-sm p-8" style={{ border: '1px solid var(--border-light)' }}>
+        <div className="bg-white rounded-[var(--r-surface)] shadow-sm p-8" style={{ border: '1px solid var(--border-light)' }}>
           {children}
         </div>
         {footer && (

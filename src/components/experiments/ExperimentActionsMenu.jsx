@@ -9,7 +9,7 @@ import AddToCalendarModal from '@/components/calendar/AddToCalendarModal';
 function ExperimentDeleteConfirm({ expTitle, onConfirm, onCancel }) {
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" style={{ background: 'rgba(5,8,22,0.55)' }}>
-      <div className="w-full max-w-sm rounded-[20px] bg-white p-6 shadow-2xl">
+      <div className="w-full max-w-sm rounded-[var(--r-surface)] bg-white p-6 shadow-2xl">
         <div className="flex items-start justify-between gap-3 mb-3">
           <h3 className="tp-section text-[color:var(--surface-dark-900)]">Move this experiment to Recently Deleted?</h3>
           <button onClick={onCancel}><X size={18} className="text-[color:var(--ink-400)]" /></button>
@@ -20,11 +20,11 @@ function ExperimentDeleteConfirm({ expTitle, onConfirm, onCancel }) {
         </p>
         <div className="flex gap-3">
           <button onClick={onCancel}
-            className="tp-body flex-1 rounded-[10px] border border-[color:var(--ink-200)] py-2.5 font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)] transition">
+            className="tp-body flex-1 rounded-[var(--r-control)] border border-[color:var(--ink-200)] py-2.5 font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)] transition">
             Cancel
           </button>
           <button onClick={onConfirm}
-            className="tp-body flex-1 rounded-[10px] py-2.5 font-semibold text-white transition"
+            className="tp-body flex-1 rounded-[var(--r-control)] py-2.5 font-semibold text-white transition"
             style={{ background: 'var(--brand-navy-900)' }}>
             Move to Recently Deleted
           </button>
@@ -53,11 +53,11 @@ function EditExperimentModal({ exp, onClose, onSaved }) {
     onSaved({ ...exp, ...data });
   };
 
-  const inputCls = 'w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]';
+  const inputCls = 'w-full rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]';
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" style={{ background: 'rgba(5,8,22,0.5)' }}>
-      <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-[24px] bg-white p-6 shadow-2xl">
+      <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-[var(--r-surface)] bg-white p-6 shadow-2xl">
         <div className="flex items-center justify-between mb-4">
           <h2 className="tp-section text-[color:var(--surface-dark-900)]">Edit Experiment</h2>
           <button onClick={onClose}><X size={18} className="text-[color:var(--ink-400)]" /></button>
@@ -88,9 +88,9 @@ function EditExperimentModal({ exp, onClose, onSaved }) {
           </label>
         </div>
         <div className="mt-6 flex gap-3">
-          <button onClick={onClose} className="tp-body flex-1 rounded-[10px] border border-[color:var(--ink-200)] py-2.5 font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)] transition">Cancel</button>
+          <button onClick={onClose} className="tp-body flex-1 rounded-[var(--r-control)] border border-[color:var(--ink-200)] py-2.5 font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)] transition">Cancel</button>
           <button onClick={handleSave} disabled={saving}
-            className="tp-body flex-1 rounded-[10px] py-2.5 font-semibold text-white transition disabled:opacity-60"
+            className="tp-body flex-1 rounded-[var(--r-control)] py-2.5 font-semibold text-white transition disabled:opacity-60"
             style={{ background: 'var(--brand-navy-900)' }}>
              {saving ? 'Saving…' : 'Save Changes'}
           </button>
@@ -162,14 +162,14 @@ export default function ExperimentActionsMenu({ exp, onDeleted, onPaused, onResu
       <div className="relative" ref={menuRef}>
         <button
           onClick={() => setOpen(v => !v)}
-          className="rounded-xl border border-[color:var(--ink-200)] p-2 text-[color:var(--ink-400)] hover:text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)] transition"
+          className="rounded-[var(--r-control)] border border-[color:var(--ink-200)] p-2 text-[color:var(--ink-400)] hover:text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)] transition"
           title="More actions"
         >
           <MoreHorizontal size={15} />
         </button>
 
         {open && (
-          <div className="absolute right-0 top-10 z-20 w-52 rounded-xl border border-[color:var(--ink-200)] bg-white shadow-lg py-1.5">
+          <div className="absolute right-0 top-10 z-20 w-52 rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-white shadow-lg py-1.5">
             <button
               onClick={() => { setOpen(false); setShowEdit(true); }}
               className="tp-body w-full flex items-center gap-2.5 px-4 py-2 text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)] transition"

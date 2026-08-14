@@ -1,0 +1,114 @@
+{
+  // One school's calendar, fetched once and shared by everybody there.
+  //
+  // Until this existed, every student's page load fetched their school's whole
+  // calendar over the network. Two students at the same school in the same
+  // minute both hit that school's server; the same student on a second device
+  // did it again. The only caching was per browser, so it did nothing for the
+  // first load by any given student, which is the one that decides whether they
+  // ever see campus events at all.
+  //
+  // WHAT IS STORED IS THE SCHOOL-WIDE LIST, and that layering is the whole
+  // safety argument. The value here is the output of fetchEvents(): normalized,
+  // nothing filtered for anybody, no match_score, no per-student limit, and it
+  // has NOT been through the upcoming-window filter. Every per-student step
+  // (attendable, upcoming, scoring against that student's terms, the limit
+  // slice) still runs per request, against that request's own clock. Cache
+  // anything downstream of a student's interests and the first student at a
+  // school decides what every later student sees, which is a correctness bug
+  // wearing an optimization's clothes.
+  //
+  // Rows are current state, not history: a refresh updates the school's row for
+  // that window rather than appending. Two simultaneous misses can both write,
+  // and a duplicate is harmless because reads take the newest matching row.
+  "name": "CampusEventCache",
+  "type": "object",
+  "properties": {
+    "university_id": {
+      // Which school. A row with no university is never written: without one
+      // there is nothing to key the shared list on.
+      "type": "string"
+    },
+    "cache_key": {
+      // "<days>:<seriesDates>", the two request parameters that change what the
+      // fetch returns. Only 45:1 and 60:1 are asked for today, so this is two
+      // rows per school rather than an explosion.
+      //
+      // Deliberately NOT one wide window narrowed down on read: a list built
+      // with seriesDates:12 cannot be reduced to a seriesDates:1 list, because
+      // the normalized records carry no series identifier to group the extra
+      // dates back by.
+      "type": "string"
+    },
+    "feed_url": {
+      // The feed these events came from. A row whose feed_url no longer matches
+      // the feed the request is about to read is a miss, so an admin approving
+      // a student's calendar link, or upholding a report and taking a feed off
+      // a school, invalidates this for free and needs no second write.
+      "type": "string"
+    },
+    "fetched_at": {
+      // When the school was last asked. The only input to the TTL.
+      "type": "string",
+      "format": "date-time"
+    },
+    "event_count": {
+      // How many events the row holds, so the health and admin surfaces can
+      // read it without loading the payload.
+      "type": "number",
+      "default": 0
+    },
+    "events": {
+      // The normalized list, stored exactly as the adapters hand it over.
+      //
+      // The item shape is deliberately left open rather than restated here.
+      // It is defined once, in emptyEvent() in the campusEvents function, and a
+      // second copy in this file would rot the first time an adapter gains a
+      // field: the field would be written, silently dropped, and nobody would
+      // see it go. Two entities here already store arrays this way.
+      //
+      // One field is the reason this matters more than usual. `is_free` has
+      // three states and the third is the common one: null means the calendar
+      // format has nowhere to put a price. Flattening that to false would have
+      // every event off a pasted club portal telling a student it costs money.
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "truncated": {
+      // True when the cap dropped events a student could still have attended,
+      // which is worth knowing: a cached reader can never see one of those
+      // however well it would have scored for them.
+      //
+      // Events that finished days ago are dropped first and do NOT set this.
+      // An .ics feed has no lower bound and hands over the school's entire
+      // published past, so on the largest feeds most of what arrives is history
+      // and the flag would be permanently true and permanently meaningless. The
+      // read-time window refuses every one of them in the same request, so
+      // losing them costs a reader nothing.
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "required": [
+    "university_id",
+    "cache_key"
+  ],
+  // Admin on all four, meaning "nobody but the backend function", matching
+  // CampusFeedSubmission and CampusScrapedEvents. Students reach this only
+  // through campusEvents, which uses asServiceRole. Per the SDK, asServiceRole
+  // does NOT bypass RLS, it acts with role "admin", so admin-scoped rules are
+  // what let the function work at all and anything wider is a door for no gain.
+  //
+  // Write access is the one that matters. A row here is what an entire school
+  // is served as its calendar for up to a day, so a student able to create or
+  // update one could put arbitrary text and arbitrary links in front of
+  // everyone at their school without any feed ever being asked.
+  "rls": {
+    "create": { "user_condition": { "role": "admin" } },
+    "read": { "user_condition": { "role": "admin" } },
+    "update": { "user_condition": { "role": "admin" } },
+    "delete": { "user_condition": { "role": "admin" } }
+  }
+}

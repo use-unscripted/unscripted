@@ -30,14 +30,19 @@ import { Reveal, WordReveal, UnderlineDraw, EASE, EASE_COPY } from '@/components
    "fit signals", "lifestyle implications" — which is how the page ended up
    reading as machine-written. */
 const steps = [
-  { n: '01', title: 'Compare three paths', body: "Three careers that match your answers, each with what it costs you and what it gets you." },
-  { n: '02', title: 'Run the missions', body: 'Email someone who does the job. Get them on a call. Come back with notes.' },
-  { n: '03', title: 'Fit it around class', body: 'Missions get scheduled around your classes, your job and your shifts.' },
-  { n: '04', title: 'Decide on evidence', body: "Each week you write down what happened, and your ranking moves on that instead of a quiz." },
+  { n: '01', title: 'Discover', body: 'See careers worth testing, based on what we currently know about you.' },
+  { n: '02', title: 'Experiment', body: 'Try realistic work designed to test whether the career actually fits.' },
+  { n: '03', title: 'Measure', body: 'Compare what you expected with what you actually experienced.' },
+  { n: '04', title: 'Prove', body: 'Turn the work into proof of what you can already do.' },
+  { n: '05', title: 'Recalibrate', body: 'Which careers appear to fit updates, and you can see why.' },
+  { n: '06', title: 'Repeat', body: 'Test the next thing you do not know yet.' },
 ];
 
-/* Each step owns a quarter of the rail's scroll range. */
-const bandFor = (i) => [i * 0.25, i * 0.25 + 0.16];
+/* Each step owns an equal slice of the rail's scroll range. */
+const bandFor = (i) => {
+  const slice = 1 / steps.length;
+  return [i * slice, i * slice + slice * 0.64];
+};
 
 function RailNode({ index, progress }) {
   const [a, b] = bandFor(index);
@@ -88,7 +93,7 @@ function RailNode({ index, progress }) {
    read as misalignment, not rhythm. Tops are level now — the row is kept off
    feature-grid shape by being unboxed and by the rail beneath it, which is
    what was doing that work anyway. */
-const STEP_OFFSET = ['', '', '', ''];
+const STEP_OFFSET = ['', '', '', '', '', ''];
 
 function StepCard({ step, index, progress }) {
   const [a, b] = bandFor(index);
@@ -107,7 +112,7 @@ function StepCard({ step, index, progress }) {
       style={{ y: lift, opacity }}
     >
       <motion.span
-        className="font-heading block text-4xl font-bold tabular-nums"
+        className="font-heading block text-3xl font-bold tabular-nums"
         style={{ color: numberColor, letterSpacing: '-0.02em' }}
       >
         {step.n}
@@ -164,11 +169,14 @@ function ProcessRail() {
          link on purpose: a destination should be called what the thing that
          sent you here called it. */}
       <h2
-        className="font-heading mb-8 text-3xl font-bold"
+        className="font-heading text-3xl font-bold"
         style={{ color: 'var(--text-primary)' }}
       >
         How it works
       </h2>
+      <p className="mb-8 mt-3 max-w-2xl" style={{ color: 'var(--text-secondary)' }}>
+        One loop, run as many times as you need. Each pass tells you something the last one could not.
+      </p>
 
       {/* Horizontal rail — wide screens */}
       <div className="relative mb-9 hidden lg:block">
@@ -181,7 +189,7 @@ function ProcessRail() {
             background: 'linear-gradient(90deg, var(--brand-navy-700), var(--brand-gold-500))',
           }}
         />
-        <div className="absolute inset-x-0 top-0 grid grid-cols-4">
+        <div className="absolute inset-x-0 top-0 grid grid-cols-6">
           {steps.map((s, i) => (
             <RailNode key={s.n} index={i} progress={p} />
           ))}
@@ -210,7 +218,7 @@ function ProcessRail() {
           }}
         />
 
-        <div className="grid gap-4 pl-8 lg:grid-cols-4 lg:pl-0">
+        <div className="grid gap-4 pl-8 lg:grid-cols-6 lg:pl-0">
           {steps.map((s, i) => (
             <div key={s.n} className="relative">
               <StackNode index={i} progress={p} />
@@ -270,14 +278,13 @@ export default function Hero() {
                visibly bigger at the same font-size. */
             style={{ color: 'var(--text-primary)', fontSize: 'clamp(2.5rem, 5vw + 0.5rem, 3.75rem)' }}
           >
-            <WordReveal text="Don’t guess your next path." delay={0.05} duration={0.85} />{' '}
+            <WordReveal text="Don’t choose a career." delay={0.05} duration={0.85} />{' '}
             <span className="relative inline-block">
-              {/* 0.325, not 0.34. The headline is one seven-word sentence
-                  that happens to be split across two WordReveals so the
-                  second half can carry an underline. The word cadence has to
-                  run straight through the seam: 0.05 + (5 x 0.055) = 0.325 is
-                  exactly where the sixth word falls. */}
-              <WordReveal text="Test it." delay={0.325} duration={0.85} />
+              {/* The headline is one sentence split across two WordReveals so
+                  the second half can carry an underline. The word cadence runs
+                  straight through the seam: 0.05 + (4 x 0.055) = 0.27 is
+                  exactly where the fifth word falls. */}
+              <WordReveal text="Test one." delay={0.27} duration={0.85} />
               {/* Was 0.72, which put the rule mid-wipe underneath a word that
                   was itself still rising, at the same time as the paragraph
                   and buttons were arriving. Now it starts as “it.” lands and
@@ -310,7 +317,7 @@ export default function Hero() {
               “pops in, then does nothing” feeling. */}
           <Reveal delay={700} y={14} duration={0.72} ease={EASE_COPY}>
             <p className="mt-6 max-w-[52ch] text-lg leading-8 font-body" style={{ color: 'var(--text-secondary)' }}>
-              Pick a career you’re weighing up. You get 30 days of real assignments: who to email, what to say, what to bring back. By the end you’ll know whether it fits, because you’ll have tried it.
+              Unscripted helps you discover careers worth exploring, test them through realistic work experiments, and build an evidence-backed understanding of what actually fits you.
             </p>
           </Reveal>
 
@@ -321,7 +328,7 @@ export default function Hero() {
                 className="touch-target group flex items-center gap-2 whitespace-nowrap rounded-[var(--r-control)] px-7 py-3.5 text-sm font-semibold text-white"
                 style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgb(31 58 95 / 0.25)' }}
               >
-                Start your 30-day test
+                Start exploring
                 <motion.span
                   className="inline-flex"
                   initial={false}

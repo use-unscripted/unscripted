@@ -75,7 +75,7 @@ export function LegalPage({ title, effective, updated, notice, lede, contents, c
         {contents && (
           <nav
             aria-label="Contents"
-            className="mt-10 rounded-2xl border p-6"
+            className="mt-10 rounded-[var(--r-surface)] border p-6"
             style={{ borderColor: 'var(--border-light)', background: 'var(--background-secondary)' }}
           >
             <h2 className="tp-meta font-bold uppercase tracking-[.16em]" style={{ color: 'var(--brand-gold-700)' }}>
@@ -178,7 +178,7 @@ export function Defs({ items }) {
 export function Conspicuous({ children }) {
   return (
     <div
-      className="rounded-xl border-2 p-5"
+      className="rounded-[var(--r-control)] border-2 p-5"
       style={{ borderColor: 'var(--brand-navy-900)', background: 'var(--background-secondary)' }}
     >
       <p
@@ -260,7 +260,7 @@ export function DataTable({ caption, columns, rows }) {
             <tr
               key={i}
               role="row"
-              className="mt-3 block rounded-xl border p-4 first:mt-0 border-[color:var(--border-light)] bg-[color:var(--background-secondary)] sm:mt-0 sm:table-row sm:rounded-none sm:border-0 sm:bg-transparent sm:p-0"
+              className="mt-3 block rounded-[var(--r-control)] border p-4 first:mt-0 border-[color:var(--border-light)] bg-[color:var(--background-secondary)] sm:mt-0 sm:table-row sm:rounded-none sm:border-0 sm:bg-transparent sm:p-0"
             >
               {/* sm:first:pt-3 is not redundant with sm:py-3. first:pt-0 carries a
                   second class of specificity, so without it the mobile rule survives

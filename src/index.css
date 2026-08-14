@@ -231,6 +231,49 @@
   html,
   body {
     overflow-x: clip;
+    /* iOS WebView: a drag that reaches the end of the page must not rubber-band
+       the whole canvas. Vertical scrolling inside the page is untouched. */
+    overscroll-behavior-y: contain;
+  }
+
+  /* Tapping and holding a control on iOS selects its label and raises the
+     callout. Controls and navigation are not text to be copied; prose is, and
+     is deliberately excluded here. */
+  button,
+  a,
+  [role="button"],
+  nav,
+  .nav-link,
+  .app-navlink,
+  label {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+  }
+
+  /* Anything the student might actually want to copy keeps normal selection. */
+  p, li, h1, h2, h3, h4, blockquote, td, th,
+  input, textarea, [contenteditable="true"],
+  .tp-prose, .tp-body, .tp-lead, .selectable {
+    -webkit-user-select: text;
+    user-select: text;
+  }
+
+  /* …except when that prose is the label of a control, where it is still part
+     of the button rather than something to copy. */
+  button p, button li, button h1, button h2, button h3, button h4,
+  a p, a li, a h1, a h2, a h3, a h4,
+  [role="button"] p, [role="button"] li,
+  nav p, nav li {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  /* Scrollable panels contain their own overscroll too, so a modal or a long
+     list cannot drag the page behind it. */
+  [class*="overflow-y-auto"],
+  [class*="overflow-auto"] {
+    overscroll-behavior-y: contain;
   }
 
   /* Hold the scrollbar's space open whether or not the page currently needs
@@ -324,6 +367,117 @@
   transition: transform 80ms var(--ease-out);
 }
 
+/* ═══ The signed-in app's surface vocabulary ════════════════════════════════
+   Lifted off the marketing page rather than designed here. Every value below
+   was measured on the rendered landing page 2026-08-11, and the point is that
+   there is now one set of surfaces and one set of buttons across the whole
+   product instead of two that almost match.
+
+   What the app was doing before: cards at 10, 12, 14, 16, 18, 20, 22 and 24px
+   radius depending on which screen you were on, flat white boxes separated by
+   a hairline, and primary buttons set in the display face at 17px bold. The
+   marketing page has two radii, three elevations and one button.
+
+   Use these classes rather than re-typing the values. A card that needs to be
+   different should be different for a reason you can say out loud.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* Elevation. Three steps, navy-tinted, all from the landing page.
+     A card is lifted off the page, not outlined on it — the outline-only card
+     is what made the app read as a form and the marketing page read as a
+     product. */
+  --elev-rest:  0 1px 2px rgba(16, 24, 40, 0.04);
+  --elev-card:  0 18px 44px rgba(16, 24, 40, 0.07);
+  --elev-raise: 0 12px 28px rgba(31, 58, 95, 0.22);
+  --elev-cta:   0 8px 24px rgb(31 58 95 / 0.25);
+}
+
+/* A panel: the landing page's own card, down to the shadow. */
+.app-card {
+  background: var(--background-primary);
+  border: 1px solid var(--border-light);
+  border-radius: var(--r-surface);
+  box-shadow: var(--elev-card);
+}
+
+/* A card inside a card, or a row in a list — sits on the page rather than
+   floating above it, so a group of them doesn't read as a pile. */
+.app-card-flat {
+  background: var(--background-primary);
+  border: 1px solid var(--border-light);
+  border-radius: var(--r-surface);
+  box-shadow: var(--elev-rest);
+}
+
+/* A tinted block inside a card: the "signal it fits" / "signal it doesn't"
+   treatment. Control radius, never surface radius — it is not a card. */
+.app-inset {
+  border-radius: var(--r-control);
+}
+
+/* The one primary button, in the one place the marketing page puts it. */
+.app-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  white-space: nowrap;
+  border-radius: var(--r-control);
+  padding: 0.875rem 1.75rem;
+  background: var(--brand-navy-900);
+  color: var(--brand-white);
+  box-shadow: var(--elev-cta);
+}
+.app-cta:hover { box-shadow: 0 6px 20px rgba(31, 58, 95, 0.28); }
+.app-cta:active {
+  transform: scale(0.98);
+  transition: transform 80ms var(--ease-out);
+}
+
+/* And its quieter twin. */
+.app-cta-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  white-space: nowrap;
+  border-radius: var(--r-control);
+  padding: 0.875rem 1.75rem;
+  background: var(--background-primary);
+  border: 1px solid var(--border-light);
+  color: var(--text-primary);
+}
+.app-cta-secondary:hover { border-color: var(--ink-300); }
+
+/* The gold underline that wipes in under a nav link. The marketing page's nav
+   does this on hover and on focus; the app's sidebar had a colour swap and a
+   left border instead, which is a different product's nav. */
+.app-navlink {
+  position: relative;
+}
+.app-navlink::after {
+  content: '';
+  position: absolute;
+  left: 1rem;
+  right: 1rem;
+  bottom: 0.4rem;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--brand-gold-500);
+  transform: scaleX(0);
+  transform-origin: right center;
+  transition: transform 360ms var(--ease-out);
+}
+/* Hover and focus, never the current page — the active link already carries a
+   gold rail and a fill, and a third signal on the same element is the
+   universal-affordance tell this stylesheet spent a pass removing. */
+.app-navlink:hover::after,
+.app-navlink:focus-visible::after {
+  transform: scaleX(1);
+  transform-origin: left center;
+}
+
 /* ── Touch targets ──────────────────────────────────────────────────────── */
 /* Apple's floor is 44x44pt. A thumb is not a cursor, so these only fire where
    the pointer is coarse and a mouse keeps the density the site has now.
@@ -351,6 +505,43 @@
     min-width: 44px;
     min-height: 44px;
     margin: -14px -17px;
+  }
+
+  /* A short text link or button sitting in a row of its own. Raising its height
+     would make it a chunky new control and change the row, so instead an
+     invisible box grows out from its centre into the space already around it.
+     The box is out of flow and paints nothing, so the layout does not move.
+
+     Only for a control with slack around it: text, padding, or a control that
+     does the same thing. Next to something unrelated the box would swallow its
+     taps. An ancestor with `overflow: hidden` clips it, so keep it inside the
+     card it belongs to. */
+  .touch-reach {
+    position: relative;
+  }
+
+  .touch-reach::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 100%;
+    height: 44px;
+  }
+
+  /* A line of links written as running text. On a phone the line wraps, and a
+     box on the first line lands on the link that moved to the second, which
+     stops answering taps at all. The links become a row that wraps on purpose,
+     spaced so each line clears the one under it. The gap stands in for the
+     space either side of the separator, so nothing shifts while the line still
+     fits on one row. */
+  .touch-reach-line {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    column-gap: 3px;
+    row-gap: 28px;
   }
 }
 

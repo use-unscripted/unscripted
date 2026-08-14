@@ -1,22 +1,31 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   Loader2, Sparkles, Check, CalendarSearch, Link2, Search,
   RotateCw, School, ArrowRight, AlertCircle,
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import {
-  fetchCampusEvents,
-  recommendCampusEvents,
   submitCalendarUrl,
   reportFeedWrong,
   schoolEventsSearchUrl,
   SUBMISSION_REJECTIONS,
 } from '@/lib/campus-events';
+import useCampusEvents from '@/components/campus/useCampusEvents';
+import useCampusPicks from '@/components/campus/useCampusPicks';
 import CampusEventCard from './CampusEventCard';
 import { Sk } from '@/components/PageSkeleton';
 
 /** How many real events to show when the model ranked none of them. */
 const BROWSE_LIMIT = 6;
+
+/**
+ * How many to show while the ranking is still running.
+ *
+ * Three, because three is what a ranking comes back with. Six here and three a
+ * moment later would shrink the dialog under the reader's cursor, which is the
+ * same jump the reserved skeleton was built to avoid.
+ */
+const RANKING_PREVIEW = 3;
 
 /**
  * Offers real, dated events on the student's own campus to anchor a guide to.
@@ -53,190 +62,128 @@ const BROWSE_LIMIT = 6;
  *
  * None of them is a failure the student has to resolve, and every one keeps the
  * skip button in reach.
+ *
+ * ## It reads the calendar the app already has
+ *
+ * This used to run its own fetch on its own window: 45 days, 20 events, which
+ * matched nothing else in the product. The dashboard and the campus page share
+ * a feed on a different window, kept on the device and rendered on the first
+ * frame, so a student who had already seen their own calendar somewhere else
+ * opened this and watched it get read from scratch, in a modal they opened
+ * wanting to start something.
+ *
+ * Same hook now, same window, same stored answer. For almost everyone the
+ * events are simply on screen when this opens. The ranking comes back for free
+ * too whenever the student is testing the path this experiment belongs to,
+ * because that is the key the dashboard already paid for.
+ *
+ * ## Nothing waits on the ranking
+ *
+ * The ranking is a model call measured at ~22s, and it used to hold a full
+ * panel over real events we already had in hand, with a full-width Generate
+ * button sitting underneath giving no reason on earth to wait for it. The
+ * events render immediately and stay pickable the whole time; the ranking
+ * arrives on top of them and cuts the list to the ones worth the walk, with a
+ * sentence saying why. `onBusy` is how the generator knows to stop calling its
+ * own button ready.
  */
-export default function CampusEventPicker({ profile, pathName, selected, onSelect, disabled }) {
-  const [loading, setLoading] = useState(true);
-  // Two very different waits wear one `loading` flag. Reading the calendar is a
-  // second or two; ranking those events is a model call that measured ~22s.
-  // A shimmer is right for the first and a lie for the second: it promises
-  // content is a moment away and then keeps promising it for half a minute.
-  const [phase, setPhase] = useState('feed'); // 'feed' | 'ranking'
-  const [status, setStatus] = useState('');
-  const [college, setCollege] = useState('');
-  const [picks, setPicks] = useState([]);
-  // Kept whenever the feed answered, so "nothing matched" can still show the
-  // student what is genuinely happening rather than describing an absence.
-  const [feedEvents, setFeedEvents] = useState([]);
+export default function CampusEventPicker({ pathName, selected, onSelect, disabled, onBusy }) {
+  const {
+    loading, status, college, events: feedEvents, profile, pathName: journeyPath, rankingReady, retry, adopt,
+  } = useCampusEvents({ days: 60, limit: 40 });
 
-  const [reloadKey, setReloadKey] = useState(0);
-  const retry = useCallback(() => setReloadKey(k => k + 1), []);
-  // Which reload this effect has already served. Comparing against it keeps
-  // "try again" a one-off: read as `reloadKey > 0` it stays switched on, so
-  // every later change of profile or path clears the whole cache and pays for
-  // the ranking again for the rest of the session.
-  const servedReload = useRef(0);
+  // The experiment's own path is the sharper question: this is choosing an
+  // event to build THIS guide around. Falling back to the path the student is
+  // testing keeps the key identical to the dashboard's in the ordinary case,
+  // where those are the same path and the ranking has already been paid for.
+  const { loading: ranking, picks } = useCampusPicks(feedEvents, profile, {
+    pathName: pathName || journeyPath,
+    ready: rankingReady,
+  });
 
-  // A profile object is rebuilt on every parent render, so depending on it
-  // directly would re-run this effect forever, and each run costs a feed fetch
-  // and a model call. The fields the lookup actually reads are what matter.
-  const profileKey = [
-    profile?.id, profile?.college, profile?.major,
-    profile?.career_interests, profile?.favorite_topics, profile?.desired_skills,
-  ].join('|');
+  const hasEvents = feedEvents.length > 0;
+  // Anything still to come that would change what is on this screen. The
+  // generator relabels its own button off this, so it must not stay true once
+  // there is nothing left to arrive.
+  const busy = loading || (hasEvents && ranking);
+  useEffect(() => { onBusy?.(busy); }, [busy, onBusy]);
 
-  useEffect(() => {
-    let cancelled = false;
-    setLoading(true);
-    setPhase('feed');
-
-    const isRetry = reloadKey !== servedReload.current;
-    servedReload.current = reloadKey;
-
-    (async () => {
-      try {
-        // Reopening the picker reuses the calendar and the ranking it already
-        // paid for; pressing "try again" is the one thing that must not.
-        const feed = await fetchCampusEvents({ days: 45, limit: 20, refresh: isRetry });
-        if (cancelled) return;
-
-        setCollege(feed.college || '');
-        setFeedEvents(feed.events || []);
-
-        if (!feed.events?.length) {
-          setPicks([]);
-          setStatus(feed.status || 'no_matches');
-          setLoading(false);
-          return;
-        }
-
-        setPhase('ranking');
-        const recommended = await recommendCampusEvents(feed.events, profile, { pathName });
-        if (cancelled) return;
-
-        setPicks(recommended);
-        // A real feed full of real events that the model declined to rank is not
-        // the same outcome as an empty calendar, and must not render as one.
-        setStatus(recommended.length ? 'ok' : 'unranked');
-        setLoading(false);
-      } catch {
-        // Neither call is meant to throw, and this component early-returns its
-        // spinner while `loading` is true, so anything that does throw leaves
-        // the student on it with no retry and no skip. An unexpected failure
-        // has to land on a screen that has a way off it.
-        if (cancelled) return;
-        setPicks([]);
-        setStatus('feed_error');
-        setLoading(false);
-      }
-    })();
-
-    return () => { cancelled = true; };
-  }, [profileKey, pathName, reloadKey]);
-
-  /**
-   * A feed the student found for us: same shape, same rendering path.
-   *
-   * Including the ranking. The student who went and found their own portal did
-   * more work than anyone else here and was getting the least for it: a bare
-   * list of six events with no fit reason, no what-to-do-there and no
-   * questions, which is the entire product.
-   */
-  const adoptSubmission = useCallback(async (result) => {
-    setCollege(result.college || '');
-    setFeedEvents(result.events || []);
-    setPicks([]);
-
-    if (!result.events?.length) {
-      setStatus('no_feed');
-      return;
-    }
-
-    setStatus('unranked');
-    const recommended = await recommendCampusEvents(result.events, profile, { pathName });
-    if (recommended.length) {
-      setPicks(recommended);
-      setStatus('ok');
-    }
-  }, [profile, pathName]);
-
-  if (loading) {
-    // Both waits reserve the same box. This sits inside an open modal, and the
-    // old single-line "Checking your campus calendar…" bar meant the dialog
-    // grew by ~300px under the reader's cursor when the events landed.
+  // Only until the calendar itself lands. Past that there are real events to
+  // read, so this is never a shimmer over content we are already holding.
+  if (loading && !hasEvents) {
+    // This sits inside an open modal, and the old single-line "Checking your
+    // campus calendar…" bar meant the dialog grew by ~300px under the reader's
+    // cursor when the events landed. So trace what it becomes: heading, two
+    // lines of explanation, then event cards at the height a real one occupies
+    // once its date, venue and confirm-before-you-go panel are on it.
     return (
       <div className="mb-5" style={{ minHeight: 564 }}>
-        {phase === 'feed' ? (
-          <>
-            {/* A second or two. Trace what it becomes: heading, two lines of
-                explanation, then event cards at the height a real one occupies
-                once its date, venue and confirm-before-you-go panel are on it. */}
-            <div className="flex h-5 items-center gap-1.5">
-              <Sk h={14} w={14} r={4} />
-              <Sk h={13} w={196} r={4} />
-            </div>
-            <div className="mb-3 mt-1">
-              <div className="flex h-4 items-center"><Sk h={11} w="94%" r={4} /></div>
-              <div className="flex h-4 items-center"><Sk h={11} w="62%" r={4} /></div>
-            </div>
-            <div className="space-y-2">
-              {[0, 1].map(i => <Sk key={i} h={244} r={12} />)}
-            </div>
-          </>
-        ) : (
-          // ~20 seconds. Say what is happening and roughly how long, because a
-          // shimmer this long reads as broken rather than as working.
-          <div
-            className="flex h-full flex-col items-center justify-center rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] px-6 py-10 text-center"
-            style={{ minHeight: 564 }}
-            role="status"
-            aria-live="polite"
-          >
-            <Sparkles size={20} style={{ color: 'var(--brand-navy-700)' }} aria-hidden="true" />
-            <p className="tp-body mt-3 font-bold text-[color:var(--ink-700)]">
-              Working through {college ? `${college}'s` : 'your campus'} calendar
-            </p>
-            <p className="tp-meta mt-1.5 max-w-xs text-[color:var(--ink-500)]">
-              {feedEvents.length} events are coming up. Finding the ones that actually fit
-              this experiment takes about twenty seconds.
-            </p>
-            <div className="mt-5 h-1 w-40 overflow-hidden rounded-full" style={{ background: 'var(--ink-200)' }}>
-              <div className="picker-progress h-full rounded-full" style={{ background: 'var(--brand-navy-700)' }} />
-            </div>
-          </div>
-        )}
+        <div className="flex h-5 items-center gap-1.5">
+          <Sk h={14} w={14} r={4} />
+          <Sk h={13} w={196} r={4} />
+        </div>
+        <div className="mb-3 mt-1">
+          <div className="flex h-4 items-center"><Sk h={11} w="94%" r={4} /></div>
+          <div className="flex h-4 items-center"><Sk h={11} w="62%" r={4} /></div>
+        </div>
+        <div className="space-y-2">
+          {[0, 1].map(i => <Sk key={i} h={244} r={12} />)}
+        </div>
       </div>
     );
   }
 
-  if (status === 'no_college') {
-    return <NoCollegeState profile={profile} disabled={disabled} onSaved={retry} />;
-  }
-  if (status === 'no_feed') {
-    return <NoFeedState college={college} disabled={disabled} onResolved={adoptSubmission} />;
-  }
-  if (status === 'feed_error') {
-    return <FeedErrorState college={college} disabled={disabled} onRetry={retry} />;
-  }
-  if (status === 'no_matches') {
+  if (!hasEvents) {
+    if (status === 'no_college') {
+      return <NoCollegeState profile={profile} disabled={disabled} onSaved={retry} />;
+    }
+    if (status === 'no_feed') {
+      return <NoFeedState college={college} disabled={disabled} onResolved={adopt} />;
+    }
+    if (status === 'feed_error') {
+      return <FeedErrorState college={college} disabled={disabled} onRetry={retry} />;
+    }
     return <EmptyCalendarState college={college} />;
   }
 
-  const unranked = status === 'unranked';
-  const events = unranked ? feedEvents.slice(0, BROWSE_LIMIT) : picks;
+  // A real feed full of real events that the model declined to rank is not the
+  // same outcome as an empty calendar, and must not render as one.
+  const unranked = !ranking && picks.length === 0;
+  const events = ranking
+    ? feedEvents.slice(0, RANKING_PREVIEW)
+    : unranked ? feedEvents.slice(0, BROWSE_LIMIT) : picks;
 
   return (
     <div className="mb-5">
       <p className="tp-body flex items-center gap-1.5 font-semibold text-[color:var(--ink-700)]">
         <Sparkles size={14} style={{ color: 'var(--brand-gold-500, var(--brand-gold-500))' }} aria-hidden="true" />
-        {unranked ? 'Nothing matched, but these are real' : 'Anchor this to something real'}
+        {ranking
+          ? 'Finding the ones worth your time'
+          : unranked ? 'Nothing matched, but these are real' : 'Anchor this to something real'}
       </p>
       <p className="tp-meta mb-3 mt-0.5 text-[color:var(--ink-500)]">
-        {unranked
-          ? <>Nothing on {college || 'your campus'}&apos;s calendar lines up with this experiment.
-              These are happening anyway.</>
-          : <>Happening at {college}. Pick one and it becomes your first step, with a date you
-              didn&apos;t have to invent.</>}
+        {ranking
+          ? <>These are happening at {college || 'your school'}. Working out which ones fit this
+              experiment takes about twenty seconds, and you can pick one now if you already
+              see it.</>
+          : unranked
+            ? <>Nothing on {college || 'your campus'}&apos;s calendar lines up with this experiment.
+                These are happening anyway.</>
+            : <>Happening at {college}. Pick one and it becomes your first step, with a date you
+                didn&apos;t have to invent.</>}
       </p>
+
+      {ranking && (
+        <div
+          className="mb-3 h-1 w-40 overflow-hidden rounded-full"
+          style={{ background: 'var(--ink-200)' }}
+          role="status"
+          aria-live="polite"
+          aria-label={`Picking the events that fit this experiment at ${college || 'your school'}`}
+        >
+          <div className="picker-progress h-full rounded-full" style={{ background: 'var(--brand-navy-700)' }} />
+        </div>
+      )}
 
       <div className="space-y-2" role="group" aria-label="Campus events">
         {events.map(event => {
@@ -248,7 +195,7 @@ export default function CampusEventPicker({ profile, pathName, selected, onSelec
                 onClick={() => onSelect(isSelected ? null : event)}
                 disabled={disabled}
                 aria-pressed={isSelected}
-                className="w-full rounded-xl border-2 p-2 text-left transition disabled:opacity-60"
+                className="w-full rounded-[var(--r-control)] border-2 p-2 text-left transition disabled:opacity-60"
                 style={{
                   borderColor: isSelected ? 'var(--brand-navy-700)' : 'transparent',
                   background: isSelected ? 'var(--background-tertiary, var(--ink-100))' : 'transparent',
@@ -269,7 +216,7 @@ export default function CampusEventPicker({ profile, pathName, selected, onSelec
               </button>
 
               {isSelected && event.guidance?.what_to_do?.length > 0 && (
-                <div className="mt-1.5 rounded-xl border border-[color:var(--ink-200)] bg-white px-3 py-2.5">
+                <div className="mt-1.5 rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-white px-3 py-2.5">
                   <p className="tp-eyebrow mb-1.5 text-[color:var(--ink-500)]">
                     What to do there
                   </p>
@@ -298,7 +245,7 @@ export default function CampusEventPicker({ profile, pathName, selected, onSelec
         onClick={() => onSelect(null)}
         disabled={disabled}
         aria-pressed={!selected}
-        className="tp-meta mt-2 w-full rounded-xl border px-4 py-3 text-left font-semibold transition disabled:opacity-60"
+        className="tp-meta mt-2 w-full rounded-[var(--r-control)] border px-4 py-3 text-left font-semibold transition disabled:opacity-60"
         style={{
           borderColor: !selected ? 'var(--brand-navy-700)' : 'var(--ink-200)',
           color: !selected ? 'var(--brand-navy-700)' : 'var(--ink-500)',
@@ -324,7 +271,7 @@ export default function CampusEventPicker({ profile, pathName, selected, onSelec
 function EmptyPanel({ icon: Icon, title, children }) {
   return (
     <div
-      className="mb-5 overflow-hidden rounded-xl border px-4 py-3.5"
+      className="mb-5 overflow-hidden rounded-[var(--r-control)] border px-4 py-3.5"
       style={{ borderColor: 'var(--ink-200)', background: 'var(--ink-50)' }}
     >
       <p className="tp-body flex items-center gap-1.5 font-semibold text-[color:var(--ink-700)]">
@@ -623,7 +570,7 @@ function WrongCalendarButton({ college }) {
   }
 
   return (
-    <div className="mt-3 rounded-xl border px-3 py-2.5" style={{ borderColor: 'var(--ink-200)' }}>
+    <div className="mt-3 rounded-[var(--r-control)] border px-3 py-2.5" style={{ borderColor: 'var(--ink-200)' }}>
       <label htmlFor="wrong-calendar-note" className="tp-meta font-semibold text-[color:var(--ink-700)]">
         What&apos;s wrong with it? Optional.
       </label>

@@ -72,7 +72,7 @@ function Shell({ children }) {
 
 function Card({ children }) {
   return (
-    <section className="rounded-[20px] bg-white p-6" style={{ border: '1px solid var(--border-light)' }}>
+    <section className="rounded-[var(--r-surface)] bg-white p-6" style={{ border: '1px solid var(--border-light)' }}>
       {children}
     </section>
   );
@@ -87,7 +87,7 @@ function Notice({ title, body, to = HOME, cta = 'Go to My Journey' }) {
         {body && <p className="tp-prose mt-2" style={{ color: 'var(--text-secondary)' }}>{body}</p>}
         <Link
           to={to}
-          className="ui-press mt-5 inline-flex items-center rounded-[10px] px-5 py-3 text-sm font-bold text-white"
+          className="ui-press mt-5 inline-flex items-center rounded-[var(--r-control)] px-5 py-3 text-sm font-bold text-white"
           style={{ background: 'var(--brand-navy-900)', minHeight: '48px' }}
         >
           {cta}
@@ -341,7 +341,7 @@ function AnswerNudgeInner() {
           <button
             type="button"
             onClick={load}
-            className="ui-press mt-4 inline-flex items-center rounded-[10px] px-5 text-sm font-bold text-white"
+            className="ui-press mt-4 inline-flex items-center rounded-[var(--r-control)] px-5 text-sm font-bold text-white"
             style={{ background: 'var(--brand-navy-900)', minHeight: '48px' }}
           >
             Try again
@@ -419,7 +419,7 @@ function AnswerNudgeInner() {
   if (isRuleOut) eyebrow = 'Your call';
 
   const buttonStyle = { background: 'var(--brand-navy-900)', minHeight: '48px' };
-  const quietButton = 'ui-press w-full rounded-[10px] border px-5 py-3 text-sm font-bold';
+  const quietButton = 'ui-press w-full rounded-[var(--r-control)] border px-5 py-3 text-sm font-bold';
 
   return (
     <Shell>
@@ -459,7 +459,7 @@ function AnswerNudgeInner() {
               onChange={(e) => setReply(e.target.value)}
               maxLength={2000}
               placeholder={isRuleOut ? 'One sentence, if you want to say.' : 'One sentence is enough.'}
-              className="w-full resize-none rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] px-4 py-3 text-base md:text-sm text-[color:var(--surface-dark-900)] placeholder-[color:var(--ink-400)] outline-none focus:border-[color:var(--brand-navy-700)]"
+              className="w-full resize-none rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] px-4 py-3 text-base md:text-sm text-[color:var(--surface-dark-900)] placeholder-[color:var(--ink-400)] outline-none focus:border-[color:var(--brand-navy-700)]"
             />
           </label>
         )}
@@ -472,7 +472,7 @@ function AnswerNudgeInner() {
               type="button"
               disabled={saving}
               onClick={() => submit('answered')}
-              className="ui-press w-full rounded-[10px] px-5 py-3 text-sm font-bold text-white disabled:opacity-60"
+              className="ui-press w-full rounded-[var(--r-control)] px-5 py-3 text-sm font-bold text-white disabled:opacity-60"
               style={buttonStyle}
             >
               {saving ? 'Sending' : 'Send my answer'}
@@ -485,7 +485,7 @@ function AnswerNudgeInner() {
                 type="button"
                 disabled={saving}
                 onClick={() => submit('accepted')}
-                className="ui-press w-full rounded-[10px] px-5 py-3 text-sm font-bold text-white disabled:opacity-60"
+                className="ui-press w-full rounded-[var(--r-control)] px-5 py-3 text-sm font-bold text-white disabled:opacity-60"
                 style={buttonStyle}
               >
                 {isAccount ? 'Yes, stop sending these' : 'Yes, close it out'}
@@ -513,7 +513,7 @@ function AnswerNudgeInner() {
                 type="button"
                 disabled={saving}
                 onClick={() => submit('accepted')}
-                className="ui-press w-full rounded-[10px] px-5 py-3 text-sm font-bold text-white disabled:opacity-60"
+                className="ui-press w-full rounded-[var(--r-control)] px-5 py-3 text-sm font-bold text-white disabled:opacity-60"
                 style={buttonStyle}
               >
                 {target ? 'Yes, take me there' : 'Yes, I will do it'}
@@ -544,7 +544,7 @@ function AnswerNudgeInner() {
         </div>
 
         {declining && (
-          <div className="mt-5 rounded-[16px] border border-[color:var(--ink-200)] p-4">
+          <div className="mt-5 rounded-[var(--r-surface)] border border-[color:var(--ink-200)] p-4">
             <label className="block text-sm font-semibold" style={{ color: 'var(--ink-700)' }}>
               Why, if you feel like saying?
               <span className="tp-meta ml-2 font-normal" style={{ color: 'var(--ink-400)' }}>Optional</span>
@@ -554,14 +554,14 @@ function AnswerNudgeInner() {
                 onChange={(e) => setDeclineReason(e.target.value)}
                 maxLength={2000}
                 placeholder="It changes what we ask you next."
-                className="mt-1 w-full resize-none rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] px-4 py-3 text-base md:text-sm text-[color:var(--surface-dark-900)] placeholder-[color:var(--ink-400)] outline-none focus:border-[color:var(--brand-navy-700)]"
+                className="mt-1 w-full resize-none rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] px-4 py-3 text-base md:text-sm text-[color:var(--surface-dark-900)] placeholder-[color:var(--ink-400)] outline-none focus:border-[color:var(--brand-navy-700)]"
               />
             </label>
             <button
               type="button"
               disabled={saving}
               onClick={() => submit('declined')}
-              className="ui-press mt-3 w-full rounded-[10px] px-5 py-3 text-sm font-bold text-white disabled:opacity-60"
+              className="ui-press mt-3 w-full rounded-[var(--r-control)] px-5 py-3 text-sm font-bold text-white disabled:opacity-60"
               style={buttonStyle}
             >
               {saving ? 'Sending' : 'Send'}

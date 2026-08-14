@@ -30,7 +30,7 @@ export default function MissionItem({ mission, experiment, path, contacts, proof
   const evidenceRequirement = mission.proof_required || experiment?.proof_required;
 
   return (
-    <article className="rounded-[14px] bg-white p-4" style={{ border: '1px solid var(--border-light)' }}>
+    <article className="rounded-[var(--r-control)] bg-white p-4" style={{ border: '1px solid var(--border-light)' }}>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
@@ -44,7 +44,7 @@ export default function MissionItem({ mission, experiment, path, contacts, proof
           <h4 className="tp-card mt-2" style={{ color: 'var(--text-primary)' }}>{mission.title}</h4>
         </div>
         <button onClick={() => setOpen(v => !v)} aria-label={open ? 'Collapse mission' : 'Expand mission'}
-          className="rounded-[8px] border p-1.5" style={{ borderColor: 'var(--border-light)' }}>
+          className="rounded-[var(--r-control)] border p-1.5" style={{ borderColor: 'var(--border-light)' }}>
           {open ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
         </button>
       </div>
@@ -99,7 +99,7 @@ export default function MissionItem({ mission, experiment, path, contacts, proof
             <button
               type="button"
               onClick={() => onComplete(mission)}
-              className="ui-press mt-4 flex w-full items-center justify-center gap-2 rounded-[10px] px-4 text-sm font-bold text-white sm:w-auto"
+              className="ui-press mt-4 flex w-full items-center justify-center gap-2 rounded-[var(--r-control)] px-4 text-sm font-bold text-white sm:w-auto"
               style={{ background: 'var(--brand-navy-900)', minHeight: '48px' }}
             >
               <CheckCircle2 size={15} /> Mark complete with evidence

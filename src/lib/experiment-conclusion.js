@@ -8,10 +8,10 @@
  */
 import { base44 } from '@/api/base44Client';
 import { getActiveCycle, onceInFlight } from '@/lib/career-cycle';
+import { readProgress } from '@/lib/guide-progress';
 
 const alive = (rows) => (Array.isArray(rows) ? rows : []).filter(r => r?.deletion_status !== 'deleted');
 const OPEN_EXPERIMENT = ['draft', 'planned', 'in_progress'];
-const CLOSED_MISSION = ['completed', 'skipped'];
 
 /** localStorage draft, so a failed save never costs the student their words. */
 export const draftKey = (experimentId) => `unscripted_conclusion_draft_${experimentId}`;
@@ -58,15 +58,15 @@ export async function loadConclusionContext(experimentIdParam) {
   }
   if (!experiment) return { user, cycle, experiment: null };
 
-  const [missionRows, proofRows, outreachRows, reflectionRows, pathRows] = await Promise.all([
-    base44.entities.Missions.filter({ experiment_id: experiment.id }, 'created_date', 200).catch(() => []),
+  const [guideRows, proofRows, outreachRows, reflectionRows, pathRows] = await Promise.all([
+    base44.entities.MissionGuides.filter({ experiment_id: experiment.id }, '-version_number', 20).catch(() => []),
     base44.entities.ProofOfWork.filter({ experiment_id: experiment.id }, '-created_date', 200).catch(() => []),
     base44.entities.OutreachContacts.filter({ experiment_id: experiment.id }, '-created_date', 200).catch(() => []),
     base44.entities.WeeklyReflections.filter({ experiment_id: experiment.id }, '-created_date', 50).catch(() => []),
     base44.entities.PathRecommendations.list('-created_date', 200).catch(() => []),
   ]);
 
-  const missions = alive(missionRows);
+  const guides = alive(guideRows);
   const proof = alive(proofRows);
   const outreach = alive(outreachRows);
   const reflections = alive(reflectionRows);
@@ -76,15 +76,30 @@ export async function loadConclusionContext(experimentIdParam) {
     || paths.find(p => p.path_name === experiment.path_name)
     || null;
 
+  /* Step progress on the experiment's own guide. Experiments carry their steps
+     directly now, so nothing here reads Missions. */
+  const guide = guides.find(g => g.is_active) || guides[0] || null;
+  const progress = guide ? readProgress(guide) : { steps: [], completed: [], total: 0 };
+  const completedStepTitles = progress.steps
+    .filter(s => progress.completed.includes(s.step_number))
+    .map(s => s.title)
+    .filter(Boolean);
+
+  /* Every experiment this student has finished, and the finished ones on this
+     same path — the reflection can point back at them. */
+  const completedExperiments = own.filter(e => e.status === 'completed');
+
   return {
     user,
     cycle,
     path,
     paths,
     experiment,
-    missions,
-    completedMissions: missions.filter(m => m.status === 'completed'),
-    openMissions: missions.filter(m => !CLOSED_MISSION.includes(m.status)),
+    guide,
+    stepsTotal: progress.total,
+    stepsDone: progress.completed.length,
+    completedStepTitles,
+    completedExperiments,
     proof,
     outreach,
     reflections,
@@ -97,17 +112,20 @@ export async function loadConclusionContext(experimentIdParam) {
 }
 
 /**
- * Is the reflection open yet? Two doors: every required mission is closed, or
- * the student deliberately ended the experiment early with a reason.
+ * Is the reflection open yet? Three doors: the experiment is marked complete,
+ * every step of it is done, or the student ended it early with a reason.
  */
 export function conclusionAvailability(ctx) {
   if (!ctx?.experiment) return { ready: false, reason: 'no_experiment' };
   if (ctx.endedEarly) return { ready: true, reason: 'ended_early' };
-  if (ctx.missions.length === 0) return { ready: false, reason: 'no_missions', openCount: 0 };
-  if (ctx.openMissions.length > 0) {
-    return { ready: false, reason: 'missions_incomplete', openCount: ctx.openMissions.length };
-  }
-  return { ready: true, reason: 'missions_complete' };
+  if (ctx.experiment.status === 'completed') return { ready: true, reason: 'experiment_complete' };
+  if (ctx.stepsTotal > 0 && ctx.stepsDone >= ctx.stepsTotal) return { ready: true, reason: 'steps_complete' };
+  return {
+    ready: false,
+    reason: 'experiment_open',
+    stepsDone: ctx.stepsDone || 0,
+    stepsTotal: ctx.stepsTotal || 0,
+  };
 }
 
 /** Ends the experiment early with the student's own reason. */
@@ -161,10 +179,16 @@ export async function saveConclusion(ctx, answers) {
     next_changes: answers.next.trim() || undefined,
     clarity_score: answers.clarity ?? undefined,
     baseline_clarity_score: ctx.baselineClarity ?? undefined,
-    missions_completed_count: ctx.completedMissions.length,
+    missions_completed_count: ctx.stepsDone || 0,
     proof_count: ctx.proof.length,
     outreach_count: ctx.outreach.length,
-    completed_items: ctx.completedMissions.map(m => m.title).filter(Boolean),
+    completed_items: ctx.completedStepTitles,
+    referenced_experiment_ids: answers.references?.length ? answers.references : undefined,
+    referenced_experiment_titles: answers.references?.length
+      ? answers.references
+        .map(id => (ctx.completedExperiments.find(e => e.id === id)?.title))
+        .filter(Boolean)
+      : undefined,
   };
   Object.keys(payload).forEach(k => { if (payload[k] === undefined) delete payload[k]; });
 

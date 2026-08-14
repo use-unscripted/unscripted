@@ -10,7 +10,7 @@ export default function EvidenceCard({ item, onReview, onOpenCycle }) {
   const isPrivate = item.visibility === 'private';
 
   return (
-    <div className="tp-card-body rounded-[16px] border border-[color:var(--ink-200)] bg-white">
+    <div className="tp-card-body rounded-[var(--r-surface)] border border-[color:var(--ink-200)] bg-white">
       <div className="flex flex-wrap items-center gap-2">
         <Chip bg="var(--ink-100)" color="var(--brand-navy-900)">{typeLabel(item.type)}</Chip>
         <Chip bg={rs.bg} color={rs.text}>{rs.label}</Chip>

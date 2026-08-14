@@ -59,7 +59,7 @@ function Tooltip({ text }) {
           <span className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
           <span
           role="tooltip"
-          className="tp-meta absolute left-1/2 -translate-x-1/2 bottom-full mb-2 z-50 w-64 rounded-xl border border-[color:var(--ink-200)] bg-white p-3 text-[color:var(--ink-700)] shadow-xl">
+          className="tp-meta absolute left-1/2 -translate-x-1/2 bottom-full mb-2 z-50 w-64 rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-white p-3 text-[color:var(--ink-700)] shadow-xl">
           
             {text}
             <button

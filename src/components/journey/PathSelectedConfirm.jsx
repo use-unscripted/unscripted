@@ -9,7 +9,7 @@ import { Link } from 'react-router-dom';
 export default function PathSelectedConfirm({ pathName, experiment, onDismiss }) {
   return (
     <section
-      className="rounded-[20px] p-6"
+      className="rounded-[var(--r-surface)] p-6"
       style={{ background: 'var(--success-50)', border: '1px solid #BBF7D0' }}
       role="status"
     >
@@ -25,8 +25,8 @@ export default function PathSelectedConfirm({ pathName, experiment, onDismiss })
           <div className="mt-4 flex flex-wrap items-center gap-3">
             <Link
               to={experiment?.id ? `/experiment?experimentId=${experiment.id}` : '/experiment'}
-              className="ui-press inline-flex items-center gap-2 rounded-[10px] px-5 font-heading font-bold text-white"
-              style={{ background: 'var(--brand-navy-900)', minHeight: '48px' }}
+              className="ui-press app-cta tp-control"
+              style={{ minHeight: '48px' }}
             >
               Open my experiment <ArrowRight size={16} />
             </Link>

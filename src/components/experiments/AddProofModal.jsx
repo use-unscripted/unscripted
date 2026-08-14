@@ -5,7 +5,7 @@ import AddProofFlow from '@/components/experiments/AddProofFlow';
 export function ProofSuccessToast({ proof, missionTitle, onViewProof, onReturnToMission, onDismiss }) {
   return (
     <div role="alert" aria-live="polite"
-      className="fixed bottom-6 right-6 z-[100] max-w-sm w-full rounded-[20px] bg-white border border-green-100 shadow-2xl p-5 flex flex-col gap-3"
+      className="fixed bottom-6 right-6 z-[100] max-w-sm w-full rounded-[var(--r-surface)] bg-white border border-green-100 shadow-2xl p-5 flex flex-col gap-3"
       style={{ boxShadow: '0 20px 60px rgba(0,0,0,0.15)' }}>
       <div className="flex items-start gap-3">
         <div className="shrink-0 w-9 h-9 rounded-full flex items-center justify-center" style={{ background: 'var(--success-50)' }}>
@@ -21,9 +21,9 @@ export function ProofSuccessToast({ proof, missionTitle, onViewProof, onReturnTo
         </button>
       </div>
       <div className="flex gap-2">
-        <button onClick={onViewProof} className="tp-meta flex-1 rounded-[8px] py-2.5 font-semibold text-white"
+        <button onClick={onViewProof} className="tp-meta flex-1 rounded-[var(--r-control)] py-2.5 font-semibold text-white"
           style={{ background: 'var(--brand-navy-900)' }}>View Proof</button>
-        <button onClick={onReturnToMission} className="tp-meta flex-1 rounded-[8px] border border-[color:var(--ink-200)] py-2.5 font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)]">
+        <button onClick={onReturnToMission} className="tp-meta flex-1 rounded-[var(--r-control)] border border-[color:var(--ink-200)] py-2.5 font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)]">
           Return to Mission
         </button>
       </div>

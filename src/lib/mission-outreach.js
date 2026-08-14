@@ -15,8 +15,14 @@ import { isDirectProfileUrl, peopleSearchUrl, storedStatusOf } from '@/lib/linke
 
 const slug = (s) => String(s || '').trim().toLowerCase().replace(/\s+/g, '-').slice(0, 40);
 
-export function outreachKey(mission, { name, archetype }) {
-  return `mission:${mission.id}:${slug(name) || slug(archetype) || 'contact'}`;
+/**
+ * A mission is optional. A guide can have steps that ask for a conversation
+ * without a mission record behind them, and the student still has to be able to
+ * record who they spoke with, so the key falls back to the experiment.
+ */
+export function outreachKey(mission, { name, archetype }, experiment) {
+  const owner = mission?.id ? `mission:${mission.id}` : `experiment:${experiment?.id || 'none'}`;
+  return `${owner}:${slug(name) || slug(archetype) || 'contact'}`;
 }
 
 export async function missionOutreach(missionId) {
@@ -32,7 +38,7 @@ export async function missionOutreach(missionId) {
  * is a real linkedin.com/in/ address; otherwise we keep a search link instead.
  */
 export function saveMissionOutreach({ mission, experiment, path, contact }) {
-  const key = outreachKey(mission, contact);
+  const key = outreachKey(mission, contact, experiment);
 
   return onceInFlight(`outreach:${key}`, async () => {
     const links = await linksForExperiment(experiment, mission);
@@ -51,9 +57,9 @@ export function saveMissionOutreach({ mission, experiment, path, contact }) {
         ? undefined
         : peopleSearchUrl([contact.name, contact.company, contact.archetype || contact.role].filter(Boolean).join(' ')),
       contact_type: contact.contact_type || 'informational_interview',
-      reason_for_contact: contact.purpose || mission.outreach_purpose || undefined,
-      suggested_message: contact.suggested_message || mission.suggested_message || undefined,
-      questions_to_ask: contact.questions_to_ask || mission.questions_to_ask || undefined,
+      reason_for_contact: contact.purpose || mission?.outreach_purpose || undefined,
+      suggested_message: contact.suggested_message || mission?.suggested_message || undefined,
+      questions_to_ask: contact.questions_to_ask || mission?.questions_to_ask || undefined,
       response_status: storedStatusOf(contact.status || 'planned'),
       notes: contact.notes || undefined,
       path_being_tested: experiment?.path_name || path?.path_name,

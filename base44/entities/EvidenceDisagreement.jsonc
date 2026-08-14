@@ -1,0 +1,59 @@
+{
+  "name": "EvidenceDisagreement",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string"
+    },
+    "conclusion_type": {
+      "type": "string",
+      "enum": [
+        "career_hypothesis",
+        "ability",
+        "work_preference",
+        "energiser",
+        "drain",
+        "open_question"
+      ]
+    },
+    "conclusion_key": {
+      "type": "string"
+    },
+    "conclusion_label": {
+      "type": "string"
+    },
+    "note": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "open",
+        "reconciled"
+      ],
+      "default": "open"
+    },
+    "flagged_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "conclusion_type",
+    "conclusion_key"
+  ],
+  "rls": {
+    "create": {
+      "created_by_id": "{{user.id}}"
+    },
+    "read": {
+      "created_by_id": "{{user.id}}"
+    },
+    "update": {
+      "created_by_id": "{{user.id}}"
+    },
+    "delete": {
+      "created_by_id": "{{user.id}}"
+    }
+  }
+}

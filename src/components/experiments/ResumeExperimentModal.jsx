@@ -42,7 +42,7 @@ export default function ResumeExperimentModal({ exp, missions = [], onClose, onR
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" style={{ background: 'rgba(5,8,22,0.55)' }}>
-      <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-[24px] bg-white p-6 shadow-2xl">
+      <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-[var(--r-surface)] bg-white p-6 shadow-2xl">
         <div className="flex items-start justify-between gap-3 mb-4">
           <div className="flex items-center gap-2">
             <Play size={18} style={{ color: 'var(--success-700)' }} />
@@ -52,7 +52,7 @@ export default function ResumeExperimentModal({ exp, missions = [], onClose, onR
         </div>
 
         {/* Summary */}
-        <div className="rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] p-4 mb-4 space-y-2">
+        <div className="rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] p-4 mb-4 space-y-2">
           <p className="tp-card text-[color:var(--surface-dark-900)]">{exp.title}</p>
           {exp.path_name && <p className="tp-meta text-[color:var(--ink-500)]">Path: <span className="font-medium text-[color:var(--ink-700)]">{exp.path_name}</span></p>}
           {exp.paused_at && <p className="tp-meta text-[color:var(--ink-500)] flex items-center gap-1"><Clock size={11} /> Paused: {fmtDate(exp.paused_at)}</p>}
@@ -62,11 +62,11 @@ export default function ResumeExperimentModal({ exp, missions = [], onClose, onR
 
         {/* Progress summary */}
         <div className="grid grid-cols-2 gap-3 mb-4">
-          <div className="rounded-xl border border-[color:var(--ink-200)] p-3 text-center">
+          <div className="rounded-[var(--r-control)] border border-[color:var(--ink-200)] p-3 text-center">
             <p className="font-heading text-xl font-bold text-[color:var(--surface-dark-900)]">{completedMissions.length}</p>
             <p className="tp-meta text-[color:var(--ink-500)]">Missions completed</p>
           </div>
-          <div className="rounded-xl border border-[color:var(--ink-200)] p-3 text-center">
+          <div className="rounded-[var(--r-control)] border border-[color:var(--ink-200)] p-3 text-center">
             <p className="font-heading text-xl font-bold text-[color:var(--surface-dark-900)]">{remainingMissions.length}</p>
             <p className="tp-meta text-[color:var(--ink-500)]">Missions remaining</p>
           </div>
@@ -82,7 +82,7 @@ export default function ResumeExperimentModal({ exp, missions = [], onClose, onR
             <button
               key={opt.value}
               onClick={() => setChoice(opt.value)}
-              className="w-full rounded-xl border p-3 text-left transition"
+              className="w-full rounded-[var(--r-control)] border p-3 text-left transition"
               style={choice === opt.value ? { borderColor: 'var(--brand-navy-900)', background: 'var(--ink-100)' } : { borderColor: 'var(--ink-200)', background: 'white' }}
             >
               <div className="flex items-center gap-2">
@@ -98,16 +98,16 @@ export default function ResumeExperimentModal({ exp, missions = [], onClose, onR
         </div>
 
         {choice === 'update' && (
-          <div className="space-y-3 mb-4 rounded-xl border border-[color:var(--ink-200)] p-4">
+          <div className="space-y-3 mb-4 rounded-[var(--r-control)] border border-[color:var(--ink-200)] p-4">
             <label className="block">
               <span className="tp-body font-semibold text-[color:var(--ink-700)] block mb-1">Revised deadline</span>
               <input type="date" value={newDeadline} onChange={e => setNewDeadline(e.target.value)}
-                className="w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-2.5 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]" />
+                className="w-full rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-2.5 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]" />
             </label>
             <label className="block">
               <span className="tp-body font-semibold text-[color:var(--ink-700)] block mb-1">Updated weekly hours</span>
               <input type="number" value={newHours} onChange={e => setNewHours(e.target.value)} min={1} max={40}
-                className="w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-2.5 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]" />
+                className="w-full rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-2.5 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]" />
             </label>
           </div>
         )}
@@ -121,17 +121,17 @@ export default function ResumeExperimentModal({ exp, missions = [], onClose, onR
             value={notes}
             onChange={e => setNotes(e.target.value)}
             placeholder="New skills, updated goals, different availability..."
-            className="w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)] resize-none"
+            className="w-full rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)] resize-none"
           />
         </label>
 
         <div className="flex gap-3">
           <button onClick={onClose}
-            className="tp-body flex-1 rounded-[10px] border border-[color:var(--ink-200)] py-2.5 font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)] transition">
+            className="tp-body flex-1 rounded-[var(--r-control)] border border-[color:var(--ink-200)] py-2.5 font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)] transition">
             Cancel
           </button>
           <button onClick={handleResume} disabled={saving}
-            className="tp-body flex-1 rounded-[10px] py-2.5 font-semibold text-white transition disabled:opacity-60"
+            className="tp-body flex-1 rounded-[var(--r-control)] py-2.5 font-semibold text-white transition disabled:opacity-60"
             style={{ background: 'var(--brand-navy-900)' }}>
             {saving ? 'Resuming…' : 'Resume Experiment'}
           </button>

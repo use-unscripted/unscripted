@@ -20,7 +20,7 @@ import { toText, toTextList, isPlainObject } from '@/lib/ai-validation';
 import { generateValidated } from '@/lib/ai-generate';
 import { reportAiFailure } from '@/lib/ai-failures';
 
-const inputCls = 'w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-2.5 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]';
+const inputCls = 'w-full rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-2.5 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]';
 
 // ── Step 1: Survey ─────────────────────────────────────────────────────────────
 const DEFAULT_SURVEY = {
@@ -293,7 +293,7 @@ function SurveyStep({ pathName, survey, setSurvey, index, setIndex, onGenerate, 
                   : s.options.find(o => o.value === survey[s.key])?.label;
               return (
                 <button key={s.key} type="button" onClick={() => go(i, 'back')}
-                  className="opt-row flex w-full items-start gap-3 rounded-xl border px-3.5 py-2.5 text-left"
+                  className="opt-row flex w-full items-start gap-3 rounded-[var(--r-control)] border px-3.5 py-2.5 text-left"
                   style={{ animationDelay: `${i * 30}ms`, borderColor: 'var(--ink-200)', background: 'var(--brand-white)' }}>
                   <span className="min-w-0 flex-1">
                     <span className="tp-eyebrow block" style={{ color: 'var(--text-secondary)' }}>
@@ -309,7 +309,7 @@ function SurveyStep({ pathName, survey, setSurvey, index, setIndex, onGenerate, 
             })}
           </div>
 
-          <div className="mt-5 rounded-2xl border p-4" style={{ borderColor: 'var(--ink-200)', background: '#FAFBFC' }}>
+          <div className="mt-5 rounded-[var(--r-surface)] border p-4" style={{ borderColor: 'var(--ink-200)', background: '#FAFBFC' }}>
             <p className="tp-body font-semibold" style={{ color: 'var(--text-primary)' }}>Also suggest real people to contact?</p>
             <p className="tp-meta mt-1" style={{ color: 'var(--text-secondary)' }}>
               Public figures in this field. You’ll still need to verify each one.
@@ -327,7 +327,7 @@ function SurveyStep({ pathName, survey, setSurvey, index, setIndex, onGenerate, 
           </div>
 
           {error && (
-            <div className="tp-body mt-4 flex items-center gap-2 rounded-xl bg-red-50 p-3 text-red-700" role="alert">
+            <div className="tp-body mt-4 flex items-center gap-2 rounded-[var(--r-control)] bg-red-50 p-3 text-red-700" role="alert">
               <AlertTriangle size={14} />{error}
             </div>
           )}
@@ -335,12 +335,12 @@ function SurveyStep({ pathName, survey, setSurvey, index, setIndex, onGenerate, 
           <div className={footerCls}>
             <div className="flex items-center gap-3">
               <button onClick={back}
-                className="tp-body flex items-center gap-1 rounded-[10px] border px-4 py-3 font-semibold"
+                className="tp-body flex items-center gap-1 rounded-[var(--r-control)] border px-4 py-3 font-semibold"
                 style={{ borderColor: 'var(--ink-200)', color: 'var(--text-primary)' }}>
                 <ChevronLeft size={15} /> Back
               </button>
               <button onClick={onGenerate}
-                className="tp-body flex flex-1 items-center justify-center gap-2 rounded-[10px] py-3 font-semibold text-white"
+                className="tp-body flex flex-1 items-center justify-center gap-2 rounded-[var(--r-control)] py-3 font-semibold text-white"
                 style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}>
                 <Sparkles size={15} /> Build my outreach plan
               </button>
@@ -419,20 +419,20 @@ function SurveyStep({ pathName, survey, setSurvey, index, setIndex, onGenerate, 
         <div className="flex items-center gap-3">
           {index > 0 ? (
             <button onClick={back}
-              className="tp-body flex items-center gap-1 rounded-[10px] border px-4 py-3 font-semibold"
+              className="tp-body flex items-center gap-1 rounded-[var(--r-control)] border px-4 py-3 font-semibold"
               style={{ borderColor: 'var(--ink-200)', color: 'var(--text-primary)' }}>
               <ChevronLeft size={15} /> Back
             </button>
           ) : (
             <button onClick={onClose}
-              className="tp-body rounded-[10px] border px-4 py-3 font-semibold"
+              className="tp-body rounded-[var(--r-control)] border px-4 py-3 font-semibold"
               style={{ borderColor: 'var(--ink-200)', color: 'var(--text-primary)' }}>
               Cancel
             </button>
           )}
 
           <button onClick={next} disabled={!answered}
-            className={`tp-body flex flex-1 items-center justify-center gap-2 rounded-[10px] border py-3 font-semibold transition-colors disabled:opacity-40 ${skipping ? '' : 'text-white'}`}
+            className={`tp-body flex flex-1 items-center justify-center gap-2 rounded-[var(--r-control)] border py-3 font-semibold transition-colors disabled:opacity-40 ${skipping ? '' : 'text-white'}`}
             style={skipping
               ? { borderColor: 'var(--ink-200)', color: 'var(--text-secondary)' }
               : { background: 'var(--brand-navy-900)', borderColor: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}>
@@ -455,7 +455,7 @@ function SurveyStep({ pathName, survey, setSurvey, index, setIndex, onGenerate, 
 // ── Contact archetype card ─────────────────────────────────────────────────────
 function ArchetypeCard({ archetype }) {
   return (
-    <div className="rounded-[16px] border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] p-4">
+    <div className="rounded-[var(--r-surface)] border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] p-4">
       <div className="flex items-center gap-2 mb-2">
         <User size={14} style={{ color: 'var(--brand-navy-900)' }} />
         <p className="tp-card text-[color:var(--surface-dark-900)]">{archetype.title}</p>
@@ -473,7 +473,7 @@ function ArchetypeCard({ archetype }) {
 // ── Outreach experiment card ───────────────────────────────────────────────────
 function OutreachExperimentCard({ exp }) {
   return (
-    <div className="rounded-[16px] border border-[color:var(--ink-200)] bg-white p-4 space-y-2">
+    <div className="rounded-[var(--r-surface)] border border-[color:var(--ink-200)] bg-white p-4 space-y-2">
       <div className="flex items-center gap-2">
         <Beaker size={14} style={{ color: 'var(--brand-navy-900)' }} />
         <p className="tp-card text-[color:var(--surface-dark-900)]">{exp.title}</p>
@@ -503,7 +503,7 @@ function MessageTemplate({ template }) {
     setTimeout(() => setCopied(false), 2000);
   };
   return (
-    <div className="rounded-[16px] border border-[color:var(--ink-200)] bg-white p-4">
+    <div className="rounded-[var(--r-surface)] border border-[color:var(--ink-200)] bg-white p-4">
       <div className="flex items-center justify-between mb-2">
         <p className="tp-eyebrow text-[color:var(--ink-500)]">{template.label}</p>
         <button onClick={copy} className="tp-meta font-semibold transition" style={{ color: 'var(--brand-navy-900)' }}>
@@ -590,7 +590,7 @@ function ContactSuggestionCard({ suggestion, pathName, experimentId, onSaved, on
           onSaved={(contact) => { setShowSaveModal(false); setSaved(true); onSaved?.(contact); }}
         />
       )}
-      <div className={`rounded-[16px] border p-4 space-y-3 transition ${saved ? 'border-green-200 bg-green-50' : 'border-[color:var(--ink-200)] bg-white'}`}>
+      <div className={`rounded-[var(--r-surface)] border p-4 space-y-3 transition ${saved ? 'border-green-200 bg-green-50' : 'border-[color:var(--ink-200)] bg-white'}`}>
         <div className="flex items-start justify-between gap-2">
           <div className="flex-1 min-w-0">
             {isArchetype ? (
@@ -713,14 +713,14 @@ function SaveContactConfirmModal({ suggestion, pathName, experimentId, experimen
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" style={{ background: 'rgba(5,8,22,0.6)' }}>
-      <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-[24px] bg-white p-6">
+      <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-[var(--r-surface)] bg-white p-6">
         <div className="flex items-center justify-between mb-4">
           <h3 className="tp-section text-[color:var(--surface-dark-900)]">Save to Outreach</h3>
           <button onClick={onClose}><X size={18} className="text-[color:var(--ink-500)]" /></button>
         </div>
 
         {isArchetype && (
-          <div className="mb-4 rounded-xl p-3" style={{ background: 'var(--warning-50)', border: '1px solid rgba(180,83,9,0.2)' }}>
+          <div className="mb-4 rounded-[var(--r-control)] p-3" style={{ background: 'var(--warning-50)', border: '1px solid rgba(180,83,9,0.2)' }}>
             <p className="tp-meta text-[color:var(--warning-700)] font-semibold">This is an archetype template. Fill in the actual contact details below before saving.</p>
           </div>
         )}
@@ -741,7 +741,7 @@ function SaveContactConfirmModal({ suggestion, pathName, experimentId, experimen
             <span className="tp-meta block mb-1.5 font-semibold text-[color:var(--ink-700)]">Reason for outreach</span>
             <textarea name="reason_for_contact" rows={2} value={form.reason_for_contact} onChange={ch} className={inputCls} />
           </label>
-          <div className="tp-meta rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] px-4 py-3">
+          <div className="tp-meta rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] px-4 py-3">
             <p className="font-semibold text-[color:var(--ink-500)] mb-0.5">Path</p>
             <p className="text-[color:var(--surface-dark-900)] font-bold">{pathName}</p>
             {linkedExp && <>
@@ -752,11 +752,11 @@ function SaveContactConfirmModal({ suggestion, pathName, experimentId, experimen
         </div>
 
         <div className="mt-5 flex gap-3">
-          <button onClick={onClose} className="tp-body flex-1 rounded-[10px] border border-[color:var(--ink-200)] py-3 font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)]">
+          <button onClick={onClose} className="tp-body flex-1 rounded-[var(--r-control)] border border-[color:var(--ink-200)] py-3 font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)]">
             Cancel
           </button>
           <button onClick={handleSave} disabled={saving || !form.name.trim()}
-            className="tp-body flex-1 flex items-center justify-center gap-2 rounded-[10px] py-3 font-semibold text-white disabled:opacity-60"
+            className="tp-body flex-1 flex items-center justify-center gap-2 rounded-[var(--r-control)] py-3 font-semibold text-white disabled:opacity-60"
             style={{ background: 'var(--brand-navy-900)' }}>
             {saving ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle size={14} />}
             {saving ? 'Saving…' : 'Confirm & Save'}
@@ -880,7 +880,7 @@ function ResultsStep({ plan, pathName, experimentId, experiments, onContactSaved
   return (
     <div className="space-y-4">
       {savedCount > 0 && (
-        <div className="tp-meta rounded-xl px-4 py-3 flex items-center gap-2 font-semibold text-green-700" style={{ background: 'var(--success-50)', border: '1px solid #BBF7D0' }}>
+        <div className="tp-meta rounded-[var(--r-control)] px-4 py-3 flex items-center gap-2 font-semibold text-green-700" style={{ background: 'var(--success-50)', border: '1px solid #BBF7D0' }}>
           <CheckCircle size={13} /> {savedCount} contact{savedCount !== 1 ? 's' : ''} saved to Outreach
           {missionCount > 0 && ` · ${missionCount} mission${missionCount !== 1 ? 's' : ''} created`}
         </div>
@@ -905,7 +905,7 @@ function ResultsStep({ plan, pathName, experimentId, experiments, onContactSaved
 
       <div className="space-y-3 max-h-[55vh] overflow-y-auto pr-1">
         {activeCount === 0 && (
-          <p className="tp-body rounded-xl px-4 py-3 text-[color:var(--ink-500)]"
+          <p className="tp-body rounded-[var(--r-control)] px-4 py-3 text-[color:var(--ink-500)]"
             style={{ background: 'var(--ink-50)', border: '1px solid var(--ink-200)' }}>
             This section came back empty. Close the plan and build it again to fill it in.
           </p>
@@ -939,7 +939,7 @@ function ResultsStep({ plan, pathName, experimentId, experiments, onContactSaved
       </div>
 
       <button onClick={onClose}
-        className="w-full rounded-[10px] border border-[color:var(--ink-200)] py-3 text-sm font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)]">
+        className="w-full rounded-[var(--r-control)] border border-[color:var(--ink-200)] py-3 text-sm font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)]">
         Done
       </button>
     </div>
@@ -1119,7 +1119,7 @@ ${PLAIN_PROSE_RULES}${correction}`,
     <div className="anim-overlay fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(5,8,22,0.55)' }}>
       <div
         data-modal-scroll
-        className={`anim-modal w-full max-h-[94vh] overflow-y-auto rounded-[24px] bg-white ${
+        className={`anim-modal w-full max-h-[94vh] overflow-y-auto rounded-[var(--r-surface)] bg-white ${
           isSurvey ? 'max-w-xl px-6 pb-0 pt-6 sm:px-8 sm:pt-8' : 'max-w-2xl p-6 sm:p-8'
         }`}
         style={{ boxShadow: '0 30px 80px rgba(5,8,22,0.28)' }}

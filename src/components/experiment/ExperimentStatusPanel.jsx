@@ -17,7 +17,7 @@ function Row({ Icon, label, value, to, cta }) {
         <p className="tp-meta mt-1" style={{ color: 'var(--text-muted)' }}>{value}</p>
       </div>
       {to && (
-        <Link to={to} className="tp-meta shrink-0 py-1 font-bold" style={{ color: 'var(--brand-navy-700)' }}>{cta} →</Link>
+        <Link to={to} className="touch-reach tp-meta shrink-0 py-1 font-bold" style={{ color: 'var(--brand-navy-700)' }}>{cta} →</Link>
       )}
     </div>
   );
@@ -27,7 +27,7 @@ export default function ExperimentStatusPanel({ proofs, reflections, cycle }) {
   const decision = cycle?.final_decision;
 
   return (
-    <section className="rounded-[16px] bg-white p-5" style={{ border: '1px solid var(--border-light)' }}>
+    <section className="rounded-[var(--r-surface)] bg-white p-5" style={{ border: '1px solid var(--border-light)' }}>
       <h3 className="tp-card mb-4" style={{ color: 'var(--text-primary)' }}>
         Evidence, reflection and decision
       </h3>

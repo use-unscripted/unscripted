@@ -54,7 +54,7 @@ export default function PathSwitcher({ paths = [], selectedId, onChange, showAll
   const dropdown = open && (
     <div
       ref={dropdownRef}
-      className="anim-scale-in w-72 rounded-[16px] border border-[color:var(--ink-200)] bg-white shadow-xl py-1.5 overflow-y-auto"
+      className="anim-scale-in w-72 rounded-[var(--r-surface)] border border-[color:var(--ink-200)] bg-white shadow-xl py-1.5 overflow-y-auto"
       style={{ ...dropdownStyle, maxHeight: '320px' }}
       onWheel={e => e.stopPropagation()}
     >
@@ -123,7 +123,7 @@ export default function PathSwitcher({ paths = [], selectedId, onChange, showAll
       <button
         ref={buttonRef}
         onClick={() => setOpen(v => !v)}
-        className="ui-press flex items-center gap-2 rounded-xl border bg-white px-3 py-2 text-sm font-semibold min-w-[180px] max-w-[280px]"
+        className="ui-press flex items-center gap-2 rounded-[var(--r-control)] border bg-white px-3 py-2 text-sm font-semibold min-w-[180px] max-w-[280px]"
         style={{ borderColor: 'var(--border-light)', color: 'var(--text-primary)' }}
         onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--brand-navy-700)'}
         onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border-light)'}

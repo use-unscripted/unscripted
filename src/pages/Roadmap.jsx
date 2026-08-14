@@ -50,7 +50,7 @@ export default function Roadmap() {
         description="Specific actions, sequenced around what matters now, not a list of everything you could do."
         action={
           <Link to="/calendar"
-            className="tp-body flex items-center gap-2 rounded-[10px] px-6 py-3.5 font-semibold text-white transition hover:-translate-y-px"
+            className="tp-body flex items-center gap-2 rounded-[var(--r-control)] px-6 py-3.5 font-semibold text-white transition hover:-translate-y-px"
             style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}>
             <CalendarDays size={16} /> Open this week
           </Link>
@@ -59,7 +59,7 @@ export default function Roadmap() {
 
       {/* Feasibility assessment */}
       {r.feasibility_assessment && (
-        <div className="mb-6 flex items-start gap-3 rounded-[20px] p-6" style={{ background: 'var(--surface-dark-700)', border: '1px solid rgba(31,58,95,0.30)' }}>
+        <div className="mb-6 flex items-start gap-3 rounded-[var(--r-surface)] p-6" style={{ background: 'var(--surface-dark-700)', border: '1px solid rgba(31,58,95,0.30)' }}>
           <AlertTriangle size={18} className="shrink-0 mt-0.5" style={{ color: 'var(--brand-gold-500)' }} />
           <div>
             {/* Gold, not navy: navy-900 on this surface measures 1.63:1. */}
@@ -70,7 +70,7 @@ export default function Roadmap() {
       )}
 
       {r.goals_to_defer?.length > 0 && (
-        <div className="mb-6 rounded-[16px] p-4" style={{ background: 'var(--warning-50)', border: '1px solid rgba(180,83,9,0.25)' }}>
+        <div className="mb-6 rounded-[var(--r-surface)] p-4" style={{ background: 'var(--warning-50)', border: '1px solid rgba(180,83,9,0.25)' }}>
           <p className="tp-eyebrow text-[color:var(--warning-700)] mb-2">Goals to defer for now</p>
           <ul className="space-y-1">{r.goals_to_defer.map((g, i) => <li key={i} className="tp-body text-[color:var(--ink-700)]">· {g}</li>)}</ul>
         </div>

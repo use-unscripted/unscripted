@@ -124,7 +124,7 @@ export default function OnboardingReview() {
         </div>
 
         {/* Summary card */}
-        <div className="mb-6 rounded-[24px] border border-[color:var(--ink-200)] bg-white p-7 shadow-sm">
+        <div className="mb-6 rounded-[var(--r-surface)] border border-[color:var(--ink-200)] bg-white p-7 shadow-sm">
           <p className="tp-eyebrow mb-5" style={{ color: 'var(--brand-navy-700)' }}>Your intake summary</p>
 
           <div className="space-y-4">
@@ -181,7 +181,7 @@ export default function OnboardingReview() {
             context is offered here instead, once a student can see what it is
             for, and it stays editable in Settings afterwards. */}
         {!hasNotes && !editingNotes && (
-          <div className="mb-6 rounded-[24px] border border-dashed border-[color:var(--ink-200)] bg-white p-6 shadow-sm">
+          <div className="mb-6 rounded-[var(--r-surface)] border border-dashed border-[color:var(--ink-200)] bg-white p-6 shadow-sm">
             <div className="flex items-start gap-3">
               <FileText size={16} className="mt-0.5 shrink-0" style={{ color: 'var(--brand-navy-900)' }} />
               <div className="min-w-0 flex-1">
@@ -191,7 +191,7 @@ export default function OnboardingReview() {
                   heavily. Entirely optional. You can add it now or any time from your settings.
                 </p>
                 <button onClick={() => setEditingNotes(true)}
-                  className="tp-meta mt-3 rounded-[10px] border border-[color:var(--ink-200)] px-4 py-2 font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)]">
+                  className="tp-meta mt-3 rounded-[var(--r-control)] border border-[color:var(--ink-200)] px-4 py-2 font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)]">
                   Add personal context
                 </button>
               </div>
@@ -201,7 +201,7 @@ export default function OnboardingReview() {
 
         {/* Personal notes summary */}
         {(hasNotes || editingNotes) && !editingNotes && (
-          <div className="mb-6 rounded-[24px] border border-[color:var(--ink-200)] bg-white p-7 shadow-sm">
+          <div className="mb-6 rounded-[var(--r-surface)] border border-[color:var(--ink-200)] bg-white p-7 shadow-sm">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <FileText size={16} style={{ color: 'var(--brand-navy-900)' }} />
@@ -254,7 +254,7 @@ export default function OnboardingReview() {
         )}
 
         {editingNotes && (
-          <div className="mb-6 rounded-[24px] border border-[color:var(--brand-navy-900)] bg-white p-7 shadow-sm">
+          <div className="mb-6 rounded-[var(--r-surface)] border border-[color:var(--brand-navy-900)] bg-white p-7 shadow-sm">
             <p className="tp-eyebrow mb-4" style={{ color: 'var(--brand-navy-700)' }}>Edit personal context</p>
             {[
               { name: 'personal_notes', label: 'Personal notes and context', maxLength: 3000 },
@@ -267,16 +267,16 @@ export default function OnboardingReview() {
                 {f.label}
                 <textarea rows={3} value={notesForm[f.name]} maxLength={f.maxLength}
                   onChange={e => setNotesForm(n => ({ ...n, [f.name]: e.target.value }))}
-                  className="mt-1 w-full rounded-xl border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] px-4 py-3 text-base md:text-sm font-normal text-[color:var(--surface-dark-900)] placeholder-[color:var(--ink-400)] outline-none focus:border-[color:var(--brand-navy-900)]" />
+                  className="mt-1 w-full rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] px-4 py-3 text-base md:text-sm font-normal text-[color:var(--surface-dark-900)] placeholder-[color:var(--ink-400)] outline-none focus:border-[color:var(--brand-navy-900)]" />
               </label>
             ))}
             <div className="flex gap-3">
               <button onClick={() => setEditingNotes(false)}
-                className="flex-1 rounded-[10px] border border-[color:var(--ink-200)] py-2.5 text-sm font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)]">
+                className="flex-1 rounded-[var(--r-control)] border border-[color:var(--ink-200)] py-2.5 text-sm font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)]">
                 Cancel
               </button>
               <button onClick={saveNotes}
-                className="flex-1 flex items-center justify-center gap-2 rounded-[10px] py-2.5 text-sm font-semibold text-white"
+                className="flex-1 flex items-center justify-center gap-2 rounded-[var(--r-control)] py-2.5 text-sm font-semibold text-white"
                 style={{ background: 'var(--brand-navy-900)' }}>
                 <Check size={14} /> Save notes
               </button>
@@ -285,12 +285,12 @@ export default function OnboardingReview() {
         )}
 
         {/* CTA */}
-        <div className="rounded-[24px] border border-[color:var(--ink-200)] bg-white p-7 shadow-sm text-center">
+        <div className="rounded-[var(--r-surface)] border border-[color:var(--ink-200)] bg-white p-7 shadow-sm text-center">
           <p className="tp-body mx-auto text-[color:var(--ink-500)] mb-6">
             Create a free account to generate your three tailored paths, save your Mission Guides, and track what you learn.
           </p>
           <button onClick={handleCreateAccount}
-            className="w-full flex items-center justify-center gap-2 rounded-[10px] py-3.5 text-sm font-semibold text-white transition hover:-translate-y-px"
+            className="w-full flex items-center justify-center gap-2 rounded-[var(--r-control)] py-3.5 text-sm font-semibold text-white transition hover:-translate-y-px"
             style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}>
             Create My Free Account <ArrowRight size={16} />
           </button>

@@ -1,4 +1,6 @@
+import { lazy, Suspense } from 'react';
 import { Toaster } from "@/components/ui/toaster"
+import { ThemeProvider } from 'next-themes'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
 import { BrowserRouter as Router, Route, Routes, useLocation } from 'react-router-dom';
@@ -11,55 +13,63 @@ import { Navigate } from 'react-router-dom';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import AppErrorBoundary from '@/components/AppErrorBoundary';
 
+/* Pages are split out of the initial bundle. On a phone the WebView has to
+   download, parse and compile everything in the entry chunk before it can paint
+   anything, and the entry chunk used to contain every screen in the product —
+   the resume builder's PDF work, the landing page's three.js backdrop, the admin
+   console — to render a login form. Each screen is now its own chunk, fetched
+   when its route is first visited. */
+
 // Pages
-import Landing from '@/pages/Landing';
-import Login from '@/pages/Login';
-import Register from '@/pages/Register';
-import ForgotPassword from '@/pages/ForgotPassword';
-import ResetPassword from '@/pages/ResetPassword';
-import Onboarding from '@/pages/Onboarding';
-import GoalIntake from '@/pages/GoalIntake';
-import Generating from '@/pages/Generating';
-import AmbitionProfile from '@/pages/AmbitionProfile';
-import PostAuth from '@/pages/PostAuth';
-import OnboardingReview from '@/pages/OnboardingReview';
-import ClaimOnboarding from '@/pages/ClaimOnboarding';
+const Landing = lazy(() => import('@/pages/Landing'));
+const Login = lazy(() => import('@/pages/Login'));
+const Register = lazy(() => import('@/pages/Register'));
+const ForgotPassword = lazy(() => import('@/pages/ForgotPassword'));
+const ResetPassword = lazy(() => import('@/pages/ResetPassword'));
+const Onboarding = lazy(() => import('@/pages/Onboarding'));
+const GoalIntake = lazy(() => import('@/pages/GoalIntake'));
+const Generating = lazy(() => import('@/pages/Generating'));
+const AmbitionProfile = lazy(() => import('@/pages/AmbitionProfile'));
+const PostAuth = lazy(() => import('@/pages/PostAuth'));
+const OnboardingReview = lazy(() => import('@/pages/OnboardingReview'));
+const ClaimOnboarding = lazy(() => import('@/pages/ClaimOnboarding'));
 
 // New onboarding flow pages
-import PathsIntake from '@/pages/PathsIntake';
-import PathResults from '@/pages/PathResults';
+const PathsIntake = lazy(() => import('@/pages/PathsIntake'));
+const PathResults = lazy(() => import('@/pages/PathResults'));
 
 // Public company + policy pages
-import About from '@/pages/About';
-import Contact from '@/pages/Contact';
-import Privacy from '@/pages/Privacy';
-import Terms from '@/pages/Terms';
+const About = lazy(() => import('@/pages/About'));
+const Contact = lazy(() => import('@/pages/Contact'));
+const Privacy = lazy(() => import('@/pages/Privacy'));
+const Terms = lazy(() => import('@/pages/Terms'));
 
 // App shell pages
-import AppShell from '@/components/AppShell';
-import MyJourney from '@/pages/MyJourney';
-import Evidence from '@/pages/Evidence';
-import CampusEventsPage from '@/pages/CampusEventsPage';
-import ExperimentSetup from '@/pages/ExperimentSetup';
-import Roadmap from '@/pages/Roadmap';
-import WeeklyCalendar from '@/pages/WeeklyCalendar';
-import SavedRoadmaps from '@/pages/SavedRoadmaps';
-import Settings from '@/pages/Settings';
-import BlueprintLibrary from '@/pages/BlueprintLibrary';
-import PathComparison from '@/pages/PathComparison';
-import ExperimentsPage from '@/pages/ExperimentsPage';
-import ActiveExperiment from '@/pages/ActiveExperiment';
-import ExperimentReflection from '@/pages/ExperimentReflection';
-import ResourceHub from '@/pages/ResourceHub';
-import CreatorLibrary from '@/pages/CreatorLibrary';
-import GoalsPage from '@/pages/GoalsPage';
-import ResumeBuilder from '@/pages/ResumeBuilder';
-import RecentlyDeleted from '@/pages/RecentlyDeleted';
-import GuideDetailPage from '@/pages/GuideDetailPage';
-import PilotDashboard from '@/pages/PilotDashboard';
-import AnswerNudge from '@/pages/AnswerNudge';
-import AdminCampusFeeds from '@/pages/AdminCampusFeeds';
-import AdminAiFailures from '@/pages/AdminAiFailures';
+const AppShell = lazy(() => import('@/components/AppShell'));
+const MyJourney = lazy(() => import('@/pages/MyJourney'));
+const Evidence = lazy(() => import('@/pages/Evidence'));
+const CareerEvidenceProfile = lazy(() => import('@/pages/CareerEvidenceProfile'));
+const CampusEventsPage = lazy(() => import('@/pages/CampusEventsPage'));
+const ExperimentSetup = lazy(() => import('@/pages/ExperimentSetup'));
+const CareerMomentPage = lazy(() => import('@/pages/CareerMomentPage'));
+const Roadmap = lazy(() => import('@/pages/Roadmap'));
+const WeeklyCalendar = lazy(() => import('@/pages/WeeklyCalendar'));
+const SavedRoadmaps = lazy(() => import('@/pages/SavedRoadmaps'));
+const Settings = lazy(() => import('@/pages/Settings'));
+const BlueprintLibrary = lazy(() => import('@/pages/BlueprintLibrary'));
+const PathComparison = lazy(() => import('@/pages/PathComparison'));
+const ExperimentsPage = lazy(() => import('@/pages/ExperimentsPage'));
+const ActiveExperiment = lazy(() => import('@/pages/ActiveExperiment'));
+const ExperimentReflection = lazy(() => import('@/pages/ExperimentReflection'));
+const ResourceHub = lazy(() => import('@/pages/ResourceHub'));
+const CreatorLibrary = lazy(() => import('@/pages/CreatorLibrary'));
+const GoalsPage = lazy(() => import('@/pages/GoalsPage'));
+const ResumeBuilder = lazy(() => import('@/pages/ResumeBuilder'));
+const RecentlyDeleted = lazy(() => import('@/pages/RecentlyDeleted'));
+const GuideDetailPage = lazy(() => import('@/pages/GuideDetailPage'));
+const AnswerNudge = lazy(() => import('@/pages/AnswerNudge'));
+const AdminCampusFeeds = lazy(() => import('@/pages/AdminCampusFeeds'));
+const AdminAiFailures = lazy(() => import('@/pages/AdminAiFailures'));
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError } = useAuth();
@@ -82,6 +92,14 @@ const AuthenticatedApp = () => {
   if (authError?.type === 'user_not_registered') return <UserNotRegisteredError />;
 
   return (
+    // The wait while a route's chunk arrives is the same wait as the auth check
+    // above, so it gets the same frame: the shell on a signed-in destination,
+    // the plain spinner on a public page.
+    <Suspense fallback={isShellRoute(pathname) ? <AppShellSkeleton /> : (
+      <div className="fixed inset-0 flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-[color:var(--ink-200)] border-t-[color:var(--brand-navy-900)] rounded-full animate-spin"></div>
+      </div>
+    )}>
     <Routes>
       <Route path="/" element={<Landing />} />
       <Route path="/login" element={<Login />} />
@@ -117,6 +135,9 @@ const AuthenticatedApp = () => {
           {/* My Journey — the default authenticated destination */}
           <Route path="/journey" element={<MyJourney />} />
           <Route path="/evidence" element={<Evidence />} />
+          {/* The Career Evidence Profile. Private to the student; also reachable
+              as a tab inside Evidence. */}
+          <Route path="/career-profile" element={<CareerEvidenceProfile />} />
           {/* A deep screen, reached from My Journey rather than competing with it
               in the nav — the same rule paths, missions and the week follow. */}
           <Route path="/campus" element={<CampusEventsPage />} />
@@ -128,6 +149,8 @@ const AuthenticatedApp = () => {
           <Route path="/settings" element={<Settings />} />
           <Route path="/blueprints" element={<BlueprintLibrary />} />
           <Route path="/paths" element={<PathComparison />} />
+          {/* The default, short Experiment: one Career Moment, 2–7 minutes. */}
+          <Route path="/moment" element={<CareerMomentPage />} />
           <Route path="/experiment" element={<ActiveExperiment />} />
           <Route path="/reflect" element={<ExperimentReflection />} />
           <Route path="/experiments" element={<ExperimentsPage />} />
@@ -141,8 +164,6 @@ const AuthenticatedApp = () => {
           <Route path="/resume" element={<ResumeBuilder />} />
           <Route path="/recently-deleted" element={<RecentlyDeleted />} />
           <Route path="/guide" element={<GuideDetailPage />} />
-          {/* Admin-only aggregate pilot reporting; the page itself re-checks the role. */}
-          <Route path="/pilot" element={<PilotDashboard />} />
           {/* Team-only. The page checks the role, and so does the function behind it. */}
           <Route path="/admin/campus-feeds" element={<AdminCampusFeeds />} />
           {/* Team-only. The page checks the role, and so does the entity's RLS. */}
@@ -152,6 +173,7 @@ const AuthenticatedApp = () => {
       </Route>
       <Route path="*" element={<PageNotFound />} />
     </Routes>
+    </Suspense>
   );
 };
 
@@ -160,6 +182,10 @@ function App() {
     // Outermost on purpose. A throw anywhere below it lands on a page with a
     // message and a way out, instead of unmounting the tree to a white screen.
     <AppErrorBoundary>
+      {/* Puts the .dark class on <html> so the dark token block in index.css is
+          what decides the palette. attribute="class" matches Tailwind's
+          darkMode: ["class"]. */}
+      <ThemeProvider attribute="class" enableSystem defaultTheme="light" disableTransitionOnChange>
       <AuthProvider>
         <QueryClientProvider client={queryClientInstance}>
           <Router>
@@ -169,6 +195,7 @@ function App() {
           <Toaster />
         </QueryClientProvider>
       </AuthProvider>
+      </ThemeProvider>
     </AppErrorBoundary>
   )
 }

@@ -64,7 +64,7 @@ export default function CreatorLibrary() {
     return (
       <main className="app-page">
         <button onClick={() => setSelected(null)} className="tp-body mb-7 font-semibold transition hover:opacity-80" style={{ color: 'var(--brand-navy-900)' }}>← Back to profiles</button>
-        <div className="rounded-[24px] border border-[color:var(--ink-200)] bg-white p-7 sm:p-10">
+        <div className="rounded-[var(--r-surface)] border border-[color:var(--ink-200)] bg-white p-7 sm:p-10">
           <div className="flex items-start justify-between gap-4 flex-wrap">
             <div>
               <h1 className="tp-page text-[color:var(--surface-dark-900)]">{p.name}</h1>
@@ -110,7 +110,7 @@ export default function CreatorLibrary() {
               </div>
             )}
             {p.student_takeaways && (
-              <div className="rounded-[16px] p-5" style={{ background: 'var(--ink-100)', border: '1px solid rgba(31,58,95,0.15)' }}>
+              <div className="rounded-[var(--r-surface)] p-5" style={{ background: 'var(--ink-100)', border: '1px solid rgba(31,58,95,0.15)' }}>
                 <h2 className="tp-section mb-2.5" style={{ color: 'var(--brand-navy-900)' }}>What you can take away</h2>
                 <p className="tp-prose text-[color:var(--ink-700)]">{p.student_takeaways}</p>
               </div>
@@ -153,14 +153,14 @@ export default function CreatorLibrary() {
       {loading ? (
         <SkGrid count={3} h={200} cols={3} r={20} />
       ) : filtered.length === 0 ? (
-        <div className="tp-body rounded-[24px] border border-dashed border-[color:var(--ink-200)] px-8 py-14 text-center text-[color:var(--ink-500)]">
+        <div className="tp-body rounded-[var(--r-surface)] border border-dashed border-[color:var(--ink-200)] px-8 py-14 text-center text-[color:var(--ink-500)]">
           No profiles in this category yet. More are being added regularly.
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map((p, i) => (
             <button key={p.id || i} onClick={() => setSelected(p)}
-              className="rounded-[20px] border border-[color:var(--ink-200)] bg-white p-5 text-left transition hover:shadow-md hover:border-[rgba(31,58,95,0.25)] hover:-translate-y-0.5">
+              className="rounded-[var(--r-surface)] border border-[color:var(--ink-200)] bg-white p-5 text-left transition hover:shadow-md hover:border-[rgba(31,58,95,0.25)] hover:-translate-y-0.5">
               <div className="mb-3 flex flex-wrap gap-1.5">
                 {p.category?.slice(0, 2).map((c, ci) => (
                   <span key={ci} className="tp-meta rounded-full px-2.5 py-0.5 font-semibold" style={{ background: 'var(--ink-100)', color: 'var(--brand-navy-900)' }}>{c}</span>
@@ -176,7 +176,7 @@ export default function CreatorLibrary() {
       )}
       </div>
 
-      <div className="mt-10 rounded-[20px] p-5" style={{ background: 'var(--ink-100)' }}>
+      <div className="mt-10 rounded-[var(--r-surface)] p-5" style={{ background: 'var(--ink-100)' }}>
         <p className="tp-eyebrow text-[color:var(--ink-500)] mb-2">About these profiles</p>
         <p className="tp-prose text-[color:var(--ink-700)]">All profiles use publicly available information. Unscripted does not scrape protected social-media content, fabricate histories, or claim private information. Profiles are reviewed periodically for accuracy. Dates shown indicate last review.</p>
       </div>
