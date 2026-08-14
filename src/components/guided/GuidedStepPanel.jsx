@@ -11,9 +11,11 @@ import StepArtifact from '@/components/experiments/StepArtifact';
 import CampusEventCard from '@/components/experiments/CampusEventCard';
 import MissionOutreachPanel from '@/components/experiment/MissionOutreachPanel';
 import StepDisclosure from '@/components/guided/StepDisclosure';
+import StepUncertaintyNote from '@/components/guided/StepUncertaintyNote';
 import StepEvidencePanel from '@/components/guided/StepEvidencePanel';
 import StepExtraEvidence from '@/components/guided/StepExtraEvidence';
 import { isOutreachStep, needsEvidence } from '@/lib/guide-progress';
+import { campusRelevance } from '@/lib/experiment-types';
 
 /** First sentence is the purpose; the rest is detail the student can open. */
 function split(text) {
@@ -70,9 +72,17 @@ export default function GuidedStepPanel({
         <p className="tp-meta mt-1" style={{ color: 'var(--text-muted)' }} role="status">Rewording this step…</p>
       )}
 
+      {/* Each step says which uncertainty it is here to answer, and that we are
+          measuring the reaction rather than the performance. */}
+      <StepUncertaintyNote experiment={experiment} />
+
       {step.campus_event && (
         <div className="mt-4">
-          <CampusEventCard event={step.campus_event} college={profile?.college} />
+          <CampusEventCard
+            event={step.campus_event}
+            college={profile?.college}
+            relevance={campusRelevance(experiment)}
+          />
         </div>
       )}
 

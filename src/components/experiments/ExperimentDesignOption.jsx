@@ -1,4 +1,5 @@
 import { DIFFICULTY_LABELS } from '@/lib/experiment-design';
+import { TYPE_BY_ID, effortLabel } from '@/lib/experiment-types';
 
 /**
  * One designed experiment, as offered in the setup picker. Leads with the
@@ -17,8 +18,14 @@ export default function ExperimentDesignOption({ design, selected, onSelect }) {
           {selected && <div className="h-2.5 w-2.5 rounded-full" style={{ background: 'var(--brand-navy-900)' }} />}
         </div>
         <div className="min-w-0">
-          {design.unresolved_question && (
-            <p className="tp-eyebrow mb-1" style={{ color: 'var(--brand-navy-700)' }}>Answers: {design.unresolved_question}</p>
+          {TYPE_BY_ID.get(design.experiment_type) && (
+            <p className="tp-meta mb-1 inline-block rounded-full px-2 py-0.5 font-bold"
+              style={{ background: 'var(--ink-100)', color: 'var(--brand-navy-700)' }}>
+              {TYPE_BY_ID.get(design.experiment_type).label}
+            </p>
+          )}
+          {(design.test_question || design.unresolved_question) && (
+            <p className="tp-eyebrow mb-1" style={{ color: 'var(--brand-navy-700)' }}>Answers: {design.test_question || design.unresolved_question}</p>
           )}
           <p className="tp-card text-[color:var(--surface-dark-900)]">{design.title}</p>
           {design.realistic_scenario && (
@@ -32,7 +39,7 @@ export default function ExperimentDesignOption({ design, selected, onSelect }) {
             </div>
           )}
           <p className="tp-meta mt-2 text-[color:var(--ink-400)]">
-            ~{design.estimated_hours}h
+            {effortLabel(design.effort) || `~${design.estimated_hours}h`}
             {design.difficulty_level ? ` · ${DIFFICULTY_LABELS[design.difficulty_level]}` : ''}
             {design.deliverable ? ` · Deliverable: ${design.deliverable}` : ''}
           </p>

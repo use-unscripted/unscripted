@@ -11,6 +11,8 @@ import { Sk, SkCards } from '@/components/PageSkeleton';
 import AddToCalendarModal from '@/components/calendar/AddToCalendarModal';
 import ExperimentDesignOption from '@/components/experiments/ExperimentDesignOption';
 import UncertaintyPicker from '@/components/experiments/UncertaintyPicker';
+import BiggestUnknownCard from '@/components/experiments/BiggestUnknownCard';
+import { testBrief, evidenceRequirementFallback } from '@/lib/experiment-types';
 import { designExperiments } from '@/lib/experiment-design';
 import { deriveHypothesis } from '@/lib/career-hypothesis';
 import {
@@ -150,7 +152,7 @@ function getExperimentOptions(pathName) {
 const STEPS = ['What to Test', 'Select Experiment', 'Confirm Details', 'Build Experiment', 'Experiment Created'];
 
 // ─── Step 1: Path context + experiment picker ────────────────────────────────
-function StepPick({ rec, options, selected, onSelect, onCustom, onNext, designing, focus, onChangeFocus }) {
+function StepPick({ rec, options, selected, onSelect, onCustom, onNext, designing, focus, onChangeFocus, brief, onTestRecommended }) {
   return (
     <div className="space-y-6">
       {/* Path context card */}
@@ -195,6 +197,9 @@ function StepPick({ rec, options, selected, onSelect, onCustom, onNext, designin
           </button>
         </div>
       )}
+
+      {/* Selection, framed as the uncertainty rather than the career. */}
+      <BiggestUnknownCard brief={brief} onTest={onTestRecommended} busy={designing} />
 
       {/* The default: a few minutes of the actual work. The long simulations
           below stay available as Deep Dives. */}
@@ -545,6 +550,23 @@ export default function ExperimentSetup() {
   };
 
   const focus = variables.find(v => v.variable === focusId) || null;
+  // The biggest current unknown, the test recommended for it, and the effort it
+  // takes. Derived from the uncertainty the student chose, never invented.
+  const brief = focus
+    ? testBrief({ path: rec, careerName: rec?.path_name, target: { id: focus.variable, label: focus.label, question: focus.question } })
+    : null;
+
+  /**
+   * "Test This" runs the recommended kind of test: the designed option matching
+   * the recommended type when one came back, otherwise the first design.
+   */
+  const handleTestRecommended = async () => {
+    const designed = options.filter(o => o.realistic_scenario || o.test_question);
+    const match = designed.find(o => o.experiment_type === brief?.experiment_type) || designed[0];
+    if (!match) return;
+    setSelectedIndex(options.indexOf(match));
+    await handleConfirmPickWith(match);
+  };
 
   const handleConfirmFocus = () => {
     setSelectedIndex(null);
@@ -557,18 +579,32 @@ export default function ExperimentSetup() {
     setSelectedIndex(idx);
   };
 
-  const handleConfirmPick = async () => {
-    if (selectedIndex === null) return;
-    const opt = options[selectedIndex];
+  const handleConfirmPickWith = async (opt) => {
     const { type, ...designFields } = opt;
     await proceedToGenerate({
       ...designFields,
       experiment_type: opt.experiment_type || type,
+      // Every experiment records the uncertainty it tests and the decision
+      // dimensions that uncertainty moves, whichever option was chosen.
+      test_question: opt.test_question || opt.unresolved_question || brief?.biggest_unknown || '',
+      why_this_test_matters: opt.why_this_test_matters || brief?.why_it_matters || '',
+      uncertainty_ids: opt.uncertainty_ids?.length ? opt.uncertainty_ids : (focus?.variable ? [focus.variable] : []),
+      uncertainty_label: opt.uncertainty_label || focus?.label || '',
+      decision_dimension_ids: opt.decision_dimension_ids?.length ? opt.decision_dimension_ids : (brief?.decision_dimension_ids || []),
+      effort: opt.effort || brief?.effort || undefined,
+      evidence_requirements: opt.evidence_requirements?.length
+        ? opt.evidence_requirements
+        : [evidenceRequirementFallback({ test_question: opt.test_question || brief?.biggest_unknown })],
       path_name: rec.path_name,
       career_name: opt.career_name || rec.path_name,
       career_hypothesis_id: rec.id || '',
       path_recommendation_id: rec.id || '',
     });
+  };
+
+  const handleConfirmPick = async () => {
+    if (selectedIndex === null) return;
+    await handleConfirmPickWith(options[selectedIndex]);
   };
 
   const handleConfirmCustom = async () => {
@@ -630,6 +666,7 @@ export default function ExperimentSetup() {
       saved = await base44.entities.Experiments.create({
         ...links,
         ...experimentData,
+        career_cycle_id: links.cycle_id || undefined,
         path_id: rec.id || links.path_id,
         experiment_id: undefined,
         status: 'draft',
@@ -666,6 +703,11 @@ OBJECTIVE: ${experimentData.objective}
 DELIVERABLE: ${experimentData.deliverable}
 ${experimentData.unresolved_question ? `THE QUESTION THIS MUST ANSWER: ${experimentData.unresolved_question}` : ''}
 ${experimentData.realistic_scenario ? `THE SCENARIO THE STUDENT IS WORKING FROM: ${experimentData.realistic_scenario}` : ''}
+
+${experimentData.test_question ? `THE UNCERTAINTY THIS EXPERIMENT EXISTS TO REDUCE: ${experimentData.test_question}
+Every step must move that question forward. Missions exist to create decision evidence, never to fill time: between them they should have the student DOING, OBSERVING, SPEAKING and PRODUCING wherever those make sense for this career. Add no step that does not help answer the question above.
+If a step asks the student to contact a professional, the conversation must test that same uncertainty: say what to ask about their real week, the hardest stretches and the tradeoffs, rather than "talk to someone in the field".
+Remind the student in at least one step that we are testing whether this type of work is energizing, not whether they can perform it perfectly.` : ''}
 
 The guide must be specific to "${experimentData.path_name}", not generic networking advice. Include:
 1. Mission objective (1 sentence)
@@ -886,6 +928,8 @@ ${PLAIN_PROSE_RULES}${correction}`,
               designing={designing}
               focus={focus}
               onChangeFocus={() => setStep('uncertainty')}
+              brief={brief}
+              onTestRecommended={handleTestRecommended}
             />
           )}
           {step === 'custom' && (

@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo, useCallback, useRef } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { Plus, Star, Pencil, Pause, Play, Archive, ArchiveRestore, ChevronDown, ChevronUp, Clock, CheckCircle2, History, ArrowRight, RotateCcw, SlidersHorizontal, X, Users, FlaskConical } from 'lucide-react';
 import PageHeader from '@/components/PageHeader';
@@ -187,11 +187,11 @@ function PathCard({ path, experiments, missions, proof, contacts, reflections, p
         <div className="mt-4 flex flex-wrap gap-2">
           {/* The one primary action. Choosing a career is not what happens here;
               testing one is. */}
-          <a href={`/experiments/new?pathId=${encodeURIComponent(path.id)}&pathName=${encodeURIComponent(path.path_name)}`}
+          <Link to={`/experiments/new?pathId=${encodeURIComponent(path.id)}&pathName=${encodeURIComponent(path.path_name)}`}
             className="tp-meta touch-target flex items-center gap-1.5 rounded-[var(--r-control)] px-4 py-2 font-semibold text-white"
             style={{ background: 'var(--brand-navy-900)', boxShadow: '0 6px 18px rgba(31,58,95,0.22)' }}>
             <FlaskConical size={12} /> Test This Hypothesis
-          </a>
+          </Link>
           <button onClick={onBuildOutreachPlan}
             className="tp-meta touch-target flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-semibold transition"
             style={{ background: 'var(--background-tertiary)', color: 'var(--brand-navy-700)', border: '1px solid var(--border-light)' }}>
@@ -254,6 +254,7 @@ function PathCard({ path, experiments, missions, proof, contacts, reflections, p
             hypothesis={hyp}
             path={path}
             signals={signals}
+            profile={profile}
           />
 
           {isPausedOrCompleted && (
@@ -359,11 +360,11 @@ function PathCard({ path, experiments, missions, proof, contacts, reflections, p
             </div>
           </div>
 
-          <a href={`/experiments/new?pathId=${encodeURIComponent(path.id)}&pathName=${encodeURIComponent(path.path_name)}`}
+          <Link to={`/experiments/new?pathId=${encodeURIComponent(path.id)}&pathName=${encodeURIComponent(path.path_name)}`}
             className="inline-flex items-center gap-2 text-sm font-semibold transition hover:opacity-80"
             style={{ color: 'var(--brand-navy-900)' }}>
             Test This Hypothesis <ArrowRight size={15} />
-          </a>
+          </Link>
         </div>
       )}
     </div>

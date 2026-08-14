@@ -1,6 +1,7 @@
 import { FlaskConical, HelpCircle } from 'lucide-react';
 import { HYPOTHESIS_STATUS_LABELS, HYPOTHESIS_STATUS_MEANING, NOT_YET_ASSESSED } from '@/lib/career-hypothesis';
 import CareerUncertaintyMap from '@/components/paths/CareerUncertaintyMap';
+import HypothesisDimensions from '@/components/paths/HypothesisDimensions';
 import FitBreakdown from '@/components/paths/FitBreakdown';
 import DimensionProgress from '@/components/paths/DimensionProgress';
 import NextTestCard from '@/components/paths/NextTestCard';
@@ -44,7 +45,7 @@ function Bullets({ title, items, render }) {
  * The hypothesis view of a path: what we think, how sure we are, and what we
  * still need to learn. Deliberately written as an open question, not a verdict.
  */
-export default function CareerHypothesisPanel({ pathName, hypothesis, path, signals = [] }) {
+export default function CareerHypothesisPanel({ pathName, hypothesis, path, signals = [], profile = {} }) {
   const h = hypothesis;
   // Which dimensions of this career already have evidence, and which one is
   // worth testing next. Both read the uncertainty map that already exists.
@@ -203,6 +204,13 @@ export default function CareerHypothesisPanel({ pathName, hypothesis, path, sign
             </ul>
           </div>
         )}
+
+        <HypothesisDimensions
+          hypothesis={h}
+          careerName={pathName}
+          signals={signals}
+          profile={profile}
+        />
 
         <CareerUncertaintyMap map={h.uncertainty} />
       </div>

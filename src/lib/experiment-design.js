@@ -13,6 +13,11 @@ import { base44 } from '@/api/base44Client';
 import { unwrapLLM, PLAIN_PROSE_RULES } from '@/lib/llm';
 import { toText, toTextList } from '@/lib/ai-validation';
 import { generateValidated } from '@/lib/ai-generate';
+import {
+  EXPERIMENT_TYPES, TYPE_BY_ID, EFFORT_SCALE, normalizeEffort, effortHours,
+  smallestUsefulEffort, typeForUncertainty, dimensionsForUncertainty,
+  evidenceRequirementFallback,
+} from '@/lib/experiment-types';
 
 export const DIFFICULTY_LABELS = {
   introductory: 'Introductory',
@@ -23,14 +28,34 @@ export const DIFFICULTY_LABELS = {
 /** One design, coerced into the shape the Experiments record expects. */
 function repairDesign(raw, { unknown, path }) {
   const instructions = toTextList(raw?.instructions, { splitLines: true });
+  // The kind of test and the effort it takes are constrained vocabularies. A
+  // model answer outside them is replaced by the smallest useful test capable of
+  // reducing THIS uncertainty, never by a 30-day default.
+  const variable = unknown?.variable || '';
+  const type = TYPE_BY_ID.has(raw?.experiment_type) ? raw.experiment_type : typeForUncertainty(variable);
+  const effort = normalizeEffort(raw?.effort) || smallestUsefulEffort(type);
+  const testQuestion = toText(raw?.test_question) || toText(raw?.unresolved_question) || unknown?.question || '';
+  const evidenceRequirements = toTextList(raw?.evidence_requirements);
   return {
     title: toText(raw?.title),
     career_name: path.path_name,
     objective: toText(raw?.objective),
-    unresolved_question: toText(raw?.unresolved_question) || unknown?.question || '',
-    unresolved_question_id: unknown?.variable || '',
+    unresolved_question: testQuestion,
+    unresolved_question_id: variable,
+    // Every experiment names the uncertainty it exists to reduce, and the
+    // decision dimensions that uncertainty would move.
+    test_question: testQuestion,
+    why_this_test_matters: toText(raw?.why_this_test_matters)
+      || (unknown?.label ? `${path.path_name} asks for ${String(unknown.label).toLowerCase()} constantly, and we do not yet know how you respond to it.` : ''),
+    uncertainty_ids: variable ? [variable] : [],
+    uncertainty_label: unknown?.label || '',
+    decision_dimension_ids: dimensionsForUncertainty(variable),
+    effort,
+    evidence_requirements: evidenceRequirements.length
+      ? evidenceRequirements
+      : [evidenceRequirementFallback({ test_question: testQuestion })],
     work_characteristics_tested: toTextList(raw?.work_characteristics_tested),
-    work_characteristic_ids: unknown?.variable ? [unknown.variable] : [],
+    work_characteristic_ids: variable ? [variable] : [],
     realistic_scenario: toText(raw?.realistic_scenario),
     instructions,
     deliverable: toText(raw?.deliverable),
@@ -39,8 +64,8 @@ function repairDesign(raw, { unknown, path }) {
     // Internal. Never shown to the student in this wording.
     evidence_purpose: `This experiment exists to generate evidence about ${unknown?.label || 'this career\u2019s fit'} on ${path.path_name}.`,
     difficulty_level: DIFFICULTY_LABELS[raw?.difficulty_level] ? raw.difficulty_level : 'moderate',
-    estimated_hours: Number(raw?.estimated_hours) > 0 ? Number(raw.estimated_hours) : 4,
-    experiment_type: 'Realistic work simulation',
+    estimated_hours: effortHours(effort) || 1,
+    experiment_type: type,
     design_source: 'hypothesis_designed',
   };
 }
@@ -101,7 +126,12 @@ Design exactly ${unknowns.length} experiments. ${focus ? 'Every experiment must 
 ${asked}
 
 Rules:
-- Each experiment is a miniature version of ACTUAL work in this career, with a concrete scenario containing real details, numbers, constraints and competing pressures the student must reason through. Consulting: diagnose why a business is losing profitability. Product management: prioritize a roadmap when engineering, sales and design each want something different. Venture capital: decide whether a startup earns further diligence. Marketing: position a new product. Investment banking: review a simplified acquisition case. UX research: interpret mock interview feedback.
+- The experiment exists to reduce ONE uncertainty, not to represent the career. State it in "test_question", and in "why_this_test_matters" say why that unknown decides whether this career is worth more of their life.
+- Choose "experiment_type" from this list, picking the kind of test that can actually answer the question (a lifestyle or income unknown is answered by speaking to someone, not by producing a work sample):
+${EXPERIMENT_TYPES.map(t => `  ${t.id}: ${t.blurb}`).join('\n')}
+- Choose "effort" from this list, and choose the SMALLEST useful experiment capable of reducing this uncertainty. Most uncertainties do not need more than a few hours. Only use "1 week" or "multi-week" when nothing shorter could answer it: ${EFFORT_SCALE.map(e => e.id).join(', ')}.
+- "evidence_requirements" is 2 to 4 plain items answering: what evidence would help us update our view of this career?
+- Where the type is a work sample, decision simulation, research or creation test, the experiment is a miniature version of ACTUAL work in this career, with a concrete scenario containing real details, numbers, constraints and competing pressures the student must reason through. Consulting: diagnose why a business is losing profitability. Product management: prioritize a roadmap when engineering, sales and design each want something different. Venture capital: decide whether a startup earns further diligence. Marketing: position a new product. Investment banking: review a simplified acquisition case. UX research: interpret mock interview feedback.
 - NEVER a quiz, a personality test, or generic reading and reflection about the profession.
 - The scenario must be self-contained: invent the company, the numbers and the constraints so the student can start immediately.
 - Deliverable is something the student writes or builds in one sitting (a recommendation, a memo, a model, a plan).
@@ -124,6 +154,11 @@ ${PLAIN_PROSE_RULES}${correction}`,
                 title: { type: 'string' },
                 objective: { type: 'string' },
                 unresolved_question: { type: 'string' },
+                test_question: { type: 'string' },
+                why_this_test_matters: { type: 'string' },
+                experiment_type: { type: 'string' },
+                effort: { type: 'string' },
+                evidence_requirements: { type: 'array', items: { type: 'string' } },
                 realistic_scenario: { type: 'string' },
                 instructions: { type: 'array', items: { type: 'string' } },
                 deliverable: { type: 'string' },

@@ -1,0 +1,131 @@
+{
+  "name": "CareerDimensionEvidence",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string"
+    },
+    "dimension": {
+      "type": "string"
+    },
+    "dimension_label": {
+      "type": "string"
+    },
+    "current_evidence_level": {
+      "type": "string",
+      "enum": [
+        "unknown",
+        "weak",
+        "moderate",
+        "strong",
+        "conflicting"
+      ],
+      "default": "unknown"
+    },
+    "direction": {
+      "type": "string",
+      "enum": [
+        "draws_toward",
+        "draws_away",
+        "unclear",
+        "none"
+      ],
+      "default": "none"
+    },
+    "self_reported_preference": {
+      "type": "string"
+    },
+    "self_reported_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "behavioral_evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          },
+          "experiment_id": {
+            "type": "string"
+          },
+          "experiment_title": {
+            "type": "string"
+          },
+          "career_name": {
+            "type": "string"
+          },
+          "occurred_at": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "contradictory_evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          },
+          "experiment_id": {
+            "type": "string"
+          },
+          "experiment_title": {
+            "type": "string"
+          },
+          "career_name": {
+            "type": "string"
+          },
+          "occurred_at": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "careers_observed_in": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "confidence": {
+      "type": "number"
+    },
+    "evidence_count": {
+      "type": "number"
+    },
+    "statement": {
+      "type": "string"
+    },
+    "last_updated_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "dimension"
+  ],
+  "rls": {
+    "create": {
+      "created_by_id": "{{user.id}}"
+    },
+    "read": {
+      "created_by_id": "{{user.id}}"
+    },
+    "update": {
+      "created_by_id": "{{user.id}}"
+    },
+    "delete": {
+      "created_by_id": "{{user.id}}"
+    }
+  }
+}

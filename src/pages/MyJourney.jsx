@@ -20,6 +20,7 @@ import UncertaintyUpdateCard from '@/components/journey/UncertaintyUpdateCard';
 import NextBestExperimentPanel from '@/components/next-test/NextBestExperimentPanel';
 import SimEntryCard from '@/components/worksim/SimEntryCard';
 import JourneyEvidence from '@/components/journey/JourneyEvidence';
+import WhatWeAreLearning from '@/components/journey/WhatWeAreLearning';
 import CampusEventsPanel from '@/components/campus/CampusEventsPanel';
 import ContinuationGate from '@/components/journey/ContinuationGate';
 import { Sk } from '@/components/PageSkeleton';
@@ -247,6 +248,12 @@ export default function MyJourney() {
           record of what has been learned second. Each card inside reveals
           itself; see the note in that file for why it is not wrapped here. */}
       <JourneyEvidence />
+
+      {/* What the evidence says about the student themselves, rather than about
+          one career: known, suspected, unsettled, and still to test. Shared
+          across hypotheses, so a dimension tested once is not retested for its
+          own sake. Silent until there is something to say. */}
+      <WhatWeAreLearning />
 
       {/* The "no experiment yet" case is not listed here: the panel above is
           already showing that exact call to action, and two buttons pointing at

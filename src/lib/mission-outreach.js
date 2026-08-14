@@ -12,6 +12,7 @@
 import { base44 } from '@/api/base44Client';
 import { onceInFlight, linksForExperiment } from '@/lib/career-cycle';
 import { isDirectProfileUrl, peopleSearchUrl, storedStatusOf } from '@/lib/linkedin';
+import { outreachBrief } from '@/lib/experiment-types';
 
 const slug = (s) => String(s || '').trim().toLowerCase().replace(/\s+/g, '-').slice(0, 40);
 
@@ -57,7 +58,9 @@ export function saveMissionOutreach({ mission, experiment, path, contact }) {
         ? undefined
         : peopleSearchUrl([contact.name, contact.company, contact.archetype || contact.role].filter(Boolean).join(' ')),
       contact_type: contact.contact_type || 'informational_interview',
-      reason_for_contact: contact.purpose || mission?.outreach_purpose || undefined,
+      // A conversation tests a specific unknown, so the experiment's own test
+      // question is the reason when the mission does not name one.
+      reason_for_contact: contact.purpose || mission?.outreach_purpose || outreachBrief(experiment)?.purpose || undefined,
       suggested_message: contact.suggested_message || mission?.suggested_message || undefined,
       questions_to_ask: contact.questions_to_ask || mission?.questions_to_ask || undefined,
       response_status: storedStatusOf(contact.status || 'planned'),

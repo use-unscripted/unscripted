@@ -14,7 +14,7 @@ import {
  * from generated text. That is why the link out is always shown: the student
  * can check us against the source in one click, and should be able to.
  */
-export default function CampusEventCard({ event, college = '', compact = false }) {
+export default function CampusEventCard({ event, college = '', compact = false, relevance = null }) {
   if (!event) return null;
 
   const when = formatEventWhen(event);
@@ -50,6 +50,11 @@ export default function CampusEventCard({ event, college = '', compact = false }
 
       <div className={compact ? 'px-3 py-2.5' : 'px-3 py-3'}>
         <p className="tp-card text-[color:var(--surface-dark-900)]">{event.title}</p>
+
+        {/* Why this event is being suggested: the unknown it can help test. */}
+        {relevance && (
+          <p className="tp-meta mt-1.5 text-[color:var(--ink-500)]">{relevance}</p>
+        )}
 
         <dl className="tp-meta mt-2 space-y-1 text-[color:var(--ink-500)]">
           {when && (
