@@ -1,7 +1,7 @@
 /* ──────────────────────────────────────────────────────────────────────────
    WhatDoYouWant — the film moment in the hero.
 
-   A 2 second cut of Sean asking Will "What do you want to do?" It sits in
+   A 1.75 second cut of Sean asking Will "What do you want to do?" It sits in
    the fold next to the copy so the page opens on the question the product
    exists to answer, instead of only asserting it in the headline.
 
@@ -12,6 +12,17 @@
    blocks, which roll two lines at a time and are useless for this. A first
    pass trusted the cue block and landed five seconds late, on Sean listening
    rather than asking. If this ever needs recutting, read the word timings.
+
+   ⚠️ Do NOT put a fade to black on the ends. It was tried and it blinks twice
+   a cycle on a loop this short, which is what a viewer notices instead of the
+   line. The file instead carries a 0.25s crossfade wrapped around its own
+   loop point: the last quarter second is dissolved into the first, so the
+   final frame and the opening frame are the same image and the cycle has no
+   seam. Measured, the jump at the loop point is 1.5x an ordinary frame to
+   frame change, against 6.4x for a straight hard loop. That is why the clip
+   is 1.75s from a 2s cut. Re-encoding it without the crossfade brings the pop
+   back, so recut from the 2s source and redo the wrap rather than trimming
+   this file.
 
    ⚠️ RIGHTS: the footage is from Good Will Hunting (1997), Miramax. We do not
    hold a licence for it. This was added at Drew's direction on 2026-08-14
