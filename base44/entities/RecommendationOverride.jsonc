@@ -1,0 +1,64 @@
+{
+  "name": "RecommendationOverride",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string"
+    },
+    "dimension": {
+      "type": "string"
+    },
+    "dimension_label": {
+      "type": "string"
+    },
+    "test_question": {
+      "type": "string"
+    },
+    "blueprint_title": {
+      "type": "string"
+    },
+    "path_id": {
+      "type": "string"
+    },
+    "path_name": {
+      "type": "string"
+    },
+    "action": {
+      "type": "string",
+      "enum": [
+        "another_test",
+        "different_uncertainty",
+        "save_for_later",
+        "not_relevant",
+        "accepted"
+      ]
+    },
+    "note": {
+      "type": "string"
+    },
+    "learning_value_score": {
+      "type": "number"
+    },
+    "recorded_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "action"
+  ],
+  "rls": {
+    "create": {
+      "created_by_id": "{{user.id}}"
+    },
+    "read": {
+      "created_by_id": "{{user.id}}"
+    },
+    "update": {
+      "created_by_id": "{{user.id}}"
+    },
+    "delete": {
+      "created_by_id": "{{user.id}}"
+    }
+  }
+}

@@ -5,6 +5,7 @@ import DepthBadge from '@/components/experiments/DepthBadge';
 import { DEPTHS } from '@/lib/experiment-depth';
 import WhyThisMatters from '@/components/next-test/WhyThisMatters';
 import AlternativeTests from '@/components/next-test/AlternativeTests';
+import OverrideActions from '@/components/next-test/OverrideActions';
 
 /**
  * Recommended next test.
@@ -13,7 +14,7 @@ import AlternativeTests from '@/components/next-test/AlternativeTests';
  * and what it will tell us — then leaves the student free to do something else.
  * No scores, no talk of variables or information value.
  */
-export default function RecommendedNextTest({ recommendation }) {
+export default function RecommendedNextTest({ recommendation, onOverride, busy, exhausted }) {
   const [showWhy, setShowWhy] = useState(false);
   const [showOthers, setShowOthers] = useState(false);
   if (!recommendation) return null;
@@ -21,7 +22,7 @@ export default function RecommendedNextTest({ recommendation }) {
   const {
     title, why, tests, path_name, detail, alternatives, early,
     depth = 'quick_test', depth_reason, depth_meta, alternative_depth_meta,
-    quick_to, deep_to, start_to, unlock,
+    quick_to, deep_to, start_to, unlock, cross_career_note, smallest_useful,
   } = recommendation;
 
   const quickFirst = depth !== 'deep_dive';
@@ -58,6 +59,14 @@ export default function RecommendedNextTest({ recommendation }) {
         <p className="tp-body mt-2" style={{ color: 'var(--ink-700)' }}>{why}</p>
       </div>
 
+      {/* One answer that informs several directions beats three career-shaped
+          tests of the same unknown, so it is worth saying out loud. */}
+      {cross_career_note && (
+        <p className="tp-body mt-3 rounded-[var(--r-control)] px-3 py-2" style={{ background: 'var(--info-50)', color: 'var(--info-700)' }}>
+          {cross_career_note}
+        </p>
+      )}
+
       <div className="mt-4">
         <h3 className="tp-label" style={{ color: 'var(--ink-500)' }}>This will help us test</h3>
         <ul className="mt-2 flex flex-wrap gap-2">
@@ -71,6 +80,9 @@ export default function RecommendedNextTest({ recommendation }) {
         <DepthBadge depth={primary.meta.id} />
         <span className="tp-meta" style={{ color: 'var(--ink-400)' }}>{depth_reason}</span>
       </div>
+      {smallest_useful && (
+        <p className="tp-meta mt-1.5" style={{ color: 'var(--ink-400)' }}>{smallest_useful}</p>
+      )}
 
       {/* The optional upgrade in depth, once a run of short tests exists. Never
           a requirement: the short test stays right beside it. */}
@@ -114,6 +126,13 @@ export default function RecommendedNextTest({ recommendation }) {
 
       {showWhy && <WhyThisMatters detail={detail} />}
       {showOthers && <AlternativeTests alternatives={alternatives} />}
+
+      {onOverride && <OverrideActions onOverride={onOverride} busy={busy} />}
+      {exhausted && (
+        <p className="tp-meta mt-3" style={{ color: 'var(--ink-400)' }}>
+          That was the last open question we could put forward right now, so this one is still showing. Nothing you set aside has been lost.
+        </p>
+      )}
     </section>
   );
 }

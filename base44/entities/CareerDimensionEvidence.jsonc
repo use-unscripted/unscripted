@@ -35,7 +35,32 @@
     "self_reported_preference": {
       "type": "string"
     },
+    "self_report_source": {
+      "type": "string"
+    },
     "self_reported_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "behavioral_evidence_count": {
+      "type": "number"
+    },
+    "positive_evidence_count": {
+      "type": "number"
+    },
+    "negative_evidence_count": {
+      "type": "number"
+    },
+    "conflicting_evidence_count": {
+      "type": "number"
+    },
+    "current_interpretation": {
+      "type": "string"
+    },
+    "next_test_priority": {
+      "type": "number"
+    },
+    "last_tested_at": {
       "type": "string",
       "format": "date-time"
     },

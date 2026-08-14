@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { loadNextBestExperiment } from '@/lib/next-best-experiment';
+import { recordOverride } from '@/lib/recommendation-overrides';
 import RecommendedNextTest from '@/components/next-test/RecommendedNextTest';
 import { Sk } from '@/components/PageSkeleton';
 import { Reveal } from '@/components/motion';
@@ -8,17 +9,42 @@ import { Reveal } from '@/components/motion';
  * Loads the recommendation and renders it. Stays silent when there is nothing
  * worth recommending — a student with no live hypotheses, or one whose open
  * questions have all been answered — rather than showing an empty prompt.
+ *
+ * An override recomputes the recommendation with that question set aside. The
+ * uncertainty itself is never deleted: it is only held back, and the choice is
+ * recorded as product-learning data.
  */
 export default function NextBestExperimentPanel() {
   const [state, setState] = useState({ loading: true, recommendation: null });
+  const [skip, setSkip] = useState([]);
+  const [busy, setBusy] = useState(false);
+  const [exhausted, setExhausted] = useState(false);
+
+  const load = useCallback(async (skipList) => {
+    const { recommendation } = await loadNextBestExperiment({ skip: skipList }).catch(() => ({ recommendation: null }));
+    return recommendation;
+  }, []);
 
   useEffect(() => {
     let alive = true;
-    loadNextBestExperiment()
-      .then(({ recommendation }) => { if (alive) setState({ loading: false, recommendation }); })
-      .catch(() => { if (alive) setState({ loading: false, recommendation: null }); });
+    load([]).then(r => { if (alive) setState({ loading: false, recommendation: r }); });
     return () => { alive = false; };
-  }, []);
+  }, [load]);
+
+  const onOverride = async (action, note) => {
+    const current = state.recommendation;
+    if (!current || busy) return;
+    setBusy(true);
+    await recordOverride({ action, note, candidate: current.candidate, recommendation: current });
+    // "Another test" keeps the same question and asks for a different task, so
+    // only the other three set the question aside.
+    const nextSkip = action === 'another_test' ? skip : [...skip, current.candidate.variable];
+    setSkip(nextSkip);
+    const next = await load(nextSkip);
+    if (!next) setExhausted(true);
+    setState({ loading: false, recommendation: next || current });
+    setBusy(false);
+  };
 
   if (state.loading) return <Sk h={268} r={16} />;
   if (!state.recommendation) return null;
@@ -27,7 +53,12 @@ export default function NextBestExperimentPanel() {
      wrapper out there would space out an empty box. */
   return (
     <Reveal y={20}>
-      <RecommendedNextTest recommendation={state.recommendation} />
+      <RecommendedNextTest
+        recommendation={state.recommendation}
+        onOverride={onOverride}
+        busy={busy}
+        exhausted={exhausted}
+      />
     </Reveal>
   );
 }

@@ -24,13 +24,21 @@ import { characteristicSignals } from '@/lib/evidence-patterns';
 /** The five evidence levels, weakest first. */
 export const EVIDENCE_LEVELS = ['unknown', 'weak', 'moderate', 'strong', 'conflicting'];
 
+/* The student-facing names for the five levels. "Initial Signal" rather than
+   "Weak Evidence": one experience is a start, not a poor result, and the wording
+   should not imply the student did badly. Nothing here implies certainty. */
 export const EVIDENCE_LEVEL_LABELS = {
   unknown: 'Unknown',
-  weak: 'Weak Evidence',
-  moderate: 'Moderate Evidence',
-  strong: 'Strong Evidence',
+  weak: 'Initial Signal',
+  moderate: 'Some Evidence',
+  strong: 'Stronger Evidence',
   conflicting: 'Conflicting Evidence',
 };
+
+/* How much a dimension is worth testing next, before any career context is
+   applied. Conflicting sits just under unknown: it is the one case where
+   retesting something already measured is the most useful move available. */
+export const NEXT_TEST_PRIORITY = { unknown: 90, conflicting: 82, weak: 58, moderate: 24, strong: 6 };
 
 /** Confidence is capped by level. Nothing here can ever reach certainty. */
 export const CONFIDENCE_CAP = { unknown: 0, weak: 30, moderate: 60, strong: 85, conflicting: 40 };
@@ -101,6 +109,7 @@ function observations(signal) {
       experiment_id: e.id || null,
       experiment_title: e.title || null,
       career_name: e.career_name || e.path_name || null,
+      occurred_at: e.completed_at || e.updated_date || e.created_date || null,
     });
   });
   return out;
@@ -127,6 +136,29 @@ function statementFor(dim, level, direction) {
   if (direction === 'draws_toward') return `${hedge} you are drawn to ${dim.noun}.`;
   if (direction === 'draws_away') return `${hedge} ${dim.noun} tends to drain you.`;
   return `${hedge} we are still reading how you respond to ${dim.noun}.`;
+}
+
+/**
+ * The one-line reading of a dimension, written so the basis is always visible:
+ * what the student said, what they have done, and how much of it there is.
+ * Never a claim about who they are.
+ */
+function interpretationFor(dim, level, direction, { behavioural, stated }) {
+  if (level === 'unknown') {
+    return stated
+      ? `You have told us where you stand on ${dim.noun}, and we have not tested it yet.`
+      : `We have limited evidence about ${dim.noun}.`;
+  }
+  if (level === 'conflicting') {
+    return `Evidence about ${dim.noun} currently points both ways, so this is still uncertain.`;
+  }
+  const count = `${behavioural} experience${behavioural === 1 ? '' : 's'}`;
+  const lean = direction === 'draws_toward' ? `draws you toward ${dim.noun}`
+    : direction === 'draws_away' ? `${dim.noun} tends to drain you`
+    : `we are still reading how you respond to ${dim.noun}`;
+  return level === 'weak'
+    ? `An initial signal from ${count} suggests ${lean}. Still uncertain.`
+    : `Evidence currently suggests ${lean}, from ${count}.`;
 }
 
 /**
@@ -177,6 +209,7 @@ export function deriveDimensions({ signals = [], profile = {} } = {}) {
       experiment_id: o.experiment_id,
       experiment_title: o.experiment_title,
       career_name: o.career_name,
+      occurred_at: o.occurred_at,
     });
 
     return {
@@ -190,6 +223,20 @@ export function deriveDimensions({ signals = [], profile = {} } = {}) {
       contradictory_evidence: contradicting.map(describe),
       careers_observed_in: [...careers],
       evidence_count: obs.length,
+      // The counts the Uncertainty Map is read from. Behavioural observations
+      // are counted separately from what the student told us, so a stated
+      // preference can never look like a tested one.
+      behavioral_evidence_count: obs.length,
+      positive_evidence_count: positives.length,
+      negative_evidence_count: negatives.length,
+      conflicting_evidence_count: positives.length && negatives.length ? Math.min(positives.length, negatives.length) : 0,
+      self_report_source: self_reported_preference ? 'onboarding' : null,
+      last_tested_at: obs.map(o => o.occurred_at).filter(Boolean).sort().slice(-1)[0] || null,
+      next_test_priority: NEXT_TEST_PRIORITY[level] ?? 0,
+      current_interpretation: interpretationFor(dim, level, direction, {
+        behavioural: obs.length,
+        stated: Boolean(self_reported_preference),
+      }),
       confidence: Math.min(CONFIDENCE_CAP[level], obs.length * 20 + (self_reported_preference ? 10 : 0)),
       statement: statementFor(dim, level, direction),
       sources: matched.flatMap(s => s.sources || []),
@@ -210,7 +257,16 @@ export function learningStatements(dimensions = [], { known = 4, open = 3 } = {}
     knowing: sorted.filter(d => ['strong', 'moderate'].includes(d.current_evidence_level)).slice(0, known),
     suspecting: sorted.filter(d => d.current_evidence_level === 'weak').slice(0, known),
     conflicting: sorted.filter(d => d.current_evidence_level === 'conflicting').slice(0, 2),
-    open: sorted.filter(d => d.current_evidence_level === 'unknown').slice(0, open),
+    // What the student TOLD us and nobody has tested. Kept apart from the tested
+    // groups on purpose: a stated preference is a starting point, never proof.
+    stated: sorted
+      .filter(d => d.self_reported_preference && !d.behavioral_evidence_count)
+      .slice(0, known),
+    // The open questions worth testing first, rather than the first ones listed.
+    open: sorted
+      .filter(d => d.current_evidence_level === 'unknown' && !d.self_reported_preference)
+      .sort((a, b) => (b.next_test_priority || 0) - (a.next_test_priority || 0))
+      .slice(0, open),
   };
 }
 

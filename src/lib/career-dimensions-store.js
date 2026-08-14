@@ -20,6 +20,14 @@ const payload = (d) => ({
   current_evidence_level: d.current_evidence_level,
   direction: d.direction,
   self_reported_preference: d.self_reported_preference || null,
+  self_report_source: d.self_report_source || null,
+  behavioral_evidence_count: d.behavioral_evidence_count || 0,
+  positive_evidence_count: d.positive_evidence_count || 0,
+  negative_evidence_count: d.negative_evidence_count || 0,
+  conflicting_evidence_count: d.conflicting_evidence_count || 0,
+  current_interpretation: d.current_interpretation || null,
+  next_test_priority: d.next_test_priority || 0,
+  last_tested_at: d.last_tested_at || null,
   behavioral_evidence: d.behavioral_evidence,
   contradictory_evidence: d.contradictory_evidence,
   careers_observed_in: d.careers_observed_in,
@@ -52,7 +60,9 @@ export async function syncDimensionEvidence(dimensions = []) {
     const changed = row.current_evidence_level !== d.current_evidence_level
       || (row.evidence_count || 0) !== d.evidence_count
       || (row.confidence || 0) !== d.confidence
-      || (row.direction || 'none') !== d.direction;
+      || (row.direction || 'none') !== d.direction
+      || (row.next_test_priority || 0) !== (d.next_test_priority || 0)
+      || (row.current_interpretation || null) !== (d.current_interpretation || null);
     if (changed) updates.push({ id: row.id, ...payload(d) });
   });
 

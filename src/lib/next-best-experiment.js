@@ -28,6 +28,7 @@ import { deriveHypothesis } from '@/lib/career-hypothesis';
 import { loadRecalculationContext } from '@/lib/hypothesis-recalculation';
 import { blueprintFor } from '@/lib/next-test-blueprints';
 import { depthOf, recommendDepth, deepDiveUnlock, depthMeta } from '@/lib/experiment-depth';
+import { loadOverrides, suppressionFrom } from '@/lib/recommendation-overrides';
 
 /** Every knob in one place, so the engine's judgement can be tuned. */
 export const LEARNING_VALUE_WEIGHTS = {
@@ -41,6 +42,7 @@ export const LEARNING_VALUE_WEIGHTS = {
   exploration_bonus: 8,         // a credible career with very little evidence
   recent_repeat_penalty: 22,    // tested in the last few experiments
   saturated_penalty: 30,        // already answered consistently
+  deferred_penalty: 16,         // the student asked to come back to it later
 };
 
 const RELEVANCE = { high: 1, medium: 0.62, low: 0.25 };
@@ -96,7 +98,8 @@ function recentlyTested(ctx) {
  * Every unresolved question across every live career hypothesis, collapsed so
  * that one characteristic appears once with all of the careers it affects.
  */
-export function deriveOpenQuestions(ctx) {
+export function deriveOpenQuestions(ctx, { suppressed = new Map(), skip = [] } = {}) {
+  const skipSet = new Set(skip);
   const paths = (ctx.paths || []).filter(p => p.status !== 'archived' && p.hypothesis_status !== 'archived');
   if (!paths.length) return { candidates: [], hypotheses: [], leading: [] };
 
@@ -143,7 +146,11 @@ export function deriveOpenQuestions(ctx) {
   });
 
   const candidates = [...byVariable.values()]
-    .map(c => score(c, { signalsById, recent, leading }))
+    // The student's own overrides. "Not relevant" takes a question off the table
+    // for a while; anything else only pushes it down the order. Nothing stored
+    // about the uncertainty itself is touched either way.
+    .filter(c => !skipSet.has(c.variable) && !suppressed.get(c.variable)?.hard)
+    .map(c => score(c, { signalsById, recent, leading, suppressed }))
     // Already answered, consistently, more than once: taken off the table
     // rather than ranked low, so it can never resurface as the best option.
     .filter(c => !(c.evidence.settled && !c.evidence.contradicted))
@@ -153,7 +160,7 @@ export function deriveOpenQuestions(ctx) {
 }
 
 /** The learning value of answering one question, and the reasons behind it. */
-function score(candidate, { signalsById, recent, leading }) {
+function score(candidate, { signalsById, recent, leading, suppressed = new Map() }) {
   const W = LEARNING_VALUE_WEIGHTS;
   const evidence = evidenceState(signalsById.get(candidate.variable));
   const careers = candidate.careers;
@@ -192,6 +199,8 @@ function score(candidate, { signalsById, recent, leading }) {
   if (norm(attached.confidence, 0.5) < 0.45) { total += W.exploration_bonus; factors.push('a path we still know little about'); }
   if (isRecent) total -= W.recent_repeat_penalty;
   if (evidence.settled) total -= W.saturated_penalty;
+  const deferred = suppressed.get(candidate.variable);
+  if (deferred) total -= W.deferred_penalty;
 
   return {
     ...candidate,
@@ -201,7 +210,9 @@ function score(candidate, { signalsById, recent, leading }) {
     contradicted,
     recently_tested: isRecent,
     cross_career: careers.length >= 2,
+    cross_career_count: careers.length,
     differentiates,
+    deferred: deferred?.action || null,
     learning_value_score: clamp(total),
   };
 }
@@ -232,8 +243,8 @@ function modeOf(candidate, leading, ctx) {
  * The recommended next test, its reasoning, and the runners-up.
  * Returns null only when there is no live career hypothesis to test.
  */
-export function nextBestExperiment(ctx) {
-  const { candidates, hypotheses, leading } = deriveOpenQuestions(ctx);
+export function nextBestExperiment(ctx, opts = {}) {
+  const { candidates, hypotheses, leading } = deriveOpenQuestions(ctx, opts);
   if (!candidates.length) return null;
 
   const top = candidates[0];
@@ -256,8 +267,10 @@ export function nextBestExperiment(ctx) {
   });
   const mode = modeOf(top, leading, ctx);
   const knows = established(ctx);
-  const careerNames = top.careers.filter(c => c.leading).map(c => c.path_name);
-  const names = careerNames.length ? careerNames : top.careers.map(c => c.path_name);
+  // Distinct, and limited to the careers the student is actively weighing.
+  const uniq = (xs) => [...new Set(xs.filter(Boolean))];
+  const careerNames = uniq(top.careers.filter(c => c.leading).map(c => c.path_name));
+  const names = (careerNames.length ? careerNames : uniq(top.careers.map(c => c.path_name))).slice(0, 3);
 
   const why = [
     knows.length
@@ -284,6 +297,22 @@ export function nextBestExperiment(ctx) {
     depth: depth.depth,
     depth_alternative: depth.alternative,
     depth_reason: depth.reason,
+    // Cross-hypothesis value, stated plainly: one answer that informs several
+    // directions is worth more than three career-shaped tests of the same thing.
+    // Distinct careers, and the ones the student is actually weighing rather than
+    // every hypothesis on file: counting rows produced "useful across 21
+    // directions", which is true of the data and meaningless to a student.
+    cross_career_count: names.length,
+    informs: names,
+    cross_career_note: names.length >= 2
+      // The careers themselves are already named in the paragraph above, so this
+      // line carries only what that one does not: the count.
+      ? `One test, useful across ${names.length} of the directions you are considering.`
+      : null,
+    // Why this is the SMALLEST useful test, rather than the most thorough one.
+    smallest_useful: depth.depth === 'quick_test'
+      ? 'A short test is enough to answer this, so there is no reason to spend longer on it yet.'
+      : 'A short test cannot produce the evidence this question needs, so this one is longer on purpose.',
     depth_meta: depthMeta(depth.depth),
     alternative_depth_meta: depthMeta(depth.alternative),
     quick_test_count: quickTests,
@@ -346,10 +375,18 @@ function whyThisMatters(candidate, { knows, hypotheses, mode }) {
   };
 }
 
-/** Load and compute in one step, for the screens. */
-export async function loadNextBestExperiment() {
-  const ctx = await loadNextBestContext();
-  return { ctx, recommendation: nextBestExperiment(ctx) };
+/**
+ * Load and compute in one step, for the screens. `skip` is how a student asking
+ * for something else is honoured within a session, on top of the overrides they
+ * have already recorded.
+ */
+export async function loadNextBestExperiment({ skip = [] } = {}) {
+  const [ctx, overrides] = await Promise.all([
+    loadNextBestContext(),
+    loadOverrides().catch(() => []),
+  ]);
+  const suppressed = suppressionFrom(overrides);
+  return { ctx, recommendation: nextBestExperiment(ctx, { suppressed, skip }), overrides };
 }
 
 export default nextBestExperiment;

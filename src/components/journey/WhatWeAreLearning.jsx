@@ -7,7 +7,7 @@
  * suggests", and a conclusion with one observation behind it says so.
  */
 import { useEffect, useState } from 'react';
-import { Check, HelpCircle, Scale, ChevronRight } from 'lucide-react';
+import { Check, HelpCircle, Scale, ChevronRight, MessageSquare } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { loadMeasurements } from '@/lib/experiment-measurement';
 import { dimensionsFromActivity, learningStatements, EVIDENCE_LEVEL_LABELS } from '@/lib/career-dimensions';
@@ -23,7 +23,9 @@ function Row({ icon, tone, dimension, onInspect }) {
     >
       <span className="mt-0.5 shrink-0" style={{ color: tone }}>{icon}</span>
       <span className="min-w-0 flex-1">
-        <span className="tp-body block" style={{ color: 'var(--ink-700)' }}>{dimension.statement}</span>
+        <span className="tp-body block" style={{ color: 'var(--ink-700)' }}>
+          {dimension.current_interpretation || dimension.statement}
+        </span>
         <span className="tp-meta mt-0.5 block" style={{ color: 'var(--ink-400)' }}>
           {dimension.dimension_label} · {EVIDENCE_LEVEL_LABELS[dimension.current_evidence_level]}
           {dimension.evidence_count ? ` · ${dimension.evidence_count} observation${dimension.evidence_count === 1 ? '' : 's'}` : ''}
@@ -62,8 +64,8 @@ export default function WhatWeAreLearning() {
   }, []);
 
   if (!state) return null;
-  const { knowing, suspecting, conflicting, open } = state;
-  if (!knowing.length && !suspecting.length && !conflicting.length && !open.length) return null;
+  const { knowing, suspecting, conflicting, stated = [], open } = state;
+  if (!knowing.length && !suspecting.length && !conflicting.length && !stated.length && !open.length) return null;
 
   return (
     <Reveal y={20}>
@@ -77,6 +79,9 @@ export default function WhatWeAreLearning() {
           {knowing.map(d => <Row key={d.dimension} dimension={d} onInspect={setInspecting} tone="var(--success-700)" icon={<Check size={15} />} />)}
           {suspecting.map(d => <Row key={d.dimension} dimension={d} onInspect={setInspecting} tone="var(--brand-navy-700)" icon={<Check size={15} />} />)}
           {conflicting.map(d => <Row key={d.dimension} dimension={d} onInspect={setInspecting} tone="var(--warning-700)" icon={<Scale size={15} />} />)}
+          {/* Told us, not tested. Deliberately marked differently from anything
+              you have shown us. */}
+          {stated.map(d => <Row key={d.dimension} dimension={d} onInspect={setInspecting} tone="var(--brand-navy-700)" icon={<MessageSquare size={15} />} />)}
           {open.map(d => <Row key={d.dimension} dimension={d} onInspect={setInspecting} tone="var(--ink-400)" icon={<HelpCircle size={15} />} />)}
         </div>
       </section>
