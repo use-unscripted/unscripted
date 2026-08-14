@@ -19,6 +19,7 @@ import { motion, useScroll, useSpring, useTransform, useReducedMotion } from 'fr
 import UniversityMarquee from '@/components/landing/UniversityMarquee';
 import HeroBackdrop from '@/components/landing/HeroBackdrop';
 import PathPreview from '@/components/landing/PathPreview';
+import WhatDoYouWant from '@/components/landing/WhatDoYouWant';
 import { Reveal, WordReveal, UnderlineDraw, EASE, EASE_COPY } from '@/components/motion';
 
 /* Numbering earns its place here: the rail below fills in order and the four
@@ -264,7 +265,14 @@ export default function Hero() {
             recognisable generated-page shape — and it was what this page did
             top to bottom. The copy column is capped for measure but sits at
             the container's left edge, so the fold has a direction. */}
-        <div className="relative max-w-[54rem]" style={{ zIndex: 1 }}>
+        {/* Copy column and the film clip share a row on xl, where there is
+            genuinely room beside the 54rem measure. Below that the clip drops
+            underneath the log-in line rather than shrinking into the copy. */}
+        <div
+          className="relative grid items-start gap-10 xl:grid-cols-[minmax(0,1fr)_auto]"
+          style={{ zIndex: 1 }}
+        >
+        <div className="max-w-[54rem]">
           {/* The pill that used to sit here — tiny letterspaced caps, gold dot
              pulsing on a 2.6s loop, reading "Write your own path" — said
              nothing the headline doesn't say two lines later, and that exact
@@ -365,6 +373,13 @@ export default function Hero() {
               </Link>
             </p>
           </Reveal>
+        </div>
+
+          {/* Arrives at 1050ms, after the headline, rule, paragraph, buttons
+              and log-in line have all landed. The fold already runs four
+              staggered beats; this is the fifth, not a sixth thing moving
+              inside the existing pile-up. */}
+          <WhatDoYouWant />
         </div>
 
         {/* The product artifact — sits outside the max-w-3xl copy column so
