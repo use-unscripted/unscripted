@@ -6,7 +6,8 @@
  */
 import { useState, useEffect, useMemo } from 'react';
 import { base44 } from '@/api/base44Client';
-import { Library, Layers, FileText, ArrowRight, Lock } from 'lucide-react';
+import { Library, Layers, FileText, ArrowRight, Lock, History } from 'lucide-react';
+import DecisionRecordView from '@/components/record/DecisionRecordView';
 import PageHeader from '@/components/PageHeader';
 import { Sk, SkCards } from '@/components/PageSkeleton';
 import EvidenceFilters from '@/components/evidence/EvidenceFilters';
@@ -83,7 +84,7 @@ export default function EvidenceLibrary() {
       ) : (
         <>
           <div className="mb-5 flex gap-2">
-            {[['all', 'All evidence', Library], ['cycles', 'By career cycle', Layers]].map(([key, label, Icon]) => (
+            {[['all', 'All evidence', Library], ['cycles', 'By career cycle', Layers], ['record', 'Decision record', History]].map(([key, label, Icon]) => (
               <button key={key} onClick={() => setView(key)}
                 className="touch-target ui-press flex items-center gap-1.5 rounded-[var(--r-control)] px-4 py-2.5 text-sm font-bold"
                 style={key === view
@@ -94,11 +95,15 @@ export default function EvidenceLibrary() {
             ))}
           </div>
 
-          <p className="tp-meta mb-5 flex items-center gap-2 rounded-[var(--r-control)] px-4 py-3 text-[color:var(--ink-700)]" style={{ background: 'var(--background-tertiary)' }}>
-            <Lock size={13} className="shrink-0" /> Everything here is yours alone. Private evidence is never shown to other students.
-          </p>
+          {view !== 'record' && (
+            <p className="tp-meta mb-5 flex items-center gap-2 rounded-[var(--r-control)] px-4 py-3 text-[color:var(--ink-700)]" style={{ background: 'var(--background-tertiary)' }}>
+              <Lock size={13} className="shrink-0" /> Everything here is yours alone. Private evidence is never shown to other students.
+            </p>
+          )}
 
-          {view === 'all' ? (
+          {view === 'record' ? (
+            <DecisionRecordView raw={raw} />
+          ) : view === 'all' ? (
             <>
               {/* Nothing to sift through yet, so the empty state says more than a filter bar can. */}
               {evidence.length > 0 && (
