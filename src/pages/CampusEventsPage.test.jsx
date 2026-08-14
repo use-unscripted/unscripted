@@ -14,6 +14,7 @@
 
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render, screen } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 
 const { useCampusEvents, useCampusPicks } = vi.hoisted(() => ({
   useCampusEvents: vi.fn(),
@@ -72,7 +73,9 @@ function setup({ picks, ranking }) {
     adopt: vi.fn(),
   });
   useCampusPicks.mockReturnValue({ picks, loading: ranking });
-  render(<CampusEventsPage />);
+  // The page header has a back button, so the page calls useNavigate on its
+  // first render. Same wrapper the panel's own suite renders through.
+  render(<MemoryRouter><CampusEventsPage /></MemoryRouter>);
 }
 
 afterEach(() => {

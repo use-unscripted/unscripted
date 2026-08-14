@@ -1,8 +1,15 @@
+// @vitest-environment jsdom
 import { describe, it, expect, vi } from 'vitest';
 import { toText, toTextList, STEP_TEXT_KEYS } from './ai-validation';
 
 // These components pull in the whole app shell, so the parts under test are the
 // pure repair functions and everything they import is stubbed out.
+//
+// The functions themselves are pure, but the import chain is not: the setup
+// page now reaches a select control, and that reaches `lib/utils`, which reads
+// `window.self` at module scope. Under the default node environment the file
+// throws on load and the whole suite is reported as an unhandled error rather
+// than a failure. jsdom is what the component suites already run under.
 vi.mock('@/api/base44Client', () => ({ base44: {} }));
 vi.mock('@/lib/llm', () => ({ unwrapLLM: (x) => x, PLAIN_PROSE_RULES: '' }));
 vi.mock('@/lib/ai-generate', () => ({ generateValidated: () => Promise.resolve({ ok: true, data: null }) }));

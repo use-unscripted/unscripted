@@ -85,7 +85,10 @@ describe('the generate button while the calendar is still loading', () => {
     draw();
     pickerProps.current.onBusy(false);
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: /Generate Mission Guide/ })).toBeTruthy();
+      // The settled label follows whatever the button calls the thing it makes.
+      // That copy is now "Generate Experiment"; the assertion is that it stops
+      // saying "without an event", not the noun it happens to use.
+      expect(screen.getByRole('button', { name: /Generate Experiment/ })).toBeTruthy();
     });
     expect(screen.queryByText(/campus calendar is still loading/)).toBeNull();
   });
