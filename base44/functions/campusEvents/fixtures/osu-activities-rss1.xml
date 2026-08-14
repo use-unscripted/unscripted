@@ -1,0 +1,805 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:ev="http://purl.org/rss/1.0/modules/event/" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns="http://purl.org/rss/1.0/">
+  <channel rdf:about="https://activities.osu.edu/Events.aspx">
+    <title>Office of Student Life</title>
+    <link>https://activities.osu.edu/Events.aspx</link>
+    <description>The latest events from the Office of Student Life at OSU</description>
+    <copyright>Copyright 2001 - 2026, Office of Student Life. All rights reserved</copyright>
+    <items>
+      <rdf:Seq>
+        <rdf:li rdf:resource="https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=16&amp;e=84107&amp;title=sunday-service-" />
+        <rdf:li rdf:resource="https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=18&amp;e=84171&amp;title=sports-social-" />
+        <rdf:li rdf:resource="https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=19&amp;e=84172&amp;title=sports-social-" />
+        <rdf:li rdf:resource="https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=21&amp;e=83853&amp;title=lawn-games" />
+        <rdf:li rdf:resource="https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=21&amp;e=84174&amp;title=glow-games-" />
+        <rdf:li rdf:resource="https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=21&amp;e=84173&amp;title=glow-games-" />
+        <rdf:li rdf:resource="https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=22&amp;e=83854&amp;title=lawn-games-arts-and-crafts" />
+        <rdf:li rdf:resource="https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=23&amp;e=83849&amp;title=sunday-church-service" />
+        <rdf:li rdf:resource="https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=23&amp;e=83855&amp;title=lunch-after-service" />
+        <rdf:li rdf:resource="https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=23&amp;e=84108&amp;title=sunday-service-" />
+        <rdf:li rdf:resource="https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=23&amp;e=83859&amp;title=student-involvement-fair" />
+        <rdf:li rdf:resource="https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=23&amp;e=84076&amp;title=sunday-service-" />
+        <rdf:li rdf:resource="https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=24&amp;e=84077&amp;title=revive-social" />
+        <rdf:li rdf:resource="https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=24&amp;e=83860&amp;title=lawn-games" />
+        <rdf:li rdf:resource="https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=24&amp;e=84080&amp;title=revive-social" />
+        <rdf:li rdf:resource="https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=25&amp;e=83861&amp;title=coffee-and-lemonade-tent" />
+        <rdf:li rdf:resource="https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=25&amp;e=83862&amp;title=bible-study-night" />
+        <rdf:li rdf:resource="https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=26&amp;e=83863&amp;title=food-and-making-cards-for-hospital" />
+        <rdf:li rdf:resource="https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=26&amp;e=83864&amp;title=lawn-games-arts-and-crafts" />
+        <rdf:li rdf:resource="https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=26&amp;e=84106&amp;title=welcome-night-" />
+        <rdf:li rdf:resource="https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=27&amp;e=83867&amp;title=coffee-hot-chocolate-and-donuts" />
+        <rdf:li rdf:resource="https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=27&amp;e=84175&amp;title=sports-social-" />
+        <rdf:li rdf:resource="https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=27&amp;e=83866&amp;title=lawn-games-arts-and-crafts" />
+        <rdf:li rdf:resource="https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=28&amp;e=84177&amp;title=girls-night" />
+        <rdf:li rdf:resource="https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=28&amp;e=84176&amp;title=bros-night-" />
+        <rdf:li rdf:resource="https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=28&amp;e=83869&amp;title=movie-night-with-board-games-and-crafts" />
+        <rdf:li rdf:resource="https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=29&amp;e=83868&amp;title=food-and-making-cards-for-hospital" />
+        <rdf:li rdf:resource="https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=29&amp;e=83870&amp;title=dinner-and-sand-volleyball" />
+        <rdf:li rdf:resource="https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=30&amp;e=83850&amp;title=sunday-church-service" />
+        <rdf:li rdf:resource="https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=30&amp;e=83857&amp;title=lawn-games" />
+        <rdf:li rdf:resource="https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=30&amp;e=83856&amp;title=lunch-after-service" />
+        <rdf:li rdf:resource="https://activities.osu.edu/Events.aspx?y=2026&amp;mo=9&amp;day=1&amp;e=83871&amp;title=bible-study-night" />
+        <rdf:li rdf:resource="https://activities.osu.edu/Events.aspx?y=2026&amp;mo=9&amp;day=2&amp;e=83872&amp;title=h2o-sports-day" />
+        <rdf:li rdf:resource="https://activities.osu.edu/Events.aspx?y=2026&amp;mo=9&amp;day=6&amp;e=83851&amp;title=sunday-church-service" />
+        <rdf:li rdf:resource="https://activities.osu.edu/Events.aspx?y=2026&amp;mo=9&amp;day=6&amp;e=84178&amp;title=sunday-service-" />
+        <rdf:li rdf:resource="https://activities.osu.edu/Events.aspx?y=2026&amp;mo=9&amp;day=7&amp;e=83873&amp;title=labor-day-cookout" />
+        <rdf:li rdf:resource="https://activities.osu.edu/Events.aspx?y=2026&amp;mo=9&amp;day=8&amp;e=83874&amp;title=worship-night" />
+        <rdf:li rdf:resource="https://activities.osu.edu/Events.aspx?y=2026&amp;mo=9&amp;day=9&amp;e=84112&amp;title=your-success-the-graduate-professional-student-wellness-kickoff" />
+        <rdf:li rdf:resource="https://activities.osu.edu/Events.aspx?y=2026&amp;mo=9&amp;day=11&amp;e=84194&amp;title=recovery-is-spoken-here" />
+        <rdf:li rdf:resource="https://activities.osu.edu/Events.aspx?y=2026&amp;mo=9&amp;day=13&amp;e=83852&amp;title=sunday-church-service" />
+        <rdf:li rdf:resource="https://activities.osu.edu/Events.aspx?y=2026&amp;mo=9&amp;day=13&amp;e=84179&amp;title=sunday-service-" />
+        <rdf:li rdf:resource="https://activities.osu.edu/Events.aspx?y=2026&amp;mo=9&amp;day=17&amp;e=83876&amp;title=bekind-food-packing" />
+        <rdf:li rdf:resource="https://activities.osu.edu/Events.aspx?y=2026&amp;mo=9&amp;day=18&amp;e=84193&amp;title=guiding-students-to-wellness" />
+        <rdf:li rdf:resource="https://activities.osu.edu/Events.aspx?y=2026&amp;mo=9&amp;day=20&amp;e=83816&amp;title=sunday-church-service" />
+        <rdf:li rdf:resource="https://activities.osu.edu/Events.aspx?y=2026&amp;mo=9&amp;day=20&amp;e=84180&amp;title=sunday-service-" />
+        <rdf:li rdf:resource="https://activities.osu.edu/Events.aspx?y=2026&amp;mo=9&amp;day=23&amp;e=84113&amp;title=the-chew-meal-planning-prep-made-simple" />
+        <rdf:li rdf:resource="https://activities.osu.edu/Events.aspx?y=2026&amp;mo=9&amp;day=27&amp;e=83817&amp;title=sunday-church-service" />
+        <rdf:li rdf:resource="https://activities.osu.edu/Events.aspx?y=2026&amp;mo=9&amp;day=27&amp;e=84181&amp;title=sunday-service" />
+        <rdf:li rdf:resource="https://activities.osu.edu/Events.aspx?y=2026&amp;mo=10&amp;day=4&amp;e=83818&amp;title=sunday-church-service" />
+        <rdf:li rdf:resource="https://activities.osu.edu/Events.aspx?y=2026&amp;mo=10&amp;day=4&amp;e=84182&amp;title=sunday-service" />
+      </rdf:Seq>
+    </items>
+  </channel>
+  <item rdf:about="https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=16&amp;e=84107&amp;title=sunday-service-">
+    <title>Sunday Service </title>
+    <link>https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=16&amp;e=84107&amp;title=sunday-service-</link>
+    <ev:location>Union Great Hall Meeting Rm 3</ev:location>
+    <ev:startdate>2026-08-16T15:00:00-04:00</ev:startdate>
+    <ev:enddate>2026-08-16T17:00:00-04:00</ev:enddate>
+    <guid>https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=16&amp;e=84107&amp;title=sunday-service-</guid>
+    <pubDate>2026-07-29T19:47:23-04:00</pubDate>
+    <dc:subject>Food</dc:subject>
+    <dc:subject>Social</dc:subject>
+    <dc:subject>Students (Columbus Campus)</dc:subject>
+    <dc:subject>Students (All)</dc:subject>
+    <content:encoded><![CDATA[<p>Looking for a church to call home on campus? Join us at Revive! We're a group of OSU students and mentors learning about God and living out our faith. We invite you to come alongside us as we strive to make Christ known at OSU. <br />And if you're new to Christianity or looking to learn more about Jesus, we invite you to join, ask questions and be a part of our community.</p><p>Emmerson Straughter<br /><a href="mailto:emmerson.straughter@gmail.com">emmerson.straughter@gmail.com</a><br />614-285-1694<a href="https://revivecollege.church/sign-me-up">Sign up to get connected!</a><br /></p>]]></content:encoded>
+  </item>
+  <item rdf:about="https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=18&amp;e=84171&amp;title=sports-social-">
+    <title>Sports Social </title>
+    <link>https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=18&amp;e=84171&amp;title=sports-social-</link>
+    <ev:location>South Oval </ev:location>
+    <ev:startdate>2026-08-18T18:00:00-04:00</ev:startdate>
+    <ev:enddate>2026-08-18T20:00:00-04:00</ev:enddate>
+    <guid>https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=18&amp;e=84171&amp;title=sports-social-</guid>
+    <pubDate>2026-08-13T20:36:53-04:00</pubDate>
+    <dc:subject>Sports</dc:subject>
+    <dc:subject>Social</dc:subject>
+    <dc:subject>Students (Columbus Campus)</dc:subject>
+    <dc:subject>Students (All)</dc:subject>
+    <content:encoded><![CDATA[<p>Grab your friends and get active! Casual games, friendly competition, and a great way to meet new people out on the South Oval. All skill levels welcome!</p><p>Emmerson Straughter<br /><a href="mailto:emmerson.straughter@gmail.com">emmerson.straughter@gmail.com</a><br />614-285-1694<a href="https://revivecollege.church/sign-me-up">Sign up to get connected!</a><br /></p>]]></content:encoded>
+  </item>
+  <item rdf:about="https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=19&amp;e=84172&amp;title=sports-social-">
+    <title>Sports Social </title>
+    <link>https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=19&amp;e=84172&amp;title=sports-social-</link>
+    <ev:location>Oval </ev:location>
+    <ev:startdate>2026-08-19T18:00:00-04:00</ev:startdate>
+    <ev:enddate>2026-08-19T20:00:00-04:00</ev:enddate>
+    <guid>https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=19&amp;e=84172&amp;title=sports-social-</guid>
+    <pubDate>2026-08-13T20:42:38-04:00</pubDate>
+    <dc:subject>Sports</dc:subject>
+    <dc:subject>Social</dc:subject>
+    <dc:subject>Students (Columbus Campus)</dc:subject>
+    <dc:subject>Students (All)</dc:subject>
+    <dc:subject>Sports Social</dc:subject>
+    <content:encoded><![CDATA[<p>Grab your friends and get active! Casual games, friendly competition, and a great way to meet new people out on the Oval. All skill levels welcome!</p><p>Emmerson Straughter<br /><a href="mailto:emmerson.straughter@gmail.com">emmerson.straughter@gmail.com</a><br />614-285-1694<a href="https://revivecollege.church/sign-me-up">Sign up to get connected!</a><br /></p>]]></content:encoded>
+  </item>
+  <item rdf:about="https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=21&amp;e=83853&amp;title=lawn-games">
+    <title>Lawn Games</title>
+    <link>https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=21&amp;e=83853&amp;title=lawn-games</link>
+    <ev:location>South Oval</ev:location>
+    <ev:startdate>2026-08-21T18:00:00-04:00</ev:startdate>
+    <ev:enddate>2026-08-21T20:00:00-04:00</ev:enddate>
+    <guid>https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=21&amp;e=83853&amp;title=lawn-games</guid>
+    <pubDate>2026-06-16T18:40:31-04:00</pubDate>
+    <dc:subject>Sports</dc:subject>
+    <dc:subject>Family Friendly</dc:subject>
+    <dc:subject>Social</dc:subject>
+    <dc:subject>Students (All)</dc:subject>
+    <content:encoded><![CDATA[<p>Join H2O Church for lawn games in the Ohio Union west plaza. This is an informal event for students to get connected with one another and come hang out.</p><p>Vince Concialdi<br /><a href="mailto:concialdi.1@buckeyemail.osu.edu">concialdi.1@buckeyemail.osu.edu</a><br /></p>]]></content:encoded>
+  </item>
+  <item rdf:about="https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=21&amp;e=84174&amp;title=glow-games-">
+    <title>Glow Games </title>
+    <link>https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=21&amp;e=84174&amp;title=glow-games-</link>
+    <ev:location>Oval </ev:location>
+    <ev:startdate>2026-08-21T20:00:00-04:00</ev:startdate>
+    <ev:enddate>2026-08-21T22:00:00-04:00</ev:enddate>
+    <guid>https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=21&amp;e=84174&amp;title=glow-games-</guid>
+    <pubDate>2026-08-13T20:49:48-04:00</pubDate>
+    <dc:subject>Sports</dc:subject>
+    <dc:subject>Social</dc:subject>
+    <dc:subject>Students (Columbus Campus)</dc:subject>
+    <dc:subject>Students (All)</dc:subject>
+    <content:encoded><![CDATA[<p>Come play some glow in the dark games with us out on Oval!</p><p>Emmerson Straughter<br /><a href="mailto:emmerson.straughter@gmail.com">emmerson.straughter@gmail.com</a><br />614-285-1694<a href="https://revivecollege.church/sign-me-up">Sign up to get connected!</a><br /></p>]]></content:encoded>
+  </item>
+  <item rdf:about="https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=21&amp;e=84173&amp;title=glow-games-">
+    <title>Glow Games </title>
+    <link>https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=21&amp;e=84173&amp;title=glow-games-</link>
+    <ev:location>South Oval </ev:location>
+    <ev:startdate>2026-08-21T20:00:00-04:00</ev:startdate>
+    <ev:enddate>2026-08-21T22:00:00-04:00</ev:enddate>
+    <guid>https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=21&amp;e=84173&amp;title=glow-games-</guid>
+    <pubDate>2026-08-13T20:47:13-04:00</pubDate>
+    <dc:subject>Sports</dc:subject>
+    <dc:subject>Social</dc:subject>
+    <dc:subject>Students (Columbus Campus)</dc:subject>
+    <dc:subject>Students (All)</dc:subject>
+    <content:encoded><![CDATA[<p>Come play some glow in the dark games with us out on South Oval!</p><p>Emmerson Straughter<br /><a href="mailto:emmerson.straughter@gmail.com">emmerson.straughter@gmail.com</a><br />614-285-1694<a href="https://revivecollege.church/sign-me-up">Sign up to get connected!</a><br /></p>]]></content:encoded>
+  </item>
+  <item rdf:about="https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=22&amp;e=83854&amp;title=lawn-games-arts-and-crafts">
+    <title>Lawn Games + Arts and Crafts</title>
+    <link>https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=22&amp;e=83854&amp;title=lawn-games-arts-and-crafts</link>
+    <ev:location>McPherson Lawn</ev:location>
+    <ev:startdate>2026-08-22T18:00:00-04:00</ev:startdate>
+    <ev:enddate>2026-08-22T20:00:00-04:00</ev:enddate>
+    <guid>https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=22&amp;e=83854&amp;title=lawn-games-arts-and-crafts</guid>
+    <pubDate>2026-06-16T18:44:28-04:00</pubDate>
+    <dc:subject>Sports</dc:subject>
+    <dc:subject>Family Friendly</dc:subject>
+    <dc:subject>Social</dc:subject>
+    <dc:subject>Students (All)</dc:subject>
+    <content:encoded><![CDATA[<p>Join H2O Church for lawn games and arts and crafts, located on the Scott Lawn! There will be lawn games such as cornhole and spike ball, along with a variety of arts and crafts.</p><p>Vince Concialdi<br /><a href="mailto:concialdi.1@buckeyemail.osu.edu">concialdi.1@buckeyemail.osu.edu</a><br /></p>]]></content:encoded>
+  </item>
+  <item rdf:about="https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=23&amp;e=83849&amp;title=sunday-church-service">
+    <title>Sunday Church Service</title>
+    <link>https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=23&amp;e=83849&amp;title=sunday-church-service</link>
+    <ev:location>Ohio Union</ev:location>
+    <ev:startdate>2026-08-23T11:01:00-04:00</ev:startdate>
+    <ev:enddate>2026-08-23T12:00:00-04:00</ev:enddate>
+    <guid>https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=23&amp;e=83849&amp;title=sunday-church-service</guid>
+    <pubDate>2026-06-16T18:34:54-04:00</pubDate>
+    <dc:subject>Community Service/Outreach</dc:subject>
+    <dc:subject>Family Friendly</dc:subject>
+    <dc:subject>Students (Columbus Campus)</dc:subject>
+    <dc:subject>Students (All)</dc:subject>
+    <dc:subject>Faculty/Staff</dc:subject>
+    <dc:subject>Alumni</dc:subject>
+    <dc:subject>General Public</dc:subject>
+    <dc:subject>Parents/Family</dc:subject>
+    <dc:subject>Graduate/Professional Students</dc:subject>
+    <dc:subject>Church</dc:subject>
+    <content:encoded><![CDATA[<p>Join us for Sunday service in the Ohio Union! The first four H2O services will be held here as students move in and get used to campus before being held in the H2O building.</p><p>Vince Concialdi<br /><a href="mailto:concialdi.1@buckeyemail.osu.edu">concialdi.1@buckeyemail.osu.edu</a><br /></p>]]></content:encoded>
+  </item>
+  <item rdf:about="https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=23&amp;e=83855&amp;title=lunch-after-service">
+    <title>Lunch after service</title>
+    <link>https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=23&amp;e=83855&amp;title=lunch-after-service</link>
+    <ev:location>Ohio Union</ev:location>
+    <ev:startdate>2026-08-23T12:15:00-04:00</ev:startdate>
+    <ev:enddate>2026-08-23T13:15:00-04:00</ev:enddate>
+    <guid>https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=23&amp;e=83855&amp;title=lunch-after-service</guid>
+    <pubDate>2026-06-16T18:50:57-04:00</pubDate>
+    <dc:subject>Food</dc:subject>
+    <dc:subject>Social</dc:subject>
+    <dc:subject>Students (All)</dc:subject>
+    <content:encoded><![CDATA[<p>Join attendees of the H2O sunday service in lunch at the Union! This is a great time to get to know other students and members of the Church</p><p>Vince Concialdi<br /><a href="mailto:concialdi.1@buckeyemail.osu.edu">concialdi.1@buckeyemail.osu.edu</a><br /></p>]]></content:encoded>
+  </item>
+  <item rdf:about="https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=23&amp;e=84108&amp;title=sunday-service-">
+    <title>Sunday Service </title>
+    <link>https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=23&amp;e=84108&amp;title=sunday-service-</link>
+    <ev:location>Union Great Hall Meeting Rm 3</ev:location>
+    <ev:startdate>2026-08-23T13:00:00-04:00</ev:startdate>
+    <ev:enddate>2026-08-23T15:00:00-04:00</ev:enddate>
+    <guid>https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=23&amp;e=84108&amp;title=sunday-service-</guid>
+    <pubDate>2026-08-04T13:21:01-04:00</pubDate>
+    <dc:subject>Food</dc:subject>
+    <dc:subject>Social</dc:subject>
+    <dc:subject>Students (Columbus Campus)</dc:subject>
+    <dc:subject>Students (All)</dc:subject>
+    <content:encoded><![CDATA[<p>Looking for a church to call home on campus? Join us at Revive! We're a group of OSU students and mentors learning about God and living out our faith. We invite you to come alongside us as we strive to make Christ known at OSU.<br />And if you're new to Christianity or looking to learn more about Jesus, we invite you to join, ask questions and be a part of our community.</p><p>Emmerson Straughter<br /><a href="mailto:emmerson.straughter@gmail.com">emmerson.straughter@gmail.com</a><br />614-285-1694<a href="https://revivecollege.church/sign-me-up">Sign up to get connected!</a><br /></p>]]></content:encoded>
+  </item>
+  <item rdf:about="https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=23&amp;e=83859&amp;title=student-involvement-fair">
+    <title>Student Involvement Fair</title>
+    <link>https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=23&amp;e=83859&amp;title=student-involvement-fair</link>
+    <ev:location>North Oval</ev:location>
+    <ev:startdate>2026-08-23T16:00:00-04:00</ev:startdate>
+    <ev:enddate>2026-08-23T19:00:00-04:00</ev:enddate>
+    <guid>https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=23&amp;e=83859&amp;title=student-involvement-fair</guid>
+    <pubDate>2026-06-16T18:56:10-04:00</pubDate>
+    <dc:subject>Community Service/Outreach</dc:subject>
+    <dc:subject>Social</dc:subject>
+    <dc:subject>Students (All)</dc:subject>
+    <content:encoded><![CDATA[<p>Come find our table at the student involvement fair! We will have extra info about our church, and we would love to get to know you if you need a church to go to!</p><p>Vince Concialdi<br /><a href="mailto:concialdi.1@buckeyemail.osu.edu">concialdi.1@buckeyemail.osu.edu</a><br /></p>]]></content:encoded>
+  </item>
+  <item rdf:about="https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=23&amp;e=84076&amp;title=sunday-service-">
+    <title>Sunday Service </title>
+    <link>https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=23&amp;e=84076&amp;title=sunday-service-</link>
+    <ev:location>Union Great Hall Meeting Rm 3</ev:location>
+    <ev:startdate>2026-08-23T19:30:00-04:00</ev:startdate>
+    <ev:enddate>2026-08-23T21:30:00-04:00</ev:enddate>
+    <guid>https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=23&amp;e=84076&amp;title=sunday-service-</guid>
+    <pubDate>2026-07-29T19:49:11-04:00</pubDate>
+    <dc:subject>Food</dc:subject>
+    <dc:subject>Social</dc:subject>
+    <dc:subject>Students (Columbus Campus)</dc:subject>
+    <dc:subject>Students (All)</dc:subject>
+    <content:encoded><![CDATA[<p>Looking for a church to call home on campus? Join us at Revive! We're a group of OSU students and mentors learning about God and living out our faith. We invite you to come alongside us as we strive to make Christ known at OSU. <br />And if you're new to Christianity or looking to learn more about Jesus, we invite you to join, ask questions and be a part of our community.</p><p>Emmerson Straughter<br /><a href="mailto:emmerson.straughter@gmail.com">emmerson.straughter@gmail.com</a><br />614-285-1694<a href="https://revivecollege.church/sign-me-up">Sign up to get connected!</a><br /></p>]]></content:encoded>
+  </item>
+  <item rdf:about="https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=24&amp;e=84077&amp;title=revive-social">
+    <title>Revive Social</title>
+    <link>https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=24&amp;e=84077&amp;title=revive-social</link>
+    <ev:location>South Oval </ev:location>
+    <ev:startdate>2026-08-24T18:00:00-04:00</ev:startdate>
+    <ev:enddate>2026-08-24T20:00:00-04:00</ev:enddate>
+    <guid>https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=24&amp;e=84077&amp;title=revive-social</guid>
+    <pubDate>2026-07-29T19:57:17-04:00</pubDate>
+    <dc:subject>Food</dc:subject>
+    <dc:subject>Social</dc:subject>
+    <dc:subject>Students (Columbus Campus)</dc:subject>
+    <dc:subject>Students (All)</dc:subject>
+    <content:encoded><![CDATA[<p>Swing by Revive Social between 6-8 PM to connect with friends, new and old, hang out, and win prizes! Food and prizes are in limited supply to don't miss out and see y'all there!</p><p>Emmerson Straughter<br /><a href="mailto:emmerson.straughter@gmail.com">emmerson.straughter@gmail.com</a><br />614-285-1694<a href="https://revivecollege.church/sign-me-up">Sign up to get connected!</a><br /></p>]]></content:encoded>
+  </item>
+  <item rdf:about="https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=24&amp;e=83860&amp;title=lawn-games">
+    <title>Lawn Games</title>
+    <link>https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=24&amp;e=83860&amp;title=lawn-games</link>
+    <ev:location>South Oval</ev:location>
+    <ev:startdate>2026-08-24T18:00:00-04:00</ev:startdate>
+    <ev:enddate>2026-08-24T20:00:00-04:00</ev:enddate>
+    <guid>https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=24&amp;e=83860&amp;title=lawn-games</guid>
+    <pubDate>2026-06-19T12:59:39-04:00</pubDate>
+    <dc:subject>Sports</dc:subject>
+    <dc:subject>Family Friendly</dc:subject>
+    <dc:subject>Social</dc:subject>
+    <dc:subject>Students (All)</dc:subject>
+    <content:encoded><![CDATA[<p>Join H2O for more lawn games at the aquatic center! This is a great space to hangout with other students and get to know one another.</p><p>Vince Concialdi<br /><a href="mailto:concialdi.1@buckeyemail.osu.edu">concialdi.1@buckeyemail.osu.edu</a><br /></p>]]></content:encoded>
+  </item>
+  <item rdf:about="https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=24&amp;e=84080&amp;title=revive-social">
+    <title>Revive Social</title>
+    <link>https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=24&amp;e=84080&amp;title=revive-social</link>
+    <ev:location>South Oval </ev:location>
+    <ev:startdate>2026-08-24T18:30:00-04:00</ev:startdate>
+    <ev:enddate>2026-08-24T21:30:00-04:00</ev:enddate>
+    <guid>https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=24&amp;e=84080&amp;title=revive-social</guid>
+    <pubDate>2026-07-30T16:32:52-04:00</pubDate>
+    <dc:subject>Food</dc:subject>
+    <dc:subject>Social</dc:subject>
+    <dc:subject>Students (Columbus Campus)</dc:subject>
+    <dc:subject>Students (All)</dc:subject>
+    <content:encoded><![CDATA[<p>Swing by Revive Social between 6-8 PM to connect with friends, new and old, hang out, and win prizes! Food and prizes are in limited supply to don't miss out and see y'all there!</p><p>Emmerson Straughter<br /><a href="mailto:emmerson.straughter@gmail.com">emmerson.straughter@gmail.com</a><br />614-285-1694<a href="https://revivecollege.church/sign-me-up">Sign up to get connected!</a><br /></p>]]></content:encoded>
+  </item>
+  <item rdf:about="https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=25&amp;e=83861&amp;title=coffee-and-lemonade-tent">
+    <title>Coffee and lemonade tent</title>
+    <link>https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=25&amp;e=83861&amp;title=coffee-and-lemonade-tent</link>
+    <ev:location>Oval</ev:location>
+    <ev:startdate>2026-08-25T09:00:00-04:00</ev:startdate>
+    <ev:enddate>2026-08-25T12:00:00-04:00</ev:enddate>
+    <guid>https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=25&amp;e=83861&amp;title=coffee-and-lemonade-tent</guid>
+    <pubDate>2026-06-19T13:09:54-04:00</pubDate>
+    <dc:subject>Food</dc:subject>
+    <dc:subject>Social</dc:subject>
+    <dc:subject>Students (All)</dc:subject>
+    <content:encoded><![CDATA[<p>Come find H2O on the main oval and join us for coffee and lemonade! Feel free to stay and chat with us afterwards.</p><p>Vince Concialdi<br /><a href="mailto:concialdi.1@buckeyemail.osu.edu">concialdi.1@buckeyemail.osu.edu</a><br /></p>]]></content:encoded>
+  </item>
+  <item rdf:about="https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=25&amp;e=83862&amp;title=bible-study-night">
+    <title>Bible study night</title>
+    <link>https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=25&amp;e=83862&amp;title=bible-study-night</link>
+    <ev:location>Oval</ev:location>
+    <ev:startdate>2026-08-25T18:00:00-04:00</ev:startdate>
+    <ev:enddate>2026-08-25T19:30:00-04:00</ev:enddate>
+    <guid>https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=25&amp;e=83862&amp;title=bible-study-night</guid>
+    <pubDate>2026-06-19T13:21:34-04:00</pubDate>
+    <dc:subject>Community Service/Outreach</dc:subject>
+    <dc:subject>Social</dc:subject>
+    <dc:subject>Students (All)</dc:subject>
+    <content:encoded><![CDATA[<p>Bible study night is open to anyone interested in joining a Bible study or just wanting to see what it's like! We'll be meeting in the oval a few times before splitting into individual groups.</p><p>Vince Concialdi<br /><a href="mailto:concialdi.1@buckeyemail.osu.edu">concialdi.1@buckeyemail.osu.edu</a><br /></p>]]></content:encoded>
+  </item>
+  <item rdf:about="https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=26&amp;e=83863&amp;title=food-and-making-cards-for-hospital">
+    <title>Food and making cards for hospital</title>
+    <link>https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=26&amp;e=83863&amp;title=food-and-making-cards-for-hospital</link>
+    <ev:location>Oval</ev:location>
+    <ev:startdate>2026-08-26T09:00:00-04:00</ev:startdate>
+    <ev:enddate>2026-08-26T12:00:00-04:00</ev:enddate>
+    <guid>https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=26&amp;e=83863&amp;title=food-and-making-cards-for-hospital</guid>
+    <pubDate>2026-06-19T13:45:57-04:00</pubDate>
+    <dc:subject>Community Service/Outreach</dc:subject>
+    <dc:subject>Social</dc:subject>
+    <dc:subject>Students (All)</dc:subject>
+    <content:encoded><![CDATA[<p>Join us in the oval for this volunteering opportunity! We will be making cards for hospital patients. We will have popsicles on the first day and iced coffee on the second.</p><p>Vince Concialdi<br /><a href="mailto:concialdi.1@buckeyemail.osu.edu">concialdi.1@buckeyemail.osu.edu</a><br /></p>]]></content:encoded>
+  </item>
+  <item rdf:about="https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=26&amp;e=83864&amp;title=lawn-games-arts-and-crafts">
+    <title>Lawn Games + Arts and Crafts</title>
+    <link>https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=26&amp;e=83864&amp;title=lawn-games-arts-and-crafts</link>
+    <ev:location>McPherson Lawn</ev:location>
+    <ev:startdate>2026-08-26T18:00:00-04:00</ev:startdate>
+    <ev:enddate>2026-08-26T20:00:00-04:00</ev:enddate>
+    <guid>https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=26&amp;e=83864&amp;title=lawn-games-arts-and-crafts</guid>
+    <pubDate>2026-06-16T18:44:28-04:00</pubDate>
+    <dc:subject>Sports</dc:subject>
+    <dc:subject>Family Friendly</dc:subject>
+    <dc:subject>Social</dc:subject>
+    <dc:subject>Students (All)</dc:subject>
+    <content:encoded><![CDATA[<p>Join H2O Church for lawn games and arts and crafts, located on the Scott Lawn! There will be lawn games such as cornhole and spike ball, along with a variety of arts and crafts.</p><p>Vince Concialdi<br /><a href="mailto:concialdi.1@buckeyemail.osu.edu">concialdi.1@buckeyemail.osu.edu</a><br /></p>]]></content:encoded>
+  </item>
+  <item rdf:about="https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=26&amp;e=84106&amp;title=welcome-night-">
+    <title>Welcome Night </title>
+    <link>https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=26&amp;e=84106&amp;title=welcome-night-</link>
+    <ev:location>Blackburn - Victory Room</ev:location>
+    <ev:startdate>2026-08-26T20:00:00-04:00</ev:startdate>
+    <ev:enddate>2026-08-26T22:00:00-04:00</ev:enddate>
+    <guid>https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=26&amp;e=84106&amp;title=welcome-night-</guid>
+    <pubDate>2026-07-29T20:00:33-04:00</pubDate>
+    <dc:subject>Food</dc:subject>
+    <dc:subject>Social</dc:subject>
+    <dc:subject>Students (Columbus Campus)</dc:subject>
+    <dc:subject>Students (All)</dc:subject>
+    <content:encoded><![CDATA[<p>We're welcoming YOU back to campus at our Fall Welcome Night! We'll be sharing food and stories from students in our group and about what Revive is about. See you then!</p><p>Emmerson Straughter<br /><a href="mailto:emmerson.straughter@gmail.com">emmerson.straughter@gmail.com</a><br />614-285-1694<a href="https://revivecollege.church/sign-me-up">Sign up to get connected!</a><br /></p>]]></content:encoded>
+  </item>
+  <item rdf:about="https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=27&amp;e=83867&amp;title=coffee-hot-chocolate-and-donuts">
+    <title>Coffee, hot chocolate, and donuts</title>
+    <link>https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=27&amp;e=83867&amp;title=coffee-hot-chocolate-and-donuts</link>
+    <ev:location>Oval</ev:location>
+    <ev:startdate>2026-08-27T09:00:00-04:00</ev:startdate>
+    <ev:enddate>2026-08-27T12:00:00-04:00</ev:enddate>
+    <guid>https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=27&amp;e=83867&amp;title=coffee-hot-chocolate-and-donuts</guid>
+    <pubDate>2026-06-19T14:05:38-04:00</pubDate>
+    <dc:subject>Food</dc:subject>
+    <dc:subject>Social</dc:subject>
+    <dc:subject>Students (All)</dc:subject>
+    <content:encoded><![CDATA[<p>Come find us on the oval for some coffee, hot chocolate, or donuts! Feel free to stay and hang out for a while</p><p>Vince Concialdi<br /><a href="mailto:concialdi.1@buckeyemail.osu.edu">concialdi.1@buckeyemail.osu.edu</a><br /></p>]]></content:encoded>
+  </item>
+  <item rdf:about="https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=27&amp;e=84175&amp;title=sports-social-">
+    <title>Sports Social </title>
+    <link>https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=27&amp;e=84175&amp;title=sports-social-</link>
+    <ev:location>Oval </ev:location>
+    <ev:startdate>2026-08-27T18:00:00-04:00</ev:startdate>
+    <ev:enddate>2026-08-27T20:00:00-04:00</ev:enddate>
+    <guid>https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=27&amp;e=84175&amp;title=sports-social-</guid>
+    <pubDate>2026-08-13T20:53:47-04:00</pubDate>
+    <dc:subject>Sports</dc:subject>
+    <dc:subject>Social</dc:subject>
+    <dc:subject>Students (Columbus Campus)</dc:subject>
+    <dc:subject>Students (All)</dc:subject>
+    <content:encoded><![CDATA[<p>Grab your friends and get active! Casual games, friendly competition, and a great way to meet new people out on the Oval. All skill levels welcome!</p><p>Emmerson Straughter<br /><a href="mailto:emmerson.straughter@gmail.com">emmerson.straughter@gmail.com</a><br />614-285-1694<a href="https://revivecollege.church/sign-me-up">Sign up to get connected!</a><br /></p>]]></content:encoded>
+  </item>
+  <item rdf:about="https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=27&amp;e=83866&amp;title=lawn-games-arts-and-crafts">
+    <title>Lawn Games + Arts and Crafts</title>
+    <link>https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=27&amp;e=83866&amp;title=lawn-games-arts-and-crafts</link>
+    <ev:location>Oval</ev:location>
+    <ev:startdate>2026-08-27T18:00:00-04:00</ev:startdate>
+    <ev:enddate>2026-08-27T20:00:00-04:00</ev:enddate>
+    <guid>https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=27&amp;e=83866&amp;title=lawn-games-arts-and-crafts</guid>
+    <pubDate>2026-06-19T14:03:18-04:00</pubDate>
+    <dc:subject>Sports</dc:subject>
+    <dc:subject>Social</dc:subject>
+    <dc:subject>Students (All)</dc:subject>
+    <content:encoded><![CDATA[<p>Join H2O Church for lawn games and arts and crafts, located at Smith-Steeb! There will be lawn games such as cornhole and spike ball, along with a variety of arts and crafts.</p><p>Vince Concialdi<br /><a href="mailto:concialdi.1@buckeyemail.osu.edu">concialdi.1@buckeyemail.osu.edu</a><br /></p>]]></content:encoded>
+  </item>
+  <item rdf:about="https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=28&amp;e=84177&amp;title=girls-night">
+    <title>Girls' Night</title>
+    <link>https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=28&amp;e=84177&amp;title=girls-night</link>
+    <ev:location>Nosker (Burgee Room)</ev:location>
+    <ev:startdate>2026-08-28T18:30:00-04:00</ev:startdate>
+    <ev:enddate>2026-08-28T20:30:00-04:00</ev:enddate>
+    <guid>https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=28&amp;e=84177&amp;title=girls-night</guid>
+    <pubDate>2026-08-13T21:03:26-04:00</pubDate>
+    <dc:subject>Fine Arts</dc:subject>
+    <dc:subject>Social</dc:subject>
+    <dc:subject>Students (Columbus Campus)</dc:subject>
+    <dc:subject>Students (All)</dc:subject>
+    <content:encoded><![CDATA[<p>We're having a Y2K themed girls' night complete with friendship bracelets and butterfly clips. Would love to see y'all there!</p><p>Emmerson Straughter<br /><a href="mailto:emmerson.straughter@gmail.com">emmerson.straughter@gmail.com</a><br />614-285-1694<a href="https://revivecollege.church/sign-me-up">Sign up to get connected!</a><br /></p>]]></content:encoded>
+  </item>
+  <item rdf:about="https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=28&amp;e=84176&amp;title=bros-night-">
+    <title>Bro's Night </title>
+    <link>https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=28&amp;e=84176&amp;title=bros-night-</link>
+    <ev:location>College Green </ev:location>
+    <ev:startdate>2026-08-28T18:30:00-04:00</ev:startdate>
+    <ev:enddate>2026-08-28T20:30:00-04:00</ev:enddate>
+    <guid>https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=28&amp;e=84176&amp;title=bros-night-</guid>
+    <pubDate>2026-08-13T20:57:20-04:00</pubDate>
+    <dc:subject>Sports</dc:subject>
+    <dc:subject>Social</dc:subject>
+    <dc:subject>Students (Columbus Campus)</dc:subject>
+    <dc:subject>Students (All)</dc:subject>
+    <content:encoded><![CDATA[<p>Food. Fun. Friendly competition. See you then!</p><p>Emmerson Straughter<br /><a href="mailto:emmerson.straughter@gmail.com">emmerson.straughter@gmail.com</a><br />614-285-1694<a href="https://revivecollege.church/sign-me-up">Sign up to get connected!</a><br /></p>]]></content:encoded>
+  </item>
+  <item rdf:about="https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=28&amp;e=83869&amp;title=movie-night-with-board-games-and-crafts">
+    <title>Movie night with board games and crafts</title>
+    <link>https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=28&amp;e=83869&amp;title=movie-night-with-board-games-and-crafts</link>
+    <ev:location>1385 Neil Ave, Columbus, OH 43201</ev:location>
+    <ev:startdate>2026-08-28T19:00:00-04:00</ev:startdate>
+    <ev:enddate>2026-08-28T23:00:00-04:00</ev:enddate>
+    <guid>https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=28&amp;e=83869&amp;title=movie-night-with-board-games-and-crafts</guid>
+    <pubDate>2026-06-19T14:30:55-04:00</pubDate>
+    <dc:subject>Movies</dc:subject>
+    <dc:subject>Social</dc:subject>
+    <dc:subject>Students (All)</dc:subject>
+    <content:encoded><![CDATA[<p>Join us at the H2O building for a movie night along with board games and arts and crafts!&nbsp;</p><p>Vince Concialdi<br /><a href="mailto:concialdi.1@buckeyemail.osu.edu">concialdi.1@buckeyemail.osu.edu</a><br /></p>]]></content:encoded>
+  </item>
+  <item rdf:about="https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=29&amp;e=83868&amp;title=food-and-making-cards-for-hospital">
+    <title>Food and making cards for hospital</title>
+    <link>https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=29&amp;e=83868&amp;title=food-and-making-cards-for-hospital</link>
+    <ev:location>Oval</ev:location>
+    <ev:startdate>2026-08-29T09:00:00-04:00</ev:startdate>
+    <ev:enddate>2026-08-29T12:00:00-04:00</ev:enddate>
+    <guid>https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=29&amp;e=83868&amp;title=food-and-making-cards-for-hospital</guid>
+    <pubDate>2026-06-19T13:45:57-04:00</pubDate>
+    <dc:subject>Community Service/Outreach</dc:subject>
+    <dc:subject>Social</dc:subject>
+    <dc:subject>Students (All)</dc:subject>
+    <content:encoded><![CDATA[<p>Join us in the oval for this volunteering opportunity! We will be making cards for hospital patients. We will have popsicles on the first day and iced coffee on the second.</p><p>Vince Concialdi<br /><a href="mailto:concialdi.1@buckeyemail.osu.edu">concialdi.1@buckeyemail.osu.edu</a><br /></p>]]></content:encoded>
+  </item>
+  <item rdf:about="https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=29&amp;e=83870&amp;title=dinner-and-sand-volleyball">
+    <title>Dinner and sand volleyball</title>
+    <link>https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=29&amp;e=83870&amp;title=dinner-and-sand-volleyball</link>
+    <ev:location>Curl market</ev:location>
+    <ev:startdate>2026-08-29T19:00:00-04:00</ev:startdate>
+    <ev:enddate>2026-08-29T22:00:00-04:00</ev:enddate>
+    <guid>https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=29&amp;e=83870&amp;title=dinner-and-sand-volleyball</guid>
+    <pubDate>2026-06-19T14:49:57-04:00</pubDate>
+    <dc:subject>Sports</dc:subject>
+    <dc:subject>Food</dc:subject>
+    <dc:subject>Students (All)</dc:subject>
+    <content:encoded><![CDATA[<p>We will be getting dinner at Curl Market and play sand volleyball on the courts nextdoor. Everyone is welcome!</p><p>Vince Concialdi<br /><a href="mailto:concialdi.1@buckeyemail.osu.edu">concialdi.1@buckeyemail.osu.edu</a><br /></p>]]></content:encoded>
+  </item>
+  <item rdf:about="https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=30&amp;e=83850&amp;title=sunday-church-service">
+    <title>Sunday Church Service</title>
+    <link>https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=30&amp;e=83850&amp;title=sunday-church-service</link>
+    <ev:location>Ohio Union</ev:location>
+    <ev:startdate>2026-08-30T11:01:00-04:00</ev:startdate>
+    <ev:enddate>2026-08-30T12:00:00-04:00</ev:enddate>
+    <guid>https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=30&amp;e=83850&amp;title=sunday-church-service</guid>
+    <pubDate>2026-06-16T18:34:54-04:00</pubDate>
+    <dc:subject>Community Service/Outreach</dc:subject>
+    <dc:subject>Family Friendly</dc:subject>
+    <dc:subject>Students (Columbus Campus)</dc:subject>
+    <dc:subject>Students (All)</dc:subject>
+    <dc:subject>Faculty/Staff</dc:subject>
+    <dc:subject>Alumni</dc:subject>
+    <dc:subject>General Public</dc:subject>
+    <dc:subject>Parents/Family</dc:subject>
+    <dc:subject>Graduate/Professional Students</dc:subject>
+    <dc:subject>Church</dc:subject>
+    <content:encoded><![CDATA[<p>Join us for Sunday service in the Ohio Union! The first four H2O services will be held here as students move in and get used to campus before being held in the H2O building.</p><p>Vince Concialdi<br /><a href="mailto:concialdi.1@buckeyemail.osu.edu">concialdi.1@buckeyemail.osu.edu</a><br /></p>]]></content:encoded>
+  </item>
+  <item rdf:about="https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=30&amp;e=83857&amp;title=lawn-games">
+    <title>Lawn Games</title>
+    <link>https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=30&amp;e=83857&amp;title=lawn-games</link>
+    <ev:location>South Oval</ev:location>
+    <ev:startdate>2026-08-30T12:15:00-04:00</ev:startdate>
+    <ev:enddate>2026-08-30T14:15:00-04:00</ev:enddate>
+    <guid>https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=30&amp;e=83857&amp;title=lawn-games</guid>
+    <pubDate>2026-06-16T18:40:31-04:00</pubDate>
+    <dc:subject>Sports</dc:subject>
+    <dc:subject>Family Friendly</dc:subject>
+    <dc:subject>Social</dc:subject>
+    <dc:subject>Students (All)</dc:subject>
+    <content:encoded><![CDATA[<p>Join H2O Church for lawn games in the Ohio Union west plaza. This is an informal event for students to get connected with one another and come hang out.</p><p>Vince Concialdi<br /><a href="mailto:concialdi.1@buckeyemail.osu.edu">concialdi.1@buckeyemail.osu.edu</a><br /></p>]]></content:encoded>
+  </item>
+  <item rdf:about="https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=30&amp;e=83856&amp;title=lunch-after-service">
+    <title>Lunch after service</title>
+    <link>https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=30&amp;e=83856&amp;title=lunch-after-service</link>
+    <ev:location>Ohio Union</ev:location>
+    <ev:startdate>2026-08-30T12:15:00-04:00</ev:startdate>
+    <ev:enddate>2026-08-30T13:15:00-04:00</ev:enddate>
+    <guid>https://activities.osu.edu/Events.aspx?y=2026&amp;mo=8&amp;day=30&amp;e=83856&amp;title=lunch-after-service</guid>
+    <pubDate>2026-06-16T18:50:57-04:00</pubDate>
+    <dc:subject>Food</dc:subject>
+    <dc:subject>Social</dc:subject>
+    <dc:subject>Students (All)</dc:subject>
+    <content:encoded><![CDATA[<p>Join attendees of the H2O sunday service in lunch at the Union! This is a great time to get to know other students and members of the Church</p><p>Vince Concialdi<br /><a href="mailto:concialdi.1@buckeyemail.osu.edu">concialdi.1@buckeyemail.osu.edu</a><br /></p>]]></content:encoded>
+  </item>
+  <item rdf:about="https://activities.osu.edu/Events.aspx?y=2026&amp;mo=9&amp;day=1&amp;e=83871&amp;title=bible-study-night">
+    <title>Bible study night</title>
+    <link>https://activities.osu.edu/Events.aspx?y=2026&amp;mo=9&amp;day=1&amp;e=83871&amp;title=bible-study-night</link>
+    <ev:location>Oval</ev:location>
+    <ev:startdate>2026-09-01T18:00:00-04:00</ev:startdate>
+    <ev:enddate>2026-09-01T19:30:00-04:00</ev:enddate>
+    <guid>https://activities.osu.edu/Events.aspx?y=2026&amp;mo=9&amp;day=1&amp;e=83871&amp;title=bible-study-night</guid>
+    <pubDate>2026-06-19T13:21:34-04:00</pubDate>
+    <dc:subject>Community Service/Outreach</dc:subject>
+    <dc:subject>Social</dc:subject>
+    <dc:subject>Students (All)</dc:subject>
+    <content:encoded><![CDATA[<p>Bible study night is open to anyone interested in joining a Bible study or just wanting to see what it's like! We'll be meeting in the oval a few times before splitting into individual groups.</p><p>Vince Concialdi<br /><a href="mailto:concialdi.1@buckeyemail.osu.edu">concialdi.1@buckeyemail.osu.edu</a><br /></p>]]></content:encoded>
+  </item>
+  <item rdf:about="https://activities.osu.edu/Events.aspx?y=2026&amp;mo=9&amp;day=2&amp;e=83872&amp;title=h2o-sports-day">
+    <title>H2O sports day</title>
+    <link>https://activities.osu.edu/Events.aspx?y=2026&amp;mo=9&amp;day=2&amp;e=83872&amp;title=h2o-sports-day</link>
+    <ev:location>Turf fields</ev:location>
+    <ev:startdate>2026-09-02T18:00:00-04:00</ev:startdate>
+    <ev:enddate>2026-09-02T20:00:00-04:00</ev:enddate>
+    <guid>https://activities.osu.edu/Events.aspx?y=2026&amp;mo=9&amp;day=2&amp;e=83872&amp;title=h2o-sports-day</guid>
+    <pubDate>2026-06-19T15:14:04-04:00</pubDate>
+    <dc:subject>Sports</dc:subject>
+    <dc:subject>Social</dc:subject>
+    <dc:subject>Students (All)</dc:subject>
+    <content:encoded><![CDATA[<p>Join us at the turf fields for a variety of games such as pickleball, ultimate frisbee, soccer, and any other games you feel like playing!</p><p>Vince Concialdi<br /><a href="mailto:concialdi.1@buckeyemail.osu.edu">concialdi.1@buckeyemail.osu.edu</a><br /></p>]]></content:encoded>
+  </item>
+  <item rdf:about="https://activities.osu.edu/Events.aspx?y=2026&amp;mo=9&amp;day=6&amp;e=83851&amp;title=sunday-church-service">
+    <title>Sunday Church Service</title>
+    <link>https://activities.osu.edu/Events.aspx?y=2026&amp;mo=9&amp;day=6&amp;e=83851&amp;title=sunday-church-service</link>
+    <ev:location>Ohio Union</ev:location>
+    <ev:startdate>2026-09-06T11:01:00-04:00</ev:startdate>
+    <ev:enddate>2026-09-06T12:00:00-04:00</ev:enddate>
+    <guid>https://activities.osu.edu/Events.aspx?y=2026&amp;mo=9&amp;day=6&amp;e=83851&amp;title=sunday-church-service</guid>
+    <pubDate>2026-06-16T18:34:54-04:00</pubDate>
+    <dc:subject>Community Service/Outreach</dc:subject>
+    <dc:subject>Family Friendly</dc:subject>
+    <dc:subject>Students (Columbus Campus)</dc:subject>
+    <dc:subject>Students (All)</dc:subject>
+    <dc:subject>Faculty/Staff</dc:subject>
+    <dc:subject>Alumni</dc:subject>
+    <dc:subject>General Public</dc:subject>
+    <dc:subject>Parents/Family</dc:subject>
+    <dc:subject>Graduate/Professional Students</dc:subject>
+    <dc:subject>Church</dc:subject>
+    <content:encoded><![CDATA[<p>Join us for Sunday service in the Ohio Union! The first four H2O services will be held here as students move in and get used to campus before being held in the H2O building.</p><p>Vince Concialdi<br /><a href="mailto:concialdi.1@buckeyemail.osu.edu">concialdi.1@buckeyemail.osu.edu</a><br /></p>]]></content:encoded>
+  </item>
+  <item rdf:about="https://activities.osu.edu/Events.aspx?y=2026&amp;mo=9&amp;day=6&amp;e=84178&amp;title=sunday-service-">
+    <title>Sunday Service </title>
+    <link>https://activities.osu.edu/Events.aspx?y=2026&amp;mo=9&amp;day=6&amp;e=84178&amp;title=sunday-service-</link>
+    <ev:location>Union Great Hall Meeting Rm 3</ev:location>
+    <ev:startdate>2026-09-06T15:00:00-04:00</ev:startdate>
+    <ev:enddate>2026-09-06T17:00:00-04:00</ev:enddate>
+    <guid>https://activities.osu.edu/Events.aspx?y=2026&amp;mo=9&amp;day=6&amp;e=84178&amp;title=sunday-service-</guid>
+    <pubDate>2026-08-13T21:07:36-04:00</pubDate>
+    <dc:subject>Food</dc:subject>
+    <dc:subject>Social</dc:subject>
+    <dc:subject>Students (Columbus Campus)</dc:subject>
+    <dc:subject>Students (All)</dc:subject>
+    <content:encoded><![CDATA[<p>Looking for a church to call home on campus? Join us at Revive! We're a group of OSU students and mentors learning about God and living out our faith. We invite you to come alongside us as we strive to make Christ known at OSU.</p>
+<p>And if you're new to Christianity or looking to learn more about Jesus, we invite you to join, ask questions and be a part of our community.</p><p>Emmerson Straughter<br /><a href="mailto:emmerson.straughter@gmail.com">emmerson.straughter@gmail.com</a><br />614-285-1694<a href="https://revivecollege.church/sign-me-up">Sign up to get connected!</a><br /></p>]]></content:encoded>
+  </item>
+  <item rdf:about="https://activities.osu.edu/Events.aspx?y=2026&amp;mo=9&amp;day=7&amp;e=83873&amp;title=labor-day-cookout">
+    <title>Labor day cookout</title>
+    <link>https://activities.osu.edu/Events.aspx?y=2026&amp;mo=9&amp;day=7&amp;e=83873&amp;title=labor-day-cookout</link>
+    <ev:location>Tuttle park</ev:location>
+    <ev:startdate>2026-09-07T12:00:00-04:00</ev:startdate>
+    <ev:enddate>2026-09-07T14:00:00-04:00</ev:enddate>
+    <guid>https://activities.osu.edu/Events.aspx?y=2026&amp;mo=9&amp;day=7&amp;e=83873&amp;title=labor-day-cookout</guid>
+    <pubDate>2026-06-19T15:27:06-04:00</pubDate>
+    <dc:subject>Food</dc:subject>
+    <dc:subject>Social</dc:subject>
+    <dc:subject>Students (All)</dc:subject>
+    <content:encoded><![CDATA[<p>Join us for a labor day cookout at Tuttle park!&nbsp;</p><p>Vince Concialdi<br /><a href="mailto:concialdi.1@buckeyemail.osu.edu">concialdi.1@buckeyemail.osu.edu</a><br /></p>]]></content:encoded>
+  </item>
+  <item rdf:about="https://activities.osu.edu/Events.aspx?y=2026&amp;mo=9&amp;day=8&amp;e=83874&amp;title=worship-night">
+    <title>Worship night</title>
+    <link>https://activities.osu.edu/Events.aspx?y=2026&amp;mo=9&amp;day=8&amp;e=83874&amp;title=worship-night</link>
+    <ev:location>Mirror lake amphitheater</ev:location>
+    <ev:startdate>2026-09-08T18:00:00-04:00</ev:startdate>
+    <ev:enddate>2026-09-08T20:00:00-04:00</ev:enddate>
+    <guid>https://activities.osu.edu/Events.aspx?y=2026&amp;mo=9&amp;day=8&amp;e=83874&amp;title=worship-night</guid>
+    <pubDate>2026-06-19T15:34:44-04:00</pubDate>
+    <dc:subject>Music</dc:subject>
+    <dc:subject>Family Friendly</dc:subject>
+    <dc:subject>Social</dc:subject>
+    <dc:subject>Students (All)</dc:subject>
+    <content:encoded><![CDATA[<p>Come see the H2O worship band and join us in worship at the Browning Amphitheater.&nbsp;</p><p>Vince Concialdi<br /><a href="mailto:concialdi.1@buckeyemail.osu.edu">concialdi.1@buckeyemail.osu.edu</a><br /></p>]]></content:encoded>
+  </item>
+  <item rdf:about="https://activities.osu.edu/Events.aspx?y=2026&amp;mo=9&amp;day=9&amp;e=84112&amp;title=your-success-the-graduate-professional-student-wellness-kickoff">
+    <title>Your Success: The Graduate &amp; Professional Student Wellness Kickoff</title>
+    <link>https://activities.osu.edu/Events.aspx?y=2026&amp;mo=9&amp;day=9&amp;e=84112&amp;title=your-success-the-graduate-professional-student-wellness-kickoff</link>
+    <ev:location>Ohio Union Maudine Cow room</ev:location>
+    <ev:startdate>2026-09-09T12:00:00-04:00</ev:startdate>
+    <ev:enddate>2026-09-09T13:00:00-04:00</ev:enddate>
+    <guid>https://activities.osu.edu/Events.aspx?y=2026&amp;mo=9&amp;day=9&amp;e=84112&amp;title=your-success-the-graduate-professional-student-wellness-kickoff</guid>
+    <pubDate>2026-08-05T11:29:21-04:00</pubDate>
+    <dc:subject>Health and Wellness</dc:subject>
+    <dc:subject>Graduate/Professional Students</dc:subject>
+    <dc:subject>Student Wellness Center</dc:subject>
+    <dc:subject>Student Wellness</dc:subject>
+    <dc:subject>resources</dc:subject>
+    <dc:subject>Health and Wellness</dc:subject>
+    <dc:subject>Graduate and Professional Students</dc:subject>
+    <dc:subject>Wellbeing</dc:subject>
+    <dc:subject>Success</dc:subject>
+    <content:encoded><![CDATA[<p><strong><em>Wellness Wednesday in partnership with OUAB.&nbsp;</em></strong></p>
+<p>Whether you are stepping onto campus for your first semester of classes or settling into the home stretch of your dissertation or clinical rotations, navigating the graduate and professional school experience requires more than just academic grit. Join us for a high-impact "insider&rsquo;s guide" to the resources that matter most in supporting your well-being. We are bringing vital offices&mdash;the Student Wellness Center, CCS, Student Advocacy, the Graduate Ombudsperson, and Student Life Disability Services&mdash;for a rapid-fire "5x5" session. Get the essential details on confidential conflict resolution, lab/field-based accommodations, and mental health support specifically designed for the OSU advanced-degree lifecycle. Come for the insider knowledge, stay for the lunch, and leave with your support network identified and mapped out.</p>
+<p><strong>Presenters:</strong> Student Wellness Center (SWC), Student Advocacy Center, Student Life Disability Services (SLDS), Counseling and Consultation Service (CCS), &amp; Graduate and Professional Student Ombudsperson</p><p>Adrienne Wilson<br /><a href="mailto:wilson.2313@osu.edu">wilson.2313@osu.edu</a><br /></p>]]></content:encoded>
+  </item>
+  <item rdf:about="https://activities.osu.edu/Events.aspx?y=2026&amp;mo=9&amp;day=11&amp;e=84194&amp;title=recovery-is-spoken-here">
+    <title>Recovery is Spoken Here</title>
+    <link>https://activities.osu.edu/Events.aspx?y=2026&amp;mo=9&amp;day=11&amp;e=84194&amp;title=recovery-is-spoken-here</link>
+    <ev:location>Virtual (Carmen Zoom)</ev:location>
+    <ev:startdate>2026-09-11T10:00:00-04:00</ev:startdate>
+    <ev:enddate>2026-09-11T12:00:00-04:00</ev:enddate>
+    <guid>https://activities.osu.edu/Events.aspx?y=2026&amp;mo=9&amp;day=11&amp;e=84194&amp;title=recovery-is-spoken-here</guid>
+    <pubDate>2026-08-14T09:30:14-04:00</pubDate>
+    <dc:subject>Health and Wellness</dc:subject>
+    <dc:subject>Faculty/Staff</dc:subject>
+    <dc:subject>Student Wellness Center</dc:subject>
+    <content:encoded><![CDATA[<p>The Office of Student Life Student Wellness Center's Collegiate Recovery Community (CRC), in partnership with the Higher Education Center for Alcohol and Drug Misuse Prevention and Recovery (HECAOD), is excited to offer our Recovery is Spoken Here (RISH) training geared towards faculty and staff members. We aim to foster an environment where students in or seeking recovery feel accepted by their peers, are empowered to live genuinely, feel comfortable asking for help, and are celebrated by the Ohio State community. By becoming a Recovery Ally, you declare to students seeking recovery that you embody these ideals.</p>
+<p>This 2-hour training covers a high-level overview of addiction and recovery, addiction and recovery on campus, recovery-friendly language, how to connect students with the CRC, and ways to get involved as a Recovery Ally.</p><p>Adrienne Wilson<br /><a href="mailto:wilson.2313@osu.edu">wilson.2313@osu.edu</a><br />614-292-4527<a href="https://go.osu.edu/rishfall26">Register Here</a><br /></p>]]></content:encoded>
+  </item>
+  <item rdf:about="https://activities.osu.edu/Events.aspx?y=2026&amp;mo=9&amp;day=13&amp;e=83852&amp;title=sunday-church-service">
+    <title>Sunday Church Service</title>
+    <link>https://activities.osu.edu/Events.aspx?y=2026&amp;mo=9&amp;day=13&amp;e=83852&amp;title=sunday-church-service</link>
+    <ev:location>Ohio Union</ev:location>
+    <ev:startdate>2026-09-13T11:01:00-04:00</ev:startdate>
+    <ev:enddate>2026-09-13T12:00:00-04:00</ev:enddate>
+    <guid>https://activities.osu.edu/Events.aspx?y=2026&amp;mo=9&amp;day=13&amp;e=83852&amp;title=sunday-church-service</guid>
+    <pubDate>2026-06-16T18:34:54-04:00</pubDate>
+    <dc:subject>Community Service/Outreach</dc:subject>
+    <dc:subject>Family Friendly</dc:subject>
+    <dc:subject>Students (Columbus Campus)</dc:subject>
+    <dc:subject>Students (All)</dc:subject>
+    <dc:subject>Faculty/Staff</dc:subject>
+    <dc:subject>Alumni</dc:subject>
+    <dc:subject>General Public</dc:subject>
+    <dc:subject>Parents/Family</dc:subject>
+    <dc:subject>Graduate/Professional Students</dc:subject>
+    <dc:subject>Church</dc:subject>
+    <content:encoded><![CDATA[<p>Join us for Sunday service in the Ohio Union! The first four H2O services will be held here as students move in and get used to campus before being held in the H2O building.</p><p>Vince Concialdi<br /><a href="mailto:concialdi.1@buckeyemail.osu.edu">concialdi.1@buckeyemail.osu.edu</a><br /></p>]]></content:encoded>
+  </item>
+  <item rdf:about="https://activities.osu.edu/Events.aspx?y=2026&amp;mo=9&amp;day=13&amp;e=84179&amp;title=sunday-service-">
+    <title>Sunday Service </title>
+    <link>https://activities.osu.edu/Events.aspx?y=2026&amp;mo=9&amp;day=13&amp;e=84179&amp;title=sunday-service-</link>
+    <ev:location>Union Great Hall Meeting Rm 3</ev:location>
+    <ev:startdate>2026-09-13T15:00:00-04:00</ev:startdate>
+    <ev:enddate>2026-09-13T17:00:00-04:00</ev:enddate>
+    <guid>https://activities.osu.edu/Events.aspx?y=2026&amp;mo=9&amp;day=13&amp;e=84179&amp;title=sunday-service-</guid>
+    <pubDate>2026-08-13T21:07:36-04:00</pubDate>
+    <dc:subject>Food</dc:subject>
+    <dc:subject>Social</dc:subject>
+    <dc:subject>Students (Columbus Campus)</dc:subject>
+    <dc:subject>Students (All)</dc:subject>
+    <content:encoded><![CDATA[<p>Looking for a church to call home on campus? Join us at Revive! We're a group of OSU students and mentors learning about God and living out our faith. We invite you to come alongside us as we strive to make Christ known at OSU.</p>
+<p>And if you're new to Christianity or looking to learn more about Jesus, we invite you to join, ask questions and be a part of our community.</p><p>Emmerson Straughter<br /><a href="mailto:emmerson.straughter@gmail.com">emmerson.straughter@gmail.com</a><br />614-285-1694<a href="https://revivecollege.church/sign-me-up">Sign up to get connected!</a><br /></p>]]></content:encoded>
+  </item>
+  <item rdf:about="https://activities.osu.edu/Events.aspx?y=2026&amp;mo=9&amp;day=17&amp;e=83876&amp;title=bekind-food-packing">
+    <title>BeKind food packing</title>
+    <link>https://activities.osu.edu/Events.aspx?y=2026&amp;mo=9&amp;day=17&amp;e=83876&amp;title=bekind-food-packing</link>
+    <ev:location>RPAC</ev:location>
+    <ev:startdate>2026-09-17T18:00:00-04:00</ev:startdate>
+    <ev:enddate>2026-09-17T21:00:00-04:00</ev:enddate>
+    <guid>https://activities.osu.edu/Events.aspx?y=2026&amp;mo=9&amp;day=17&amp;e=83876&amp;title=bekind-food-packing</guid>
+    <pubDate>2026-06-20T13:20:27-04:00</pubDate>
+    <dc:subject>Community Service/Outreach</dc:subject>
+    <dc:subject>Food</dc:subject>
+    <dc:subject>Students (All)</dc:subject>
+    <content:encoded><![CDATA[<p>This is an annual volunteering opportunity where we will participate with hundreds of other volunteers. We will come together to pack food for families in need all across the state.</p><p>Vince Concialdi<br /><a href="mailto:concialdi.1@buckeyemail.osu.edu">concialdi.1@buckeyemail.osu.edu</a><br /></p>]]></content:encoded>
+  </item>
+  <item rdf:about="https://activities.osu.edu/Events.aspx?y=2026&amp;mo=9&amp;day=18&amp;e=84193&amp;title=guiding-students-to-wellness">
+    <title>Guiding Students to Wellness</title>
+    <link>https://activities.osu.edu/Events.aspx?y=2026&amp;mo=9&amp;day=18&amp;e=84193&amp;title=guiding-students-to-wellness</link>
+    <ev:location>Recreation and Physical Activity Center (RPAC) Dave Griner Room</ev:location>
+    <ev:startdate>2026-09-18T10:00:00-04:00</ev:startdate>
+    <ev:enddate>2026-09-18T12:00:00-04:00</ev:enddate>
+    <guid>https://activities.osu.edu/Events.aspx?y=2026&amp;mo=9&amp;day=18&amp;e=84193&amp;title=guiding-students-to-wellness</guid>
+    <pubDate>2026-08-14T09:27:10-04:00</pubDate>
+    <dc:subject>Health and Wellness</dc:subject>
+    <dc:subject>Faculty/Staff</dc:subject>
+    <dc:subject>Student Wellness Center</dc:subject>
+    <content:encoded><![CDATA[<p>The&nbsp;Guiding Students to Wellness workshop is a 2-hour&nbsp;training&nbsp;designed for&nbsp;faculty,&nbsp;staff&nbsp;and graduate/professional students at The Ohio State University. Participants will learn to effectively guide students to wellness through&nbsp;Motivational Interviewing and best-referral practices. Participants will gain insights into Student Wellness Center programming and services, as well as&nbsp;tangible skills to help students access&nbsp;campus health and&nbsp;wellness&nbsp;resources.</p><p>Adrienne Wilson<br /><a href="mailto:wilson.2313@osu.edu">wilson.2313@osu.edu</a><br />614-292-4527<a href="https://go.osu.edu/fall26gs2wellness">Register Here</a><br /></p>]]></content:encoded>
+  </item>
+  <item rdf:about="https://activities.osu.edu/Events.aspx?y=2026&amp;mo=9&amp;day=20&amp;e=83816&amp;title=sunday-church-service">
+    <title>Sunday Church Service</title>
+    <link>https://activities.osu.edu/Events.aspx?y=2026&amp;mo=9&amp;day=20&amp;e=83816&amp;title=sunday-church-service</link>
+    <ev:location>1385 Neil Ave, Columbus, OH 43201</ev:location>
+    <ev:startdate>2026-09-20T11:01:00-04:00</ev:startdate>
+    <ev:enddate>2026-09-20T12:00:00-04:00</ev:enddate>
+    <guid>https://activities.osu.edu/Events.aspx?y=2026&amp;mo=9&amp;day=20&amp;e=83816&amp;title=sunday-church-service</guid>
+    <pubDate>2026-06-16T18:31:30-04:00</pubDate>
+    <dc:subject>Community Service/Outreach</dc:subject>
+    <dc:subject>Family Friendly</dc:subject>
+    <dc:subject>Students (Columbus Campus)</dc:subject>
+    <dc:subject>Students (All)</dc:subject>
+    <dc:subject>Faculty/Staff</dc:subject>
+    <dc:subject>Alumni</dc:subject>
+    <dc:subject>General Public</dc:subject>
+    <dc:subject>Parents/Family</dc:subject>
+    <dc:subject>Graduate/Professional Students</dc:subject>
+    <dc:subject>Church</dc:subject>
+    <content:encoded><![CDATA[<p>Join us for Sunday service every Sunday at the H2O Columbus building! We offer an informal, friendly atmosphere for anyone who wants to attend.</p><p>Vince Concialdi<br /><a href="mailto:concialdi.1@buckeyemail.osu.edu">concialdi.1@buckeyemail.osu.edu</a><br /></p>]]></content:encoded>
+  </item>
+  <item rdf:about="https://activities.osu.edu/Events.aspx?y=2026&amp;mo=9&amp;day=20&amp;e=84180&amp;title=sunday-service-">
+    <title>Sunday Service </title>
+    <link>https://activities.osu.edu/Events.aspx?y=2026&amp;mo=9&amp;day=20&amp;e=84180&amp;title=sunday-service-</link>
+    <ev:location>Union Great Hall Meeting Rm 3</ev:location>
+    <ev:startdate>2026-09-20T15:00:00-04:00</ev:startdate>
+    <ev:enddate>2026-09-20T17:00:00-04:00</ev:enddate>
+    <guid>https://activities.osu.edu/Events.aspx?y=2026&amp;mo=9&amp;day=20&amp;e=84180&amp;title=sunday-service-</guid>
+    <pubDate>2026-08-13T21:07:36-04:00</pubDate>
+    <dc:subject>Food</dc:subject>
+    <dc:subject>Social</dc:subject>
+    <dc:subject>Students (Columbus Campus)</dc:subject>
+    <dc:subject>Students (All)</dc:subject>
+    <content:encoded><![CDATA[<p>Looking for a church to call home on campus? Join us at Revive! We're a group of OSU students and mentors learning about God and living out our faith. We invite you to come alongside us as we strive to make Christ known at OSU.</p>
+<p>And if you're new to Christianity or looking to learn more about Jesus, we invite you to join, ask questions and be a part of our community.</p><p>Emmerson Straughter<br /><a href="mailto:emmerson.straughter@gmail.com">emmerson.straughter@gmail.com</a><br />614-285-1694<a href="https://revivecollege.church/sign-me-up">Sign up to get connected!</a><br /></p>]]></content:encoded>
+  </item>
+  <item rdf:about="https://activities.osu.edu/Events.aspx?y=2026&amp;mo=9&amp;day=23&amp;e=84113&amp;title=the-chew-meal-planning-prep-made-simple">
+    <title>The Chew: Meal Planning &amp; Prep Made Simple</title>
+    <link>https://activities.osu.edu/Events.aspx?y=2026&amp;mo=9&amp;day=23&amp;e=84113&amp;title=the-chew-meal-planning-prep-made-simple</link>
+    <ev:location>Ohio Union Maudine Cow Room</ev:location>
+    <ev:startdate>2026-09-23T12:00:00-04:00</ev:startdate>
+    <ev:enddate>2026-09-23T13:00:00-04:00</ev:enddate>
+    <guid>https://activities.osu.edu/Events.aspx?y=2026&amp;mo=9&amp;day=23&amp;e=84113&amp;title=the-chew-meal-planning-prep-made-simple</guid>
+    <pubDate>2026-08-05T11:31:34-04:00</pubDate>
+    <dc:subject>Health and Wellness</dc:subject>
+    <dc:subject>Graduate/Professional Students</dc:subject>
+    <dc:subject>Student Wellness Center</dc:subject>
+    <content:encoded><![CDATA[<p><em><strong>Wellness Wednesday in partnership with OUAB</strong></em></p>
+<p>Feeling unsure about what to cook or how to safely prepare and store food? This presentation offers practical tips and tools to reduce cooking stress and boost your confidence in the kitchen. You'll learn foundational meal planning strategies to help you create balanced meals, along with along safe food handling and storage practices, whether you're cooking from scratch or assembling something on the fly.&nbsp;</p>
+<p><strong>Presenter:</strong> <em>Janele Bayless</em>, Wellness Coordinator for Nutrition Coaching and Education, Student Wellness Center</p>
+<p><a href="https://swc.osu.edu/">https://swc.osu.edu/&nbsp;</a></p>
+<br><p>Adrienne Wilson<br /><a href="mailto:wilson.2313@osu.edu">wilson.2313@osu.edu</a><br /></p>]]></content:encoded>
+  </item>
+  <item rdf:about="https://activities.osu.edu/Events.aspx?y=2026&amp;mo=9&amp;day=27&amp;e=83817&amp;title=sunday-church-service">
+    <title>Sunday Church Service</title>
+    <link>https://activities.osu.edu/Events.aspx?y=2026&amp;mo=9&amp;day=27&amp;e=83817&amp;title=sunday-church-service</link>
+    <ev:location>1385 Neil Ave, Columbus, OH 43201</ev:location>
+    <ev:startdate>2026-09-27T11:01:00-04:00</ev:startdate>
+    <ev:enddate>2026-09-27T12:00:00-04:00</ev:enddate>
+    <guid>https://activities.osu.edu/Events.aspx?y=2026&amp;mo=9&amp;day=27&amp;e=83817&amp;title=sunday-church-service</guid>
+    <pubDate>2026-06-16T18:31:30-04:00</pubDate>
+    <dc:subject>Community Service/Outreach</dc:subject>
+    <dc:subject>Family Friendly</dc:subject>
+    <dc:subject>Students (Columbus Campus)</dc:subject>
+    <dc:subject>Students (All)</dc:subject>
+    <dc:subject>Faculty/Staff</dc:subject>
+    <dc:subject>Alumni</dc:subject>
+    <dc:subject>General Public</dc:subject>
+    <dc:subject>Parents/Family</dc:subject>
+    <dc:subject>Graduate/Professional Students</dc:subject>
+    <dc:subject>Church</dc:subject>
+    <content:encoded><![CDATA[<p>Join us for Sunday service every Sunday at the H2O Columbus building! We offer an informal, friendly atmosphere for anyone who wants to attend.</p><p>Vince Concialdi<br /><a href="mailto:concialdi.1@buckeyemail.osu.edu">concialdi.1@buckeyemail.osu.edu</a><br /></p>]]></content:encoded>
+  </item>
+  <item rdf:about="https://activities.osu.edu/Events.aspx?y=2026&amp;mo=9&amp;day=27&amp;e=84181&amp;title=sunday-service">
+    <title>Sunday Service</title>
+    <link>https://activities.osu.edu/Events.aspx?y=2026&amp;mo=9&amp;day=27&amp;e=84181&amp;title=sunday-service</link>
+    <ev:location>Hale Hall </ev:location>
+    <ev:startdate>2026-09-27T15:00:00-04:00</ev:startdate>
+    <ev:enddate>2026-09-27T17:00:00-04:00</ev:enddate>
+    <guid>https://activities.osu.edu/Events.aspx?y=2026&amp;mo=9&amp;day=27&amp;e=84181&amp;title=sunday-service</guid>
+    <pubDate>2026-08-13T21:11:51-04:00</pubDate>
+    <dc:subject>Food</dc:subject>
+    <dc:subject>Social</dc:subject>
+    <dc:subject>Students (Columbus Campus)</dc:subject>
+    <dc:subject>Students (All)</dc:subject>
+    <content:encoded><![CDATA[<p>Looking for a church to call home on campus? Join us at Revive! We're a group of OSU students and mentors learning about God and living out our faith. We invite you to come alongside us as we strive to make Christ known at OSU.</p>
+<p>And if you're new to Christianity or looking to learn more about Jesus, we invite you to join, ask questions and be a part of our community.</p><p>Emmerson Straughter<br /><a href="mailto:emmerson.straughter@gmail.com">emmerson.straughter@gmail.com</a><br />614-285-1694<a href="https://revivecollege.church/sign-me-up">Sign up to get connected!</a><br /></p>]]></content:encoded>
+  </item>
+  <item rdf:about="https://activities.osu.edu/Events.aspx?y=2026&amp;mo=10&amp;day=4&amp;e=83818&amp;title=sunday-church-service">
+    <title>Sunday Church Service</title>
+    <link>https://activities.osu.edu/Events.aspx?y=2026&amp;mo=10&amp;day=4&amp;e=83818&amp;title=sunday-church-service</link>
+    <ev:location>1385 Neil Ave, Columbus, OH 43201</ev:location>
+    <ev:startdate>2026-10-04T11:01:00-04:00</ev:startdate>
+    <ev:enddate>2026-10-04T12:00:00-04:00</ev:enddate>
+    <guid>https://activities.osu.edu/Events.aspx?y=2026&amp;mo=10&amp;day=4&amp;e=83818&amp;title=sunday-church-service</guid>
+    <pubDate>2026-06-16T18:31:30-04:00</pubDate>
+    <dc:subject>Community Service/Outreach</dc:subject>
+    <dc:subject>Family Friendly</dc:subject>
+    <dc:subject>Students (Columbus Campus)</dc:subject>
+    <dc:subject>Students (All)</dc:subject>
+    <dc:subject>Faculty/Staff</dc:subject>
+    <dc:subject>Alumni</dc:subject>
+    <dc:subject>General Public</dc:subject>
+    <dc:subject>Parents/Family</dc:subject>
+    <dc:subject>Graduate/Professional Students</dc:subject>
+    <dc:subject>Church</dc:subject>
+    <content:encoded><![CDATA[<p>Join us for Sunday service every Sunday at the H2O Columbus building! We offer an informal, friendly atmosphere for anyone who wants to attend.</p><p>Vince Concialdi<br /><a href="mailto:concialdi.1@buckeyemail.osu.edu">concialdi.1@buckeyemail.osu.edu</a><br /></p>]]></content:encoded>
+  </item>
+  <item rdf:about="https://activities.osu.edu/Events.aspx?y=2026&amp;mo=10&amp;day=4&amp;e=84182&amp;title=sunday-service">
+    <title>Sunday Service</title>
+    <link>https://activities.osu.edu/Events.aspx?y=2026&amp;mo=10&amp;day=4&amp;e=84182&amp;title=sunday-service</link>
+    <ev:location>Hale Hall </ev:location>
+    <ev:startdate>2026-10-04T15:00:00-04:00</ev:startdate>
+    <ev:enddate>2026-10-04T17:00:00-04:00</ev:enddate>
+    <guid>https://activities.osu.edu/Events.aspx?y=2026&amp;mo=10&amp;day=4&amp;e=84182&amp;title=sunday-service</guid>
+    <pubDate>2026-08-13T21:11:51-04:00</pubDate>
+    <dc:subject>Food</dc:subject>
+    <dc:subject>Social</dc:subject>
+    <dc:subject>Students (Columbus Campus)</dc:subject>
+    <dc:subject>Students (All)</dc:subject>
+    <content:encoded><![CDATA[<p>Looking for a church to call home on campus? Join us at Revive! We're a group of OSU students and mentors learning about God and living out our faith. We invite you to come alongside us as we strive to make Christ known at OSU.</p>
+<p>And if you're new to Christianity or looking to learn more about Jesus, we invite you to join, ask questions and be a part of our community.</p><p>Emmerson Straughter<br /><a href="mailto:emmerson.straughter@gmail.com">emmerson.straughter@gmail.com</a><br />614-285-1694<a href="https://revivecollege.church/sign-me-up">Sign up to get connected!</a><br /></p>]]></content:encoded>
+  </item>
+</rdf:RDF>

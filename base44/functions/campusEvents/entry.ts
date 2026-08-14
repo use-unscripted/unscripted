@@ -3840,6 +3840,518 @@ const drupalAdapter: Adapter = {
   normalize: normalizeDrupal,
 };
 
+// ── Adapter: RSS 1.0 with the event module ──────────────────────────────────
+
+/**
+ * RSS 1.0 (RDF) carrying the `ev:` event module. A real calendar, in a format
+ * that is not RSS 2.0 with extra tags: it is a different document shape, and
+ * every way an RSS 2.0 reader gets it wrong is silent.
+ *
+ * Ohio State is why this exists. Their university-wide events page is an
+ * infinite redirect loop under every client identity we have, and the only
+ * machine-readable calendar they publish is the Office of Student Life one at
+ * activities.osu.edu. Two of our own students attend, and until this adapter
+ * existed their row was switched off, because the alternative on offer was
+ * Oregon State's calendar.
+ *
+ * The three structural differences, all of which return zero events rather
+ * than an error:
+ *
+ * - The root element is `rdf:RDF`, not `rss`.
+ * - `item` elements are SIBLINGS of `channel`, not children of it. A reader
+ *   that descends into `channel` looking for items finds none, and a school
+ *   with a full calendar reads as a school with an empty one.
+ * - When the event happens is not in the item under any RSS 2.0 name. The
+ *   event module carries it, and `pubDate` is when somebody typed the listing
+ *   in. Reading `pubDate` as the start would date every event to its data
+ *   entry day, which is precisely the misread date this whole function exists
+ *   to avoid.
+ *
+ * The module's prefix is read out of the document's own namespace
+ * declarations. A prefix is a local choice and nothing more: a feed binding
+ * `http://purl.org/rss/1.0/modules/event/` to "event" or "evt" is exactly as
+ * correct as one binding it to "ev", and hardcoding the letters would read
+ * that feed as having no dates at all. A document that declares the module
+ * nowhere has no event dates in it and is refused, rather than fished for
+ * something date-shaped.
+ *
+ * ## Timezones
+ *
+ * Ohio State stamps a real UTC offset on every value ("2026-08-16T15:00:00
+ * -04:00", Eastern with daylight saving already applied). That is an
+ * unambiguous instant, so it is passed through exactly as published and
+ * nothing is converted, shifted or re-stamped.
+ *
+ * A value with no offset is campus wall-clock and is passed through
+ * unresolved, the same as Trumba, WordPress and a `TZID` in an .ics. A student
+ * standing on that campus reads the clock on the wall, and synthesising an
+ * offset from tz data we may not hold moves a listing by an hour.
+ *
+ * A bare `YYYY-MM-DD` stays date-only and is marked all-day. The event module
+ * has no all-day flag, and stamping midnight on a bare day shows it a day
+ * early anywhere west of Greenwich.
+ */
+
+/** The namespaces this reads. Prefixes for all of them come from the document. */
+const RSS1_RDF_NS = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#';
+const RSS1_CORE_NS = 'http://purl.org/rss/1.0/';
+const RSS1_EVENT_NS = 'http://purl.org/rss/1.0/modules/event/';
+const RSS1_CONTENT_NS = 'http://purl.org/rss/1.0/modules/content/';
+const RSS1_DC_NS = 'http://purl.org/dc/elements/1.1/';
+
+const RSS1_FEED_TIMEOUT_MS = 12_000;
+/** Same budget as an .ics probe: this pulls a whole calendar before it can judge it. */
+const RSS1_PROBE_TIMEOUT_MS = 12_000;
+const RSS1_MAX_BYTES = 2_000_000;
+
+/**
+ * A runaway guard, not a page size.
+ *
+ * Nothing here pages: an RSS 1.0 feed is whatever the publisher chose to put in
+ * one document, and Ohio State's is a fixed 50 items whatever you ask it for.
+ * The cap is only so a pathological file cannot spin, and it is set far above
+ * any real feed so that it can never be the thing that decides what a student
+ * is shown.
+ */
+const RSS1_MAX_ITEMS = 5_000;
+
+/** How much of a page to read while looking for a feed link. */
+const RSS1_HTML_SCAN_BYTES = 500_000;
+/** Feed links worth validating off one school. Each costs a whole-document read. */
+const RSS1_MAX_FEED_LINKS = 4;
+
+/** Namespace URIs compare without case or a trailing slash, and nothing else. */
+function rss1Namespace(uri: unknown): string {
+  return String(uri || '').trim().toLowerCase().replace(/\/+$/, '');
+}
+
+/** A literal used inside a built pattern has to stay a literal. */
+function rss1Escape(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/**
+ * Every prefix this document binds to one namespace, in declaration order.
+ *
+ * More than one is legal and does happen, so this answers with all of them
+ * rather than the first: a feed that declares both `ev:` and `event:` and uses
+ * the second one on half its items is well-formed, and reading only the first
+ * would drop those items.
+ */
+export function rss1Prefixes(xml: unknown, namespace: string): string[] {
+  const want = rss1Namespace(namespace);
+  const found: string[] = [];
+  const declarations = /xmlns:([A-Za-z_][A-Za-z0-9_.-]*)\s*=\s*["']([^"']*)["']/g;
+  for (const match of String(xml || '').matchAll(declarations)) {
+    if (rss1Namespace(match[2]) !== want) continue;
+    if (!found.includes(match[1])) found.push(match[1]);
+  }
+  return found;
+}
+
+/** Is this namespace the document's default, so its elements carry no prefix? */
+function rss1IsDefault(xml: string, namespace: string): boolean {
+  const match = /xmlns\s*=\s*["']([^"']*)["']/.exec(xml);
+  return Boolean(match && rss1Namespace(match[1]) === rss1Namespace(namespace));
+}
+
+/**
+ * Every spelling one element name can have in this document.
+ *
+ * A module element is only ever read under a prefix the document actually
+ * bound, or bare when the module is the default namespace. There is no fallback
+ * to the conventional prefix: an undeclared module is a module the feed is not
+ * using, and guessing at it would be reading a tag whose meaning nobody stated.
+ */
+function rss1ModuleNames(xml: string, namespace: string, local: string): string[] {
+  const names = rss1Prefixes(xml, namespace).map(prefix => `${prefix}:${local}`);
+  if (rss1IsDefault(xml, namespace)) names.push(local);
+  return names;
+}
+
+/**
+ * The same, for RSS 1.0's own elements, which are bare in every real feed
+ * because the core namespace is conventionally the default one.
+ *
+ * The bare name is accepted whether or not the default namespace was declared.
+ * An `<item>` inside an RDF document is the RSS item under any reading, and a
+ * feed that forgets the declaration is untidy rather than ambiguous.
+ */
+function rss1CoreNames(xml: string, local: string): string[] {
+  const names = rss1Prefixes(xml, RSS1_CORE_NS).map(prefix => `${prefix}:${local}`);
+  names.push(local);
+  return names;
+}
+
+/** The whole of each element with one of these names, outermost text first. */
+function rss1Blocks(xml: string, names: string[]): string[] {
+  if (!names.length) return [];
+  const alt = names.map(rss1Escape).join('|');
+  const pattern = new RegExp(`<(${alt})(?:\\s[^>]*)?>([\\s\\S]*?)</\\1\\s*>`, 'gi');
+  return [...xml.matchAll(pattern)].map(match => match[0]);
+}
+
+/** The text of every element with one of these names, CDATA unwrapped. */
+function rss1Values(xml: string, names: string[]): string[] {
+  if (!names.length) return [];
+  const alt = names.map(rss1Escape).join('|');
+  const pattern = new RegExp(
+    `<(?:${alt})(?:\\s[^>]*)?(?:/>|>([\\s\\S]*?)</(?:${alt})\\s*>)`,
+    'gi',
+  );
+  const found: string[] = [];
+  for (const match of xml.matchAll(pattern)) {
+    const raw = (match[1] || '').replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1').trim();
+    if (raw) found.push(raw);
+  }
+  return found;
+}
+
+/** The first, or an empty string. */
+function rss1Value(xml: string, names: string[]): string {
+  return rss1Values(xml, names)[0] || '';
+}
+
+/** "2026-08-16" with nothing after it. There is no clock anywhere in that. */
+const RSS1_DATE_ONLY = /^\d{4}-\d{2}-\d{2}$/;
+/** ISO 8601, which is what the event module specifies. Anything else is refused. */
+const RSS1_TIMESTAMP =
+  /^(\d{4}-\d{2}-\d{2})[T ](\d{2}:\d{2}(?::\d{2})?(?:\.\d+)?)\s*(Z|[+-]\d{2}:?\d{2})?$/i;
+
+/**
+ * One event-module date, kept exactly as strong as the feed wrote it.
+ *
+ * An offset survives verbatim, a missing offset stays missing, and a bare day
+ * stays a bare day. The one liberty taken is spelling: a space instead of the
+ * `T`, and `+0400` for `+04:00`, are both written in the wild and both mean
+ * one thing. A value this cannot read at all returns empty, and the item is
+ * dropped rather than dated from something nearby.
+ */
+export function rss1Date(value: unknown): { value: string; allDay: boolean } {
+  const text = decodeEntities(String(value ?? '')).trim();
+  if (!text) return { value: '', allDay: false };
+  if (RSS1_DATE_ONLY.test(text)) return { value: text, allDay: true };
+  const match = RSS1_TIMESTAMP.exec(text);
+  if (!match) return { value: '', allDay: false };
+  const zone = (match[3] || '').toUpperCase().replace(/^([+-]\d{2})(\d{2})$/, '$1:$2');
+  return { value: `${match[1]}T${match[2]}${zone}`, allDay: false };
+}
+
+interface Rss1Event {
+  id: string;
+  title: string;
+  url: string;
+  start: string;
+  end: string;
+  allDay: boolean;
+  location: string;
+  description: string;
+  subjects: string[];
+  types: string[];
+}
+
+/**
+ * Is this an RDF document that declares the event module?
+ *
+ * Both halves matter. The RDF root is what separates RSS 1.0 from the RSS 2.0
+ * and Atom feeds every school also publishes, and the event module is what
+ * separates a calendar from a news feed. A school's press releases parsed as
+ * events would be dated from whatever we chose to read, which is the failure
+ * this refuses outright.
+ */
+export function isRss1Document(text: unknown): boolean {
+  if (typeof text !== 'string' || !text) return false;
+  const head = text.slice(0, 4000);
+  if (!/<(?:[A-Za-z_][A-Za-z0-9_.-]*:)?RDF[\s>]/i.test(head)) return false;
+  if (!rss1Prefixes(text, RSS1_RDF_NS).length) return false;
+  return Boolean(
+    rss1Prefixes(text, RSS1_EVENT_NS).length || rss1IsDefault(text, RSS1_EVENT_NS),
+  );
+}
+
+/**
+ * The item's own identity, off the RDF resource it is about.
+ *
+ * `rdf:about` is the RSS 1.0 way to say which thing this describes, so it is
+ * read first and under whatever prefix the document bound to the RDF
+ * namespace. `guid` is the RSS 2.0 spelling, present in Ohio State's feed and
+ * in plenty of others written by tools that emit both, and it is a fallback
+ * rather than the answer.
+ */
+function rss1Id(block: string, xml: string): string {
+  const attributes = rss1ModuleNames(xml, RSS1_RDF_NS, 'about').map(rss1Escape).join('|');
+  if (attributes) {
+    const pattern = new RegExp(`<[^>]*?\\s(?:${attributes})\\s*=\\s*["']([^"']+)["']`, 'i');
+    const match = pattern.exec(block);
+    if (match) return cleanUrl(match[1]);
+  }
+  return cleanUrl(rss1Value(block, ['guid']));
+}
+
+/**
+ * Every dated item in the document.
+ *
+ * Items are found across the whole document rather than inside `channel`,
+ * because in RSS 1.0 that is where they are. The `<items>` block inside
+ * `channel` is an `rdf:Seq` of pointers and holds no event data, so nothing is
+ * read from it.
+ *
+ * An item with no readable start is not an event and is dropped. There is no
+ * second guess at a date from `pubDate` or from the link, both of which are
+ * present on every Ohio State item and neither of which is when the event
+ * happens.
+ */
+export function parseRss1Events(xml: unknown): Rss1Event[] {
+  const text = String(xml || '');
+  if (!isRss1Document(text)) return [];
+
+  const itemNames = rss1CoreNames(text, 'item');
+  const titleNames = rss1CoreNames(text, 'title');
+  const linkNames = rss1CoreNames(text, 'link');
+  const descriptionNames = rss1CoreNames(text, 'description');
+  const startNames = rss1ModuleNames(text, RSS1_EVENT_NS, 'startdate');
+  const endNames = rss1ModuleNames(text, RSS1_EVENT_NS, 'enddate');
+  const locationNames = rss1ModuleNames(text, RSS1_EVENT_NS, 'location');
+  const typeNames = rss1ModuleNames(text, RSS1_EVENT_NS, 'type');
+  const subjectNames = rss1ModuleNames(text, RSS1_DC_NS, 'subject');
+  const encodedNames = rss1ModuleNames(text, RSS1_CONTENT_NS, 'encoded');
+
+  const events: Rss1Event[] = [];
+  for (const block of rss1Blocks(text, itemNames)) {
+    if (events.length >= RSS1_MAX_ITEMS) break;
+    const start = rss1Date(rss1Value(block, startNames));
+    if (!start.value) continue;
+    const end = rss1Date(rss1Value(block, endNames));
+    const link = rss1Value(block, linkNames);
+    events.push({
+      id: rss1Id(block, text) || link,
+      title: plainText(rss1Value(block, titleNames)),
+      url: cleanUrl(link),
+      start: start.value,
+      end: end.value,
+      allDay: start.allDay,
+      location: plainText(rss1Value(block, locationNames)),
+      // The summary where the feed writes one, the full body where it does not.
+      // Ohio State publishes only `content:encoded`, and reading `description`
+      // alone leaves every listing with no description at all.
+      description: plainText(
+        rss1Value(block, descriptionNames) || rss1Value(block, encodedNames),
+      ),
+      subjects: rss1Values(block, subjectNames).map(plainText).filter(Boolean),
+      types: rss1Values(block, typeNames).map(plainText).filter(Boolean),
+    });
+  }
+  return events;
+}
+
+/**
+ * A calendar with something still ahead of today.
+ *
+ * The same gate the .ics probe uses, and the same day of grace: this decides
+ * whether a whole school is worth resolving, not whether one listing is shown.
+ */
+export function looksLikeRss1(text: unknown): boolean {
+  const events = parseRss1Events(text);
+  if (!events.length) return false;
+  const cutoff = Date.now() - 86400000;
+  return events.some((event) => {
+    const at = new Date(event.start).getTime();
+    return Number.isFinite(at) && at >= cutoff;
+  });
+}
+
+async function fetchRss1Once(
+  url: string,
+  timeoutMs: number,
+  headers: Record<string, string>,
+): Promise<string> {
+  const res = await fetch(url, { headers, signal: AbortSignal.timeout(timeoutMs) });
+  if (!res.ok || !res.body) {
+    await res.body?.cancel().catch(() => {});
+    return '';
+  }
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder('utf-8');
+  let text = '';
+  try {
+    while (text.length < RSS1_MAX_BYTES) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      text += decoder.decode(value, { stream: true });
+    }
+  } finally {
+    await reader.cancel().catch(() => {});
+  }
+  return text;
+}
+
+/**
+ * Fetch a feed, trying both client identities before believing a refusal.
+ *
+ * The same reasoning as the .ics reader: schools disagree about who may read a
+ * public feed and they disagree in both directions, so a response that is not a
+ * calendar is retried under the other identity before it counts as a miss.
+ */
+async function fetchRss1Text(url: string, timeoutMs: number): Promise<string> {
+  const accept = 'application/rss+xml,application/rdf+xml,application/xml,text/xml,*/*';
+  const attempts: Record<string, string>[] = [
+    { Accept: accept },
+    { Accept: accept, 'User-Agent': BROWSER_UA },
+  ];
+  for (const headers of attempts) {
+    let text = '';
+    try {
+      text = await fetchRss1Once(url, timeoutMs, headers);
+    } catch (_) {
+      continue; // Unreachable or timed out under this identity; try the other.
+    }
+    if (isRss1Document(text)) return text;
+  }
+  return '';
+}
+
+/** Is this feed URL one the school itself is entitled to point us at? */
+export function isAllowedRss1Url(url: string, domain: string): boolean {
+  let parsed: URL;
+  try {
+    parsed = new URL(String(url || '').trim());
+  } catch (_) {
+    return false;
+  }
+  if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') return false;
+  // Same gate as a discovered .ics, and for the same reason: this URL came off
+  // a remote page and is about to be fetched server-side, so same-site is not
+  // enough on its own and an explicit port is refused outright.
+  if (parsed.port) return false;
+  const host = stripWww(parsed.hostname.toLowerCase());
+  return isProbeableDomain(host) && sameSite(host, domain);
+}
+
+/**
+ * Feed links a page advertises, in the order it names them.
+ *
+ * Only the `rel=alternate` link tag, which exists precisely to say "the machine
+ * readable version of this page is here". Anything looser reads a school's news
+ * feed as its calendar, and the event-module gate is the only thing that would
+ * then be standing between a press release and a student's Mission Guide.
+ */
+export function rss1LinksFrom(html: string, domain: string, baseUrl = ''): string[] {
+  const found: string[] = [];
+  const patterns = [
+    /<link[^>]+type\s*=\s*["']application\/(?:rss|rdf)\+xml["'][^>]*?href\s*=\s*["']([^"']+)["']/gi,
+    /<link[^>]+href\s*=\s*["']([^"']+)["'][^>]*?type\s*=\s*["']application\/(?:rss|rdf)\+xml["']/gi,
+  ];
+  for (const pattern of patterns) {
+    for (const match of String(html || '').matchAll(pattern)) {
+      // Advertised feeds are routinely relative, so they are resolved against
+      // the page that named them before the same-site check, which is what
+      // makes that check mean anything.
+      let url = decodeEntities(match[1]).trim();
+      if (baseUrl && !/^https?:\/\//i.test(url)) {
+        try {
+          url = new URL(url, baseUrl).toString();
+        } catch (_) {
+          continue;
+        }
+      }
+      if (!isAllowedRss1Url(url, domain) || found.includes(url)) continue;
+      found.push(url);
+      if (found.length >= RSS1_MAX_FEED_LINKS) return found;
+    }
+  }
+  return found;
+}
+
+/** Pages a school is most likely to advertise an events feed on. */
+function rss1PageCandidates(domain: string): string[] {
+  return [
+    `https://www.${domain}/events`,
+    `https://www.${domain}/calendar`,
+    `https://events.${domain}`,
+    `https://calendar.${domain}`,
+  ];
+}
+
+/** First candidate that parses as a calendar with something still ahead. */
+async function firstValidRss1(candidates: string[]): Promise<string | null> {
+  const attempts = candidates.map(async (url) => {
+    try {
+      return looksLikeRss1(await fetchRss1Text(url, RSS1_PROBE_TIMEOUT_MS));
+    } catch (_) {
+      return false;
+    }
+  });
+  for (let i = 0; i < attempts.length; i++) {
+    if (await attempts[i]) return candidates[i];
+  }
+  return null;
+}
+
+/**
+ * There is no path to guess here, so the school has to name its own feed.
+ *
+ * RSS 1.0 is a format rather than a product, and the schools that publish one
+ * put it wherever their CMS felt like: Ohio State's is
+ * /CentralCalendar/StudentLife.EventCalendar.Web.Service.RssHandler.ashx, which
+ * no list of guesses would ever contain. What those pages do carry is the
+ * `rel=alternate` link tag advertising it, so that is what gets read.
+ *
+ * A school whose pages advertise nothing simply does not resolve this way. Its
+ * row can still name a feed directly, which is how Ohio State is served: their
+ * feed sits on activities.osu.edu and their university-wide events page, the
+ * one page that would link it, is an infinite redirect loop.
+ */
+async function probeRss1(domain: string): Promise<string | null> {
+  const pages = await Promise.all(rss1PageCandidates(domain).map(async (url) => {
+    try {
+      return await fetchPage(url, RSS1_HTML_SCAN_BYTES);
+    } catch (_) {
+      return { finalHost: '', finalUrl: url, html: '' }; // No feed named from here.
+    }
+  }));
+
+  const candidates: string[] = [];
+  for (const page of pages) {
+    for (const link of rss1LinksFrom(page.html, domain, page.finalUrl)) {
+      if (!candidates.includes(link)) candidates.push(link);
+    }
+  }
+  return await firstValidRss1(candidates.slice(0, RSS1_MAX_FEED_LINKS));
+}
+
+async function fetchRss1(feedUrl: string, days: number) {
+  const text = await fetchRss1Text(feedUrl, RSS1_FEED_TIMEOUT_MS);
+  if (!isRss1Document(text)) throw new Error('Calendar feed returned an unexpected shape');
+  return parseRss1Events(text).filter(event => withinWindow(event.start, days));
+}
+
+// deno-lint-ignore no-explicit-any
+function normalizeRss1(event: any): NormalizedEvent {
+  return {
+    ...emptyEvent(),
+    id: String(event.id || `${event.start}-${event.title}`),
+    title: plainText(event.title),
+    description: plainText(event.description).slice(0, 600),
+    url: cleanUrl(event.url),
+    start: event.start || '',
+    end: event.end || '',
+    all_day: Boolean(event.allDay),
+    location: plainText(event.location),
+    types: cleanList(event.types),
+    // dc:subject is what Ohio State tags a listing with ("Food", "Social",
+    // "Students (Columbus Campus)"), and it is the only thing in this format
+    // that ranking has to match a student's interests against.
+    keywords: cleanList(event.subjects),
+  };
+}
+
+const rss1Adapter: Adapter = {
+  name: 'rss1',
+  probe: probeRss1,
+  fetch: fetchRss1,
+  normalize: normalizeRss1,
+};
+
 // ── Schools that publish no feed at all ─────────────────────────────────────
 
 /**
@@ -4062,6 +4574,11 @@ const ADAPTERS: Adapter[] = [
   trumbaAdapter,
   drupalAdapter,
   icalAdapter,
+  // Behind iCal, and last of the real feeds. Its probe has to read pages before
+  // it can say no, and there is no path to guess, so only a school that
+  // resolved to nothing everywhere else pays for it. A school whose row already
+  // names an RSS 1.0 feed never reaches this at all.
+  rss1Adapter,
   // Last, and never reached by probing. A school only lands here because every
   // real feed above failed and the offline job found events on its page.
   scrapedAdapter,

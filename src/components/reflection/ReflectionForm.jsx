@@ -5,7 +5,7 @@
  */
 import { useEffect, useState } from 'react';
 import { AlertCircle, Loader2, Save } from 'lucide-react';
-import { loadDraft, saveDraft } from '@/lib/experiment-conclusion';
+import { readConclusionDraft, writeConclusionDraft } from '@/lib/student-drafts';
 import { trackPilotEvent } from '@/lib/pilot-metrics';
 import ReferencedExperiments from '@/components/reflection/ReferencedExperiments';
 
@@ -35,6 +35,8 @@ const fieldStyle = { borderColor: 'var(--border-light)', background: 'var(--back
 
 export default function ReflectionForm({ ctx, onSaved, onSubmit }) {
   const experimentId = ctx.experiment.id;
+  // The draft belongs to this student, not to this browser. No id, no draft.
+  const userId = ctx.user?.id || '';
   const [answers, setAnswers] = useState(() => {
     const e = ctx.existing;
     if (e) {
@@ -47,7 +49,7 @@ export default function ReflectionForm({ ctx, onSaved, onSubmit }) {
         references: e.referenced_experiment_ids || [],
       };
     }
-    return { ...EMPTY, ...(loadDraft(experimentId) || {}) };
+    return { ...EMPTY, ...(readConclusionDraft(userId, experimentId) || {}) };
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -70,10 +72,10 @@ export default function ReflectionForm({ ctx, onSaved, onSubmit }) {
 
   // Draft only for a first-time conclusion; an edit already has a stored row.
   useEffect(() => {
-    if (ctx.existing) return;
-    const t = setTimeout(() => saveDraft(experimentId, answers), 500);
+    if (ctx.existing || !userId) return;
+    const t = setTimeout(() => writeConclusionDraft(userId, experimentId, answers), 500);
     return () => clearTimeout(t);
-  }, [answers, experimentId, ctx.existing]);
+  }, [answers, experimentId, userId, ctx.existing]);
 
   const blocked = !answers.lessons.trim()
     ? 'Answer the first question: what you learned about the work.'

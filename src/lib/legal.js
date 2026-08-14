@@ -39,7 +39,7 @@ export const EFFECTIVE_DATE = 'July 31, 2026';
  * Corrections to what the Policy describes move this; they don't restart the
  * date the Policy took effect.
  */
-export const PRIVACY_LAST_UPDATED = 'August 3, 2026';
+export const PRIVACY_LAST_UPDATED = 'August 14, 2026';
 
 /** Minimum age to hold an account. 13–17 requires a parent or guardian's permission. */
 export const MIN_AGE = 13;
