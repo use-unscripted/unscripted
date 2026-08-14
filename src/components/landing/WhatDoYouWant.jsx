@@ -1,9 +1,17 @@
 /* ──────────────────────────────────────────────────────────────────────────
    WhatDoYouWant — the film moment in the hero.
 
-   A 2.4 second cut of Sean asking Will "What do you want to do?" It sits in
+   A 2 second cut of Sean asking Will "What do you want to do?" It sits in
    the fold next to the copy so the page opens on the question the product
    exists to answer, instead of only asserting it in the headline.
+
+   The cut is 3:14.18 to 3:16.18 of the Miramax upload of the scene, which is
+   Sean's single unbroken close-up: he cuts in at 3:14.15 and back out to Will
+   at 3:16.2, and the line runs 3:14.88 to roughly 3:16.3. Those boundaries
+   come from the word-level timings in the caption track, not from the cue
+   blocks, which roll two lines at a time and are useless for this. A first
+   pass trusted the cue block and landed five seconds late, on Sean listening
+   rather than asking. If this ever needs recutting, read the word timings.
 
    ⚠️ RIGHTS: the footage is from Good Will Hunting (1997), Miramax. We do not
    hold a licence for it. This was added at Drew's direction on 2026-08-14
