@@ -213,12 +213,23 @@ function MissionsSection({ experiment, missions, loadingMissions, onMissionAdded
 // ── Experiment card ───────────────────────────────────────────────────────────
 function ExperimentCard({ exp, measurement, onStatusChange, onExpand, expanded, missions, loadingMissions, onMissionAdded, onProofAdded, onMissionDeleted, onDelete, onEdited, onFindPeople, paths, guides, onGenerateGuide, onGuideSetActive, onGuideDeleted, onGuideDuplicated, onGuideRenamed, onPaused, onResumed }) {
   const s = STATUS_STYLES[exp.status] || STATUS_STYLES.planned;
+  /* Evidence for the experiment itself, without having to open it or invent a
+     mission first. The flow is the same one the mission row opens, handed this
+     experiment, so it skips the "which experiment" question. */
+  const [showExpProof, setShowExpProof] = useState(false);
   const hasGuides = guides && guides.length > 0;
   const activeGuide = guides?.find(g => g.is_active);
   const isPaused = exp.status === 'paused';
 
   return (
     <div className={`rounded-[var(--r-surface)] border bg-white overflow-hidden ${isPaused ? 'border-amber-200' : 'border-[color:var(--ink-200)]'}`}>
+      {showExpProof && (
+        <AddProofModal
+          experiment={exp}
+          onClose={() => setShowExpProof(false)}
+          onSaved={(proof) => { setShowExpProof(false); onProofAdded(proof, null); }}
+        />
+      )}
       <div className="tp-card-body">
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1">
@@ -260,6 +271,11 @@ function ExperimentCard({ exp, measurement, onStatusChange, onExpand, expanded, 
           {!expanded && guides && guides.length > 0 && (
             <span className="flex items-center gap-1"><Wand2 size={12} /> {guides.length} experiment plan{guides.length > 1 ? 's' : ''}</span>
           )}
+          <button onClick={() => setShowExpProof(true)}
+            className="tp-meta flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-semibold transition"
+            style={{ background: 'var(--background-tertiary)', color: 'var(--brand-navy-700)', border: '1px solid var(--border-light)' }}>
+            <FileText size={13} /> Add proof
+          </button>
           {!isPaused && (
             <button onClick={onFindPeople}
               className="tp-meta flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-semibold transition"
