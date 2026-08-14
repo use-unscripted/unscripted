@@ -27,7 +27,11 @@
         "second_cycle_attempted",
         "continuation_interest_recorded",
         "seven_day_return",
-        "thirty_day_return"
+        "thirty_day_return",
+        "simulation_started",
+        "simulation_completed",
+        "simulation_abandoned",
+        "simulation_second_started"
       ]
     },
     "access_source": {
