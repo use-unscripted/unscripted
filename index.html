@@ -21,6 +21,25 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="icon" type="image/jpeg" href="https://media.base44.com/images/public/6a591b5064fe15dff1df6a81/3549597e7_04a84a99-062a-4466-8304-ce69ad7b6418.jpg" />
     <link rel="shortcut icon" href="https://media.base44.com/images/public/6a591b5064fe15dff1df6a81/3549597e7_04a84a99-062a-4466-8304-ce69ad7b6418.jpg" />
+
+    <!-- Home screen install. A student who adds this to their iPhone gets a real
+         app icon and a window with no browser chrome, which is the only version
+         of "an iOS app" that costs nothing and needs nobody's review. -->
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <!-- Safari ignores the manifest icon list entirely and reads this one tag,
+         so the 180x180 has to be declared here or the home screen falls back to
+         a blurry screenshot of the page. -->
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <!-- "default" keeps the clock and battery dark, which is what reads on the
+         light page surface the app uses. black-translucent would put white text
+         on a near-white background. -->
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <!-- The label under the icon. The full title is a marketing line and gets
+         truncated to nonsense at that size, so name it the way a student would. -->
+    <meta name="apple-mobile-web-app-title" content="Unscripted" />
+    <meta name="application-name" content="Unscripted" />
     <meta name="description" content="Unscripted turns a college student's goals, schedule, interests, and ambition into a personalized roadmap for careers, startups, personal brands, and real-world growth." />
     <meta property="og:title" content="Unscripted | Build Your Own Path" />
     <meta property="og:description" content="Unscripted turns a college student's goals, schedule, interests, and ambition into a personalized roadmap for careers, startups, personal brands, and real-world growth." />
