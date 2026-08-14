@@ -12,6 +12,7 @@
  * HypothesisRecalculation, and nothing in this file deletes either.
  */
 import { base44 } from '@/api/base44Client';
+import { informationValue, evidenceOutcome, unknownsDelta } from '@/lib/experiment-information-value';
 
 /** The three outcomes. Elimination is a result, not a failure. */
 export const DECISIONS = [
@@ -67,10 +68,43 @@ export function buildInitialSnapshot({ path, originalScores = null, dimensions =
   };
 }
 
-/** One update row, built from the reviewed synthesis and the decision. */
-export function buildUpdateRow({ synthesis, decision, decisionNote, reflection, experiment, sequence }) {
+/**
+ * One update row, built from the reviewed synthesis and the decision.
+ *
+ * `previous` is the row this version follows, which is what makes the chain a
+ * chain: each version points back at the state it replaced, and what changed
+ * between them (unknowns closed, unknowns opened, the recommendation that moved)
+ * is stored rather than recomputed later from records that may since have moved.
+ */
+export function buildUpdateRow({ synthesis, decision, decisionNote, reflection, experiment, sequence, previous = null, measurement = null, approvedSynthesis = true, crossCareerCount = 1 }) {
   const meta = decisionMeta(decision);
+  const { resolved, added } = unknownsDelta(previous?.remaining_unknowns || [], synthesis.unknowns || []);
+  const outcome = evidenceOutcome({
+    strengthened: synthesis.strengthened || [],
+    weakened: synthesis.weakened || [],
+    resolved, added, decision,
+  });
+  const value = informationValue({
+    synthesis, measurement, reflection, experiment, resolved, added, crossCareerCount,
+  });
+  const previousNext = previous?.next_best_test || '';
+  const nextNow = synthesis.next_test?.question || '';
   return {
+    previous_version_id: previous?.id || undefined,
+    career_cycle_id: experiment?.career_cycle_id || experiment?.cycle_id || undefined,
+    unknowns_resolved: resolved.length ? resolved : undefined,
+    unknowns_added: added.length ? added : undefined,
+    decision_dimensions_updated: (synthesis.dimensions_tested || []).length ? synthesis.dimensions_tested : undefined,
+    // What the recommendation did as a result, in words, so the chain shows the
+    // loop closing rather than just a new score.
+    recommendation_change: nextNow && nextNow !== previousNext
+      ? (previousNext ? `Next test moved from "${previousNext}" to "${nextNow}".` : `Next test is now "${nextNow}".`)
+      : undefined,
+    ai_synthesis: synthesis.summary || synthesis.statement || undefined,
+    student_approved_synthesis: Boolean(approvedSynthesis),
+    evidence_outcome: outcome,
+    information_value_score: value.score,
+    information_value_reasons: value.reasons.length ? value.reasons : undefined,
     path_id: synthesis.path_id,
     path_name: synthesis.path_name,
     stage: 'update',
@@ -122,7 +156,7 @@ export async function loadHypothesisHistory(pathId) {
  * Record the update: the initial snapshot if this career has none yet, then the
  * update itself, then the career's current status. No prior row is touched.
  */
-export async function recordHypothesisUpdate({ path, synthesis, decision, decisionNote, reflection, experiment, dimensions = [] }) {
+export async function recordHypothesisUpdate({ path, synthesis, decision, decisionNote, reflection, experiment, dimensions = [], measurement = null, approvedSynthesis = true, crossCareerCount = 1 }) {
   if (!path?.id || !synthesis) throw new Error('A career hypothesis and a synthesis are required.');
   const existing = await loadHypothesisHistory(path.id);
 
@@ -138,8 +172,13 @@ export async function recordHypothesisUpdate({ path, synthesis, decision, decisi
   }
 
   const sequence = existing.filter(r => r.stage === 'update').length + 1;
+  // The version this one follows: the newest update if there is one, otherwise
+  // the initial snapshot. Never modified, only pointed at.
+  const sorted = [...existing].sort((a, b) => (a.sequence ?? 0) - (b.sequence ?? 0));
+  const previous = sorted.filter(r => r.stage === 'update').slice(-1)[0] || sorted.find(r => r.stage === 'initial') || null;
   const saved = await base44.entities.HypothesisUpdate.create(strip(buildUpdateRow({
     synthesis, decision, decisionNote, reflection, experiment, sequence,
+    previous, measurement, approvedSynthesis, crossCareerCount,
   })));
 
   const meta = decisionMeta(decision);

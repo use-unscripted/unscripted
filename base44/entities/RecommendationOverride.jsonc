@@ -39,6 +39,37 @@
     "learning_value_score": {
       "type": "number"
     },
+    "rule_id": {
+      "type": "string"
+    },
+    "rule_version": {
+      "type": "string"
+    },
+    "rule_reasons": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "mode": {
+      "type": "string"
+    },
+    "depth": {
+      "type": "string"
+    },
+    "cross_career_count": {
+      "type": "number"
+    },
+    "experiment_id": {
+      "type": "string"
+    },
+    "information_value_score": {
+      "type": "number"
+    },
+    "information_value_recorded_at": {
+      "type": "string",
+      "format": "date-time"
+    },
     "recorded_at": {
       "type": "string",
       "format": "date-time"

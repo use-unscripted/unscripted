@@ -22,6 +22,9 @@
     "sequence": {
       "type": "number"
     },
+    "previous_version_id": {
+      "type": "string"
+    },
     "experiment_id": {
       "type": "string"
     },
@@ -32,6 +35,9 @@
       "type": "string"
     },
     "cycle_id": {
+      "type": "string"
+    },
+    "career_cycle_id": {
       "type": "string"
     },
     "test_question": {
@@ -109,11 +115,59 @@
         "type": "string"
       }
     },
+    "unknowns_resolved": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "unknowns_added": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "decision_dimensions_updated": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
     "next_best_test": {
       "type": "string"
     },
     "next_best_test_link": {
       "type": "string"
+    },
+    "recommendation_change": {
+      "type": "string"
+    },
+    "ai_synthesis": {
+      "type": "string"
+    },
+    "student_approved_synthesis": {
+      "type": "boolean",
+      "default": false
+    },
+    "evidence_outcome": {
+      "type": "string",
+      "enum": [
+        "strengthened",
+        "weakened",
+        "mixed",
+        "resolved_and_revealed",
+        "modified",
+        "insufficient_information"
+      ]
+    },
+    "information_value_score": {
+      "type": "number"
+    },
+    "information_value_reasons": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
     },
     "dimensions_tested": {
       "type": "array",

@@ -35,8 +35,22 @@ export async function recordOverride({ action, candidate, recommendation, note }
     path_id: recommendation?.path_id || undefined,
     path_name: recommendation?.path_name || undefined,
     learning_value_score: candidate?.learning_value_score ?? undefined,
+    // Which rule put this forward, and what the student did about it. This is the
+    // pairing the engine can be judged on later: rule → acceptance → the
+    // information value of what the student actually learned.
+    rule_id: recommendation?.rule_id || undefined,
+    rule_version: recommendation?.rule_version || undefined,
+    rule_reasons: recommendation?.rule_reasons?.length ? recommendation.rule_reasons : undefined,
+    mode: recommendation?.mode || undefined,
+    depth: recommendation?.depth || undefined,
+    cross_career_count: recommendation?.cross_career_count ?? undefined,
     recorded_at: new Date().toISOString(),
   }).catch(() => null);
+}
+
+/** The student started the recommended test. Same row shape, positive action. */
+export function recordAcceptance({ candidate, recommendation }) {
+  return recordOverride({ action: 'accepted', candidate, recommendation });
 }
 
 export async function loadOverrides() {

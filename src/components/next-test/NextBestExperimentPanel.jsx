@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { loadNextBestExperiment } from '@/lib/next-best-experiment';
-import { recordOverride } from '@/lib/recommendation-overrides';
+import { recordOverride, recordAcceptance } from '@/lib/recommendation-overrides';
 import RecommendedNextTest from '@/components/next-test/RecommendedNextTest';
 import { Sk } from '@/components/PageSkeleton';
 import { Reveal } from '@/components/motion';
@@ -46,6 +46,14 @@ export default function NextBestExperimentPanel() {
     setBusy(false);
   };
 
+  /* Accepting is recorded too, not just refusing. Without it the log only ever
+     shows the recommendations students rejected, which would make every rule
+     look bad. Fire-and-forget: the student navigates immediately either way. */
+  const onAccept = () => {
+    const current = state.recommendation;
+    if (current) recordAcceptance({ candidate: current.candidate, recommendation: current });
+  };
+
   if (state.loading) return <Sk h={268} r={16} />;
   if (!state.recommendation) return null;
   /* The reveal lives here rather than around this component on the page: it
@@ -55,6 +63,7 @@ export default function NextBestExperimentPanel() {
     <Reveal y={20}>
       <RecommendedNextTest
         recommendation={state.recommendation}
+        onAccept={onAccept}
         onOverride={onOverride}
         busy={busy}
         exhausted={exhausted}

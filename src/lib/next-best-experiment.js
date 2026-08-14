@@ -45,6 +45,34 @@ export const LEARNING_VALUE_WEIGHTS = {
   deferred_penalty: 16,         // the student asked to come back to it later
 };
 
+/**
+ * Which interpretable rule produced the recommendation.
+ *
+ * Logged with every recommendation the student accepts or overrides, so that the
+ * question "which rule tends to put forward the tests students actually learn
+ * from" can be answered later from records rather than guessed. Deliberately a
+ * short list of stated rules: no opaque model, and every id is readable.
+ */
+export const RULE_VERSION = '2026-08-r1';
+
+export const RECOMMENDATION_RULES = {
+  resolve_contradiction: 'Evidence on this dimension points both ways, so settling it is worth more than anything new.',
+  differentiate_leading_paths: 'This answer separates the leading directions rather than confirming all of them.',
+  cross_career_unknown: 'One unknown that several live directions turn on.',
+  explore_low_confidence_path: 'A credible direction we know very little about yet.',
+  first_behavioural_evidence: 'No experiment has been measured yet, so any real reading is the most useful thing available.',
+  highest_impact_unknown: 'The open question with the highest impact on what we can tell this student.',
+};
+
+function ruleFor(candidate, mode) {
+  if (candidate.contradicted) return 'resolve_contradiction';
+  if (mode === 'early') return 'first_behavioural_evidence';
+  if (candidate.differentiates) return 'differentiate_leading_paths';
+  if (candidate.cross_career) return 'cross_career_unknown';
+  if (mode === 'exploration') return 'explore_low_confidence_path';
+  return 'highest_impact_unknown';
+}
+
 const RELEVANCE = { high: 1, medium: 0.62, low: 0.25 };
 const clamp = (n, lo = 0, hi = 100) => Math.max(lo, Math.min(hi, Math.round(n)));
 const norm = (n, fallback = 0.5) => (typeof n === 'number' && Number.isFinite(n) ? n / 100 : fallback);
@@ -282,10 +310,18 @@ export function nextBestExperiment(ctx, opts = {}) {
       : `That matters on ${names[0]}.`,
   ].join(' ');
 
+  const rule_id = ruleFor(top, mode);
+
   return {
     mode,
     early: mode === 'early',
     candidate: top,
+    // The rule behind this recommendation, kept interpretable and logged with
+    // whatever the student does next.
+    rule_id,
+    rule_version: RULE_VERSION,
+    rule_explanation: RECOMMENDATION_RULES[rule_id],
+    rule_reasons: top.factors,
     blueprint,
     title: blueprint.title,
     tests: blueprint.tests,

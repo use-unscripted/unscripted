@@ -1,0 +1,102 @@
+{
+  "name": "ExperimentEffectiveness",
+  "type": "object",
+  "properties": {
+    "blueprint_key": {
+      "type": "string"
+    },
+    "blueprint_title": {
+      "type": "string"
+    },
+    "test_question": {
+      "type": "string"
+    },
+    "dimensions_tested": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "hypotheses_where_used": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "students_started": {
+      "type": "number"
+    },
+    "students_completed": {
+      "type": "number"
+    },
+    "completion_rate": {
+      "type": "number"
+    },
+    "average_hours_to_completion": {
+      "type": "number"
+    },
+    "evidence_submission_rate": {
+      "type": "number"
+    },
+    "reflection_completion_rate": {
+      "type": "number"
+    },
+    "student_reported_usefulness": {
+      "type": "number"
+    },
+    "pct_changed_understanding": {
+      "type": "number"
+    },
+    "average_uncertainties_resolved": {
+      "type": "number"
+    },
+    "expectation_reality_delta": {
+      "type": "number"
+    },
+    "second_experiment_followthrough": {
+      "type": "number"
+    },
+    "dropoff_stage": {
+      "type": "string"
+    },
+    "information_value_score": {
+      "type": "number"
+    },
+    "sample_size": {
+      "type": "number"
+    },
+    "suppressed": {
+      "type": "boolean",
+      "default": true
+    },
+    "computed_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "blueprint_key"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

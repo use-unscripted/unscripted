@@ -72,6 +72,7 @@ const GuideDetailPage = lazy(() => import('@/pages/GuideDetailPage'));
 const AnswerNudge = lazy(() => import('@/pages/AnswerNudge'));
 const AdminCampusFeeds = lazy(() => import('@/pages/AdminCampusFeeds'));
 const AdminAiFailures = lazy(() => import('@/pages/AdminAiFailures'));
+const AdminDecisionIntelligence = lazy(() => import('@/pages/AdminDecisionIntelligence'));
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError } = useAuth();
@@ -178,6 +179,9 @@ const AuthenticatedApp = () => {
           <Route path="/admin/campus-feeds" element={<AdminCampusFeeds />} />
           {/* Team-only. The page checks the role, and so does the entity's RLS. */}
           <Route path="/admin/ai-failures" element={<AdminAiFailures />} />
+          {/* Team-only aggregate product learning. The page checks the role, and
+              so does the function, which is where suppression is applied. */}
+          <Route path="/admin/decision-intelligence" element={<AdminDecisionIntelligence />} />
 
         </Route>
       </Route>

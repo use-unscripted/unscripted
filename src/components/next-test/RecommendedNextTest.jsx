@@ -14,7 +14,7 @@ import OverrideActions from '@/components/next-test/OverrideActions';
  * and what it will tell us — then leaves the student free to do something else.
  * No scores, no talk of variables or information value.
  */
-export default function RecommendedNextTest({ recommendation, onOverride, busy, exhausted }) {
+export default function RecommendedNextTest({ recommendation, onOverride, onAccept, busy, exhausted }) {
   const [showWhy, setShowWhy] = useState(false);
   const [showOthers, setShowOthers] = useState(false);
   if (!recommendation) return null;
@@ -99,10 +99,10 @@ export default function RecommendedNextTest({ recommendation, onOverride, busy, 
       <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
         {/* Quick Test is the default level. Deep Dive stays one tap away and is
             never required. */}
-        <Link to={primary.to} className="ui-press app-cta tp-control">
+        <Link to={primary.to} onClick={onAccept} className="ui-press app-cta tp-control">
           Start the {primary.meta.label} · {primary.meta.duration_label} <ArrowRight size={17} aria-hidden="true" />
         </Link>
-        <Link to={secondary.to} className="app-cta-secondary tp-control">
+        <Link to={secondary.to} onClick={onAccept} className="app-cta-secondary tp-control">
           {secondary.meta.label} instead · {secondary.meta.duration_label}
         </Link>
         <button
