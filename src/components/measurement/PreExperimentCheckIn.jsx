@@ -1,20 +1,32 @@
 /**
- * "Before You Start" — five taps, recorded before the work begins.
+ * "Before You Start" — five taps and three optional lines, recorded before the
+ * work begins.
  *
- * Not skippable: without the expectation there is nothing to compare the
- * outcome against, which is the whole point of the measurement.
+ * Not skippable on the scales: without the expectation there is nothing to
+ * compare the outcome against, which is the whole point of the measurement. The
+ * written answers are optional so the form never becomes the reason somebody
+ * stops. Answers are kept locally as they are given, so closing this and coming
+ * back later does not lose taps already made.
  */
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Loader2, X } from 'lucide-react';
 import ScaleInput from '@/components/measurement/ScaleInput';
-import { PRE_FIELDS, savePreMeasurement } from '@/lib/experiment-measurement';
+import TextAnswer from '@/components/measurement/TextAnswer';
+import {
+  PRE_FIELDS, PRE_TEXT_FIELDS, savePreMeasurement,
+  loadDraft, saveDraft, clearDraft,
+} from '@/lib/experiment-measurement';
 
 export default function PreExperimentCheckIn({ exp, onClose, onSaved }) {
-  const [values, setValues] = useState({});
+  const [values, setValues] = useState(() => loadDraft('pre', exp?.id));
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
+  useEffect(() => { saveDraft('pre', exp?.id, values); }, [values, exp?.id]);
+
+  const set = (key, val) => setValues(v => ({ ...v, [key]: val }));
   const complete = PRE_FIELDS.every(f => values[f.key]);
+  const resumed = Object.keys(loadDraft('pre', exp?.id)).length > 0;
 
   const submit = async () => {
     if (!complete || saving) return;
@@ -22,6 +34,7 @@ export default function PreExperimentCheckIn({ exp, onClose, onSaved }) {
     setError('');
     try {
       const row = await savePreMeasurement(exp, values);
+      clearDraft('pre', exp?.id);
       onSaved(row);
     } catch {
       setError('We could not save that just now. Try again.');
@@ -39,6 +52,9 @@ export default function PreExperimentCheckIn({ exp, onClose, onSaved }) {
         <p className="tp-lead mb-5" style={{ color: 'var(--text-secondary)' }}>
           Take a few seconds to tell us what you are expecting from {exp.title}. We will compare it to what actually happens.
         </p>
+        {resumed && (
+          <p className="tp-meta mb-4" style={{ color: 'var(--text-muted)' }}>Your earlier answers were kept.</p>
+        )}
 
         <div className="space-y-5">
           {PRE_FIELDS.map(f => (
@@ -48,8 +64,12 @@ export default function PreExperimentCheckIn({ exp, onClose, onSaved }) {
               low={f.low}
               high={f.high}
               value={values[f.key]}
-              onChange={(n) => setValues(v => ({ ...v, [f.key]: n }))}
+              onChange={(n) => set(f.key, n)}
             />
+          ))}
+
+          {PRE_TEXT_FIELDS.map(f => (
+            <TextAnswer key={f.key} label={f.label} value={values[f.key]} onChange={(t) => set(f.key, t)} />
           ))}
         </div>
 
@@ -62,7 +82,7 @@ export default function PreExperimentCheckIn({ exp, onClose, onSaved }) {
           {saving ? 'Saving…' : 'Start the experiment'}
         </button>
         {!complete && (
-          <p className="tp-meta mt-2 text-center" style={{ color: 'var(--text-muted)' }}>Answer all five to begin.</p>
+          <p className="tp-meta mt-2 text-center" style={{ color: 'var(--text-muted)' }}>Answer the five ratings to begin. The written questions are optional.</p>
         )}
       </div>
     </div>

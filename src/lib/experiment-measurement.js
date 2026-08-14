@@ -65,8 +65,56 @@ export const POST_FIELDS = [
   { key: 'frustration_level', label: 'Frustration level', low: 'None', high: 'A lot' },
   { key: 'desire_to_repeat', label: 'Desire to do similar work again', low: 'None', high: 'Strong' },
   { key: 'self_rated_performance', label: 'How well do you think you did?', low: 'Poorly', high: 'Very well' },
+  { key: 'post_career_interest', label: 'Interest in this career now', low: 'Low', high: 'High' },
   { key: 'post_career_fit_confidence', label: 'How strongly do you think this career fits you now?', low: 'Not sure', high: 'Very sure' },
 ];
+
+/**
+ * The written half. Optional on purpose: a required paragraph is the thing that
+ * stops a student finishing the check-in, and the scales already carry the
+ * comparison. An unanswered one stays absent rather than stored empty.
+ */
+export const PRE_TEXT_FIELDS = [
+  { key: 'biggest_expected_positive', label: 'What do you think you will like most about this?' },
+  { key: 'biggest_concern', label: 'What are you most concerned about?' },
+  { key: 'expectation_prediction', label: 'What do you think this experience will tell you?' },
+];
+
+export const POST_TEXT_FIELDS = [
+  { key: 'biggest_positive', label: 'What was the best part of doing this?' },
+  { key: 'biggest_negative', label: 'What was the worst part of doing this?' },
+  { key: 'surprise_reflection', label: 'What surprised you most?' },
+  { key: 'assumption_that_changed', label: 'What did you believe before this that you no longer believe?' },
+];
+
+const text = (values, fields) => fields.reduce((acc, f) => {
+  const v = (values[f.key] || '').trim();
+  return { ...acc, [f.key]: v || undefined };
+}, {});
+
+/**
+ * Answers held locally while the check-in is open, so closing the sheet or
+ * leaving the experiment and coming back does not lose taps already made. Keyed
+ * per experiment and phase, and cleared once the row is written.
+ */
+const draftKey = (phase, expId) => `unscripted_measure_draft_${phase}_${expId}`;
+
+export function loadDraft(phase, expId) {
+  if (!expId) return {};
+  try {
+    return JSON.parse(localStorage.getItem(draftKey(phase, expId)) || '{}') || {};
+  } catch { return {}; }
+}
+
+export function saveDraft(phase, expId, values) {
+  if (!expId) return;
+  try { localStorage.setItem(draftKey(phase, expId), JSON.stringify(values || {})); } catch { /* private mode */ }
+}
+
+export function clearDraft(phase, expId) {
+  if (!expId) return;
+  try { localStorage.removeItem(draftKey(phase, expId)); } catch { /* private mode */ }
+}
 
 const num = (v) => (typeof v === 'number' && Number.isFinite(v) ? v : null);
 
@@ -104,6 +152,7 @@ export async function savePreMeasurement(exp, values) {
     user_id: user?.id,
     ...links(exp),
     ...ALL_PRE_FIELDS.reduce((acc, f) => ({ ...acc, [f.key]: num(values[f.key]) ?? undefined }), {}),
+    ...text(values, PRE_TEXT_FIELDS),
     pre_completed_at: new Date().toISOString(),
   });
 
@@ -129,6 +178,7 @@ export function computeDeltas(pre, post) {
     enjoyment_expectation_delta: d(post.actual_enjoyment, pre?.expected_enjoyment),
     difficulty_expectation_delta: d(post.actual_difficulty, pre?.expected_difficulty),
     energy_expectation_delta: d(post.actual_energy, pre?.expected_energy),
+    career_interest_delta: d(post.post_career_interest, pre?.pre_career_interest),
     career_confidence_delta: d(post.post_career_fit_confidence, pre?.pre_career_fit_confidence),
   };
 }
@@ -141,7 +191,8 @@ export async function savePostMeasurement(exp, existingRow, values) {
     user_id: user?.id,
     ...links(exp),
     ...POST_FIELDS.reduce((acc, f) => ({ ...acc, [f.key]: post[f.key] ?? undefined }), {}),
-    surprise_reflection: (values.surprise_reflection || '').trim() || undefined,
+    ...text(values, POST_TEXT_FIELDS),
+    behavioral_snapshot: values.behavioral_snapshot || undefined,
     post_completed_at: new Date().toISOString(),
     ...computeDeltas(existingRow, post),
   });

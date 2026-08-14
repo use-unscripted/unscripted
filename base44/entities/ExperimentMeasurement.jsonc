@@ -44,6 +44,15 @@
     "expected_want_more": {
       "type": "number"
     },
+    "biggest_expected_positive": {
+      "type": "string"
+    },
+    "biggest_concern": {
+      "type": "string"
+    },
+    "expectation_prediction": {
+      "type": "string"
+    },
     "pre_completed_at": {
       "type": "string",
       "format": "date-time"
@@ -66,15 +75,30 @@
     "self_rated_performance": {
       "type": "number"
     },
+    "post_career_interest": {
+      "type": "number"
+    },
     "post_career_fit_confidence": {
       "type": "number"
     },
+    "biggest_positive": {
+      "type": "string"
+    },
+    "biggest_negative": {
+      "type": "string"
+    },
     "surprise_reflection": {
+      "type": "string"
+    },
+    "assumption_that_changed": {
       "type": "string"
     },
     "post_completed_at": {
       "type": "string",
       "format": "date-time"
+    },
+    "behavioral_snapshot": {
+      "type": "object"
     },
     "system_performance_score": {
       "type": "number"
@@ -128,6 +152,9 @@
       "type": "number"
     },
     "energy_expectation_delta": {
+      "type": "number"
+    },
+    "career_interest_delta": {
       "type": "number"
     },
     "career_confidence_delta": {

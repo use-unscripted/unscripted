@@ -21,6 +21,7 @@ import MeasurementGate from '@/components/measurement/MeasurementGate';
 import WhatYouLearned from '@/components/measurement/WhatYouLearned';
 import ReviewedWork from '@/components/measurement/ReviewedWork';
 import { loadMeasurements } from '@/lib/experiment-measurement';
+import { behavioralSnapshot } from '@/lib/expectation-reality';
 import { useMissions } from '@/hooks/useMissions';
 import { Sk } from '@/components/PageSkeleton';
 
@@ -130,6 +131,15 @@ export default function ActiveExperiment() {
   // has, so falling back to the newest keeps the card from disappearing.
   const openGuide = guides.find(g => g.is_active) || guides[0];
   const firstStepTitle = openGuide?.steps?.find(s => s?.title)?.title || '';
+  // Counts of what actually happened, recorded beside the ratings and never
+  // merged into them.
+  const behavioral = behavioralSnapshot({
+    exp: experiment,
+    guide: openGuide,
+    proof: proofs,
+    contacts,
+    measurement,
+  });
 
   return (
     <main className="app-page">
@@ -207,6 +217,7 @@ export default function ActiveExperiment() {
             phase="post"
             exp={experiment}
             measurement={measurement}
+            behavioral={behavioral}
             autoOpen
             onSaved={(row) => { setMeasurement(row); setLearned(row); }}
           />
@@ -220,7 +231,7 @@ export default function ActiveExperiment() {
           />
         )}
 
-        {learned && <WhatYouLearned m={learned} />}
+        {learned && <WhatYouLearned m={learned} behavioral={behavioral} />}
         {/* The review of the deliverable, kept beside the student's own rating. */}
         <ReviewedWork m={measurement} />
 

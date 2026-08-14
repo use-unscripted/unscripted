@@ -17,7 +17,7 @@ import { isQuickTest } from '@/lib/experiment-depth';
  *
  * `phase` is 'pre' or 'post'. Renders nothing once that half is recorded.
  */
-export default function MeasurementGate({ phase, exp, measurement, onSaved, autoOpen = false }) {
+export default function MeasurementGate({ phase, exp, measurement, behavioral, onSaved, autoOpen = false }) {
   const done = phase === 'pre' ? !!measurement?.pre_completed_at : !!measurement?.post_completed_at;
   const [open, setOpen] = useState(false);
   const [reviewing, setReviewing] = useState(false);
@@ -79,6 +79,7 @@ export default function MeasurementGate({ phase, exp, measurement, onSaved, auto
         <PostExperimentCheckIn
           exp={exp}
           measurement={measurement}
+          behavioral={behavioral}
           onClose={() => setOpen(false)}
           onSaved={savePost}
         />
