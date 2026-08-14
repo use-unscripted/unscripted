@@ -52,6 +52,7 @@ const CareerEvidenceProfile = lazy(() => import('@/pages/CareerEvidenceProfile')
 const CampusEventsPage = lazy(() => import('@/pages/CampusEventsPage'));
 const ExperimentSetup = lazy(() => import('@/pages/ExperimentSetup'));
 const CareerMomentPage = lazy(() => import('@/pages/CareerMomentPage'));
+const WorkSimulationPage = lazy(() => import('@/pages/WorkSimulationPage'));
 const Roadmap = lazy(() => import('@/pages/Roadmap'));
 const WeeklyCalendar = lazy(() => import('@/pages/WeeklyCalendar'));
 const SavedRoadmaps = lazy(() => import('@/pages/SavedRoadmaps'));
@@ -151,6 +152,11 @@ const AuthenticatedApp = () => {
           <Route path="/paths" element={<PathComparison />} />
           {/* The default, short Experiment: one Career Moment, 2–7 minutes. */}
           <Route path="/moment" element={<CareerMomentPage />} />
+          {/* The work simulation: 30 minutes of one job, signed in only. Inside
+              ProtectedRoute on purpose. Every row it writes is owned by the
+              student under row-level security, so there is no guest draft to
+              claim later and no anonymous run to reconcile. */}
+          <Route path="/simulation" element={<WorkSimulationPage />} />
           <Route path="/experiment" element={<ActiveExperiment />} />
           <Route path="/reflect" element={<ExperimentReflection />} />
           <Route path="/experiments" element={<ExperimentsPage />} />

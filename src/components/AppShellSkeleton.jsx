@@ -18,6 +18,7 @@ const SHELL_ROUTES = [
   '/blueprints', '/paths', '/experiment', '/reflect', '/experiments',
   '/resources', '/creators', '/goals-tracker', '/resume', '/recently-deleted',
   '/guide', '/pilot', '/admin', '/dashboard', '/outreach', '/proof', '/reflection',
+  '/simulation',
 ];
 
 export function isShellRoute(pathname) {
