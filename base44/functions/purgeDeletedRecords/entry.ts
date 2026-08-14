@@ -1,6 +1,10 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.38';
 
-const ENTITY_NAMES = ['Experiments', 'Missions', 'OutreachContacts', 'WeeklyReflections', 'ProofOfWork'];
+// Every entity a student can soft-delete has to be named here, or its rows sit
+// past their purge date forever. MissionGuides was missing from this list for
+// as long as guides have been deletable. `entry.test.js` derives the same set
+// from the frontend's softDeletePayload call sites and fails if they diverge.
+const ENTITY_NAMES = ['Experiments', 'Missions', 'MissionGuides', 'OutreachContacts', 'WeeklyReflections', 'ProofOfWork'];
 
 Deno.serve(async (req) => {
   try {
