@@ -41,7 +41,7 @@ import SimRevision from '@/components/worksim/SimRevision';
 import SimReply from '@/components/worksim/SimReply';
 import SimSample from '@/components/worksim/SimSample';
 import SimAfter from '@/components/worksim/SimAfter';
-import SimReadoutPlaceholder from '@/components/worksim/SimReadoutPlaceholder';
+import SimReadout from '@/components/worksim/SimReadout';
 
 const SIM = NORTHGATE_PM;
 
@@ -79,6 +79,10 @@ export default function WorkSimulationPage() {
   const [engineerReply, setEngineerReply] = useState('');
   const [salesReply, setSalesReply] = useState('');
   const [post, setPost] = useState({});
+  // The measurement row the read-out puts the four predictions against. It is
+  // whatever `completeRun` got back, which is null when that write failed, and
+  // the read-out is built to degrade on a missing one rather than to wait for it.
+  const [measurement, setMeasurement] = useState(null);
 
   // Timing, held in refs so recording it never re-renders a text area someone
   // is typing into.
@@ -173,6 +177,7 @@ export default function WorkSimulationPage() {
     const result = await completeRun({ run: runRef.current, answers: post, sim: SIM });
     finishedRef.current = true;
     setRun(result.run);
+    setMeasurement(result.measurement);
     setStage('done');
   });
 
@@ -219,6 +224,11 @@ export default function WorkSimulationPage() {
           </div>
         )}
 
+        {/* The read-out is four panels rather than one step, so it draws at the
+            page's own level instead of inside the card the steps share. */}
+        {stage === 'done' ? (
+          <SimReadout run={run} measurement={measurement} sim={SIM} />
+        ) : (
         <div className="app-card p-6 sm:p-8">
           {stage === 'setup' && (
             <SimSetup
@@ -339,11 +349,8 @@ export default function WorkSimulationPage() {
               busy={busy}
             />
           )}
-
-          {/* Placeholder. The real read-out replaces this component and takes
-              `run` plus the measurement row, both of which this page holds. */}
-          {stage === 'done' && <SimReadoutPlaceholder />}
         </div>
+        )}
       </div>
     </main>
   );

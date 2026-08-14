@@ -178,7 +178,7 @@ describe('the work simulation, end to end', () => {
     click('Yes');
     click('Finish');
 
-    await screen.findByText('That is saved');
+    await screen.findByText('Your read-out');
 
     const row = rowSoFar();
     expect(row.problem_statement).toContain('Duplicate jobs');
