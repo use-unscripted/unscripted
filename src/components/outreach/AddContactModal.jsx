@@ -303,10 +303,18 @@ export default function AddContactModal({ contact, onClose, onSaved }) {
 
             {selectedExp && (
               <div className="rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] px-4 py-3">
-                <p className="tp-eyebrow mb-1.5 text-[color:var(--ink-500)]">Path</p>
+                <p className="tp-eyebrow mb-1.5 text-[color:var(--ink-500)]">Hypothesis being tested</p>
                 <p className="tp-body font-semibold text-[color:var(--surface-dark-900)]">
-                  {selectedExp.path_name || <span className="text-[color:var(--ink-400)] font-normal">No path connected to this experiment</span>}
+                  {selectedExp.path_name || <span className="text-[color:var(--ink-400)] font-normal">No hypothesis connected to this experiment</span>}
                 </p>
+                {/* A conversation without a question behind it is networking. The
+                    unresolved question this experiment exists to answer is shown
+                    here so the purpose field below has something to aim at. */}
+                {(selectedExp.test_question || selectedExp.unresolved_question) && (
+                  <p className="tp-meta mt-2 text-[color:var(--ink-500)]">
+                    Still uncertain: {selectedExp.test_question || selectedExp.unresolved_question}
+                  </p>
+                )}
               </div>
             )}
 
@@ -359,9 +367,15 @@ export default function AddContactModal({ contact, onClose, onSaved }) {
             </div>
 
             <div>
-              <label className="tp-meta block mb-1.5 font-semibold text-[color:var(--ink-700)]">Reason for contact</label>
+              <label className="tp-meta block mb-1.5 font-semibold text-[color:var(--ink-700)]">
+                What are you trying to learn from this person?
+              </label>
               <textarea rows={2} name="reason_for_contact" value={data.reason_for_contact} onChange={ch}
-                placeholder="What specific question can only they answer?" className={inputCls} />
+                placeholder={selectedExp?.test_question || selectedExp?.unresolved_question || 'What specific uncertainty can only they answer?'}
+                className={inputCls} />
+              <p className="tp-meta mt-1.5 text-[color:var(--ink-400)]">
+                Aim it at what is still uncertain, not at a general introduction.
+              </p>
             </div>
             <div>
               <label className="tp-meta block mb-1.5 font-semibold text-[color:var(--ink-700)]">Notes</label>

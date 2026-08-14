@@ -1,6 +1,14 @@
 import { Calendar, Lock, Eye, FileText, ArrowRight, CheckCircle2 } from 'lucide-react';
 import { RESUME_STATUS, VISIBILITY_LABELS, typeLabel, fmtDate } from '@/lib/evidence-library';
 
+/* The student's own reading, phrased as evidence rather than as a verdict. */
+const DIRECTION_LABELS = {
+  supports: 'Evidence suggests this supports the hypothesis',
+  weakens: 'Evidence suggests this weakens the hypothesis',
+  mixed: 'Points both ways',
+  unclear: 'Still uncertain',
+};
+
 function Chip({ children, bg = 'var(--ink-100)', color = 'var(--ink-500)' }) {
   return <span className="tp-meta rounded-full px-2.5 py-1 font-bold" style={{ background: bg, color }}>{children}</span>;
 }
@@ -31,6 +39,26 @@ export default function EvidenceCard({ item, onReview, onOpenCycle }) {
         ))}
         {!item.pathName && !item.experimentTitle && !item.missionTitle && <span>Not linked to an experiment yet</span>}
       </p>
+
+      {/* What this evidence says about the hypothesis, in the student's words.
+          Silent when they have not answered it yet — an empty prompt on every
+          card would read as a chore rather than a finding. */}
+      {(item.interpretation || item.interpretationDirection) && (
+        <div className="mt-4 rounded-[var(--r-control)] px-4 py-3" style={{ background: 'var(--background-tertiary)' }}>
+          <p className="tp-eyebrow" style={{ color: 'var(--brand-navy-700)' }}>
+            What this tells us
+            {item.interpretationDirection && ` · ${DIRECTION_LABELS[item.interpretationDirection] || item.interpretationDirection}`}
+          </p>
+          {item.interpretedTestQuestion && (
+            <p className="tp-meta mt-1.5" style={{ color: 'var(--text-muted)' }}>
+              Tested: {item.interpretedTestQuestion}
+            </p>
+          )}
+          {item.interpretation && (
+            <p className="tp-prose mt-1.5" style={{ color: 'var(--text-primary)' }}>{item.interpretation}</p>
+          )}
+        </div>
+      )}
 
       {item.skills.length > 0 && (
         <div className="mt-3 flex flex-wrap gap-1.5">

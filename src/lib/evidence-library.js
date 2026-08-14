@@ -71,6 +71,11 @@ export function buildLibrary({ cycles = [], paths = [], experiments = [], missio
       missionId: mission?.id || '',
       missionTitle: mission?.title || '',
       skills: p.skills_demonstrated || [],
+      // The student's own reading of what this work says about the hypothesis,
+      // and the question it was answering.
+      interpretation: p.hypothesis_interpretation || '',
+      interpretationDirection: p.interpretation_direction || '',
+      interpretedTestQuestion: p.interpreted_test_question || experiment?.test_question || '',
       visibility: p.network_visibility || p.visibility || 'private',
       resumeStatus: p.resume_status || 'not_reviewed',
     };
@@ -126,7 +131,7 @@ export function filterEvidence(items, f) {
       if (from && t < from.getTime()) return false;
       if (to && t >= to.getTime()) return false;
     }
-    if (q && ![i.title, i.pathName, i.experimentTitle, i.missionTitle, ...(i.skills || [])].join(' ').toLowerCase().includes(q)) return false;
+    if (q && ![i.title, i.pathName, i.experimentTitle, i.missionTitle, i.interpretation, ...(i.skills || [])].join(' ').toLowerCase().includes(q)) return false;
     return true;
   });
 }

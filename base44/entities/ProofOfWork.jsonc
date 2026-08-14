@@ -92,6 +92,21 @@
     "reflection": {
       "type": "string"
     },
+    "hypothesis_interpretation": {
+      "type": "string"
+    },
+    "interpretation_direction": {
+      "type": "string",
+      "enum": [
+        "supports",
+        "weakens",
+        "mixed",
+        "unclear"
+      ]
+    },
+    "interpreted_test_question": {
+      "type": "string"
+    },
     "visibility": {
       "type": "string",
       "enum": [

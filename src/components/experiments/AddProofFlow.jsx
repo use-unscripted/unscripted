@@ -17,6 +17,7 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import { X, Loader2, Upload, FileText, Film, CheckCircle, AlertCircle, RefreshCw, Trash2, ChevronRight, ChevronLeft, ChevronDown, Save } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { ProgressBar, OptionRow, GuidedStyles, footerCls } from '@/components/guided/GuidedPieces';
+import InterpretationField from '@/components/evidence/InterpretationField';
 import { linksForExperiment } from '@/lib/career-cycle';
 
 const inputCls = 'w-full rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-base md:text-sm outline-none focus:border-[color:var(--brand-navy-900)]';
@@ -157,6 +158,8 @@ export default function AddProofFlow({ onClose, onSaved, preselectedMission, pre
     description: '',
     external_url: '',
     completion_note: '',
+    hypothesis_interpretation: '',
+    interpretation_direction: '',
     skills_demonstrated: '',
     visibility: 'private',
     completed_at: new Date().toISOString().split('T')[0],
@@ -367,6 +370,14 @@ export default function AddProofFlow({ onClose, onSaved, preselectedMission, pre
         // unchecked row is never saved.
         external_url: (linkOn && trimmedUrl) || undefined,
         completion_note: noteOn ? data.completion_note : '',
+        // What this piece of work says about the hypothesis, in the student's
+        // own words. Optional, and the question it answers is stored with it so
+        // the reading can still be read back against what was being tested.
+        hypothesis_interpretation: data.hypothesis_interpretation.trim() || undefined,
+        interpretation_direction: data.interpretation_direction || undefined,
+        interpreted_test_question: (data.hypothesis_interpretation.trim() || data.interpretation_direction)
+          ? (exp.test_question || exp.unresolved_question || undefined)
+          : undefined,
         completed_at: data.completed_at || undefined,
         skills_demonstrated: data.skills_demonstrated
           ? data.skills_demonstrated.split(',').map(s => s.trim()).filter(Boolean)
@@ -611,6 +622,20 @@ export default function AddProofFlow({ onClose, onSaved, preselectedMission, pre
               </div>
             );
           })}
+        </div>
+
+        {/* The question that makes this evidence rather than an artefact. It
+            sits outside the optional disclosure below on purpose: this is the
+            product's whole point, and burying it made proof a filing cabinet. */}
+        <div className="mt-5 rounded-[var(--r-surface)] border p-4" style={{ borderColor: 'var(--ink-200)', background: 'var(--brand-white)' }}>
+          <InterpretationField
+            testQuestion={selectedExp?.test_question || selectedExp?.unresolved_question}
+            value={data.hypothesis_interpretation}
+            direction={data.interpretation_direction}
+            onChange={v => setData(d => ({ ...d, hypothesis_interpretation: v }))}
+            onDirectionChange={v => setData(d => ({ ...d, interpretation_direction: v }))}
+            inputCls={inputCls}
+          />
         </div>
 
         {/* Everything optional lives behind this, closed. */}
