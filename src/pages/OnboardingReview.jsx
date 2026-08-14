@@ -13,7 +13,10 @@ export default function OnboardingReview() {
 
   useEffect(() => {
     const d = loadDraft();
-    if (!d || !d.primary_path) {
+    // A name is the only thing this screen needs. Naming a career is optional
+    // in the intake, so requiring one here would bounce the exact student the
+    // new flow exists for straight back to question one.
+    if (!d || !d.name) {
       // No usable draft, so send back to start
       nav('/onboarding', { replace: true });
       return;
@@ -90,6 +93,10 @@ export default function OnboardingReview() {
     return `${(lastSpace > max * 0.6 ? cut.slice(0, lastSpace) : cut).replace(/[,;:.\s]+$/, '')}…`;
   };
 
+  const considered = Array.isArray(draft.current_careers_considered) ? draft.current_careers_considered.filter(Boolean) : [];
+  const ruledOut = Array.isArray(draft.careers_ruled_out) ? draft.careers_ruled_out.filter(Boolean) : [];
+  const openQuestions = Array.isArray(draft.major_uncertainties) ? draft.major_uncertainties.filter(Boolean) : [];
+
   const tradeoffs = draft.desired_lifestyle
     ? `Lifestyle goal: ${truncateOnWord(draft.desired_lifestyle, 120)}`
     : null;
@@ -116,10 +123,10 @@ export default function OnboardingReview() {
             <Target size={28} style={{ color: 'var(--brand-navy-900)' }} />
           </div>
           <h1 className="tp-page text-[color:var(--surface-dark-900)]">
-            Your 30-Day Path Test Is Ready
+            You do not need to know what you want yet
           </h1>
           <p className="tp-lead mt-3 text-[color:var(--ink-500)]">
-            You've completed the intake. Create a free account to generate your three tailored paths, save your Mission Guides, and track what you learn.
+            Create a free account and we will turn these answers into three careers worth testing, plus the first experiment that tells you something real about the ones you are unsure of.
           </p>
         </div>
 
@@ -145,10 +152,17 @@ export default function OnboardingReview() {
                 <span className="tp-meta font-bold" style={{ color: 'var(--brand-navy-900)' }}>2</span>
               </div>
               <div>
-                <p className="tp-eyebrow text-[color:var(--ink-400)]">Primary path to test</p>
-                <p className="tp-body mt-1 font-semibold text-[color:var(--surface-dark-900)]">{draft.primary_path}</p>
-                {draft.comparison_path && (
-                  <p className="tp-body text-[color:var(--ink-500)]">Comparing against: {draft.comparison_path}</p>
+                <p className="tp-eyebrow text-[color:var(--ink-400)]">Where you are starting</p>
+                <p className="tp-body mt-1 font-semibold text-[color:var(--surface-dark-900)]">
+                  {considered.length ? considered.join(' · ') : 'No career named yet, which is a fine place to start'}
+                </p>
+                {draft.baseline_career_clarity && (
+                  <p className="tp-body text-[color:var(--ink-500)]">
+                    Clarity right now: {draft.baseline_career_clarity}/10
+                  </p>
+                )}
+                {ruledOut.length > 0 && (
+                  <p className="tp-body text-[color:var(--ink-500)]">Ruled out: {ruledOut.join(', ')}</p>
                 )}
               </div>
             </div>
@@ -162,6 +176,18 @@ export default function OnboardingReview() {
                 <p className="tp-body mt-1 text-[color:var(--ink-700)]">{draft.available_hours_per_week || 8} hours per week available for path-testing</p>
               </div>
             </div>
+
+            {openQuestions.length > 0 && (
+              <div className="flex gap-3">
+                <div className="mt-0.5 h-6 w-6 shrink-0 rounded-full flex items-center justify-center" style={{ background: 'var(--ink-100)' }}>
+                  <Zap size={11} style={{ color: 'var(--brand-navy-900)' }} />
+                </div>
+                <div>
+                  <p className="tp-eyebrow text-[color:var(--ink-400)]">What we will help you test</p>
+                  <p className="tp-body mt-1 text-[color:var(--ink-700)]">{openQuestions.slice(0, 3).join(' · ')}</p>
+                </div>
+              </div>
+            )}
 
             {tradeoffs && (
               <div className="flex gap-3">

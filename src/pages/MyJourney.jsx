@@ -16,6 +16,7 @@ import JourneyNow from '@/components/journey/JourneyNow';
 import PathComparisonWorkspace from '@/components/journey/PathComparisonWorkspace';
 import PathSelectedConfirm from '@/components/journey/PathSelectedConfirm';
 import JourneyEmptyState from '@/components/journey/JourneyEmptyState';
+import UncertaintyUpdateCard from '@/components/journey/UncertaintyUpdateCard';
 import NextBestExperimentPanel from '@/components/next-test/NextBestExperimentPanel';
 import SimEntryCard from '@/components/worksim/SimEntryCard';
 import JourneyEvidence from '@/components/journey/JourneyEvidence';
@@ -208,6 +209,10 @@ export default function MyJourney() {
           onDismiss={() => setConfirmed(null)}
         />
       )}
+
+      {/* Silent unless this student onboarded before the intake asked about
+          uncertainty. An invitation, never a gate. */}
+      <UncertaintyUpdateCard profile={data.profile} />
 
       <JourneyNow
         stage={stage}

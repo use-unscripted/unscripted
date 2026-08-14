@@ -50,7 +50,9 @@ export function clearDraft() {
 
 export function isDraftComplete(draft) {
   if (!draft) return false;
-  // Only the essentials — everything else has a sensible fallback so a
-  // partially filled intake can never dead-end the user.
-  return !!(draft.name && draft.primary_path);
+  // Only the essentials, and naming a career is deliberately not one of them:
+  // a student who does not know what they want is the case this product is
+  // built for. Everything else has a sensible fallback, so a partially filled
+  // intake can never dead-end the user.
+  return !!draft.name;
 }

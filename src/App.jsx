@@ -57,6 +57,7 @@ const Roadmap = lazy(() => import('@/pages/Roadmap'));
 const WeeklyCalendar = lazy(() => import('@/pages/WeeklyCalendar'));
 const SavedRoadmaps = lazy(() => import('@/pages/SavedRoadmaps'));
 const Settings = lazy(() => import('@/pages/Settings'));
+const UncertaintyUpdate = lazy(() => import('@/pages/UncertaintyUpdate'));
 const BlueprintLibrary = lazy(() => import('@/pages/BlueprintLibrary'));
 const PathComparison = lazy(() => import('@/pages/PathComparison'));
 const ExperimentsPage = lazy(() => import('@/pages/ExperimentsPage'));
@@ -148,6 +149,9 @@ const AuthenticatedApp = () => {
           <Route path="/calendar" element={<WeeklyCalendar />} />
           <Route path="/saved" element={<SavedRoadmaps />} />
           <Route path="/settings" element={<Settings />} />
+          {/* The short uncertainty update for a student who onboarded before
+              the intake asked about it. Adds fields; changes nothing existing. */}
+          <Route path="/uncertainty-update" element={<UncertaintyUpdate />} />
           <Route path="/blueprints" element={<BlueprintLibrary />} />
           <Route path="/paths" element={<PathComparison />} />
           {/* The default, short Experiment: one Career Moment, 2–7 minutes. */}

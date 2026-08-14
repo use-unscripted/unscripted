@@ -11,6 +11,7 @@ import { ArrowLeft, RefreshCw, AlertTriangle } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { loadDraft, clearDraft, isDraftComplete } from '@/lib/guest-draft';
 import { generatePathTest } from '@/lib/path-generator';
+import { profileFromDraft, userMetaFromDraft } from '@/lib/onboarding-profile';
 import { trackFunnel, trackFunnelOnce } from '@/lib/funnel';
 
 const PHASES = [
@@ -74,51 +75,14 @@ export default function ClaimOnboarding() {
 
       if (!alreadyClaimed) {
         // ── Save StudentProfile from draft ──
-        await base44.entities.StudentProfile.create({
-          name: draft.name,
-          education_stage: draft.education_stage || 'college',
-          college: draft.college || 'Not specified',
-          major: draft.major || 'Undecided',
-          graduation_year: draft.graduation_year,
-          school_year: draft.school_year,
-          // The intake no longer asks "paths you are considering" separately:
-          // the path they chose to test is the answer to that question.
-          career_interests: draft.primary_path,
-          pressured_paths: draft.pressured_path,
-          secret_paths: draft.curious_path,
-          desired_lifestyle: draft.desired_lifestyle,
-          // Collected as chips since the vision question shipped, but never
-          // written here, so the generator's [themes: …] clause was always
-          // empty. It is mapped now.
-          vision_themes: draft.vision_themes,
-          biggest_blocker: draft.biggest_blocker,
-          commitments: draft.fixed_commitments,
-          priority_autonomy: draft.priority_autonomy,
-          priority_stability: draft.priority_stability,
-          priority_impact: draft.priority_impact,
-          priority_creativity: draft.priority_creativity,
-          priority_ownership: draft.priority_ownership,
-          willing_financial_risk: draft.willing_financial_risk,
-          willing_long_hours: draft.willing_long_hours,
-          available_hours_per_week: draft.available_hours_per_week || 8,
-          guest_session_id: draft.guest_session_id,
-          personal_notes: draft.personal_notes || '',
-          long_term_ambitions: draft.long_term_ambitions || '',
-          responsibilities_constraints: draft.responsibilities_constraints || '',
-          things_to_avoid: draft.things_to_avoid || '',
-          priorities_for_recommendations: draft.priorities_for_recommendations || '',
-        });
+        // The mapping lives in src/lib/onboarding-profile.js: it keeps the
+        // student's self-report under names that say it is self-report, and
+        // derives the five priority scores the generator prompt reads from the
+        // values grid rather than asking for them twice.
+        await base44.entities.StudentProfile.create(profileFromDraft(draft));
 
-        // ── Save path selections to user meta ──
-        await base44.auth.updateMe({
-          education_stage: draft.education_stage || 'college',
-          college: draft.college,
-          major: draft.major,
-          graduation_year: draft.graduation_year,
-          school_year: draft.school_year,
-          primary_path: draft.primary_path,
-          comparison_path: draft.comparison_path || '',
-        });
+        // ── Save identity + any careers they named to user meta ──
+        await base44.auth.updateMe(userMetaFromDraft(draft));
       }
 
       // ── Generate paths (idempotent: generator checks for existing recs) ──
