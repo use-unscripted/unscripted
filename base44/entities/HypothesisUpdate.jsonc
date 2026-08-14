@@ -1,0 +1,164 @@
+{
+  "name": "HypothesisUpdate",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string"
+    },
+    "path_id": {
+      "type": "string"
+    },
+    "path_name": {
+      "type": "string"
+    },
+    "stage": {
+      "type": "string",
+      "enum": [
+        "initial",
+        "update"
+      ],
+      "default": "update"
+    },
+    "sequence": {
+      "type": "number"
+    },
+    "experiment_id": {
+      "type": "string"
+    },
+    "experiment_title": {
+      "type": "string"
+    },
+    "reflection_id": {
+      "type": "string"
+    },
+    "cycle_id": {
+      "type": "string"
+    },
+    "test_question": {
+      "type": "string"
+    },
+    "hypothesis_statement": {
+      "type": "string"
+    },
+    "rationale": {
+      "type": "string"
+    },
+    "status_before": {
+      "type": "string"
+    },
+    "status_after": {
+      "type": "string"
+    },
+    "fit_before": {
+      "type": "number"
+    },
+    "fit_after": {
+      "type": "number"
+    },
+    "confidence_before": {
+      "type": "number"
+    },
+    "confidence_after": {
+      "type": "number"
+    },
+    "confidence_label_before": {
+      "type": "string"
+    },
+    "confidence_label_after": {
+      "type": "string"
+    },
+    "confidence_label_source": {
+      "type": "string",
+      "enum": [
+        "derived",
+        "student_corrected"
+      ],
+      "default": "derived"
+    },
+    "strengthened_by": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "weakened_by": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "remaining_unknowns": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "next_best_test": {
+      "type": "string"
+    },
+    "next_best_test_link": {
+      "type": "string"
+    },
+    "dimensions_tested": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "student_correction": {
+      "type": "string"
+    },
+    "decision": {
+      "type": "string",
+      "enum": [
+        "continue_testing",
+        "modify_hypothesis",
+        "eliminate_hypothesis"
+      ]
+    },
+    "decision_note": {
+      "type": "string"
+    },
+    "clarity_score": {
+      "type": "number"
+    },
+    "recorded_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "path_id",
+    "stage"
+  ],
+  "rls": {
+    "create": {
+      "created_by_id": "{{user.id}}"
+    },
+    "read": {
+      "created_by_id": "{{user.id}}"
+    },
+    "update": {
+      "created_by_id": "{{user.id}}"
+    },
+    "delete": {
+      "created_by_id": "{{user.id}}"
+    }
+  }
+}

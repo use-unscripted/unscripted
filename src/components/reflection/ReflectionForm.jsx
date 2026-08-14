@@ -1,31 +1,31 @@
 /**
- * The nine conclusion questions. Answers are held in local state and mirrored to
- * a per-experiment local draft, so a failed save (or a closed tab) never costs
- * the student their words.
+ * The reflection, in seven sections, whose purpose is to update the career
+ * hypothesis rather than to keep a journal.
+ *
+ * Sections 1, 2, 5 are written answers; 3 shows the pre/post comparison the
+ * student already produced and asks one question about it; 4 asks about the
+ * decision dimensions this experiment actually tested; 6 shows the evidence
+ * created. Section 7, the hypothesis synthesis, comes after this form is saved,
+ * because it is built from the recalculated evidence.
+ *
+ * Answers are mirrored to a per-experiment local draft, so a failed save or a
+ * closed tab never costs the student their words.
  */
 import { useEffect, useState } from 'react';
 import { AlertCircle, Loader2, Save } from 'lucide-react';
 import { readConclusionDraft, writeConclusionDraft } from '@/lib/student-drafts';
 import { trackPilotEvent } from '@/lib/pilot-metrics';
+import {
+  REFLECTION_SECTIONS, EMPTY_ANSWERS, answersFromReflection, blockingAnswer,
+} from '@/lib/reflection-sections';
+import ReflectionSection from '@/components/reflection/ReflectionSection';
+import DimensionQuestions from '@/components/reflection/DimensionQuestions';
+import EvidenceReview from '@/components/reflection/EvidenceReview';
+import ExpectationReality from '@/components/measurement/ExpectationReality';
 import ReferencedExperiments from '@/components/reflection/ReferencedExperiments';
 
-const EMPTY = {
-  lessons: '', surprises: '', enjoyed: '', disliked: '', assumptions: '',
-  evidence: '', interest: '', interestNote: '', next: '', clarity: null,
-  references: [],
-};
-
-const QUESTIONS = [
-  { key: 'lessons', label: 'What did you learn about the work?', required: true, rows: 4, hint: 'The work itself, not how the experiment went.', placeholder: 'Be specific about what the day-to-day actually involves.' },
-  { key: 'surprises', label: 'What surprised you?', rows: 3, placeholder: 'Anything that did not match what you expected going in.' },
-  { key: 'enjoyed', label: 'Which activities did you enjoy?', rows: 3, placeholder: 'The parts you would happily do again.' },
-  { key: 'disliked', label: 'Which activities did you dislike?', rows: 3, placeholder: 'The parts you avoided or dreaded.' },
-  { key: 'assumptions', label: 'Which assumptions changed?', rows: 3, placeholder: 'What you believed before, and what you believe now.' },
-  { key: 'evidence', label: 'What evidence supports your conclusion?', rows: 3, placeholder: 'Point to the proof, conversations or results behind your answer.' },
-];
-
 const INTEREST = [
-  { value: 'more', label: 'More interested', desc: 'This made the path look stronger.' },
+  { value: 'more', label: 'More interested', desc: 'This made the direction look stronger.' },
   { value: 'same', label: 'About the same', desc: 'Nothing moved much either way.' },
   { value: 'less', label: 'Less interested', desc: 'Worth saying out loud early.' },
 ];
@@ -33,57 +33,37 @@ const INTEREST = [
 const field = 'w-full rounded-[var(--r-control)] border px-3 py-2.5 text-base md:text-sm outline-none';
 const fieldStyle = { borderColor: 'var(--border-light)', background: 'var(--background-secondary)' };
 
-export default function ReflectionForm({ ctx, onSaved, onSubmit }) {
+export default function ReflectionForm({ ctx, measurement, dimensions = [], onSaved, onSubmit }) {
   const experimentId = ctx.experiment.id;
-  // The draft belongs to this student, not to this browser. No id, no draft.
   const userId = ctx.user?.id || '';
-  const [answers, setAnswers] = useState(() => {
-    const e = ctx.existing;
-    if (e) {
-      return {
-        lessons: e.lessons || '', surprises: e.surprises || '', enjoyed: e.energy_sources || '',
-        disliked: e.energy_drains || '', assumptions: e.assumptions_changed || '',
-        evidence: e.supporting_evidence || '', interest: e.interest_direction || '',
-        interestNote: '', next: e.next_changes || '',
-        clarity: typeof e.clarity_score === 'number' ? e.clarity_score : null,
-        references: e.referenced_experiment_ids || [],
-      };
-    }
-    return { ...EMPTY, ...(readConclusionDraft(userId, experimentId) || {}) };
-  });
+  const [answers, setAnswers] = useState(() =>
+    answersFromReflection(ctx.existing) || { ...EMPTY_ANSWERS, ...(readConclusionDraft(userId, experimentId) || {}) });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
   const set = (key, value) => { setAnswers(a => ({ ...a, [key]: value })); setError(''); };
+  const patch = (fields) => { setAnswers(a => ({ ...a, ...fields })); setError(''); };
+  const setNote = (dimension, note) => setAnswers(a => ({ ...a, dimensionNotes: { ...a.dimensionNotes, [dimension]: note } }));
 
-  /* Completed experiments only, and never the one being concluded here. */
   const referenceable = (ctx.completedExperiments || []).filter(e => e.id !== experimentId);
   const toggleReference = (id) => set(
     'references',
     answers.references.includes(id) ? answers.references.filter(r => r !== id) : [...answers.references, id],
   );
 
-  // Opening the conclusion form is the start of the reflection stage.
   useEffect(() => {
     trackPilotEvent('reflection_started', {
       experiment_id: experimentId, cycle_id: ctx.experiment.cycle_id, dedupe_key: experimentId,
     });
   }, [experimentId, ctx.experiment.cycle_id]);
 
-  // Draft only for a first-time conclusion; an edit already has a stored row.
   useEffect(() => {
     if (ctx.existing || !userId) return;
     const t = setTimeout(() => writeConclusionDraft(userId, experimentId, answers), 500);
     return () => clearTimeout(t);
   }, [answers, experimentId, userId, ctx.existing]);
 
-  const blocked = !answers.lessons.trim()
-    ? 'Answer the first question: what you learned about the work.'
-    : !answers.interest
-      ? 'Say whether you are more or less interested in this path.'
-      : answers.clarity == null
-        ? 'Set your current career-clarity score.'
-        : null;
+  const blocked = blockingAnswer(answers);
 
   const submit = async () => {
     if (blocked) { setError(blocked); return; }
@@ -91,9 +71,7 @@ export default function ReflectionForm({ ctx, onSaved, onSubmit }) {
     setSaving(true);
     setError('');
     try {
-      const saved = await onSubmit(answers);
-      // Numbers and ids only. None of the nine answers leaves the student's own
-      // records.
+      const saved = await onSubmit(answers, dimensions);
       await trackPilotEvent('reflection_completed', {
         experiment_id: experimentId,
         cycle_id: ctx.experiment.cycle_id,
@@ -103,10 +81,28 @@ export default function ReflectionForm({ ctx, onSaved, onSubmit }) {
       onSaved(saved);
     } catch (err) {
       console.error('[reflection] save failed:', err?.message || err);
-      // State is untouched, so every answer is still on screen.
       setError("We couldn't save this. Your answers are still here. Try again.");
       setSaving(false);
     }
+  };
+
+  const extraFor = (id) => {
+    if (id === 'expectation_reality') {
+      return measurement
+        ? <div className="mt-4 rounded-[var(--r-control)] bg-white p-4" style={{ border: '1px solid var(--border-light)' }}>
+          <ExpectationReality m={measurement} />
+        </div>
+        : <p className="tp-body mt-3" style={{ color: 'var(--text-secondary)' }}>
+          No check-in numbers were recorded for this experiment, so there is nothing to compare. Answer in your own words.
+        </p>;
+    }
+    if (id === 'about_you') {
+      return <DimensionQuestions dimensions={dimensions} notes={answers.dimensionNotes} onChange={setNote} />;
+    }
+    if (id === 'evidence_review') {
+      return <EvidenceReview ctx={ctx} answers={answers} onChange={patch} />;
+    }
+    return null;
   };
 
   return (
@@ -117,29 +113,18 @@ export default function ReflectionForm({ ctx, onSaved, onSubmit }) {
       <p className="tp-lead mt-2" style={{ color: 'var(--text-secondary)' }}>
         {ctx.existing
           ? 'Editing updates the reflection you already saved. It never adds a second one.'
-          : 'Nine questions. The first, your interest and your clarity score are required; the rest help you decide.'}
+          : 'Six sections here, then a suggested update to your hypothesis that you can correct before anything is recorded.'}
       </p>
 
-      <div className="mt-5 space-y-5">
-        {QUESTIONS.map((q, i) => (
-          <label key={q.key} className="block">
-            <span className="tp-body font-bold" style={{ color: 'var(--text-primary)' }}>
-              {i + 1}. {q.label}{!q.required && <span className="font-normal" style={{ color: 'var(--text-muted)' }}> · optional</span>}
-            </span>
-            {q.hint && <span className="tp-meta mt-1 block" style={{ color: 'var(--text-muted)' }}>{q.hint}</span>}
-            <textarea
-              rows={q.rows}
-              value={answers[q.key]}
-              onChange={e => set(q.key, e.target.value)}
-              placeholder={q.placeholder}
-              className={`${field} mt-1.5 resize-none`}
-              style={fieldStyle}
-            />
-          </label>
+      <div className="mt-5 space-y-4">
+        {REFLECTION_SECTIONS.map(section => (
+          <ReflectionSection key={section.id} section={section} answers={answers} onChange={set}>
+            {extraFor(section.id)}
+          </ReflectionSection>
         ))}
 
         <div>
-          <p className="tp-body font-bold" style={{ color: 'var(--text-primary)' }}>7. Are you more or less interested in this path?</p>
+          <p className="tp-body font-bold" style={{ color: 'var(--text-primary)' }}>Are you more or less interested in this direction?</p>
           <div className="mt-2 grid gap-2 sm:grid-cols-3">
             {INTEREST.map(o => {
               const on = answers.interest === o.value;
@@ -175,24 +160,10 @@ export default function ReflectionForm({ ctx, onSaved, onSubmit }) {
           onToggle={toggleReference}
         />
 
-        <label className="block">
-          <span className="tp-body font-bold" style={{ color: 'var(--text-primary)' }}>8. What should you do next?</span>
-          <textarea
-            rows={3}
-            value={answers.next}
-            onChange={e => set('next', e.target.value)}
-            placeholder="The single next action this experiment points to."
-            className={`${field} mt-1.5 resize-none`}
-            style={fieldStyle}
-          />
-        </label>
-
         <div>
-          <p className="tp-body font-bold" style={{ color: 'var(--text-primary)' }}>
-            9. What is your current career-clarity score?
-          </p>
+          <p className="tp-body font-bold" style={{ color: 'var(--text-primary)' }}>What is your current career-clarity score?</p>
           <p className="tp-meta mt-1" style={{ color: 'var(--text-muted)' }}>
-            1 = no idea, 10 = completely clear.
+            1 = no idea, 10 = completely clear. Going down after a test is normal.
             {ctx.baselineClarity != null && ` You started this cycle at ${ctx.baselineClarity}.`}
           </p>
           <div className="mt-2 flex flex-wrap gap-2">
@@ -229,7 +200,7 @@ export default function ReflectionForm({ ctx, onSaved, onSubmit }) {
       >
         {saving
           ? <><Loader2 size={15} className="animate-spin" /> Saving…</>
-          : <><Save size={15} /> {ctx.existing ? 'Save and continue to my decision' : 'Save reflection and decide'}</>}
+          : <><Save size={15} /> Save and update my hypothesis</>}
       </button>
       {blocked && !error && (
         <p className="tp-meta mt-2 text-center font-semibold" style={{ color: 'var(--text-secondary)' }}>{blocked}</p>

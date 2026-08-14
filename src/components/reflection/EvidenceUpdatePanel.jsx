@@ -12,17 +12,25 @@ import { Sk } from '@/components/PageSkeleton';
  * and prior evidence, the affected career hypotheses are recalculated, and the
  * result is shown here rather than changing scores invisibly.
  */
-export default function EvidenceUpdatePanel({ reflection, experiment }) {
+export default function EvidenceUpdatePanel({ reflection, experiment, onResults }) {
   const [state, setState] = useState('working');
   const [changes, setChanges] = useState([]);
 
   useEffect(() => {
     let live = true;
     setState('working');
-    recalculateAfterReflection({ reflection, experiment })
-      .then(rows => { if (live) { setChanges(rows); setState('done'); } })
-      .catch(() => { if (live) setState('failed'); });
+    // includeAll: the synthesis below needs this career's before and after even
+    // when the movement was too small to report.
+    recalculateAfterReflection({ reflection, experiment, includeAll: true })
+      .then(rows => {
+        if (!live) return;
+        setChanges(rows.filter(r => r.meaningful));
+        setState('done');
+        onResults?.(rows);
+      })
+      .catch(() => { if (live) { setState('failed'); onResults?.([]); } });
     return () => { live = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reflection?.id, experiment?.id]);
 
   if (state === 'failed') return null;

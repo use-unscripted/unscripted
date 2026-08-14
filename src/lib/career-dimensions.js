@@ -254,6 +254,28 @@ export function dimensionsForCareer({ hypothesis, dimensions = [], careerName })
   };
 }
 
+/**
+ * The decision dimensions ONE experiment tested, matched from the work
+ * characteristics it was tagged with. Empty when an experiment carries no tags,
+ * so nobody is asked what they noticed about something they never did.
+ */
+export function dimensionsForExperiment({ experiment, dimensions = [] }) {
+  const tags = new Set([
+    ...(experiment?.decision_dimension_ids || []),
+    ...(experiment?.work_characteristic_ids || []),
+    ...(experiment?.work_characteristics_tested || []),
+  ].map(t => String(t).toLowerCase().replace(/\s+/g, '_')));
+  if (!tags.size) return [];
+
+  const wanted = CAREER_DIMENSIONS.filter(d => tags.has(d.id) || d.signals.some(s => tags.has(s)));
+  return wanted
+    .map(d => dimensions.find(x => x.dimension === d.id) || {
+      dimension: d.id, dimension_label: d.label, noun: d.noun,
+      current_evidence_level: 'unknown', evidence_count: 0,
+    })
+    .slice(0, 4);
+}
+
 /** Signals → dimensions in one call, for screens that already loaded the raw rows. */
 export function dimensionsFromActivity({ experiments = [], measurements = {}, reflections = [], profile = {} } = {}) {
   const signals = characteristicSignals({ experiments, measurements, reflections });

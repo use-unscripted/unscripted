@@ -229,7 +229,7 @@ async function persist(result, { experiment, reflection, trigger }) {
  * Returns the change records for the "Why this changed" panel; a career that
  * barely moved is recalculated but not announced.
  */
-export async function recalculateAfterReflection({ reflection, experiment }) {
+export async function recalculateAfterReflection({ reflection, experiment, includeAll = false }) {
   const ctx = await loadRecalculationContext();
   const exp = experiment || ctx.experiments.find(e => e.id === reflection?.experiment_id) || null;
 
@@ -256,7 +256,9 @@ export async function recalculateAfterReflection({ reflection, experiment }) {
       reflection: isPrimary ? reflection : null,
     });
     await persist(result, { experiment: isPrimary ? exp : null, reflection: isPrimary ? reflection : null, trigger: 'reflection' }).catch(() => null);
-    if (result.meaningful) results.push(result);
+    // includeAll is what the hypothesis synthesis needs: the before and after of
+    // the tested career, even when the movement was too small to announce.
+    if (includeAll || result.meaningful) results.push(result);
   }
   // The career the student just tested comes first.
   return results.sort((a, b) => (a.path.id === primary?.id ? -1 : b.path.id === primary?.id ? 1 : 0));

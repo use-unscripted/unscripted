@@ -9,6 +9,7 @@
 import { base44 } from '@/api/base44Client';
 import { getActiveCycle, onceInFlight } from '@/lib/career-cycle';
 import { readProgress } from '@/lib/guide-progress';
+import { reflectionFields } from '@/lib/reflection-sections';
 
 const alive = (rows) => (Array.isArray(rows) ? rows : []).filter(r => r?.deletion_status !== 'deleted');
 const OPEN_EXPERIMENT = ['draft', 'planned', 'in_progress'];
@@ -143,9 +144,10 @@ function localDateKey(d = new Date()) {
  * a single in-flight promise, so a double-tap or a retry after an error can
  * never produce a duplicate or a second reflection over the first.
  */
-export async function saveConclusion(ctx, answers) {
+export async function saveConclusion(ctx, answers, dimensions = []) {
   const { experiment, cycle, path, user } = ctx;
   const payload = {
+    ...reflectionFields(answers, dimensions),
     user_id: user?.id,
     cycle_id: experiment.cycle_id || (cycle?.experiment_id === experiment.id ? cycle.id : undefined),
     experiment_id: experiment.id,
@@ -155,17 +157,11 @@ export async function saveConclusion(ctx, answers) {
     is_experiment_conclusion: true,
     conclusion_key: `conclusion:${experiment.id}`,
     ended_early_reason: ctx.endedEarly ? (experiment.pause_reason || undefined) : undefined,
-    lessons: answers.lessons.trim(),
-    surprises: answers.surprises.trim() || undefined,
-    energy_sources: answers.enjoyed.trim() || undefined,
-    energy_drains: answers.disliked.trim() || undefined,
-    assumptions_changed: answers.assumptions.trim() || undefined,
-    supporting_evidence: answers.evidence.trim() || undefined,
     interest_direction: answers.interest,
     path_feedback: answers.interest
       ? `${{ more: 'More interested in this path', same: 'About as interested as before', less: 'Less interested in this path' }[answers.interest]}${answers.interestNote.trim() ? `: ${answers.interestNote.trim()}` : ''}`
       : undefined,
-    next_changes: answers.next.trim() || undefined,
+    next_changes: String(answers.unresolved || '').trim() || undefined,
     clarity_score: answers.clarity ?? undefined,
     baseline_clarity_score: ctx.baselineClarity ?? undefined,
     missions_completed_count: ctx.stepsDone || 0,

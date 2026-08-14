@@ -124,6 +124,67 @@
         "type": "string"
       }
     },
+    "what_i_did": {
+      "type": "string"
+    },
+    "most_realistic": {
+      "type": "string"
+    },
+    "enjoyed_most": {
+      "type": "string"
+    },
+    "avoided_work": {
+      "type": "string"
+    },
+    "would_do_again": {
+      "type": "string"
+    },
+    "expectations_wrong": {
+      "type": "string"
+    },
+    "dimension_notes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "dimension": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "note": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "more_appealing": {
+      "type": "string"
+    },
+    "less_appealing": {
+      "type": "string"
+    },
+    "misconception_changed": {
+      "type": "string"
+    },
+    "still_unresolved": {
+      "type": "string"
+    },
+    "most_influential_evidence": {
+      "type": "string"
+    },
+    "most_influential_evidence_id": {
+      "type": "string"
+    },
+    "hypothesis_decision": {
+      "type": "string",
+      "enum": [
+        "continue_testing",
+        "modify_hypothesis",
+        "eliminate_hypothesis"
+      ]
+    },
     "deletion_status": {
       "type": "string",
       "enum": [

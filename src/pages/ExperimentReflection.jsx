@@ -1,12 +1,18 @@
 /**
- * Reflection as the conclusion of the active experiment.
+ * Reflection as the step that UPDATES THE CAREER HYPOTHESIS.
  *
- * Everything is resolved automatically (user, cycle, path, experiment, completed
- * missions, outreach, proof, baseline clarity) so arriving from My Journey never
- * asks the student to pick an experiment again. Reflection, decision and cycle
- * summary happen in this one place.
+ * Same reflection system as before — one row per experiment in
+ * WeeklyReflections, the same recalculation engine, the same cycle close — with
+ * its purpose made explicit and its order fixed:
+ *
+ *   context loaded automatically → post-experiment check-in → six sections of
+ *   reflection → the recalculation → the suggested hypothesis synthesis, which
+ *   the student can correct → continue / modify / eliminate → the update is
+ *   appended to this hypothesis's history, and the cycle closes.
+ *
+ * No prior hypothesis state is overwritten anywhere in this flow.
  */
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { AlertCircle, RotateCcw } from 'lucide-react';
 import {
@@ -17,14 +23,20 @@ import { clearConclusionDraft } from '@/lib/student-drafts';
 import ReflectionContextCard from '@/components/reflection/ReflectionContextCard';
 import ConclusionGate from '@/components/reflection/ConclusionGate';
 import ReflectionForm from '@/components/reflection/ReflectionForm';
-import DecisionStep from '@/components/reflection/DecisionStep';
 import EvidenceUpdatePanel from '@/components/reflection/EvidenceUpdatePanel';
+import HypothesisSynthesisPanel from '@/components/reflection/HypothesisSynthesisPanel';
+import HypothesisDecision from '@/components/reflection/HypothesisDecision';
+import HypothesisTimeline from '@/components/reflection/HypothesisTimeline';
 import CycleSummary from '@/components/reflection/CycleSummary';
 import JourneyEmptyState from '@/components/journey/JourneyEmptyState';
 import PageHeader from '@/components/PageHeader';
 import NextBestExperimentPanel from '@/components/next-test/NextBestExperimentPanel';
 import MeasurementGate from '@/components/measurement/MeasurementGate';
 import { loadMeasurements } from '@/lib/experiment-measurement';
+import { dimensionsFromActivity, dimensionsForExperiment } from '@/lib/career-dimensions';
+import { buildSynthesis } from '@/lib/hypothesis-synthesis';
+import { decisionMeta, ELIMINATION_NOTE } from '@/lib/hypothesis-updates';
+import { loadNextBestExperiment } from '@/lib/next-best-experiment';
 import { Sk } from '@/components/PageSkeleton';
 
 function Shell({ children }) {
@@ -47,9 +59,6 @@ function Notice({ title, body, to, cta }) {
 }
 
 export default function ExperimentReflection() {
-  // Read from the router, not window.location: navigating to another experiment
-  // while already on this page changes only the query string, and a page that
-  // read the URL once on mount would keep showing the previous experiment.
   const { search } = useLocation();
   const experimentIdParam = new URLSearchParams(search).get('experimentId') || '';
   const [ctx, setCtx] = useState(null);
@@ -57,9 +66,13 @@ export default function ExperimentReflection() {
   const [reflection, setReflection] = useState(null);
   const [decision, setDecision] = useState(null);
   const [closedCycle, setClosedCycle] = useState(null);
-  // The outcome check-in for this experiment. The reflection is recalculated
-  // together with it, so it is collected first rather than left optional.
   const [measurement, setMeasurement] = useState(null);
+  const [dimensions, setDimensions] = useState([]);
+  // The recalculation result for the tested career, the suggested synthesis
+  // built from it, and the version the student approved.
+  const [changes, setChanges] = useState(null);
+  const [nextBest, setNextBest] = useState(null);
+  const [approved, setApproved] = useState(null);
 
   const load = useCallback(async () => {
     setLoadError('');
@@ -69,31 +82,51 @@ export default function ExperimentReflection() {
       if (next.experiment?.id) {
         const ms = await loadMeasurements().catch(() => ({}));
         setMeasurement(ms[next.experiment.id] || null);
+        // Which decision dimensions this experiment actually tested, and what we
+        // already knew about each before it.
+        const all = dimensionsFromActivity({
+          experiments: [next.experiment, ...(next.completedExperiments || [])],
+          measurements: ms,
+          reflections: next.reflections || [],
+        });
+        setDimensions(dimensionsForExperiment({ experiment: next.experiment, dimensions: all }));
       }
-      // An already-written conclusion means the decision is what is left.
-      // Set unconditionally: reading the current reflection out of the closure
-      // here made switching to another experiment keep the previous one's state,
-      // which showed the form again over an already-saved conclusion.
       setReflection(next.existing || null);
     } catch (err) {
       console.error('[reflection] load failed:', err?.message || err);
-      // Never leave the page spinning: say what happened and offer a retry.
       setLoadError("We couldn't load your experiment just now.");
       setCtx(null);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [experimentIdParam]);
 
-  // A different experiment means a different conclusion: clear the reflection and
-  // decision this page was holding, so no stale summary survives the switch.
   useEffect(() => {
     setCtx(null);
     setReflection(null);
     setDecision(null);
     setClosedCycle(null);
     setMeasurement(null);
+    setChanges(null);
+    setApproved(null);
+    setNextBest(null);
     load();
   }, [experimentIdParam, load]);
+
+  // The next best test, so the synthesis can name it rather than invent one.
+  useEffect(() => {
+    if (!reflection) return;
+    let live = true;
+    loadNextBestExperiment()
+      .then(({ recommendation }) => { if (live) setNextBest(recommendation || null); })
+      .catch(() => { if (live) setNextBest(null); });
+    return () => { live = false; };
+  }, [reflection?.id]);
+
+  const synthesis = useMemo(() => {
+    if (!changes || !ctx) return null;
+    const forPath = changes.find(c => c.path?.id === ctx.path?.id) || changes[0] || null;
+    return buildSynthesis({ change: forPath, dimensions, nextBest });
+  }, [changes, ctx, dimensions, nextBest]);
 
   if (loadError) {
     return (
@@ -110,16 +143,11 @@ export default function ExperimentReflection() {
   }
 
   if (!ctx) {
-    // The context card, then the form or gate that follows it, then the
-    // footer links, at the sizes they actually occupy. Two arbitrary grey
-    // blocks used to stand here and neither matched what replaced it.
     return (
       <Shell>
         <Sk h={132} r={20} />
         <Sk h={368} r={20} />
-        <div className="flex justify-center pt-1">
-          <Sk h={12} w={286} r={4} />
-        </div>
+        <div className="flex justify-center pt-1"><Sk h={12} w={286} r={4} /></div>
       </Shell>
     );
   }
@@ -137,9 +165,7 @@ export default function ExperimentReflection() {
     );
   }
 
-  if (!ctx.experiment) {
-    return <Shell><JourneyEmptyState variant="experiment" /></Shell>;
-  }
+  if (!ctx.experiment) return <Shell><JourneyEmptyState variant="experiment" /></Shell>;
 
   const availability = conclusionAvailability(ctx);
 
@@ -148,7 +174,7 @@ export default function ExperimentReflection() {
     await load();
   };
 
-  const handleSubmit = (answers) => saveConclusion(ctx, answers);
+  const handleSubmit = (answers, dims) => saveConclusion(ctx, answers, dims);
 
   const handleSaved = (saved) => {
     setReflection(saved);
@@ -165,47 +191,76 @@ export default function ExperimentReflection() {
 
   return (
     <Shell>
-      {/* The shared back control, so leaving this page is one thumb-sized tap
-          rather than the footer links at the very bottom. */}
-      <PageHeader showBack backLabel="Go back" title="Conclude this experiment" />
-      <ReflectionContextCard ctx={ctx} />
+      <PageHeader showBack backLabel="Go back" title="Update your hypothesis" />
+      <ReflectionContextCard ctx={ctx} measurement={measurement} />
 
       {decision ? (
         <>
-          <CycleSummary ctx={ctx} reflection={reflection} decision={decision} closedCycle={closedCycle} />
-          {/* The loop continues here. By this point the hypotheses have been
-              recalculated, so the recommendation is computed from the evidence
-              this cycle just produced. */}
+          {decision === 'eliminate_hypothesis' && (
+            <section className="rounded-[var(--r-surface)] p-5 sm:p-6" style={{ background: 'var(--background-secondary)', border: '1px solid var(--border-light)' }}>
+              <p className="tp-card" style={{ color: 'var(--text-primary)' }}>Recorded as tested and set aside</p>
+              <p className="tp-prose mt-2" style={{ color: 'var(--text-secondary)' }}>{ELIMINATION_NOTE}</p>
+            </section>
+          )}
+          <HypothesisTimeline pathId={ctx.path?.id} pathName={ctx.path?.path_name} refreshKey={decision} />
+          <CycleSummary
+            ctx={ctx}
+            reflection={reflection}
+            decision={decisionMeta(decision)?.cycle_decision}
+            closedCycle={closedCycle}
+          />
           <NextBestExperimentPanel />
         </>
       ) : !availability.ready ? (
         <ConclusionGate availability={availability} experiment={ctx.experiment} onEndEarly={handleEndEarly} />
       ) : !measurement?.post_completed_at ? (
-        /* The outcome numbers come before the written reflection: the
-           recalculation reads both together, and text alone is the weakest
-           evidence in the system. */
-        <MeasurementGate
-          phase="post"
-          exp={ctx.experiment}
-          measurement={measurement}
-          autoOpen
-          onSaved={setMeasurement}
-        />
+        <MeasurementGate phase="post" exp={ctx.experiment} measurement={measurement} autoOpen onSaved={setMeasurement} />
       ) : reflection ? (
         <>
-          {/* The reflection is evidence now: it is folded into the career
-              hypothesis before the student is asked to decide anything. */}
-          <EvidenceUpdatePanel reflection={reflection} experiment={ctx.experiment} />
-          <DecisionStep ctx={ctx} reflection={reflection} onDecided={handleDecided} />
+          {/* The recalculation runs once per saved reflection and hands its
+              before/after to the synthesis below. */}
+          <EvidenceUpdatePanel reflection={reflection} experiment={ctx.experiment} onResults={setChanges} />
+
+          {!approved ? (
+            changes && (
+              synthesis
+                ? <HypothesisSynthesisPanel synthesis={synthesis} onConfirm={setApproved} />
+                : <section className="rounded-[var(--r-surface)] bg-white p-6" style={{ border: '1px solid var(--border-light)' }}>
+                  <p className="tp-body font-bold" style={{ color: 'var(--text-primary)' }}>No hypothesis is attached to this experiment</p>
+                  <p className="tp-prose mt-2" style={{ color: 'var(--text-secondary)' }}>
+                    Your reflection is saved as evidence. Choose what happens next below.
+                  </p>
+                </section>
+            )
+          ) : (
+            <HypothesisTimeline pathId={ctx.path?.id} pathName={ctx.path?.path_name} />
+          )}
+
+          {(approved || (changes && !synthesis)) && (
+            <HypothesisDecision
+              ctx={ctx}
+              reflection={reflection}
+              synthesis={approved}
+              dimensions={dimensions}
+              onDecided={handleDecided}
+            />
+          )}
+
           <p className="tp-meta text-center" style={{ color: 'var(--text-muted)' }}>
             Reflection saved.{' '}
-            <button onClick={() => setReflection(null)} className="font-semibold" style={{ color: 'var(--brand-navy-700)' }}>
+            <button onClick={() => { setReflection(null); setApproved(null); }} className="font-semibold" style={{ color: 'var(--brand-navy-700)' }}>
               Edit my answers
             </button>
           </p>
         </>
       ) : (
-        <ReflectionForm ctx={ctx} onSaved={handleSaved} onSubmit={handleSubmit} />
+        <ReflectionForm
+          ctx={ctx}
+          measurement={measurement}
+          dimensions={dimensions}
+          onSaved={handleSaved}
+          onSubmit={handleSubmit}
+        />
       )}
 
       <p className="touch-reach-line tp-meta justify-center pt-1 text-center" style={{ color: 'var(--text-muted)' }}>
