@@ -14,14 +14,48 @@
  */
 import { base44 } from '@/api/base44Client';
 
+/**
+ * The five the Career Experiment pre check-in asks.
+ *
+ * That component renders every entry and requires every entry, and its own copy
+ * reads "Answer all five to begin", so a field added to this list silently
+ * becomes another mandatory question in a flow that never asked for one. Every
+ * extra required question costs completions, which is the number this area of
+ * the product exists to move. A prediction that only one flow needs goes in a
+ * list of its own, the way SIM_PRE_FIELDS below does. Add here only when you
+ * mean to change the Career Experiment check-in, and change its copy to match.
+ */
 export const PRE_FIELDS = [
   { key: 'expected_enjoyment', label: 'Expected enjoyment', low: 'Not at all', high: 'A lot' },
   { key: 'expected_difficulty', label: 'Expected difficulty', low: 'Easy', high: 'Very hard' },
   { key: 'pre_career_interest', label: 'Current interest in this career', low: 'Low', high: 'High' },
   { key: 'pre_career_fit_confidence', label: 'How strongly do you think this career fits you?', low: 'Not sure', high: 'Very sure' },
   { key: 'expected_energy', label: 'Expected energy / excitement', low: 'Flat', high: 'Energised' },
+];
+
+/**
+ * The four the work simulation asks on its setup screen, in its own wording.
+ * Two of them, expected_performance and expected_want_more, are asked nowhere
+ * else. The other two overlap with PRE_FIELDS by key on purpose: the same
+ * column, so the same deltas come out, asked in the simulation's voice.
+ */
+export const SIM_PRE_FIELDS = [
+  { key: 'expected_enjoyment', label: 'How much do you think you will enjoy this?', low: 'Not at all', high: 'A lot' },
+  { key: 'expected_energy', label: 'How do you think you will feel after 30 minutes of this?', low: 'Drained', high: 'Energised' },
   { key: 'expected_performance', label: 'How well do you think you will do?', low: 'Poorly', high: 'Very well' },
   { key: 'expected_want_more', label: 'Do you think you will want to do another one after this?', low: 'No', high: 'Yes' },
+];
+
+/**
+ * Every pre field any flow can write, deduplicated by key. The save path reduces
+ * over this rather than over one flow's list, so both check-ins land their
+ * answers on the row without either one having to declare its fields at the call
+ * site. A key the caller did not answer stays absent, which is how this schema
+ * stores "not asked".
+ */
+export const ALL_PRE_FIELDS = [
+  ...PRE_FIELDS,
+  ...SIM_PRE_FIELDS.filter(s => !PRE_FIELDS.some(p => p.key === s.key)),
 ];
 
 export const POST_FIELDS = [
@@ -69,7 +103,7 @@ export async function savePreMeasurement(exp, values) {
   const payload = clean({
     user_id: user?.id,
     ...links(exp),
-    ...PRE_FIELDS.reduce((acc, f) => ({ ...acc, [f.key]: num(values[f.key]) ?? undefined }), {}),
+    ...ALL_PRE_FIELDS.reduce((acc, f) => ({ ...acc, [f.key]: num(values[f.key]) ?? undefined }), {}),
     pre_completed_at: new Date().toISOString(),
   });
 
