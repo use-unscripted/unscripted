@@ -143,12 +143,135 @@
     },
     "priorities_for_recommendations": {
       "type": "string"
+    },
+    "onboarding_version": {
+      "type": "number"
+    },
+    "baseline_career_clarity": {
+      "type": "number"
+    },
+    "baseline_confidence": {
+      "type": "number"
+    },
+    "baseline_recorded_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "current_decision_pressure": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "current_decision_pressure_note": {
+      "type": "string"
+    },
+    "current_careers_considered": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "careers_ruled_out": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "major_uncertainties": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "major_uncertainties_other": {
+      "type": "string"
+    },
+    "self_reported_energizers": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "self_reported_drains": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "activity": {
+            "type": "string"
+          },
+          "response": {
+            "type": "string",
+            "enum": [
+              "like",
+              "neutral",
+              "unsure",
+              "dislike",
+              "never_experienced"
+            ]
+          }
+        }
+      }
+    },
+    "values_importance": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "factor": {
+            "type": "string"
+          },
+          "importance": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "work_setting_preference": {
+      "type": "string",
+      "enum": [
+        "remote",
+        "hybrid",
+        "in_person",
+        "unsure"
+      ]
+    },
+    "prior_experiences": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string"
+          },
+          "enjoyed": {
+            "type": "string"
+          },
+          "disliked": {
+            "type": "string"
+          },
+          "learned": {
+            "type": "string"
+          },
+          "again": {
+            "type": "string",
+            "enum": [
+              "yes",
+              "maybe",
+              "no"
+            ]
+          }
+        }
+      }
+    },
+    "uncertainty_updated_at": {
+      "type": "string",
+      "format": "date-time"
     }
   },
   "required": [
-    "name",
-    "college",
-    "major"
+    "name"
   ],
   "rls": {
     "create": {
