@@ -179,8 +179,8 @@ export function derivePreferences({ signals = [], profile = {} }) {
       status,
       headline: dir === 'high' ? `High ${pref.label} Preference`
         : dir === 'low' ? `Lower ${pref.label} Preference`
-        : status === 'still_learning' ? `${pref.label} — Still Learning`
-        : `${pref.label} — Not Settled Yet`,
+        : status === 'still_learning' ? `${pref.label}: Still Learning`
+        : `${pref.label}: Not Settled Yet`,
       statement: status === 'still_learning'
         ? `Nothing you have done yet tells us how you feel about ${pref.noun}.`
         : status === 'stated_only'

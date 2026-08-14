@@ -80,9 +80,9 @@ export async function designExperiments(path, uncertainty, { focus } = {}) {
   if (!unknowns.length) return { ok: false, data: null };
 
   const asked = focus
-    ? `${focus.label} — the open question is: ${focus.question}\n\nAll ${unknowns.length} experiments must answer this same question, each through a clearly different kind of work.`
+    ? `${focus.label}. The open question is: ${focus.question}\n\nAll ${unknowns.length} experiments must answer this same question, each through a clearly different kind of work.`
     : unknowns
-        .map((u, i) => `${i + 1}. ${u.label} — the open question is: ${u.question}`)
+        .map((u, i) => `${i + 1}. ${u.label}. The open question is: ${u.question}`)
         .join('\n');
 
   return generateValidated({

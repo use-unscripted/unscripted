@@ -95,7 +95,7 @@ export default function CareerMomentPage() {
       momentRow: row, selected, rationale, preAnswers, answers, plan, tracker: tracker.current,
     }).catch(() => null);
     setSaving(false);
-    if (!result) { setError('Your answers could not be saved. Nothing was lost — try Save again.'); return; }
+    if (!result) { setError('Your answers could not be saved. Nothing was lost, so try Save again.'); return; }
     setChanges(result.changes || []);
     setStage('done');
   };

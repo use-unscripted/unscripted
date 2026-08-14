@@ -57,7 +57,7 @@ export default function GuidedProgress({ steps, stepNumber, completed, maxReacha
                   <span className="shrink-0" style={{ color: isDone ? 'var(--success-700)' : 'var(--text-muted)' }}>
                     {isDone ? <Check size={15} /> : isCurrent ? <Dot size={19} /> : <Circle size={13} />}
                   </span>
-                  <span className="min-w-0 flex-1 truncate">Step {n} — {s.title || 'Untitled step'}</span>
+                  <span className="min-w-0 flex-1 truncate">Step {n}: {s.title || 'Untitled step'}</span>
                   {!reachable && <span className="tp-meta shrink-0">Locked</span>}
                 </button>
               </li>

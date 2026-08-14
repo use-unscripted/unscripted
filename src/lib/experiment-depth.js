@@ -18,7 +18,7 @@ export const DEPTHS = {
   quick_test: {
     id: 'quick_test',
     label: 'Quick Test',
-    duration_label: '3–5 min',
+    duration_label: '3-5 min',
     minutes: [2, 7],
     typical_minutes: [3, 5],
     blurb: 'One realistic decision, immediate feedback.',
@@ -33,7 +33,7 @@ export const DEPTHS = {
   deep_dive: {
     id: 'deep_dive',
     label: 'Deep Dive',
-    duration_label: '15–30 min',
+    duration_label: '15-30 min',
     minutes: [15, 30],
     typical_minutes: [20, 30],
     blurb: 'Multi-stage work with a deliverable you can keep.',

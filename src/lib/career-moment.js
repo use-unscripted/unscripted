@@ -113,14 +113,14 @@ THE CHARACTERISTIC BEING TESTED: ${focus?.label || 'core judgement in this work'
 Do NOT simulate an entire job. Sample the one moment that reveals whether this work fits.
 
 Write:
-1. "hook" — two or three sentences dropping the student into a realistic situation in this career, in the first person present. No preamble, no explanation of the exercise.
-2. "information" — 2 to 4 short rows of the minimum facts needed to decide (label plus a short value, for example "2025 EBITDA" / "$6M"). Never a spreadsheet.
-3. "question" — the single decision they must make now.
-4. "options" — 3 or 4 realistic choices a practitioner might actually consider. Give each one "strength": 3 for the strongest professional answer (exactly one option), 2 for defensible but weaker, 1 for a common beginner instinct. Each option needs "feedback": one or two sentences saying what choosing it shows about how this student reasons. Never call an answer wrong or a failure; a weaker answer is described as evidence about how they currently approach this kind of problem.
-5. "rationale_prompt" — a one-sentence ask for their reasoning.
-6. "evidence_dimensions" — 2 or 3 short plain labels this moment provides evidence about (for example: prioritization, financial reasoning, ambiguity tolerance).
-7. "work_characteristics_tested" — 1 to 3 short labels, closely related to each other. Do not try to test every characteristic of the career at once.
-8. "estimated_minutes" — between 2 and 7, normally 3 to 5.
+1. "hook": two or three sentences dropping the student into a realistic situation in this career, in the first person present. No preamble, no explanation of the exercise.
+2. "information": 2 to 4 short rows of the minimum facts needed to decide (label plus a short value, for example "2025 EBITDA" / "$6M"). Never a spreadsheet.
+3. "question": the single decision they must make now.
+4. "options": 3 or 4 realistic choices a practitioner might actually consider. Give each one "strength": 3 for the strongest professional answer (exactly one option), 2 for defensible but weaker, 1 for a common beginner instinct. Each option needs "feedback": one or two sentences saying what choosing it shows about how this student reasons. Never call an answer wrong or a failure; a weaker answer is described as evidence about how they currently approach this kind of problem.
+5. "rationale_prompt": a one-sentence ask for their reasoning.
+6. "evidence_dimensions": 2 or 3 short plain labels this moment provides evidence about (for example: prioritization, financial reasoning, ambiguity tolerance).
+7. "work_characteristics_tested": 1 to 3 short labels, closely related to each other. Do not try to test every characteristic of the career at once.
+8. "estimated_minutes": between 2 and 7, normally 3 to 5.
 
 The whole thing must be answerable in a few minutes with no research, no spreadsheet and no essay.
 Do not use the words hypothesis, variable, uncertainty or experiment in any student-facing text.

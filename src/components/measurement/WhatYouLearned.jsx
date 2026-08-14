@@ -28,7 +28,7 @@ function Row({ label, expected, actual }) {
             )}
           </>
         ) : (
-          <>{typeof actual === 'number' ? `${actual}/10` : '—'}</>
+          <>{typeof actual === 'number' ? `${actual}/10` : 'Not scored'}</>
         )}
       </span>
     </div>

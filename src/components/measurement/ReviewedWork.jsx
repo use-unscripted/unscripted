@@ -65,7 +65,7 @@ export default function ReviewedWork({ m }) {
           {m.system_rubric_results.map((r, i) => (
             <div key={i} className="rounded-[var(--r-control)] p-3" style={{ background: 'var(--background-secondary)' }}>
               <p className="tp-body font-semibold" style={{ color: 'var(--text-primary)' }}>
-                {r.criterion}{typeof r.score === 'number' ? ` — ${r.score}/10` : ''}
+                {r.criterion}{typeof r.score === 'number' ? `: ${r.score}/10` : ''}
               </p>
               {r.note && <p className="tp-body mt-1" style={{ color: 'var(--text-secondary)' }}>{r.note}</p>}
             </div>

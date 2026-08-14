@@ -110,7 +110,7 @@ export default function CareerHypothesisPanel({ pathName, hypothesis, path, sign
           render={(it) => (
             <>
               {it.text}
-              {it.source && <span className="tp-meta text-[color:var(--ink-400)]"> — {it.source}</span>}
+              {it.source && <span className="tp-meta text-[color:var(--ink-400)]"> ({it.source})</span>}
             </>
           )}
         />
@@ -121,7 +121,7 @@ export default function CareerHypothesisPanel({ pathName, hypothesis, path, sign
           render={(it) => (
             <>
               {it.text}
-              {it.source && <span className="tp-meta text-[color:var(--ink-400)]"> — {it.source}</span>}
+              {it.source && <span className="tp-meta text-[color:var(--ink-400)]"> ({it.source})</span>}
             </>
           )}
         />

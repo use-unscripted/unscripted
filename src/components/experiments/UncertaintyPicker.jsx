@@ -46,7 +46,7 @@ export default function UncertaintyPicker({ pathName, variables, value, onChange
           placeholder="Choose what to test…"
           ariaLabel="The question you want answered"
           className="w-full rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-[color:var(--ink-900)]"
-          options={variables.map(v => ({ value: v.variable, label: `${v.label} — ${STATE_LABEL(v)}` }))}
+          options={variables.map(v => ({ value: v.variable, label: `${v.label} (${STATE_LABEL(v)})` }))}
         />
       </label>
 

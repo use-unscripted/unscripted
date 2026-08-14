@@ -29,7 +29,7 @@ export default function WhyThisMatters({ detail }) {
             {detail.clarifies.map(c => (
               <li key={c.path_id} className="tp-body" style={{ color: 'var(--ink-700)' }}>
                 <span className="font-semibold" style={{ color: 'var(--ink-900)' }}>{c.path_name}</span>
-                {' — '}{c.note}
+                {': '}{c.note}
               </li>
             ))}
           </ul>
