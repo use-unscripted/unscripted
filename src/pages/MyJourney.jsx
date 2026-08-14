@@ -12,7 +12,7 @@ import { getActiveCycle } from '@/lib/career-cycle';
 import { selectPathAndBeginExperiment } from '@/lib/path-selection';
 import CycleStageSync from '@/components/journey/CycleStageSync';
 import JourneyStages, { buildStageDetail } from '@/components/journey/JourneyStages';
-import JourneyNow from '@/components/journey/JourneyNow';
+import JourneyFocus from '@/components/journey/JourneyFocus';
 import PathComparisonWorkspace from '@/components/journey/PathComparisonWorkspace';
 import PathSelectedConfirm from '@/components/journey/PathSelectedConfirm';
 import JourneyEmptyState from '@/components/journey/JourneyEmptyState';
@@ -28,6 +28,10 @@ import PullToRefresh from '@/components/PullToRefresh';
 import { Reveal, WordReveal, EASE_COPY } from '@/components/motion';
 import { loadPilotAccess, CycleLimitError } from '@/lib/pilot-access';
 import { trackPilotEvent } from '@/lib/pilot-metrics';
+
+/* The page's purpose, said out loud. This screen is not a record of activity —
+   it exists to help the student work out what they actually want. */
+const PAGE_TITLE = "What We're Figuring Out";
 
 function effortLabel(experiment, missions) {
   if (!experiment) return null;
@@ -99,8 +103,8 @@ export default function MyJourney() {
     return (
       <main className="app-page">
         <header className="mb-14">
-          <h1 className="tp-page" style={{ color: 'var(--text-primary)' }}>
-            My Journey
+          <h1 className="journey-title tp-page" style={{ color: 'var(--text-primary)' }}>
+            {PAGE_TITLE}
           </h1>
           <div className="mt-5 flex h-8 items-center">
             <Sk h={14} r={5} w="72%" style={{ maxWidth: 460 }} />
@@ -134,9 +138,9 @@ export default function MyJourney() {
      to plain text under reduced motion. */
   const shell = (children, sub) => (
     <main className="app-page">
-      <header className="mb-14">
-        <h1 className="tp-page" style={{ color: 'var(--text-primary)' }}>
-          <WordReveal text="My Journey" delay={0.05} />
+      <header className="mb-8 sm:mb-14">
+        <h1 className="journey-title tp-page" style={{ color: 'var(--text-primary)' }}>
+          <WordReveal text={PAGE_TITLE} delay={0.05} />
         </h1>
         <Reveal delay={380} y={14} ease={EASE_COPY}>
           <p className="tp-lead mt-5" style={{ color: 'var(--text-secondary)', maxWidth: '52ch' }}>{sub}</p>
@@ -211,13 +215,12 @@ export default function MyJourney() {
         />
       )}
 
-      {/* Silent unless this student onboarded before the intake asked about
-          uncertainty. An invitation, never a gate. */}
-      <UncertaintyUpdateCard profile={data.profile} />
-
-      <JourneyNow
-        stage={stage}
-        path={currentPath}
+      {/* The five questions, in order: what are we testing, what do we know,
+          what is still unknown, what should I do next, and how has my thinking
+          changed. One dominant CTA lives inside the focus panel — the panels
+          below it are evidence, not competing instructions. */}
+      <JourneyFocus
+        currentPath={currentPath}
         experiment={nextExperiment}
         action={action}
         effort={effort}
@@ -226,6 +229,12 @@ export default function MyJourney() {
 
       {/* Every section below the fold arrives on scroll, the way the marketing
           page's do. One signal, once, and nothing moves again after it lands. */}
+
+      {/* Silent unless this student onboarded before the intake asked about
+          uncertainty. An invitation, never a gate — so it sits below the focus
+          panel rather than above it, where it pushed the hypothesis, the test
+          and the button off the first phone screen. */}
+      <UncertaintyUpdateCard profile={data.profile} />
 
       {/* What to test next, decided by which unresolved question would teach us
           the most — not by which path currently ranks highest. It sits directly
@@ -285,8 +294,11 @@ export default function MyJourney() {
         <Link to="/campus" className="font-semibold" style={{ color: 'var(--brand-navy-700)' }}>Campus events</Link>
       </p>
     </>,
+    // The hypothesis is named in the panel directly below, so the standfirst
+    // does not repeat it — on a phone that repetition was four lines between the
+    // title and the thing it describes.
     currentPath
-      ? `You're currently testing ${currentPath.path_name}. Nothing here is settled until the evidence says so.`
+      ? 'Nothing here is settled until the evidence says so.'
       : 'One direction at a time. This page tells you what comes next.'
   );
 }

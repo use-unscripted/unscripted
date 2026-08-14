@@ -96,4 +96,13 @@
   .tp-section { font-size: 1.5rem; }
   .tp-card { font-size: 1.0625rem; }
   .tp-lead { font-size: 1.0625rem; line-height: 1.7; }
+
+  /* Two exceptions, both on My Journey, and they have to live in this file
+     because it is the last word on size. The first phone screen has to carry
+     three things — the hypothesis being tested, the test running against it, and
+     the button — and a career hypothesis name runs to forty characters. At the
+     shared clamps (36px floor for both) the name alone took five lines and
+     pushed the button off the screen. Nothing at 640px and up changes. */
+  .journey-title { font-size: 1.75rem; line-height: 1.15; }
+  .journey-hypothesis-name { font-size: 1.625rem; line-height: 1.18; }
 }
