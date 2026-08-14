@@ -4,6 +4,7 @@ import { Compass, CalendarDays, FolderOpen, FileText, Settings, LogOut, BarChart
 import { base44 } from '@/api/base44Client';
 import { listFeedSubmissions } from '@/lib/campus-events';
 import { clearCampusStore } from '@/lib/campus-store';
+import { clearStudentDrafts } from '@/lib/student-drafts';
 import PilotTracker from '@/components/PilotTracker';
 import { loadPilotAccess } from '@/lib/pilot-access';
 
@@ -121,8 +122,13 @@ export default function AppShell() {
         </p>
         {/* The stored calendar goes with the session. It is public listings
             rather than anything private, but it names a school, and the next
-            person to sign in on this browser is not owed someone else's. */}
-        <button onClick={() => { clearCampusStore(); base44.auth.logout('/'); }}
+            person to sign in on this browser is not owed someone else's.
+
+            Unsaved reflection drafts go too, and those are not public: they are
+            a student's own words about how a week went and whether a path is
+            working. On a library machine, leaving them is leaving private
+            writing on a computer that belongs to nobody. */}
+        <button onClick={() => { clearCampusStore(); clearStudentDrafts(); base44.auth.logout('/'); }}
           className="mt-3 flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium text-[color:var(--ink-400)] transition hover:bg-white/5 hover:text-white">
           <LogOut size={15} /> Log out
         </button>

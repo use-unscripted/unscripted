@@ -11,8 +11,9 @@ import { Link, useLocation } from 'react-router-dom';
 import { AlertCircle, RotateCcw } from 'lucide-react';
 import {
   loadConclusionContext, conclusionAvailability, endExperimentEarly,
-  saveConclusion, clearDraft,
+  saveConclusion,
 } from '@/lib/experiment-conclusion';
+import { clearConclusionDraft } from '@/lib/student-drafts';
 import ReflectionContextCard from '@/components/reflection/ReflectionContextCard';
 import ConclusionGate from '@/components/reflection/ConclusionGate';
 import ReflectionForm from '@/components/reflection/ReflectionForm';
@@ -135,7 +136,7 @@ export default function ExperimentReflection() {
 
   const handleSaved = (saved) => {
     setReflection(saved);
-    clearDraft(ctx.experiment.id);
+    clearConclusionDraft(ctx.user?.id, ctx.experiment.id);
     setCtx(c => ({ ...c, existing: saved }));
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };

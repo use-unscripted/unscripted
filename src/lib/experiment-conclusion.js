@@ -13,22 +13,11 @@ const alive = (rows) => (Array.isArray(rows) ? rows : []).filter(r => r?.deletio
 const OPEN_EXPERIMENT = ['draft', 'planned', 'in_progress'];
 const CLOSED_MISSION = ['completed', 'skipped'];
 
-/** localStorage draft, so a failed save never costs the student their words. */
-export const draftKey = (experimentId) => `unscripted_conclusion_draft_${experimentId}`;
-
-export function loadDraft(experimentId) {
-  try {
-    const raw = localStorage.getItem(draftKey(experimentId));
-    const d = raw ? JSON.parse(raw) : null;
-    return d && typeof d === 'object' ? d : null;
-  } catch { return null; }
-}
-export function saveDraft(experimentId, data) {
-  try { localStorage.setItem(draftKey(experimentId), JSON.stringify(data)); } catch { /* quota / private mode */ }
-}
-export function clearDraft(experimentId) {
-  try { localStorage.removeItem(draftKey(experimentId)); } catch { /* private mode */ }
-}
+// The local draft, so a failed save never costs the student their words, moved
+// to src/lib/student-drafts.js. It is the same private free text the weekly
+// reflection holds and it now lives under the same rules: owned by one
+// signed-in student, cleared on sign-out, expired after a week. Import
+// readConclusionDraft / writeConclusionDraft / clearConclusionDraft from there.
 
 /**
  * Everything the reflection needs, resolved without asking the student to pick
