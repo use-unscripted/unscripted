@@ -117,6 +117,10 @@ const {
   emsCandidates,
   namesSameSchool,
   SCRAPED_MAX_AGE_DAYS,
+  parseRss1Events,
+  looksLikeRss1,
+  rss1Prefixes,
+  rss1Date,
 } = await loadEntry();
 
 const { __handler, __setClient } = await loadHandler();
@@ -1517,6 +1521,171 @@ describe('the request path, with a feed that is one event over and over', () => 
     expect(patch.events_upcoming_count).toBe(CAMPAIGN_COPIES + 2);
     expect(patch.events_distinct_titles).toBe(3);
     expect(patch.events_variety_at).toBeTruthy();
+  });
+});
+
+// RSS 1.0 with the event module, read off a real capture of Ohio State's feed.
+//
+// The fixture next door is the actual document their handler served on
+// 2026-08-14, byte for byte and not tidied up. That is deliberate: every trap
+// in this format is a shape a hand-written sample would quietly get right,
+// starting with items sitting outside `channel`, and a green run against an
+// idealised feed would prove nothing about the one a student is served.
+//
+// The two variants below are built by rewriting that same capture, and each
+// rewrite is one edit, stated where it happens.
+describe('an RSS 1.0 feed with the event module', () => {
+  const FIXTURE = readFileSync(
+    fileURLToPath(new URL('./fixtures/osu-activities-rss1.xml', import.meta.url)),
+    'utf8',
+  );
+  const FEED =
+    'https://activities.osu.edu/CentralCalendar/StudentLife.EventCalendar.Web.Service.RssHandler.ashx?d=9';
+
+  let realFetch;
+  function serve(xml) {
+    realFetch = globalThis.fetch;
+    globalThis.fetch = () =>
+      Promise.resolve(new Response(xml, { status: 200, headers: { 'content-type': 'text/xml' } }));
+  }
+  afterEach(() => {
+    if (realFetch) globalThis.fetch = realFetch;
+    realFetch = undefined;
+  });
+
+  it('reads every field off the first real item', () => {
+    const events = parseRss1Events(FIXTURE);
+    expect(events[0]).toMatchObject({
+      title: 'Sunday Service',
+      start: '2026-08-16T15:00:00-04:00',
+      end: '2026-08-16T17:00:00-04:00',
+      location: 'Union Great Hall Meeting Rm 3',
+      allDay: false,
+    });
+    expect(events[0].url).toBe(
+      'https://activities.osu.edu/Events.aspx?y=2026&mo=8&day=16&e=84107&title=sunday-service-',
+    );
+    expect(events[0].description).toContain('Looking for a church to call home on campus');
+    expect(events[0].subjects).toEqual([
+      'Food', 'Social', 'Students (Columbus Campus)', 'Students (All)',
+    ]);
+  });
+
+  it('keeps the offset the feed published rather than converting it', () => {
+    // Ohio State stamps a real Eastern offset, so the value is an unambiguous
+    // instant. It is passed through untouched, and it still has to parse to the
+    // moment the feed meant.
+    const [first] = parseRss1Events(FIXTURE);
+    expect(first.start.endsWith('-04:00')).toBe(true);
+    expect(Date.parse(first.start)).toBe(Date.parse('2026-08-16T19:00:00Z'));
+  });
+
+  it('never dates an item from pubDate', () => {
+    // Every item carries one and it is the day somebody typed the listing in.
+    // The second item was written on 2026-08-13 and happens on the 18th.
+    expect(parseRss1Events(FIXTURE)[1].start.slice(0, 10)).toBe('2026-08-18');
+  });
+
+  it('finds items that are siblings of channel, not children of it', () => {
+    // The structural trap, pinned against the real document: `channel` holds an
+    // rdf:Seq of pointers and no item elements at all, so a reader that
+    // descends into it comes back with zero and reads as an empty calendar.
+    const channel = FIXTURE.slice(FIXTURE.indexOf('<channel'), FIXTURE.indexOf('</channel>'));
+    expect(channel).not.toMatch(/<item[\s>]/);
+    expect(parseRss1Events(FIXTURE).length).toBeGreaterThan(0);
+  });
+
+  it('reads the module under whatever prefix the feed bound it to', () => {
+    // Same capture, one edit: the event module is bound to "evt" instead of
+    // "ev". A prefix is a local choice, so this feed is exactly as valid and
+    // has to read identically.
+    const renamed = FIXTURE
+      .replace('xmlns:ev="http://purl.org/rss/1.0/modules/event/"',
+        'xmlns:evt="http://purl.org/rss/1.0/modules/event/"')
+      .replace(/<(\/?)ev:/g, '<$1evt:');
+    expect(rss1Prefixes(renamed, 'http://purl.org/rss/1.0/modules/event/')).toEqual(['evt']);
+    expect(parseRss1Events(renamed)).toEqual(parseRss1Events(FIXTURE));
+  });
+
+  it('refuses a document that never declares the event module', () => {
+    // Without the module there are no event dates in the document, only the
+    // dates a listing was written. A school's news feed must not read as its
+    // calendar, so this returns nothing rather than reaching for pubDate.
+    const stripped = FIXTURE
+      .replace('xmlns:ev="http://purl.org/rss/1.0/modules/event/"', '')
+      .replace(/<(\/?)ev:/g, '<$1x:');
+    expect(parseRss1Events(stripped)).toEqual([]);
+    expect(looksLikeRss1(stripped)).toBe(false);
+    expect(looksLikeRss1('<rss version="2.0"><channel><item><title>News</title>' +
+      '<pubDate>Wed, 13 Aug 2026 20:36:53 -0400</pubDate></item></channel></rss>')).toBe(false);
+  });
+
+  it('keeps an item whose end date is missing', () => {
+    // Same capture, one edit: the first item loses its end. An end is the least
+    // trustworthy field in every feed here, so its absence empties that one
+    // field and changes nothing else.
+    const noEnd = FIXTURE.replace(/\s*<ev:enddate>[^<]*<\/ev:enddate>/, '');
+    const events = parseRss1Events(noEnd);
+    expect(events).toHaveLength(50);
+    expect(events[0].end).toBe('');
+    expect(events[0].start).toBe('2026-08-16T15:00:00-04:00');
+    expect(events[0].title).toBe('Sunday Service');
+    expect(events.slice(1)).toEqual(parseRss1Events(FIXTURE).slice(1));
+  });
+
+  it('returns all 50 the feed will hand over, and the 50 is theirs not ours', () => {
+    // Measured on 2026-08-14: the handler answers with exactly 50 items and no
+    // parameter moves it, d=1 through d=365 alike. So the cap belongs to Ohio
+    // State, and nothing here may add a second one on top of it.
+    expect(FIXTURE.match(/<item[\s>]/g)).toHaveLength(50);
+    expect(parseRss1Events(FIXTURE)).toHaveLength(50);
+
+    const extra = FIXTURE.replace(
+      '</rdf:RDF>',
+      `<item rdf:about="https://activities.osu.edu/Events.aspx?e=99999">
+    <title>One More</title>
+    <link>https://activities.osu.edu/Events.aspx?e=99999</link>
+    <ev:startdate>2026-10-05T15:00:00-04:00</ev:startdate>
+  </item>
+</rdf:RDF>`,
+    );
+    expect(parseRss1Events(extra)).toHaveLength(51);
+  });
+
+  it('reads a bare day as a whole day rather than stamping a clock on it', () => {
+    expect(rss1Date('2026-08-16')).toEqual({ value: '2026-08-16', allDay: true });
+    // A value with no offset is campus wall-clock and stays that way.
+    expect(rss1Date('2026-08-16 15:00:00')).toEqual({
+      value: '2026-08-16T15:00:00', allDay: false,
+    });
+    expect(rss1Date('2026-08-16T15:00:00+0400')).toEqual({
+      value: '2026-08-16T15:00:00+04:00', allDay: false,
+    });
+    expect(rss1Date('next Tuesday')).toEqual({ value: '', allDay: false });
+  });
+
+  it('reaches a student through the registered adapter', async () => {
+    // The whole path a resolved row takes: adapterFor('rss1'), its own fetch,
+    // its own normalize, then the request-time gate. Registration is what this
+    // proves, and an unregistered adapter throws here rather than failing quiet.
+    serve(FIXTURE);
+    const events = await fetchEvents('rss1', FEED, 90);
+    expect(events).toHaveLength(50);
+    expect(events[0]).toMatchObject({
+      title: 'Sunday Service',
+      start: '2026-08-16T15:00:00-04:00',
+      location: 'Union Great Hall Meeting Rm 3',
+      all_day: false,
+      is_free: null,
+    });
+    expect(events[0].keywords).toContain('Social');
+    expect(events.filter(e => stillUpcoming(e.start, e.end, e.all_day, Date.now())))
+      .toHaveLength(50);
+  });
+
+  it('says so when a feed answers with something that is not RSS 1.0', async () => {
+    serve('<html><body>Page Not Found</body></html>');
+    await expect(fetchEvents('rss1', FEED, 90)).rejects.toThrow('unexpected shape');
   });
 });
 
