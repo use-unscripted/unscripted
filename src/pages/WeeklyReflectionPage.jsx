@@ -45,6 +45,7 @@ import { linksForExperiment } from '@/lib/career-cycle';
 // `new Date()`.
 import { getMonday, fmtWeek, sameWeek } from '@/lib/dates';
 import { activityFor } from '@/lib/weekly-activity';
+import { readReflectionDraft, writeReflectionDraft, clearReflectionDraft } from '@/lib/student-drafts';
 
 // ── Small helpers ──────────────────────────────────────────────────────────────
 const isActive = (r) => !r?.deletion_status || r.deletion_status === 'active';
@@ -156,21 +157,15 @@ const CARRIED_FIELDS = ['avoidance_reasons', 'surprises', 'skill_gaps_noticed'];
 // is only ever offered when there is no server row for its week, and it is
 // never applied without the student saying so, so a stale draft cannot
 // overwrite answers that are already saved.
-const DRAFT_KEY = 'unscripted_reflection_draft_v1';
-
-function loadDraft() {
-  try {
-    const raw = localStorage.getItem(DRAFT_KEY);
-    if (!raw) return null;
-    const d = JSON.parse(raw);
-    return d && typeof d === 'object' && typeof d.week_start === 'string' ? d : null;
-  } catch { return null; }
-}
-function writeDraft(d) {
-  try { localStorage.setItem(DRAFT_KEY, JSON.stringify(d)); } catch { /* private mode / quota */ }
-}
-function clearDraft() {
-  try { localStorage.removeItem(DRAFT_KEY); } catch { /* private mode */ }
+//
+// Where it is kept, who it belongs to and when it dies are all in
+// src/lib/student-drafts.js. Read that before changing anything here: the draft
+// is tied to one signed-in student, it goes on sign-out, and it expires. Those
+// rules exist because this text is a student's private career doubts and the
+// machine they typed it on is often not theirs.
+function loadDraft(userId) {
+  const d = readReflectionDraft(userId);
+  return d && typeof d.week_start === 'string' ? d : null;
 }
 
 // The activity read-out (what this student actually logged against this
@@ -208,7 +203,7 @@ function SuccessToast({ experiment, mission, onOpenExp, onDismiss }) {
 }
 
 // ── The guided flow ────────────────────────────────────────────────────────────
-function ReflectionFlow({ experiments, missions, proofs, outreach, initialData, draft, onSaved, onDraftWritten }) {
+function ReflectionFlow({ experiments, missions, proofs, outreach, initialData, draft, userId, onSaved, onDraftWritten }) {
   const isEdit = !!initialData?.id;
 
   // week_start on an edit comes off the record and is never recomputed.
@@ -444,10 +439,13 @@ function ReflectionFlow({ experiments, missions, proofs, outreach, initialData, 
   // Only a new reflection is drafted. An edit already has a server row, and a
   // draft that could shadow it is exactly the overwrite this is meant to avoid.
   // Merely opening the page is not "you started a reflection".
+  //
+  // No signed-in user, no draft. There is no shared key to fall back to, and
+  // writing private text somewhere nobody owns is the bug this replaced.
   useEffect(() => {
-    if (isEdit || !touched || !hasContent) return;
+    if (isEdit || !touched || !hasContent || !userId) return;
     const t = setTimeout(() => {
-      writeDraft({
+      writeReflectionDraft(userId, {
         week_start: weekStart,
         experiment_id: expId,
         mission_id: missionId,
@@ -461,7 +459,7 @@ function ReflectionFlow({ experiments, missions, proofs, outreach, initialData, 
       onDraftWritten?.();
     }, 600);
     return () => clearTimeout(t);
-  }, [isEdit, touched, hasContent, weekStart, expId, missionId, weekChoice, picks, otherOpen,
+  }, [isEdit, touched, hasContent, userId, weekStart, expId, missionId, weekChoice, picks, otherOpen,
     freeText, avoidedProse, energySources, energyDrains, pathFit, pathFitProse, lessons,
     nextChanges, summary, adjustments, onDraftWritten]);
 
@@ -578,7 +576,10 @@ function ReflectionFlow({ experiments, missions, proofs, outreach, initialData, 
         saved = { ...initialData, ...payload };
       } else {
         saved = await base44.entities.WeeklyReflections.create(payload);
-        clearDraft();
+        // A submitted reflection is on the server. Nothing is owed to the
+        // copy on the device, and leaving it there is what put private text
+        // in front of the next person at the keyboard.
+        clearReflectionDraft(user.id);
       }
       console.log('[WeeklyReflectionPage] Save: success, record_id=' + saved?.id);
       onSaved(saved);
@@ -1025,6 +1026,9 @@ export default function WeeklyReflectionPage() {
   const [activeDraft, setActiveDraft] = useState(null); // accepted by the student
   const [successToast, setSuccessToast] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
+  // Who the draft belongs to. Resolved before any draft is read or written, so
+  // a draft can never be offered to an account other than the one that wrote it.
+  const [userId, setUserId] = useState('');
   const toastTimer = useRef(null);
 
   const [search, setSearch] = useState('');
@@ -1034,7 +1038,8 @@ export default function WeeklyReflectionPage() {
 
   const load = async () => {
     try {
-      const [data, exps, mis, ps, proof, contacts] = await Promise.all([
+      const [me, data, exps, mis, ps, proof, contacts] = await Promise.all([
+        base44.auth.me().catch(() => null),
         base44.entities.WeeklyReflections.list('-created_date', 100).catch(() => []),
         base44.entities.Experiments.list('-created_date', 200).catch(() => []),
         base44.entities.Missions.list('-created_date', 200).catch(() => []),
@@ -1042,6 +1047,9 @@ export default function WeeklyReflectionPage() {
         base44.entities.ProofOfWork.list('-created_date', 200).catch(() => []),
         base44.entities.OutreachContacts.list('-created_date', 200).catch(() => []),
       ]);
+
+      const mine = me?.id || '';
+      setUserId(mine);
 
       const liveReflections = Array.isArray(data) ? data.filter(isActive) : [];
       const liveExperiments = Array.isArray(exps) ? exps.filter(isActive) : [];
@@ -1068,9 +1076,9 @@ export default function WeeklyReflectionPage() {
 
       // Server wins. A local draft is only ever offered for a week that has no
       // saved row, and never applied until the student asks for it.
-      const d = loadDraft();
+      const d = loadDraft(mine);
       if (d?.week_start) {
-        if (liveReflections.some(r => sameWeek(r.week_start, d.week_start))) clearDraft();
+        if (liveReflections.some(r => sameWeek(r.week_start, d.week_start))) clearReflectionDraft(mine);
         else if (!thisWeekRow || !sameWeek(d.week_start, thisWeekRow.week_start)) setDraftOffer(d);
       }
     } finally {
@@ -1112,7 +1120,7 @@ export default function WeeklyReflectionPage() {
       return [saved, ...prev];
     });
 
-    clearDraft();
+    clearReflectionDraft(userId);
     setDraftOffer(null);
     setActiveDraft(null);
 
@@ -1227,7 +1235,7 @@ export default function WeeklyReflectionPage() {
                   className="tp-meta rounded-[var(--r-control)] px-3.5 py-2 font-semibold text-white" style={{ background: 'var(--brand-navy-900)' }}>
                   Pick it up
                 </button>
-                <button onClick={() => { clearDraft(); setDraftOffer(null); }}
+                <button onClick={() => { clearReflectionDraft(userId); setDraftOffer(null); }}
                   className="tp-meta rounded-[var(--r-control)] border border-[color:var(--ink-200)] px-3.5 py-2 font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)]">
                   Start fresh
                 </button>
@@ -1256,6 +1264,7 @@ export default function WeeklyReflectionPage() {
               outreach={outreach}
               initialData={editingReflection}
               draft={editingReflection ? null : activeDraft}
+              userId={userId}
               onSaved={handleSaved}
               onDraftWritten={handleDraftWritten}
             />

@@ -38,7 +38,7 @@ const CATEGORY_TABLE = [
     'Student Content',
     'Free-text responses concerning paths under consideration, external expectations, private interests, perceived obstacles and financial priorities; priority ratings; reflections, uploaded proof of work, resume content and outreach drafts.',
     'To generate Recommendations, experiments, guides and drafts; to save your progress.',
-    'Life of the account, subject to Section 10.',
+    'Life of the account, subject to Section 10. An unsaved reflection draft held in your browser is deleted when you save that reflection, when you sign out, or seven days after it was last written, whichever comes first.',
   ],
   [
     'Third-party contact information',
@@ -326,7 +326,12 @@ export default function Privacy() {
           3.3. That draft expires after seven days; it otherwise remains on your device until you
           create an account, clear your browsing data, or the stored version is superseded. If you
           create an account, the guest identifier is saved to your profile, which associates the
-          activity you recorded before signing up with your account.
+          activity you recorded before signing up with your account. Where you begin a weekly
+          reflection or an end-of-experiment conclusion while signed in and do not save it, the
+          answers you have typed are held in local storage for the same reason. We store each
+          such draft against your account, so it is not shown to anyone else who signs in on the
+          same computer. A draft of that kind is deleted when you save that reflection, when you
+          sign out, and in any case seven days after it was last written.
         </Sub>
         <Sub n="9.3" title="Session storage">
           We store short-lived flags in your browser’s session storage so that the same analytics

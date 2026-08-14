@@ -10,6 +10,7 @@ import { buildOptOut, optBackInPatch, isOptedOut, mergeOptOutRows } from '@/lib/
 import { clearCampusStore } from '@/lib/campus-store';
 import DeleteAccountModal from '@/components/settings/DeleteAccountModal';
 import MyCareerVocabulary from '@/components/language/MyCareerVocabulary';
+import { clearStudentDrafts } from '@/lib/student-drafts';
 
 const textareaCls = 'mt-1 w-full rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] px-4 py-3 text-base md:text-sm text-[color:var(--surface-dark-900)] placeholder-[color:var(--ink-400)] outline-none focus:border-[color:var(--brand-navy-700)] resize-none';
 
@@ -193,7 +194,7 @@ export default function Settings() {
           {saved ? 'Saved' : 'Save changes'}
         </button>
         <button
-          onClick={() => { clearCampusStore(); base44.auth.logout('/'); }}
+          onClick={() => { clearCampusStore(); clearStudentDrafts(); base44.auth.logout('/'); }}
           className="tp-body touch-target font-semibold text-[color:var(--ink-500)] hover:text-[color:var(--surface-dark-900)] transition sm:col-span-2 sm:justify-self-start"
         >
           Log out
