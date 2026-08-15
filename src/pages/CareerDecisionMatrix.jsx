@@ -108,6 +108,16 @@ export default function CareerDecisionMatrix() {
             <StrongestHypothesis strongest={data.strongest} />
           </Reveal>
 
+          {/* The story first: how the thinking has moved, and what the work has
+              shown about this student. The per-path table follows it. */}
+          <Reveal y={16}>
+            <ConfidenceHistoryChart rows={data.active} />
+          </Reveal>
+
+          <Reveal y={16}>
+            <WorkstyleMatrix rows={data.workstyle} onOpen={openDimension} />
+          </Reveal>
+
           <div>
             <div role="tablist" aria-label="Which paths to show" className="mb-4 flex gap-2">
               {[['active', 'Active paths'], ['history', 'Journey history']].map(([key, label]) => (
@@ -138,14 +148,6 @@ export default function CareerDecisionMatrix() {
               />
             )}
           </div>
-
-          <Reveal y={16}>
-            <ConfidenceHistoryChart rows={data.active} />
-          </Reveal>
-
-          <Reveal y={16}>
-            <WorkstyleMatrix rows={data.workstyle} onOpen={openDimension} />
-          </Reveal>
 
           <ChangedMind items={data.changed} />
 
