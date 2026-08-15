@@ -65,6 +65,7 @@ const UncertaintyUpdate = lazy(() => import('@/pages/UncertaintyUpdate'));
 const BlueprintLibrary = lazy(() => import('@/pages/BlueprintLibrary'));
 const PathComparison = lazy(() => import('@/pages/PathComparison'));
 const ExperimentsPage = lazy(() => import('@/pages/ExperimentsPage'));
+const CompareExperiments = lazy(() => import('@/pages/CompareExperiments'));
 const ActiveExperiment = lazy(() => import('@/pages/ActiveExperiment'));
 const ExperimentReflection = lazy(() => import('@/pages/ExperimentReflection'));
 const ResourceHub = lazy(() => import('@/pages/ResourceHub'));
@@ -75,6 +76,7 @@ const GuideDetailPage = lazy(() => import('@/pages/GuideDetailPage'));
 const AnswerNudge = lazy(() => import('@/pages/AnswerNudge'));
 const AdminAiFailures = lazy(() => import('@/pages/AdminAiFailures'));
 const AdminDecisionIntelligence = lazy(() => import('@/pages/AdminDecisionIntelligence'));
+const AdminExperimentValidation = lazy(() => import('@/pages/AdminExperimentValidation'));
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError } = useAuth();
@@ -172,6 +174,8 @@ const AuthenticatedApp = () => {
           <Route path="/experiment" element={<ActiveExperiment />} />
           <Route path="/reflect" element={<ExperimentReflection />} />
           <Route path="/experiments" element={<ExperimentsPage />} />
+          {/* Side by side, with the best next test for this student marked. */}
+          <Route path="/experiments/compare" element={<CompareExperiments />} />
           <Route path="/outreach" element={<Navigate to="/evidence?tab=outreach" replace />} />
           <Route path="/OutreachTracker" element={<Navigate to="/evidence?tab=outreach" replace />} />
           <Route path="/proof" element={<Navigate to="/evidence?tab=proof" replace />} />
@@ -186,6 +190,8 @@ const AuthenticatedApp = () => {
           {/* Team-only aggregate product learning. The page checks the role, and
               so does the function, which is where suppression is applied. */}
           <Route path="/admin/decision-intelligence" element={<AdminDecisionIntelligence />} />
+          {/* Team-only. Where experiment validation is actually decided. */}
+          <Route path="/admin/experiment-validation" element={<AdminExperimentValidation />} />
 
         </Route>
       </Route>

@@ -48,6 +48,8 @@ export default function StageTest() {
       <NextBestExperimentPanel pathId={journey.currentPath.id} />
       <SimEntryCard />
       <p className="tp-meta text-center" style={{ color: 'var(--text-muted)' }}>
+        <Link to={`/experiments/compare?pathName=${encodeURIComponent(journey.currentPath.path_name)}`} className="font-semibold" style={{ color: 'var(--brand-navy-700)' }}>Compare experiments</Link>
+        {' · '}
         <Link to="/experiments" className="font-semibold" style={{ color: 'var(--brand-navy-700)' }}>All experiments</Link>
       </p>
     </StageShell>

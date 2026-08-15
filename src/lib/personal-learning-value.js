@@ -141,8 +141,22 @@ export function bestNextTest(rows = []) {
   const best = [...scored].sort((a, b) =>
     (b.value.score - a.value.score) || ((b.strength.raw_score || 0) - (a.strength.raw_score || 0)))[0];
   const bestValidated = [...rows].sort((a, b) => (b.strength.raw_score || 0) - (a.strength.raw_score || 0))[0];
+  // Only recommend when the leader would actually teach this student something.
+  // Naming a "best next test" that mostly repeats settled ground is worse than
+  // saying none of these stands out.
+  const confident = (best.value.score ?? 0) >= PLV_LEVELS[1].min;
+  if (!confident) {
+    return {
+      best_next_test_id: null,
+      best_validated_id: bestValidated?.experiment?.id || bestValidated?.id,
+      confident: false,
+      differ: false,
+      explanation: 'None of these stands out as your best next test: they mostly cover ground your evidence has already settled. Consider testing an area you have not looked at yet.',
+    };
+  }
 
   return {
+    confident: true,
     best_next_test_id: best.experiment?.id || best.id,
     best_validated_id: bestValidated?.experiment?.id || bestValidated?.id,
     differ: (best.experiment?.id || best.id) !== (bestValidated?.experiment?.id || bestValidated?.id),
