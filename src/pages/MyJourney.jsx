@@ -17,8 +17,7 @@ import JourneyFocus from '@/components/journey/JourneyFocus';
 import PathComparisonWorkspace from '@/components/journey/PathComparisonWorkspace';
 import PathSelectedConfirm from '@/components/journey/PathSelectedConfirm';
 import JourneyEmptyState from '@/components/journey/JourneyEmptyState';
-import AllPathsPanel from '@/components/journey/AllPathsPanel';
-import MergeLookalikePaths from '@/components/journey/MergeLookalikePaths';
+import AllPathsLink from '@/components/journey/AllPathsLink';
 import UncertaintyUpdateCard from '@/components/journey/UncertaintyUpdateCard';
 import ContinuationGate from '@/components/journey/ContinuationGate';
 import { Sk } from '@/components/PageSkeleton';
@@ -95,9 +94,8 @@ export default function MyJourney() {
     }
   }, [data, load]);
 
-  /* Choosing from the full list at the bottom of the page. Same one transition
-     as the comparison workspace, then straight to Test — that path is now the
-     one being tested, so the next thing to do is set up or open its test. */
+  /* Kept for the comparison workspace's sibling flows: same one transition, then
+     straight to Test. */
   const handleChooseAndTest = useCallback(async (path) => {
     setSelectError(null);
     setBusyId(path.id);
@@ -267,22 +265,9 @@ export default function MyJourney() {
         <JourneyStages stage={stage} detail={stageDetail} />
       </Reveal>
 
-      {/* Two paths describing one career: fold one into the other, keeping the
-          work. Renders nothing when there is nothing to merge. */}
-      <MergeLookalikePaths onMerged={async () => {
-        await queryClientInstance.invalidateQueries({ queryKey: ['cycle-rail'] });
-        await queryClientInstance.invalidateQueries({ queryKey: ['journey-focus'] });
-        await load();
-      }} />
-
-      {/* All the paths this student could test, and a way to switch. */}
-      <AllPathsPanel
-        paths={livePaths.length ? livePaths : comparisonPaths}
-        currentPathId={currentPath?.id}
-        onChoose={handleChooseAndTest}
-        busyId={busyId}
-        error={selectError}
-      />
+      {/* All the paths this student could test, and the look-alike merge tool,
+          now on their own screen. */}
+      <AllPathsLink count={(livePaths.length ? livePaths : comparisonPaths).length} />
 
       <p className="tp-meta pt-2 text-center" style={{ color: 'var(--text-muted)' }}>
         Working on something else? Use the cycle in the sidebar to jump to any step.

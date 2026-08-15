@@ -64,6 +64,7 @@ const Settings = lazy(() => import('@/pages/Settings'));
 const UncertaintyUpdate = lazy(() => import('@/pages/UncertaintyUpdate'));
 const BlueprintLibrary = lazy(() => import('@/pages/BlueprintLibrary'));
 const PathComparison = lazy(() => import('@/pages/PathComparison'));
+const AllPaths = lazy(() => import('@/pages/AllPaths'));
 const ExperimentsPage = lazy(() => import('@/pages/ExperimentsPage'));
 const CompareExperiments = lazy(() => import('@/pages/CompareExperiments'));
 const ActiveExperiment = lazy(() => import('@/pages/ActiveExperiment'));
@@ -165,6 +166,8 @@ const AuthenticatedApp = () => {
           <Route path="/uncertainty-update" element={<UncertaintyUpdate />} />
           <Route path="/blueprints" element={<BlueprintLibrary />} />
           <Route path="/paths" element={<PathComparison />} />
+          {/* Every path this student owns, plus the look-alike merge tool. */}
+          <Route path="/all-paths" element={<AllPaths />} />
           {/* The default, short Experiment: one Career Moment, 2–7 minutes. */}
           <Route path="/moment" element={<CareerMomentPage />} />
           {/* The work simulation: 30 minutes of one job, signed in only. Inside

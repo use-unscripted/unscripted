@@ -7,13 +7,13 @@ import OtherPathsBrowser from '@/components/journey/OtherPathsBrowser';
  * the page keeps its one instruction; opened, it is a list, and choosing one
  * hands off to the Test stage with that path selected.
  */
-export default function AllPathsPanel({ paths = [], currentPathId, onChoose, busyId, error }) {
-  const [open, setOpen] = useState(false);
+export default function AllPathsPanel({ paths = [], currentPathId, onChoose, busyId, error, embedded = false }) {
+  const [open, setOpen] = useState(embedded);
   if (!paths.length) return null;
 
   return (
     <section className="app-card-flat p-5">
-      <button
+      {!embedded && <button
         type="button"
         onClick={() => setOpen(o => !o)}
         className="touch-target flex w-full items-center justify-between gap-3 text-left"
@@ -29,10 +29,10 @@ export default function AllPathsPanel({ paths = [], currentPathId, onChoose, bus
         {open
           ? <ChevronUp size={18} style={{ color: 'var(--brand-navy-700)' }} />
           : <ChevronDown size={18} style={{ color: 'var(--brand-navy-700)' }} />}
-      </button>
+      </button>}
 
       {open && (
-        <div className="mt-4">
+        <div className={embedded ? '' : 'mt-4'}>
         <p className="tp-meta mb-2 font-bold uppercase" style={{ color: 'var(--brand-navy-700)' }}>
           Your paths
         </p>
