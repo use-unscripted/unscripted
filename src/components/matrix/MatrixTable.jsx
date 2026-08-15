@@ -55,7 +55,14 @@ export default function MatrixTable({ rows, onOpen }) {
                   </button>
                 </td>
               ))}
-              <td className="px-5 py-4 align-top"><TrendBadge trend={row.trend} /></td>
+              <td className="px-5 py-4 align-top">
+                {/* The trend is a conclusion too, so it drills down like the rest. */}
+                <button type="button" onClick={() => onOpen(row, 'trend')}
+                  className="ui-press rounded-[var(--r-control)] px-2 py-1.5 text-left hover:bg-[color:var(--ink-100)]">
+                  <TrendBadge trend={row.trend} />
+                  <span className="tp-meta mt-0.5 block" style={{ color: 'var(--brand-navy-700)' }}>Why did this change?</span>
+                </button>
+              </td>
             </tr>
           ))}
         </tbody>

@@ -8,7 +8,7 @@ import HowThisWorks from '@/components/matrix/HowThisWorks';
 import StrongestHypothesis from '@/components/matrix/StrongestHypothesis';
 import MatrixTable from '@/components/matrix/MatrixTable';
 import MatrixCards from '@/components/matrix/MatrixCards';
-import ScoreExplainer from '@/components/matrix/ScoreExplainer';
+import MetricPanel from '@/components/matrix/MetricPanel';
 import ConfidenceHistoryChart from '@/components/matrix/ConfidenceHistoryChart';
 import WorkstyleMatrix from '@/components/matrix/WorkstyleMatrix';
 import WorkstyleDetail from '@/components/matrix/WorkstyleDetail';
@@ -33,6 +33,9 @@ function EmptyState({ title, body, ctaLabel, ctaTo }) {
 
 export default function CareerDecisionMatrix() {
   const { loading, data } = useDecisionMatrix();
+  // Which metric on which hypothesis is being inspected. The metric matters:
+  // a student who clicked Evidence Coverage is asking about coverage, not for
+  // every number on the row at once.
   const [scored, setScored] = useState(null);
   const [dimension, setDimension] = useState(null);
   const [view, setView] = useState('active');
@@ -49,7 +52,7 @@ export default function CareerDecisionMatrix() {
   }
 
   const openScore = (row, metric) => {
-    setScored(row);
+    setScored({ row, metric });
     track('hypothesis_score_opened', { metric, hypothesis: row.name });
     if (metric === 'confidence') track('score_explanation_opened', { hypothesis: row.name });
     if (metric === 'expectation') track('expectation_reality_viewed', { hypothesis: row.name });
@@ -162,7 +165,7 @@ export default function CareerDecisionMatrix() {
         </div>
       )}
 
-      <ScoreExplainer row={scored} onClose={() => setScored(null)} />
+      <MetricPanel row={scored?.row} metric={scored?.metric} onClose={() => setScored(null)} />
       <WorkstyleDetail row={dimension} onClose={() => setDimension(null)} />
     </main>
   );

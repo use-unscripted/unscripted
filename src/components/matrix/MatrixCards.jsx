@@ -10,6 +10,10 @@ const CELLS = [
   ['coverage', 'Evidence coverage', r => r.coverage.value],
   ['fit', 'Experienced fit', r => r.fit.value],
   ['uncertainty', 'Uncertainty left', r => r.uncertainty.value],
+  // On a phone these two are only reachable here, so they are cells rather than
+  // desktop-only table columns.
+  ['expectation', 'Expectation vs reality', r => r.expectation.value],
+  ['human', 'Human exposure', r => (r.human.count ? r.human.value : null)],
 ];
 
 export default function MatrixCards({ rows, onOpen }) {
@@ -31,7 +35,10 @@ export default function MatrixCards({ rows, onOpen }) {
           </div>
 
           <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-            <TrendBadge trend={row.trend} />
+            <button type="button" onClick={() => onOpen(row, 'trend')}
+              className="touch-target rounded-[var(--r-control)] text-left">
+              <TrendBadge trend={row.trend} />
+            </button>
             <button type="button" onClick={() => onOpen(row, 'confidence')}
               className="touch-target tp-control rounded-[var(--r-control)] px-3 py-2"
               style={{ color: 'var(--brand-navy-700)' }}>

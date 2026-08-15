@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { humanDate } from '@/lib/matrix-provenance';
 
 /**
  * How the student's thinking has changed, read from stored hypothesis versions
@@ -21,6 +22,12 @@ function Explain({ point }) {
       <p className="tp-eyebrow" style={{ color: 'var(--brand-navy-700)' }}>Why did this change?</p>
       <p className="tp-card mt-1.5" style={{ color: 'var(--text-primary)' }}>
         {point.career}: {point.value}% after {point.label}
+      </p>
+      {/* The date of the record itself, so the point can be traced back to the
+          update the student actually recorded. Never an id. */}
+      <p className="tp-meta mt-1" style={{ color: 'var(--text-muted)' }}>
+        {[point.previous !== null && point.previous !== undefined ? `Previously ${point.previous}%` : null,
+          humanDate(point.at) ? `Recorded ${humanDate(point.at)}` : null].filter(Boolean).join(' · ')}
       </p>
       {point.change && <p className="tp-body mt-2" style={{ color: 'var(--text-secondary)' }}>{point.change}</p>}
       {point.strengthened?.length > 0 && (
@@ -74,7 +81,10 @@ export default function ConfidenceHistoryChart({ rows }) {
   const onPoint = (careerName, index) => {
     const s = series.find(x => x.name === careerName);
     const p = s?.trend.points[index];
-    if (p) setSelected({ ...p, career: careerName });
+    // The previous point's stored value, so "why did this change?" can show what
+    // it changed FROM without recomputing history.
+    const prev = index > 0 ? s?.trend.points[index - 1]?.value : null;
+    if (p) setSelected({ ...p, career: careerName, previous: prev ?? null });
   };
 
   return (
