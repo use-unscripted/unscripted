@@ -225,6 +225,14 @@ export const STEPS = [
     placeholder: 'What keeps you stuck?',
   },
   {
+    /* Four short situations, one at a time. Not a personality test: each one
+       produces at most an initial signal, and no label comes out the other end. */
+    key: 'scenario_answers',
+    kind: 'scenarios',
+    question: 'How do you tend to decide?',
+    hint: 'There are no right answers here. Every option is something a reasonable person does, and one choice tells us very little on its own.',
+  },
+  {
     key: 'about',
     kind: 'about',
     required: true,
@@ -243,7 +251,8 @@ const SECTIONS = [
   { until: 10, label: 'What you have done' },
   { until: 11, label: 'What you are still figuring out' },
   { until: 14, label: 'Your week' },
-  { until: 15, label: 'About you' },
+  { until: 15, label: 'How you decide' },
+  { until: 16, label: 'About you' },
 ];
 
 export const sectionFor = (i) =>
@@ -293,6 +302,10 @@ export function summarise(step, data) {
     }
     case 'choice':
       return step.options.find(o => o.value === data[step.key])?.label || '';
+    case 'scenarios': {
+      const answered = list(data.scenario_answers).length;
+      return answered ? `${answered} scenario${answered === 1 ? '' : 's'} answered` : '';
+    }
     case 'about':
       return [data.name, data.college, data.major, data.school_year, data.graduation_year]
         .filter(Boolean).join(' · ');

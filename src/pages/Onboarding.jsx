@@ -41,10 +41,11 @@ import {
 import {
   Chip, Scale, Tags, ChipsMulti, Matrix, ValuesGrid, Experiences,
 } from '@/components/onboarding/OnboardingFields';
+import OnboardingScenarioStep from '@/components/onboarding/OnboardingScenarioStep';
 
 /** Bumped with the question set. An older draft's step number points at a
  *  question that no longer exists, so only a matching version restores it. */
-const INTAKE_VERSION = 3;
+const INTAKE_VERSION = 4;
 
 const TOGGLES = [
   { name: 'willing_financial_risk', label: 'I will take financial risk for better upside' },
@@ -425,6 +426,15 @@ export default function Onboarding() {
               onSelect={() => set(t.name, !data[t.name])} />
           ))}
         </div>
+      );
+    }
+
+    if (step.kind === 'scenarios') {
+      return (
+        <OnboardingScenarioStep
+          value={Array.isArray(data.scenario_answers) ? data.scenario_answers : []}
+          onChange={v => set('scenario_answers', v)}
+        />
       );
     }
 

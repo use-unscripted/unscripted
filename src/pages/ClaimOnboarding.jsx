@@ -12,6 +12,7 @@ import { base44 } from '@/api/base44Client';
 import { loadDraft, clearDraft, isDraftComplete } from '@/lib/guest-draft';
 import { generatePathTest } from '@/lib/path-generator';
 import { profileFromDraft, userMetaFromDraft } from '@/lib/onboarding-profile';
+import { claimOnboardingScenarios } from '@/lib/scenarios/onboarding-scenarios';
 import { trackFunnel, trackFunnelOnce } from '@/lib/funnel';
 
 const PHASES = [
@@ -83,6 +84,10 @@ export default function ClaimOnboarding() {
 
         // ── Save identity + any careers they named to user meta ──
         await base44.auth.updateMe(userMetaFromDraft(draft));
+
+        // The intake's scenario answers, now that there is an owner for them.
+        // Idempotent, and never allowed to block the rest of setup.
+        await claimOnboardingScenarios(draft).catch(() => 0);
       }
 
       // ── Generate paths (idempotent: generator checks for existing recs) ──

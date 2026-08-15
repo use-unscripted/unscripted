@@ -4,7 +4,8 @@
  * routes between them, so no feature is duplicated.
  */
 import { useSearchParams } from 'react-router-dom';
-import { FileText, RotateCcw, Library, UserCheck } from 'lucide-react';
+import { FileText, RotateCcw, Library, UserCheck, Compass } from 'lucide-react';
+import ScenarioEvidenceSection from '@/components/scenarios/ScenarioEvidenceSection';
 import CareerEvidenceProfile from '@/pages/CareerEvidenceProfile';
 import EvidenceLibrary from '@/pages/EvidenceLibrary';
 import ProofOfWorkPage from '@/pages/ProofOfWorkPage';
@@ -15,6 +16,8 @@ const TABS = [
   ['proof',    'Proof',       FileText],
   ['reflect',  'Reflections', RotateCcw],
   ['career-profile', 'Career Profile', UserCheck],
+  // Scenario evidence lives inside Evidence, never as its own nav item.
+  ['signals', 'Signals', Compass],
 ];
 
 export default function Evidence() {
@@ -60,6 +63,11 @@ export default function Evidence() {
       {active === 'proof' && <ProofOfWorkPage />}
       {active === 'reflect' && <WeeklyReflectionPage />}
       {active === 'career-profile' && <CareerEvidenceProfile />}
+      {active === 'signals' && (
+        <main className="app-page">
+          <ScenarioEvidenceSection />
+        </main>
+      )}
     </div>
   );
 }

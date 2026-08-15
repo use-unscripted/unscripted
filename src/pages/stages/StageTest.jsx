@@ -5,6 +5,7 @@ import NextBestExperimentPanel from '@/components/next-test/NextBestExperimentPa
 import UnknownsChecklist from '@/components/stages/UnknownsChecklist';
 import SimEntryCard from '@/components/worksim/SimEntryCard';
 import LibraryTestPicker from '@/components/library/LibraryTestPicker';
+import ExperimentScenarios from '@/components/scenarios/ExperimentScenarios';
 import JourneyEmptyState from '@/components/journey/JourneyEmptyState';
 import useJourneyFocus from '@/hooks/useJourneyFocus';
 import { Sk } from '@/components/PageSkeleton';
@@ -49,6 +50,12 @@ export default function StageTest() {
       {/* No test set up yet: the validated library is the first place to look,
           and it says plainly when this career is not covered. */}
       {!exp && <LibraryTestPicker path={journey.currentPath} />}
+      {/* Role-relevant decision scenarios, and a scored question kept apart. */}
+      <ExperimentScenarios
+        experiment={exp}
+        careerName={journey.currentPath.path_name}
+        pathId={journey.currentPath.id}
+      />
       <NextBestExperimentPanel pathId={journey.currentPath.id} />
       <SimEntryCard />
       <p className="tp-meta text-center" style={{ color: 'var(--text-muted)' }}>
