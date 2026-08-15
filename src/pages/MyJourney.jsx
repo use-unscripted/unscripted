@@ -268,7 +268,7 @@ export default function MyJourney() {
 
       {/* All the paths this student could test, and a way to switch. */}
       <AllPathsPanel
-        paths={comparisonPaths}
+        paths={livePaths.length ? livePaths : comparisonPaths}
         currentPathId={currentPath?.id}
         onChoose={handleChooseAndTest}
         busyId={busyId}

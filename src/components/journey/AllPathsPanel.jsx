@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { ChevronDown, ChevronUp, Check, Loader2 } from 'lucide-react';
+import OtherPathsBrowser from '@/components/journey/OtherPathsBrowser';
 
 /**
  * Every path this student has, at the bottom of My Journey. Closed by default so
@@ -22,7 +23,7 @@ export default function AllPathsPanel({ paths = [], currentPathId, onChoose, bus
             See all paths available to me
           </span>
           <span className="tp-meta mt-0.5 block" style={{ color: 'var(--text-muted)' }}>
-            {paths.length} path{paths.length === 1 ? '' : 's'}. You can switch the one you are testing.
+            {paths.length} path{paths.length === 1 ? '' : 's'} of your own, plus every other path you could explore.
           </span>
         </span>
         {open
@@ -31,7 +32,11 @@ export default function AllPathsPanel({ paths = [], currentPathId, onChoose, bus
       </button>
 
       {open && (
-        <div className="mt-4 space-y-3">
+        <div className="mt-4">
+        <p className="tp-meta mb-2 font-bold uppercase" style={{ color: 'var(--brand-navy-700)' }}>
+          Your paths
+        </p>
+        <div className="space-y-3">
           {paths.map(path => {
             const isCurrent = path.id === currentPathId;
             return (
@@ -76,6 +81,10 @@ export default function AllPathsPanel({ paths = [], currentPathId, onChoose, bus
               </div>
             );
           })}
+        </div>
+        {/* The rest of the validated library, so three is a starting point
+            rather than a limit. */}
+        <OtherPathsBrowser ownedPaths={paths} onAdded={onChoose} disabled={Boolean(busyId)} />
         </div>
       )}
     </section>
