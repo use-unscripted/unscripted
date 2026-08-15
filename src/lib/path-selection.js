@@ -17,7 +17,7 @@
  * experiment before creating one.
  */
 import { base44 } from '@/api/base44Client';
-import { onceInFlight, selectPathForCycle, attachExperimentToCycle } from '@/lib/career-cycle';
+import { onceInFlight, selectPathForCycle, attachExperimentToCycle, getActiveCycle } from '@/lib/career-cycle';
 import { assertCanStartCycle } from '@/lib/pilot-access';
 import { trackPilotEvent } from '@/lib/pilot-metrics';
 
@@ -54,9 +54,12 @@ export function selectPathAndBeginExperiment(path, allPaths = []) {
   if (!path?.id) throw new Error('No path to select.');
 
   return onceInFlight(`select-path:${path.id}`, async () => {
-    // Access first: an independent beta student who has used their one cycle
-    // gets the continuation step, and nothing is created for them here.
-    await assertCanStartCycle();
+    // Access first, but only when this would actually START a cycle. A student
+    // who already has an active cycle is picking the path INSIDE it, and the
+    // one-cycle limit was being applied to that too: the button threw, the
+    // caller swallowed the throw, and nothing happened at all.
+    const existingCycle = await getActiveCycle().catch(() => null);
+    if (!existingCycle) await assertCanStartCycle();
 
     const user_id = await currentUserId();
 

@@ -39,7 +39,10 @@ export default function ChoosePath() {
       // the unknowns still open on it.
       navigate('/test');
     } catch (err) {
-      if (!(err instanceof CycleLimitError)) setError(path.id);
+      // A limit used to fail silently, so the button looked broken. It now sends
+      // the student to My Journey, where the continuation step explains it.
+      if (err instanceof CycleLimitError) navigate('/journey');
+      else setError(path.id);
     } finally {
       setBusyId(null);
     }
