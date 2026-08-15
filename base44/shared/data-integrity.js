@@ -29,8 +29,8 @@ export const CYCLE_STAGES = [
   'completed',
 ];
 
-export const normalizeTitle = (s) =>
-  String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+export { normalizeTitle } from './path-similarity.js';
+import { canonicalTitle, compareTitles, normalizeTitle } from './path-similarity.js';
 
 const ownerOf = (row) => row?.created_by_id || row?.user_id || null;
 const olderFirst = (a, b) => String(a.created_date || '').localeCompare(String(b.created_date || ''));
@@ -80,67 +80,92 @@ export function totalLinks(counts, id) {
 }
 
 /**
+ * One decision about a keeper and a candidate duplicate of it. The keeper is
+ * always the older row, because that is the one the student's work points at.
+ */
+function decidePair(keep, dup, counts, match) {
+  const keepLinks = totalLinks(counts, keep.id);
+  const dupLinks = totalLinks(counts, dup.id);
+  const wording = match.verdict === 'same'
+    ? `"${keep.path_name}" and "${dup.path_name}" describe the same career once wording is set aside.`
+    : `"${keep.path_name}" and "${dup.path_name}" match on ${Math.round(match.similarity * 100)}% of their meaningful words.`;
+  const common = {
+    title: canonicalTitle(keep.path_name),
+    keep_id: keep.id,
+    keep_name: keep.path_name,
+    duplicate_id: dup.id,
+    duplicate_name: dup.path_name,
+    similarity: Math.round(match.similarity * 100) / 100,
+  };
+
+  // Close but not clearly the same: a person decides, nothing is touched.
+  if (match.verdict === 'review') {
+    return { kind: 'review', row: { ...common, reason: `${wording} That is close enough to check by hand, but not close enough to merge automatically.` } };
+  }
+
+  const differentSubmission =
+    keep.onboarding_submission_id && dup.onboarding_submission_id
+    && keep.onboarding_submission_id !== dup.onboarding_submission_id;
+  if (differentSubmission) {
+    return { kind: 'review', row: { ...common, reason: `${wording} They came from different onboarding submissions, so they may be intentionally separate hypotheses.` } };
+  }
+  if (dupLinks > 0 && keepLinks > 0) {
+    return { kind: 'review', row: { ...common, reason: `${wording} Both carry work (${keepLinks} and ${dupLinks} linked records), so which one is authoritative is a judgement call.` } };
+  }
+
+  return {
+    kind: 'merge',
+    row: {
+      ...common,
+      remap: dupLinks > 0,
+      linked_records: dupLinks,
+      reason: dupLinks > 0
+        ? `${wording} The surviving row has no work of its own, so the duplicate\u2019s records are remapped onto it.`
+        : `${wording} The duplicate has no records attached.`,
+    },
+  };
+}
+
+/**
  * The de-duplication plan for one student.
  *
- * Identity is "same owner, same normalized career title". That is deliberately
- * narrow: two genuinely different hypotheses never share a normalized title,
- * and a student who intentionally created a second hypothesis about the same
- * career will have work attached to it, which sends the pair to review rather
- * than merging it away.
+ * Two rows are the same hypothesis when their titles reduce to the same
+ * canonical career wording, or when they share enough meaningful words to pass
+ * the merge threshold ("Healthcare-focused boutique investment banking" and
+ * "Healthcare boutique investment banking"). Titles that are close without
+ * clearing that bar are reported for review rather than merged, and so is any
+ * pair where both rows carry real work.
  *
  * @returns {{ merges: Array, review: Array }}
  */
 export function planPathDedupe(rows = [], counts = new Map()) {
-  const groups = new Map();
-  for (const row of rows) {
-    if (row.integrity_status === 'merged') continue;
-    const key = normalizeTitle(row.path_name);
-    if (!key) continue;
-    if (!groups.has(key)) groups.set(key, []);
-    groups.get(key).push(row);
-  }
+  const live = rows
+    .filter(r => r.integrity_status !== 'merged' && normalizeTitle(r.path_name))
+    .sort(olderFirst);
 
   const merges = [];
   const review = [];
+  // Each cluster is led by the oldest row that started it. Later rows are
+  // compared against that leader, so a chain of loose matches can never drag
+  // two different careers into one cluster.
+  const clusters = [];
 
-  for (const [key, group] of groups) {
-    if (group.length < 2) continue;
-    const ordered = [...group].sort(olderFirst);
-    const keep = ordered[0];
-    const keepLinks = totalLinks(counts, keep.id);
-
-    for (const dup of ordered.slice(1)) {
-      const dupLinks = totalLinks(counts, dup.id);
-      const differentSubmission =
-        keep.onboarding_submission_id && dup.onboarding_submission_id
-        && keep.onboarding_submission_id !== dup.onboarding_submission_id;
-
-      if (differentSubmission) {
-        review.push({
-          title: key, keep_id: keep.id, duplicate_id: dup.id,
-          reason: 'Both rows came from different onboarding submissions, so they may be intentionally separate hypotheses.',
-        });
-        continue;
-      }
-      if (dupLinks > 0 && keepLinks > 0) {
-        review.push({
-          title: key, keep_id: keep.id, duplicate_id: dup.id,
-          reason: `Both rows carry work (${keepLinks} and ${dupLinks} linked records), so which one is authoritative is a judgement call.`,
-        });
-        continue;
-      }
-      merges.push({
-        title: key,
-        keep_id: keep.id,
-        keep_name: keep.path_name,
-        duplicate_id: dup.id,
-        remap: dupLinks > 0,
-        linked_records: dupLinks,
-        reason: dupLinks > 0
-          ? 'Duplicate title; the surviving row has no work of its own, so the duplicate\u2019s records are remapped onto it.'
-          : 'Duplicate title with no records attached, produced by a repeated generation.',
-      });
+  for (const row of live) {
+    let placed = false;
+    for (const cluster of clusters) {
+      const match = compareTitles(cluster.keep.path_name, row.path_name);
+      if (match.verdict === 'different') continue;
+      const decision = decidePair(cluster.keep, row, counts, match);
+      if (decision.kind === 'merge') merges.push(decision.row);
+      else review.push(decision.row);
+      // A row sent to review stays its own hypothesis, so it can lead a cluster
+      // of its own; a merged row cannot.
+      placed = decision.kind === 'merge';
+      // First cluster it resembles is the only one it is judged against, so a
+      // row is never reported twice.
+      break;
     }
+    if (!placed) clusters.push({ keep: row });
   }
 
   return { merges, review };
