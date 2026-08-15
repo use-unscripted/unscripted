@@ -20,11 +20,16 @@ export default function JourneyFocus({ currentPath, experiment, action, effort, 
 
   const focus = focusData?.focus || (currentPath ? { name: currentPath.path_name } : null);
 
+  /* My Journey's one button always opens the Test stage. Naming the stage-
+     specific work here ("Submit Evidence") told the student what to do without
+     telling them where they were in the cycle; the stage screen carries that. */
+  const journeyAction = { label: 'Go to My Test', to: '/test', sub: action?.sub };
+
   return (
     <HypothesisFocus
       focus={focus}
       experiment={experiment}
-      action={action}
+      action={journeyAction}
       effort={effort}
       onAnchorClick={onAnchorClick}
     />

@@ -21,12 +21,28 @@ export default function StageTest() {
     );
   }
 
+  /* The button says where the test itself stands, not where the cycle stands:
+     started work continues, planned work starts, and with nothing set up yet it
+     sets one up. */
+  const exp = journey.nextExperiment;
+  const action = exp
+    ? {
+        label: exp.status === 'in_progress' ? 'Continue Test' : 'Start Test',
+        to: `/experiment?experimentId=${exp.id}`,
+        sub: exp.title,
+      }
+    : {
+        label: 'Set Up My Test',
+        to: `/experiments/new?pathName=${encodeURIComponent(journey.currentPath.path_name)}`,
+        sub: 'A 30-day test that shows you what this path actually feels like.',
+      };
+
   return (
     <StageShell stage="test">
       <HypothesisFocus
         focus={focus || { name: journey.currentPath.path_name }}
-        experiment={journey.nextExperiment}
-        action={journey.action}
+        experiment={exp}
+        action={action}
       />
       <UnknownsChecklist progress={focus?.progress} pathId={journey.currentPath.id} />
       <NextBestExperimentPanel pathId={journey.currentPath.id} />
