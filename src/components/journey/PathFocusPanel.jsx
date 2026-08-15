@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ChevronLeft, ChevronRight, ArrowLeft, ArrowRight, Loader2, AlertCircle } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ArrowLeft, ArrowRight, Loader2, AlertCircle, Check } from 'lucide-react';
 import { COMPARISON_FIELDS, RISK_LABEL } from '@/components/journey/pathComparisonFields';
 
 /**
@@ -10,7 +10,17 @@ import { COMPARISON_FIELDS, RISK_LABEL } from '@/components/journey/pathComparis
  * side-by-side comparison used to show all at once. Same information, delivered
  * one screen at a time.
  */
-export default function PathFocusPanel({ paths = [], onSelect, busyId, error, onRetry, ctaLabel = 'Test this path' }) {
+export default function PathFocusPanel({
+  paths = [],
+  onSelect,
+  busyId,
+  error,
+  onRetry,
+  ctaLabel = 'Test this path',
+  currentPathId = null,
+  title,
+  description,
+}) {
   const [openId, setOpenId] = useState(null);
   const [fieldIndex, setFieldIndex] = useState(0);
 
@@ -22,9 +32,11 @@ export default function PathFocusPanel({ paths = [], onSelect, busyId, error, on
   if (!path) {
     return (
       <section className="app-card p-6">
-        <h2 className="tp-section" style={{ color: 'var(--text-primary)' }}>Your three paths</h2>
+        <h2 className="tp-section" style={{ color: 'var(--text-primary)' }}>
+          {title || (paths.length === 3 ? 'Your three paths' : 'Your paths')}
+        </h2>
         <p className="tp-meta mt-1.5" style={{ color: 'var(--text-muted)' }}>
-          Open one to read it. None of these is a guaranteed fit. You pick the one worth testing first.
+          {description || 'Open one to read it. None of these is a guaranteed fit. You pick the one worth testing first.'}
         </p>
 
         <ul className="mt-4 space-y-2.5">
@@ -37,7 +49,17 @@ export default function PathFocusPanel({ paths = [], onSelect, busyId, error, on
                 style={{ background: 'var(--background-secondary)', border: '1px solid var(--border-light)', minHeight: '56px' }}
               >
                 <span className="min-w-0">
-                  <span className="tp-card block" style={{ color: 'var(--text-primary)' }}>{p.path_name}</span>
+                  <span className="tp-card block" style={{ color: 'var(--text-primary)' }}>
+                    {p.path_name}
+                    {p.id === currentPathId && (
+                      <span
+                        className="tp-meta ml-2 inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-bold uppercase align-middle"
+                        style={{ background: 'var(--success-50)', color: 'var(--success-700)' }}
+                      >
+                        <Check size={11} /> Testing now
+                      </span>
+                    )}
+                  </span>
                   {(p.path_category || p.risk_level) && (
                     <span className="tp-meta block" style={{ color: 'var(--ink-400)' }}>
                       {[p.path_category, RISK_LABEL[p.risk_level]].filter(Boolean).join(' · ')}
@@ -108,7 +130,13 @@ export default function PathFocusPanel({ paths = [], onSelect, busyId, error, on
         </button>
       </div>
 
-      {onSelect && (
+      {path.id === currentPathId && (
+        <p className="tp-meta mt-5 font-semibold" style={{ color: 'var(--success-700)' }}>
+          This is the path you are testing now.
+        </p>
+      )}
+
+      {onSelect && path.id !== currentPathId && (
         <>
           {error === path.id && (
             <p className="tp-meta mt-4 flex items-start gap-1.5 font-semibold text-red-600" role="alert">
