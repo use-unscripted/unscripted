@@ -75,16 +75,49 @@ async function currentUserId() {
  * beat the guard), the OLDEST is authoritative and the rest are marked
  * 'abandoned' — no user-entered content is touched.
  */
+/* Authority is decided by the same rule the dataIntegrity audit applies
+   (base44/shared/data-integrity.js — resolveCycleAuthority): a live linked
+   experiment first, then the furthest stage reached, then the most recently
+   touched record. Keeping the OLDEST row, as this did before, is a guess — the
+   oldest row is not the one the student has been working in.
+
+   When the leaders tie on all three AND point at different hypotheses nothing is
+   abandoned: the rows are flagged for review, because no record says which one
+   the student meant. */
+const stageRank = (c) => Math.max(0, CYCLE_STAGES.indexOf(c.current_stage || 'onboarding'));
+
 export async function getActiveCycle() {
-  const rows = await base44.entities.CareerCycle.filter({ status: 'active' }, 'created_date', 20).catch(() => []);
+  const rows = await base44.entities.CareerCycle.filter({ status: 'active' }, '-created_date', 20).catch(() => []);
   const list = Array.isArray(rows) ? rows : [];
   if (list.length <= 1) return list[0] || null;
 
-  const [primary, ...extras] = list;
-  await Promise.all(
-    extras.map(c => base44.entities.CareerCycle.update(c.id, { status: 'abandoned', legacy_review: true }).catch(() => null))
+  const openExpIds = new Set(
+    (await base44.entities.Experiments.list('-created_date', 200).catch(() => []))
+      .filter(e => e.deletion_status !== 'deleted')
+      .map(e => e.id)
   );
-  return primary;
+  const key = (c) => ({
+    live: c.experiment_id && openExpIds.has(c.experiment_id) ? 1 : 0,
+    stage: stageRank(c),
+    touched: String(c.updated_date || c.created_date || ''),
+  });
+  const scored = list
+    .map(c => ({ c, k: key(c) }))
+    .sort((a, b) => (b.k.live - a.k.live) || (b.k.stage - a.k.stage) || b.k.touched.localeCompare(a.k.touched));
+
+  const [top, second] = scored;
+  const ambiguous = Boolean(second
+    && second.k.live === top.k.live
+    && second.k.stage === top.k.stage
+    && second.k.touched === top.k.touched
+    && (second.c.selected_path_id || null) !== (top.c.selected_path_id || null));
+
+  await Promise.all(
+    scored.slice(1).map(({ c }) => base44.entities.CareerCycle
+      .update(c.id, ambiguous ? { legacy_review: true } : { status: 'abandoned', legacy_review: true })
+      .catch(() => null))
+  );
+  return top.c;
 }
 
 /** Returns the active cycle, creating one if the student has none. */

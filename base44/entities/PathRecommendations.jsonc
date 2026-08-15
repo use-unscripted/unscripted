@@ -24,6 +24,21 @@
         "manual"
       ]
     },
+    "integrity_status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "merged",
+        "review"
+      ],
+      "default": "active"
+    },
+    "duplicate_of_id": {
+      "type": "string"
+    },
+    "integrity_note": {
+      "type": "string"
+    },
     "is_sample": {
       "type": "boolean"
     },

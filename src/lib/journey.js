@@ -6,6 +6,8 @@
  * reads correctly for existing accounts with legacy data.
  */
 
+import { resolveCurrentPath } from '@/lib/current-path';
+
 export const STAGES = [
   /* Explore and Choose used to be two screens showing the same three paths with
      the same button, so they are one stage: read them, pick one. */
@@ -26,12 +28,12 @@ const ACTIVE_PATH_STATUSES = ['active', 'exploring', 'draft'];
  *   counts: object, action: {label: string, to?: string, anchor?: string, sub: string}
  * }}
  */
-export function resolveJourney({ paths = [], experiments = [], proof = [], reflections = [] }) {
-  const livePaths = paths.filter(p => !['archived'].includes(p.status));
-  const currentPath =
-    livePaths.find(p => p.is_primary_focus) ||
-    livePaths.find(p => p.status === 'active') ||
-    null;
+export function resolveJourney({ paths = [], experiments = [], proof = [], reflections = [], cycle = null }) {
+  const livePaths = paths.filter(p => !['archived'].includes(p.status) && p.integrity_status !== 'merged');
+  /* Source of truth: the active cycle's selected_path_id. is_primary_focus is
+     derived display state and is used only as the fallback for an account with
+     no cycle. See src/lib/current-path.js for the rule. */
+  const currentPath = resolveCurrentPath(cycle, livePaths);
 
   const scoped = currentPath
     ? experiments.filter(e => e.path_name === currentPath.path_name)

@@ -72,7 +72,25 @@ const MAX_REPORTED_PROBLEMS = 8;
  * explicit, user-confirmed retry — that writes a NEW set alongside the old one
  * and never overwrites it.
  */
-export async function generatePathTest({ force = false } = {}) {
+/**
+ * One generation at a time, per browser session.
+ *
+ * The idempotency check below only helps once a set exists. A refresh, a React
+ * double-mount, or a second click while the first call is still running all pass
+ * that check simultaneously and each write their own set — which is exactly how
+ * the duplicate hypotheses in the data were made. Concurrent callers now share
+ * the first call's promise.
+ */
+let generationInFlight = null;
+
+export function generatePathTest(opts = {}) {
+  if (opts.force) return runGeneration(opts);
+  if (generationInFlight) return generationInFlight;
+  generationInFlight = runGeneration(opts).finally(() => { generationInFlight = null; });
+  return generationInFlight;
+}
+
+async function runGeneration({ force = false } = {}) {
   let user, profile, primaryPath, comparisonPath, availableHours;
 
   try {
@@ -322,6 +340,14 @@ ${PLAIN_PROSE_RULES}`;
     // the owner, the onboarding submission it came from, and the generation
     // event itself. Without these a returning student's set is unidentifiable.
     const submission = await loadOnboardingSubmission();
+    // Last check before writing. The model call takes ~30 seconds; another tab
+    // or a retry could have completed a set in that window, and appending a
+    // second one is the duplicate this whole pass exists to prevent.
+    if (!force) {
+      const { paths: nowOwned } = await loadOwnedPaths();
+      const raced = authoritativeSet(nowOwned);
+      if (raced && raced.paths.length === 3) return raced.paths;
+    }
     const pathSetId = `ps_${user.id}_${Date.now()}`;
     const generatedAt = new Date().toISOString();
     // Exactly three, guaranteed by the validator — a set that reached here is
