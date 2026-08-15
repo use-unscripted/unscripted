@@ -1,7 +1,7 @@
 import { Outlet, NavLink, useLocation } from 'react-router-dom';
 import TabScrollMemory from '@/components/nav/TabScrollMemory';
 import { tabOf, lastLocation } from '@/lib/tab-stacks';
-import { Compass, FolderOpen, FileText, Settings, LogOut } from 'lucide-react';
+import { Compass, FolderOpen, Settings, LogOut } from 'lucide-react';
 import { MotionConfig } from 'framer-motion';
 import { base44 } from '@/api/base44Client';
 import RouteTransition from '@/components/RouteTransition';
@@ -21,13 +21,12 @@ function CompassSVG() {
 }
 
 /**
- * Four destinations, one journey. Deep screens (paths, missions, week, guides)
+ * Three destinations, one journey. Deep screens (paths, missions, week, guides)
  * are reached from inside My Journey rather than competing with it in the nav.
  */
 const NAV = [
   ['/journey',  'My Journey',        'Journey',  Compass],
   ['/evidence', 'Evidence',          'Evidence', FolderOpen],
-  ['/resume',   'Resume',            'Resume',   FileText],
   ['/settings', 'Profile & Settings', 'Profile',  Settings],
 ];
 

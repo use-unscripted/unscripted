@@ -1,5 +1,5 @@
-import { Calendar, Lock, Eye, FileText, ArrowRight, CheckCircle2 } from 'lucide-react';
-import { RESUME_STATUS, VISIBILITY_LABELS, typeLabel, fmtDate } from '@/lib/evidence-library';
+import { Calendar, Lock, Eye, ArrowRight } from 'lucide-react';
+import { VISIBILITY_LABELS, typeLabel, fmtDate } from '@/lib/evidence-library';
 
 /* The student's own reading, phrased as evidence rather than as a verdict. */
 const DIRECTION_LABELS = {
@@ -13,15 +13,13 @@ function Chip({ children, bg = 'var(--ink-100)', color = 'var(--ink-500)' }) {
   return <span className="tp-meta rounded-full px-2.5 py-1 font-bold" style={{ background: bg, color }}>{children}</span>;
 }
 
-export default function EvidenceCard({ item, onReview, onOpenCycle }) {
-  const rs = RESUME_STATUS[item.resumeStatus] || RESUME_STATUS.not_reviewed;
+export default function EvidenceCard({ item, onOpenCycle }) {
   const isPrivate = item.visibility === 'private';
 
   return (
     <div className="tp-card-body rounded-[var(--r-surface)] border border-[color:var(--ink-200)] bg-white">
       <div className="flex flex-wrap items-center gap-2">
         <Chip bg="var(--ink-100)" color="var(--brand-navy-900)">{typeLabel(item.type)}</Chip>
-        <Chip bg={rs.bg} color={rs.text}>{rs.label}</Chip>
         <Chip>{isPrivate ? <span className="inline-flex items-center gap-1"><Lock size={11} /> Private</span>
                         : <span className="inline-flex items-center gap-1"><Eye size={11} /> {VISIBILITY_LABELS[item.visibility] || item.visibility}</span>}</Chip>
         {item.date && (
@@ -69,11 +67,6 @@ export default function EvidenceCard({ item, onReview, onOpenCycle }) {
       )}
 
       <div className="mt-5 flex flex-wrap gap-2">
-        <button onClick={() => onReview(item)}
-          className="tp-meta flex items-center gap-1.5 rounded-lg px-4 py-2 font-semibold text-white"
-          style={{ background: 'var(--brand-navy-900)' }}>
-          {item.resumeStatus === 'approved' ? <><CheckCircle2 size={13} /> Review approved details</> : <><FileText size={13} /> Review for resume</>}
-        </button>
         {item.cycleId && (
           <button onClick={() => onOpenCycle(item.cycleId)}
             className="tp-meta flex items-center gap-1.5 rounded-lg border border-[color:var(--ink-200)] px-4 py-2 font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)]">

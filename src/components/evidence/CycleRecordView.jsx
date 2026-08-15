@@ -1,10 +1,10 @@
 import { ArrowLeft, CheckCircle2, Circle, Lock, Eye } from 'lucide-react';
 import CycleStageBlock from '@/components/evidence/CycleStageBlock';
-import { fmtDate, typeLabel, VISIBILITY_LABELS, RESUME_STATUS } from '@/lib/evidence-library';
+import { fmtDate, typeLabel, VISIBILITY_LABELS } from '@/lib/evidence-library';
 
 const DECISION_LABELS = { continue: 'Continue', adjust: 'Adjust', stop_and_explore: 'Stop and explore' };
 
-export default function CycleRecordView({ record, onBack, onReview }) {
+export default function CycleRecordView({ record, onBack }) {
   const { cycle, path, pathName, experiments, missions, outreach, evidence, reflections, decision } = record;
   const reflection = reflections[0];
 
@@ -68,9 +68,7 @@ export default function CycleRecordView({ record, onBack, onReview }) {
 
       <CycleStageBlock step={5} label="Evidence" count={evidence.length} empty="No evidence submitted in this cycle.">
         <div className="space-y-2">
-          {evidence.map((i) => {
-            const rs = RESUME_STATUS[i.resumeStatus] || RESUME_STATUS.not_reviewed;
-            return (
+          {evidence.map((i) => (
               <div key={i.id} className="flex flex-wrap items-center gap-2.5 rounded-[var(--r-control)] border border-[color:var(--ink-200)] p-4">
                 <div className="min-w-0 flex-1">
                   <p className="tp-card truncate text-[color:var(--surface-dark-900)]">{i.title}</p>
@@ -81,13 +79,8 @@ export default function CycleRecordView({ record, onBack, onReview }) {
                     </span>
                   </p>
                 </div>
-                <span className="tp-meta rounded-full px-2.5 py-1 font-bold" style={{ background: rs.bg, color: rs.text }}>{rs.label}</span>
-                <button onClick={() => onReview(i)} className="tp-meta rounded-lg border border-[color:var(--ink-200)] px-4 py-2 font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)]">
-                  Review for resume
-                </button>
               </div>
-            );
-          })}
+          ))}
         </div>
       </CycleStageBlock>
 

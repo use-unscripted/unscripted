@@ -16,7 +16,6 @@ const KEY = 'unscripted:tab-stacks';
 export const TAB_ROUTES = {
   '/journey': ['/journey', '/moment', '/experiment', '/experiments', '/paths', '/reflect', '/guide', '/calendar', '/roadmap', '/saved', '/goals-tracker'],
   '/evidence': ['/evidence', '/career-profile', '/recently-deleted'],
-  '/resume': ['/resume'],
   '/settings': ['/settings', '/blueprints', '/resources', '/creators'],
 };
 

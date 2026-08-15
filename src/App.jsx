@@ -65,7 +65,6 @@ const ExperimentReflection = lazy(() => import('@/pages/ExperimentReflection'));
 const ResourceHub = lazy(() => import('@/pages/ResourceHub'));
 const CreatorLibrary = lazy(() => import('@/pages/CreatorLibrary'));
 const GoalsPage = lazy(() => import('@/pages/GoalsPage'));
-const ResumeBuilder = lazy(() => import('@/pages/ResumeBuilder'));
 const RecentlyDeleted = lazy(() => import('@/pages/RecentlyDeleted'));
 const GuideDetailPage = lazy(() => import('@/pages/GuideDetailPage'));
 const AnswerNudge = lazy(() => import('@/pages/AnswerNudge'));
@@ -167,7 +166,6 @@ const AuthenticatedApp = () => {
           <Route path="/resources" element={<ResourceHub />} />
           <Route path="/creators" element={<CreatorLibrary />} />
           <Route path="/goals-tracker" element={<GoalsPage />} />
-          <Route path="/resume" element={<ResumeBuilder />} />
           <Route path="/recently-deleted" element={<RecentlyDeleted />} />
           <Route path="/guide" element={<GuideDetailPage />} />
           {/* Team-only. The page checks the role, and so does the entity's RLS. */}

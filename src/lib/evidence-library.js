@@ -4,20 +4,10 @@
  * Every record here is already owned by the signed-in student (all of these
  * entities are owner-scoped), so this module never widens visibility: it groups,
  * labels and filters what the student already has.
- *
- * The resume draft below is EXTRACTION, never invention. Every field is copied
- * from something the student typed or stored themselves — no employers, titles,
- * metrics, dates or skills are generated.
  */
 import { entityTime, localDayStart, localDayStartPlus } from '@/lib/dates';
 
 const live = (r) => r && r.deletion_status !== 'deleted' && r.deletion_status !== 'permanently_deleted';
-
-export const RESUME_STATUS = {
-  not_reviewed: { label: 'Not reviewed', bg: 'var(--ink-100)', text: 'var(--ink-500)' },
-  approved:     { label: 'Approved for resume', bg: 'var(--success-50)', text: 'var(--success-700)' },
-  excluded:     { label: 'Kept off resume', bg: 'var(--warning-50)', text: 'var(--warning-700)' },
-};
 
 export const VISIBILITY_LABELS = {
   private: 'Private',
@@ -77,7 +67,6 @@ export function buildLibrary({ cycles = [], paths = [], experiments = [], missio
       interpretationDirection: p.interpretation_direction || '',
       interpretedTestQuestion: p.interpreted_test_question || experiment?.test_question || '',
       visibility: p.network_visibility || p.visibility || 'private',
-      resumeStatus: p.resume_status || 'not_reviewed',
     };
   });
 
@@ -104,7 +93,7 @@ export function buildLibrary({ cycles = [], paths = [], experiments = [], missio
 
 export const DEFAULT_FILTERS = {
   q: '', path: 'all', cycle: 'all', experiment: 'all', mission: 'all',
-  type: 'all', skill: 'all', visibility: 'all', resume: 'all', from: '', to: '',
+  type: 'all', skill: 'all', visibility: 'all', from: '', to: '',
 };
 
 export function filterEvidence(items, f) {
@@ -117,7 +106,6 @@ export function filterEvidence(items, f) {
     if (f.type !== 'all' && i.type !== f.type) return false;
     if (f.skill !== 'all' && !i.skills.includes(f.skill)) return false;
     if (f.visibility !== 'all' && i.visibility !== f.visibility) return false;
-    if (f.resume !== 'all' && i.resumeStatus !== f.resume) return false;
     // From/To come from <input type="date">, so they are the student's own
     // local calendar days: the range runs local midnight to local end-of-day.
     // `i.date` is an entity timestamp, which is UTC with no `Z` on it — parsing
@@ -147,23 +135,5 @@ export function filterOptions(items) {
     types: uniq(items.map((i) => i.type)),
     skills: uniq(items.flatMap((i) => i.skills)),
     visibilities: uniq(items.map((i) => i.visibility)),
-  };
-}
-
-/**
- * Pre-fill the review form from stored values only. Anything the student has
- * already approved wins; otherwise we copy their own words across.
- */
-export function extractResumeDraft(item) {
-  const p = item.proof;
-  return {
-    approved_title: p.approved_title || p.title || '',
-    approved_deliverable: p.approved_deliverable || item.experimentDeliverable || '',
-    approved_bullet: p.approved_bullet || p.description || p.completion_note || p.outcome || '',
-    approved_skills: (p.approved_skills?.length ? p.approved_skills : item.skills) || [],
-    approved_tools: (p.approved_tools?.length ? p.approved_tools : item.experimentTools) || [],
-    // Only an external link the student pasted themselves can ever be public.
-    // Uploaded files stay private and are never turned into a resume link.
-    approved_link: p.approved_link || p.external_url || '',
   };
 }

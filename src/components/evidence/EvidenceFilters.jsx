@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { SlidersHorizontal, X, Search, ChevronDown } from 'lucide-react';
-import { DEFAULT_FILTERS, typeLabel, VISIBILITY_LABELS, RESUME_STATUS } from '@/lib/evidence-library';
+import { DEFAULT_FILTERS, typeLabel, VISIBILITY_LABELS } from '@/lib/evidence-library';
 import FieldSelect from '@/components/ui/FieldSelect';
 
 // w-full inside the grid below: on a phone each control takes its own cell instead
@@ -29,7 +29,6 @@ export default function EvidenceFilters({ filters, setFilters, options, shown, t
     options.types.length > 1 && ['type', 'All types', options.types.map((t) => [t, typeLabel(t)])],
     options.skills.length > 1 && ['skill', 'All skills', options.skills.map((s) => [s, s])],
     options.visibilities.length > 1 && ['visibility', 'All visibility', options.visibilities.map((v) => [v, VISIBILITY_LABELS[v] || v])],
-    total > 1 && ['resume', 'All resume statuses', Object.entries(RESUME_STATUS).map(([k, v]) => [k, v.label])],
   ].filter(Boolean);
 
   return (

@@ -13,7 +13,6 @@ import { Sk, SkCards } from '@/components/PageSkeleton';
 import EvidenceFilters from '@/components/evidence/EvidenceFilters';
 import EvidenceCard from '@/components/evidence/EvidenceCard';
 import CycleRecordView from '@/components/evidence/CycleRecordView';
-import ResumeApprovalModal from '@/components/evidence/ResumeApprovalModal';
 import { buildLibrary, filterEvidence, filterOptions, DEFAULT_FILTERS, fmtDate } from '@/lib/evidence-library';
 import PullToRefresh from '@/components/PullToRefresh';
 
@@ -22,7 +21,6 @@ export default function EvidenceLibrary() {
   const [filters, setFilters] = useState(DEFAULT_FILTERS);
   const [view, setView] = useState('all');
   const [openCycleId, setOpenCycleId] = useState(null);
-  const [reviewItem, setReviewItem] = useState(null);
 
   const load = async () => {
     const [cycles, paths, experiments, missions, proof, outreach, reflections] = await Promise.all([
@@ -44,24 +42,8 @@ export default function EvidenceLibrary() {
   const shown = useMemo(() => filterEvidence(evidence, filters), [evidence, filters]);
   const openRecord = cycleRecords.find((r) => r.cycle.id === openCycleId) || null;
 
-  // The modal closes and the row updates on the spot; the refetch that confirms
-  // it runs behind the screen rather than in front of it.
-  const reviewedSaved = (updated) => {
-    const id = reviewItem?.sourceId || reviewItem?.id;
-    setReviewItem(null);
-    if (id) {
-      setRaw(prev => prev && ({
-        ...prev,
-        proof: prev.proof.map(p => (p.id === id ? { ...p, ...(updated || {}), resume_status: updated?.resume_status || 'approved' } : p)),
-      }));
-    }
-    load();
-  };
-
   return (
     <main className="app-page">
-      {reviewItem && <ResumeApprovalModal item={reviewItem} onClose={() => setReviewItem(null)} onSaved={reviewedSaved} />}
-
       <PageHeader
         title="What you have actually done."
         description="Every piece of proof from your career experiments, in one place."
@@ -80,7 +62,7 @@ export default function EvidenceLibrary() {
           <SkCards count={4} h={132} r={16} />
         </div>
       ) : openRecord ? (
-        <CycleRecordView record={openRecord} onBack={() => setOpenCycleId(null)} onReview={setReviewItem} />
+        <CycleRecordView record={openRecord} onBack={() => setOpenCycleId(null)} />
       ) : (
         <>
           <div className="mb-5 flex gap-2">
@@ -126,7 +108,7 @@ export default function EvidenceLibrary() {
               ) : (
                 <div className="space-y-4">
                   {shown.map((i) => (
-                    <EvidenceCard key={i.id} item={i} onReview={setReviewItem} onOpenCycle={setOpenCycleId} />
+                    <EvidenceCard key={i.id} item={i} onOpenCycle={setOpenCycleId} />
                   ))}
                 </div>
               )}
