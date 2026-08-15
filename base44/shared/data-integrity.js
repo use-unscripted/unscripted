@@ -171,6 +171,46 @@ export function planPathDedupe(rows = [], counts = new Map()) {
   return { merges, review };
 }
 
+/**
+ * Look-alike pairs among ONE student's own paths, for the student to resolve in
+ * the app. Unlike planPathDedupe this decides nothing: it reports every pair
+ * whose titles are not clearly different, in both a "review" and a "same" case,
+ * with how much work hangs off each side so the student can see what would
+ * move. The student picks which row survives.
+ */
+export function findLookalikePairs(rows = [], counts = new Map()) {
+  const live = rows
+    .filter(r => r.integrity_status !== 'merged' && normalizeTitle(r.path_name))
+    .sort(olderFirst);
+
+  const pairs = [];
+  const seen = new Set();
+  for (let i = 0; i < live.length; i += 1) {
+    for (let j = i + 1; j < live.length; j += 1) {
+      const a = live[i];
+      const b = live[j];
+      const match = compareTitles(a.path_name, b.path_name);
+      if (match.verdict === 'different') continue;
+      const key = [a.id, b.id].sort().join(':');
+      if (seen.has(key)) continue;
+      seen.add(key);
+      pairs.push({
+        similarity: Math.round(match.similarity * 100) / 100,
+        certain: match.verdict === 'same' || match.verdict === 'duplicate',
+        options: [a, b].map(row => ({
+          id: row.id,
+          path_name: row.path_name,
+          created_date: row.created_date || null,
+          is_primary_focus: Boolean(row.is_primary_focus),
+          status: row.status || null,
+          linked_records: totalLinks(counts, row.id),
+        })),
+      });
+    }
+  }
+  return pairs;
+}
+
 // ── One authoritative active cycle ──────────────────────────────────────────
 
 const stageRank = (c) => Math.max(0, CYCLE_STAGES.indexOf(c.current_stage || 'onboarding'));

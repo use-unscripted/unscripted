@@ -18,6 +18,7 @@ import PathComparisonWorkspace from '@/components/journey/PathComparisonWorkspac
 import PathSelectedConfirm from '@/components/journey/PathSelectedConfirm';
 import JourneyEmptyState from '@/components/journey/JourneyEmptyState';
 import AllPathsPanel from '@/components/journey/AllPathsPanel';
+import MergeLookalikePaths from '@/components/journey/MergeLookalikePaths';
 import UncertaintyUpdateCard from '@/components/journey/UncertaintyUpdateCard';
 import ContinuationGate from '@/components/journey/ContinuationGate';
 import { Sk } from '@/components/PageSkeleton';
@@ -265,6 +266,14 @@ export default function MyJourney() {
       <Reveal y={20}>
         <JourneyStages stage={stage} detail={stageDetail} />
       </Reveal>
+
+      {/* Two paths describing one career: fold one into the other, keeping the
+          work. Renders nothing when there is nothing to merge. */}
+      <MergeLookalikePaths onMerged={async () => {
+        await queryClientInstance.invalidateQueries({ queryKey: ['cycle-rail'] });
+        await queryClientInstance.invalidateQueries({ queryKey: ['journey-focus'] });
+        await load();
+      }} />
 
       {/* All the paths this student could test, and a way to switch. */}
       <AllPathsPanel
