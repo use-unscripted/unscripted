@@ -7,22 +7,18 @@ import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { getActiveCycle } from '@/lib/career-cycle';
-import { CheckCircle2, Plus, Wand2 } from 'lucide-react';
+import { Wand2 } from 'lucide-react';
 import ExperimentOverview from '@/components/experiment/ExperimentOverview';
-import MissionItem from '@/components/experiment/MissionItem';
-import CompleteMissionModal from '@/components/experiment/CompleteMissionModal';
 import ExperimentNotesPanel from '@/components/experiment/ExperimentNotesPanel';
 import ExperimentStatusPanel from '@/components/experiment/ExperimentStatusPanel';
 import MissionGuideHistory from '@/components/experiments/MissionGuideHistory';
 import MissionGuideGenerator from '@/components/experiments/MissionGuideGenerator';
-import AddMissionModal from '@/components/experiments/AddMissionModal';
 import JourneyEmptyState from '@/components/journey/JourneyEmptyState';
 import MeasurementGate from '@/components/measurement/MeasurementGate';
 import WhatYouLearned from '@/components/measurement/WhatYouLearned';
 import ReviewedWork from '@/components/measurement/ReviewedWork';
 import { loadMeasurements } from '@/lib/experiment-measurement';
 import { behavioralSnapshot } from '@/lib/expectation-reality';
-import { useMissions } from '@/hooks/useMissions';
 import { Sk } from '@/components/PageSkeleton';
 
 const OPEN = ['draft', 'planned', 'in_progress'];
@@ -31,16 +27,11 @@ const alive = (rows) => (Array.isArray(rows) ? rows : []).filter(r => r.deletion
 export default function ActiveExperiment() {
   const navigate = useNavigate();
   const [state, setState] = useState(null);
-  const [completing, setCompleting] = useState(null);
-  const [justDone, setJustDone] = useState(null);
   const [showGuideGen, setShowGuideGen] = useState(false);
-  const [showAddMission, setShowAddMission] = useState(false);
   // The measurement half of the loop. Held here because this workspace is where
   // an experiment is actually started and finished.
   const [measurement, setMeasurement] = useState(null);
   const [learned, setLearned] = useState(null);
-  // Missions come from the query cache so completing one can be optimistic.
-  const { data: cachedMissions } = useMissions(state?.experiment?.id);
 
   const load = useCallback(async () => {
     const cycle = await getActiveCycle().catch(() => null);
@@ -57,8 +48,7 @@ export default function ActiveExperiment() {
 
     if (!experiment) return setState({ cycle, experiment: null });
 
-    const [missions, guides, proofs, reflections, contacts, paths] = await Promise.all([
-      base44.entities.Missions.filter({ experiment_id: experiment.id }, 'created_date', 100).catch(() => []),
+    const [guides, proofs, reflections, contacts, paths] = await Promise.all([
       base44.entities.MissionGuides.filter({ experiment_id: experiment.id }, '-version_number', 50).catch(() => []),
       base44.entities.ProofOfWork.filter({ experiment_id: experiment.id }, '-created_date', 100).catch(() => []),
       base44.entities.WeeklyReflections.filter({ experiment_id: experiment.id }, '-created_date', 50).catch(() => []),
@@ -74,7 +64,6 @@ export default function ActiveExperiment() {
 
     setState({
       cycle, experiment, path,
-      missions: alive(missions),
       guides: alive(guides),
       proofs: alive(proofs),
       reflections: alive(reflections),
@@ -83,21 +72,6 @@ export default function ActiveExperiment() {
   }, []);
 
   useEffect(() => { load(); }, [load]);
-
-  // The modal closes and the mission reads as done immediately; the refetch that
-  // confirms it and pulls in the new proof runs behind the screen.
-  const onCompleted = (result) => {
-    const doneId = completing?.id;
-    setCompleting(null);
-    setJustDone(result);
-    if (doneId) {
-      setState(prev => prev && ({
-        ...prev,
-        missions: prev.missions.map(m => (m.id === doneId ? { ...m, status: 'completed' } : m)),
-      }));
-    }
-    load();
-  };
 
   if (!state) {
     // Matches the loaded page's padding and its space-y-5 card stack. The old
@@ -123,10 +97,6 @@ export default function ActiveExperiment() {
   }
 
   const { experiment, path, guides, proofs, reflections, contacts, cycle } = state;
-  // The cache is the live copy once it has loaded; the fetch that came with the
-  // page is what shows until then.
-  const missions = cachedMissions || state.missions || [];
-  const nextMission = missions.find(m => !['completed', 'skipped'].includes(m.status));
   // The one to open. A guide saved as a draft is still the only guide a student
   // has, so falling back to the newest keeps the card from disappearing.
   const openGuide = guides.find(g => g.is_active) || guides[0];
@@ -143,15 +113,6 @@ export default function ActiveExperiment() {
 
   return (
     <main className="app-page">
-      {completing && (
-        <CompleteMissionModal
-          mission={completing}
-          experiment={experiment}
-          path={path}
-          onClose={() => setCompleting(null)}
-          onCompleted={onCompleted}
-        />
-      )}
       {showGuideGen && (
         <MissionGuideGenerator
           experiment={experiment}
@@ -171,43 +132,9 @@ export default function ActiveExperiment() {
           onClose={() => setShowGuideGen(false)}
         />
       )}
-      {showAddMission && (
-        <AddMissionModal
-          experiment={experiment}
-          onClose={() => setShowAddMission(false)}
-          onSaved={async () => { setShowAddMission(false); await load(); }}
-        />
-      )}
 
       <div className="space-y-5">
-        {justDone && (
-          <section className="rounded-[var(--r-surface)] p-5" role="status" style={{ background: 'var(--success-50)', border: '1px solid #BBF7D0' }}>
-            <p className="tp-body flex items-center gap-2 font-bold" style={{ color: '#14532D' }}>
-              <CheckCircle2 size={16} /> Evidence attached to this mission{justDone.reused ? ' (already recorded)' : ''}.
-            </p>
-            <p className="tp-body mt-1" style={{ color: '#166534' }}>
-              {justDone.experimentCompleted
-                ? 'Every mission is done. Next: reflect on what this told you.'
-                : nextMission
-                  ? `Next: ${nextMission.title}`
-                  : 'Next: reflect on what this experiment told you.'}
-            </p>
-            <div className="mt-3 flex flex-wrap gap-3">
-              {(justDone.experimentCompleted || !nextMission) && (
-                <Link to="/evidence?tab=reflect"
-                  className="ui-press tp-body inline-flex items-center rounded-[var(--r-control)] px-5 font-bold text-white"
-                  style={{ background: 'var(--brand-navy-900)', minHeight: '48px' }}>
-                  Reflect on this experiment
-                </Link>
-              )}
-              <button onClick={() => setJustDone(null)} className="tp-body font-semibold" style={{ color: '#166534' }}>
-                Stay here
-              </button>
-            </div>
-          </section>
-        )}
-
-        <ExperimentOverview experiment={experiment} path={path} missions={missions} />
+        <ExperimentOverview experiment={experiment} path={path} />
 
         {/* Before the work: what the student expects. After every mission is
             done: what actually happened. Both are what the reflection, the
@@ -321,43 +248,6 @@ export default function ActiveExperiment() {
             )}
           </section>
         )}
-
-        <section>
-          <div className="mb-3 flex items-center justify-between gap-2">
-            <h3 className="tp-section" style={{ color: 'var(--text-primary)' }}>
-              Missions {missions.length ? `(${missions.length})` : ''}
-            </h3>
-            <button onClick={() => setShowAddMission(true)}
-              className="touch-reach tp-meta inline-flex items-center gap-1.5 font-bold" style={{ color: 'var(--brand-navy-700)' }}>
-              <Plus size={13} /> Add mission
-            </button>
-          </div>
-          {missions.length === 0 ? (
-            <div className="rounded-[var(--r-control)] bg-white p-6 text-center" style={{ border: '1px dashed var(--border-light)' }}>
-              <p className="tp-body font-semibold" style={{ color: 'var(--text-primary)' }}>No missions yet</p>
-              <p className="tp-meta mt-1" style={{ color: 'var(--text-muted)' }}>
-                {guides.length
-                  ? 'Your experiment has the steps. Add a mission here for anything you want to track separately.'
-                  : 'Start by building your experiment above, or add the first mission yourself.'}
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {missions.map(m => (
-                <MissionItem
-                  key={m.id}
-                  mission={m}
-                  experiment={experiment}
-                  path={path}
-                  contacts={contacts.filter(c => c.mission_id === m.id)}
-                  proofs={proofs.filter(p => p.mission_id === m.id)}
-                  onChanged={load}
-                  onComplete={setCompleting}
-                />
-              ))}
-            </div>
-          )}
-        </section>
 
         <ExperimentNotesPanel experiment={experiment} />
 

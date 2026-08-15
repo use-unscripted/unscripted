@@ -35,7 +35,7 @@ export default function ExperimentStatusPanel({ proofs, reflections, cycle }) {
       <Row
         Icon={FileText}
         label="Evidence"
-        value={proofs.length ? `${proofs.length} item${proofs.length === 1 ? '' : 's'} attached to this experiment` : 'Nothing attached yet. Complete a mission to add evidence.'}
+        value={proofs.length ? `${proofs.length} item${proofs.length === 1 ? '' : 's'} attached to this experiment` : 'Nothing attached yet. Add evidence as you work through this experiment.'}
         to="/evidence?tab=proof"
         cta="Full history"
       />

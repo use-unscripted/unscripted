@@ -1,20 +1,18 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
-import { Plus, ChevronDown, ChevronUp, Clock, BookOpen, Target, FileText, Trash2, Users, Wand2, PauseCircle, Play, Search } from 'lucide-react';
+import { Plus, ChevronDown, ChevronUp, Clock, BookOpen, FileText, Users, Wand2, PauseCircle, Play, Search } from 'lucide-react';
 import MissionGuideGenerator from '@/components/experiments/MissionGuideGenerator';
 import MissionGuideHistory from '@/components/experiments/MissionGuideHistory';
 import OutreachPlanModal from '@/components/outreach/OutreachPlanModal';
 import { toText, STEP_TEXT_KEYS } from '@/lib/ai-validation';
 import PageHeader from '@/components/PageHeader';
 import { Sk, SkPills, SkCards } from '@/components/PageSkeleton';
-import AddMissionModal from '@/components/experiments/AddMissionModal';
 import AddProofModal, { ProofSuccessToast } from '@/components/experiments/AddProofModal';
 import PathSwitcher from '@/components/PathSwitcher';
 import FocusOverlay from '@/components/FocusOverlay';
 import DepthBadge from '@/components/experiments/DepthBadge';
 import { depthOf, DEPTHS } from '@/lib/experiment-depth';
-import SoftDeleteConfirm, { softDeletePayload } from '@/components/SoftDeleteConfirm';
 import ExperimentActionsMenu from '@/components/experiments/ExperimentActionsMenu';
 import ResumeExperimentModal from '@/components/experiments/ResumeExperimentModal';
 import ExperimentTestPanel from '@/components/experiments/ExperimentTestPanel';
@@ -110,96 +108,8 @@ function PathDropdown({ paths, value, onChange, error }) {
   );
 }
 
-// ── Mission row inside expanded card ──────────────────────────────────────────
-function MissionRow({ mission, experiment, onProofAdded, onDeleted }) {
-  const [showProof, setShowProof] = useState(false);
-  const [confirmDelete, setConfirmDelete] = useState(false);
-  const s = STATUS_STYLES[mission.status] || STATUS_STYLES.planned;
-
-  const handleSoftDelete = async () => {
-    const user = await base44.auth.me();
-    await base44.entities.Missions.update(mission.id, softDeletePayload(user.id));
-    setConfirmDelete(false);
-    onDeleted(mission.id);
-  };
-
-  return (
-    <div className="flex items-center justify-between gap-3 rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] px-4 py-3">
-      {confirmDelete && (
-        <SoftDeleteConfirm
-          itemName={mission.title}
-          onConfirm={handleSoftDelete}
-          onCancel={() => setConfirmDelete(false)}
-        />
-      )}
-      {showProof && (
-        <AddProofModal
-          mission={mission}
-          experiment={experiment}
-          onClose={() => setShowProof(false)}
-          onSaved={(proof) => { setShowProof(false); onProofAdded(proof, mission.title); }}
-        />
-      )}
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="rounded-full px-2 py-0.5 tp-meta font-bold" style={{ background: s.bg, color: s.text }}>{s.label}</span>
-          <span className="tp-body font-semibold text-[color:var(--surface-dark-900)] truncate">{mission.title}</span>
-        </div>
-        {mission.objective && <p className="mt-0.5 tp-meta text-[color:var(--ink-500)] line-clamp-1">{mission.objective}</p>}
-      </div>
-      <div className="flex gap-2 shrink-0">
-        <button onClick={() => setShowProof(true)} className="flex items-center gap-1.5 rounded-lg border border-[color:var(--ink-200)] px-3 py-1.5 tp-meta font-semibold text-[color:var(--ink-700)] hover:bg-white transition">
-          <FileText size={12} /> Add Proof
-        </button>
-        <button onClick={() => setConfirmDelete(true)} className="flex items-center gap-1.5 rounded-lg border border-[color:var(--ink-200)] px-2 py-1.5 tp-meta text-red-300 hover:text-red-500 hover:border-red-200 transition" title="Delete mission">
-          <Trash2 size={12} />
-        </button>
-      </div>
-    </div>
-  );
-}
-
-// ── Missions section inside expanded card ─────────────────────────────────────
-function MissionsSection({ experiment, missions, loadingMissions, onMissionAdded, onProofAdded, onMissionDeleted }) {
-  const [showAdd, setShowAdd] = useState(false);
-  const hasMissions = missions.length > 0;
-
-  return (
-    <div className="border-t border-[color:var(--ink-200)] pt-4">
-      {showAdd && (
-        <AddMissionModal
-          experiment={experiment}
-          onClose={() => setShowAdd(false)}
-          onSaved={(m) => { setShowAdd(false); onMissionAdded(m); }}
-        />
-      )}
-      <div className="flex items-center justify-between mb-3">
-        <p className="tp-eyebrow text-[color:var(--ink-500)]">
-          Missions {hasMissions ? `(${missions.length})` : ''}
-        </p>
-        <button onClick={() => setShowAdd(true)}
-          className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 tp-meta font-semibold text-white transition hover:-translate-y-px"
-          style={{ background: 'var(--brand-navy-900)', boxShadow: '0 4px 12px rgba(31,58,95,0.25)' }}>
-          <Plus size={12} /> {hasMissions ? 'Add Another Mission' : 'Add Mission'}
-        </button>
-      </div>
-      {loadingMissions ? (
-        <SkCards count={2} h={54} gap={8} r={12} />
-      ) : hasMissions ? (
-        <div className="space-y-2">
-          {missions.map(m => (
-            <MissionRow key={m.id} mission={m} experiment={experiment} onProofAdded={onProofAdded} onDeleted={onMissionDeleted} />
-          ))}
-        </div>
-      ) : (
-        <p className="tp-meta text-[color:var(--ink-400)] italic">No missions yet. Add one to track progress and submit proof.</p>
-      )}
-    </div>
-  );
-}
-
 // ── Experiment card ───────────────────────────────────────────────────────────
-function ExperimentCard({ exp, measurement, onStatusChange, onExpand, expanded, missions, loadingMissions, onMissionAdded, onProofAdded, onMissionDeleted, onDelete, onEdited, onFindPeople, paths, guides, onGenerateGuide, onGuideSetActive, onGuideDeleted, onGuideDuplicated, onGuideRenamed, onPaused, onResumed }) {
+function ExperimentCard({ exp, measurement, onStatusChange, onExpand, expanded, onProofAdded, onDelete, onEdited, onFindPeople, paths, guides, onGenerateGuide, onGuideSetActive, onGuideDeleted, onGuideDuplicated, onGuideRenamed, onPaused, onResumed }) {
   const s = STATUS_STYLES[exp.status] || STATUS_STYLES.planned;
   /* Evidence for the experiment itself, without having to open it or invent a
      mission first. The flow is the same one the mission row opens, handed this
@@ -253,9 +163,6 @@ function ExperimentCard({ exp, measurement, onStatusChange, onExpand, expanded, 
           {exp.estimated_hours && <span className="flex items-center gap-1"><Clock size={12} /> ~{exp.estimated_hours}h</span>}
           {exp.deadline && <span>Due {new Date(exp.deadline).toLocaleDateString()}</span>}
           {exp.deliverable && <span className="flex items-center gap-1"><BookOpen size={12} /> {exp.deliverable}</span>}
-          {!expanded && missions.length > 0 && (
-            <span className="flex items-center gap-1"><Target size={12} /> {missions.length} mission{missions.length > 1 ? 's' : ''}</span>
-          )}
           {!expanded && guides && guides.length > 0 && (
             <span className="flex items-center gap-1"><Wand2 size={12} /> {guides.length} experiment plan{guides.length > 1 ? 's' : ''}</span>
           )}
@@ -372,16 +279,6 @@ function ExperimentCard({ exp, measurement, onStatusChange, onExpand, expanded, 
               <p className="tp-meta text-[color:var(--ink-400)] italic">Nothing generated yet. Generate one to get step-by-step instructions.</p>
             )}
           </div>
-
-          {/* Missions */}
-          <MissionsSection
-            experiment={exp}
-            missions={missions}
-            loadingMissions={loadingMissions}
-            onMissionAdded={onMissionAdded}
-            onProofAdded={onProofAdded}
-            onMissionDeleted={onMissionDeleted}
-          />
         </div>
       )}
     </div>
@@ -389,7 +286,7 @@ function ExperimentCard({ exp, measurement, onStatusChange, onExpand, expanded, 
 }
 
 // ── Paused experiments section ────────────────────────────────────────────────
-function PausedSection({ experiments, missions, guides, onResumed, onDelete, onEdited }) {
+function PausedSection({ experiments, guides, onResumed, onDelete, onEdited }) {
   const [expandedId, setExpandedId] = useState(null);
   const [open, setOpen] = useState(true);
 
@@ -411,9 +308,6 @@ function PausedSection({ experiments, missions, guides, onResumed, onDelete, onE
     );
   }
 
-  const completedCount = (expId) => (missions[expId] || []).filter(m => m.status === 'completed').length;
-  const totalCount = (expId) => (missions[expId] || []).length;
-
   return (
     <div className="mb-8">
       <button onClick={() => setOpen(v => !v)} className="touch-reach flex items-center gap-2 mb-3">
@@ -426,7 +320,6 @@ function PausedSection({ experiments, missions, guides, onResumed, onDelete, onE
         <div className="space-y-3">
           {experiments.map(exp => {
             const isExpanded = expandedId === exp.id;
-            const expMissions = missions[exp.id] || [];
             const expGuides = guides[exp.id] || [];
             const activeGuide = expGuides.find(g => g.is_active);
             const s = STATUS_STYLES.paused;
@@ -445,7 +338,6 @@ function PausedSection({ experiments, missions, guides, onResumed, onDelete, onE
                       <p className="tp-prose mt-2 text-[color:var(--ink-700)] line-clamp-2">{exp.objective}</p>
                       <div className="mt-2 flex flex-wrap items-center gap-3 tp-meta text-[color:var(--ink-400)]">
                         {exp.paused_at && <span className="flex items-center gap-1"><PauseCircle size={11} /> Paused {fmtDate(exp.paused_at)}</span>}
-                        {totalCount(exp.id) > 0 && <span><Target size={11} className="inline mr-0.5" />{completedCount(exp.id)}/{totalCount(exp.id)} missions done</span>}
                         {activeGuide && <span className="flex items-center gap-1"><Wand2 size={11} /> Experiment v{activeGuide.version_number}</span>}
                       </div>
                       {exp.pause_reason && <p className="mt-1 tp-meta text-[color:var(--ink-500)] italic">"{exp.pause_reason}"</p>}
@@ -481,22 +373,6 @@ function PausedSection({ experiments, missions, guides, onResumed, onDelete, onE
                   <div className="border-t border-amber-100 p-5 space-y-3">
                     {exp.proof_required && (
                       <div><p className="tp-eyebrow text-[color:var(--ink-500)] mb-1">Proof required</p><p className="tp-body text-[color:var(--ink-700)]">{exp.proof_required}</p></div>
-                    )}
-                    {expMissions.length > 0 && (
-                      <div>
-                        <p className="tp-eyebrow text-[color:var(--ink-500)] mb-2">Missions ({expMissions.length})</p>
-                        <div className="space-y-1.5">
-                          {expMissions.map(m => {
-                            const ms = STATUS_STYLES[m.status] || STATUS_STYLES.planned;
-                            return (
-                              <div key={m.id} className="flex items-center gap-2 rounded-lg border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] px-3 py-2">
-                                <span className="rounded-full px-2 py-0.5 tp-meta font-bold" style={{ background: ms.bg, color: ms.text }}>{ms.label}</span>
-                                <span className="tp-body text-[color:var(--ink-700)]">{m.title}</span>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
                     )}
                     {expGuides.length > 0 && (
                       <div>
@@ -631,8 +507,6 @@ export default function ExperimentsPage() {
   const [filter, setFilter] = useState('active'); // 'active' | 'completed' | 'skipped' | 'all'
   // Quick Test / Deep Dive, derived from each record rather than stored twice.
   const [depthFilter, setDepthFilter] = useState('all');
-  const [missionsMap, setMissionsMap] = useState({});
-  const [loadingMissionsFor, setLoadingMissionsFor] = useState(null);
   const [guidesMap, setGuidesMap] = useState({});
   const [showGuideGeneratorFor, setShowGuideGeneratorFor] = useState(null);
   const [successToast, setSuccessToast] = useState(null);
@@ -672,15 +546,6 @@ export default function ExperimentsPage() {
 
   useEffect(() => { load(); }, []);
 
-  const loadMissionsForExp = useCallback(async (expId) => {
-    if (missionsMap[expId] !== undefined) return;
-    setLoadingMissionsFor(expId);
-    const ms = await base44.entities.Missions.filter({ experiment_id: expId }, '-created_date', 50);
-    const active = (ms || []).filter(m => !m.deletion_status || m.deletion_status === 'active');
-    setMissionsMap(prev => ({ ...prev, [expId]: active }));
-    setLoadingMissionsFor(null);
-  }, [missionsMap]);
-
   const loadGuidesForExp = useCallback(async (expId) => {
     const gs = await base44.entities.MissionGuides.filter({ experiment_id: expId }, '-version_number', 50).catch(() => []);
     const active = (gs || []).filter(g => !g.deletion_status || g.deletion_status === 'active');
@@ -690,7 +555,7 @@ export default function ExperimentsPage() {
   const handleExpand = (expId) => {
     const next = expandedId === expId ? null : expId;
     setExpandedId(next);
-    if (next) { loadMissionsForExp(next); loadGuidesForExp(next); }
+    if (next) loadGuidesForExp(next);
   };
 
   // Deep link: /experiments?experimentId=… opens that experiment directly
@@ -704,11 +569,10 @@ export default function ExperimentsPage() {
     handleExpand(target);
   }, [experiments]);
 
-  // Load missions/guides for all paused experiments upfront so the paused section has data
+  // Load guides for all paused experiments upfront so the paused section has data
   const pausedExps = experiments.filter(e => e.status === 'paused');
   useEffect(() => {
     pausedExps.forEach(e => {
-      if (missionsMap[e.id] === undefined) loadMissionsForExp(e.id);
       if (guidesMap[e.id] === undefined) loadGuidesForExp(e.id);
     });
   }, [experiments]);
@@ -757,14 +621,6 @@ export default function ExperimentsPage() {
     setLearnedTarget(row);
   };
 
-  const handleMissionAdded = (expId, mission) => {
-    setMissionsMap(prev => ({ ...prev, [expId]: [...(prev[expId] || []), mission] }));
-  };
-
-  const handleMissionDeleted = (expId, missionId) => {
-    setMissionsMap(prev => ({ ...prev, [expId]: (prev[expId] || []).filter(m => m.id !== missionId) }));
-  };
-
   const handleExperimentDeleted = (expId) => {
     setExperiments(prev => prev.filter(e => e.id !== expId));
     if (expandedId === expId) setExpandedId(null);
@@ -777,8 +633,7 @@ export default function ExperimentsPage() {
   const handlePaused = (expId, updatedExp) => {
     setExperiments(prev => prev.map(e => e.id === expId ? { ...e, ...updatedExp } : e));
     if (expandedId === expId) setExpandedId(null);
-    // Ensure missions/guides are loaded for the paused section
-    loadMissionsForExp(expId);
+    // Ensure guides are loaded for the paused section
     loadGuidesForExp(expId);
   };
 
@@ -858,11 +713,7 @@ export default function ExperimentsPage() {
     expanded: expandedId === exp.id,
     onExpand: () => handleExpand(exp.id),
     onStatusChange: updateStatus,
-    missions: missionsMap[exp.id] || [],
-    loadingMissions: loadingMissionsFor === exp.id,
-    onMissionAdded: (m) => handleMissionAdded(exp.id, m),
     onProofAdded: handleProofAdded,
-    onMissionDeleted: (missionId) => handleMissionDeleted(exp.id, missionId),
     onDelete: handleExperimentDeleted,
     onEdited: handleExperimentEdited,
     paths,
@@ -944,7 +795,7 @@ export default function ExperimentsPage() {
       {resumeTarget && (
         <ResumeExperimentModal
           exp={resumeTarget}
-          missions={missionsMap[resumeTarget.id] || []}
+          missions={[]}
           onClose={() => setResumeTarget(null)}
           onResumed={handleResumed}
         />
@@ -1006,7 +857,6 @@ export default function ExperimentsPage() {
           {/* Paused section: always visible */}
           <PausedSection
             experiments={pausedFiltered}
-            missions={missionsMap}
             guides={guidesMap}
             onResumed={(e) => setResumeTarget(e)}
             onDelete={handleExperimentDeleted}

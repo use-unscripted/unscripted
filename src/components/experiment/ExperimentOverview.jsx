@@ -2,15 +2,13 @@
  * The experiment at a glance, plus its own progress. This is the header of the
  * container everything else hangs off.
  */
-import { Clock, Target } from 'lucide-react';
+import { Clock } from 'lucide-react';
 import LanguageLevelControl from '@/components/language/LanguageLevelControl';
 import useLanguageLevel from '@/hooks/useLanguageLevel';
 
-export default function ExperimentOverview({ experiment, path, missions }) {
+export default function ExperimentOverview({ experiment, path }) {
   // Wording preference for this path. Nothing about the experiment changes with it.
   const language = useLanguageLevel({ path, experiment });
-  const done = missions.filter(m => ['completed', 'skipped'].includes(m.status)).length;
-  const pct = missions.length ? Math.round((done / missions.length) * 100) : 0;
 
   return (
     <section className="rounded-[var(--r-surface)] bg-white p-5 sm:p-6" style={{ border: '1px solid var(--border-light)' }}>
@@ -26,15 +24,10 @@ export default function ExperimentOverview({ experiment, path, missions }) {
 
       <div className="tp-meta mt-5 flex flex-wrap items-center gap-5" style={{ color: 'var(--text-muted)' }}>
         {experiment.estimated_hours && <span className="flex items-center gap-1"><Clock size={12} /> ~{experiment.estimated_hours}h</span>}
-        <span className="flex items-center gap-1"><Target size={12} /> {done}/{missions.length} missions complete</span>
         {experiment.deadline && <span>Due {new Date(experiment.deadline).toLocaleDateString()}</span>}
       </div>
 
       <LanguageLevelControl level={language.level} onChange={language.setLevel} hint={false} className="mt-4" />
-
-      <div className="mt-3 h-2 w-full overflow-hidden rounded-full" style={{ background: 'var(--background-tertiary)' }}>
-        <div className="progress-fill h-full rounded-full" style={{ width: `${pct}%`, background: 'var(--brand-gold-500)' }} />
-      </div>
 
       {experiment.expected_learning && (
         <div className="mt-4 border-t pt-4" style={{ borderColor: 'var(--border-light)' }}>
