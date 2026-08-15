@@ -4,7 +4,6 @@ import { loadOwnedPaths, authoritativeSet } from '@/lib/path-set';
 import PathFocusPanel from '@/components/journey/PathFocusPanel';
 import { selectPathAndBeginExperiment } from '@/lib/path-selection';
 import { CycleLimitError } from '@/lib/pilot-access';
-import PathComparisonWorkspace from '@/components/journey/PathComparisonWorkspace';
 import PathSelectedConfirm from '@/components/journey/PathSelectedConfirm';
 import { Sk } from '@/components/PageSkeleton';
 
@@ -61,8 +60,9 @@ export default function ChoosePath({ mode = 'choose', onCompareSelect }) {
           onDismiss={() => setConfirmed(null)}
         />
       )}
-      {mode === 'choose' && <PathFocusPanel paths={paths.comparison} />}
-      <PathComparisonWorkspace
+      {/* One path at a time. The side-by-side comparison put every field of all
+          three on screen at once, which is what made this page overwhelming. */}
+      <PathFocusPanel
         paths={paths.comparison}
         onSelect={handleSelect}
         busyId={busyId}

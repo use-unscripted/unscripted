@@ -1,67 +1,78 @@
 import { useState } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ArrowLeft, ArrowRight, Loader2, AlertCircle } from 'lucide-react';
 import { COMPARISON_FIELDS, RISK_LABEL } from '@/components/journey/pathComparisonFields';
 
 /**
- * Focus on one path at a time and read its description one part at a time.
+ * One path at a time, one part of its description at a time.
  *
- * Same fields, same order as the side-by-side comparison — this is a reading
- * mode for a single path, not a second source of truth.
+ * The names come first and nothing else: the student opens the one they are
+ * curious about, then steps through the same fields, in the same order, that the
+ * side-by-side comparison used to show all at once. Same information, delivered
+ * one screen at a time.
  */
-export default function PathFocusPanel({ paths = [] }) {
-  const [pathIndex, setPathIndex] = useState(0);
+export default function PathFocusPanel({ paths = [], onSelect, busyId, error, onRetry, ctaLabel = 'Test this path' }) {
+  const [openId, setOpenId] = useState(null);
   const [fieldIndex, setFieldIndex] = useState(0);
 
   if (!paths.length) return null;
 
-  const path = paths[Math.min(pathIndex, paths.length - 1)];
+  const path = paths.find(p => p.id === openId) || null;
+
+  // ── The list of names ──────────────────────────────────────────────────────
+  if (!path) {
+    return (
+      <section className="app-card p-6">
+        <h2 className="tp-section" style={{ color: 'var(--text-primary)' }}>Your three paths</h2>
+        <p className="tp-meta mt-1.5" style={{ color: 'var(--text-muted)' }}>
+          Open one to read it. None of these is a guaranteed fit. You pick the one worth testing first.
+        </p>
+
+        <ul className="mt-4 space-y-2.5">
+          {paths.map(p => (
+            <li key={p.id}>
+              <button
+                type="button"
+                onClick={() => { setOpenId(p.id); setFieldIndex(0); }}
+                className="ui-lift flex w-full items-center justify-between gap-3 rounded-[var(--r-control)] p-4 text-left"
+                style={{ background: 'var(--background-secondary)', border: '1px solid var(--border-light)', minHeight: '56px' }}
+              >
+                <span className="min-w-0">
+                  <span className="tp-card block" style={{ color: 'var(--text-primary)' }}>{p.path_name}</span>
+                  {(p.path_category || p.risk_level) && (
+                    <span className="tp-meta block" style={{ color: 'var(--ink-400)' }}>
+                      {[p.path_category, RISK_LABEL[p.risk_level]].filter(Boolean).join(' · ')}
+                    </span>
+                  )}
+                </span>
+                <ArrowRight size={16} className="shrink-0" style={{ color: 'var(--brand-navy-700)' }} />
+              </button>
+            </li>
+          ))}
+        </ul>
+      </section>
+    );
+  }
+
+  // ── One path, one part of its description ─────────────────────────────────
   const field = COMPARISON_FIELDS[fieldIndex];
   const value = field.get(path);
-
-  const pickPath = (i) => { setPathIndex(i); setFieldIndex(0); };
+  const last = COMPARISON_FIELDS.length - 1;
 
   return (
     <section className="app-card p-6">
-      <h2 className="tp-section" style={{ color: 'var(--text-primary)' }}>Focus on one path</h2>
-      <p className="tp-meta mt-1.5" style={{ color: 'var(--text-muted)' }}>
-        Read one path at a time, one part of its description at a time.
-      </p>
+      <button
+        type="button"
+        onClick={() => setOpenId(null)}
+        className="tp-meta inline-flex items-center gap-1.5 font-bold"
+        style={{ color: 'var(--brand-navy-700)', minHeight: '44px' }}
+      >
+        <ArrowLeft size={14} /> All three paths
+      </button>
 
-      {/* Which path */}
-      <div className="mt-4 flex flex-wrap gap-2">
-        {paths.map((p, i) => (
-          <button
-            key={p.id}
-            type="button"
-            onClick={() => pickPath(i)}
-            aria-pressed={i === pathIndex}
-            className="tp-meta rounded-full px-3.5 py-2 font-bold"
-            style={i === pathIndex
-              ? { background: 'var(--brand-navy-900)', color: 'var(--brand-white)' }
-              : { background: 'var(--background-secondary)', border: '1px solid var(--border-light)', color: 'var(--text-primary)' }}
-          >
-            {p.path_name}
-          </button>
-        ))}
-      </div>
-
-      {/* Which part of the description */}
-      <div className="mt-4 flex flex-wrap gap-1.5">
-        {COMPARISON_FIELDS.map((f, i) => (
-          <button
-            key={f.key}
-            type="button"
-            onClick={() => setFieldIndex(i)}
-            aria-pressed={i === fieldIndex}
-            className="tp-meta rounded-[var(--r-control)] px-2.5 py-1.5 font-semibold"
-            style={i === fieldIndex
-              ? { background: 'var(--ink-100)', color: 'var(--brand-navy-900)', border: '1px solid var(--brand-navy-700)' }
-              : { background: 'transparent', color: 'var(--ink-500)', border: '1px solid var(--border-light)' }}
-          >
-            {f.label}
-          </button>
-        ))}
-      </div>
+      <h2 className="tp-section mt-1" style={{ color: 'var(--text-primary)' }}>{path.path_name}</h2>
+      {path.risk_level && (
+        <p className="tp-meta mt-1" style={{ color: 'var(--ink-400)' }}>{RISK_LABEL[path.risk_level]}</p>
+      )}
 
       <div
         className="mt-4 rounded-[var(--r-control)] p-4"
@@ -71,11 +82,6 @@ export default function PathFocusPanel({ paths = [] }) {
         <p className="tp-prose mt-2" style={{ color: 'var(--ink-700)' }}>
           {value || 'Nothing recorded here yet.'}
         </p>
-        {path.risk_level && fieldIndex === 0 && (
-          <p className="tp-meta mt-2" style={{ color: 'var(--ink-400)' }}>
-            {RISK_LABEL[path.risk_level] || ''}
-          </p>
-        )}
       </div>
 
       <div className="mt-4 flex items-center justify-between gap-3">
@@ -93,14 +99,36 @@ export default function PathFocusPanel({ paths = [] }) {
         </span>
         <button
           type="button"
-          onClick={() => setFieldIndex(i => Math.min(COMPARISON_FIELDS.length - 1, i + 1))}
-          disabled={fieldIndex === COMPARISON_FIELDS.length - 1}
+          onClick={() => setFieldIndex(i => Math.min(last, i + 1))}
+          disabled={fieldIndex === last}
           className="tp-body inline-flex items-center gap-1.5 rounded-[var(--r-control)] border px-4 font-semibold disabled:opacity-40"
           style={{ borderColor: 'var(--border-light)', color: 'var(--text-primary)', minHeight: '44px' }}
         >
           Next <ChevronRight size={15} />
         </button>
       </div>
+
+      {onSelect && (
+        <>
+          {error === path.id && (
+            <p className="tp-meta mt-4 flex items-start gap-1.5 font-semibold text-red-600" role="alert">
+              <AlertCircle size={13} className="mt-0.5 shrink-0" />
+              That did not save. <button type="button" onClick={onRetry} className="underline">Try again</button>
+            </p>
+          )}
+          <button
+            type="button"
+            onClick={() => onSelect(path)}
+            disabled={busyId === path.id}
+            className="ui-press app-cta tp-control mt-5 w-full disabled:opacity-60"
+            style={{ minHeight: '52px' }}
+          >
+            {busyId === path.id
+              ? <><Loader2 size={16} className="animate-spin" /> Setting up your test…</>
+              : <>{ctaLabel} <ArrowRight size={16} /></>}
+          </button>
+        </>
+      )}
     </section>
   );
 }
