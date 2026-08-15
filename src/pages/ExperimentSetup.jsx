@@ -16,8 +16,9 @@ import { designExperiments } from '@/lib/experiment-design';
 import { deriveHypothesis } from '@/lib/career-hypothesis';
 import {
   ensureActiveCycle, assertNoActiveExperiment, attachExperimentToCycle,
-  ActiveExperimentError, cycleLinks,
+  ActiveExperimentError, cycleLinks, getActiveCycle,
 } from '@/lib/career-cycle';
+import { resolveCurrentPath } from '@/lib/current-path';
 
 /**
  * Repair a generated Mission Guide into the shape the experiment record and the
@@ -455,18 +456,45 @@ export default function ExperimentSetup() {
 
   useEffect(() => {
     loadRec();
-  }, [recId, pathNameParam]);
+  }, [recId, pathId, pathNameParam]);
 
   const loadRec = async () => {
     setLoading(true);
     try {
+      /* A Deep Dive can arrive from several places, and each one knows the path
+         by a different handle: the recommendation's record id, the path_id on
+         that record, or only the name. Resolving just one of them is why
+         "we could not identify the path you selected" was reachable from a
+         working recommendation — the id was fine, it was simply the handle this
+         screen did not read. All of them are honoured now, and the path the
+         student is already testing is the last resort. */
       let resolved = null;
-      if (recId) {
-        const results = await base44.entities.PathRecommendations.filter({ id: recId });
-        resolved = results[0] || null;
+      const wanted = recId || pathId;
+      if (wanted) {
+        const owned = await base44.entities.PathRecommendations.list('-created_date', 200).catch(() => []);
+        const rows = Array.isArray(owned) ? owned : [];
+        resolved = rows.find(p => p.id === wanted)
+          || rows.find(p => p.path_id === wanted)
+          || null;
+        // A name in the URL still identifies the path when the id came from a
+        // merged or library record that this student does not own a row for.
+        if (!resolved && pathNameParam) {
+          const name = decodeURIComponent(pathNameParam).toLowerCase();
+          resolved = rows.find(p => (p.path_name || '').toLowerCase() === name) || null;
+        }
       }
       if (!resolved && pathNameParam) {
         resolved = { path_name: decodeURIComponent(pathNameParam), fit_reason: '', current_gaps: [], first_experiment: '' };
+      }
+      if (!resolved) {
+        // Nothing usable in the URL: the path this student is currently testing
+        // is a better answer than an error screen.
+        const [cycle, owned] = await Promise.all([
+          getActiveCycle().catch(() => null),
+          base44.entities.PathRecommendations.list('-created_date', 200).catch(() => []),
+        ]);
+        const current = resolveCurrentPath(cycle, Array.isArray(owned) ? owned : []);
+        if (current) resolved = current;
       }
       if (!resolved) {
         setLoadError('We could not identify the path you selected. Return to Path Comparison and select the path again.');
