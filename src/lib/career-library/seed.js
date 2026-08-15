@@ -86,7 +86,10 @@ export async function seedLibrary({ dryRun = false } = {}) {
 
   const report = { careers: [], professional_reviews_on_file: (reviews || []).length, dryRun };
 
-  for (const career of CAREERS) {
+  // Careers run in parallel batches, and each career's sources and templates are
+  // written together. Sequentially this is ~150 round trips and slow enough that
+  // a single click could not finish it.
+  const seedCareer = async (career) => {
     const mine = TEMPLATES.filter(t => t.career_key === career.key);
     const fields = blueprintFields(career);
     const existing = blueprintByTitle.get(career.title) || null;
@@ -99,8 +102,7 @@ export async function seedLibrary({ dryRun = false } = {}) {
     }
     const blueprintId = blueprint?.id || null;
 
-    let sourceCount = 0;
-    for (const s of career.sources) {
+    await Promise.all(career.sources.map(async (s) => {
       const found = (sources || []).find(x => x.role_blueprint_id === blueprintId && x.source_name === s.source_name);
       const payload = {
         role_blueprint_id: blueprintId,
@@ -112,13 +114,12 @@ export async function seedLibrary({ dryRun = false } = {}) {
         active_status: 'active',
         relevant_sections: ['Tasks', 'Work Activities', 'Work Context'],
       };
-      if (!dryRun) {
-        found
-          ? await base44.entities.CareerSource.update(found.id, payload)
-          : await base44.entities.CareerSource.create(payload);
-      }
-      sourceCount += 1;
-    }
+      if (dryRun) return;
+      return found
+        ? base44.entities.CareerSource.update(found.id, payload)
+        : base44.entities.CareerSource.create(payload);
+    }));
+    const sourceCount = career.sources.length;
 
     const careerReport = {
       career_key: career.key,
