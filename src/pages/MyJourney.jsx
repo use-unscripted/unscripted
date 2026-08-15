@@ -4,18 +4,20 @@
  * and then the running state of that cycle.
  */
 import { useEffect, useState, useCallback } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { resolveJourney } from '@/lib/journey';
 import { loadOwnedPaths, authoritativeSet, loadOnboardingSubmission } from '@/lib/path-set';
 import { getActiveCycle } from '@/lib/career-cycle';
 import { selectPathAndBeginExperiment } from '@/lib/path-selection';
+import { queryClientInstance } from '@/lib/query-client';
 import CycleStageSync from '@/components/journey/CycleStageSync';
 import JourneyStages, { buildStageDetail } from '@/components/journey/JourneyStages';
 import JourneyFocus from '@/components/journey/JourneyFocus';
 import PathComparisonWorkspace from '@/components/journey/PathComparisonWorkspace';
 import PathSelectedConfirm from '@/components/journey/PathSelectedConfirm';
 import JourneyEmptyState from '@/components/journey/JourneyEmptyState';
+import AllPathsPanel from '@/components/journey/AllPathsPanel';
 import UncertaintyUpdateCard from '@/components/journey/UncertaintyUpdateCard';
 import ContinuationGate from '@/components/journey/ContinuationGate';
 import { Sk } from '@/components/PageSkeleton';
@@ -40,6 +42,7 @@ function effortLabel(experiment, missions) {
 }
 
 export default function MyJourney() {
+  const navigate = useNavigate();
   const [data, setData] = useState(null);
   const [busyId, setBusyId] = useState(null);
   const [selectError, setSelectError] = useState(null);
@@ -90,6 +93,32 @@ export default function MyJourney() {
       setBusyId(null);
     }
   }, [data, load]);
+
+  /* Choosing from the full list at the bottom of the page. Same one transition
+     as the comparison workspace, then straight to Test — that path is now the
+     one being tested, so the next thing to do is set up or open its test. */
+  const handleChooseAndTest = useCallback(async (path) => {
+    setSelectError(null);
+    setBusyId(path.id);
+    try {
+      await selectPathAndBeginExperiment(path, data?.paths || []);
+      /* The cycle rail and the focus view model are cached for a minute. Without
+         this, Test opens still naming the path the student just switched away
+         from. */
+      await queryClientInstance.invalidateQueries({ queryKey: ['cycle-rail'] });
+      await queryClientInstance.invalidateQueries({ queryKey: ['journey-focus'] });
+      navigate('/test');
+    } catch (err) {
+      if (err instanceof CycleLimitError) {
+        await load();
+        return;
+      }
+      console.error('[journey] path switch failed at stage: begin_experiment', err?.message);
+      setSelectError(path.id);
+    } finally {
+      setBusyId(null);
+    }
+  }, [data, load, navigate]);
 
   if (!data) {
     // Same wrapper, same header, same card rhythm as the loaded page below —
@@ -236,6 +265,15 @@ export default function MyJourney() {
       <Reveal y={20}>
         <JourneyStages stage={stage} detail={stageDetail} />
       </Reveal>
+
+      {/* All the paths this student could test, and a way to switch. */}
+      <AllPathsPanel
+        paths={comparisonPaths}
+        currentPathId={currentPath?.id}
+        onChoose={handleChooseAndTest}
+        busyId={busyId}
+        error={selectError}
+      />
 
       <p className="tp-meta pt-2 text-center" style={{ color: 'var(--text-muted)' }}>
         Working on something else? Use the cycle in the sidebar to jump to any step.
