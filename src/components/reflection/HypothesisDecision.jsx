@@ -53,7 +53,7 @@ export default function HypothesisDecision({ ctx, reflection, synthesis, dimensi
 
   return (
     <section id="decision" className="rounded-[var(--r-surface)] bg-white p-5 sm:p-6" style={{ border: '1px solid var(--border-light)' }}>
-      <h2 className="tp-section" style={{ color: 'var(--text-primary)' }}>What happens to this hypothesis?</h2>
+      <h2 className="tp-section" style={{ color: 'var(--text-primary)' }}>What happens to this path?</h2>
       <p className="tp-lead mt-2" style={{ color: 'var(--text-secondary)' }}>
         All three are results. Your earlier position on {ctx.path?.path_name || ctx.experiment.path_name || 'this direction'} is kept either way.
       </p>

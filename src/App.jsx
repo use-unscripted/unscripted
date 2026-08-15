@@ -47,6 +47,12 @@ const Terms = lazy(() => import('@/pages/Terms'));
 // App shell pages
 const AppShell = lazy(() => import('@/components/AppShell'));
 const MyJourney = lazy(() => import('@/pages/MyJourney'));
+// One screen per stage of the cycle. Each carries only that stage's work.
+const StageExplore = lazy(() => import('@/pages/stages/StageExplore'));
+const StageChoose = lazy(() => import('@/pages/stages/StageChoose'));
+const StageTest = lazy(() => import('@/pages/stages/StageTest'));
+const StageProve = lazy(() => import('@/pages/stages/StageProve'));
+const StageDecide = lazy(() => import('@/pages/stages/StageDecide'));
 const Evidence = lazy(() => import('@/pages/Evidence'));
 const CareerEvidenceProfile = lazy(() => import('@/pages/CareerEvidenceProfile'));
 const ExperimentSetup = lazy(() => import('@/pages/ExperimentSetup'));
@@ -133,6 +139,12 @@ const AuthenticatedApp = () => {
         <Route element={<AppShell />}>
           {/* My Journey — the default authenticated destination */}
           <Route path="/journey" element={<MyJourney />} />
+          {/* The cycle, one stage per screen */}
+          <Route path="/explore" element={<StageExplore />} />
+          <Route path="/choose" element={<StageChoose />} />
+          <Route path="/test" element={<StageTest />} />
+          <Route path="/prove" element={<StageProve />} />
+          <Route path="/decide" element={<StageDecide />} />
           <Route path="/evidence" element={<Evidence />} />
           {/* The Career Evidence Profile. Private to the student; also reachable
               as a tab inside Evidence. */}

@@ -58,7 +58,7 @@ export default function CareerHypothesisPanel({ pathName, hypothesis, path, sign
     <section className="rounded-[var(--r-surface)] p-5" style={{ background: 'var(--background-tertiary)', border: '1px solid var(--border-light)' }}>
       <div className="flex flex-wrap items-center gap-2">
         <span className="tp-eyebrow flex items-center gap-1.5" style={{ color: 'var(--brand-navy-700)' }}>
-          <FlaskConical size={12} /> Career hypothesis
+          <FlaskConical size={12} /> Path being tested
         </span>
         <span className="tp-meta rounded-full px-2.5 py-0.5 font-bold" style={{ background: 'white', color: 'var(--brand-navy-900)' }}>
           {HYPOTHESIS_STATUS_LABELS[h.hypothesis_status] || 'Untested'}
@@ -67,7 +67,7 @@ export default function CareerHypothesisPanel({ pathName, hypothesis, path, sign
 
       <p className="tp-body mt-2 font-semibold text-[color:var(--surface-dark-900)]">{pathName}</p>
       <p className="tp-meta mt-1 text-[color:var(--ink-500)]">
-        A career hypothesis is a direction worth testing, not a prediction of what you should become.
+        A path is a direction worth testing, not a prediction of what you should become.
         {' '}{HYPOTHESIS_STATUS_MEANING[h.hypothesis_status] || ''}
       </p>
       <p className="tp-meta mt-1 text-[color:var(--ink-400)]">

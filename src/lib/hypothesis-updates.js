@@ -19,20 +19,20 @@ export const DECISIONS = [
   {
     key: 'continue_testing',
     label: 'Continue testing',
-    sub: 'This hypothesis still looks promising. Test the next most important unknown.',
+    sub: 'This path still looks promising. Test the next most important unknown.',
     cycle_decision: 'continue',
     hypothesis_status: 'testing',
   },
   {
     key: 'modify_hypothesis',
-    label: 'Modify hypothesis',
+    label: 'Change the path',
     sub: 'Something about the broader direction fits, but a different role, environment, specialty or version may fit better.',
     cycle_decision: 'adjust',
     hypothesis_status: 'modified',
   },
   {
     key: 'eliminate_hypothesis',
-    label: 'Eliminate hypothesis',
+    label: 'Stop pursuing this path',
     sub: 'You learned enough to stop investing time in this direction for now.',
     cycle_decision: 'stop_and_explore',
     hypothesis_status: 'eliminated',

@@ -71,7 +71,7 @@ export default function HypothesisSynthesisPanel({ synthesis, onConfirm }) {
   return (
     <section className="rounded-[var(--r-surface)] bg-white p-5 sm:p-6" style={{ border: '1px solid var(--border-light)' }}>
       <p className="tp-eyebrow" style={{ color: 'var(--brand-navy-700)' }}>Section 7</p>
-      <h2 className="tp-section mt-1.5" style={{ color: 'var(--text-primary)' }}>Update your hypothesis</h2>
+      <h2 className="tp-section mt-1.5" style={{ color: 'var(--text-primary)' }}>Update where this path stands</h2>
       <p className="tp-lead mt-2" style={{ color: 'var(--text-secondary)' }}>
         This is assembled from your own check-ins, deliverables and words. Correct anything that misreads what happened before you record it.
       </p>
@@ -86,21 +86,21 @@ export default function HypothesisSynthesisPanel({ synthesis, onConfirm }) {
         rows={synthesis.strengthened}
         dropped={review.droppedStrengthened}
         onToggle={toggle('droppedStrengthened')}
-        empty="Nothing in this experiment strengthened this hypothesis."
+        empty="Nothing in this experiment strengthened this path."
       />
       <EvidenceList
         title="Evidence that weakened it"
         rows={synthesis.weakened}
         dropped={review.droppedWeakened}
         onToggle={toggle('droppedWeakened')}
-        empty="Nothing in this experiment weakened this hypothesis."
+        empty="Nothing in this experiment weakened this path."
       />
       <EvidenceList
         title="Remaining unknowns"
         rows={synthesis.unknowns.map(u => ({ text: u, source: 'Still open' }))}
         dropped={review.droppedUnknowns}
         onToggle={toggle('droppedUnknowns')}
-        empty="No open questions are recorded against this hypothesis."
+        empty="No open questions are recorded against this path."
       />
 
       {synthesis.next_test && (

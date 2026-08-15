@@ -14,7 +14,7 @@ const KEY = 'unscripted:tab-stacks';
 // Which routes belong to which tab. Deep screens are reached from inside a tab,
 // so they belong to that tab's stack rather than to a tab of their own.
 export const TAB_ROUTES = {
-  '/journey': ['/journey', '/moment', '/experiment', '/experiments', '/paths', '/reflect', '/guide', '/roadmap', '/saved', '/goals-tracker'],
+  '/journey': ['/journey', '/moment', '/experiment', '/experiments', '/paths', '/reflect', '/guide', '/roadmap', '/explore', '/choose', '/test', '/prove', '/decide', '/saved', '/goals-tracker'],
   '/evidence': ['/evidence', '/career-profile', '/recently-deleted'],
   '/settings': ['/settings', '/blueprints', '/resources', '/creators'],
 };

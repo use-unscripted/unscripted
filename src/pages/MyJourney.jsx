@@ -17,10 +17,6 @@ import PathComparisonWorkspace from '@/components/journey/PathComparisonWorkspac
 import PathSelectedConfirm from '@/components/journey/PathSelectedConfirm';
 import JourneyEmptyState from '@/components/journey/JourneyEmptyState';
 import UncertaintyUpdateCard from '@/components/journey/UncertaintyUpdateCard';
-import NextBestExperimentPanel from '@/components/next-test/NextBestExperimentPanel';
-import SimEntryCard from '@/components/worksim/SimEntryCard';
-import JourneyEvidence from '@/components/journey/JourneyEvidence';
-import WhatWeAreLearning from '@/components/journey/WhatWeAreLearning';
 import ContinuationGate from '@/components/journey/ContinuationGate';
 import { Sk } from '@/components/PageSkeleton';
 import PullToRefresh from '@/components/PullToRefresh';
@@ -214,10 +210,9 @@ export default function MyJourney() {
         />
       )}
 
-      {/* The five questions, in order: what are we testing, what do we know,
-          what is still unknown, what should I do next, and how has my thinking
-          changed. One dominant CTA lives inside the focus panel — the panels
-          below it are evidence, not competing instructions. */}
+      {/* One panel, one instruction. Everything that used to stack up under it
+          now lives on the stage screen that does that work, reachable from the
+          cycle in the sidebar. */}
       <JourneyFocus
         currentPath={currentPath}
         experiment={nextExperiment}
@@ -226,42 +221,11 @@ export default function MyJourney() {
         onAnchorClick={scrollToDecision}
       />
 
-      {/* Every section below the fold arrives on scroll, the way the marketing
-          page's do. One signal, once, and nothing moves again after it lands. */}
-
       {/* Silent unless this student onboarded before the intake asked about
           uncertainty. An invitation, never a gate — so it sits below the focus
           panel rather than above it, where it pushed the hypothesis, the test
           and the button off the first phone screen. */}
       <UncertaintyUpdateCard profile={data.profile} />
-
-      {/* What to test next, decided by which unresolved question would teach us
-          the most — not by which path currently ranks highest. It sits directly
-          under the one instruction because for most students it IS the next
-          action, and burying it inside the Experiments page would make it a
-          feature rather than the way the loop continues. */}
-      <NextBestExperimentPanel pathId={currentPath?.id} />
-
-      {/* Thirty minutes of one job, offered to every student rather than only
-          the ones whose paths happen to be product shaped. Whether the mechanic
-          works at all is the thing being tested, and gating it leaves too few
-          students to find out. The card carries the framing itself. */}
-      <Reveal y={20}>
-        <SimEntryCard />
-      </Reveal>
-
-      {/* Then the evidence: which careers currently look worth testing, what
-          moved since last time, and what we are still learning. It sits under
-          the next action on purpose — the loop is what to do next first, the
-          record of what has been learned second. Each card inside reveals
-          itself; see the note in that file for why it is not wrapped here. */}
-      <JourneyEvidence />
-
-      {/* What the evidence says about the student themselves, rather than about
-          one career: known, suspected, unsettled, and still to test. Shared
-          across hypotheses, so a dimension tested once is not retested for its
-          own sake. Silent until there is something to say. */}
-      <WhatWeAreLearning />
 
       {/* The "no experiment yet" case is not listed here: the panel above is
           already showing that exact call to action, and two buttons pointing at
@@ -274,9 +238,7 @@ export default function MyJourney() {
       </Reveal>
 
       <p className="tp-meta pt-2 text-center" style={{ color: 'var(--text-muted)' }}>
-        Working on something else? <Link to="/paths" className="font-semibold" style={{ color: 'var(--brand-navy-700)' }}>Compare all paths</Link>
-        {' · '}
-        <Link to="/experiments" className="font-semibold" style={{ color: 'var(--brand-navy-700)' }}>All experiments</Link>
+        Working on something else? Use the cycle in the sidebar to jump to any step.
       </p>
     </>,
     // The hypothesis is named in the panel directly below, so the standfirst

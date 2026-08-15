@@ -14,7 +14,7 @@ export default function OtherHypotheses({ others = [] }) {
   return (
     <Reveal y={20}>
       <section className="app-card-flat p-6">
-        <h2 className="tp-card" style={{ color: 'var(--text-primary)' }}>Other hypotheses</h2>
+        <h2 className="tp-card" style={{ color: 'var(--text-primary)' }}>Other paths</h2>
         <p className="tp-meta mt-1" style={{ color: 'var(--text-muted)' }}>
           Still open. You are not testing these right now, and nothing about them is closed.
         </p>

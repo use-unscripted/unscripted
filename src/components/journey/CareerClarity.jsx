@@ -31,7 +31,7 @@ export default function CareerClarity({ clarity }) {
         <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
           <Stat label="Baseline clarity" value={baseline === null ? 'Not recorded' : `${baseline}/10`} />
           <Stat label="Current clarity" value={current === null ? 'Not rated yet' : `${current}/10`} />
-          <Stat label="Hypotheses tested" value={hypothesesTested} />
+          <Stat label="Paths tested" value={hypothesesTested} />
           <Stat label="Unknowns resolved" value={unknownsResolved} />
           <Stat label="Experiments completed" value={experimentsCompleted} />
         </div>

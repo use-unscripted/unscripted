@@ -72,12 +72,12 @@ export function resolveJourney({ paths = [], experiments = [], proof = [], refle
   const ACTIONS = {
     explore: {
       label: 'Compare My Paths',
-      to: '/paths',
+      to: '/explore',
       sub: 'Review the directions built from your onboarding answers, side by side.',
     },
     choose: {
       label: 'Choose This Path',
-      to: '/paths',
+      to: '/choose',
       sub: 'Pick the one direction you will test first. Nothing is permanent.',
     },
     test: nextExperiment

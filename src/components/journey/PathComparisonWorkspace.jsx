@@ -21,7 +21,7 @@ function Cell({ label, value }) {
   );
 }
 
-function PathColumn({ path, busy, busyId, onSelect }) {
+function PathColumn({ path, busy, busyId, onSelect, ctaLabel = 'Test this path' }) {
   return (
     <article
       className="flex flex-col rounded-[var(--r-surface)] bg-white p-5"
@@ -47,13 +47,13 @@ function PathColumn({ path, busy, busyId, onSelect }) {
         className="ui-press app-cta tp-control mt-5 w-full disabled:opacity-60"
         style={{ minHeight: '48px' }}
       >
-        {busyId === path.id ? 'Setting this up…' : 'Test this path'}
+        {busyId === path.id ? 'Setting this up…' : ctaLabel}
       </button>
     </article>
   );
 }
 
-export default function PathComparisonWorkspace({ paths, onSelect, busyId, error, onRetry }) {
+export default function PathComparisonWorkspace({ paths, onSelect, busyId, error, onRetry, ctaLabel }) {
   const three = paths.slice(0, 3);
   const [mobileIdx, setMobileIdx] = useState(0);
   const busy = !!busyId;
@@ -116,13 +116,13 @@ export default function PathComparisonWorkspace({ paths, onSelect, busyId, error
 
       <div className="mt-4 sm:hidden">
         {three[mobileIdx] && (
-          <PathColumn path={three[mobileIdx]} busy={busy} busyId={busyId} onSelect={onSelect} />
+          <PathColumn path={three[mobileIdx]} busy={busy} busyId={busyId} onSelect={onSelect} ctaLabel={ctaLabel} />
         )}
       </div>
 
       <div className="mt-5 hidden gap-4 sm:grid sm:grid-cols-3">
         {three.map(p => (
-          <PathColumn key={p.id} path={p} busy={busy} busyId={busyId} onSelect={onSelect} />
+          <PathColumn key={p.id} path={p} busy={busy} busyId={busyId} onSelect={onSelect} ctaLabel={ctaLabel} />
         ))}
       </div>
     </section>

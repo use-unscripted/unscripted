@@ -48,7 +48,7 @@ export default function HypothesisFocus({ focus, experiment, action, effort, onA
       <span aria-hidden="true" className="absolute inset-y-0 left-0 w-[3px]" style={{ background: 'var(--brand-gold-500)' }} />
 
       <div className="flex max-w-3xl flex-col">
-        <p className="tp-eyebrow order-1" style={{ color: 'var(--brand-gold-500)' }}>Current career hypothesis</p>
+        <p className="tp-eyebrow order-1" style={{ color: 'var(--brand-gold-500)' }}>Path you are testing</p>
 
         <h2
           id="journey-hypothesis-name"
@@ -60,7 +60,7 @@ export default function HypothesisFocus({ focus, experiment, action, effort, onA
 
         {focus && (
           <dl className="order-3 mt-4 flex flex-wrap gap-x-8 gap-y-3 sm:mt-5">
-            <Field label="Hypothesis status" value={focus.statusLabel} />
+            <Field label="Path status" value={focus.statusLabel} />
             <Field label="Confidence" value={focus.confidenceBand} />
           </dl>
         )}

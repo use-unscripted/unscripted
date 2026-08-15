@@ -54,7 +54,7 @@ export const HYPOTHESIS_STATUS_MEANING = {
   testing: 'You are gathering evidence on this one right now.',
   strengthened: 'What you have done so far supports this direction.',
   mixed_evidence: 'Your evidence points both ways. That is useful, not a failure.',
-  modified: 'You changed this hypothesis after what you learned.',
+  modified: 'You changed this path after what you learned.',
   eliminated: 'You ruled this one out. The record of why stays.',
 };
 
