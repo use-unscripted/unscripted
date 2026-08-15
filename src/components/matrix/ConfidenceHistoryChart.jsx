@@ -81,7 +81,7 @@ export default function ConfidenceHistoryChart({ rows }) {
     <section className="app-card p-6">
       <h2 className="tp-section" style={{ color: 'var(--text-primary)' }}>How your career thinking has changed</h2>
       <p className="tp-body mt-2" style={{ color: 'var(--text-secondary)' }}>
-        Each point is a hypothesis update you recorded. Tap a point to see what moved it.
+        Each point is a path update you recorded. Tap a point to see what moved it.
       </p>
 
       <div className="mt-5 flex flex-wrap gap-4">

@@ -6,7 +6,7 @@ export default function ClaritySummary({ clarity }) {
   const tiles = [
     ['Baseline clarity', clarity.baseline === null ? null : `${clarity.baseline}/10`],
     ['Clarity now', clarity.current === null ? null : `${clarity.current}/10`],
-    ['Hypotheses tested', clarity.hypothesesTested],
+    ['Paths tested', clarity.hypothesesTested],
     ['Experiments completed', clarity.experiments],
     ['Evidence created', clarity.evidence],
     ['Professional conversations', clarity.conversations],

@@ -106,7 +106,11 @@ export default function CareerMomentPage() {
   // The next test, chosen by the recommendation engine from the evidence that
   // now includes this Moment — never a reload of the one just completed.
   const goAnother = async () => {
-    const to = await nextQuickTest({ excludeVariable: row?.unresolved_question_id }).catch(() => '/moment');
+    const to = await nextQuickTest({
+      excludeVariable: row?.unresolved_question_id,
+      // Stay on the path this test was about.
+      pathId: row?.path_id,
+    }).catch(() => (row?.path_id ? `/moment?recId=${row.path_id}` : '/moment'));
     navigate(to, { replace: true });
   };
 

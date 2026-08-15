@@ -6,7 +6,7 @@ import TrendBadge from '@/components/matrix/TrendBadge';
  * can trace back to the work behind it is not evidence, it is decoration.
  */
 const COLUMNS = [
-  ['confidence', 'Hypothesis Confidence'],
+  ['confidence', 'Path Confidence'],
   ['coverage', 'Evidence Coverage'],
   ['fit', 'Experienced Fit'],
   ['expectation', 'Expectation vs Reality'],
@@ -29,7 +29,7 @@ export default function MatrixTable({ rows, onOpen }) {
       <table className="w-full border-collapse text-left">
         <thead>
           <tr style={{ background: 'var(--ink-50)' }}>
-            <th className="tp-eyebrow px-5 py-3.5" style={{ color: 'var(--brand-navy-700)' }}>Career Hypothesis</th>
+            <th className="tp-eyebrow px-5 py-3.5" style={{ color: 'var(--brand-navy-700)' }}>Career Path</th>
             {COLUMNS.map(([key, label]) => (
               <th key={key} className="tp-eyebrow px-3 py-3.5" style={{ color: 'var(--brand-navy-700)' }}>{label}</th>
             ))}

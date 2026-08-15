@@ -7,7 +7,7 @@ export default function StrongestHypothesis({ strongest }) {
   const { row, reason } = strongest;
   return (
     <section className="app-card p-6" style={{ background: 'var(--brand-navy-900)', border: 'none' }}>
-      <p className="tp-eyebrow" style={{ color: 'var(--brand-gold-500)' }}>Strongest current hypothesis</p>
+      <p className="tp-eyebrow" style={{ color: 'var(--brand-gold-500)' }}>Strongest current path</p>
       {row ? (
         <>
           <h2 className="tp-page mt-2" style={{ color: 'var(--brand-white)' }}>{row.name}</h2>

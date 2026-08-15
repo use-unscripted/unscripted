@@ -194,15 +194,20 @@ export async function loadMomentTarget({ recId, variable } = {}) {
  * Experiment engine the dashboard uses, re-run against the evidence the Moment
  * just produced, so the dimension just tested is not handed straight back.
  */
-export async function nextQuickTest({ excludeVariable } = {}) {
+export async function nextQuickTest({ excludeVariable, pathId } = {}) {
   const ctx = await loadRecalculationContext();
-  const rec = nextBestExperiment(ctx);
-  if (!rec) return '/moment';
+  // Another test means another test ON THIS PATH. Without pinning, the engine
+  // is free to answer with whichever path scores best across the whole map,
+  // which threw the student onto a different career mid-cycle.
+  const rec = (pathId && nextBestExperiment(ctx, { pathId })) || nextBestExperiment(ctx);
+  if (!rec) return pathId ? `/moment?recId=${pathId}` : '/moment';
   if (excludeVariable && rec.candidate?.variable === excludeVariable) {
-    const alt = (rec.alternatives || [])[0];
+    // A different question, but still on the same path where one exists.
+    const alts = rec.alternatives || [];
+    const alt = (pathId && alts.find(a => a.attached?.path_id === pathId)) || alts[0];
     if (alt) return `/moment?recId=${alt.attached.path_id}&variable=${encodeURIComponent(alt.variable)}`;
   }
-  return rec.quick_to || '/moment';
+  return rec.quick_to || (pathId ? `/moment?recId=${pathId}` : '/moment');
 }
 
 /**

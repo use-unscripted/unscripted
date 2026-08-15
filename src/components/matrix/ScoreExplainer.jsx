@@ -62,7 +62,7 @@ export default function ScoreExplainer({ row, onClose }) {
           ) : <Empty>No experienced signals yet, so no confidence percentage is shown.</Empty>}
         </Section>
 
-        <Section title="Evidence strengthening this hypothesis">
+        <Section title="Evidence strengthening this path">
           {row.strengthening.length ? (
             <ul className="space-y-2">
               {row.strengthening.map((e, i) => (
@@ -75,7 +75,7 @@ export default function ScoreExplainer({ row, onClose }) {
           ) : <Empty>Nothing yet supports this direction through real work.</Empty>}
         </Section>
 
-        <Section title="Evidence weakening this hypothesis">
+        <Section title="Evidence weakening this path">
           {row.weakening.length ? (
             <ul className="space-y-2">
               {row.weakening.map((e, i) => (

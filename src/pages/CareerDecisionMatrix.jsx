@@ -67,7 +67,7 @@ export default function CareerDecisionMatrix() {
     <main className="app-page">
       <PageHeader
         title="Career Decision Matrix"
-        description="See how real experiences are shaping your career hypotheses over time."
+        description="See how real experiences are shaping your paths over time."
       />
       <p className="tp-body -mt-6" style={{ color: 'var(--text-muted)', maxWidth: '60ch' }}>
         These scores reflect the evidence you have collected so far. They are not predictions of career success or
@@ -79,7 +79,7 @@ export default function CareerDecisionMatrix() {
         <div className="mt-8">
           <EmptyState
             title="Complete onboarding to begin building your Career Decision Matrix"
-            body="Once you have career hypotheses to test, this page shows how real experiences change them."
+            body="Once you have paths to test, this page shows how real experiences change them."
             ctaLabel="Start onboarding"
             ctaTo="/onboarding"
           />
@@ -88,7 +88,7 @@ export default function CareerDecisionMatrix() {
         <div className="mt-8 space-y-8">
           {data.measuredExperiments === 0 && (
             <EmptyState
-              title="Your hypotheses are based mostly on what you've told us so far"
+              title="Your paths are based mostly on what you've told us so far"
               body="Test one of them to begin collecting real evidence. Confidence stays as an early signal until then."
               ctaLabel="Choose something to test"
               ctaTo="/choose"
@@ -106,8 +106,8 @@ export default function CareerDecisionMatrix() {
           </Reveal>
 
           <div>
-            <div role="tablist" aria-label="Which hypotheses to show" className="mb-4 flex gap-2">
-              {[['active', 'Active hypotheses'], ['history', 'Journey history']].map(([key, label]) => (
+            <div role="tablist" aria-label="Which paths to show" className="mb-4 flex gap-2">
+              {[['active', 'Active paths'], ['history', 'Journey history']].map(([key, label]) => (
                 <button key={key} type="button" role="tab" aria-selected={view === key}
                   onClick={() => setView(key)}
                   className="touch-target tp-control rounded-full px-4 py-2"
@@ -128,7 +128,7 @@ export default function CareerDecisionMatrix() {
               </>
             ) : (
               <EmptyState
-                title="No active hypotheses right now"
+                title="No active paths right now"
                 body="Pick a direction to test and it will appear here with the evidence behind it."
                 ctaLabel="Choose something to test"
                 ctaTo="/choose"
