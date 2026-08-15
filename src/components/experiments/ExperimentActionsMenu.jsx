@@ -1,9 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
-import { MoreHorizontal, Pencil, PauseCircle, Play, Trash2, X, Calendar } from 'lucide-react';
+import { MoreHorizontal, Pencil, PauseCircle, Play, Trash2, X } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { softDeletePayload } from '@/components/SoftDeleteConfirm';
 import PauseExperimentModal from '@/components/experiments/PauseExperimentModal';
-import AddToCalendarModal from '@/components/calendar/AddToCalendarModal';
 
 // ── Experiment-specific soft-delete confirmation ──────────────────────────────
 function ExperimentDeleteConfirm({ expTitle, onConfirm, onCancel }) {
@@ -106,7 +105,6 @@ export default function ExperimentActionsMenu({ exp, onDeleted, onPaused, onResu
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const [showPause, setShowPause] = useState(false);
-  const [showCal, setShowCal] = useState(false);
   const menuRef = useRef(null);
 
   useEffect(() => {
@@ -151,14 +149,6 @@ export default function ExperimentActionsMenu({ exp, onDeleted, onPaused, onResu
           onPaused={(updated) => { setShowPause(false); onPaused(exp.id, 'paused', updated); }}
         />
       )}
-      {showCal && (
-        <AddToCalendarModal
-          item={exp}
-          itemType="experiment"
-          onClose={() => setShowCal(false)}
-        />
-      )}
-
       <div className="relative" ref={menuRef}>
         <button
           onClick={() => setOpen(v => !v)}
@@ -175,12 +165,6 @@ export default function ExperimentActionsMenu({ exp, onDeleted, onPaused, onResu
               className="tp-body w-full flex items-center gap-2.5 px-4 py-2 text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)] transition"
             >
               <Pencil size={14} /> Edit Experiment
-            </button>
-            <button
-              onClick={() => { setOpen(false); setShowCal(true); }}
-              className="tp-body w-full flex items-center gap-2.5 px-4 py-2 text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)] transition"
-            >
-              <Calendar size={14} /> Add to Calendar
             </button>
             {!isPaused && (
               <button

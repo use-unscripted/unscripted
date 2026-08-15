@@ -1,11 +1,10 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
-import { Plus, ChevronDown, ChevronUp, Clock, BookOpen, Target, FileText, Calendar, Trash2, Users, Wand2, PauseCircle, Play, Search } from 'lucide-react';
+import { Plus, ChevronDown, ChevronUp, Clock, BookOpen, Target, FileText, Trash2, Users, Wand2, PauseCircle, Play, Search } from 'lucide-react';
 import MissionGuideGenerator from '@/components/experiments/MissionGuideGenerator';
 import MissionGuideHistory from '@/components/experiments/MissionGuideHistory';
 import OutreachPlanModal from '@/components/outreach/OutreachPlanModal';
-import AddToCalendarModal from '@/components/calendar/AddToCalendarModal';
 import { toText, STEP_TEXT_KEYS } from '@/lib/ai-validation';
 import PageHeader from '@/components/PageHeader';
 import { Sk, SkPills, SkCards } from '@/components/PageSkeleton';
@@ -114,7 +113,6 @@ function PathDropdown({ paths, value, onChange, error }) {
 // ── Mission row inside expanded card ──────────────────────────────────────────
 function MissionRow({ mission, experiment, onProofAdded, onDeleted }) {
   const [showProof, setShowProof] = useState(false);
-  const [showCal, setShowCal] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const s = STATUS_STYLES[mission.status] || STATUS_STYLES.planned;
 
@@ -142,13 +140,6 @@ function MissionRow({ mission, experiment, onProofAdded, onDeleted }) {
           onSaved={(proof) => { setShowProof(false); onProofAdded(proof, mission.title); }}
         />
       )}
-      {showCal && (
-        <AddToCalendarModal
-          item={mission}
-          itemType="mission"
-          onClose={() => setShowCal(false)}
-        />
-      )}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
           <span className="rounded-full px-2 py-0.5 tp-meta font-bold" style={{ background: s.bg, color: s.text }}>{s.label}</span>
@@ -157,9 +148,6 @@ function MissionRow({ mission, experiment, onProofAdded, onDeleted }) {
         {mission.objective && <p className="mt-0.5 tp-meta text-[color:var(--ink-500)] line-clamp-1">{mission.objective}</p>}
       </div>
       <div className="flex gap-2 shrink-0">
-        <button onClick={() => setShowCal(true)} className="flex items-center gap-1.5 rounded-lg border border-[color:var(--ink-200)] px-3 py-1.5 tp-meta font-semibold text-[color:var(--ink-700)] hover:bg-white transition">
-          <Calendar size={12} /> Add to Calendar
-        </button>
         <button onClick={() => setShowProof(true)} className="flex items-center gap-1.5 rounded-lg border border-[color:var(--ink-200)] px-3 py-1.5 tp-meta font-semibold text-[color:var(--ink-700)] hover:bg-white transition">
           <FileText size={12} /> Add Proof
         </button>

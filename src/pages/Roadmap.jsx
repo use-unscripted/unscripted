@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
-import { CalendarDays, AlertTriangle } from 'lucide-react';
+import { AlertTriangle } from 'lucide-react';
 import PageHeader from '@/components/PageHeader';
 import RoadmapSection from '@/components/RoadmapSection';
 import { PageSkeleton, SkCards } from '@/components/PageSkeleton';
@@ -48,13 +48,6 @@ export default function Roadmap() {
         eyebrow="Personal roadmap"
         title={r.title}
         description="Specific actions, sequenced around what matters now, not a list of everything you could do."
-        action={
-          <Link to="/calendar"
-            className="tp-body flex items-center gap-2 rounded-[var(--r-control)] px-6 py-3.5 font-semibold text-white transition hover:-translate-y-px"
-            style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}>
-            <CalendarDays size={16} /> Open this week
-          </Link>
-        }
       />
 
       {/* Feasibility assessment */}

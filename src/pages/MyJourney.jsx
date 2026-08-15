@@ -277,8 +277,6 @@ export default function MyJourney() {
         Working on something else? <Link to="/paths" className="font-semibold" style={{ color: 'var(--brand-navy-700)' }}>Compare all paths</Link>
         {' · '}
         <Link to="/experiments" className="font-semibold" style={{ color: 'var(--brand-navy-700)' }}>All experiments</Link>
-        {' · '}
-        <Link to="/calendar" className="font-semibold" style={{ color: 'var(--brand-navy-700)' }}>Your week</Link>
       </p>
     </>,
     // The hypothesis is named in the panel directly below, so the standfirst

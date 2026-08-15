@@ -53,7 +53,6 @@ const ExperimentSetup = lazy(() => import('@/pages/ExperimentSetup'));
 const CareerMomentPage = lazy(() => import('@/pages/CareerMomentPage'));
 const WorkSimulationPage = lazy(() => import('@/pages/WorkSimulationPage'));
 const Roadmap = lazy(() => import('@/pages/Roadmap'));
-const WeeklyCalendar = lazy(() => import('@/pages/WeeklyCalendar'));
 const SavedRoadmaps = lazy(() => import('@/pages/SavedRoadmaps'));
 const Settings = lazy(() => import('@/pages/Settings'));
 const UncertaintyUpdate = lazy(() => import('@/pages/UncertaintyUpdate'));
@@ -141,7 +140,6 @@ const AuthenticatedApp = () => {
           {/* Legacy routes kept for old links/bookmarks — they now land inside My Journey */}
           <Route path="/dashboard" element={<Navigate to="/journey" replace />} />
           <Route path="/roadmap" element={<Roadmap />} />
-          <Route path="/calendar" element={<WeeklyCalendar />} />
           <Route path="/saved" element={<SavedRoadmaps />} />
           <Route path="/settings" element={<Settings />} />
           {/* The short uncertainty update for a student who onboarded before

@@ -8,7 +8,6 @@ import { reportAiFailure } from '@/lib/ai-failures';
 import { ArrowLeft, ArrowRight, CheckCircle, Loader2, AlertCircle } from 'lucide-react';
 import { LogoWordmark } from '@/components/UnscriptedLogo';
 import { Sk, SkCards } from '@/components/PageSkeleton';
-import AddToCalendarModal from '@/components/calendar/AddToCalendarModal';
 import ExperimentDesignOption from '@/components/experiments/ExperimentDesignOption';
 import UncertaintyPicker from '@/components/experiments/UncertaintyPicker';
 import BiggestUnknownCard from '@/components/experiments/BiggestUnknownCard';
@@ -342,21 +341,12 @@ function StepGenerating({ experiment, missionGuide, error }) {
 
 // ─── Step 4: Success ─────────────────────────────────────────────────────────
 function StepSuccess({ experiment, missionGuide, onViewGuide }) {
-  const [showCal, setShowCal] = useState(false);
   // Rows written before guides were validated can hold steps as objects, and an
   // object handed to React as a child throws and blanks this screen.
   const firstStepText = toText(missionGuide?.mission_steps?.[0], STEP_TEXT_KEYS) || 'Start your first action';
 
   return (
     <div className="space-y-6">
-      {showCal && (
-        <AddToCalendarModal
-          item={experiment}
-          itemType="experiment"
-          onClose={() => setShowCal(false)}
-        />
-      )}
-
       <div className="rounded-[var(--r-surface)] text-center p-8 space-y-3" style={{ background: 'var(--success-50)', border: '1px solid #86EFAC' }}>
         <CheckCircle className="mx-auto text-green-600" size={40} />
         <h2 className="tp-page text-[color:var(--surface-dark-900)]">Experiment Created</h2>
@@ -388,18 +378,13 @@ function StepSuccess({ experiment, missionGuide, onViewGuide }) {
         </div>
       )}
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 gap-3">
         <button onClick={onViewGuide}
           className="tp-body rounded-[var(--r-control)] py-3 font-semibold text-white"
           style={{ background: 'var(--brand-navy-900)' }}>
           View My Full Experiment
         </button>
-        <button onClick={() => setShowCal(true)}
-          className="tp-body rounded-[var(--r-control)] border py-3 font-semibold transition hover:bg-[color:var(--ink-50)]"
-          style={{ borderColor: 'var(--ink-200)', color: 'var(--ink-700)' }}>
-          Add to Calendar
-        </button>
-        <Link to="/paths" className="tp-body col-span-2 text-center font-semibold transition hover:opacity-80" style={{ color: 'var(--brand-navy-900)' }}>
+        <Link to="/paths" className="tp-body text-center font-semibold transition hover:opacity-80" style={{ color: 'var(--brand-navy-900)' }}>
           ← Return to Path Comparison
         </Link>
       </div>

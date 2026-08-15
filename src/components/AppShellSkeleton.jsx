@@ -14,7 +14,7 @@ import { Sk, SkHeader, SkCards } from '@/components/PageSkeleton';
 
 /** Routes that live inside the signed-in shell, so the shell is worth drawing. */
 const SHELL_ROUTES = [
-  '/journey', '/evidence', '/roadmap', '/calendar', '/saved', '/settings',
+  '/journey', '/evidence', '/roadmap', '/saved', '/settings',
   '/blueprints', '/paths', '/experiment', '/reflect', '/experiments',
   '/resources', '/creators', '/goals-tracker', '/resume', '/recently-deleted',
   '/guide', '/pilot', '/admin', '/dashboard', '/outreach', '/proof', '/reflection',

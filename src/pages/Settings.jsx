@@ -4,7 +4,6 @@ import { base44 } from '@/api/base44Client';
 import PageHeader from '@/components/PageHeader';
 import { Trash2, RefreshCw, CheckCircle, ArrowRight } from 'lucide-react';
 import Field from '@/components/onboarding/Field';
-import ICSExportPanel from '@/components/calendar/ICSExportPanel';
 import { generatePathTest } from '@/lib/path-generator';
 import { buildOptOut, optBackInPatch, isOptedOut, mergeOptOutRows } from '@/lib/nudge-response';
 import DeleteAccountModal from '@/components/settings/DeleteAccountModal';
@@ -260,12 +259,6 @@ export default function Settings() {
           </div>
         )}
       </section>
-
-      <div className="mb-3">
-        <h2 className="tp-section text-[color:var(--surface-dark-900)] mb-1.5">Export to calendar</h2>
-        <p className="tp-prose text-[color:var(--ink-700)]">Download .ics files to add your Unscripted schedule to Google Calendar, Apple Calendar, Outlook, or any standard calendar app.</p>
-      </div>
-      <ICSExportPanel showHeading={false} />
 
       <div className="mt-10 mb-3">
         <h2 className="tp-section text-[color:var(--surface-dark-900)] mb-1.5">My Career Vocabulary</h2>
