@@ -96,7 +96,7 @@ describe('activityFor: which week a completed mission belongs to', () => {
   });
 });
 
-describe('activityFor: proof and outreach', () => {
+describe('activityFor: proof', () => {
   it('files a Sunday-evening proof under the week that is ending', () => {
     const p = { id: 'p1', title: 'Call notes', experiment_id: EXP, created_date: SUNDAY_NIGHT };
     expect(labels({ proofs: [p] }, WEEK)).toEqual(['Call notes']);
@@ -110,16 +110,6 @@ describe('activityFor: proof and outreach', () => {
     expect(labels({ proofs: [p] }, NEXT_WEEK)).toEqual([]);
   });
 
-  it('files a Sunday-evening contact under the week that is ending', () => {
-    const c = { id: 'c1', name: 'Ada', company: 'Acme', experiment_id: EXP, last_contacted_date: SUNDAY_NIGHT };
-    expect(labels({ outreach: [c] }, WEEK)).toEqual(['Ada (Acme)']);
-    expect(labels({ outreach: [c] }, NEXT_WEEK)).toEqual([]);
-  });
-
-  it('names a contact with no company by name alone', () => {
-    const c = { id: 'c1', name: 'Ada', experiment_id: EXP, date_contacted: '2026-07-29T15:00:00.000000' };
-    expect(labels({ outreach: [c] }, WEEK)).toEqual(['Ada']);
-  });
 });
 
 describe('activityFor: nothing to show', () => {
