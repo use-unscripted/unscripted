@@ -35,65 +35,7 @@ const PROOF_DESTINATION = 'the Proof of Work page';
 
 // ── Prompt ──────────────────────────────────────────────────────────────────
 
-/**
- * A real event off the student's own campus calendar, anchoring step 1.
- *
- * The model is told the event exists and what it is about, but never allowed to
- * restate its date, time, or room — those render from the calendar record via
- * step.campus_event, which attachCampusEvent() writes after validation. A model
- * that paraphrases "Thursday at 5 in Dolan 220" from memory is how a student
- * ends up outside a locked building.
- */
-function campusEventSection(event) {
-  if (!event) return '';
-
-  const g = event.guidance || {};
-  const facts = [
-    event.title && `Event: "${event.title}"`,
-    event.departments?.length && `Hosted by: ${event.departments.join(', ')}`,
-    event.topics?.length && `Topics: ${event.topics.join(', ')}`,
-    event.types?.length && `Format: ${event.types.join(', ')}`,
-    event.has_register && 'Registration is required to attend.',
-    event.description && `Description: ${event.description.slice(0, 500)}`,
-    g.fit_reason && `Why it fits this student: ${g.fit_reason}`,
-    g.what_to_do?.length && `Plan for the room:\n${g.what_to_do.map(a => `  - ${a}`).join('\n')}`,
-    g.questions_to_ask?.length && `Questions already drafted (use verbatim or sharpen; do not replace with weaker ones):\n${g.questions_to_ask.map(q => `  - ${q}`).join('\n')}`,
-    g.proof_to_capture && `Proof this produces: ${g.proof_to_capture}`,
-  ].filter(Boolean).join('\n');
-
-  return `
-
-## This guide is anchored to a real campus event
-
-${facts}
-
-The student's first rep is LOCKING IN this event: registering or putting it on
-their calendar. Not preparing for it, not researching it. Committing to it.
-
-Rules 4 and 5 are replaced by these for step 1:
-
-E1. Step 1 is is_first_rep: true and is ≤10 minutes: register or add the event
-    to their calendar, plus the single smallest act of preparation that fits in
-    the same sitting. done_when is "the event is on your calendar"${event.has_register ? ' and "you have a registration confirmation"' : ''}.
-
-E2. NEVER write the event's date, time, day of week, room, or building into any
-    step, artifact, or description. Not once, not as a reminder, not in an email
-    signature. The app renders those from the calendar feed. If you need to
-    refer to timing, write "the event" or "before you go".
-
-E3. Step 2 is what they do IN THE ROOM. Its artifact is a question_list of
-    questions written out verbatim, ready to say out loud to a stranger who does
-    this work. Not "prepare thoughtful questions". Write the questions.
-
-E4. At least one later step converts the event into a relationship: the
-    follow-up message to someone they met, written in full, with a blank only
-    for the person's name and the specific thing they discussed.
-
-E5. Later steps still follow every rule below, including artifacts written out
-    in full and objectively checkable done_when.`;
-}
-
-export function buildGuidePrompt(experiment, { variationInstruction = '', version = 1, campusEvent = null } = {}) {
+export function buildGuidePrompt(experiment, { variationInstruction = '', version = 1 } = {}) {
   const base = `You are Unscripted, an AI career coach for college students.
 
 Generate a PRE-FILLED Mission Guide for the experiment below.
@@ -103,7 +45,7 @@ Objective: "${experiment.objective}"
 Path being tested: "${experiment.path_name || 'Not specified'}"
 ${experiment.deliverable ? `Deliverable: "${experiment.deliverable}"` : ''}
 
-This is Version ${version}.${campusEventSection(campusEvent)}
+This is Version ${version}.
 
 ## What makes this different from a normal guide
 
@@ -425,48 +367,7 @@ function collectTokens(artifact) {
  * Returns { ok, guide, errors, warnings }. `errors` non-empty means the caller
  * should regenerate; `warnings` are silent fixes worth surfacing in dev.
  */
-/**
- * A hard-coded date or time in the prose is the one campus-event failure that
- * actually hurts: the card next to it renders the real time off the calendar,
- * and the student has no way to know which one to trust.
- *
- * Deliberately narrow. Only clock times and month-day pairs — "within two days"
- * and "Monday morning energy" are legitimate and must not trip this.
- */
-const CLOCK_RE = /\b\d{1,2}(:\d{2})?\s*(a\.?m\.?|p\.?m\.?)\b/i;
-
-/**
- * Month names are spelled out rather than matched as a prefix plus any letters.
- * "Dec" followed by more letters is usually not a month: "Decide 3 people to
- * talk to" and "Separate 2 lists" are ordinary step prose, and flagging them
- * spends the one retry and hands the student no guide at all.
- */
-const MONTH_DAY_RE = /\b(jan(uary)?|feb(ruary)?|mar(ch)?|apr(il)?|may|jun(e)?|jul(y)?|aug(ust)?|sept?(ember)?|oct(ober)?|nov(ember)?|dec(ember)?)\.?\s+\d{1,2}\b/i;
-
-function findHardcodedTiming(guide) {
-  const offenders = [];
-  for (const [index, step] of (guide.steps || []).entries()) {
-    const texts = [
-      step.title,
-      step.description,
-      step.done_when,
-      step.artifact?.subject,
-      step.artifact?.body,
-      ...(step.artifact?.items || []),
-    ];
-    for (const text of texts) {
-      if (typeof text !== 'string') continue;
-      const hit = text.match(CLOCK_RE) || text.match(MONTH_DAY_RE);
-      if (hit) {
-        offenders.push(`Step ${index + 1} writes the event timing ("${hit[0]}") into its text`);
-        break;
-      }
-    }
-  }
-  return offenders;
-}
-
-export function validateGuide(raw, { campusEvent = null } = {}) {
+export function validateGuide(raw) {
   const errors = [];
   const warnings = [];
 
@@ -631,14 +532,6 @@ export function validateGuide(raw, { campusEvent = null } = {}) {
     if (hit) {
       errors.push(`Proof instructions name the address ${hit[0]}. Proof is uploaded on ${PROOF_DESTINATION}; there is no Unscripted inbox to send to.`);
       break;
-    }
-  }
-
-  // Guard the campus-event contract: the calendar record is the only source of
-  // when and where, so the prose must not compete with it.
-  if (campusEvent) {
-    for (const offender of findHardcodedTiming(guide)) {
-      errors.push(`${offender}. Never write the date, time, or room. The app renders those from the campus calendar. Say "the event" or "before you go".`);
     }
   }
 

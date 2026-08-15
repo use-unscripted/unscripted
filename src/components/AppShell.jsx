@@ -1,16 +1,12 @@
-import { useEffect, useState } from 'react';
 import { Outlet, NavLink, useLocation } from 'react-router-dom';
 import TabScrollMemory from '@/components/nav/TabScrollMemory';
 import { tabOf, lastLocation } from '@/lib/tab-stacks';
-import { Compass, CalendarDays, FolderOpen, FileText, Settings, LogOut, Inbox } from 'lucide-react';
+import { Compass, FolderOpen, FileText, Settings, LogOut } from 'lucide-react';
 import { MotionConfig } from 'framer-motion';
 import { base44 } from '@/api/base44Client';
 import RouteTransition from '@/components/RouteTransition';
-import { listFeedSubmissions } from '@/lib/campus-events';
-import { clearCampusStore } from '@/lib/campus-store';
 import { clearStudentDrafts } from '@/lib/student-drafts';
 import PilotTracker from '@/components/PilotTracker';
-import { loadPilotAccess } from '@/lib/pilot-access';
 
 function CompassSVG() {
   return (
@@ -25,17 +21,11 @@ function CompassSVG() {
 }
 
 /**
- * Five destinations, one journey. Deep screens (paths, missions, week, guides)
+ * Four destinations, one journey. Deep screens (paths, missions, week, guides)
  * are reached from inside My Journey rather than competing with it in the nav.
- *
- * The campus calendar is the exception, and it earns the slot: it is the only
- * screen in the product with dates on it that the student did not choose, and
- * it was reachable only from a link inside the dashboard, so a student who
- * scrolled past that link had no way back to it at all.
  */
 const NAV = [
   ['/journey',  'My Journey',        'Journey',  Compass],
-  ['/campus',   'On campus',         'Campus',   CalendarDays],
   ['/evidence', 'Evidence',          'Evidence', FolderOpen],
   ['/resume',   'Resume',            'Resume',   FileText],
   ['/settings', 'Profile & Settings', 'Profile',  Settings],
@@ -46,30 +36,6 @@ export default function AppShell() {
   // week) keeps its tab lit rather than lighting nothing.
   const { pathname } = useLocation();
   const activeTab = tabOf(pathname);
-
-  // Admin-only nav (the campus feed queue below) is hidden from students.
-  const [isAdmin, setIsAdmin] = useState(false);
-  useEffect(() => { loadPilotAccess().then(a => setIsAdmin(!!a.isAdmin)).catch(() => setIsAdmin(false)); }, []);
-
-  // Calendar links students have sent us that nobody has looked at yet.
-  //
-  // The count is the point. A student can paste a working link, get their own
-  // events, and have the row sit unreviewed forever — their school never gets
-  // switched on and nobody finds out. A queue nobody remembers to open is the
-  // same as no queue, so the number goes where the team already looks. Silent
-  // for everyone else, and silent when there is nothing waiting.
-  const [pendingFeeds, setPendingFeeds] = useState(0);
-  useEffect(() => {
-    if (!isAdmin) return;
-    let cancelled = false;
-    listFeedSubmissions()
-      .then(rows => {
-        if (cancelled) return;
-        setPendingFeeds(rows.filter(r => r.resolution === 'resolved' && r.review_status === 'pending').length);
-      })
-      .catch(() => {}); // A nav badge is never worth an error on someone's screen.
-    return () => { cancelled = true; };
-  }, [isAdmin]);
 
   return (
     // The landing page's paper, not the cooler grey the app used to sit on: the
@@ -108,33 +74,16 @@ export default function AppShell() {
               </NavLink>
             );
           })}
-          {isAdmin && pendingFeeds > 0 && (
-            <NavLink to="/admin/campus-feeds"
-              className={({ isActive }) =>
-                `nav-link app-navlink tp-control mb-1 flex items-center gap-3 rounded-[var(--r-control)] px-4 py-3 ${isActive ? 'text-white' : 'text-[color:var(--ink-300)] hover:text-white'}`
-              }
-              style={({ isActive }) => isActive
-                ? { background: 'var(--brand-navy-700)', borderLeft: '3px solid var(--brand-gold-500)', paddingLeft: '13px' }
-                : { borderLeft: '3px solid transparent' }
-              }>
-              <Inbox size={17} />
-              Campus feeds · {pendingFeeds}
-            </NavLink>
-          )}
         </nav>
 
         <p className="tp-meta rounded-[var(--r-control)] p-3.5 text-[color:var(--ink-400)] mt-4" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
           Write your unscripted path.
         </p>
-        {/* The stored calendar goes with the session. It is public listings
-            rather than anything private, but it names a school, and the next
-            person to sign in on this browser is not owed someone else's.
-
-            Unsaved reflection drafts go too, and those are not public: they are
-            a student's own words about how a week went and whether a path is
-            working. On a library machine, leaving them is leaving private
-            writing on a computer that belongs to nobody. */}
-        <button onClick={() => { clearCampusStore(); clearStudentDrafts(); base44.auth.logout('/'); }}
+        {/* Unsaved reflection drafts go with the session: they are a student's
+            own words about how a week went and whether a path is working. On a
+            library machine, leaving them is leaving private writing on a
+            computer that belongs to nobody. */}
+        <button onClick={() => { clearStudentDrafts(); base44.auth.logout('/'); }}
           className="mt-3 flex items-center gap-2 rounded-[var(--r-control)] px-4 py-2.5 text-sm font-medium text-[color:var(--ink-400)] transition hover:bg-white/5 hover:text-white">
           <LogOut size={15} /> Log out
         </button>

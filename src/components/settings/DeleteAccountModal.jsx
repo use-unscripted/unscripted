@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { AlertTriangle } from 'lucide-react';
 import { deleteMyAccount } from '@/lib/account-deletion';
-import { clearCampusStore } from '@/lib/campus-store';
 import { base44 } from '@/api/base44Client';
 
 /**
@@ -19,7 +18,6 @@ export default function DeleteAccountModal({ onClose }) {
     setError('');
     try {
       await deleteMyAccount();
-      clearCampusStore();
       try { localStorage.clear(); sessionStorage.clear(); } catch { /* private mode */ }
       // Drops the token and returns to the landing page.
       base44.auth.logout('/');

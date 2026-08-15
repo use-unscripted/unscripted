@@ -21,7 +21,6 @@ import NextBestExperimentPanel from '@/components/next-test/NextBestExperimentPa
 import SimEntryCard from '@/components/worksim/SimEntryCard';
 import JourneyEvidence from '@/components/journey/JourneyEvidence';
 import WhatWeAreLearning from '@/components/journey/WhatWeAreLearning';
-import CampusEventsPanel from '@/components/campus/CampusEventsPanel';
 import ContinuationGate from '@/components/journey/ContinuationGate';
 import { Sk } from '@/components/PageSkeleton';
 import PullToRefresh from '@/components/PullToRefresh';
@@ -270,16 +269,6 @@ export default function MyJourney() {
       {experimentDone && counts.proof === 0 && <JourneyEmptyState variant="experiment_done" />}
       {data.cycle?.legacy_review && <JourneyEmptyState variant="legacy" />}
 
-      {/* The only dated thing on this page, and the reason it sits directly
-          under the instruction rather than at the bottom: everything else here
-          describes a state — a stage, a count, a status — and none of it says
-          "Thursday". The top of the page is what to do; the spine below is the
-          record. It stays silent for a student with no college set or a
-          calendar we cannot read, so it costs nothing when it has nothing. */}
-      {/* Already reveals itself, and stays silent for a student with no college
-          set, so it must not be wrapped from out here. */}
-      <CampusEventsPanel />
-
       <Reveal y={20}>
         <JourneyStages stage={stage} detail={stageDetail} />
       </Reveal>
@@ -290,8 +279,6 @@ export default function MyJourney() {
         <Link to="/experiments" className="font-semibold" style={{ color: 'var(--brand-navy-700)' }}>All experiments</Link>
         {' · '}
         <Link to="/calendar" className="font-semibold" style={{ color: 'var(--brand-navy-700)' }}>Your week</Link>
-        {' · '}
-        <Link to="/campus" className="font-semibold" style={{ color: 'var(--brand-navy-700)' }}>Campus events</Link>
       </p>
     </>,
     // The hypothesis is named in the panel directly below, so the standfirst

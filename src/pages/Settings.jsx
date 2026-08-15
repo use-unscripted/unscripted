@@ -7,7 +7,6 @@ import Field from '@/components/onboarding/Field';
 import ICSExportPanel from '@/components/calendar/ICSExportPanel';
 import { generatePathTest } from '@/lib/path-generator';
 import { buildOptOut, optBackInPatch, isOptedOut, mergeOptOutRows } from '@/lib/nudge-response';
-import { clearCampusStore } from '@/lib/campus-store';
 import DeleteAccountModal from '@/components/settings/DeleteAccountModal';
 import MyCareerVocabulary from '@/components/language/MyCareerVocabulary';
 import { clearStudentDrafts } from '@/lib/student-drafts';
@@ -194,7 +193,7 @@ export default function Settings() {
           {saved ? 'Saved' : 'Save changes'}
         </button>
         <button
-          onClick={() => { clearCampusStore(); clearStudentDrafts(); base44.auth.logout('/'); }}
+          onClick={() => { clearStudentDrafts(); base44.auth.logout('/'); }}
           className="tp-body touch-target font-semibold text-[color:var(--ink-500)] hover:text-[color:var(--surface-dark-900)] transition sm:col-span-2 sm:justify-self-start"
         >
           Log out

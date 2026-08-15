@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   EXPERIMENT_TYPES, EFFORT_SCALE, smallestUsefulEffort, typeForUncertainty,
   dimensionsForUncertainty, missionCoverage, testBrief, stepUncertaintyLine,
-  outreachBrief, campusRelevance, evidenceRequirementFallback, normalizeEffort,
+  outreachBrief, evidenceRequirementFallback, normalizeEffort,
 } from '@/lib/experiment-types';
 
 describe('experiment types', () => {
@@ -93,11 +93,6 @@ describe('student-facing framing', () => {
     expect(o.instruction).toMatch(/actual week/);
     expect(o.purpose).toBe(experiment.test_question);
     expect(outreachBrief({})).toBeNull();
-  });
-
-  it('explains why a campus event is relevant', () => {
-    expect(campusRelevance(experiment)).toMatch(/You are testing entrepreneurial ambiguity/);
-    expect(campusRelevance({})).toBeNull();
   });
 
   it('always defines what evidence would update the hypothesis', () => {

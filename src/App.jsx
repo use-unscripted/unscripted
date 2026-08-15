@@ -49,7 +49,6 @@ const AppShell = lazy(() => import('@/components/AppShell'));
 const MyJourney = lazy(() => import('@/pages/MyJourney'));
 const Evidence = lazy(() => import('@/pages/Evidence'));
 const CareerEvidenceProfile = lazy(() => import('@/pages/CareerEvidenceProfile'));
-const CampusEventsPage = lazy(() => import('@/pages/CampusEventsPage'));
 const ExperimentSetup = lazy(() => import('@/pages/ExperimentSetup'));
 const CareerMomentPage = lazy(() => import('@/pages/CareerMomentPage'));
 const WorkSimulationPage = lazy(() => import('@/pages/WorkSimulationPage'));
@@ -70,7 +69,6 @@ const ResumeBuilder = lazy(() => import('@/pages/ResumeBuilder'));
 const RecentlyDeleted = lazy(() => import('@/pages/RecentlyDeleted'));
 const GuideDetailPage = lazy(() => import('@/pages/GuideDetailPage'));
 const AnswerNudge = lazy(() => import('@/pages/AnswerNudge'));
-const AdminCampusFeeds = lazy(() => import('@/pages/AdminCampusFeeds'));
 const AdminAiFailures = lazy(() => import('@/pages/AdminAiFailures'));
 const AdminDecisionIntelligence = lazy(() => import('@/pages/AdminDecisionIntelligence'));
 
@@ -141,9 +139,6 @@ const AuthenticatedApp = () => {
           {/* The Career Evidence Profile. Private to the student; also reachable
               as a tab inside Evidence. */}
           <Route path="/career-profile" element={<CareerEvidenceProfile />} />
-          {/* A deep screen, reached from My Journey rather than competing with it
-              in the nav — the same rule paths, missions and the week follow. */}
-          <Route path="/campus" element={<CampusEventsPage />} />
           {/* Legacy routes kept for old links/bookmarks — they now land inside My Journey */}
           <Route path="/dashboard" element={<Navigate to="/journey" replace />} />
           <Route path="/roadmap" element={<Roadmap />} />
@@ -175,8 +170,6 @@ const AuthenticatedApp = () => {
           <Route path="/resume" element={<ResumeBuilder />} />
           <Route path="/recently-deleted" element={<RecentlyDeleted />} />
           <Route path="/guide" element={<GuideDetailPage />} />
-          {/* Team-only. The page checks the role, and so does the function behind it. */}
-          <Route path="/admin/campus-feeds" element={<AdminCampusFeeds />} />
           {/* Team-only. The page checks the role, and so does the entity's RLS. */}
           <Route path="/admin/ai-failures" element={<AdminAiFailures />} />
           {/* Team-only aggregate product learning. The page checks the role, and

@@ -165,13 +165,6 @@ export function outreachBrief(experiment) {
   };
 }
 
-/** Why a campus opportunity is worth attending: the unknown it can test. */
-export function campusRelevance(experiment) {
-  const label = experiment?.uncertainty_label || experiment?.unresolved_question;
-  if (!label) return null;
-  return `You are testing ${String(label).replace(/\?$/, '').toLowerCase()}. This may provide useful exposure to it.`;
-}
-
 /** Evidence requirements always answer the same question, in plain words. */
 export function evidenceRequirementFallback(experiment) {
   const q = experiment?.test_question || experiment?.unresolved_question;
