@@ -130,6 +130,21 @@ export function titleSimilarity(a, b) {
   return (2 * shared) / (A.length + B.length);
 }
 
+/**
+ * Words that name the sector a career sits in. They matter because one title
+ * being the other plus a sector word is usually a narrower hypothesis rather
+ * than a duplicate: "Biotech Venture Capital Analyst" is not "Venture Capital
+ * Analyst". Those pairs go to review instead of being merged.
+ */
+const SECTOR_WORDS = new Set([
+  'healthcare', 'biotech', 'biotechnology', 'pharma', 'pharmaceutical', 'medicine', 'clinical',
+  'technology', 'software', 'teaching', 'government', 'policy', 'energy', 'climate',
+  'sustainability', 'retail', 'consumer', 'industrial', 'manufacturing', 'media', 'entertainment',
+  'sport', 'fashion', 'luxury', 'estate', 'property', 'insurance', 'defense', 'defence',
+  'aerospace', 'agriculture', 'transport', 'logistics', 'gaming', 'crypto', 'municipal',
+  'non', 'profit', 'philanthropy', 'museum', 'university', 'school',
+]);
+
 /** At or above this, two titles are the same career. */
 export const MERGE_THRESHOLD = 0.8;
 /** At or above this but below the merge threshold, a person decides. */
@@ -142,6 +157,18 @@ export const REVIEW_THRESHOLD = 0.6;
 export function compareTitles(a, b) {
   if (canonicalTitle(a) === canonicalTitle(b)) return { verdict: 'same', similarity: 1 };
   const similarity = titleSimilarity(a, b);
+
+  // One title is the other plus extra words. If any of those extra words names
+  // a sector, the longer title is a narrower hypothesis, not a duplicate.
+  const A = titleTokens(a);
+  const B = titleTokens(b);
+  const [shorter, longer] = A.length <= B.length ? [A, B] : [B, A];
+  const longSet = new Set(longer);
+  if (shorter.every(t => longSet.has(t))) {
+    const extras = longer.filter(t => !shorter.includes(t));
+    if (extras.some(t => SECTOR_WORDS.has(t))) return { verdict: 'review', similarity };
+  }
+
   if (similarity >= MERGE_THRESHOLD) return { verdict: 'duplicate', similarity };
   if (similarity >= REVIEW_THRESHOLD) return { verdict: 'review', similarity };
   return { verdict: 'different', similarity };
