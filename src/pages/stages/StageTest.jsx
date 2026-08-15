@@ -4,6 +4,7 @@ import HypothesisFocus from '@/components/journey/HypothesisFocus';
 import NextBestExperimentPanel from '@/components/next-test/NextBestExperimentPanel';
 import UnknownsChecklist from '@/components/stages/UnknownsChecklist';
 import SimEntryCard from '@/components/worksim/SimEntryCard';
+import LibraryTestPicker from '@/components/library/LibraryTestPicker';
 import JourneyEmptyState from '@/components/journey/JourneyEmptyState';
 import useJourneyFocus from '@/hooks/useJourneyFocus';
 import { Sk } from '@/components/PageSkeleton';
@@ -45,6 +46,9 @@ export default function StageTest() {
         action={action}
       />
       <UnknownsChecklist progress={focus?.progress} pathId={journey.currentPath.id} />
+      {/* No test set up yet: the validated library is the first place to look,
+          and it says plainly when this career is not covered. */}
+      {!exp && <LibraryTestPicker path={journey.currentPath} />}
       <NextBestExperimentPanel pathId={journey.currentPath.id} />
       <SimEntryCard />
       <p className="tp-meta text-center" style={{ color: 'var(--text-muted)' }}>

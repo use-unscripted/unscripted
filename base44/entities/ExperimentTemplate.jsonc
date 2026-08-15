@@ -1,0 +1,127 @@
+{
+  "name": "ExperimentTemplate",
+  "type": "object",
+  "properties": {
+    "blueprint_key": {
+      "type": "string"
+    },
+    "library_version": {
+      "type": "number",
+      "default": 1
+    },
+    "career_key": {
+      "type": "string"
+    },
+    "career_title": {
+      "type": "string"
+    },
+    "match_terms": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "role_blueprint_id": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string"
+    },
+    "test_question": {
+      "type": "string"
+    },
+    "why_it_matters": {
+      "type": "string"
+    },
+    "what_it_tests": {
+      "type": "string"
+    },
+    "cannot_simulate": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "decision_dimension_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "work_characteristics_tested": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "estimated_minutes_low": {
+      "type": "number"
+    },
+    "estimated_minutes_high": {
+      "type": "number"
+    },
+    "effort": {
+      "type": "string"
+    },
+    "realistic_scenario": {
+      "type": "string"
+    },
+    "instructions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "deliverable": {
+      "type": "string"
+    },
+    "evidence_required": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "human_component": {
+      "type": "string"
+    },
+    "evaluation_criteria": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "published",
+        "retired"
+      ],
+      "default": "published"
+    }
+  },
+  "required": [
+    "blueprint_key",
+    "career_key",
+    "title",
+    "test_question"
+  ],
+  "rls": {
+    "read": {},
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

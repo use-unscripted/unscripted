@@ -77,6 +77,7 @@ const AnswerNudge = lazy(() => import('@/pages/AnswerNudge'));
 const AdminAiFailures = lazy(() => import('@/pages/AdminAiFailures'));
 const AdminDecisionIntelligence = lazy(() => import('@/pages/AdminDecisionIntelligence'));
 const AdminExperimentValidation = lazy(() => import('@/pages/AdminExperimentValidation'));
+const AdminLibrarySeed = lazy(() => import('@/pages/AdminLibrarySeed'));
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError } = useAuth();
@@ -192,6 +193,8 @@ const AuthenticatedApp = () => {
           <Route path="/admin/decision-intelligence" element={<AdminDecisionIntelligence />} />
           {/* Team-only. Where experiment validation is actually decided. */}
           <Route path="/admin/experiment-validation" element={<AdminExperimentValidation />} />
+          {/* Team-only. Publishes the validated career library. */}
+          <Route path="/admin/career-library" element={<AdminLibrarySeed />} />
 
         </Route>
       </Route>
