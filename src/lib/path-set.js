@@ -27,6 +27,10 @@ export async function loadOwnedPaths() {
   const rows = await base44.entities.PathRecommendations.list('-created_date', 500);
   const paths = (Array.isArray(rows) ? rows : []).filter(
     r => r && (r.created_by_id === user.id || r.user_id === user.id)
+      // A row merged into another by the data-integrity pass is history, not a
+      // hypothesis. Filtering it at the one loader every screen and engine reads
+      // means nothing can offer it, select it, or count it twice.
+      && r.integrity_status !== 'merged'
   );
   return { user, paths };
 }

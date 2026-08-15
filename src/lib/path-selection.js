@@ -58,6 +58,13 @@ async function findExistingExperiment(path, cycle) {
  */
 export function selectPathAndBeginExperiment(path, allPaths = []) {
   if (!path?.id) throw new Error('No path to select.');
+  // A duplicate that the integrity pass merged away must never become the
+  // selected hypothesis again — the surviving row is the one that carries the
+  // history.
+  if (path.integrity_status === 'merged' && path.duplicate_of_id) {
+    const survivor = allPaths.find(p => p.id === path.duplicate_of_id);
+    if (survivor) path = survivor;
+  }
 
   return onceInFlight(`select-path:${path.id}`, async () => {
     // Access first, but only when this would actually START a cycle. A student
