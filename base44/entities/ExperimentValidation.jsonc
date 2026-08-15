@@ -1,0 +1,147 @@
+{
+  "name": "ExperimentValidation",
+  "type": "object",
+  "properties": {
+    "experiment_id": {
+      "type": "string"
+    },
+    "blueprint_key": {
+      "type": "string"
+    },
+    "experiment_title": {
+      "type": "string"
+    },
+    "experiment_version": {
+      "type": "number",
+      "default": 1
+    },
+    "role_blueprint_id": {
+      "type": "string"
+    },
+    "role_blueprint_version": {
+      "type": "number"
+    },
+    "role_task_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "decision_dimension_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "work_characteristics_tested": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "career_characteristics_represented": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "career_characteristics_not_represented": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "validation_scope": {
+      "type": "string"
+    },
+    "what_it_does": {
+      "type": "string"
+    },
+    "best_for": {
+      "type": "string"
+    },
+    "estimated_minutes_low": {
+      "type": "number"
+    },
+    "estimated_minutes_high": {
+      "type": "number"
+    },
+    "mapping_reviewed": {
+      "type": "boolean",
+      "default": false
+    },
+    "field_calibrated": {
+      "type": "boolean",
+      "default": false
+    },
+    "field_calibration_note": {
+      "type": "string"
+    },
+    "validation_status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "published",
+        "needs_rereview",
+        "retired"
+      ],
+      "default": "draft"
+    },
+    "last_validated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "professional_review_version": {
+      "type": "number"
+    },
+    "source_version": {
+      "type": "number"
+    },
+    "experiment_strength_score": {
+      "type": "number"
+    },
+    "experiment_strength_level": {
+      "type": "string",
+      "enum": [
+        "developing",
+        "grounded",
+        "strong",
+        "highly_validated"
+      ]
+    },
+    "validation_level": {
+      "type": "number"
+    },
+    "component_scores": {
+      "type": "object"
+    },
+    "scoring_version": {
+      "type": "string"
+    },
+    "calculated_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "experiment_id"
+  ],
+  "rls": {
+    "read": {},
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

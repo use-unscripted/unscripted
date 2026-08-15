@@ -20,6 +20,8 @@ import ReviewedWork from '@/components/measurement/ReviewedWork';
 import { loadMeasurements } from '@/lib/experiment-measurement';
 import { behavioralSnapshot } from '@/lib/expectation-reality';
 import { Sk } from '@/components/PageSkeleton';
+import ExperimentValidationCard from '@/components/validation/ExperimentValidationCard';
+import useExperimentValidation from '@/hooks/useExperimentValidation';
 
 const OPEN = ['draft', 'planned', 'in_progress'];
 const alive = (rows) => (Array.isArray(rows) ? rows : []).filter(r => r.deletion_status !== 'deleted');
@@ -32,6 +34,9 @@ export default function ActiveExperiment() {
   // an experiment is actually started and finished.
   const [measurement, setMeasurement] = useState(null);
   const [learned, setLearned] = useState(null);
+  // How well validated this experiment is, and how much it would teach THIS
+  // student. Read from stored validation records, never generated.
+  const validationReading = useExperimentValidation(state?.experiment);
 
   const load = useCallback(async () => {
     const cycle = await getActiveCycle().catch(() => null);
@@ -135,6 +140,8 @@ export default function ActiveExperiment() {
 
       <div className="space-y-5">
         <ExperimentOverview experiment={experiment} path={path} />
+
+        <ExperimentValidationCard reading={validationReading} pathName={path?.path_name} />
 
         {/* Before the work: what the student expects. After every mission is
             done: what actually happened. Both are what the reflection, the

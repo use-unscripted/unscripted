@@ -1,0 +1,193 @@
+{
+  "name": "RoleBlueprint",
+  "type": "object",
+  "properties": {
+    "career_title": {
+      "type": "string"
+    },
+    "career_family": {
+      "type": "string"
+    },
+    "seniority_scope": {
+      "type": "string"
+    },
+    "path_id": {
+      "type": "string"
+    },
+    "career_id": {
+      "type": "string"
+    },
+    "blueprint_version": {
+      "type": "number",
+      "default": 1
+    },
+    "supersedes_id": {
+      "type": "string"
+    },
+    "change_note": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "developing",
+        "source_grounded",
+        "professionally_reviewed",
+        "fully_supported",
+        "retired"
+      ],
+      "default": "developing"
+    },
+    "source_count": {
+      "type": "number"
+    },
+    "professional_reviewer_count": {
+      "type": "number"
+    },
+    "last_reviewed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "core_tasks": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "common_work_activities": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "typical_decisions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "common_deliverables": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "tools_used": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "skills_used": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "work_environment": {
+      "type": "string"
+    },
+    "work_schedule_notes": {
+      "type": "string"
+    },
+    "entry_level_responsibilities": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "common_misconceptions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "cannot_be_simulated": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "characteristics": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "dimension": {
+            "type": "string"
+          },
+          "dimension_label": {
+            "type": "string"
+          },
+          "importance": {
+            "type": "string",
+            "enum": [
+              "high",
+              "medium",
+              "low"
+            ]
+          },
+          "note": {
+            "type": "string"
+          },
+          "simulatable": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "market_validation": {
+      "type": "object",
+      "properties": {
+        "sample_size": {
+          "type": "number"
+        },
+        "review_date": {
+          "type": "string"
+        },
+        "recurring_responsibilities": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "recurring_skills": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "recurring_tools": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "current_market_notes": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "required": [
+    "career_title"
+  ],
+  "rls": {
+    "read": {},
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

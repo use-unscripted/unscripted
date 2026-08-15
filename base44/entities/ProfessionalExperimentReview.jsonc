@@ -1,0 +1,103 @@
+{
+  "name": "ProfessionalExperimentReview",
+  "type": "object",
+  "properties": {
+    "experiment_id": {
+      "type": "string"
+    },
+    "blueprint_key": {
+      "type": "string"
+    },
+    "experiment_version": {
+      "type": "number"
+    },
+    "role_blueprint_id": {
+      "type": "string"
+    },
+    "reviewer_id": {
+      "type": "string"
+    },
+    "reviewer_role": {
+      "type": "string"
+    },
+    "reviewer_display": {
+      "type": "string"
+    },
+    "relevant_experience": {
+      "type": "string"
+    },
+    "share_identity": {
+      "type": "boolean",
+      "default": false
+    },
+    "review_date": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "realism_rating": {
+      "type": "number"
+    },
+    "entry_level_realism_rating": {
+      "type": "number"
+    },
+    "importance_rating": {
+      "type": "number"
+    },
+    "difficulty_rating": {
+      "type": "number"
+    },
+    "terminology_rating": {
+      "type": "number"
+    },
+    "workstyle_validity_rating": {
+      "type": "number"
+    },
+    "missing_elements": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "misleading_elements": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "recommendations": {
+      "type": "string"
+    },
+    "approval_status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "approved",
+        "changes_requested",
+        "rejected",
+        "superseded"
+      ],
+      "default": "pending"
+    }
+  },
+  "required": [
+    "experiment_id"
+  ],
+  "rls": {
+    "read": {},
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

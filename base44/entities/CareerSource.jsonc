@@ -1,0 +1,81 @@
+{
+  "name": "CareerSource",
+  "type": "object",
+  "properties": {
+    "role_blueprint_id": {
+      "type": "string"
+    },
+    "source_type": {
+      "type": "string",
+      "enum": [
+        "onet",
+        "bls",
+        "professional_association",
+        "employer_job_description",
+        "employer_career_page",
+        "professional_supplied",
+        "university_career_resource",
+        "industry_research",
+        "manually_verified_other"
+      ]
+    },
+    "source_name": {
+      "type": "string"
+    },
+    "source_url": {
+      "type": "string"
+    },
+    "source_published_at": {
+      "type": "string"
+    },
+    "source_verified_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "relevant_sections": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "reviewer_id": {
+      "type": "string"
+    },
+    "publicly_viewable": {
+      "type": "boolean",
+      "default": true
+    },
+    "active_status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "outdated",
+        "retired"
+      ],
+      "default": "active"
+    }
+  },
+  "required": [
+    "role_blueprint_id",
+    "source_type",
+    "source_name"
+  ],
+  "rls": {
+    "read": {},
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
