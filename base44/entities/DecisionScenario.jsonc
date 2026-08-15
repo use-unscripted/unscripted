@@ -1,0 +1,195 @@
+{
+  "name": "DecisionScenario",
+  "type": "object",
+  "properties": {
+    "scenario_key": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string"
+    },
+    "scenario_text": {
+      "type": "string"
+    },
+    "scenario_type": {
+      "type": "string",
+      "enum": [
+        "workstyle",
+        "decision_style",
+        "performance_objective",
+        "performance_rubric"
+      ],
+      "default": "workstyle"
+    },
+    "context_type": {
+      "type": "string",
+      "enum": [
+        "general",
+        "career_specific",
+        "experiment_embedded",
+        "onboarding"
+      ],
+      "default": "general"
+    },
+    "career_id": {
+      "type": "string"
+    },
+    "career_title": {
+      "type": "string"
+    },
+    "role_blueprint_id": {
+      "type": "string"
+    },
+    "experiment_id": {
+      "type": "string"
+    },
+    "difficulty": {
+      "type": "string",
+      "enum": [
+        "introductory",
+        "moderate",
+        "challenging"
+      ]
+    },
+    "dimensions_intended": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "what_this_does_not_tell_us": {
+      "type": "string"
+    },
+    "source_type": {
+      "type": "string",
+      "enum": [
+        "onet",
+        "bls",
+        "employer_job_description",
+        "professional_supplied",
+        "industry_research",
+        "internal_draft",
+        "manually_verified_other"
+      ]
+    },
+    "source_note": {
+      "type": "string"
+    },
+    "reviewer_count": {
+      "type": "number",
+      "default": 0
+    },
+    "last_reviewed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "validation_status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "published",
+        "needs_rereview",
+        "retired"
+      ],
+      "default": "draft"
+    },
+    "version": {
+      "type": "number",
+      "default": 1
+    },
+    "active_status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "inactive"
+      ],
+      "default": "active"
+    },
+    "scoring_version": {
+      "type": "string"
+    },
+    "answer_key_option_id": {
+      "type": "string"
+    },
+    "accepted_answer_range": {
+      "type": "object",
+      "properties": {
+        "low": {
+          "type": "number"
+        },
+        "high": {
+          "type": "number"
+        },
+        "unit": {
+          "type": "string"
+        }
+      }
+    },
+    "answer_explanation": {
+      "type": "string"
+    },
+    "rubric_criteria": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "criterion": {
+            "type": "string"
+          },
+          "levels": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "level": {
+                  "type": "string"
+                },
+                "score": {
+                  "type": "number"
+                },
+                "descriptor": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "role_relevance": {
+      "type": "string"
+    },
+    "evaluation_version": {
+      "type": "string"
+    },
+    "reviewer_provenance": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "title",
+    "scenario_text",
+    "scenario_type"
+  ],
+  "rls": {
+    "read": {},
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

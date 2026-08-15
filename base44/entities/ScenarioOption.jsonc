@@ -1,0 +1,87 @@
+{
+  "name": "ScenarioOption",
+  "type": "object",
+  "properties": {
+    "scenario_id": {
+      "type": "string"
+    },
+    "scenario_version": {
+      "type": "number",
+      "default": 1
+    },
+    "option_text": {
+      "type": "string"
+    },
+    "display_order": {
+      "type": "number"
+    },
+    "dimension_signal_mapping": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "dimension": {
+            "type": "string"
+          },
+          "signal_direction": {
+            "type": "string",
+            "enum": [
+              "draws_toward",
+              "draws_away",
+              "unclear"
+            ]
+          },
+          "signal_strength": {
+            "type": "string",
+            "enum": [
+              "weak",
+              "moderate"
+            ]
+          }
+        }
+      }
+    },
+    "context_notes": {
+      "type": "string"
+    },
+    "scoring_metadata": {
+      "type": "object"
+    },
+    "is_correct": {
+      "type": "boolean"
+    },
+    "correct_explanation": {
+      "type": "string"
+    },
+    "active_status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "superseded"
+      ],
+      "default": "active"
+    }
+  },
+  "required": [
+    "scenario_id",
+    "option_text"
+  ],
+  "rls": {
+    "read": {},
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

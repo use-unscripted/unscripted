@@ -1,0 +1,93 @@
+{
+  "name": "ScenarioVersion",
+  "type": "object",
+  "properties": {
+    "scenario_id": {
+      "type": "string"
+    },
+    "scenario_key": {
+      "type": "string"
+    },
+    "scenario_version": {
+      "type": "number"
+    },
+    "supersedes_version": {
+      "type": "number"
+    },
+    "is_current": {
+      "type": "boolean",
+      "default": true
+    },
+    "content_snapshot": {
+      "type": "object"
+    },
+    "options_snapshot": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "material": {
+      "type": "boolean",
+      "default": false
+    },
+    "changes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "field": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "before": {
+            "type": "string"
+          },
+          "after": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "change_summary": {
+      "type": "string"
+    },
+    "validation_status_after": {
+      "type": "string"
+    },
+    "reviews_superseded": {
+      "type": "number"
+    },
+    "published_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "published_by_id": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "scenario_id",
+    "scenario_version"
+  ],
+  "rls": {
+    "read": {},
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

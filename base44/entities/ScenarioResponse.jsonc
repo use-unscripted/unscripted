@@ -1,0 +1,130 @@
+{
+  "name": "ScenarioResponse",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string"
+    },
+    "scenario_id": {
+      "type": "string"
+    },
+    "scenario_key": {
+      "type": "string"
+    },
+    "scenario_version": {
+      "type": "number"
+    },
+    "scenario_type": {
+      "type": "string"
+    },
+    "selected_option_id": {
+      "type": "string"
+    },
+    "free_text_answer": {
+      "type": "string"
+    },
+    "numeric_answer": {
+      "type": "number"
+    },
+    "response_context": {
+      "type": "string",
+      "enum": [
+        "onboarding",
+        "experiment",
+        "path_review",
+        "standalone"
+      ],
+      "default": "standalone"
+    },
+    "career_cycle_id": {
+      "type": "string"
+    },
+    "path_id": {
+      "type": "string"
+    },
+    "path_name": {
+      "type": "string"
+    },
+    "experiment_id": {
+      "type": "string"
+    },
+    "dimension_signals_generated": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "dimension": {
+            "type": "string"
+          },
+          "dimension_label": {
+            "type": "string"
+          },
+          "signal_direction": {
+            "type": "string"
+          },
+          "signal_strength": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "performance_result": {
+      "type": "object",
+      "properties": {
+        "is_correct": {
+          "type": "boolean"
+        },
+        "score": {
+          "type": "number"
+        },
+        "max_score": {
+          "type": "number"
+        },
+        "criterion_scores": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "criterion": {
+                "type": "string"
+              },
+              "score": {
+                "type": "number"
+              }
+            }
+          }
+        },
+        "evaluation_version": {
+          "type": "string"
+        }
+      }
+    },
+    "response_time_ms": {
+      "type": "number"
+    },
+    "scoring_version": {
+      "type": "string"
+    },
+    "completed_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "scenario_id"
+  ],
+  "rls": {
+    "create": {
+      "created_by_id": "{{user.id}}"
+    },
+    "read": {
+      "created_by_id": "{{user.id}}"
+    },
+    "update": {
+      "created_by_id": "{{user.id}}"
+    },
+    "delete": {
+      "created_by_id": "{{user.id}}"
+    }
+  }
+}
