@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { loadOwnedPaths, authoritativeSet } from '@/lib/path-set';
+import PathFocusPanel from '@/components/journey/PathFocusPanel';
 import { selectPathAndBeginExperiment } from '@/lib/path-selection';
 import { CycleLimitError } from '@/lib/pilot-access';
 import PathComparisonWorkspace from '@/components/journey/PathComparisonWorkspace';
@@ -15,6 +17,7 @@ import { Sk } from '@/components/PageSkeleton';
  * that does both at once.
  */
 export default function ChoosePath({ mode = 'choose', onCompareSelect }) {
+  const navigate = useNavigate();
   const [paths, setPaths] = useState(null);
   const [busyId, setBusyId] = useState(null);
   const [error, setError] = useState(null);
@@ -37,12 +40,15 @@ export default function ChoosePath({ mode = 'choose', onCompareSelect }) {
       const result = await selectPathAndBeginExperiment(path, paths?.all || []);
       setConfirmed({ pathName: path.path_name, experiment: result.experiment });
       await load();
+      // Straight to the Test stage, which shows the path now being tested and
+      // the unknowns still open on it.
+      navigate('/test');
     } catch (err) {
       if (!(err instanceof CycleLimitError)) setError(path.id);
     } finally {
       setBusyId(null);
     }
-  }, [mode, onCompareSelect, paths, load]);
+  }, [mode, onCompareSelect, paths, load, navigate]);
 
   if (!paths) return <Sk h={320} r={16} />;
 
@@ -55,6 +61,7 @@ export default function ChoosePath({ mode = 'choose', onCompareSelect }) {
           onDismiss={() => setConfirmed(null)}
         />
       )}
+      {mode === 'choose' && <PathFocusPanel paths={paths.comparison} />}
       <PathComparisonWorkspace
         paths={paths.comparison}
         onSelect={handleSelect}

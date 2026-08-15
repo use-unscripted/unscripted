@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import StageShell from '@/components/stages/StageShell';
 import HypothesisFocus from '@/components/journey/HypothesisFocus';
 import NextBestExperimentPanel from '@/components/next-test/NextBestExperimentPanel';
+import UnknownsChecklist from '@/components/stages/UnknownsChecklist';
 import SimEntryCard from '@/components/worksim/SimEntryCard';
 import JourneyEmptyState from '@/components/journey/JourneyEmptyState';
 import useJourneyFocus from '@/hooks/useJourneyFocus';
@@ -27,6 +28,7 @@ export default function StageTest() {
         experiment={journey.nextExperiment}
         action={journey.action}
       />
+      <UnknownsChecklist progress={focus?.progress} pathId={journey.currentPath.id} />
       <NextBestExperimentPanel pathId={journey.currentPath.id} />
       <SimEntryCard />
       <p className="tp-meta text-center" style={{ color: 'var(--text-muted)' }}>

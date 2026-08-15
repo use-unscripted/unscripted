@@ -19,6 +19,7 @@ import { Sk, SkControls, SkGrid } from '@/components/PageSkeleton';
 import { ProofSuccessToast } from '@/components/experiments/AddProofModal';
 import PathSwitcher from '@/components/PathSwitcher';
 import AddProofStandaloneModal from '@/components/experiments/AddProofStandaloneModal';
+import ExperimentProofList from '@/components/proof/ExperimentProofList';
 import { safeExternalUrl } from '@/lib/safe-url';
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
@@ -239,6 +240,9 @@ export default function ProofOfWorkPage() {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
   const [showNew, setShowNew] = useState(false);
+  // Set when proof is being added from one specific experiment, so its flow
+  // opens already filed under that experiment.
+  const [proofFor, setProofFor] = useState(null);
   const [search, setSearch] = useState('');
   const [filterPath, setFilterPath] = useState('all');
   const [filterExp, setFilterExp] = useState('all');
@@ -335,11 +339,13 @@ export default function ProofOfWorkPage() {
         />
       )}
 
-      {showNew && (
+      {(showNew || proofFor) && (
         <AddProofStandaloneModal
-          onClose={() => setShowNew(false)}
+          preselectedExperiment={proofFor || undefined}
+          onClose={() => { setShowNew(false); setProofFor(null); }}
           onSaved={(proof, missionTitle) => {
             setShowNew(false);
+            setProofFor(null);
             load();
             setSuccessToast({ proof, missionTitle: missionTitle || '' });
             if (toastTimer.current) clearTimeout(toastTimer.current);
@@ -397,6 +403,10 @@ export default function ProofOfWorkPage() {
           </button>
         }
       />
+
+      {!loading && !loadError && (
+        <ExperimentProofList experiments={experiments} onAdd={setProofFor} />
+      )}
 
       {/* Search + Filters.
           Held back until the data lands. The path and experiment dropdowns only
