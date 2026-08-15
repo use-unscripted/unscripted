@@ -1,0 +1,137 @@
+{
+  "name": "ExperimentVersion",
+  "type": "object",
+  "properties": {
+    "experiment_id": {
+      "type": "string"
+    },
+    "blueprint_key": {
+      "type": "string"
+    },
+    "experiment_title": {
+      "type": "string"
+    },
+    "experiment_version": {
+      "type": "number"
+    },
+    "supersedes_version": {
+      "type": "number"
+    },
+    "is_current": {
+      "type": "boolean",
+      "default": true
+    },
+    "content_snapshot": {
+      "type": "object"
+    },
+    "change_summary": {
+      "type": "string"
+    },
+    "material": {
+      "type": "boolean",
+      "default": false
+    },
+    "changes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "field": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "before": {
+            "type": "string"
+          },
+          "after": {
+            "type": "string"
+          },
+          "similarity": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "validation_level_before": {
+      "type": "number"
+    },
+    "validation_level_after": {
+      "type": "number"
+    },
+    "strength_score_before": {
+      "type": "number"
+    },
+    "strength_score_after": {
+      "type": "number"
+    },
+    "reviews_superseded": {
+      "type": "number"
+    },
+    "assigned_reviewer_id": {
+      "type": "string"
+    },
+    "assigned_reviewer_display": {
+      "type": "string"
+    },
+    "assigned_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "rereview_status": {
+      "type": "string",
+      "enum": [
+        "not_required",
+        "pending",
+        "assigned",
+        "changes_requested",
+        "rejected",
+        "approved"
+      ],
+      "default": "not_required"
+    },
+    "approved_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "approved_by_id": {
+      "type": "string"
+    },
+    "published_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "published_by_id": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "experiment_version"
+  ],
+  "rls": {
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

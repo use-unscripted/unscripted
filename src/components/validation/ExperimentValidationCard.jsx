@@ -4,6 +4,8 @@ import StrengthMeter from '@/components/validation/StrengthMeter';
 import PersonalValuePanel from '@/components/validation/PersonalValuePanel';
 import TestsAndLimits from '@/components/validation/TestsAndLimits';
 import HowValidatedPanel from '@/components/validation/HowValidatedPanel';
+import RereviewNotice from '@/components/validation/RereviewNotice';
+import { REREVIEW_LABEL } from '@/lib/experiment-revision';
 import { Sk } from '@/components/PageSkeleton';
 
 /**
@@ -38,9 +40,14 @@ export default function ExperimentValidationCard({ reading, pathName }) {
       </p>
       <div className="mt-3"><StrengthMeter strength={strength} /></div>
 
+      <RereviewNotice strength={strength} validation={validation} />
+
       <div className="tp-meta mt-4 flex flex-wrap items-center gap-x-5 gap-y-2" style={{ color: 'var(--text-muted)' }}>
         <span className="font-semibold" style={{ color: 'var(--text-secondary)' }}>
-          {strength.validation_level_meta.label}
+          {/* While a material update is awaiting re-review, the previous
+              version's badge would be a claim about work this experiment no
+              longer asks for. */}
+          {strength.rereview_pending ? REREVIEW_LABEL : strength.validation_level_meta.label}
         </span>
         <span className="flex items-center gap-1">
           <Users size={12} /> {strength.reviewer_count} professional review{strength.reviewer_count === 1 ? '' : 's'}

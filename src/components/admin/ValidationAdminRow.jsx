@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Loader2 } from 'lucide-react';
+import RereviewPanel from '@/components/admin/RereviewPanel';
 
 const STATUS_TINT = {
   published: { background: 'var(--success-50)', color: 'var(--success-700)' },
@@ -9,10 +10,12 @@ const STATUS_TINT = {
 };
 
 /** One validation record, with the staff decisions that can be taken on it. */
-export default function ValidationAdminRow({ row, onChange, onRewritten }) {
+export default function ValidationAdminRow({ row, onChange, onRewritten, onAssign, onSubmitReview }) {
   const [busy, setBusy] = useState('');
+  const [open, setOpen] = useState(false);
   const { validation: v, blueprint, strength, sources, reviews } = row;
   const approved = reviews.filter(r => r.approval_status === 'approved').length;
+  const superseded = reviews.filter(r => r.approval_status === 'superseded').length;
 
   const run = async (key, fn) => {
     setBusy(key);
@@ -47,7 +50,7 @@ export default function ValidationAdminRow({ row, onChange, onRewritten }) {
 
       <p className="mt-1 font-mono text-xs text-[color:var(--ink-500)]">
         level {strength.validation_level} · {strength.sufficient ? `${strength.score}/100` : 'no score'} ·
-        {' '}{sources.length} sources · {approved} approved reviews · {blueprint?.career_title || 'no blueprint'}
+        {' '}{sources.length} sources · {approved} approved reviews{superseded ? ` · ${superseded} superseded` : ''} · {blueprint?.career_title || 'no blueprint'}
         {v.mapping_reviewed ? ' · mapping reviewed' : ''}{v.field_calibrated ? ' · field calibrated' : ''}
       </p>
 
@@ -63,7 +66,13 @@ export default function ValidationAdminRow({ row, onChange, onRewritten }) {
           <Btn id="ret" label="Retire" onClick={() => onChange(row, { validation_status: 'retired' })} />
         )}
         <Btn id="rw" label="Experiment rewritten (needs re-review)" onClick={() => onRewritten(row)} />
+        <button type="button" onClick={() => setOpen(o => !o)}
+          className="rounded-lg border border-[color:var(--ink-200)] px-3 py-1.5 text-xs font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)]">
+          {open ? 'Hide re-review' : 'Re-review'}
+        </button>
       </div>
+
+      {open && <RereviewPanel row={row} onAssign={onAssign} onSubmitReview={onSubmitReview} />}
     </div>
   );
 }

@@ -78,8 +78,15 @@ export default function HowValidatedPanel({ reading, onClose }) {
           <p className="tp-body mt-2" style={{ color: 'var(--text-secondary)' }}>
             {approved.length
               ? `Reviewed by ${approved.length} professional${approved.length === 1 ? '' : 's'} with relevant industry experience.`
-              : 'No professional has reviewed this experiment yet.'}
+              : 'No professional has reviewed this current version yet.'}
           </p>
+          {strength.rereview_pending && (
+            <p className="tp-body mt-2" style={{ color: 'var(--warning-700)' }}>
+              This experiment was materially updated. {strength.superseded_review_count
+                ? `${strength.superseded_review_count} earlier review${strength.superseded_review_count === 1 ? '' : 's'} of the previous version remain on file, but no longer apply to this one.`
+                : 'Earlier reviews no longer apply to this version.'} A professional re-review is pending.
+            </p>
+          )}
           {approved.length > 0 && (
             <ul className="mt-3 space-y-1.5">
               {approved.map(r => (

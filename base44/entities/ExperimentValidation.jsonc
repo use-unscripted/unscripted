@@ -121,6 +121,37 @@
     "calculated_at": {
       "type": "string",
       "format": "date-time"
+    },
+    "content_snapshot": {
+      "type": "object"
+    },
+    "current_version_record_id": {
+      "type": "string"
+    },
+    "previous_experiment_version": {
+      "type": "number"
+    },
+    "previous_validation_level": {
+      "type": "number"
+    },
+    "rereview_reason": {
+      "type": "string"
+    },
+    "rereview_change_labels": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "rereview_opened_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "pending_reviewer_id": {
+      "type": "string"
+    },
+    "pending_reviewer_display": {
+      "type": "string"
     }
   },
   "required": [

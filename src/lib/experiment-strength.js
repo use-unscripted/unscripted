@@ -186,6 +186,10 @@ export function experimentStrength({ validation, sources = [], reviews = [], eff
     last_reviewed_at: approved.map(r => r.review_date).filter(Boolean).sort().slice(-1)[0]
       || validation?.last_validated_at || null,
     field_sample_shown: sample,
+    // The current wording is materially newer than any approval on file. The
+    // badge must say so rather than carry the previous version's status.
+    rereview_pending: validation?.validation_status === 'needs_rereview',
+    superseded_review_count: (reviews || []).filter(r => r.approval_status === 'superseded').length,
     reasons,
     // How much trust downstream evidence should place in a result from this
     // experiment. Never zero: a student's own reaction is always worth keeping.

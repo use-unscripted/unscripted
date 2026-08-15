@@ -4,7 +4,7 @@ import PageHeader from '@/components/PageHeader';
 import { SkCards } from '@/components/PageSkeleton';
 import { useAuth } from '@/lib/AuthContext';
 import ValidationAdminRow from '@/components/admin/ValidationAdminRow';
-import { loadValidationAdmin, updateValidation, markRewritten } from '@/lib/validation-admin';
+import { loadValidationAdmin, updateValidation, markRewritten, assignReviewer, submitRereview } from '@/lib/validation-admin';
 
 const TABS = [
   { id: 'needs_rereview', label: 'Needs re-review' },
@@ -47,6 +47,8 @@ export default function AdminExperimentValidation() {
 
   const change = async (row, patch) => { await updateValidation(row, patch); await load(); };
   const rewritten = async (row) => { await markRewritten(row); await load(); };
+  const assign = async (row, reviewer) => { await assignReviewer(row, reviewer); await load(); };
+  const review = async (row, form) => { await submitRereview(row, form); await load(); };
 
   return (
     <main className="mx-auto max-w-5xl px-5 py-10 sm:px-8">
@@ -90,7 +92,8 @@ export default function AdminExperimentValidation() {
       ) : (
         <div className="space-y-2">
           {rows.map(row => (
-            <ValidationAdminRow key={row.validation.id} row={row} onChange={change} onRewritten={rewritten} />
+            <ValidationAdminRow key={row.validation.id} row={row} onChange={change} onRewritten={rewritten}
+              onAssign={assign} onSubmitReview={review} />
           ))}
         </div>
       )}
