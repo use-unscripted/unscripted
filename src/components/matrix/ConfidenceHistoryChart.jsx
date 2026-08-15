@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip } from 'recharts';
 
 /**
  * How the student's thinking has changed, read from stored hypothesis versions
@@ -62,12 +61,15 @@ export default function ConfidenceHistoryChart({ rows }) {
     );
   }
 
+  /* Drawn as plain SVG rather than through a charting library: the chart is a
+     handful of straight lines on a fixed 0–100 scale, and the library was a
+     large extra dependency for it. viewBox scaling keeps it responsive. */
   const length = Math.max(...series.map(s => s.trend.points.length));
-  const data = Array.from({ length }, (_, i) => {
-    const point = { step: series.find(s => s.trend.points[i])?.trend.points[i]?.label || `Step ${i + 1}` };
-    series.forEach(s => { point[s.name] = s.trend.points[i]?.value ?? null; });
-    return point;
-  });
+  const W = 720, H = 280, L = 38, R = 12, T = 12, B = 30;
+  const x = (i) => L + (length > 1 ? (i * (W - L - R)) / (length - 1) : (W - L - R) / 2);
+  const y = (v) => T + ((100 - v) * (H - T - B)) / 100;
+  const labels = Array.from({ length }, (_, i) =>
+    series.find(s => s.trend.points[i])?.trend.points[i]?.label || `Step ${i + 1}`);
 
   const onPoint = (careerName, index) => {
     const s = series.find(x => x.name === careerName);
@@ -93,26 +95,44 @@ export default function ConfidenceHistoryChart({ rows }) {
         ))}
       </div>
 
-      <div className="mt-4 h-[280px] w-full">
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={data} margin={{ top: 10, right: 12, bottom: 4, left: -18 }}>
-            <CartesianGrid stroke="var(--border-light)" vertical={false} />
-            <XAxis dataKey="step" tick={{ fontSize: 11, fill: 'var(--text-muted)' }} tickLine={false} axisLine={{ stroke: 'var(--border-light)' }} interval="preserveStartEnd" />
-            <YAxis domain={[0, 100]} tick={{ fontSize: 11, fill: 'var(--text-muted)' }} tickLine={false} axisLine={false} />
-            <Tooltip
-              contentStyle={{ borderRadius: 12, border: '1px solid var(--border-light)', fontSize: 12 }}
-              formatter={(v, name) => [`${v}%`, name]}
-            />
-            {series.map((s, i) => (
-              <Line key={s.pathId} type="monotone" dataKey={s.name} connectNulls
-                stroke={STROKES[i].color} strokeWidth={2.5} strokeDasharray={STROKES[i].dash}
-                dot={{ r: 4, strokeWidth: 2, fill: 'var(--background-primary)', cursor: 'pointer' }}
-                activeDot={{ r: 6, onClick: (_, payload) => onPoint(s.name, payload?.index ?? 0) }}
-                isAnimationActive
-              />
-            ))}
-          </LineChart>
-        </ResponsiveContainer>
+      <div className="mt-4 w-full">
+        <svg viewBox={`0 0 ${W} ${H}`} className="h-[280px] w-full" role="img"
+          aria-label="Confidence over time for each hypothesis you have updated">
+          {[0, 25, 50, 75, 100].map(v => (
+            <g key={v}>
+              <line x1={L} y1={y(v)} x2={W - R} y2={y(v)} stroke="var(--border-light)" strokeWidth="1" />
+              <text x={L - 8} y={y(v) + 4} textAnchor="end" fontSize="11" fill="var(--text-muted)">{v}</text>
+            </g>
+          ))}
+          {labels.map((label, i) => (
+            <text key={i} x={x(i)} y={H - 8} textAnchor="middle" fontSize="11" fill="var(--text-muted)">
+              {label.length > 14 ? `${label.slice(0, 13)}…` : label}
+            </text>
+          ))}
+          {series.map((s, si) => {
+            const pts = s.trend.points
+              .map((p, i) => (typeof p.value === 'number' ? { i, value: p.value } : null))
+              .filter(Boolean);
+            return (
+              <g key={s.pathId}>
+                <polyline
+                  points={pts.map(p => `${x(p.i)},${y(p.value)}`).join(' ')}
+                  fill="none" stroke={STROKES[si].color} strokeWidth="2.5"
+                  strokeDasharray={STROKES[si].dash} strokeLinecap="round"
+                />
+                {pts.map(p => (
+                  <circle key={p.i} cx={x(p.i)} cy={y(p.value)} r="5"
+                    fill="var(--background-primary)" stroke={STROKES[si].color} strokeWidth="2.5"
+                    style={{ cursor: 'pointer' }}
+                    onClick={() => onPoint(s.name, p.i)}
+                  >
+                    <title>{`${s.name}: ${p.value}%`}</title>
+                  </circle>
+                ))}
+              </g>
+            );
+          })}
+        </svg>
       </div>
 
       <Explain point={selected} />
