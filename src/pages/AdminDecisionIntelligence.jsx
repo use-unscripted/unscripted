@@ -6,6 +6,7 @@ import { SkCards } from '@/components/PageSkeleton';
 import { useAuth } from '@/lib/AuthContext';
 import DiSection from '@/components/admin/DiSection';
 import DiExperimentTable from '@/components/admin/DiExperimentTable';
+import DiFlaggedExperiments from '@/components/admin/DiFlaggedExperiments';
 
 /**
  * Decision Intelligence: what the product is learning about which experiences
@@ -76,6 +77,7 @@ export default function AdminDecisionIntelligence() {
           </p>
 
           <DiSection title="Uncertainty" cell={data.uncertainty} />
+          <DiFlaggedExperiments rows={data.flagged_experiments || []} />
           <DiExperimentTable rows={data.experiments} minStudents={data.min_students} />
           <DiSection title="Cross-career learning" cell={data.cross_career} />
           <DiSection title="Hypothesis evolution" cell={data.hypothesis_evolution} />

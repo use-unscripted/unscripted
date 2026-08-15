@@ -13,6 +13,10 @@
  * Pure. The function passes rows in; this file does arithmetic only.
  */
 
+import {
+  feedbackSummary, groupFeedback, flaggedExperiments, MIN_FEEDBACK_STUDENTS,
+} from './experiment-feedback.js';
+
 /** Below this many distinct students, a cell reports nothing but its own absence. */
 export const MIN_STUDENTS = 5;
 
@@ -52,7 +56,8 @@ export function blueprintKey(experiment) {
  * suppression flag, because a rare experiment must not become identifiable just
  * because the aggregate around it is large.
  */
-export function experimentEffectiveness({ experiments = [], measurements = [], reflections = [], proof = [], updates = [] }) {
+export function experimentEffectiveness({ experiments = [], measurements = [], reflections = [], proof = [], updates = [], feedback = [] }) {
+  const feedbackByKey = groupFeedback(feedback, (r) => r.blueprint_key);
   const measurementByExp = new Map(measurements.map((m) => [m.experiment_id, m]));
   const reflectionByExp = new Map(reflections.filter(isLive).map((r) => [r.experiment_id, r]));
   const proofByExp = new Map();
@@ -110,6 +115,15 @@ export function experimentEffectiveness({ experiments = [], measurements = [], r
         dropoff_stage: dropoff(rows, measurementByExp, reflectionByExp),
       };
     });
+    // The post-experiment survey, suppressed on its own sample: an experience
+    // many students ran but few rated must not publish four opinions as a rate.
+    const survey = feedbackSummary(feedbackByKey.get(g.key) || []);
+    const { review_flags: flags = [], suppressed: surveySuppressed, students: _s, reason: _r, ...surveyNumbers } = survey;
+    const surveyCell = surveySuppressed
+      ? { survey_responses: survey.survey_responses, survey_suppressed: true }
+      : surveyNumbers;
+    const flagFields = { flagged_for_review: flags.length > 0, review_flags: flags };
+
     // A suppressed row keeps its identity and nothing else. Emitting the
     // dimensions and the number of hypotheses it appeared in would still be a
     // description of the two or three students who ran it.
@@ -119,11 +133,12 @@ export function experimentEffectiveness({ experiments = [], measurements = [], r
         blueprint_key: base.blueprint_key,
         blueprint_title: base.blueprint_title,
         ...computed,
+        ...flagFields,
         sample_size: size,
         computed_at: new Date().toISOString(),
       };
     }
-    return { ...base, ...computed, sample_size: size, computed_at: new Date().toISOString() };
+    return { ...base, ...computed, ...surveyCell, ...flagFields, sample_size: size, computed_at: new Date().toISOString() };
   }).sort((a, b) => (b.sample_size || 0) - (a.sample_size || 0));
 }
 
@@ -294,8 +309,12 @@ export function dataQuality({ experiments = [], measurements = [], reflections =
 
 /** The whole dashboard payload. */
 export function decisionIntelligence(data) {
+  const groups = groupFeedback(data.feedback || [], (r) => r.blueprint_key);
+  const titles = new Map((data.experiments || []).map((e) => [blueprintKey(e), e.title || '']));
   return {
     min_students: MIN_STUDENTS,
+    min_survey_students: MIN_FEEDBACK_STUDENTS,
+    flagged_experiments: flaggedExperiments(groups, titles),
     computed_at: new Date().toISOString(),
     uncertainty: uncertaintyPicture(data),
     experiments: experimentEffectiveness(data),

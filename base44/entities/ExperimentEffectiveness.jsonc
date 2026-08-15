@@ -18,10 +18,7 @@
       }
     },
     "hypotheses_where_used": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      }
+      "type": "number"
     },
     "students_started": {
       "type": "number"
@@ -68,6 +65,56 @@
     "suppressed": {
       "type": "boolean",
       "default": true
+    },
+    "survey_responses": {
+      "type": "number"
+    },
+    "survey_realism_rating": {
+      "type": "number"
+    },
+    "survey_career_understanding_rating": {
+      "type": "number"
+    },
+    "survey_self_learning_rating": {
+      "type": "number"
+    },
+    "survey_time_value_rating": {
+      "type": "number"
+    },
+    "survey_professional_support_rate": {
+      "type": "number"
+    },
+    "survey_missing_themes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "theme": {
+            "type": "string"
+          },
+          "mentions": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "flagged_for_review": {
+      "type": "boolean",
+      "default": false
+    },
+    "review_flags": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "detail": {
+            "type": "string"
+          }
+        }
+      }
     },
     "computed_at": {
       "type": "string",

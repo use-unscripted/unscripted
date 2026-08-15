@@ -23,7 +23,7 @@ export default async function (req: Request): Promise<Response> {
     if (user.role !== 'admin') return Response.json({ error: 'Forbidden' }, { status: 403 });
 
     const svc = base44.asServiceRole.entities;
-    const [experiments, measurements, reflections, proof, updates, dimensionEvidence, overrides, profiles] = await Promise.all([
+    const [experiments, measurements, reflections, proof, updates, dimensionEvidence, overrides, profiles, feedback] = await Promise.all([
       svc.Experiments.list('-created_date', CAP).catch(() => []),
       svc.ExperimentMeasurement.list('-created_date', CAP).catch(() => []),
       svc.WeeklyReflections.list('-created_date', CAP).catch(() => []),
@@ -32,6 +32,10 @@ export default async function (req: Request): Promise<Response> {
       svc.CareerDimensionEvidence.list('-created_date', CAP).catch(() => []),
       svc.RecommendationOverride.list('-created_date', CAP).catch(() => []),
       svc.StudentProfile.list('-created_date', CAP).catch(() => []),
+      // The post-experiment survey. Read here with the service role and reduced
+      // to counts before anything leaves: no individual answer, and no free
+      // text, is ever returned to the dashboard.
+      svc.ExperimentFeedback.list('-submitted_at', CAP).catch(() => []),
     ]);
 
     const data = {
@@ -43,6 +47,7 @@ export default async function (req: Request): Promise<Response> {
       dimensionEvidence: Array.isArray(dimensionEvidence) ? dimensionEvidence : [],
       overrides: Array.isArray(overrides) ? overrides : [],
       profiles: Array.isArray(profiles) ? profiles : [],
+      feedback: Array.isArray(feedback) ? feedback : [],
     };
 
     const payload = decisionIntelligence(data);
@@ -50,12 +55,15 @@ export default async function (req: Request): Promise<Response> {
     // Persist the per-experience rows so effectiveness can be compared over time
     // rather than only as of this request. Only rows that pass suppression are
     // stored, and they hold no per-student anything.
-    const rows = experimentEffectiveness(data).filter((r) => !r.suppressed);
+    // A flagged row is stored even while suppressed: the review queue must not
+    // wait for a publishable sample. It carries flags and counts only.
+    const rows = experimentEffectiveness(data).filter((r) => !r.suppressed || r.flagged_for_review);
     if (rows.length) {
       const existing = await base44.asServiceRole.entities.ExperimentEffectiveness.list('-computed_at', 500).catch(() => []);
       const byKey = new Map((Array.isArray(existing) ? existing : []).map((r) => [r.blueprint_key, r]));
       for (const row of rows) {
-        const { suppressed, students, reason, ...clean } = row;
+        const { suppressed, students, reason, survey_suppressed, ...rest } = row;
+        const clean = { ...rest, suppressed: Boolean(suppressed) };
         const prior = byKey.get(row.blueprint_key);
         if (prior) await base44.asServiceRole.entities.ExperimentEffectiveness.update(prior.id, clean).catch(() => null);
         else await base44.asServiceRole.entities.ExperimentEffectiveness.create(clean).catch(() => null);

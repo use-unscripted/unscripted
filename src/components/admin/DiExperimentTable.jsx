@@ -27,7 +27,7 @@ export default function DiExperimentTable({ rows = [], minStudents = 5 }) {
             <table className="w-full min-w-[720px] border-collapse text-left">
               <thead>
                 <tr>
-                  {['Experience', 'Students', 'Completed', 'Evidence', 'Reflected', 'Changed view', 'Unknowns closed', 'Expectation gap', 'Info value'].map(h => (
+                  {['Experience', 'Students', 'Completed', 'Evidence', 'Reflected', 'Changed view', 'Unknowns closed', 'Expectation gap', 'Info value', 'Realism', 'Worth the time'].map(h => (
                     <th key={h} className="tp-label border-b px-2 py-2" style={{ borderColor: 'var(--ink-200)', color: 'var(--ink-500)' }}>{h}</th>
                   ))}
                 </tr>
@@ -46,6 +46,10 @@ export default function DiExperimentTable({ rows = [], minStudents = 5 }) {
                     <td className="tp-meta border-b px-2 py-2" style={{ borderColor: 'var(--ink-200)' }}>{r.average_uncertainties_resolved ?? '—'}</td>
                     <td className="tp-meta border-b px-2 py-2" style={{ borderColor: 'var(--ink-200)' }}>{r.expectation_reality_delta ?? '—'}</td>
                     <td className="tp-meta border-b px-2 py-2" style={{ borderColor: 'var(--ink-200)' }}>{r.information_value_score ?? '—'}</td>
+                    {/* Survey columns carry their own suppression: an experience
+                        many students ran but few rated shows nothing here. */}
+                    <td className="tp-meta border-b px-2 py-2" style={{ borderColor: 'var(--ink-200)' }}>{r.survey_realism_rating ?? '—'}</td>
+                    <td className="tp-meta border-b px-2 py-2" style={{ borderColor: 'var(--ink-200)' }}>{r.survey_time_value_rating ?? '—'}</td>
                   </tr>
                 ))}
               </tbody>

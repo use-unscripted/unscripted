@@ -1,0 +1,73 @@
+{
+  "name": "ExperimentFeedback",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string"
+    },
+    "experiment_id": {
+      "type": "string"
+    },
+    "experiment_title": {
+      "type": "string"
+    },
+    "blueprint_key": {
+      "type": "string"
+    },
+    "experiment_version": {
+      "type": "number"
+    },
+    "role_blueprint_version": {
+      "type": "number"
+    },
+    "realism_rating": {
+      "type": "number"
+    },
+    "career_understanding_rating": {
+      "type": "number"
+    },
+    "self_learning_rating": {
+      "type": "number"
+    },
+    "time_value_rating": {
+      "type": "number"
+    },
+    "realism_notes": {
+      "type": "string"
+    },
+    "missing_elements_notes": {
+      "type": "string"
+    },
+    "professional_alignment_rating": {
+      "type": "string",
+      "enum": [
+        "supported",
+        "mostly_supported",
+        "mixed",
+        "mostly_contradicted",
+        "not_enough_information"
+      ]
+    },
+    "submitted_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "experiment_id"
+  ],
+  "rls": {
+    "create": {
+      "created_by_id": "{{user.id}}"
+    },
+    "read": {
+      "created_by_id": "{{user.id}}"
+    },
+    "update": {
+      "created_by_id": "{{user.id}}"
+    },
+    "delete": {
+      "created_by_id": "{{user.id}}"
+    }
+  }
+}

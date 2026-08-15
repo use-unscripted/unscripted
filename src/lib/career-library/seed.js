@@ -211,6 +211,12 @@ export async function seedLibrary({ dryRun = false } = {}) {
     }
 
     report.careers.push(careerReport);
+  };
+
+  // Small batches: enough parallelism to finish inside one click, not enough to
+  // hammer the API.
+  for (let i = 0; i < CAREERS.length; i += 5) {
+    await Promise.all(CAREERS.slice(i, i + 5).map(seedCareer));
   }
 
   report.totals = {

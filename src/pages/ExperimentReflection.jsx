@@ -39,6 +39,7 @@ import { decisionMeta, ELIMINATION_NOTE } from '@/lib/hypothesis-updates';
 import { loadNextBestExperiment } from '@/lib/next-best-experiment';
 import { Sk } from '@/components/PageSkeleton';
 import ReflectionStep from '@/components/reflection/ReflectionStep';
+import FeedbackSurveyPanel from '@/components/reflection/FeedbackSurveyPanel';
 
 /* The flow, named. Four steps from "the experiment is finished" to "the cycle is
    closed", so the student can see how much is left at every point. */
@@ -250,6 +251,13 @@ export default function ExperimentReflection() {
                 <HypothesisTimeline pathId={ctx.path?.id} pathName={ctx.path?.path_name} />
               )}
             </div>
+          </ReflectionStep>
+
+          {/* Alongside the hypothesis update, never in front of it: this rates
+              the experiment, and skipping it must not strand the cycle. */}
+          <ReflectionStep index={3} total={TOTAL_STEPS} title="Rate this experiment" delay={40}
+            purpose="How realistic and how useful it was. This improves the experiment for other students and changes nothing about your hypothesis.">
+            <FeedbackSurveyPanel experiment={ctx.experiment} />
           </ReflectionStep>
 
           {(approved || (changes && !synthesis)) && (
