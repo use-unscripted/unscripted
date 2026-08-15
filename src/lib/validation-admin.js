@@ -19,6 +19,23 @@ import { diffExperimentVersions, revisionPlan } from '@/lib/experiment-revision'
 const list = (rows) => (Array.isArray(rows) ? rows : []);
 const now = () => new Date().toISOString();
 
+/**
+ * The new wording is stored whole in `content_snapshot`. Only the fields the
+ * validation record itself declares are copied onto the record — writing an
+ * experiment's own fields (core task, instructions) onto a validation row is
+ * rejected by the schema and would abort the revision half-done.
+ */
+const VALIDATION_CONTENT_FIELDS = [
+  'experiment_title', 'decision_dimension_ids', 'work_characteristics_tested',
+  'career_characteristics_represented', 'career_characteristics_not_represented',
+  'estimated_minutes_low', 'estimated_minutes_high', 'role_blueprint_id', 'role_blueprint_version',
+  'validation_scope', 'what_it_does', 'best_for',
+];
+const validationFieldsOf = (content = {}) => VALIDATION_CONTENT_FIELDS.reduce((acc, key) => {
+  if (content[key] !== undefined) acc[key] = content[key];
+  return acc;
+}, {});
+
 /** Everything the dashboard reads, in one pass. */
 export async function loadValidationAdmin() {
   const [validations, blueprints, sources, reviews, versions] = await Promise.all([
@@ -92,7 +109,7 @@ export async function publishRevision(row, nextContent, options = {}) {
 
   const nextValidation = {
     ...v,
-    ...nextContent,
+    ...validationFieldsOf(nextContent),
     experiment_version: plan.next_version,
     validation_status: plan.validation_status,
     ...(plan.material ? { mapping_reviewed: false, field_calibrated: false } : {}),
@@ -133,7 +150,7 @@ export async function publishRevision(row, nextContent, options = {}) {
   }
 
   await base44.entities.ExperimentValidation.update(v.id, {
-    ...nextContent,
+    ...validationFieldsOf(nextContent),
     experiment_version: plan.next_version,
     validation_status: plan.validation_status,
     content_snapshot: nextContent,
