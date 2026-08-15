@@ -25,13 +25,9 @@ export default function HypothesisFocus({ focus, experiment, action, effort, onA
   const testQuestion = experiment?.test_question || experiment?.unresolved_question || focus?.unknowns?.[0]?.question;
   const progress = focus?.progress;
 
-  /* One destination, always the Test stage. The label used to change with the
-     resolved stage ("Submit Evidence"), which told the student to do a thing
-     without saying where in the cycle they were, and sent them into an
-     experiment screen rather than the stage they were reading about. */
   const btn = (
     <>
-      Go to My Test
+      {action.label}
       <motion.span className="inline-flex" initial={false} whileHover={{ x: 3 }} transition={{ duration: 0.3, ease: EASE }}>
         <ArrowRight size={17} className="shrink-0" aria-hidden="true" />
       </motion.span>
@@ -100,7 +96,11 @@ export default function HypothesisFocus({ focus, experiment, action, effort, onA
 
         <Reveal delay={320} y={14} className="order-5 sm:order-6">
           <div className="mt-4 flex flex-col gap-3 sm:mt-8 sm:flex-row sm:items-center sm:gap-5">
-            <Link to="/test" className={btnClass}>{btn}</Link>
+            {action.to ? (
+              <Link to={action.to} className={btnClass}>{btn}</Link>
+            ) : (
+              <button type="button" onClick={onAnchorClick} className={btnClass}>{btn}</button>
+            )}
             <p className="tp-meta" style={{ color: 'var(--ink-300)' }}>{action.sub}</p>
           </div>
         </Reveal>
