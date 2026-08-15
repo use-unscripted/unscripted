@@ -35,6 +35,9 @@ export default function CareerMomentPage() {
   const [stage, setStage] = useState('hook'); // hook | task | feedback | reaction | done
   const [selected, setSelected] = useState('');
   const [rationale, setRationale] = useState('');
+  // Whether the decision has been seen yet, so the situation screen can offer a
+  // way back to it instead of a second Start.
+  const [seenTask, setSeenTask] = useState(false);
   // At most one question before, one or two after. Which ones rotates.
   const [plan, setPlan] = useState({ pre: null, post: [] });
   const [preAnswers, setPreAnswers] = useState({});
@@ -51,7 +54,7 @@ export default function CareerMomentPage() {
     // A second Moment is a fresh Moment: everything the last one held is cleared
     // before the next one is built.
     setRow(null); setStage('hook'); setSelected(''); setRationale('');
-    setPreAnswers({}); setAnswers({}); setChanges([]); setError(null);
+    setPreAnswers({}); setAnswers({}); setChanges([]); setError(null); setSeenTask(false);
     finishedRef.current = false;
     (async () => {
       const { path, focus } = await loadMomentTarget({ recId, variable }).catch(() => ({ path: null }));
@@ -160,7 +163,14 @@ export default function CareerMomentPage() {
               preField={plan.pre}
               preValue={plan.pre ? preAnswers[plan.pre.key] : undefined}
               onPre={(v) => setPreAnswers({ [plan.pre.key]: v })}
-              onStart={() => { tracker.current.began_at = Date.now(); setStage('task'); }}
+              returning={seenTask}
+              onStart={() => {
+                // Only the first arrival starts the clock; re-reading the
+                // situation must not look like a slower decision.
+                if (!tracker.current.began_at) tracker.current.began_at = Date.now();
+                setSeenTask(true);
+                setStage('task');
+              }}
             />
           )}
           {stage === 'task' && (
@@ -170,6 +180,7 @@ export default function CareerMomentPage() {
               onSelect={selectOption}
               rationale={rationale}
               onRationale={setRationale}
+              onBack={() => setStage('hook')}
               onSubmit={() => { tracker.current.decided_at = Date.now(); setStage('feedback'); }}
             />
           )}

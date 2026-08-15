@@ -1,7 +1,19 @@
+import { ArrowLeft } from 'lucide-react';
+
 /** Stage 2. The minimum information, one decision, one sentence of reasoning. */
-export default function MomentTask({ moment, selected, onSelect, rationale, onRationale, onSubmit }) {
+export default function MomentTask({ moment, selected, onSelect, rationale, onRationale, onSubmit, onBack }) {
   return (
     <div className="space-y-6">
+      {/* The situation is a few lines long and the decision depends on it, so
+          re-reading it has to be possible. Going back keeps the answer and the
+          reasoning already entered. */}
+      {onBack && (
+        <button onClick={onBack} className="tp-meta inline-flex items-center gap-1.5 font-semibold"
+          style={{ color: 'var(--ink-500)' }}>
+          <ArrowLeft size={13} /> Read the situation again
+        </button>
+      )}
+
       {moment.information?.length > 0 && (
         <div className="rounded-[var(--r-surface)] border p-4" style={{ borderColor: 'var(--ink-200)', background: 'var(--ink-50)' }}>
           {moment.information.map((row, i) => (

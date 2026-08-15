@@ -7,7 +7,7 @@ import DepthBadge from '@/components/experiments/DepthBadge';
  * every few Moments, and only when it can be compared with a question this
  * Moment will ask afterwards.
  */
-export default function MomentHook({ moment, onStart, preField, preValue, onPre }) {
+export default function MomentHook({ moment, onStart, preField, preValue, onPre, returning = false }) {
   return (
     <div className="space-y-6">
       <div className="rounded-[var(--r-surface)] p-6" style={{ background: 'var(--surface-dark-700)', color: 'white' }}>
@@ -29,7 +29,7 @@ export default function MomentHook({ moment, onStart, preField, preValue, onPre 
       <button onClick={onStart}
         className="tp-body ui-press flex w-full items-center justify-center gap-2 rounded-[var(--r-control)] py-3.5 font-semibold text-white"
         style={{ background: 'var(--brand-navy-900)' }}>
-        Start <ArrowRight size={16} />
+        {returning ? 'Back to your call' : 'Start'} <ArrowRight size={16} />
       </button>
     </div>
   );
