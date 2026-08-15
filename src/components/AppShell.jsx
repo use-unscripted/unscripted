@@ -1,7 +1,7 @@
 import { Outlet, NavLink, useLocation } from 'react-router-dom';
 import TabScrollMemory from '@/components/nav/TabScrollMemory';
 import { tabOf, lastLocation } from '@/lib/tab-stacks';
-import { Compass, FolderOpen, Settings, LogOut } from 'lucide-react';
+import { Compass, FolderOpen, Settings, LogOut, LineChart } from 'lucide-react';
 import { MotionConfig } from 'framer-motion';
 import { base44 } from '@/api/base44Client';
 import RouteTransition from '@/components/RouteTransition';
@@ -28,6 +28,7 @@ function CompassSVG() {
  */
 const NAV = [
   ['/journey',  'My Journey',        'Journey',  Compass],
+  ['/matrix',   'Decision Matrix',   'Matrix',   LineChart],
   ['/evidence', 'Evidence',          'Evidence', FolderOpen],
   ['/settings', 'Profile & Settings', 'Profile',  Settings],
 ];

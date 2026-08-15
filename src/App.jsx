@@ -47,6 +47,7 @@ const Terms = lazy(() => import('@/pages/Terms'));
 // App shell pages
 const AppShell = lazy(() => import('@/components/AppShell'));
 const MyJourney = lazy(() => import('@/pages/MyJourney'));
+const CareerDecisionMatrix = lazy(() => import('@/pages/CareerDecisionMatrix'));
 // One screen per stage of the cycle. Each carries only that stage's work.
 const StageChoose = lazy(() => import('@/pages/stages/StageChoose'));
 const StageTest = lazy(() => import('@/pages/stages/StageTest'));
@@ -138,6 +139,8 @@ const AuthenticatedApp = () => {
         <Route element={<AppShell />}>
           {/* My Journey — the default authenticated destination */}
           <Route path="/journey" element={<MyJourney />} />
+          {/* How the evidence is moving each career hypothesis. Read-only. */}
+          <Route path="/matrix" element={<CareerDecisionMatrix />} />
           {/* The cycle, one stage per screen */}
           {/* Explore was merged into Choose — old links land there. */}
           <Route path="/explore" element={<Navigate to="/choose" replace />} />

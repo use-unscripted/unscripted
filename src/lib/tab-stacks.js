@@ -15,6 +15,7 @@ const KEY = 'unscripted:tab-stacks';
 // so they belong to that tab's stack rather than to a tab of their own.
 export const TAB_ROUTES = {
   '/journey': ['/journey', '/moment', '/experiment', '/experiments', '/paths', '/reflect', '/guide', '/roadmap', '/explore', '/choose', '/test', '/prove', '/decide', '/saved', '/goals-tracker'],
+  '/matrix': ['/matrix'],
   '/evidence': ['/evidence', '/career-profile', '/recently-deleted'],
   '/settings': ['/settings', '/blueprints', '/resources', '/creators'],
 };
