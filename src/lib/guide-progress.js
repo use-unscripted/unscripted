@@ -140,15 +140,6 @@ export function saveStepEvidence({ guide, stepNumber, step, experiment, mission,
   });
 }
 
-const OUTREACH_RE = /\b(email|message|reach out|contact|speak|talk|interview|conversation|call|follow[- ]up)\b/i;
-
-/** Does this step involve talking to a professional? */
-export function isOutreachStep(step) {
-  if (!step) return false;
-  if (['email', 'message'].includes(step.artifact?.kind)) return true;
-  return OUTREACH_RE.test(`${step.title || ''} ${step.description || ''}`);
-}
-
 /** True when the step asks the student to keep something as proof. */
 export function needsEvidence(step) {
   return Boolean(step?.proof_capture && String(step.proof_capture).trim());
@@ -158,13 +149,10 @@ export function needsEvidence(step) {
  * What still stands between this step and the next, in plain language. An empty
  * list means the student can continue.
  */
-export function stepBlockers(step, { note, evidence, contacts }) {
+export function stepBlockers(step, { note, evidence }) {
   const out = [];
   if (needsEvidence(step) && !evidence && !String(note || '').trim()) {
     out.push('Upload or describe what you completed before moving to the next step.');
-  }
-  if (isOutreachStep(step) && (contacts || []).length === 0) {
-    out.push('Add the person (or the role) you contacted before continuing.');
   }
   return out;
 }

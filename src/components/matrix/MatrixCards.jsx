@@ -10,10 +10,7 @@ const CELLS = [
   ['coverage', 'Evidence coverage', r => r.coverage.value],
   ['fit', 'Experienced fit', r => r.fit.value],
   ['uncertainty', 'Uncertainty left', r => r.uncertainty.value],
-  // On a phone these two are only reachable here, so they are cells rather than
-  // desktop-only table columns.
   ['expectation', 'Expectation vs reality', r => r.expectation.value],
-  ['human', 'Human exposure', r => (r.human.count ? r.human.value : null)],
 ];
 
 export default function MatrixCards({ rows, onOpen }) {

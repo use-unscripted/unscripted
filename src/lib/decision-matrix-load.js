@@ -3,7 +3,7 @@
  *
  * Everything comes from records that already exist: the Career Evidence Profile
  * loader supplies the hypotheses, measurements, experiments and proof; the
- * outreach contacts supply Human Exposure; the HypothesisUpdate chain supplies
+ * HypothesisUpdate chain supplies
  * the history the graph and the trend are read from. Nothing is written.
  */
 import { base44 } from '@/api/base44Client';
@@ -14,16 +14,15 @@ import { scoreHypothesis, workstyleRows, changedMind, claritySummary, strongestO
 const ELIMINATED = ['eliminated', 'archived', 'modified'];
 
 export async function loadDecisionMatrix() {
-  const [profileData, reflections, contacts, updates] = await Promise.all([
+  const [profileData, reflections, updates] = await Promise.all([
     loadEvidenceProfile(),
     base44.entities.WeeklyReflections.list('-created_date', 200).catch(() => []),
-    base44.entities.OutreachContacts.list('-created_date', 200).catch(() => []),
     base44.entities.HypothesisUpdate.list('-created_date', 300).catch(() => []),
   ]);
 
   const { hypotheses, experiments, measurements, proof, profile, signals } = profileData;
   const dimensions = deriveDimensions({ signals, profile });
-  const data = { experiments, measurements, proof, reflections, contacts };
+  const data = { experiments, measurements, proof, reflections };
 
   const rows = hypotheses.map(({ path, hypothesis }) => scoreHypothesis({
     path,

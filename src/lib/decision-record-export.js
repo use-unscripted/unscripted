@@ -54,7 +54,6 @@ export function advisorBrief(record, { includeReflections = false } = {}) {
     bullet([
       `${counts.experiments} experiment${counts.experiments === 1 ? '' : 's'}`,
       `${counts.evidence} piece${counts.evidence === 1 ? '' : 's'} of evidence`,
-      `${counts.conversations} conversation${counts.conversations === 1 ? '' : 's'} with people in the field`,
     ]),
   ].join('\n');
 }
@@ -125,7 +124,6 @@ export function portfolioExport(record, { includeReflections = false } = {}) {
             n.tested && `Tested: ${n.tested}`,
             n.expectation[0] && `Expectation: ${n.expectation.join('; ')}`,
             n.activity.missions.length && `Activity: ${n.activity.missions.join('; ')}`,
-            n.activity.conversations.length && `Conversations: ${n.activity.conversations.join('; ')}`,
             n.evidence.length && `Evidence: ${n.evidence.map(e => e.title).join('; ')}`,
             n.reality[0] && `Reality: ${n.reality.join('; ')}`,
           ])].join('\n');

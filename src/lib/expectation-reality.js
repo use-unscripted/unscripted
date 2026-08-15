@@ -124,7 +124,7 @@ export function whatChanged(m) {
  * evidence of enjoying it, and skipping a mission is not evidence of dislike.
  * Every entry is null when we genuinely do not have it.
  */
-export function behavioralSnapshot({ exp, guide, proof = [], contacts = [], measurement } = {}) {
+export function behavioralSnapshot({ exp, guide, proof = [], measurement } = {}) {
   const steps = Array.isArray(guide?.steps) ? guide.steps : (Array.isArray(exp?.mission_steps) ? exp.mission_steps : []);
   const completed = Array.isArray(guide?.completed_steps) ? guide.completed_steps.length : null;
   const total = steps.length || null;
@@ -135,7 +135,6 @@ export function behavioralSnapshot({ exp, guide, proof = [], contacts = [], meas
 
   const mine = (rows) => rows.filter(r => r.experiment_id === exp?.id);
   const evidence = mine(proof);
-  const spoke = mine(contacts).some(c => ['responded', 'call_scheduled', 'completed'].includes(c.response_status));
 
   return {
     missions_completed: completed,
@@ -143,7 +142,6 @@ export function behavioralSnapshot({ exp, guide, proof = [], contacts = [], meas
     missions_skipped: completed !== null && total !== null ? Math.max(total - completed, 0) : null,
     minutes_spent: minutes,
     optional_work_completed: evidence.length > 1 ? true : null,
-    professional_conversation_completed: mine(contacts).length ? spoke : null,
     evidence_submitted: evidence.length,
     desire_to_repeat: num(measurement?.desire_to_repeat),
   };

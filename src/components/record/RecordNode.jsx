@@ -56,7 +56,7 @@ export default function RecordNode({ node }) {
       <Frame Icon={FlaskConical} eyebrow="Experiment" tone="var(--brand-gold-700)" date={node.at} title={node.title}>
         <Group label="What was tested" items={[node.tested]} />
         <Group label="Expectation beforehand" items={node.expectation} />
-        <Group label="Activity" items={[...node.activity.missions, ...node.activity.conversations]} />
+        <Group label="Activity" items={node.activity.missions} />
         <Group label="Campus experiences" items={node.activity.campus} />
         <Group label="Evidence produced" items={node.evidence.map(e => `${e.title}${e.approved ? ' (approved for resume)' : ''}`)} />
         <Group label="What actually happened" items={node.reality} />

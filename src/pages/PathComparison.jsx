@@ -12,7 +12,6 @@ import FocusOverlay from '@/components/FocusOverlay';
 import { loadOwnedPaths, authoritativeSet, loadOnboardingSubmission } from '@/lib/path-set';
 import { selectPathForCycle } from '@/lib/career-cycle';
 import { RiskBadge, ConfidenceBadge, RiskNotAssessed } from '@/components/paths/RiskConfidenceBadges';
-import OutreachPlanModal from '@/components/outreach/OutreachPlanModal';
 import { Search } from 'lucide-react';
 import {
   SORT_OPTIONS, DEFAULT_FILTERS,
@@ -46,11 +45,10 @@ function fmtDate(d) {
 function statusCfg(s) { return STATUS_CFG[s] || STATUS_CFG.exploring; }
 
 // ── Paused / Completed path reopen panel ─────────────────────────────────────
-function PausedPathPanel({ path, experiments, missions, proof, contacts, reflections, onResume, onArchive }) {
+function PausedPathPanel({ path, experiments, missions, proof, reflections, onResume, onArchive }) {
   const pathExps = experiments.filter(e => e.path_name === path.path_name);
   const completedExps = pathExps.filter(e => e.status === 'completed');
   const pathProof = proof.filter(p => p.path_tested === path.path_name || pathExps.some(e => e.id === p.experiment_id));
-  const pathContacts = contacts.filter(c => c.path_being_tested === path.path_name || pathExps.some(e => e.id === c.experiment_id));
   const pathReflections = reflections.filter(r => r.path_name === path.path_name || pathExps.some(e => e.id === r.experiment_id));
 
   return (
@@ -60,12 +58,11 @@ function PausedPathPanel({ path, experiments, missions, proof, contacts, reflect
         {path.last_active_at && <p className="tp-meta text-[color:var(--ink-700)] mt-1">Last active: {fmtDate(path.last_active_at)}</p>}
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-4 text-center">
+      <div className="grid gap-3 sm:grid-cols-3 text-center">
         {[
           { label: 'Experiments', val: pathExps.length },
           { label: 'Missions done', val: missions.filter(m => pathExps.some(e => e.id === m.experiment_id) && m.status === 'completed').length },
           { label: 'Proof submitted', val: pathProof.length },
-          { label: 'Contacts', val: pathContacts.length },
         ].map(({ label, val }) => (
           <div key={label} className="rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-white p-3">
             <p className="font-heading text-2xl font-bold text-[color:var(--surface-dark-900)]">{val}</p>
@@ -108,7 +105,7 @@ function PausedPathPanel({ path, experiments, missions, proof, contacts, reflect
 }
 
 // ── Path card ─────────────────────────────────────────────────────────────────
-function PathCard({ path, experiments, missions, proof, contacts, reflections, profile, measurements, signals = [], onAction, expanded, onToggle, onBuildOutreachPlan, onAutoAssess, assessing }) {
+function PathCard({ path, experiments, missions, proof, reflections, profile, measurements, signals = [], onAction, expanded, onToggle, onAutoAssess, assessing }) {
   const cfg = statusCfg(path.status);
   const d = path.generated_detail || {};
 
@@ -116,7 +113,7 @@ function PathCard({ path, experiments, missions, proof, contacts, reflections, p
   const completedExps = pathExps.filter(e => e.status === 'completed');
   const pct = pathExps.length ? Math.round(completedExps.length / pathExps.length * 100) : 0;
   const isPausedOrCompleted = ['paused', 'completed'].includes(path.status);
-  const hyp = deriveHypothesis(path, { experiments, proof, reflections, contacts, profile, measurements, signals });
+  const hyp = deriveHypothesis(path, { experiments, proof, reflections, profile, measurements, signals });
   const progress = dimensionProgress({ hypothesis: hyp, signals });
   const nextTest = progress ? nextTestForPath({ path, hypothesis: hyp, progress }) : null;
   const statusLabel = HYPOTHESIS_STATUS_LABELS[hyp.hypothesis_status] || 'Untested';
@@ -192,11 +189,6 @@ function PathCard({ path, experiments, missions, proof, contacts, reflections, p
             style={{ background: 'var(--brand-navy-900)', boxShadow: '0 6px 18px rgba(31,58,95,0.22)' }}>
             <FlaskConical size={12} /> Test This Hypothesis
           </Link>
-          <button onClick={onBuildOutreachPlan}
-            className="tp-meta touch-target flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-semibold transition"
-            style={{ background: 'var(--background-tertiary)', color: 'var(--brand-navy-700)', border: '1px solid var(--border-light)' }}>
-            <Users size={12} /> Build Outreach Plan
-          </button>
           <button onClick={() => onAction('edit', path)}
             className="tp-meta touch-target flex items-center gap-1.5 rounded-lg border border-[color:var(--ink-200)] px-3 py-1.5 font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)]">
             <Pencil size={12} /> Edit
@@ -263,7 +255,6 @@ function PathCard({ path, experiments, missions, proof, contacts, reflections, p
               experiments={experiments}
               missions={missions}
               proof={proof}
-              contacts={contacts}
               reflections={reflections}
               onResume={() => onAction('resume', path)}
               onArchive={() => onAction('archive', path)}
@@ -499,7 +490,6 @@ export default function PathComparison() {
   const [experiments, setExperiments] = useState([]);
   const [missions, setMissions] = useState([]);
   const [proof, setProof] = useState([]);
-  const [contacts, setContacts] = useState([]);
   const [reflections, setReflections] = useState([]);
   const [profile, setProfile] = useState({});
   const [measurements, setMeasurements] = useState({});
@@ -514,7 +504,6 @@ export default function PathComparison() {
   const [showCreate, setShowCreate] = useState(false);
   const [editTarget, setEditTarget] = useState(null);
   const [resumeTarget, setResumeTarget] = useState(null);
-  const [outreachPlanTarget, setOutreachPlanTarget] = useState(null);
 
   const [assessingIds, setAssessingIds] = useState(new Set());
   const [assessError, setAssessError] = useState('');
@@ -551,12 +540,11 @@ export default function PathComparison() {
       setLoadFailed(true);
     }
 
-    const [sub, exps, mis, prf, cts, refs, profs] = await Promise.all([
+    const [sub, exps, mis, prf, refs, profs] = await Promise.all([
       loadOnboardingSubmission(),
       base44.entities.Experiments.list('-created_date', 200).catch(() => []),
       base44.entities.Missions.list('-created_date', 200).catch(() => []),
       base44.entities.ProofOfWork.list('-created_date', 200).catch(() => []),
-      base44.entities.OutreachContacts.list('-created_date', 200).catch(() => []),
       base44.entities.WeeklyReflections.list('-created_date', 200).catch(() => []),
       base44.entities.StudentProfile.list('-created_date', 1).catch(() => []),
     ]);
@@ -569,7 +557,6 @@ export default function PathComparison() {
     setExperiments(Array.isArray(exps) ? exps : []);
     setMissions(Array.isArray(mis) ? mis : []);
     setProof(Array.isArray(prf) ? prf : []);
-    setContacts(Array.isArray(cts) ? cts : []);
     setReflections(Array.isArray(refs) ? refs : []);
     setLoading(false);
 
@@ -664,7 +651,7 @@ export default function PathComparison() {
     }
   };
 
-  const cardProps = { experiments, missions, proof, contacts, reflections, profile, measurements, signals, onAction: handleAction };
+  const cardProps = { experiments, missions, proof, reflections, profile, measurements, signals, onAction: handleAction };
 
   return (
     <main className="app-page">
@@ -690,13 +677,6 @@ export default function PathComparison() {
           onReactivated={() => { setResumeTarget(null); load(); }}
         />
       )}
-      {outreachPlanTarget && (
-        <OutreachPlanModal
-          path={outreachPlanTarget}
-          onClose={() => setOutreachPlanTarget(null)}
-          onContactSaved={() => {}}
-        />
-      )}
       {/* One path at a time: the comparison list stays behind, and clicking
           outside the panel returns to it. */}
       {expandedId && (() => {
@@ -709,7 +689,6 @@ export default function PathComparison() {
               {...cardProps}
               expanded
               onToggle={() => setExpandedId(null)}
-              onBuildOutreachPlan={() => setOutreachPlanTarget(p)}
               onAutoAssess={() => handleAutoAssess(p)}
               assessing={assessingIds.has(p.id)}
             />
@@ -815,7 +794,6 @@ export default function PathComparison() {
                   {...cardProps}
                   expanded={false}
                   onToggle={() => setExpandedId(p.id)}
-                  onBuildOutreachPlan={() => setOutreachPlanTarget(p)}
                   onAutoAssess={() => handleAutoAssess(p)}
                   assessing={assessingIds.has(p.id)}
                 />

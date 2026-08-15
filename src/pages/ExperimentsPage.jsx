@@ -1,10 +1,9 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
-import { Plus, ChevronDown, ChevronUp, Clock, BookOpen, FileText, Users, Wand2, PauseCircle, Play, Search } from 'lucide-react';
+import { Plus, ChevronDown, ChevronUp, Clock, BookOpen, FileText, Wand2, PauseCircle, Play, Search } from 'lucide-react';
 import MissionGuideGenerator from '@/components/experiments/MissionGuideGenerator';
 import MissionGuideHistory from '@/components/experiments/MissionGuideHistory';
-import OutreachPlanModal from '@/components/outreach/OutreachPlanModal';
 import { toText, STEP_TEXT_KEYS } from '@/lib/ai-validation';
 import PageHeader from '@/components/PageHeader';
 import { Sk, SkPills, SkCards } from '@/components/PageSkeleton';
@@ -109,7 +108,7 @@ function PathDropdown({ paths, value, onChange, error }) {
 }
 
 // ── Experiment card ───────────────────────────────────────────────────────────
-function ExperimentCard({ exp, measurement, onStatusChange, onExpand, expanded, onProofAdded, onDelete, onEdited, onFindPeople, paths, guides, onGenerateGuide, onGuideSetActive, onGuideDeleted, onGuideDuplicated, onGuideRenamed, onPaused, onResumed }) {
+function ExperimentCard({ exp, measurement, onStatusChange, onExpand, expanded, onProofAdded, onDelete, onEdited, paths, guides, onGenerateGuide, onGuideSetActive, onGuideDeleted, onGuideDuplicated, onGuideRenamed, onPaused, onResumed }) {
   const s = STATUS_STYLES[exp.status] || STATUS_STYLES.planned;
   /* Evidence for the experiment itself, without having to open it or invent a
      mission first. The flow is the same one the mission row opens, handed this
@@ -171,13 +170,6 @@ function ExperimentCard({ exp, measurement, onStatusChange, onExpand, expanded, 
             style={{ background: 'var(--background-tertiary)', color: 'var(--brand-navy-700)', border: '1px solid var(--border-light)' }}>
             <FileText size={13} /> Add proof
           </button>
-          {!isPaused && (
-            <button onClick={onFindPeople}
-              className="tp-meta flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-semibold transition"
-              style={{ background: 'var(--background-tertiary)', color: 'var(--brand-navy-700)', border: '1px solid var(--border-light)' }}>
-              <Users size={13} /> Find People to Learn From
-            </button>
-          )}
           {isPaused && (
             <button onClick={() => onResumed(exp)}
               className="flex items-center gap-1.5 rounded-lg px-3 py-1 tp-meta font-semibold text-white transition"
@@ -511,7 +503,6 @@ export default function ExperimentsPage() {
   const [showGuideGeneratorFor, setShowGuideGeneratorFor] = useState(null);
   const [successToast, setSuccessToast] = useState(null);
   const toastTimer = useRef(null);
-  const [outreachPlanTarget, setOutreachPlanTarget] = useState(null);
   const [resumeTarget, setResumeTarget] = useState(null); // experiment to resume
   // Expectation vs. reality measurement, keyed by experiment id.
   const [measurements, setMeasurements] = useState({});
@@ -717,10 +708,6 @@ export default function ExperimentsPage() {
     onDelete: handleExperimentDeleted,
     onEdited: handleExperimentEdited,
     paths,
-    onFindPeople: () => {
-      const matchedPath = paths.find(p => p.path_name === exp.path_name);
-      setOutreachPlanTarget({ exp, path: matchedPath || { path_name: exp.path_name || 'This Path' } });
-    },
     guides: guidesMap[exp.id] || [],
     onGenerateGuide: () => setShowGuideGeneratorFor(exp.id),
     onGuideSetActive: (guide) => handleGuideSetActive(exp.id, guide),
@@ -745,14 +732,6 @@ export default function ExperimentsPage() {
           />
         );
       })()}
-      {outreachPlanTarget && (
-        <OutreachPlanModal
-          path={outreachPlanTarget.path || { path_name: outreachPlanTarget.exp?.path_name || 'This Path', id: outreachPlanTarget.exp?.path_recommendation_id }}
-          experiment={outreachPlanTarget.exp}
-          onClose={() => setOutreachPlanTarget(null)}
-          onContactSaved={() => {}}
-        />
-      )}
       {showNew && <NewExperimentModal onClose={() => setShowNew(false)} onSave={save} paths={paths} />}
       {/* One experiment at a time: the list stays behind, and clicking outside
           the panel returns to it. */}

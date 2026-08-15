@@ -203,7 +203,7 @@ function SuccessToast({ experiment, mission, onOpenExp, onDismiss }) {
 }
 
 // ── The guided flow ────────────────────────────────────────────────────────────
-function ReflectionFlow({ experiments, missions, proofs, outreach, initialData, draft, userId, onSaved, onDraftWritten }) {
+function ReflectionFlow({ experiments, missions, proofs, initialData, draft, userId, onSaved, onDraftWritten }) {
   const isEdit = !!initialData?.id;
 
   // week_start on an edit comes off the record and is never recomputed.
@@ -211,7 +211,7 @@ function ReflectionFlow({ experiments, missions, proofs, outreach, initialData, 
   // reflection under the current week.
   const weekStart = initialData?.week_start || draft?.week_start || getMonday(new Date());
 
-  const activityData = useMemo(() => ({ missions, proofs, outreach }), [missions, proofs, outreach]);
+  const activityData = useMemo(() => ({ missions, proofs }), [missions, proofs]);
 
   // One lazy seed, run once per mounted record. The page keys this component on
   // the record id, so switching between "new" and an existing reflection
@@ -820,7 +820,7 @@ function ReflectionFlow({ experiments, missions, proofs, outreach, initialData, 
         <label className="block">
           <span className="tp-body mb-1.5 block font-semibold" style={{ color: 'var(--text-primary)' }}>What drained you?</span>
           <input value={energyDrains} onChange={e => setEnergyDrains(e.target.value)}
-            placeholder="e.g. writing the outreach emails" className={bigInputCls} />
+            placeholder="e.g. writing up the summary" className={bigInputCls} />
         </label>
         {/* Only rendered for a record that already has this prose. It is not a
             question this flow asks. It exists so an old answer stays visible
@@ -1018,7 +1018,6 @@ export default function WeeklyReflectionPage() {
   const [experiments, setExperiments] = useState([]);
   const [missions, setMissions] = useState([]);
   const [proofs, setProofs] = useState([]);
-  const [outreach, setOutreach] = useState([]);
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState('form'); // 'form' | 'history'
   const [editingReflection, setEditingReflection] = useState(null); // null = new
@@ -1038,14 +1037,13 @@ export default function WeeklyReflectionPage() {
 
   const load = async () => {
     try {
-      const [me, data, exps, mis, ps, proof, contacts] = await Promise.all([
+      const [me, data, exps, mis, ps, proof] = await Promise.all([
         base44.auth.me().catch(() => null),
         base44.entities.WeeklyReflections.list('-created_date', 100).catch(() => []),
         base44.entities.Experiments.list('-created_date', 200).catch(() => []),
         base44.entities.Missions.list('-created_date', 200).catch(() => []),
         base44.entities.PathRecommendations.list('-created_date', 100).catch(() => []),
         base44.entities.ProofOfWork.list('-created_date', 200).catch(() => []),
-        base44.entities.OutreachContacts.list('-created_date', 200).catch(() => []),
       ]);
 
       const mine = me?.id || '';
@@ -1064,7 +1062,6 @@ export default function WeeklyReflectionPage() {
       // hang off one of *this* user's experiments is what stops someone else's
       // work appearing on this screen. Do not relax this filter.
       setProofs(Array.isArray(proof) ? proof.filter(p => isActive(p) && ownExpIds.has(p.experiment_id)) : []);
-      setOutreach(Array.isArray(contacts) ? contacts.filter(isActive) : []);
 
       // The form is the landing view, so whether it opens as a new reflection
       // or as this week's existing one has to be decided HERE, before the
@@ -1261,7 +1258,6 @@ export default function WeeklyReflectionPage() {
               experiments={experiments}
               missions={missions}
               proofs={proofs}
-              outreach={outreach}
               initialData={editingReflection}
               draft={editingReflection ? null : activeDraft}
               userId={userId}

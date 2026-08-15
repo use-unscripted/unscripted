@@ -23,16 +23,15 @@ export default function EvidenceLibrary() {
   const [openCycleId, setOpenCycleId] = useState(null);
 
   const load = async () => {
-    const [cycles, paths, experiments, missions, proof, outreach, reflections] = await Promise.all([
+    const [cycles, paths, experiments, missions, proof, reflections] = await Promise.all([
       base44.entities.CareerCycle.list('-created_date', 100).catch(() => []),
       base44.entities.PathRecommendations.list('-created_date', 100).catch(() => []),
       base44.entities.Experiments.list('-created_date', 200).catch(() => []),
       base44.entities.Missions.list('-created_date', 300).catch(() => []),
       base44.entities.ProofOfWork.list('-created_date', 300).catch(() => []),
-      base44.entities.OutreachContacts.list('-created_date', 200).catch(() => []),
       base44.entities.WeeklyReflections.list('-created_date', 200).catch(() => []),
     ]);
-    setRaw({ cycles, paths, experiments, missions, proof, outreach, reflections });
+    setRaw({ cycles, paths, experiments, missions, proof, reflections });
   };
 
   useEffect(() => { load(); }, []);
@@ -131,7 +130,7 @@ export default function EvidenceLibrary() {
                       <p className="tp-card text-[color:var(--surface-dark-900)]">{r.pathName || 'Unassigned path'}</p>
                       <p className="tp-meta mt-1.5 text-[color:var(--ink-500)]">
                         Started {fmtDate(r.cycle.started_at || r.cycle.created_date)} · {r.experiments.length} experiment{r.experiments.length !== 1 ? 's' : ''} ·{' '}
-                        {r.missions.length} mission{r.missions.length !== 1 ? 's' : ''} · {r.outreach.length} conversation{r.outreach.length !== 1 ? 's' : ''} ·{' '}
+                        {r.missions.length} mission{r.missions.length !== 1 ? 's' : ''} ·{' '}
                         {r.evidence.length} piece{r.evidence.length !== 1 ? 's' : ''} of evidence
                       </p>
                     </div>

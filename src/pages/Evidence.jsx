@@ -4,17 +4,15 @@
  * routes between them, so no feature is duplicated.
  */
 import { useSearchParams } from 'react-router-dom';
-import { FileText, Users, RotateCcw, Library, UserCheck } from 'lucide-react';
+import { FileText, RotateCcw, Library, UserCheck } from 'lucide-react';
 import CareerEvidenceProfile from '@/pages/CareerEvidenceProfile';
 import EvidenceLibrary from '@/pages/EvidenceLibrary';
 import ProofOfWorkPage from '@/pages/ProofOfWorkPage';
-import OutreachTracker from '@/pages/OutreachTracker';
 import WeeklyReflectionPage from '@/pages/WeeklyReflectionPage';
 
 const TABS = [
   ['library',  'Library',     Library],
   ['proof',    'Proof',       FileText],
-  ['outreach', 'Outreach',    Users],
   ['reflect',  'Reflections', RotateCcw],
   ['career-profile', 'Career Profile', UserCheck],
 ];
@@ -60,7 +58,6 @@ export default function Evidence() {
 
       {active === 'library' && <EvidenceLibrary />}
       {active === 'proof' && <ProofOfWorkPage />}
-      {active === 'outreach' && <OutreachTracker />}
       {active === 'reflect' && <WeeklyReflectionPage />}
       {active === 'career-profile' && <CareerEvidenceProfile />}
     </div>

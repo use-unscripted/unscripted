@@ -5,7 +5,7 @@ import { fmtDate, typeLabel, VISIBILITY_LABELS } from '@/lib/evidence-library';
 const DECISION_LABELS = { continue: 'Continue', adjust: 'Adjust', stop_and_explore: 'Stop and explore' };
 
 export default function CycleRecordView({ record, onBack }) {
-  const { cycle, path, pathName, experiments, missions, outreach, evidence, reflections, decision } = record;
+  const { cycle, path, pathName, experiments, missions, evidence, reflections, decision } = record;
   const reflection = reflections[0];
 
   return (
@@ -54,19 +54,7 @@ export default function CycleRecordView({ record, onBack }) {
         </div>
       </CycleStageBlock>
 
-      <CycleStageBlock step={4} label="Outreach" count={outreach.length} empty="No professional conversations logged in this cycle.">
-        <div className="space-y-1.5">
-          {outreach.map((c) => (
-            <div key={c.id} className="tp-body text-[color:var(--ink-700)]">
-              <span className="font-semibold text-[color:var(--surface-dark-900)]">{c.name}</span>
-              {c.role || c.company ? <span className="text-[color:var(--ink-500)]"> · {[c.role, c.company].filter(Boolean).join(', ')}</span> : null}
-              <span className="tp-meta ml-2 inline-block text-[color:var(--ink-400)]">{(c.response_status || '').replace(/_/g, ' ')}</span>
-            </div>
-          ))}
-        </div>
-      </CycleStageBlock>
-
-      <CycleStageBlock step={5} label="Evidence" count={evidence.length} empty="No evidence submitted in this cycle.">
+      <CycleStageBlock step={4} label="Evidence" count={evidence.length} empty="No evidence submitted in this cycle.">
         <div className="space-y-2">
           {evidence.map((i) => (
               <div key={i.id} className="flex flex-wrap items-center gap-2.5 rounded-[var(--r-control)] border border-[color:var(--ink-200)] p-4">
@@ -84,7 +72,7 @@ export default function CycleRecordView({ record, onBack }) {
         </div>
       </CycleStageBlock>
 
-      <CycleStageBlock step={6} label="Reflection" count={reflections.length} empty="No reflection written for this cycle.">
+      <CycleStageBlock step={5} label="Reflection" count={reflections.length} empty="No reflection written for this cycle.">
         {reflection && (
           <div className="tp-prose space-y-2 text-[color:var(--ink-700)]">
             {reflection.lessons && <p><span className="font-semibold text-[color:var(--surface-dark-900)]">What it told me: </span>{reflection.lessons}</p>}
@@ -94,7 +82,7 @@ export default function CycleRecordView({ record, onBack }) {
         )}
       </CycleStageBlock>
 
-      <CycleStageBlock step={7} label="Decision" count={decision ? 1 : 0} empty="This cycle has not been closed with a decision yet.">
+      <CycleStageBlock step={6} label="Decision" count={decision ? 1 : 0} empty="This cycle has not been closed with a decision yet.">
         <p className="tp-card text-[color:var(--surface-dark-900)]">{DECISION_LABELS[decision] || decision}</p>
         {cycle.decision_note && <p className="tp-prose mt-1.5 text-[color:var(--ink-700)]">{cycle.decision_note}</p>}
       </CycleStageBlock>

@@ -1,25 +1,18 @@
 /**
  * The last step's "anything else to log?" section.
  *
- * One dropdown, the app's own: pick a person you spoke with, or a file, link or
- * written summary. Both save into the records the experiment already uses, so
- * the student can finish and log the experiment without leaving the step.
+ * One optional extra piece of evidence: a file, a link, or a written summary. It
+ * saves into the records the experiment already uses, so the student can finish
+ * and log the experiment without leaving the step.
  */
 import { useState } from 'react';
 import { CheckCircle2, Plus } from 'lucide-react';
-import FieldSelect from '@/components/ui/FieldSelect';
-import StepContactForm from '@/components/guided/StepContactForm';
 import StepEvidencePanel from '@/components/guided/StepEvidencePanel';
 
-const KINDS = [
-  { value: 'contact', label: 'A person I spoke with' },
-  { value: 'proof', label: 'A file, link or written summary' },
-];
-
 export default function StepExtraEvidence({
-  guide, stepNumber, step, experiment, mission, path, onContactsChanged, onEvidenceSaved,
+  guide, stepNumber, step, experiment, mission, path, onEvidenceSaved,
 }) {
-  const [kind, setKind] = useState('');
+  const [open, setOpen] = useState(false);
   const [saved, setSaved] = useState('');
   const [round, setRound] = useState(0);
 
@@ -29,7 +22,7 @@ export default function StepExtraEvidence({
         Anything else to log before you finish?
       </p>
       <p className="tp-meta mt-1" style={{ color: 'var(--text-muted)' }}>
-        Add the person you spoke with, or another piece of evidence from this experiment.
+        Add another piece of evidence from this experiment.
       </p>
 
       {saved && (
@@ -38,33 +31,7 @@ export default function StepExtraEvidence({
         </p>
       )}
 
-      <label className="mt-3 block">
-        <span className="tp-eyebrow" style={{ color: 'var(--text-muted)' }}>What are you adding?</span>
-        <FieldSelect
-          className="mt-1"
-          ariaLabel="What are you adding"
-          value={kind}
-          onChange={(v) => { setKind(v); setSaved(''); }}
-          placeholder="Choose one"
-          options={KINDS}
-        />
-      </label>
-
-      {kind === 'contact' && (
-        <StepContactForm
-          mission={mission}
-          experiment={experiment}
-          path={path}
-          onSaved={async () => {
-            await onContactsChanged();
-            setSaved('Contact saved to this experiment.');
-            setKind('');
-          }}
-          onCancel={() => setKind('')}
-        />
-      )}
-
-      {kind === 'proof' && (
+      {open ? (
         <StepEvidencePanel
           key={round}
           guide={guide}
@@ -80,14 +47,23 @@ export default function StepExtraEvidence({
             await onEvidenceSaved(proof);
             setSaved('Evidence saved to this experiment.');
             setRound(r => r + 1);
-            setKind('');
+            setOpen(false);
           }}
         />
+      ) : (
+        <button
+          type="button"
+          onClick={() => { setOpen(true); setSaved(''); }}
+          className="tp-meta mt-3 inline-flex items-center gap-1.5 py-1 font-bold"
+          style={{ color: 'var(--brand-navy-700)' }}
+        >
+          <Plus size={13} /> Add another piece of evidence
+        </button>
       )}
 
-      {!kind && !saved && (
-        <p className="tp-meta mt-3 inline-flex items-center gap-1.5" style={{ color: 'var(--text-muted)' }}>
-          <Plus size={13} /> Optional. You can finish without adding anything.
+      {!open && !saved && (
+        <p className="tp-meta mt-2" style={{ color: 'var(--text-muted)' }}>
+          Optional. You can finish without adding anything.
         </p>
       )}
     </div>

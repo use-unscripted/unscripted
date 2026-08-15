@@ -5,10 +5,9 @@
 import { CheckCircle2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
-export default function GuidedCompletion({ guide, experiment, stepsDone, total, conversations, evidenceCount, minutes }) {
+export default function GuidedCompletion({ guide, experiment, stepsDone, total, evidenceCount, minutes }) {
   const facts = [
     `${stepsDone} of ${total} steps completed`,
-    conversations ? `${conversations} professional conversation${conversations === 1 ? '' : 's'}` : null,
     `${evidenceCount} piece${evidenceCount === 1 ? '' : 's'} of evidence created`,
     minutes ? `about ${minutes} minutes of recorded work` : null,
   ].filter(Boolean);

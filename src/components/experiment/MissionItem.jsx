@@ -4,7 +4,6 @@
  */
 import { useState } from 'react';
 import { ChevronDown, ChevronUp, Clock, CheckCircle2, FileText } from 'lucide-react';
-import MissionOutreachPanel from './MissionOutreachPanel';
 
 const STATUS = {
   planned: { bg: 'var(--ink-100)', text: 'var(--ink-700)', label: 'Planned' },
@@ -22,7 +21,7 @@ function Block({ label, children }) {
   );
 }
 
-export default function MissionItem({ mission, experiment, path, contacts, proofs, onChanged, onComplete }) {
+export default function MissionItem({ mission, experiment, path, proofs, onChanged, onComplete }) {
   const [open, setOpen] = useState(mission.status !== 'completed');
   const s = STATUS[mission.status] || STATUS.planned;
   const done = mission.status === 'completed';
@@ -35,11 +34,6 @@ export default function MissionItem({ mission, experiment, path, contacts, proof
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             <span className="tp-meta rounded-full px-2.5 py-1 font-bold" style={{ background: s.bg, color: s.text }}>{s.label}</span>
-            {mission.outreach_required && (
-              <span className="tp-meta rounded-full px-2.5 py-1 font-bold" style={{ background: 'var(--background-tertiary)', color: 'var(--brand-navy-700)' }}>
-                Outreach required
-              </span>
-            )}
           </div>
           <h4 className="tp-card mt-2" style={{ color: 'var(--text-primary)' }}>{mission.title}</h4>
         </div>
@@ -85,15 +79,6 @@ export default function MissionItem({ mission, experiment, path, contacts, proof
             </div>
           )}
 
-          {mission.outreach_required && (
-            <MissionOutreachPanel
-              mission={mission}
-              experiment={experiment}
-              path={path}
-              contacts={contacts}
-              onChanged={onChanged}
-            />
-          )}
 
           {!done && (
             <button

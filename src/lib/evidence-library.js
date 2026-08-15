@@ -28,10 +28,9 @@ export function fmtDate(d) {
 }
 
 /** Build the enriched library: evidence items + one record per career cycle. */
-export function buildLibrary({ cycles = [], paths = [], experiments = [], missions = [], proof = [], outreach = [], reflections = [] }) {
+export function buildLibrary({ cycles = [], paths = [], experiments = [], missions = [], proof = [], reflections = [] }) {
   const exps = experiments.filter(live);
   const mis = missions.filter(live);
-  const out = outreach.filter(live);
   const refs = reflections.filter(live);
   const byId = (arr) => new Map(arr.map((r) => [r.id, r]));
   const expMap = byId(exps);
@@ -81,7 +80,6 @@ export function buildLibrary({ cycles = [], paths = [], experiments = [], missio
       pathName: c.selected_path_name || '',
       experiments: cycleExps,
       missions: mis.filter(inCycle),
-      outreach: out.filter(inCycle),
       evidence: evidence.filter((e) => e.cycleId === c.id || (e.experimentId && expIds.has(e.experimentId))),
       reflections: refs.filter(inCycle),
       decision: c.final_decision || '',

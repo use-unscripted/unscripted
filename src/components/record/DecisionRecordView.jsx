@@ -53,7 +53,6 @@ export default function DecisionRecordView({ raw }) {
       experiments: raw.experiments || [],
       missions: raw.missions || [],
       proof: raw.proof || [],
-      outreach: raw.outreach || [],
       reflections: raw.reflections || [],
       measurements: extra.measurements,
       updates: extra.updates,

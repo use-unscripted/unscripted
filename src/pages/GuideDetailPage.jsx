@@ -28,14 +28,13 @@ import {
 } from '@/lib/guide-progress';
 
 const alive = (rows) => (Array.isArray(rows) ? rows : []).filter(r => r?.deletion_status !== 'deleted');
-const RESPONDED = ['responded', 'call_scheduled', 'completed'];
 
 export default function GuideDetailPage() {
   const navigate = useNavigate();
   const guideId = new URLSearchParams(window.location.search).get('id');
 
   const [guide, setGuide] = useState(null);
-  const [ctx, setCtx] = useState({ experiment: null, mission: null, path: null, proofs: [], contacts: [] });
+  const [ctx, setCtx] = useState({ experiment: null, mission: null, path: null, proofs: [] });
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -59,11 +58,10 @@ export default function GuideDetailPage() {
 
   // ── Load ──
   const loadContext = useCallback(async (g) => {
-    const [experiment, missions, proofs, contacts, paths] = await Promise.all([
+    const [experiment, missions, proofs, paths] = await Promise.all([
       g.experiment_id ? base44.entities.Experiments.get(g.experiment_id).catch(() => null) : null,
       g.experiment_id ? base44.entities.Missions.filter({ experiment_id: g.experiment_id }, 'created_date', 100).catch(() => []) : [],
       g.experiment_id ? base44.entities.ProofOfWork.filter({ experiment_id: g.experiment_id }, '-created_date', 100).catch(() => []) : [],
-      g.experiment_id ? base44.entities.OutreachContacts.filter({ experiment_id: g.experiment_id }, '-created_date', 100).catch(() => []) : [],
       base44.entities.PathRecommendations.list('-created_date', 200).catch(() => []),
     ]);
     const missionList = alive(missions);
@@ -74,7 +72,7 @@ export default function GuideDetailPage() {
     const path = (Array.isArray(paths) ? paths : []).find(
       p => p.id === (experiment?.path_id || g.path_id) || p.path_name === experiment?.path_name
     ) || null;
-    setCtx({ experiment, mission, path, proofs: alive(proofs), contacts: alive(contacts) });
+    setCtx({ experiment, mission, path, proofs: alive(proofs) });
   }, []);
 
   useEffect(() => {
@@ -123,7 +121,7 @@ export default function GuideDetailPage() {
   }
 
   const progress = readProgress(guide);
-  const { experiment, mission, path, proofs, contacts } = ctx;
+  const { experiment, mission, path, proofs } = ctx;
   const backToExperiment = experiment?.id ? `/experiment?experimentId=${experiment.id}` : '/experiments';
 
   // A guide with no steps keeps its old reading view rather than an empty wizard.
@@ -144,8 +142,7 @@ export default function GuideDetailPage() {
   const step = progress.steps[stepNumber - 1] || progress.steps[0];
   const isDone = progress.completed.includes(stepNumber);
   const evidence = proofs.find(p => p.submission_key === stepEvidenceKey(guide.id, stepNumber)) || null;
-  const stepContacts = mission ? contacts.filter(c => c.mission_id === mission.id) : contacts;
-  const blockers = stepBlockers(step, { note, evidence, contacts: stepContacts });
+  const blockers = stepBlockers(step, { note, evidence });
 
   // ── Actions ──
   const goToStep = async (n) => {
@@ -193,8 +190,6 @@ export default function GuideDetailPage() {
     if (stepNumber === 1) { setView('overview'); return; }
     goToStep(stepNumber - 1);
   };
-
-  const conversations = contacts.filter(c => RESPONDED.includes(c.response_status)).length;
 
   return (
     <main className="app-page">
@@ -279,13 +274,11 @@ export default function GuideDetailPage() {
               mission={mission}
               path={path}
               profile={profile}
-              contacts={stepContacts}
               evidence={evidence}
               note={note}
               onNote={onNote}
               isLastStep={stepNumber >= progress.total}
               onEvidenceSaved={async () => { await loadContext(guide); setShowBlockers(false); }}
-              onContactsChanged={async () => { await loadContext(guide); }}
               level={language.level}
               onLevelChange={language.setLevel}
               careerName={language.careerName}
@@ -311,7 +304,6 @@ export default function GuideDetailPage() {
               experiment={experiment}
               stepsDone={progress.completed.length}
               total={progress.total}
-              conversations={conversations}
               evidenceCount={proofs.length}
               minutes={minutesSpent(guide)}
             />

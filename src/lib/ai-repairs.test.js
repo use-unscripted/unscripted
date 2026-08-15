@@ -21,7 +21,6 @@ vi.mock('@/lib/career-cycle', () => ({
 
 const { repairMissionGuide, validateMissionGuide } = await import('@/pages/ExperimentSetup');
 const { repairBlueprint } = await import('@/pages/BlueprintLibrary');
-const { repairOutreachPlan, validateOutreachPlan } = await import('@/components/outreach/OutreachPlanModal');
 
 describe('repairMissionGuide — what counts as a usable guide', () => {
   it('is usable with at least one step', () => {
@@ -96,49 +95,6 @@ describe('repairBlueprint', () => {
   it('returns null only for a non-object', () => {
     expect(repairBlueprint('nope')).toBeNull();
     expect(repairBlueprint({})).not.toBeNull();
-  });
-});
-
-describe('repairOutreachPlan — the drop rules', () => {
-  const full = () => ({
-    outreach_experiments: [{ title: 'Interview three analysts', objective: 'Learn the job' }],
-    contact_archetypes: [{ title: 'Analyst', why_useful: 'Does the work', where_to_find: ['LinkedIn'] }],
-    contact_suggestions: [{ name: 'A Person', role: 'Analyst' }],
-    message_templates: [{ label: 'Cold note', body: 'Hello [Name]' }],
-  });
-
-  it('keeps a complete plan intact', () => {
-    const p = repairOutreachPlan(full());
-    expect(validateOutreachPlan(full()).ok).toBe(true);
-    expect(p.message_templates[0].body).toBe('Hello [Name]');
-  });
-
-  it('drops an item with nothing to act on and keeps the rest', () => {
-    const raw = full();
-    raw.message_templates = [{ label: 'Empty' }, { label: 'Real', body: 'Hello' }];
-    expect(repairOutreachPlan(raw).message_templates).toEqual([{ label: 'Real', body: 'Hello' }]);
-  });
-
-  it('keeps an archetype suggestion, which has no name by design', () => {
-    const raw = full();
-    raw.contact_suggestions = [{ is_archetype: true, archetype_title: 'A hiring manager' }];
-    expect(repairOutreachPlan(raw).contact_suggestions).toHaveLength(1);
-  });
-
-  it('names each empty section so one retry can fill them all', () => {
-    const raw = full();
-    raw.message_templates = [];
-    raw.contact_archetypes = [];
-    const v = validateOutreachPlan(raw);
-    expect(v.ok).toBe(false);
-    expect(v.codes.sort()).toEqual(['contact_archetypes_empty', 'message_templates_empty']);
-    expect(v.errors.join(' ')).toMatch(/message_templates/);
-  });
-
-  it('never throws on a hostile plan', () => {
-    for (const bad of [null, 'text', 42, [], { outreach_experiments: 'nope' }]) {
-      expect(() => validateOutreachPlan(bad)).not.toThrow();
-    }
   });
 });
 

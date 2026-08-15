@@ -47,9 +47,6 @@ const reflectionSources = (rec) => rec.reflections.map(r =>
   src('Reflection', r.is_experiment_conclusion ? 'Experiment reflection' : 'Weekly reflection',
     r.created_date || r.week_start));
 
-const conversationSources = (row) => row.human.people.map(p =>
-  src('Conversation', p.name, p.date, p.role || null));
-
 const dimensionSources = (row) => (row.coverage.rows || [])
   .filter(r => r.current_evidence_level && r.current_evidence_level !== 'unknown')
   .map(r => src('Decision dimension', r.dimension_label, r.last_tested_at, r.current_interpretation));
@@ -74,7 +71,7 @@ export function sourcesFor(row, metric) {
   const rec = row.records;
   if (metric === 'confidence') {
     return compact([...measuredSources(rec), ...proofSources(rec), ...reflectionSources(rec),
-      ...conversationSources(row), ...dimensionSources(row)]);
+      ...dimensionSources(row)]);
   }
   if (metric === 'coverage' || metric === 'uncertainty') return compact(dimensionSources(row));
   if (metric === 'fit') return compact(measuredSources(rec));
@@ -82,7 +79,6 @@ export function sourcesFor(row, metric) {
     return compact(rec.measured.filter(m => m.pre_completed_at).map(m =>
       src('Expectation vs reality', m.experiment_title || 'An experiment', m.post_completed_at, 'Rated before and after')));
   }
-  if (metric === 'human') return compact(conversationSources(row));
   if (metric === 'trend') {
     return compact((row.trend.points || []).map(p =>
       src('Path update', p.label, p.at, p.outcome ? p.outcome.replace(/_/g, ' ') : null)));
@@ -156,17 +152,6 @@ export function metricPanel(row, metric) {
         : null,
       expectation: row.expectation,
       sufficient: row.expectation.available,
-    };
-  }
-
-  if (metric === 'human') {
-    return {
-      ...base,
-      title: 'Perspective from people doing the work',
-      current: `${row.human.count} conversation${row.human.count === 1 ? '' : 's'}`,
-      note: 'Only conversations with real people are counted here.',
-      people: row.human.people,
-      sufficient: row.human.people.length > 0,
     };
   }
 

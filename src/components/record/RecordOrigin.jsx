@@ -26,7 +26,7 @@ export default function RecordOrigin({ origin, counts }) {
       )}
       <p className="tp-meta mt-4" style={{ color: 'var(--text-muted)' }}>
         Since then: {counts.hypotheses} hypothes{counts.hypotheses === 1 ? 'is' : 'es'} · {counts.experiments} experiment{counts.experiments === 1 ? '' : 's'} ·{' '}
-        {counts.evidence} piece{counts.evidence === 1 ? '' : 's'} of evidence · {counts.conversations} conversation{counts.conversations === 1 ? '' : 's'}
+        {counts.evidence} piece{counts.evidence === 1 ? '' : 's'} of evidence
       </p>
     </section>
   );

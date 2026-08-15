@@ -35,8 +35,7 @@ export const WEIGHTS = {
   desire_to_repeat: 0.16,
   interest_change: 0.12,
   dimension_evidence: 0.18,
-  evidence_consistency: 0.08,
-  human_exposure: 0.07,
+  evidence_consistency: 0.15,
 };
 
 /** Evidence maturity. Confidence is shown as a percentage from `developing` up. */
@@ -65,10 +64,8 @@ const scale = (v) => (num(v) === null ? null : clamp((v / 10) * 100));
 const activeRows = (rows) => (Array.isArray(rows) ? rows : [])
   .filter(r => r?.deletion_status !== 'deleted' && r?.deletion_status !== 'permanently_deleted');
 
-const RESPONDED = ['responded', 'call_scheduled', 'completed'];
-
 /** The records that belong to one career hypothesis, matched as the app does. */
-export function recordsFor(path, { experiments = [], measurements = {}, proof = [], reflections = [], contacts = [] }) {
+export function recordsFor(path, { experiments = [], measurements = {}, proof = [], reflections = [] }) {
   const exps = activeRows(experiments).filter(e => e.path_name === path.path_name || e.path_id === path.id);
   const ids = new Set(exps.map(e => e.id));
   const measured = exps.map(e => measurements[e.id]).filter(m => m?.post_completed_at);
@@ -78,15 +75,12 @@ export function recordsFor(path, { experiments = [], measurements = {}, proof = 
     measured,
     proof: activeRows(proof).filter(p => p.path_tested === path.path_name || p.path_id === path.id || ids.has(p.experiment_id)),
     reflections: activeRows(reflections).filter(r => r.path_name === path.path_name || r.path_id === path.id || ids.has(r.experiment_id)),
-    conversations: activeRows(contacts).filter(c =>
-      (c.path_being_tested === path.path_name || c.path_id === path.id || ids.has(c.experiment_id))
-      && RESPONDED.includes(c.response_status)),
   };
 }
 
 /** Which stage of evidence a hypothesis is at. Never inferred from one rating. */
 function maturityFor(rec) {
-  const items = rec.proof.length + rec.reflections.length + rec.conversations.length;
+  const items = rec.proof.length + rec.reflections.length;
   if (!rec.measured.length && !items) return MATURITY.not_tested;
   if (rec.measured.length >= THRESHOLDS.stronger_measured_experiments && items >= THRESHOLDS.stronger_evidence_items) return MATURITY.stronger;
   if (rec.measured.length >= THRESHOLDS.min_measured_experiments && items >= THRESHOLDS.developing_evidence_items) return MATURITY.developing;
@@ -174,24 +168,6 @@ function expectationFor(rec) {
   };
 }
 
-/** Human Exposure: real people only. AI conversations are never counted. */
-function humanFor(rec) {
-  const people = rec.conversations.map(c => ({
-    id: c.id,
-    name: c.name,
-    role: [c.role, c.company].filter(Boolean).join(' at ') || c.contact_type?.replace(/_/g, ' ') || '',
-    date: c.call_date || c.last_contacted_date || c.date_contacted || c.created_date,
-    connected: c.reason_for_contact || c.path_being_tested || '',
-    learned: (c.notes || '').trim(),
-  }));
-  return {
-    count: people.length,
-    // Three real conversations is treated as good exposure for one direction.
-    value: clamp((Math.min(people.length, 3) / 3) * 100),
-    people,
-  };
-}
-
 /** The signals behind Hypothesis Confidence, each with its own weight. */
 function confidenceSignals({ rec, coverage, contradictions }) {
   const out = [];
@@ -221,10 +197,6 @@ function confidenceSignals({ rec, coverage, contradictions }) {
 
   push('evidence_consistency', 'Consistency of your evidence', clamp(100 - contradictions.length * 25),
     contradictions.length ? `${contradictions.length} conflicting reading${contradictions.length === 1 ? '' : 's'} on relevant work.` : 'No conflicting readings on relevant work.');
-
-  const human = humanFor(rec);
-  if (human.count) push('human_exposure', 'Perspective from people doing the work', human.value,
-    `${human.count} real conversation${human.count === 1 ? '' : 's'}.`);
 
   return out;
 }
@@ -265,7 +237,6 @@ export function scoreHypothesis({ path, hypothesis, dimensions, updates = [], da
   const coverage = coverageFor({ hypothesis, dimensions, careerName: path.path_name });
   const contradictions = hypothesis.contradictions || [];
   const signals = confidenceSignals({ rec, coverage, contradictions });
-  const human = humanFor(rec);
   const fit = experiencedFit(rec);
   const expectation = expectationFor(rec);
 
@@ -287,7 +258,6 @@ export function scoreHypothesis({ path, hypothesis, dimensions, updates = [], da
   const strengthening = [
     ...fit.inputs.filter(i => !i.inverted && i.value >= 70).map(i => ({ text: `${i.label} was high after ${i.source}.`, source: i.source })),
     ...(coverage.tested || []).filter(r => r.direction === 'draws_toward').map(r => ({ text: `Evidence suggests ${r.noun} draws you in.`, source: 'Your decision dimensions' })),
-    ...human.people.filter(p => p.learned).slice(0, 2).map(p => ({ text: `A conversation with ${p.name} added real perspective.`, source: p.role || 'Conversation' })),
   ].slice(0, 6);
 
   const weakening = [
@@ -306,12 +276,11 @@ export function scoreHypothesis({ path, hypothesis, dimensions, updates = [], da
     confidence: {
       value: showPercent ? clamp(raw) : null,
       signals,
-      basis: `Based on ${rec.measured.length} measured experiment${rec.measured.length === 1 ? '' : 's'}, ${rec.proof.length + rec.reflections.length} evidence item${rec.proof.length + rec.reflections.length === 1 ? '' : 's'}, and ${human.count} professional conversation${human.count === 1 ? '' : 's'}.`,
+      basis: `Based on ${rec.measured.length} measured experiment${rec.measured.length === 1 ? '' : 's'} and ${rec.proof.length + rec.reflections.length} evidence item${rec.proof.length + rec.reflections.length === 1 ? '' : 's'}.`,
     },
     coverage,
     fit,
     expectation,
-    human,
     uncertainty: {
       value: coverage.value === null ? null : clamp(100 - coverage.value),
       biggest: unknowns.sort((a, b) => (b.relevance === 'high' ? 1 : 0) - (a.relevance === 'high' ? 1 : 0))[0] || null,
@@ -329,7 +298,6 @@ export function scoreHypothesis({ path, hypothesis, dimensions, updates = [], da
       experiment_ids: rec.experiments.map(e => e.id),
       evidence_ids: [...rec.proof.map(p => p.id), ...rec.reflections.map(r => r.id)],
       decision_dimension_ids: (coverage.rows || []).map(r => r.dimension),
-      human_interaction_ids: human.people.map(p => p.id),
       hypothesis_version_id: [...updates].sort((a, b) => (b.sequence ?? 0) - (a.sequence ?? 0))[0]?.id || null,
     },
   };
@@ -434,7 +402,6 @@ export function claritySummary({ profile = {}, reflections = [], rows = [], dime
     hypothesesTested: rows.filter(r => r.records.measured.length || r.records.proof.length).length,
     experiments: rows.reduce((a, r) => a + r.records.completed.length, 0),
     evidence: rows.reduce((a, r) => a + r.records.proof.length, 0),
-    conversations: rows.reduce((a, r) => a + r.human.count, 0),
     unknownsTested: testedDims.length,
     unknownsResolved: dimensions.filter(d => ['moderate', 'strong'].includes(d.current_evidence_level)).length,
     unknownsRemaining: dimensions.filter(d => d.current_evidence_level === 'unknown').length,

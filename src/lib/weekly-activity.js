@@ -16,12 +16,12 @@ import { inWeek } from '@/lib/dates';
 const isActive = (r) => !r?.deletion_status || r.deletion_status === 'active';
 
 /**
- * @param {{missions?: object[], proofs?: object[], outreach?: object[]}} data
+ * @param {{missions?: object[], proofs?: object[]}} data
  * @param {string} expId
  * @param {string} weekKey  'YYYY-MM-DD' Monday
  * @returns {{key: string, label: string, desc: string}[]}
  */
-export function activityFor({ missions = [], proofs = [], outreach = [] }, expId, weekKey) {
+export function activityFor({ missions = [], proofs = [] }, expId, weekKey) {
   if (!expId || !weekKey) return [];
   const items = [];
 
@@ -43,15 +43,6 @@ export function activityFor({ missions = [], proofs = [], outreach = [] }, expId
     .filter(p => isActive(p) && p.experiment_id === expId)
     .filter(p => inWeek(p.completed_at || p.created_date, weekKey))
     .forEach(p => items.push({ key: `proof:${p.id}`, label: p.title, desc: 'Proof you logged' }));
-
-  outreach
-    .filter(c => isActive(c) && c.experiment_id === expId)
-    .filter(c => inWeek(c.last_contacted_date || c.date_contacted || c.created_date, weekKey))
-    .forEach(c => items.push({
-      key: `outreach:${c.id}`,
-      label: c.company ? `${c.name} (${c.company})` : c.name,
-      desc: 'Someone you reached out to',
-    }));
 
   return items.filter(i => i.label);
 }

@@ -1,9 +1,9 @@
 import { Link } from 'react-router-dom';
-import { Plus, Minus, Check, HelpCircle, Users } from 'lucide-react';
+import { Plus, Minus, Check, HelpCircle } from 'lucide-react';
 import SidePanel from '@/components/matrix/SidePanel';
 import ProvenanceSources from '@/components/matrix/ProvenanceSources';
 import ExpectationBars from '@/components/matrix/ExpectationBars';
-import { metricPanel, humanDate } from '@/lib/matrix-provenance';
+import { metricPanel } from '@/lib/matrix-provenance';
 
 /**
  * One metric, explained from the records behind it. Everything rendered here is
@@ -83,24 +83,6 @@ export default function MetricPanel({ row, metric, onClose }) {
 
           {p.expectation && <Block title="Expectation against reality"><ExpectationBars expectation={p.expectation} /></Block>}
 
-          {p.people?.length > 0 && (
-            <Block title="Conversations counted">
-              <ul className="space-y-2">
-                {p.people.map(person => (
-                  <li key={person.id} className="app-inset p-3" style={{ background: 'var(--ink-50)' }}>
-                    <p className="tp-body flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
-                      <Users size={14} aria-hidden="true" /> {person.name}
-                    </p>
-                    <p className="tp-meta mt-0.5" style={{ color: 'var(--text-muted)' }}>
-                      {[person.role, humanDate(person.date)].filter(Boolean).join(' · ')}
-                    </p>
-                    {person.learned && <p className="tp-body mt-1.5" style={{ color: 'var(--text-secondary)' }}>{person.learned}</p>}
-                  </li>
-                ))}
-              </ul>
-            </Block>
-          )}
-
           {p.strengthening?.length > 0 && (
             <Block title="Evidence strengthening this path">
               <ul className="space-y-1.5">
@@ -157,9 +139,6 @@ export default function MetricPanel({ row, metric, onClose }) {
 
           {(metric === 'uncertainty' || metric === 'coverage') && (
             <Link to="/test" className="app-cta tp-control mt-6 inline-flex">Test the biggest unknown</Link>
-          )}
-          {metric === 'human' && p.people?.length === 0 && (
-            <Link to="/evidence?tab=outreach" className="app-cta-secondary tp-control mt-6 inline-flex">Plan a conversation</Link>
           )}
         </>
       )}

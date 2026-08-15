@@ -9,7 +9,6 @@ export default function ClaritySummary({ clarity }) {
     ['Paths tested', clarity.hypothesesTested],
     ['Experiments completed', clarity.experiments],
     ['Evidence created', clarity.evidence],
-    ['Professional conversations', clarity.conversations],
     ['Unknowns with evidence', clarity.unknownsTested],
     ['Unknowns still open', clarity.unknownsRemaining],
   ];

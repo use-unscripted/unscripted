@@ -53,11 +53,10 @@ export default function ActiveExperiment() {
 
     if (!experiment) return setState({ cycle, experiment: null });
 
-    const [guides, proofs, reflections, contacts, paths] = await Promise.all([
+    const [guides, proofs, reflections, paths] = await Promise.all([
       base44.entities.MissionGuides.filter({ experiment_id: experiment.id }, '-version_number', 50).catch(() => []),
       base44.entities.ProofOfWork.filter({ experiment_id: experiment.id }, '-created_date', 100).catch(() => []),
       base44.entities.WeeklyReflections.filter({ experiment_id: experiment.id }, '-created_date', 50).catch(() => []),
-      base44.entities.OutreachContacts.filter({ experiment_id: experiment.id }, '-created_date', 100).catch(() => []),
       base44.entities.PathRecommendations.list('-created_date', 200).catch(() => []),
     ]);
     const path = (Array.isArray(paths) ? paths : []).find(
@@ -72,7 +71,6 @@ export default function ActiveExperiment() {
       guides: alive(guides),
       proofs: alive(proofs),
       reflections: alive(reflections),
-      contacts: alive(contacts),
     });
   }, []);
 
@@ -101,7 +99,7 @@ export default function ActiveExperiment() {
     );
   }
 
-  const { experiment, path, guides, proofs, reflections, contacts, cycle } = state;
+  const { experiment, path, guides, proofs, reflections, cycle } = state;
   // The one to open. A guide saved as a draft is still the only guide a student
   // has, so falling back to the newest keeps the card from disappearing.
   const openGuide = guides.find(g => g.is_active) || guides[0];
@@ -112,7 +110,6 @@ export default function ActiveExperiment() {
     exp: experiment,
     guide: openGuide,
     proof: proofs,
-    contacts,
     measurement,
   });
 
@@ -183,8 +180,7 @@ export default function ActiveExperiment() {
             </h2>
             <p className="tp-lead mt-2" style={{ color: 'var(--text-secondary)' }}>
               Right now this experiment is a title and a goal. Building it out turns it into the actual
-              moves: who to contact first, the email to send them, and what to keep as proof you
-              did it.
+              moves: what to do first, how to do it, and what to keep as proof you did it.
             </p>
             <button
               onClick={() => setShowGuideGen(true)}

@@ -10,7 +10,6 @@ const COLUMNS = [
   ['coverage', 'Evidence Coverage'],
   ['fit', 'Experienced Fit'],
   ['expectation', 'Expectation vs Reality'],
-  ['human', 'Human Exposure'],
   ['uncertainty', 'Uncertainty Remaining'],
 ];
 
@@ -19,7 +18,6 @@ const valueOf = (row, key) => {
   if (key === 'coverage') return row.coverage.value;
   if (key === 'fit') return row.fit.value;
   if (key === 'expectation') return row.expectation.value;
-  if (key === 'human') return row.human.count ? row.human.value : null;
   return row.uncertainty.value;
 };
 
@@ -47,8 +45,7 @@ export default function MatrixTable({ rows, onOpen }) {
                 <td key={key} className="px-3 py-4 align-top">
                   <button type="button" onClick={() => onOpen(row, key)}
                     className="ui-press w-full rounded-[var(--r-control)] px-2 py-1.5 text-left hover:bg-[color:var(--ink-100)]">
-                    <MetricValue value={valueOf(row, key)} maturity={row.maturity}
-                      suffix={key === 'human' ? '%' : '%'} />
+                    <MetricValue value={valueOf(row, key)} maturity={row.maturity} suffix="%" />
                     <span className="tp-meta mt-0.5 block" style={{ color: 'var(--brand-navy-700)' }}>
                       {key === 'confidence' ? 'Why this score?' : 'Inspect'}
                     </span>

@@ -180,8 +180,7 @@ const AuthenticatedApp = () => {
           <Route path="/experiments" element={<ExperimentsPage />} />
           {/* Side by side, with the best next test for this student marked. */}
           <Route path="/experiments/compare" element={<CompareExperiments />} />
-          <Route path="/outreach" element={<Navigate to="/evidence?tab=outreach" replace />} />
-          <Route path="/OutreachTracker" element={<Navigate to="/evidence?tab=outreach" replace />} />
+          <Route path="/outreach" element={<Navigate to="/evidence" replace />} />
           <Route path="/proof" element={<Navigate to="/evidence?tab=proof" replace />} />
           <Route path="/reflection" element={<Navigate to="/evidence?tab=reflect" replace />} />
           <Route path="/resources" element={<ResourceHub />} />

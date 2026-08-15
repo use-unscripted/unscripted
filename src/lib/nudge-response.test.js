@@ -12,7 +12,6 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { LADDERS } from '@/lib/nudge-ladder';
 import { shouldSkipPass } from '@/lib/nudge';
-import { uiStatusOf, storedStatusOf } from '@/lib/linkedin';
 import {
   describeAsk, planResponse, isOptedOut, buildOptOut, optBackInPatch,
   RESPONSE_FIELDS, rungForKey, describeOutcome, internalRoute, isSoftDeleted,
@@ -395,37 +394,6 @@ describe('isOptedOut', () => {
     const sources = entityEnum('NudgeOptOut', 'source');
     expect(sources).toContain(buildOptOut({ userId: 'u', source: 'nonsense' }).source);
     expect(sources).toContain(buildOptOut({ userId: 'u', source: 'answer_page' }).source);
-  });
-});
-
-describe('the closed status a rule out writes survives being looked at', () => {
-  it('round trips through the outreach status map instead of reverting', () => {
-    // uiStatusOf('closed') used to fall through to 'planned', so anything that
-    // wrote the status back put 'not_sent' over a decision the student made.
-    // Editing a note inside a mission did exactly that.
-    expect(uiStatusOf('closed')).toBe('closed');
-    expect(storedStatusOf('closed')).toBe('closed');
-    expect(storedStatusOf(uiStatusOf('closed'))).toBe('closed');
-    // And the value the rule out actually writes is the one that round trips.
-    const plan = planResponse({
-      nudge: rowFor('outreach_never_sent', 3), choice: 'accepted', now: NOW,
-    });
-    expect(storedStatusOf(uiStatusOf(plan.ruleOut.patch.response_status)))
-      .toBe(plan.ruleOut.patch.response_status);
-  });
-
-  it('is a status the tracker can draw, set and filter for', () => {
-    // Read off disk rather than restated, because the failure this guards is a
-    // page whose option list and the stored value drifted apart: a closed
-    // contact rendered as "Not contacted" and there was no option to set it.
-    const page = readFileSync(
-      fileURLToPath(new URL('../pages/OutreachTracker.jsx', import.meta.url)),
-      'utf8',
-    );
-    expect(page).toMatch(/value:\s*'closed'/);
-    // The old fallback pinned an unknown stored value to the first option,
-    // which is what made a real decision read as "Not contacted".
-    expect(page).not.toContain('|| ALL_STATUS_OPTIONS[0]');
   });
 });
 

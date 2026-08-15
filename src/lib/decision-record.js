@@ -79,7 +79,7 @@ const unknownsOf = (node) => (node?.unknowns || []).map(u => String(u).trim()).f
  * none (a legacy student, or a hypothesis tested before updates existed) the
  * initial node is read from the hypothesis record itself and marked as such.
  */
-export function buildChain({ path, updates = [], experiments = [], missions = [], outreach = [], proof = [], reflections = [], measurements = {} }) {
+export function buildChain({ path, updates = [], experiments = [], missions = [], proof = [], reflections = [], measurements = {} }) {
   const { initial, updates: ups } = timelineFrom(updates);
 
   const initialNode = {
@@ -103,7 +103,6 @@ export function buildChain({ path, updates = [], experiments = [], missions = []
     .map((e) => {
       const m = measurements[e.id] || null;
       const evidence = proof.filter(p => p.experiment_id === e.id);
-      const convos = outreach.filter(o => o.experiment_id === e.id);
       const acts = missions.filter(mi => mi.experiment_id === e.id);
       const update = ups.find(u => u.experiment_id === e.id) || null;
       return {
@@ -116,7 +115,6 @@ export function buildChain({ path, updates = [], experiments = [], missions = []
         expectation: expectationLines(m),
         activity: {
           missions: acts.map(a => a.title).filter(Boolean),
-          conversations: convos.map(c => [c.name, c.role, c.company].filter(Boolean).join(' · ')),
           campus: acts.filter(a => /campus|event|club|fair/i.test(`${a.title} ${a.objective || ''}`)).map(a => a.title),
         },
         evidence: evidence.map(p => ({ id: p.id, title: p.title, category: p.category, approved: p.resume_status === 'approved' })),
@@ -227,13 +225,12 @@ export function originFrom(profile) {
 
 /** The whole record. Hypotheses most recently moved first. */
 export function buildDecisionRecord({
-  paths = [], experiments = [], missions = [], proof = [], outreach = [], reflections = [],
+  paths = [], experiments = [], missions = [], proof = [], reflections = [],
   measurements = {}, updates = [], profile = null, dimensions = [],
 }) {
   const exps = experiments.filter(live);
   const mis = missions.filter(live);
   const prf = proof.filter(live);
-  const out = outreach.filter(live);
   const refs = reflections.filter(live);
 
   const hypotheses = paths
@@ -241,7 +238,7 @@ export function buildDecisionRecord({
     .map(p => buildChain({
       path: p,
       updates: updates.filter(u => u.path_id === p.id),
-      experiments: exps, missions: mis, outreach: out, proof: prf, reflections: refs, measurements,
+      experiments: exps, missions: mis, proof: prf, reflections: refs, measurements,
     }))
     .sort((a, b) => (b.updateCount - a.updateCount) || (b.experimentCount - a.experimentCount));
 
@@ -256,7 +253,6 @@ export function buildDecisionRecord({
       hypotheses: hypotheses.length,
       experiments: exps.length,
       evidence: prf.length,
-      conversations: out.length,
       reflections: refs.length,
     },
   };
