@@ -17,7 +17,6 @@ import JourneyFocus from '@/components/journey/JourneyFocus';
 import PathComparisonWorkspace from '@/components/journey/PathComparisonWorkspace';
 import PathSelectedConfirm from '@/components/journey/PathSelectedConfirm';
 import JourneyEmptyState from '@/components/journey/JourneyEmptyState';
-import AllPathsLink from '@/components/journey/AllPathsLink';
 import UncertaintyUpdateCard from '@/components/journey/UncertaintyUpdateCard';
 import ContinuationGate from '@/components/journey/ContinuationGate';
 import { Sk } from '@/components/PageSkeleton';
@@ -264,10 +263,6 @@ export default function MyJourney() {
       <Reveal y={20}>
         <JourneyStages stage={stage} detail={stageDetail} />
       </Reveal>
-
-      {/* All the paths this student could test, and the look-alike merge tool,
-          now on their own screen. */}
-      <AllPathsLink count={(livePaths.length ? livePaths : comparisonPaths).length} />
 
       <p className="tp-meta pt-2 text-center" style={{ color: 'var(--text-muted)' }}>
         Working on something else? Use the cycle in the sidebar to jump to any step.
