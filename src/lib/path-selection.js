@@ -29,16 +29,22 @@ async function currentUserId() {
 }
 
 /** An existing open experiment for this path, if the student already has one. */
+const belongsToPath = (e, path) =>
+  e.path_id === path.id || e.path_recommendation_id === path.id || e.path_name === path.path_name;
+
 async function findExistingExperiment(path, cycle) {
   if (cycle?.experiment_id) {
     const bound = await base44.entities.Experiments.get(cycle.experiment_id).catch(() => null);
-    if (bound && bound.deletion_status !== 'deleted' && OPEN_STATUSES.includes(bound.status)) return bound;
+    // It must be an experiment for THIS path. Without that check, switching the
+    // chosen path kept the previous path's experiment attached to the cycle, so
+    // Test said you were testing a career you had not picked.
+    if (bound && bound.deletion_status !== 'deleted' && OPEN_STATUSES.includes(bound.status) && belongsToPath(bound, path)) return bound;
   }
   const rows = await base44.entities.Experiments.list('-created_date', 200).catch(() => []);
   const mine = (Array.isArray(rows) ? rows : []).filter(
     e => e.deletion_status !== 'deleted'
       && OPEN_STATUSES.includes(e.status)
-      && (e.path_id === path.id || e.path_recommendation_id === path.id || e.path_name === path.path_name)
+      && belongsToPath(e, path)
   );
   const preferred = path.first_experiment
     ? mine.find(e => e.title && path.first_experiment.toLowerCase().includes(e.title.toLowerCase().slice(0, 18)))
@@ -66,11 +72,15 @@ export function selectPathAndBeginExperiment(path, allPaths = []) {
     // 1 — cycle records the choice first, so every later write can reference it.
     const cycle = await selectPathForCycle(path);
 
-    // 2 — one primary focus at a time.
+    // 2 — one primary focus at a time. A previously chosen path also drops back
+    // out of 'active', so it can never be picked up as the path being tested.
     await Promise.all(
       allPaths
-        .filter(p => p.is_primary_focus && p.id !== path.id)
-        .map(p => base44.entities.PathRecommendations.update(p.id, { is_primary_focus: false }))
+        .filter(p => p.id !== path.id && (p.is_primary_focus || p.status === 'active'))
+        .map(p => base44.entities.PathRecommendations.update(p.id, {
+          is_primary_focus: false,
+          ...(p.status === 'active' ? { status: 'exploring' } : {}),
+        }))
     );
     await base44.entities.PathRecommendations.update(path.id, {
       status: 'active',
