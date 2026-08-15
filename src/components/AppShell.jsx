@@ -7,7 +7,8 @@ import { base44 } from '@/api/base44Client';
 import RouteTransition from '@/components/RouteTransition';
 import { clearStudentDrafts } from '@/lib/student-drafts';
 import PilotTracker from '@/components/PilotTracker';
-import { CycleRailColumn, CycleRailStrip } from '@/components/nav/CycleRailShell';
+import { CycleRailStrip } from '@/components/nav/CycleRailShell';
+import CycleRail from '@/components/nav/CycleRail';
 
 function CompassSVG() {
   return (
@@ -49,7 +50,10 @@ export default function AppShell() {
       {/* Each tab remembers the screen and the scroll offset it was left at. */}
       <TabScrollMemory />
       {/* Sidebar */}
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-60 flex-col lg:flex py-5 px-4" style={{ background: 'var(--brand-navy-900)' }}>
+      {/* The whole column scrolls, not the nav inside it: the cycle rail made
+          the nav its own scroll box, which put a second set of scrollbars over
+          the stages and clipped the last two. */}
+      <aside className="fixed inset-y-0 left-0 z-30 hidden w-60 flex-col overflow-y-auto overflow-x-hidden lg:flex py-5 px-4" style={{ background: 'var(--brand-navy-900)' }}>
         <NavLink to="/journey" className="block -mx-5 px-5 py-3 mb-8 text-sm">
           <div className="flex items-center justify-center gap-0 font-heading font-bold text-white uppercase select-none" style={{ fontSize: '14px', letterSpacing: '0.20em' }}>
             <span>UNSCRIP</span>
@@ -58,7 +62,7 @@ export default function AppShell() {
           </div>
         </NavLink>
 
-        <nav className="flex-1 overflow-y-auto">
+        <nav className="flex-1">
           {NAV.map(([to, label, , Icon]) => {
             const isActive = activeTab === to;
             return (
@@ -74,6 +78,10 @@ export default function AppShell() {
               </NavLink>
             );
           })}
+          {/* Where you are in the cycle, in the nav it belongs to. */}
+          <div className="mt-7 border-t pt-6" style={{ borderColor: 'rgba(255,255,255,0.12)' }}>
+            <CycleRail variant="dark" />
+          </div>
         </nav>
 
         <p className="tp-meta rounded-[var(--r-control)] p-3.5 text-[color:var(--ink-400)] mt-4" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
@@ -92,11 +100,7 @@ export default function AppShell() {
       {/* The bottom nav is as tall as its own bar plus whatever the phone
           reserves for the home indicator, so the page has to clear both or the
           last thing on every scrolling screen hides behind it. */}
-      {/* Where you are in the cycle, on every screen: a column on a wide
-          display, a collapsible strip above the content on a narrow one. */}
-      <CycleRailColumn />
-
-      <main className="pb-[calc(6rem+env(safe-area-inset-bottom))] pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)] lg:ml-60 lg:pb-0 xl:mr-64">
+      <main className="pb-[calc(6rem+env(safe-area-inset-bottom))] pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)] lg:ml-60 lg:pb-0">
         <CycleRailStrip />
         {/* Screens arrive the way the landing fold does, once per route. */}
         <RouteTransition>

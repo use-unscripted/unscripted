@@ -40,17 +40,49 @@ function stageOfPath(pathname) {
   return hit ? hit[1] : null;
 }
 
-export default function CycleRail() {
+/* Two grounds: the app's paper, and the navy sidebar. Same shape either way —
+   only the ink and the hairlines change. */
+const INK = {
+  light: {
+    eyebrow: 'var(--brand-navy-700)',
+    path: 'var(--text-secondary)',
+    label: 'var(--text-primary)',
+    labelTodo: 'var(--text-muted)',
+    sub: 'var(--text-muted)',
+    here: 'var(--brand-navy-700)',
+    hereBg: 'var(--background-tertiary)',
+    rail: 'var(--border-light)',
+    nodeTodo: 'var(--background-primary)',
+    nodeTodoRing: 'var(--border-light)',
+    link: 'var(--brand-navy-700)',
+  },
+  dark: {
+    eyebrow: 'var(--brand-gold-500)',
+    path: '#FFFFFF',
+    label: '#FFFFFF',
+    labelTodo: 'var(--ink-300)',
+    sub: 'var(--ink-300)',
+    here: 'var(--brand-gold-500)',
+    hereBg: 'var(--brand-navy-700)',
+    rail: 'rgba(255,255,255,0.16)',
+    nodeTodo: 'transparent',
+    nodeTodoRing: 'rgba(255,255,255,0.28)',
+    link: 'var(--ink-300)',
+  },
+};
+
+export default function CycleRail({ variant = 'light' }) {
   const { pathname } = useLocation();
   const journey = useCycleStage();
   const activeIdx = STAGE_INDEX[journey?.stage] ?? 0;
   const hereStage = stageOfPath(pathname);
+  const c = INK[variant];
 
   return (
     <div>
-      <p className="tp-eyebrow" style={{ color: 'var(--brand-navy-700)' }}>Your cycle</p>
+      <p className="tp-eyebrow" style={{ color: c.eyebrow }}>Your cycle</p>
       {journey?.currentPath?.path_name && (
-        <p className="tp-meta mt-1.5 font-semibold" style={{ color: 'var(--text-secondary)', overflowWrap: 'anywhere' }}>
+        <p className="tp-meta mt-1.5 font-semibold" style={{ color: c.path, overflowWrap: 'anywhere' }}>
           {journey.currentPath.path_name}
         </p>
       )}
@@ -65,7 +97,7 @@ export default function CycleRail() {
                 <span
                   aria-hidden="true"
                   className="absolute bottom-0 left-[8px] top-[26px] w-[2px]"
-                  style={{ background: i < activeIdx ? 'var(--brand-gold-500)' : 'var(--border-light)' }}
+                  style={{ background: i < activeIdx ? 'var(--brand-gold-500)' : c.rail }}
                 />
               )}
               <span className="relative z-[1] shrink-0 pt-[11px]" aria-current={state === 'current' ? 'step' : undefined}>
@@ -81,20 +113,20 @@ export default function CycleRail() {
                   </span>
                 ) : (
                   <span className="block h-[18px] w-[18px] rounded-full"
-                    style={{ background: 'var(--background-primary)', boxShadow: 'inset 0 0 0 2px var(--border-light)' }} />
+                    style={{ background: c.nodeTodo, boxShadow: `inset 0 0 0 2px ${c.nodeTodoRing}` }} />
                 )}
               </span>
 
               <Link
                 to={STAGE_TO[s.key]}
                 className="journey-stage-row -mx-2 flex min-w-0 flex-1 flex-col rounded-[var(--r-control)] px-2 py-2"
-                style={isHere ? { background: 'var(--background-tertiary)' } : undefined}
+                style={isHere ? { background: c.hereBg } : undefined}
               >
                 <span className="tp-meta font-bold"
-                  style={{ color: state === 'todo' ? 'var(--text-muted)' : 'var(--text-primary)' }}>
+                  style={{ color: state === 'todo' ? c.labelTodo : c.label }}>
                   {s.label}
                 </span>
-                <span className="tp-meta" style={{ color: isHere ? 'var(--brand-navy-700)' : 'var(--text-muted)' }}>
+                <span className="tp-meta" style={{ color: isHere ? c.here : c.sub }}>
                   {isHere ? "You're here" : s.question}
                 </span>
               </Link>
@@ -103,7 +135,7 @@ export default function CycleRail() {
         })}
       </ol>
 
-      <Link to="/journey" className="tp-meta mt-4 inline-block font-semibold" style={{ color: 'var(--brand-navy-700)' }}>
+      <Link to="/journey" className="tp-meta mt-4 inline-block font-semibold" style={{ color: c.link }}>
         Back to My Journey
       </Link>
     </div>

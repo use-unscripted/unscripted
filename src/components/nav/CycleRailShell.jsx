@@ -3,21 +3,10 @@ import { ChevronDown, Map } from 'lucide-react';
 import CycleRail from '@/components/nav/CycleRail';
 
 /**
- * How the cycle rail sits on the page: a fixed column on a wide screen, and a
- * collapsible strip above the content on a narrow one, so a phone keeps the one
- * dominant action in the first viewport.
+ * How the cycle rail sits on the page: inside the navy sidebar on a wide screen
+ * (see AppShell), and a collapsible strip above the content on a narrow one, so
+ * a phone keeps the one dominant action in the first viewport.
  */
-export function CycleRailColumn() {
-  return (
-    <aside
-      aria-label="Your cycle"
-      className="fixed inset-y-0 right-0 z-20 hidden w-64 overflow-y-auto border-l px-5 py-8 xl:block"
-      style={{ background: 'var(--background-primary)', borderColor: 'var(--border-light)' }}
-    >
-      <CycleRail />
-    </aside>
-  );
-}
 
 export function CycleRailStrip() {
   const [open, setOpen] = useState(false);
