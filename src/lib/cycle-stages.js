@@ -8,7 +8,6 @@
 import { STAGES, STAGE_INDEX } from '@/lib/journey';
 
 export const STAGE_ROUTE = {
-  explore: '/explore',
   choose: '/choose',
   test: '/test',
   prove: '/prove',

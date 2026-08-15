@@ -8,14 +8,11 @@ import PathSelectedConfirm from '@/components/journey/PathSelectedConfirm';
 import { Sk } from '@/components/PageSkeleton';
 
 /**
- * Choosing the one path to test, on its own.
- *
- * `mode="compare"` shows the same workspace without committing to anything: the
- * button hands the student to the Choose stage instead of starting an experiment,
- * so comparing and committing are two different screens rather than one page
- * that does both at once.
+ * Reading the paths one at a time, and committing to the one you test first.
+ * There used to be a second, identical screen for comparing them without
+ * committing; it asked the same question and had the same button, so it's gone.
  */
-export default function ChoosePath({ mode = 'choose', onCompareSelect }) {
+export default function ChoosePath() {
   const navigate = useNavigate();
   const [paths, setPaths] = useState(null);
   const [busyId, setBusyId] = useState(null);
@@ -32,7 +29,6 @@ export default function ChoosePath({ mode = 'choose', onCompareSelect }) {
   useEffect(() => { load(); }, [load]);
 
   const handleSelect = useCallback(async (path) => {
-    if (mode === 'compare') { onCompareSelect?.(path); return; }
     setError(null);
     setBusyId(path.id);
     try {
@@ -47,7 +43,7 @@ export default function ChoosePath({ mode = 'choose', onCompareSelect }) {
     } finally {
       setBusyId(null);
     }
-  }, [mode, onCompareSelect, paths, load, navigate]);
+  }, [paths, load, navigate]);
 
   if (!paths) return <Sk h={320} r={16} />;
 
@@ -68,7 +64,6 @@ export default function ChoosePath({ mode = 'choose', onCompareSelect }) {
         busyId={busyId}
         error={error}
         onRetry={() => setError(null)}
-        ctaLabel={mode === 'compare' ? 'Consider this path' : 'Test this path'}
       />
     </>
   );

@@ -7,8 +7,9 @@
  */
 
 export const STAGES = [
-  { key: 'explore', label: 'Explore', question: 'Which directions are worth my time?' },
-  { key: 'choose',  label: 'Choose',  question: 'Which one am I testing first?' },
+  /* Explore and Choose used to be two screens showing the same three paths with
+     the same button, so they are one stage: read them, pick one. */
+  { key: 'choose',  label: 'Choose',  question: 'Which path am I testing first?' },
   { key: 'test',    label: 'Test',    question: 'What am I actually doing this week?' },
   { key: 'prove',   label: 'Prove',   question: 'What evidence did I create?' },
   { key: 'reflect', label: 'Reflect', question: 'What did I learn about the fit?' },
@@ -61,8 +62,7 @@ export function resolveJourney({ paths = [], experiments = [], proof = [], refle
   };
 
   let stage;
-  if (livePaths.length === 0) stage = 'explore';
-  else if (!currentPath) stage = 'choose';
+  if (!currentPath) stage = 'choose';
   else if (liveExps.length === 0) stage = 'test';
   else if (liveProof.length === 0) stage = doneExps.length > 0 ? 'prove' : 'test';
   else if (liveRefl.length === 0) stage = 'reflect';
@@ -70,15 +70,10 @@ export function resolveJourney({ paths = [], experiments = [], proof = [], refle
   else stage = 'test';
 
   const ACTIONS = {
-    explore: {
-      label: 'Compare My Paths',
-      to: '/explore',
-      sub: 'Review the directions built from your onboarding answers, side by side.',
-    },
     choose: {
-      label: 'Choose This Path',
+      label: 'Choose My Path',
       to: '/choose',
-      sub: 'Pick the one direction you will test first. Nothing is permanent.',
+      sub: 'Read your paths one at a time, then pick the one you will test first.',
     },
     test: nextExperiment
       ? {

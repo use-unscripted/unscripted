@@ -14,7 +14,6 @@ import useCycleStage from '@/hooks/useCycleStage';
 
 /** Which screen does the work of each stage. */
 const STAGE_TO = {
-  explore: '/explore',
   choose: '/choose',
   test: '/test',
   prove: '/prove',
@@ -24,7 +23,7 @@ const STAGE_TO = {
 
 /** Which stage the screen you are on belongs to, so the rail can mark it. */
 const HERE = [
-  ['/explore', 'explore'],
+  ['/explore', 'choose'],
   ['/choose', 'choose'],
   ['/test', 'test'],
   ['/prove', 'prove'],

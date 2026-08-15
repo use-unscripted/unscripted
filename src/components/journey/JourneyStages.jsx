@@ -24,10 +24,6 @@ function plural(n, one, many) {
  */
 export function buildStageDetail({ counts, currentPath, nextExperiment, experimentsDone }) {
   return {
-    explore: {
-      value: counts.paths ? plural(counts.paths, 'path compared', 'paths compared') : NOT_YET,
-      to: counts.paths ? '/paths' : null,
-    },
     choose: {
       value: currentPath?.path_name || 'No direction chosen yet',
       to: '/paths',
