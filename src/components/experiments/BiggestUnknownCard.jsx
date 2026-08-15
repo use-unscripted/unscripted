@@ -58,7 +58,10 @@ export default function BiggestUnknownCard({ brief, onTest, ctaLabel = 'Test Thi
       <button onClick={onTest} disabled={busy}
         className="tp-body mt-5 flex w-full items-center justify-center gap-2 rounded-[var(--r-control)] py-3.5 font-semibold text-white disabled:opacity-40"
         style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}>
-        {ctaLabel} <ArrowRight size={16} />
+        {/* Say why it is not clickable. While the designs are still being written
+            the button is disabled, and a label that still reads "Test This"
+            makes that look like a dead control rather than a wait. */}
+        {busy ? 'Designing your test…' : <>{ctaLabel} <ArrowRight size={16} /></>}
       </button>
     </section>
   );

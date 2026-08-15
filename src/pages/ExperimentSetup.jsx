@@ -562,7 +562,15 @@ export default function ExperimentSetup() {
    */
   const handleTestRecommended = async () => {
     const designed = options.filter(o => o.realistic_scenario || o.test_question);
-    const match = designed.find(o => o.experiment_type === brief?.experiment_type) || designed[0];
+    // The designed option matching the recommended type, then any designed one,
+    // then the first suggestion. That last fallback is the difference between
+    // this button working and doing nothing at all: when the design step fails
+    // or returns nothing, `options` is still the static suggestion list, none of
+    // which carries a scenario or a test question, so `designed` is empty and
+    // the click used to return silently.
+    const match = designed.find(o => o.experiment_type === brief?.experiment_type)
+      || designed[0]
+      || options[0];
     if (!match) return;
     setSelectedIndex(options.indexOf(match));
     await handleConfirmPickWith(match);
