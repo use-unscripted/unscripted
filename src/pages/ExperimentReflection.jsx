@@ -38,6 +38,11 @@ import { buildSynthesis } from '@/lib/hypothesis-synthesis';
 import { decisionMeta, ELIMINATION_NOTE } from '@/lib/hypothesis-updates';
 import { loadNextBestExperiment } from '@/lib/next-best-experiment';
 import { Sk } from '@/components/PageSkeleton';
+import ReflectionStep from '@/components/reflection/ReflectionStep';
+
+/* The flow, named. Four steps from "the experiment is finished" to "the cycle is
+   closed", so the student can see how much is left at every point. */
+const TOTAL_STEPS = 4;
 
 function Shell({ children }) {
   return <main className="app-page"><div className="space-y-5">{children}</div></main>;
@@ -216,36 +221,48 @@ export default function ExperimentReflection() {
       ) : !availability.ready ? (
         <ConclusionGate availability={availability} experiment={ctx.experiment} onEndEarly={handleEndEarly} />
       ) : !measurement?.post_completed_at ? (
-        <MeasurementGate phase="post" exp={ctx.experiment} measurement={measurement} autoOpen onSaved={setMeasurement} />
+        <ReflectionStep index={1} total={TOTAL_STEPS} title="How it actually went"
+          purpose="A short check-in against what you predicted before you started. It takes a minute.">
+          <MeasurementGate phase="post" exp={ctx.experiment} measurement={measurement} autoOpen onSaved={setMeasurement} />
+        </ReflectionStep>
       ) : reflection ? (
         <>
           {/* The recalculation runs once per saved reflection and hands its
               before/after to the synthesis below. */}
-          <EvidenceUpdatePanel reflection={reflection} experiment={ctx.experiment} onResults={setChanges} />
+          <ReflectionStep index={3} total={TOTAL_STEPS} title="What the evidence changed"
+            purpose="Read against your hypothesis: what got stronger, what got weaker, and what is still unsettled."
+            done={!!approved}>
+            <div className="space-y-5">
+              <EvidenceUpdatePanel reflection={reflection} experiment={ctx.experiment} onResults={setChanges} />
 
-          {!approved ? (
-            changes && (
-              synthesis
-                ? <HypothesisSynthesisPanel synthesis={synthesis} onConfirm={setApproved} />
-                : <section className="rounded-[var(--r-surface)] bg-white p-6" style={{ border: '1px solid var(--border-light)' }}>
-                  <p className="tp-body font-bold" style={{ color: 'var(--text-primary)' }}>No hypothesis is attached to this experiment</p>
-                  <p className="tp-prose mt-2" style={{ color: 'var(--text-secondary)' }}>
-                    Your reflection is saved as evidence. Choose what happens next below.
-                  </p>
-                </section>
-            )
-          ) : (
-            <HypothesisTimeline pathId={ctx.path?.id} pathName={ctx.path?.path_name} />
-          )}
+              {!approved ? (
+                changes && (
+                  synthesis
+                    ? <HypothesisSynthesisPanel synthesis={synthesis} onConfirm={setApproved} />
+                    : <div className="rounded-[var(--r-control)] p-5" style={{ background: 'var(--background-secondary)' }}>
+                      <p className="tp-body font-bold" style={{ color: 'var(--text-primary)' }}>No hypothesis is attached to this experiment</p>
+                      <p className="tp-prose mt-2" style={{ color: 'var(--text-secondary)' }}>
+                        Your reflection is saved as evidence. Choose what happens next below.
+                      </p>
+                    </div>
+                )
+              ) : (
+                <HypothesisTimeline pathId={ctx.path?.id} pathName={ctx.path?.path_name} />
+              )}
+            </div>
+          </ReflectionStep>
 
           {(approved || (changes && !synthesis)) && (
-            <HypothesisDecision
-              ctx={ctx}
-              reflection={reflection}
-              synthesis={approved}
-              dimensions={dimensions}
-              onDecided={handleDecided}
-            />
+            <ReflectionStep index={4} total={TOTAL_STEPS} title="Decide what comes next" delay={80}
+              purpose="Keep testing this direction, change what you are claiming, or record it as tested and set aside.">
+              <HypothesisDecision
+                ctx={ctx}
+                reflection={reflection}
+                synthesis={approved}
+                dimensions={dimensions}
+                onDecided={handleDecided}
+              />
+            </ReflectionStep>
           )}
 
           <p className="tp-meta text-center" style={{ color: 'var(--text-muted)' }}>
@@ -256,13 +273,16 @@ export default function ExperimentReflection() {
           </p>
         </>
       ) : (
-        <ReflectionForm
-          ctx={ctx}
-          measurement={measurement}
-          dimensions={dimensions}
-          onSaved={handleSaved}
-          onSubmit={handleSubmit}
-        />
+        <ReflectionStep index={2} total={TOTAL_STEPS} title="What you learned"
+          purpose="Your own words about the work: what you did, what surprised you, what you would avoid next time.">
+          <ReflectionForm
+            ctx={ctx}
+            measurement={measurement}
+            dimensions={dimensions}
+            onSaved={handleSaved}
+            onSubmit={handleSubmit}
+          />
+        </ReflectionStep>
       )}
 
       <p className="touch-reach-line tp-meta justify-center pt-1 text-center" style={{ color: 'var(--text-muted)' }}>

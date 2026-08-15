@@ -7,6 +7,7 @@ import { base44 } from '@/api/base44Client';
 import RouteTransition from '@/components/RouteTransition';
 import { clearStudentDrafts } from '@/lib/student-drafts';
 import PilotTracker from '@/components/PilotTracker';
+import { CycleRailColumn, CycleRailStrip } from '@/components/nav/CycleRailShell';
 
 function CompassSVG() {
   return (
@@ -91,7 +92,12 @@ export default function AppShell() {
       {/* The bottom nav is as tall as its own bar plus whatever the phone
           reserves for the home indicator, so the page has to clear both or the
           last thing on every scrolling screen hides behind it. */}
-      <main className="pb-[calc(6rem+env(safe-area-inset-bottom))] pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)] lg:ml-60 lg:pb-0">
+      {/* Where you are in the cycle, on every screen: a column on a wide
+          display, a collapsible strip above the content on a narrow one. */}
+      <CycleRailColumn />
+
+      <main className="pb-[calc(6rem+env(safe-area-inset-bottom))] pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)] lg:ml-60 lg:pb-0 xl:mr-64">
+        <CycleRailStrip />
         {/* Screens arrive the way the landing fold does, once per route. */}
         <RouteTransition>
           <Outlet />
