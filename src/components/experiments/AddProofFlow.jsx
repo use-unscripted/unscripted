@@ -14,9 +14,10 @@
  * Props: onClose, onSaved(proof, missionTitle), preselectedMission, preselectedExperiment
  */
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { X, Loader2, Upload, FileText, Film, CheckCircle, AlertCircle, RefreshCw, Trash2, ChevronRight, ChevronLeft, ChevronDown, Save } from 'lucide-react';
+import { X, Loader2, AlertCircle, RefreshCw, ChevronRight, ChevronLeft, ChevronDown, Save } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { ProgressBar, OptionRow, GuidedStyles, footerCls } from '@/components/guided/GuidedPieces';
+import ProofFiles, { MAX_FILES, validateFile } from '@/components/experiments/ProofFiles';
 import InterpretationField from '@/components/evidence/InterpretationField';
 import { linksForExperiment } from '@/lib/career-cycle';
 
@@ -27,12 +28,6 @@ const bigInputCls = 'w-full rounded-[var(--r-surface)] border border-[color:var(
 // padding (pb-0) so that bar can stick to the panel's edge, and its -mx values
 // cancel these px values exactly, so keep the two in step by changing the shared
 // one, not by re-declaring it here.
-
-const VIDEO_EXTS = new Set(['mp4','webm','mov','avi','mkv','m4v','wmv','ogv','3gp','3g2']);
-const VIDEO_MIMES = new Set(['video/mp4','video/webm','video/quicktime','video/x-msvideo','video/x-matroska','video/x-ms-wmv','video/ogg','video/3gpp','video/3gpp2']);
-const ALLOWED_EXTS = new Set([...VIDEO_EXTS,'pdf','doc','docx','ppt','pptx','txt','html','png','jpg','jpeg','webp','svg','csv','xls','xlsx','json','mp3','wav']);
-const VIDEO_MAX = 100 * 1024 * 1024;
-const FILE_MAX  =  50 * 1024 * 1024;
 
 const CATEGORIES = [
   ['report','Report'],['model','Model'],['case_study','Case Study'],['article','Article'],
@@ -46,94 +41,15 @@ const STATUS_LABELS = { draft:'Draft', planned:'Planned', in_progress:'In Progre
 
 const MIN_NOTE = 20;
 
-function getExt(name) { return (name.split('.').pop() || '').toLowerCase(); }
-function isVideo(file) { return VIDEO_EXTS.has(getExt(file.name)) || VIDEO_MIMES.has(file.type); }
-function fmtSize(bytes) {
-  if (bytes >= 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
-  return (bytes / 1024).toFixed(0) + ' KB';
-}
-
-function validateFile(file) {
-  const ext = getExt(file.name);
-  if (!ALLOWED_EXTS.has(ext)) return 'Unsupported file type. Upload a PDF, image, video, audio, spreadsheet, or document.';
-  const vid = isVideo(file);
-  if (file.size > (vid ? VIDEO_MAX : FILE_MAX))
-    return vid ? 'Video exceeds 100 MB limit. Compress it or paste a link instead.' : 'File exceeds 50 MB limit. Reduce size or paste a link.';
-  return null;
-}
-
 function isValidUrl(url) {
   try { new URL(url); return true; } catch { return false; }
-}
-
-// ── File Drop Zone ─────────────────────────────────────────────────────────────
-function FileDropZone({ file, uploadState, onSelect, onRemove }) {
-  const inputRef = useRef(null);
-  const [dragging, setDragging] = useState(false);
-
-  const handleDrop = useCallback(e => {
-    e.preventDefault(); setDragging(false);
-    const f = e.dataTransfer.files[0];
-    if (f) onSelect(f);
-  }, [onSelect]);
-
-  if (file) {
-    const vid = isVideo(file);
-    return (
-      <div className="rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] p-4">
-        <div className="flex items-start gap-3">
-          <div className="shrink-0 w-9 h-9 rounded-lg flex items-center justify-center" style={{ background: 'var(--ink-100)' }}>
-            {vid ? <Film size={18} style={{ color: 'var(--brand-navy-700)' }} /> : <FileText size={18} style={{ color: 'var(--brand-navy-700)' }} />}
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="tp-body font-semibold text-[color:var(--surface-dark-900)] truncate">{file.name}</p>
-            <p className="tp-meta text-[color:var(--ink-500)]">{fmtSize(file.size)} · {getExt(file.name).toUpperCase()}</p>
-            {uploadState === 'uploading' && (
-              <div className="mt-2">
-                <div className="tp-meta flex items-center gap-2" style={{ color: 'var(--brand-navy-700)' }}>
-                  <Loader2 size={12} className="animate-spin" /> Uploading...
-                </div>
-                <div className="mt-1.5 h-1.5 w-full rounded-full bg-[color:var(--ink-200)] overflow-hidden">
-                  <div className="h-full rounded-full animate-pulse" style={{ width: '60%', background: 'var(--brand-navy-700)' }} />
-                </div>
-              </div>
-            )}
-            {uploadState === 'done' && <div className="tp-meta mt-1 flex items-center gap-1 text-green-600"><CheckCircle size={12} /> Uploaded</div>}
-            {uploadState === 'error' && <div className="tp-meta mt-1 flex items-center gap-1 text-red-600"><AlertCircle size={12} /> Upload failed</div>}
-          </div>
-          {uploadState !== 'uploading' && (
-            <button onClick={onRemove} aria-label="Remove file" className="shrink-0 text-[color:var(--ink-400)] hover:text-red-500 transition">
-              <Trash2 size={15} />
-            </button>
-          )}
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div
-      onDrop={handleDrop}
-      onDragOver={e => { e.preventDefault(); setDragging(true); }}
-      onDragLeave={() => setDragging(false)}
-      onClick={() => inputRef.current?.click()}
-      className={`rounded-[var(--r-control)] border-2 border-dashed px-6 py-7 text-center cursor-pointer transition ${dragging ? 'border-[color:var(--brand-navy-900)] bg-[color:var(--ink-100)]' : 'border-[color:var(--ink-200)] bg-[color:var(--ink-50)] hover:border-[color:var(--brand-navy-900)] hover:bg-[color:var(--ink-100)]'}`}>
-      <input ref={inputRef} type="file"
-        accept=".pdf,.doc,.docx,.ppt,.pptx,.txt,.html,.png,.jpg,.jpeg,.webp,.svg,.csv,.xls,.xlsx,.json,.mp3,.wav,.mp4,.webm,.mov,.avi,.mkv,.m4v,.wmv,.ogv,.3gp,.3g2"
-        className="hidden" onChange={e => { if (e.target.files[0]) onSelect(e.target.files[0]); }} />
-      <Upload size={22} className="mx-auto mb-2 text-[color:var(--ink-400)]" />
-      <p className="tp-body font-semibold text-[color:var(--ink-700)]">Click or drag a file here</p>
-      <p className="tp-meta mt-1 text-[color:var(--ink-400)]">Videos up to 100 MB · All other files up to 50 MB</p>
-      <p className="tp-meta mt-0.5 text-[color:var(--ink-400)]">PDF, DOC, PPT, XLS, image, video, audio</p>
-    </div>
-  );
 }
 
 // The ways to answer "show it". Any one of them counts, and a student can add
 // more than one. A deck plus a note about how the pitch went is better
 // evidence, not a conflict.
 const PROOF_SOURCES = [
-  { value: 'file', label: 'Upload a file', desc: 'A doc, deck, screenshot, or recording' },
+  { value: 'file', label: 'Upload files', desc: `Docs, decks, screenshots, recordings. Up to ${MAX_FILES}.` },
   { value: 'link', label: 'Paste a link', desc: 'Google Drive, GitHub, YouTube, Notion…' },
   { value: 'note', label: 'Just write what happened', desc: 'A few sentences is plenty' },
 ];
@@ -169,10 +85,13 @@ export default function AddProofFlow({ onClose, onSaved, preselectedMission, pre
   const [sources, setSources] = useState([]);   // which of the three are open
   const skipFileRef = useRef(false);            // set by "save without the file"
   const [detailOpen, setDetailOpen] = useState(false);
-  const [file, setFile] = useState(null);
+  // Up to MAX_FILES attachments. uploadedRef keeps the urls of files that have
+  // already gone up, so a retry after a partial failure never uploads twice.
+  const [files, setFiles] = useState([]);
   const [fileError, setFileError] = useState('');
   const [uploadState, setUploadState] = useState('idle');
-  const [uploadedUrl, setUploadedUrl] = useState('');
+  const [fileStates, setFileStates] = useState({});
+  const uploadedRef = useRef({});
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const submittingRef = useRef(false);
@@ -248,25 +167,39 @@ export default function AddProofFlow({ onClose, onSaved, preselectedMission, pre
   // One definition of "there is proof here", used by the button and by the save.
   const trimmedUrl = data.external_url.trim();
   const urlInvalid = linkOn && !!trimmedUrl && !isValidUrl(trimmedUrl);
-  const fileBlocked = fileOn && !!fileError;
-  const hasFile = fileOn && !!file;
+  // A rejected file is reported, but it only blocks the save when nothing valid
+  // was attached: one oversized video should not hold up the four good files.
+  const fileBlocked = fileOn && !!fileError && files.length === 0;
+  const hasFile = fileOn && files.length > 0;
   const hasUrl = linkOn && !!trimmedUrl && !urlInvalid;
   const hasNote = noteOn && data.completion_note.trim().length > MIN_NOTE;
   const hasProof = hasFile || hasUrl || hasNote;
 
-  const handleFileSelect = (f) => {
-    const err = validateFile(f);
-    if (err) { setFileError(err); return; }
-    setFileError('');
-    setFile(f);
-    setUploadState('idle');
-    setUploadedUrl('');
+  // Adding several at once: the good ones are kept and the rejected ones are
+  // named, rather than the whole selection being thrown away.
+  const handleFilesAdd = (picked) => {
+    const room = MAX_FILES - files.length;
+    const errors = [];
+    const kept = [];
+    picked.forEach(f => {
+      if (kept.length >= room) { errors.push(`${f.name}: only ${MAX_FILES} files can be attached.`); return; }
+      const err = validateFile(f);
+      if (err) { errors.push(err); return; }
+      if (files.some(x => x.name === f.name && x.size === f.size)) return;  // already attached
+      kept.push(f);
+    });
+    setFileError(errors.join(' '));
+    if (kept.length) {
+      setFiles(prev => [...prev, ...kept]);
+      setUploadState('idle');
+    }
   };
 
-  const handleRemoveFile = () => {
-    setFile(null);
+  const handleRemoveFile = (i) => {
+    setFiles(prev => prev.filter((_, x) => x !== i));
+    setFileStates({});
+    uploadedRef.current = {};
     setUploadState('idle');
-    setUploadedUrl('');
     setFileError('');
   };
 
@@ -294,18 +227,30 @@ export default function AddProofFlow({ onClose, onSaved, preselectedMission, pre
     }, 230);
   };
 
+  /** Upload every attachment. Returns the saved rows, or null if any failed. */
   const doUpload = async () => {
-    if (!file) return null;
+    if (!files.length) return [];
     setUploadState('uploading');
-    try {
-      const result = await base44.integrations.Core.UploadFile({ file });
-      setUploadState('done');
-      setUploadedUrl(result.file_url);
-      return result.file_url;
-    } catch {
-      setUploadState('error');
-      return null;
+    const rows = [];
+    for (let i = 0; i < files.length; i += 1) {
+      const f = files[i];
+      const already = uploadedRef.current[i];
+      if (already) { rows.push(already); continue; }
+      setFileStates(s => ({ ...s, [i]: 'uploading' }));
+      try {
+        const result = await base44.integrations.Core.UploadFile({ file: f });
+        const row = { file_url: result.file_url, file_name: f.name, file_size: f.size, mime_type: f.type };
+        uploadedRef.current[i] = row;
+        rows.push(row);
+        setFileStates(s => ({ ...s, [i]: 'done' }));
+      } catch {
+        setFileStates(s => ({ ...s, [i]: 'error' }));
+        setUploadState('error');
+        return null;
+      }
     }
+    setUploadState('done');
+    return rows;
   };
 
   const handleSave = async () => {
@@ -340,14 +285,14 @@ export default function AddProofFlow({ onClose, onSaved, preselectedMission, pre
 
     try {
       const wantFile = hasFile && !skipFileRef.current;
-      let fileUrl = wantFile ? uploadedUrl : '';
-      if (wantFile && uploadState !== 'done') {
-        fileUrl = await doUpload();
-        if (!fileUrl) {
+      let uploaded = [];
+      if (wantFile) {
+        uploaded = await doUpload();
+        if (!uploaded) {
           // Losing the whole entry because one upload failed is how a student
-          // gives up. If they have other proof, offer to save without the file.
+          // gives up. If they have other proof, offer to save without the files.
           setError(hasUrl || hasNote
-            ? 'That file didn’t upload. Try again, or save what you have without it.'
+            ? 'One of those files didn’t upload. Try again, or save what you have without them.'
             : 'File upload failed. Please try again.');
           setSaving(false);
           submittingRef.current = false;
@@ -393,10 +338,13 @@ export default function AddProofFlow({ onClose, onSaved, preselectedMission, pre
           ? data.skills_demonstrated.split(',').map(s => s.trim()).filter(Boolean)
           : [],
         visibility: data.visibility,
-        file_url: fileUrl || undefined,
-        file_name: (wantFile && file?.name) || undefined,
-        file_size: (wantFile && file?.size) || undefined,
-        mime_type: (wantFile && file?.type) || undefined,
+        // Every attachment, plus the first one on the original single-file
+        // fields so existing views keep reading.
+        files: uploaded.length ? uploaded : undefined,
+        file_url: uploaded[0]?.file_url || undefined,
+        file_name: uploaded[0]?.file_name || undefined,
+        file_size: uploaded[0]?.file_size || undefined,
+        mime_type: uploaded[0]?.mime_type || undefined,
         // Cycle / path relationships resolved from the experiment itself, so
         // proof can never be filed under the wrong cycle.
         ...(await linksForExperiment(exp, missions.find(m => m.id === selectedMissionId))),
@@ -420,13 +368,15 @@ export default function AddProofFlow({ onClose, onSaved, preselectedMission, pre
   // Give up on the attachment and keep the rest, rather than losing the entry.
   const saveWithoutFile = () => { skipFileRef.current = true; handleSave(); };
 
+  const retryUpload = () => { setUploadState('idle'); setFileStates({}); skipFileRef.current = false; };
+
   // The button and the save agree, so nothing is ever enabled and then rejected.
   const canSave = !!data.title.trim() && !!selectedExpId && !saving && uploadState !== 'uploading' && !fileBlocked && hasProof && !urlInvalid;
 
   // A disabled button must never be silent about why. Every condition that can
   // switch canSave off has a line here, ordered the way a student hits them.
   const blockedReason = saving || canSave ? null
-    : fileBlocked ? `${fileError} Pick another, or uncheck “Upload a file”.`
+    : fileBlocked ? `${fileError} Remove it, or uncheck “Upload files”.`
     : urlInvalid ? 'That link isn’t a valid URL. Fix it, or uncheck “Paste a link”.'
     : !data.title.trim() ? 'Go back and give this a title.'
     : !selectedExpId ? 'Go back and pick an experiment.'
@@ -446,7 +396,7 @@ export default function AddProofFlow({ onClose, onSaved, preselectedMission, pre
 
   // Has the student put anything into this at all? Drives whether Escape is
   // allowed to throw it away.
-  const isDirty = !!file
+  const isDirty = files.length > 0
     || Object.keys(initialData).some(k => data[k] !== initialData[k])
     || selectedMissionId !== (preselectedMission?.id || '');
 
@@ -595,7 +545,7 @@ export default function AddProofFlow({ onClose, onSaved, preselectedMission, pre
 
                 {open && s.value === 'file' && (
                   <div className="anim-slide-up mt-2">
-                    <FileDropZone file={file} uploadState={uploadState} onSelect={handleFileSelect} onRemove={handleRemoveFile} />
+                    <ProofFiles files={files} states={fileStates} onAdd={handleFilesAdd} onRemove={handleRemoveFile} />
                     {fileError && (
                       <p className="tp-meta mt-2 text-red-600 flex items-start gap-1.5" role="alert">
                         <AlertCircle size={13} className="shrink-0 mt-0.5" />{fileError}
@@ -604,7 +554,7 @@ export default function AddProofFlow({ onClose, onSaved, preselectedMission, pre
                     {uploadState === 'error' && (
                       <div className="mt-2 flex items-center gap-2">
                         <p className="tp-meta text-red-600">Upload failed.</p>
-                        <button onClick={() => { setUploadState('idle'); setUploadedUrl(''); skipFileRef.current = false; }} className="tp-meta underline flex items-center gap-1" style={{ color: 'var(--brand-navy-700)' }}>
+                        <button onClick={retryUpload} className="tp-meta underline flex items-center gap-1" style={{ color: 'var(--brand-navy-700)' }}>
                           <RefreshCw size={11} /> Retry
                         </button>
                       </div>

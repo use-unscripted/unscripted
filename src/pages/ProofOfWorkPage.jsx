@@ -106,6 +106,11 @@ function ProofCard({ entry, missionsMap, experimentsMap, onDelete, onNavigateToP
     file_name: entry.file_name || null,
     file_size: entry.file_size || null,
     mime_type: entry.mime_type || null,
+    // Every attachment. Records saved before multiple files existed carry only
+    // the single set of fields above, so fall back to those.
+    files: Array.isArray(entry.files) && entry.files.length
+      ? entry.files.filter(f => f?.file_url)
+      : (entry.file_url ? [{ file_url: entry.file_url, file_name: entry.file_name, file_size: entry.file_size, mime_type: entry.mime_type }] : []),
     // Student-entered URL: only http(s) survives, so a javascript: value can
     // never reach the href below.
     external_url: safeExternalUrl(entry.external_url),

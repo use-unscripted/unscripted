@@ -80,6 +80,26 @@
     "mime_type": {
       "type": "string"
     },
+    "files": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "file_url": {
+            "type": "string"
+          },
+          "file_name": {
+            "type": "string"
+          },
+          "file_size": {
+            "type": "number"
+          },
+          "mime_type": {
+            "type": "string"
+          }
+        }
+      }
+    },
     "completion_note": {
       "type": "string"
     },
