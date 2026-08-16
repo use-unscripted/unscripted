@@ -61,15 +61,24 @@ export default function CycleSummary({ ctx, reflection, decision, closedCycle })
           <p className="tp-meta mt-1.5" style={{ color: 'var(--text-muted)' }}>
             Your next cycle starts from what you just learned: clarity, path and records all carried over.
           </p>
-          <div className="mt-3 flex flex-wrap gap-3">
-            <Link
-              to={decision === 'stop_and_explore' ? '/paths' : `/experiments/new${pathName ? `?pathName=${encodeURIComponent(pathName)}` : ''}`}
-              className="ui-press inline-flex items-center rounded-[var(--r-control)] px-5 py-3 text-sm font-bold text-white"
-              style={{ background: 'var(--brand-navy-900)', minHeight: '48px' }}
-            >
-              {decision === 'stop_and_explore' ? 'Compare my paths' : 'Set up my next experiment'}
-            </Link>
-            <Link to="/journey" className="inline-flex items-center text-sm font-bold" style={{ color: 'var(--brand-navy-700)' }}>
+          {/* Continuing on this path has ONE dominant action, and it is the
+              recommended next test below rather than a second button here that
+              sends the student off to search for one themselves. */}
+          <div className="touch-reach-line mt-3 flex flex-wrap gap-3">
+            {decision === 'stop_and_explore' ? (
+              <Link
+                to="/paths"
+                className="ui-press inline-flex items-center rounded-[var(--r-control)] px-5 py-3 text-sm font-bold text-white"
+                style={{ background: 'var(--brand-navy-900)', minHeight: '48px' }}
+              >
+                Compare my paths
+              </Link>
+            ) : (
+              <Link to="/experiments/compare" className="touch-reach inline-flex items-center text-sm font-bold" style={{ color: 'var(--brand-navy-700)' }}>
+                Compare experiments
+              </Link>
+            )}
+            <Link to="/journey" className="touch-reach inline-flex items-center text-sm font-bold" style={{ color: 'var(--brand-navy-700)' }}>
               Back to My Journey
             </Link>
           </div>

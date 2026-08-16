@@ -8,6 +8,7 @@
 import { useState } from 'react';
 import { CheckCircle2, RefreshCw, Compass, AlertCircle } from 'lucide-react';
 import { completeCycle } from '@/lib/career-cycle';
+import { cycleOutcomeFor } from '@/lib/path-history';
 import { DECISIONS, decisionMeta, recordHypothesisUpdate } from '@/lib/hypothesis-updates';
 
 const ICONS = {
@@ -38,7 +39,12 @@ export default function HypothesisDecision({ ctx, reflection, synthesis, dimensi
           dimensions,
         });
       }
+      /* Read AFTER the hypothesis update above, so the reading kept on the
+         closing cycle is the one this test produced, and the unknown carried into
+         the next cycle is the one that is now most worth answering. */
+      const outcome = ctx.path?.id ? await cycleOutcomeFor(ctx.path.id).catch(() => ({})) : {};
       const result = await completeCycle({
+        outcome,
         final_decision: meta.cycle_decision,
         post_cycle_clarity_score: reflection?.clarity_score ?? undefined,
         decision_note: note.trim() || reflection?.still_unresolved || undefined,

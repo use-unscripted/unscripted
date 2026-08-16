@@ -31,6 +31,7 @@ import CycleSummary from '@/components/reflection/CycleSummary';
 import JourneyEmptyState from '@/components/journey/JourneyEmptyState';
 import PageHeader from '@/components/PageHeader';
 import NextBestExperimentPanel from '@/components/next-test/NextBestExperimentPanel';
+import PathHistoryPanel from '@/components/paths/PathHistoryPanel';
 import MeasurementGate from '@/components/measurement/MeasurementGate';
 import { loadMeasurements } from '@/lib/experiment-measurement';
 import { dimensionsFromActivity, dimensionsForExperiment } from '@/lib/career-dimensions';
@@ -219,6 +220,9 @@ export default function ExperimentReflection() {
             </section>
           )}
           <HypothesisTimeline pathId={ctx.path?.id} pathName={ctx.path?.path_name} refreshKey={decision} />
+          {/* The path as it now stands, across every test run on it, so a student
+              finishing their second or third test can see it accumulating. */}
+          <PathHistoryPanel pathId={ctx.path?.id} />
           <CycleSummary
             ctx={ctx}
             reflection={reflection}

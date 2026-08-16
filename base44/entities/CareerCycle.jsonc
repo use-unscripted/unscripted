@@ -11,6 +11,30 @@
     "selected_path_name": {
       "type": "string"
     },
+    "cycle_sequence_number": {
+      "type": "number"
+    },
+    "primary_unknown_id": {
+      "type": "string"
+    },
+    "primary_unknown_label": {
+      "type": "string"
+    },
+    "next_unknown_id": {
+      "type": "string"
+    },
+    "next_unknown_label": {
+      "type": "string"
+    },
+    "next_experiment_id": {
+      "type": "string"
+    },
+    "resulting_path_confidence": {
+      "type": "number"
+    },
+    "resulting_evidence_coverage": {
+      "type": "number"
+    },
     "experiment_id": {
       "type": "string"
     },

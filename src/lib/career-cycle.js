@@ -120,6 +120,19 @@ export async function getActiveCycle() {
   return top.c;
 }
 
+/**
+ * Which test this is ON THIS PATH. Counting the path's own cycles rather than
+ * the student's keeps one Path a single longitudinal object: cycle 4 of
+ * Investment Banking is cycle 4 whatever else the student tested in between.
+ */
+export async function nextSequenceNumber(pathId) {
+  if (!pathId) return 1;
+  const rows = await base44.entities.CareerCycle.filter({ selected_path_id: pathId }, '-created_date', 100).catch(() => []);
+  const list = Array.isArray(rows) ? rows : [];
+  const highest = list.reduce((max, c) => Math.max(max, Number(c.cycle_sequence_number) || 0), 0);
+  return Math.max(highest + 1, list.length + 1);
+}
+
 /** Returns the active cycle, creating one if the student has none. */
 export function ensureActiveCycle(seed = {}) {
   if (ensureInFlight) return ensureInFlight;
@@ -176,11 +189,23 @@ export async function assertNoActiveExperiment(cycle) {
 /** Binds an experiment to the active cycle and moves the cycle forward. */
 export async function attachExperimentToCycle(experiment) {
   const cycle = await ensureActiveCycle();
+  const path_id = cycle.selected_path_id || experiment.path_id;
+  /* The unknown this cycle exists to answer. Stamped from the experiment the
+     student actually started, so the cycle can be read later as "this is what we
+     were trying to find out", and only when the cycle does not already say. */
+  const primary_unknown_id = cycle.primary_unknown_id
+    || experiment.unresolved_question_id
+    || (experiment.decision_dimension_ids || [])[0]
+    || (experiment.work_characteristic_ids || [])[0]
+    || undefined;
   await base44.entities.CareerCycle.update(cycle.id, {
     experiment_id: experiment.id,
-    selected_path_id: cycle.selected_path_id || experiment.path_id,
+    selected_path_id: path_id,
     selected_path_name: cycle.selected_path_name || experiment.path_name,
     current_stage: 'experiment_active',
+    primary_unknown_id,
+    primary_unknown_label: cycle.primary_unknown_label || experiment.uncertainty_label || experiment.unresolved_question || undefined,
+    cycle_sequence_number: cycle.cycle_sequence_number || await nextSequenceNumber(path_id).catch(() => 1),
   });
   return { ...cycle, experiment_id: experiment.id };
 }
@@ -241,7 +266,7 @@ export async function syncCycleStage(journeyStage) {
  * linked back through next_cycle_source_id; 'stop_and_explore' returns the
  * student to path comparison in a new cycle.
  */
-export async function completeCycle({ final_decision, post_cycle_clarity_score, decision_note } = {}) {
+export async function completeCycle({ final_decision, post_cycle_clarity_score, decision_note, outcome = {} } = {}) {
   if (!FINAL_DECISIONS.includes(final_decision)) throw new Error('Unknown decision.');
   return onceInFlight(`complete:${final_decision}`, async () => {
     const cycle = await getActiveCycle();
@@ -253,6 +278,13 @@ export async function completeCycle({ final_decision, post_cycle_clarity_score, 
       final_decision,
       post_cycle_clarity_score,
       decision_note,
+      /* The reading this cycle ended on, kept on the cycle rather than only on
+         the path, so a path's history can later be read as a sequence of
+         readings instead of one current score. */
+      resulting_path_confidence: outcome.resulting_path_confidence,
+      resulting_evidence_coverage: outcome.resulting_evidence_coverage,
+      next_unknown_id: outcome.next_unknown_id,
+      next_unknown_label: outcome.next_unknown_label,
     });
     // Measurement: the decision and the completed cycle, as numbers only. The
     // baseline travels in `stage` and the post-cycle score in `value`, so the
@@ -278,10 +310,17 @@ export async function completeCycle({ final_decision, post_cycle_clarity_score, 
     if (!access.canStartNewCycle) return { closed: cycle, next: null, cycleLimitReached: true };
 
     const user_id = await currentUserId();
+    /* Continuing or adjusting keeps the SAME path, so the next cycle carries its
+       place in that path's sequence and the unknown it should now go after. */
+    const keepsPath = final_decision !== 'stop_and_explore';
+    const nextSeq = keepsPath ? await nextSequenceNumber(cycle.selected_path_id).catch(() => undefined) : undefined;
     const next = await base44.entities.CareerCycle.create({
       user_id,
       status: 'active',
       started_at: new Date().toISOString(),
+      cycle_sequence_number: nextSeq,
+      primary_unknown_id: keepsPath ? outcome.next_unknown_id : undefined,
+      primary_unknown_label: keepsPath ? outcome.next_unknown_label : undefined,
       next_cycle_source_id: cycle.id,
       institution_id: cycle.institution_id,
       cohort_id: cycle.cohort_id,
