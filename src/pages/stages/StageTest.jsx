@@ -1,4 +1,7 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import ActiveExperimentsPanel from '@/components/experiments/ActiveExperimentsPanel';
+import { loadExperimentProgress } from '@/lib/active-experiments';
 import StageShell from '@/components/stages/StageShell';
 import HypothesisFocus from '@/components/journey/HypothesisFocus';
 import NextBestExperimentPanel from '@/components/next-test/NextBestExperimentPanel';
@@ -16,6 +19,16 @@ import { Sk } from '@/components/PageSkeleton';
 export default function StageTest() {
   const { journey, focus } = useJourneyFocus();
   const { support, index, loading: supportLoading } = usePathSupport(journey?.currentPath?.path_name);
+  /* One shared reading of where every experiment stands, so this screen and the
+     reflection screen can never disagree about which one is finished. */
+  const [progress, setProgress] = useState(null);
+  useEffect(() => {
+    let live = true;
+    loadExperimentProgress()
+      .then(p => { if (live) setProgress(p); })
+      .catch(() => { if (live) setProgress(null); });
+    return () => { live = false; };
+  }, []);
 
   if (!journey) return <StageShell stage="test"><Sk h={280} r={16} /></StageShell>;
   if (!journey.currentPath) {
@@ -26,7 +39,10 @@ export default function StageTest() {
     );
   }
 
-  const exp = journey.nextExperiment;
+  /* The experiment to act on comes from the shared reading when it is loaded:
+     unfinished work first, otherwise the one that owes a reflection. */
+  const currentRow = progress?.current || null;
+  const exp = currentRow?.experiment || journey.nextExperiment;
   /* The Supported Path Gate. A direction the library cannot carry a cycle on does
      not enter the normal Test flow: no new test is offered, no strength or
      learning value is shown, and work already in progress on it is untouched. */
@@ -61,11 +77,17 @@ export default function StageTest() {
      started work continues, planned work starts, and with nothing set up yet it
      sets one up. */
   const action = exp
-    ? {
-        label: exp.status === 'in_progress' ? 'Continue Test' : 'Start Test',
-        to: `/experiment?experimentId=${exp.id}`,
-        sub: exp.title,
-      }
+    ? currentRow?.awaitingReflection
+      ? {
+          label: 'Reflect On This Test',
+          to: `/reflect?experimentId=${exp.id}`,
+          sub: `${exp.title} — the work is done, the reflection is still open.`,
+        }
+      : {
+          label: exp.status === 'in_progress' ? 'Continue Test' : 'Start Test',
+          to: `/experiment?experimentId=${exp.id}`,
+          sub: exp.title,
+        }
     : {
         label: 'Set Up My Test',
         to: `/experiments/new?pathName=${encodeURIComponent(journey.currentPath.path_name)}`,
@@ -79,6 +101,8 @@ export default function StageTest() {
         experiment={exp}
         action={action}
       />
+      {/* Every experiment still open, across every path, with its progress. */}
+      <ActiveExperimentsPanel rows={progress?.active || []} />
       <UnknownsChecklist progress={focus?.progress} pathId={journey.currentPath.id} />
       {/* No test set up yet: the validated library is the first place to look,
           and it says plainly when this career is not covered. */}

@@ -10,6 +10,7 @@ import { base44 } from '@/api/base44Client';
 import { getActiveCycle, onceInFlight } from '@/lib/career-cycle';
 import { readProgress } from '@/lib/guide-progress';
 import { reflectionFields } from '@/lib/reflection-sections';
+import { loadExperimentProgress } from '@/lib/active-experiments';
 
 const alive = (rows) => (Array.isArray(rows) ? rows : []).filter(r => r?.deletion_status !== 'deleted');
 const OPEN_EXPERIMENT = ['draft', 'planned', 'in_progress'];
@@ -38,6 +39,16 @@ export async function loadConclusionContext(experimentIdParam) {
     experiment = own.find(e => e.id === experimentIdParam) || null;
     // The id was supplied but is not one of this student's experiments.
     if (!experiment) return { user, cycle, experiment: null, forbidden: true };
+  }
+  /* No id supplied: the experiment that owes a reflection, decided by the same
+     shared reading the Test screen uses, so the two screens agree. Only if
+     nothing is owed does this fall back to the cycle and to open work. */
+  if (!experiment) {
+    const { awaitingReflection } = await loadExperimentProgress().catch(() => ({ awaitingReflection: [] }));
+    const owed = awaitingReflection.find(r => !cycle?.selected_path_name || r.pathName === cycle.selected_path_name)
+      || awaitingReflection[0]
+      || null;
+    experiment = owed?.experiment || null;
   }
   if (!experiment && cycle?.experiment_id) experiment = own.find(e => e.id === cycle.experiment_id) || null;
   if (!experiment && cycle?.selected_path_name) {
