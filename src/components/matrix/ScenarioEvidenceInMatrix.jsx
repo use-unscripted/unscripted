@@ -6,55 +6,44 @@
  * experienced fit, because doing something well is not the same finding as wanting
  * to do it.
  *
- * Nothing is recomputed here. The hypothesis layer and the dimension store are
- * read, and the contribution rules live in scenario-path-effect.
+ * Nothing is recomputed here, and nothing is fetched here: the records arrive as
+ * props from the page's single read pass. This component used to load the whole
+ * recalculation context, the scenario responses and the dimension rows again for
+ * itself, after mounting — which was both a duplicate of what the page already
+ * had and a second sequential wave before anything on it could render.
  */
-import { useEffect, useState } from 'react';
-import { base44 } from '@/api/base44Client';
-import { loadRecalculationContext } from '@/lib/hypothesis-recalculation';
+import { useMemo } from 'react';
 import { deriveHypothesis } from '@/lib/career-hypothesis';
-import { loadDimensionEvidence } from '@/lib/career-dimensions-store';
 import { scenarioPathEffect } from '@/lib/scenarios/scenario-path-effect';
 import { performanceVsFit } from '@/lib/scenarios/dimension-sources';
 import { taskPerformance } from '@/lib/scenarios/scenario-performance';
 import ScenarioPathEffect from '@/components/matrix/ScenarioPathEffect';
 import PerformanceVsFit from '@/components/matrix/PerformanceVsFit';
 
-export default function ScenarioEvidenceInMatrix() {
-  const [state, setState] = useState(null);
+export default function ScenarioEvidenceInMatrix({ context = null, responses = [], dimensionMap = {} }) {
+  const state = useMemo(() => {
+    if (!context) return null;
+    const rows = Array.isArray(responses) ? responses : [];
+    if (!rows.length) return { effects: [], fit: null };
 
-  useEffect(() => {
-    let alive = true;
-    (async () => {
-      const [responses, ctx, dimensionMap] = await Promise.all([
-        base44.entities.ScenarioResponse.list('-completed_at', 200).catch(() => []),
-        loadRecalculationContext().catch(() => ({ paths: [] })),
-        loadDimensionEvidence().catch(() => ({})),
-      ]);
-      if (!alive) return;
-      const rows = Array.isArray(responses) ? responses : [];
-      if (!rows.length) { setState({ effects: [], fit: null }); return; }
+    const dimensions = Object.values(dimensionMap || {});
+    const live = (context.paths || []).filter(p => p.status !== 'archived' && p.hypothesis_status !== 'archived');
 
-      const dimensions = Object.values(dimensionMap || {});
-      const live = (ctx.paths || []).filter(p => p.status !== 'archived' && p.hypothesis_status !== 'archived');
+    const effects = live.map(path => {
+      const h = deriveHypothesis(path, context);
+      const variables = (h?.uncertainty?.variables || []).map(v => v.variable);
+      return scenarioPathEffect({ path, variables, responses: rows, dimensions });
+    }).filter(Boolean);
 
-      const effects = live.map(path => {
-        const h = deriveHypothesis(path, ctx);
-        const variables = (h?.uncertainty?.variables || []).map(v => v.variable);
-        return scenarioPathEffect({ path, variables, responses: rows, dimensions });
-      }).filter(Boolean);
+    const performance = taskPerformance(rows);
+    const leading = live.slice().sort((a, b) => (b.career_fit_score || 0) - (a.career_fit_score || 0))[0];
+    const fit = performanceVsFit({
+      performanceScore: performance.accuracy,
+      experiencedFit: leading?.enjoyment_fit ?? leading?.career_fit_score ?? null,
+    });
 
-      const performance = taskPerformance(rows);
-      const leading = live.slice().sort((a, b) => (b.career_fit_score || 0) - (a.career_fit_score || 0))[0];
-      const fit = performanceVsFit({
-        performanceScore: performance.accuracy,
-        experiencedFit: leading?.enjoyment_fit ?? leading?.career_fit_score ?? null,
-      });
-
-      setState({ effects, fit });
-    })();
-    return () => { alive = false; };
-  }, []);
+    return { effects, fit };
+  }, [context, responses, dimensionMap]);
 
   if (!state || (!state.effects.length && !state.fit)) return null;
 

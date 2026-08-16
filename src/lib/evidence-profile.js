@@ -11,44 +11,38 @@
  * Everything is private to the signed-in student. There is no sharing surface.
  */
 import { base44 } from '@/api/base44Client';
-import { loadOwnedPaths } from '@/lib/path-set';
 import { deriveHypothesis } from '@/lib/career-hypothesis';
-import { loadMeasurements } from '@/lib/experiment-measurement';
+import { loadStudentContext } from '@/lib/student-context';
 import { buildRecordGraph, summarizeEvidence, evidenceSource } from '@/lib/evidence-graph';
 import { deriveAbilities, linkAbilities } from '@/lib/evidence-abilities';
-import { characteristicSignals, derivePreferences, deriveEnergyPatterns, linkPatterns } from '@/lib/evidence-patterns';
+import { derivePreferences, deriveEnergyPatterns, linkPatterns } from '@/lib/evidence-patterns';
 import { linkFitDimensions } from '@/lib/career-fit-dimensions';
-import { loadLatestRecalculations } from '@/lib/hypothesis-recalculation';
 
-const active = (rows) => (Array.isArray(rows) ? rows : []).filter(r => r?.deletion_status !== 'deleted' && r?.deletion_status !== 'permanently_deleted');
-
-/** Everything the profile needs, in one pass. */
-export async function loadEvidenceProfile() {
-  const [user, owned, exps, refs, prf, profs, flags] = await Promise.all([
-    base44.auth.me().catch(() => ({})),
-    loadOwnedPaths().catch(() => null),
-    base44.entities.Experiments.list('-created_date', 200).catch(() => []),
-    base44.entities.WeeklyReflections.list('-created_date', 200).catch(() => []),
-    base44.entities.ProofOfWork.list('-created_date', 200).catch(() => []),
-    base44.entities.StudentProfile.list('-created_date', 1).catch(() => []),
-    base44.entities.EvidenceDisagreement.list('-created_date', 200).catch(() => []),
-  ]);
-
-  const [measurements, recalculations] = await Promise.all([
-    loadMeasurements(),
-    loadLatestRecalculations().catch(() => ({})),
-  ]);
-  const profile = (Array.isArray(profs) ? profs[0] : null) || {};
-  const paths = (owned?.paths || []).filter(p => p.status !== 'archived');
-  const experiments = active(exps);
-  const reflections = active(refs);
-  const proof = active(prf);
+/**
+ * Everything the profile needs, in one pass.
+ *
+ * `context` is the shared student context (see @/lib/student-context). Passing
+ * one in makes this function do no network work at all, which is how the Career
+ * Decision Matrix now builds the profile and the matrix from a single read wave
+ * instead of two. Loading it here is the standalone path, and both produce the
+ * same records: the measurements and the recalculations used to be a SECOND
+ * serial wave after the six lists, and are now in the same parallel one.
+ */
+export async function loadEvidenceProfile({ context = null } = {}) {
+  const loaded = context || await loadStudentContext();
+  const { user, measurements, recalculations, profile } = loaded;
+  const flags = loaded.disagreements;
+  const paths = loaded.ownedPaths.filter(p => p.status !== 'archived');
+  const experiments = loaded.experiments;
+  const reflections = loaded.reflections;
+  const proof = loaded.proof;
 
   const graph = buildRecordGraph({ user, paths, experiments, measurements, reflections, proof });
 
   // Rated work characteristics, needed by both the fit dimensions and the
-  // preference/pattern sections, so they are computed once here.
-  const signals = characteristicSignals({ experiments, measurements, reflections });
+  // preference/pattern sections. Computed once in the shared context, from the
+  // same three inputs this line used to pass.
+  const signals = loaded.signals;
 
   // Career hypotheses, read straight from the existing layer. Measurements and
   // signals go in so ability and enjoyment can be scored as separate dimensions.

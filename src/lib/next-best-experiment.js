@@ -484,11 +484,17 @@ function whyThisMatters(candidate, { knows, hypotheses, mode }) {
  * for something else is honoured within a session, on top of the overrides they
  * have already recorded.
  */
-export async function loadNextBestExperiment({ skip = [], pathId = null } = {}) {
+export async function loadNextBestExperiment({ skip = [], pathId = null, context = null } = {}) {
+  /* `context` is the shared student context a screen has already loaded. When it
+     is supplied nothing here re-reads the student's records, which is what used
+     to make this panel a third full copy of the same six lists, fired only after
+     it mounted. The engine sees the same context either way. */
   const [baseCtx, overrides, scenarioResponses, index] = await Promise.all([
-    loadNextBestContext(),
+    loadNextBestContext({ context }),
     loadOverrides().catch(() => []),
-    base44.entities.ScenarioResponse.list('-completed_at', 200).catch(() => []),
+    context?.scenarioResponses
+      ? Promise.resolve(context.scenarioResponses)
+      : base44.entities.ScenarioResponse.list('-completed_at', 200).catch(() => []),
     loadSupportIndex().catch(() => null),
   ]);
   const ctx = { ...baseCtx, scenarioResponses: Array.isArray(scenarioResponses) ? scenarioResponses : [] };

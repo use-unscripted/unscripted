@@ -22,39 +22,33 @@
  */
 import { base44 } from '@/api/base44Client';
 import { deriveHypothesis } from '@/lib/career-hypothesis';
-import { characteristicSignals } from '@/lib/evidence-patterns';
-import { loadMeasurements } from '@/lib/experiment-measurement';
+import { loadStudentContext } from '@/lib/student-context';
 import { extractReflectionSignals } from '@/lib/reflection-signals';
 import { FIT_DIMENSIONS } from '@/lib/career-fit-dimensions';
 
 /** A change smaller than this is noise and is not worth telling the student. */
 export const MEANINGFUL_CHANGE = 2;
 
-const active = (rows) => (Array.isArray(rows) ? rows : []).filter(r => r?.deletion_status !== 'deleted' && r?.deletion_status !== 'permanently_deleted');
 const num = (v) => (typeof v === 'number' && Number.isFinite(v) ? v : null);
 const SCORE_FIELDS = ['career_fit_score', 'fit_confidence_score', ...FIT_DIMENSIONS.map(d => d.key), 'evidence_confidence'];
 
-/** Everything the recalculation reads. One pass, all of it the student's own. */
-export async function loadRecalculationContext() {
-  const [exps, refs, prf, profs, paths] = await Promise.all([
-    base44.entities.Experiments.list('-created_date', 200).catch(() => []),
-    base44.entities.WeeklyReflections.list('-created_date', 200).catch(() => []),
-    base44.entities.ProofOfWork.list('-created_date', 200).catch(() => []),
-    base44.entities.StudentProfile.list('-created_date', 1).catch(() => []),
-    base44.entities.PathRecommendations.list('-created_date', 200).catch(() => []),
-  ]);
-  const measurements = await loadMeasurements().catch(() => ({}));
-  const experiments = active(exps);
-  const reflections = active(refs);
-  const proof = active(prf);
+/**
+ * Everything the recalculation reads. One pass, all of it the student's own.
+ *
+ * `context` lets a screen that has already loaded the shared student context
+ * hand it over instead of re-fetching the same six lists. The returned shape and
+ * every value in it are identical either way.
+ */
+export async function loadRecalculationContext({ context = null } = {}) {
+  const ctx = context || await loadStudentContext();
   return {
-    experiments,
-    reflections,
-    proof,
-    measurements,
-    profile: (Array.isArray(profs) ? profs[0] : null) || {},
-    paths: Array.isArray(paths) ? paths : [],
-    signals: characteristicSignals({ experiments, measurements, reflections }),
+    experiments: ctx.experiments,
+    reflections: ctx.reflections,
+    proof: ctx.proof,
+    measurements: ctx.measurements,
+    profile: ctx.profile,
+    paths: ctx.paths,
+    signals: ctx.signals,
   };
 }
 

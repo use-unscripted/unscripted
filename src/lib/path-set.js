@@ -23,8 +23,14 @@ export function setIdOf(row) {
 /** Every path row this user owns. Ownership is asserted client-side too, so a
  *  future RLS regression cannot put another student's path on screen. */
 export async function loadOwnedPaths() {
-  const user = await base44.auth.me();
-  const rows = await base44.entities.PathRecommendations.list('-created_date', 500);
+  /* Both reads at once. The path rows never depended on the user object — the
+     ownership assertion below only needs both to have arrived — and awaiting
+     them in sequence cost a whole extra round trip on every screen that loads
+     paths. */
+  const [user, rows] = await Promise.all([
+    base44.auth.me(),
+    base44.entities.PathRecommendations.list('-created_date', 500),
+  ]);
   const paths = (Array.isArray(rows) ? rows : []).filter(
     r => r && (r.created_by_id === user.id || r.user_id === user.id)
       // A row merged into another by the data-integrity pass is history, not a
