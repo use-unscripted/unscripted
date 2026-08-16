@@ -27,9 +27,25 @@ export default function NextBestExperimentPanel({ pathId = null }) {
 
   useEffect(() => {
     let alive = true;
-    load([]).then(r => { if (alive) setState({ loading: false, recommendation: r }); });
+    load([]).then(r => {
+      if (!alive) return;
+      setState({ loading: false, recommendation: r });
+      /* A recommendation that reached the screen. Recorded here rather than
+         where it is computed, because a recommendation nobody saw is not a
+         funnel stage. Repeat: after a finished cycle this same panel is the
+         "what comes next" step, which the reflection page renders. */
+      if (r) {
+        import('@/lib/analytics/decision-funnel-events')
+          .then(m => m.recommendationShown({
+            pathId: pathId || r.candidate?.path_id,
+            stage: r.candidate?.variable,
+            repeat: Boolean(pathId),
+          }))
+          .catch(() => {});
+      }
+    });
     return () => { alive = false; };
-  }, [load]);
+  }, [load, pathId]);
 
   const onOverride = async (action, note) => {
     const current = state.recommendation;

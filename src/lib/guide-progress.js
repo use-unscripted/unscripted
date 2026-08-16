@@ -87,9 +87,22 @@ export function completeStep(guide, stepNumber) {
       completed_at: guide.step_progress?.find(r => r?.step_number === stepNumber)?.completed_at || nowIso(),
     }),
   };
-  if (completed.length === total && total > 0 && !guide.progress_completed_at) {
+  const allDone = completed.length === total && total > 0;
+  if (allDone && !guide.progress_completed_at) {
     patch.progress_completed_at = nowIso();
   }
+  /* Progress, as events. The guide row stores current state, so it can say a
+     student is at 50% but never when they crossed it — which is what a funnel
+     needs. Fire and forget: measurement never blocks the step from saving. */
+  import('@/lib/analytics/decision-funnel-events')
+    .then(m => m.stepCompleted({
+      experimentId: guide.experiment_id,
+      pathId: guide.path_id,
+      step: stepNumber,
+      pct: patch.progress_percentage,
+      allDone,
+    }))
+    .catch(() => {});
   return persist(guide, patch, `guide-complete:${guide.id}:${stepNumber}`);
 }
 
@@ -133,6 +146,13 @@ export function saveStepEvidence({ guide, stepNumber, step, experiment, mission,
       mime_type: evidence.file?.mime_type,
       completed_at: new Date().toISOString().split('T')[0],
     };
+    import('@/lib/analytics/decision-funnel-events')
+      .then(m => m.evidenceCompleted({
+        experimentId: experiment?.id,
+        pathId: links.path_id || path?.id,
+        step: stepNumber,
+      }))
+      .catch(() => {});
     const rows = await base44.entities.ProofOfWork.filter({ submission_key: key }, '-created_date', 5).catch(() => []);
     const found = (Array.isArray(rows) ? rows : []).find(r => r.deletion_status !== 'deleted');
     if (found) return base44.entities.ProofOfWork.update(found.id, payload);

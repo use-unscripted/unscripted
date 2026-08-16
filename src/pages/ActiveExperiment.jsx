@@ -76,6 +76,16 @@ export default function ActiveExperiment() {
 
   useEffect(() => { load(); }, [load]);
 
+  /* The student opened this experiment's own screen. A funnel stage in its own
+     right: the experiment record existing never proved anyone looked at it. */
+  useEffect(() => {
+    const exp = state?.experiment;
+    if (!exp?.id) return;
+    import('@/lib/analytics/decision-funnel-events')
+      .then(m => m.detailViewed({ experimentId: exp.id, pathId: exp.path_id, cycleId: exp.cycle_id }))
+      .catch(() => {});
+  }, [state?.experiment?.id]);
+
   if (!state) {
     // Matches the loaded page's padding and its space-y-5 card stack. The old
     // version used py-10 where the real page uses py-8 on mobile, so the whole

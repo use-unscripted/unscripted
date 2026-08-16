@@ -14,6 +14,17 @@ import { entityTime } from '@/lib/dates';
 
 export const PILOT_EVENTS = [
   'signup_completed', 'onboarding_started', 'onboarding_completed', 'paths_generated',
+  // The decision-cycle funnel. These exist because an Experiments row proves a
+  // record was created and nothing more: it cannot say whether a student saw a
+  // recommendation, opened it, started, got a quarter through, or finished.
+  // Emitters live in src/lib/analytics/decision-funnel-events.js.
+  'path_investigated', 'experiment_generated', 'experiment_recommended',
+  'experiment_card_viewed', 'experiment_detail_viewed', 'experiment_selected',
+  'pre_expectation_started', 'pre_expectation_completed', 'experiment_step_completed',
+  'experiment_progress_25', 'experiment_progress_50', 'experiment_progress_75',
+  'experiment_completed', 'evidence_started', 'evidence_completed',
+  'post_experiment_completed', 'path_updated', 'decision_completed',
+  'next_experiment_recommended', 'repeat_path_test_started',
   'all_paths_viewed', 'path_selected', 'experiment_started', 'mission_guide_opened',
   'mission_completed', 'outreach_attempted', 'professional_conversation_completed',
   'proof_submitted', 'reflection_started', 'reflection_completed',
@@ -40,6 +51,11 @@ async function context() {
   return {
     user_id: me.id,
     access_source: me.access_source || 'independent_beta',
+    // Stamped on the row so an event keeps the classification it was recorded
+    // under. Reclassifying an account later must not rewrite what its past
+    // events counted as. 'unclassified' is the honest default: nothing here
+    // guesses whether an account is a real student.
+    analytics_class: me.analytics_class || 'unclassified',
     institution_id: me.institution_id || undefined,
     cohort_id: me.cohort_id || undefined,
   };

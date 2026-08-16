@@ -36,6 +36,16 @@ export default function LibraryTestPicker({ path }) {
     try {
       const cycle = await getActiveCycle().catch(() => null);
       const experiment = await startExperimentFromTemplate(row.template, { path, cycle });
+      /* The student chose this one. Recorded separately from the experiment
+         record itself, because a created record has never proved a choice. */
+      await import('@/lib/analytics/decision-funnel-events')
+        .then(m => m.experimentSelected({
+          experimentId: experiment.id,
+          pathId: path?.id,
+          cycleId: cycle?.id,
+          stage: 'validated_library',
+        }))
+        .catch(() => {});
       if (cycle) await attachExperimentToCycle(experiment).catch(() => null);
       await queryClientInstance.invalidateQueries({ queryKey: ['journey-focus'] });
       await queryClientInstance.invalidateQueries({ queryKey: ['cycle-rail'] });

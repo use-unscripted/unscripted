@@ -188,6 +188,16 @@ export default function AddProofFlow({ onClose, onSaved, preselectedMission, pre
 
   useEffect(() => () => clearTimeout(advanceRef.current), []);
 
+  /* Opening this flow is the "evidence started" stage. Deduped per experiment,
+     so reopening it does not inflate the count. */
+  useEffect(() => {
+    const expId = preselectedExperiment?.id;
+    if (!expId) return;
+    import('@/lib/analytics/decision-funnel-events')
+      .then(m => m.evidenceStarted({ experimentId: expId, pathId: preselectedExperiment?.path_id }))
+      .catch(() => {});
+  }, [preselectedExperiment?.id, preselectedExperiment?.path_id]);
+
   const go = useCallback((to, direction) => {
     clearTimeout(advanceRef.current);
     setError('');          // a save error from the last screen is stale here
@@ -391,6 +401,10 @@ export default function AddProofFlow({ onClose, onSaved, preselectedMission, pre
         // proof can never be filed under the wrong cycle.
         ...(await linksForExperiment(exp, missions.find(m => m.id === selectedMissionId))),
       });
+
+      await import('@/lib/analytics/decision-funnel-events')
+        .then(m => m.evidenceCompleted({ experimentId: selectedExpId, pathId: exp.path_id }))
+        .catch(() => {});
 
       const chosenMission = selectedMissionId
         ? (preselectedMission?.id === selectedMissionId ? preselectedMission : missions.find(m => m.id === selectedMissionId))

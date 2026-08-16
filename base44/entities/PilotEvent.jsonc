@@ -14,7 +14,23 @@
         "paths_generated",
         "all_paths_viewed",
         "path_selected",
+        "path_investigated",
+        "experiment_generated",
+        "experiment_recommended",
+        "experiment_card_viewed",
+        "experiment_detail_viewed",
+        "experiment_selected",
+        "pre_expectation_started",
+        "pre_expectation_completed",
         "experiment_started",
+        "experiment_step_completed",
+        "experiment_progress_25",
+        "experiment_progress_50",
+        "experiment_progress_75",
+        "experiment_completed",
+        "evidence_started",
+        "evidence_completed",
+        "post_experiment_completed",
         "mission_guide_opened",
         "mission_completed",
         "outreach_attempted",
@@ -22,6 +38,10 @@
         "proof_submitted",
         "reflection_started",
         "reflection_completed",
+        "path_updated",
+        "decision_completed",
+        "next_experiment_recommended",
+        "repeat_path_test_started",
         "final_decision_submitted",
         "cycle_completed",
         "second_cycle_attempted",
@@ -40,6 +60,17 @@
         "independent_beta",
         "institution_sponsored",
         "internal_admin"
+      ]
+    },
+    "analytics_class": {
+      "type": "string",
+      "enum": [
+        "unclassified",
+        "real_beta_user",
+        "founder",
+        "admin",
+        "internal_test",
+        "automated_test_agent"
       ]
     },
     "institution_id": {
@@ -61,6 +92,9 @@
       "type": "string"
     },
     "cycle_index": {
+      "type": "number"
+    },
+    "step_number": {
       "type": "number"
     },
     "stage": {

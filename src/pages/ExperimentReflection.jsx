@@ -106,6 +106,16 @@ export default function ExperimentReflection() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [experimentIdParam]);
 
+  /* Opening the reflection is its own stage: a student can reach this screen and
+     never finish it, and that is exactly the distinction records cannot make. */
+  useEffect(() => {
+    const expId = ctx?.experiment?.id;
+    if (!expId) return;
+    import('@/lib/analytics/decision-funnel-events')
+      .then(m => m.reflectionStarted({ experimentId: expId, pathId: ctx?.path?.id }))
+      .catch(() => {});
+  }, [ctx?.experiment?.id, ctx?.path?.id]);
+
   useEffect(() => {
     setCtx(null);
     setReflection(null);

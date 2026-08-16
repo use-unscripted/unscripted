@@ -177,6 +177,14 @@ export async function saveConclusion(ctx, answers, dimensions = []) {
   };
   Object.keys(payload).forEach(k => { if (payload[k] === undefined) delete payload[k]; });
 
+  await import('@/lib/analytics/decision-funnel-events')
+    .then(m => m.reflectionCompleted({
+      experimentId: experiment.id,
+      pathId: payload.path_id,
+      cycleId: payload.cycle_id,
+    }))
+    .catch(() => {});
+
   return onceInFlight(`conclusion:${experiment.id}`, async () => {
     // Re-read rather than trusting the render: another tab may have saved first.
     const rows = alive(await base44.entities.WeeklyReflections.filter(

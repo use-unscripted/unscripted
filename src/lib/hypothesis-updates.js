@@ -181,6 +181,21 @@ export async function recordHypothesisUpdate({ path, synthesis, decision, decisi
     previous, measurement, approvedSynthesis, crossCareerCount,
   })));
 
+  /* The path's own record moved, and the student chose a branch. Two stages, so
+     a cycle that updates the path but stops before the decision can be told
+     apart from one that finished. */
+  await import('@/lib/analytics/decision-funnel-events')
+    .then(async (m) => {
+      await m.pathUpdated({ experimentId: experiment?.id, pathId: path.id, sequence });
+      await m.decisionCompleted({
+        experimentId: experiment?.id,
+        pathId: path.id,
+        cycleId: experiment?.cycle_id,
+        decision,
+      });
+    })
+    .catch(() => {});
+
   const meta = decisionMeta(decision);
   if (meta) {
     const today = new Date().toISOString().split('T')[0];

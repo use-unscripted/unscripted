@@ -145,6 +145,17 @@ const clean = (payload) => {
   return payload;
 };
 
+/**
+ * Fires a funnel event without ever being able to break a save. Imported lazily
+ * so measurement does not depend on analytics loading.
+ */
+async function funnel(fn, args) {
+  try {
+    const mod = await import('@/lib/analytics/decision-funnel-events');
+    await mod[fn](args);
+  } catch { /* measurement is never worth an exception in the student's path */ }
+}
+
 /** The pre-experiment check-in. Reuses an existing row rather than adding one. */
 export async function savePreMeasurement(exp, values) {
   const user = await base44.auth.me();
@@ -159,6 +170,9 @@ export async function savePreMeasurement(exp, values) {
   const existing = await base44.entities.ExperimentMeasurement
     .filter({ experiment_id: exp.id }, '-created_date', 5).catch(() => []);
   const row = (Array.isArray(existing) ? existing : [])[0];
+  // Expectations recorded is also the moment the work begins: the check-in's own
+  // button says "Start the experiment".
+  await funnel('preExpectationCompleted', { experimentId: exp.id, pathId: exp.path_id, cycleId: exp.cycle_id });
   if (row) {
     await base44.entities.ExperimentMeasurement.update(row.id, payload);
     return { ...row, ...payload };
@@ -200,6 +214,7 @@ export async function savePostMeasurement(exp, existingRow, values) {
   const rows = await base44.entities.ExperimentMeasurement
     .filter({ experiment_id: exp.id }, '-created_date', 5).catch(() => []);
   const row = existingRow || (Array.isArray(rows) ? rows : [])[0];
+  await funnel('postExperimentCompleted', { experimentId: exp.id, pathId: exp.path_id, cycleId: exp.cycle_id });
   if (row) {
     await base44.entities.ExperimentMeasurement.update(row.id, payload);
     return { ...row, ...payload };
