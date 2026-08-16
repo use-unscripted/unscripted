@@ -29,6 +29,9 @@ import { loadRecalculationContext } from '@/lib/hypothesis-recalculation';
 import { blueprintFor } from '@/lib/next-test-blueprints';
 import { depthOf, recommendDepth, deepDiveUnlock, depthMeta } from '@/lib/experiment-depth';
 import { loadOverrides, suppressionFrom } from '@/lib/recommendation-overrides';
+import { base44 } from '@/api/base44Client';
+import { scenarioEvidence } from '@/lib/scenarios/scenario-signals';
+import { CAREER_DIMENSIONS } from '@/lib/career-dimensions';
 
 /** Every knob in one place, so the engine's judgement can be tuned. */
 export const LEARNING_VALUE_WEIGHTS = {
@@ -40,6 +43,7 @@ export const LEARNING_VALUE_WEIGHTS = {
   differentiates: 8,            // it separates leading careers rather than confirming all
   contradiction: 18,            // conflicting readings that need a decider
   exploration_bonus: 8,         // a credible career with very little evidence
+  scenario_disagreement: 12,    // hypothetical answers disagree with each other or with what we were told
   recent_repeat_penalty: 22,    // tested in the last few experiments
   saturated_penalty: 30,        // already answered consistently
   deferred_penalty: 16,         // the student asked to come back to it later
@@ -138,6 +142,7 @@ export function deriveOpenQuestions(ctx, { suppressed = new Map(), skip = [], pa
 
   const signalsById = new Map((ctx.signals || []).map(s => [s.id, s]));
   const recent = recentlyTested(ctx);
+  const scenarioByVariable = scenarioSignalsByVariable(ctx.scenarioResponses || []);
   const byVariable = new Map();
 
   hypotheses.forEach(({ path, h }) => {
@@ -183,7 +188,7 @@ export function deriveOpenQuestions(ctx, { suppressed = new Map(), skip = [], pa
     // questions that path actually turns on are candidates, and the test is
     // designed against it rather than against whichever path scores best.
     .filter(c => !pathId || c.careers.some(x => x.path_id === pathId))
-    .map(c => score(c, { signalsById, recent, leading, suppressed, pathId }))
+    .map(c => score(c, { signalsById, recent, leading, suppressed, pathId, scenarioByVariable }))
     // Already answered, consistently, more than once: taken off the table
     // rather than ranked low, so it can never resurface as the best option.
     .filter(c => !(c.evidence.settled && !c.evidence.contradicted))
@@ -192,8 +197,25 @@ export function deriveOpenQuestions(ctx, { suppressed = new Map(), skip = [], pa
   return { candidates, hypotheses, leading };
 }
 
+/**
+ * Scenario answers, indexed by the uncertainty variables they touch.
+ *
+ * Scenario evidence never answers "which career", only "what is worth testing".
+ * An unsettled hypothetical reading is exactly the kind of unknown a real
+ * experiment can close, so it raises a question's learning value and nothing else.
+ */
+export function scenarioSignalsByVariable(responses = []) {
+  const out = new Map();
+  scenarioEvidence(responses).forEach(s => {
+    const dim = CAREER_DIMENSIONS.find(d => d.id === s.dimension);
+    if (!dim) return;
+    [dim.id, ...dim.signals].forEach(v => out.set(v, s));
+  });
+  return out;
+}
+
 /** The learning value of answering one question, and the reasons behind it. */
-function score(candidate, { signalsById, recent, leading, suppressed = new Map(), pathId = null }) {
+function score(candidate, { signalsById, recent, leading, suppressed = new Map(), pathId = null, scenarioByVariable = new Map() }) {
   const W = LEARNING_VALUE_WEIGHTS;
   const evidence = evidenceState(signalsById.get(candidate.variable));
   const careers = candidate.careers;
@@ -220,6 +242,15 @@ function score(candidate, { signalsById, recent, leading, suppressed = new Map()
     headroom * W.confidence_headroom +
     crossCareer * W.cross_career;
 
+  // Hypothetical answers that point both ways, on something no experiment has
+  // settled, are a high-information unknown: the scenario raised the question and
+  // only real work can answer it.
+  const scenario = scenarioByVariable.get(candidate.variable);
+  const scenarioUnsettled = Boolean(scenario)
+    && (scenario.scenario_level === 'conflicting' || scenario.direction === 'unclear')
+    && evidence.rated === 0;
+  if (scenarioUnsettled) { total += W.scenario_disagreement; factors.push('your scenario answers point both ways'); }
+
   if (differentiates) { total += W.differentiates; factors.push('separates your leading paths'); }
   if (contradicted) { total += W.contradiction; factors.push('resolves conflicting evidence'); }
   if (careers.length >= 2) factors.push('applies across several paths');
@@ -242,6 +273,8 @@ function score(candidate, { signalsById, recent, leading, suppressed = new Map()
     attached,
     factors,
     contradicted,
+    scenario_evidence: scenario || null,
+    scenario_unsettled: scenarioUnsettled,
     recently_tested: isRecent,
     cross_career: careers.length >= 2,
     cross_career_count: careers.length,
@@ -434,10 +467,12 @@ function whyThisMatters(candidate, { knows, hypotheses, mode }) {
  * have already recorded.
  */
 export async function loadNextBestExperiment({ skip = [], pathId = null } = {}) {
-  const [ctx, overrides] = await Promise.all([
+  const [baseCtx, overrides, scenarioResponses] = await Promise.all([
     loadNextBestContext(),
     loadOverrides().catch(() => []),
+    base44.entities.ScenarioResponse.list('-completed_at', 200).catch(() => []),
   ]);
+  const ctx = { ...baseCtx, scenarioResponses: Array.isArray(scenarioResponses) ? scenarioResponses : [] };
   const suppressed = suppressionFrom(overrides);
   // Pinned first. If that career has no open question left, fall back to the
   // cross-path recommendation rather than showing nothing.

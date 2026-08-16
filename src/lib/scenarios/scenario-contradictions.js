@@ -71,7 +71,29 @@ export function scenarioContradictions({ profile = {}, responses = [], dimension
     });
   });
 
-  // 2. Scenario answers disagreeing with each other.
+  // 2. Scenario answers against what the student actually did. Behaviour is not
+  //    overturned here: the point is that the student can see the disagreement and
+  //    settle it with another real experiment rather than with another opinion.
+  scenarios.forEach(s => {
+    if (seen.has(s.dimension)) return;
+    const behaviour = dimensions.find(d => d.dimension === s.dimension);
+    if (!behaviour || behaviour.direction === 'none' || !behaviour.direction) return;
+    if (s.direction === 'unclear' || s.direction === behaviour.direction) return;
+    if (s.response_count < 2) return;
+    seen.add(s.dimension);
+    const dim = DIMENSION_BY_ID.get(s.dimension);
+    out.push({
+      dimension: s.dimension,
+      title: `Your scenario answers and your real work disagree about ${dim.noun}`,
+      detail: behaviour.direction === 'draws_toward'
+        ? `Real experiments suggested you are drawn to ${dim.noun}, while several scenario answers leaned away from it.`
+        : `Real experiments suggested ${dim.noun} drains you, while several scenario answers leaned toward it.`,
+      resolution: 'Your real experiments carry more weight, and one more real reading would settle this.',
+      behaviour_leads: true,
+    });
+  });
+
+  // 3. Scenario answers disagreeing with each other.
   scenarios.forEach(s => {
     if (seen.has(s.dimension) || s.scenario_level !== 'conflicting') return;
     if (SETTLED.includes(levelOf(s.dimension))) return;

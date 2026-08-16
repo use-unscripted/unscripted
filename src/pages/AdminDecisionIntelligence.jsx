@@ -7,6 +7,7 @@ import { useAuth } from '@/lib/AuthContext';
 import DiSection from '@/components/admin/DiSection';
 import DiExperimentTable from '@/components/admin/DiExperimentTable';
 import DiFlaggedExperiments from '@/components/admin/DiFlaggedExperiments';
+import EvidenceWeightsPanel from '@/components/admin/EvidenceWeightsPanel';
 
 /**
  * Decision Intelligence: what the product is learning about which experiences
@@ -79,6 +80,11 @@ export default function AdminDecisionIntelligence() {
           <DiSection title="Uncertainty" cell={data.uncertainty} />
           <DiFlaggedExperiments rows={data.flagged_experiments || []} />
           <DiExperimentTable rows={data.experiments} minStudents={data.min_students} />
+          {/* Decision scenarios: completion, self-consistency, and how often a
+              scenario reading was later confirmed or contradicted by real work.
+              Descriptive only — no predictive claim at this sample size. */}
+          <DiSection title="Decision scenarios" cell={data.scenarios} />
+          <EvidenceWeightsPanel />
           <DiSection title="Cross-career learning" cell={data.cross_career} />
           <DiSection title="Hypothesis evolution" cell={data.hypothesis_evolution} />
           <DiSection title="Recommendation rules" cell={data.rules} />

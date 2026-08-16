@@ -29,6 +29,64 @@ export const EVIDENCE_TIERS = [
 
 export const TIER_BY_ID = new Map(EVIDENCE_TIERS.map(t => [t.id, t]));
 
+/**
+ * The five kinds of evidence a dimension can be read from. They stay separately
+ * inspectable everywhere: a screen may summarise them, but nothing collapses
+ * them into one unexplained number.
+ */
+export const EVIDENCE_SOURCE_TYPES = [
+  { id: 'self_report', label: 'Self-report', blurb: 'What you told us directly.', tier: 'self_report' },
+  { id: 'scenario', label: 'Scenario pattern', blurb: 'Patterns across hypothetical decisions.', tier: 'scenario_pattern' },
+  { id: 'behavioural', label: 'Behavioural', blurb: 'What you actually did in real experiments.', tier: 'experiment' },
+  { id: 'performance', label: 'Performance', blurb: 'How well you completed validated tasks.', tier: 'experiment' },
+  { id: 'human', label: 'Human / verified', blurb: 'Professionally or institutionally reviewed work.', tier: 'reviewed' },
+];
+
+/**
+ * When scenario answers are allowed to read as more than a first flicker.
+ * Initial configuration values, not scientific claims — see EvidenceWeightConfig
+ * for the admin path that changes them.
+ */
+export const PATTERN_THRESHOLDS = {
+  initial_signal_responses: 1,
+  some_responses: 3,
+  stronger_responses: 6,
+  stronger_distinct_scenarios: 3,
+  stronger_moderate_signals: 2,
+  contradiction_min_responses: 2,
+};
+
+/* The active configuration. Defaults live above; an admin row may replace them
+   at runtime through configureEvidence(). Every scored row stores the version it
+   was scored under, so changing this never rewrites history. */
+let active = {
+  config_version: SCORING_VERSION,
+  source_weights: Object.fromEntries(EVIDENCE_TIERS.map(t => [t.id, t.weight])),
+  pattern_thresholds: { ...PATTERN_THRESHOLDS },
+};
+
+export function evidenceConfig() {
+  return active;
+}
+
+export function thresholds() {
+  return active.pattern_thresholds;
+}
+
+export function sourceWeight(tierId) {
+  return active.source_weights[tierId] ?? TIER_BY_ID.get(tierId)?.weight ?? 0;
+}
+
+/** Apply an admin configuration row. Unknown keys are ignored. */
+export function configureEvidence(config = {}) {
+  active = {
+    config_version: config.config_version || SCORING_VERSION,
+    source_weights: { ...active.source_weights, ...(config.source_weights || {}) },
+    pattern_thresholds: { ...active.pattern_thresholds, ...(config.pattern_thresholds || {}) },
+  };
+  return active;
+}
+
 /** Scenario evidence has its own, deliberately softer, vocabulary. */
 export const SCENARIO_LEVELS = ['none', 'initial_signal', 'some', 'stronger', 'conflicting'];
 

@@ -16,6 +16,8 @@ import ChangedMind from '@/components/matrix/ChangedMind';
 import ClaritySummary from '@/components/matrix/ClaritySummary';
 import JourneyHistory from '@/components/matrix/JourneyHistory';
 import NextBestExperimentPanel from '@/components/next-test/NextBestExperimentPanel';
+import ScenarioEvidenceInMatrix from '@/components/matrix/ScenarioEvidenceInMatrix';
+import { loadEvidenceConfig } from '@/lib/evidence-weights';
 import { Reveal } from '@/components/motion';
 
 const track = (eventName, properties) => base44.analytics.track({ eventName, properties });
@@ -39,8 +41,20 @@ export default function CareerDecisionMatrix() {
   const [scored, setScored] = useState(null);
   const [dimension, setDimension] = useState(null);
   const [view, setView] = useState('active');
+  const [scenarioResponses, setScenarioResponses] = useState([]);
 
   useEffect(() => { track('career_matrix_viewed'); }, []);
+
+  // The student's hypothetical answers, for the provenance panels, plus any
+  // admin-tuned weights this page should read the evidence under.
+  useEffect(() => {
+    let alive = true;
+    loadEvidenceConfig().catch(() => null);
+    base44.entities.ScenarioResponse.list('-completed_at', 200)
+      .then(rows => { if (alive) setScenarioResponses(Array.isArray(rows) ? rows : []); })
+      .catch(() => {});
+    return () => { alive = false; };
+  }, []);
 
   if (loading) {
     return (
@@ -151,6 +165,10 @@ export default function CareerDecisionMatrix() {
 
           <ChangedMind items={data.changed} />
 
+          {/* What the hypothetical answers contributed per path, and performance
+              beside experienced fit. Both stay separate from the scores above. */}
+          <ScenarioEvidenceInMatrix />
+
           <div>
             <h2 className="tp-section mb-4" style={{ color: 'var(--text-primary)' }}>What should you test next?</h2>
             <div onClick={() => track('next_test_clicked')}>
@@ -168,7 +186,7 @@ export default function CareerDecisionMatrix() {
       )}
 
       <MetricPanel row={scored?.row} metric={scored?.metric} onClose={() => setScored(null)} />
-      <WorkstyleDetail row={dimension} onClose={() => setDimension(null)} />
+      <WorkstyleDetail row={dimension} scenarioResponses={scenarioResponses} onClose={() => setDimension(null)} />
     </main>
   );
 }

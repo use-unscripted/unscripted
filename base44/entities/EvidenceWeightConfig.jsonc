@@ -1,0 +1,90 @@
+{
+  "name": "EvidenceWeightConfig",
+  "type": "object",
+  "properties": {
+    "config_version": {
+      "type": "string"
+    },
+    "active": {
+      "type": "boolean",
+      "default": true
+    },
+    "note": {
+      "type": "string"
+    },
+    "source_weights": {
+      "type": "object",
+      "properties": {
+        "self_report": {
+          "type": "number"
+        },
+        "single_scenario": {
+          "type": "number"
+        },
+        "scenario_pattern": {
+          "type": "number"
+        },
+        "experiment": {
+          "type": "number"
+        },
+        "repeated_behaviour": {
+          "type": "number"
+        },
+        "reviewed": {
+          "type": "number"
+        }
+      }
+    },
+    "pattern_thresholds": {
+      "type": "object",
+      "properties": {
+        "initial_signal_responses": {
+          "type": "number"
+        },
+        "some_responses": {
+          "type": "number"
+        },
+        "stronger_responses": {
+          "type": "number"
+        },
+        "stronger_distinct_scenarios": {
+          "type": "number"
+        },
+        "stronger_moderate_signals": {
+          "type": "number"
+        },
+        "contradiction_min_responses": {
+          "type": "number"
+        }
+      }
+    },
+    "updated_by_id": {
+      "type": "string"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "config_version"
+  ],
+  "rls": {
+    "read": {},
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

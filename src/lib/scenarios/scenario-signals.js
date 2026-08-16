@@ -12,6 +12,7 @@ import {
   SCENARIO_LEVEL_LABELS,
   scenarioPhrasing,
   resolveLevel,
+  thresholds,
 } from '@/lib/scenarios/evidence-hierarchy';
 
 const WORKSTYLE_TYPES = ['workstyle', 'decision_style'];
@@ -67,16 +68,20 @@ export function buildResponse({ scenario, option, context = {} }) {
  * Nothing here can exceed "stronger", which maps to moderate on the shared scale.
  */
 export function scenarioLevelFor(signals = []) {
+  const T = thresholds();
   const usable = signals.filter(s => s.signal_direction !== 'unclear');
   if (!usable.length) return 'none';
   const toward = usable.filter(s => s.signal_direction === 'draws_toward').length;
   const away = usable.filter(s => s.signal_direction === 'draws_away').length;
-  if (toward && away) return 'conflicting';
   const total = usable.length;
-  if (total === 1) return 'initial_signal';
+  // A disagreement needs at least the configured number of answers behind it,
+  // otherwise one stray tap reads as a conflict.
+  if (toward && away && total >= T.contradiction_min_responses) return 'conflicting';
+  if (total < T.some_responses) return 'initial_signal';
   const scenarios = new Set(usable.map(s => s.scenario_id).filter(Boolean)).size;
   const moderates = usable.filter(s => s.signal_strength === 'moderate').length;
-  if (total >= 4 || (scenarios >= 3 && moderates >= 2)) return 'stronger';
+  if (total >= T.stronger_responses
+    || (scenarios >= T.stronger_distinct_scenarios && moderates >= T.stronger_moderate_signals)) return 'stronger';
   return 'some';
 }
 

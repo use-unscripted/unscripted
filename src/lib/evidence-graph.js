@@ -144,9 +144,19 @@ export function createGraph() {
  * Conclusion nodes (abilities, preferences, patterns, questions) are added on
  * top of this by the modules that derive them, and always link back into it.
  */
-export function buildRecordGraph({ user = {}, paths = [], experiments = [], measurements = {}, reflections = [], proof = [] }) {
+export function buildRecordGraph({ user = {}, paths = [], experiments = [], measurements = {}, reflections = [], proof = [], scenarioResponses = [] }) {
   const graph = createGraph();
   const userId = graph.node('user', 'user', user.full_name || 'You');
+
+  /* Hypothetical decisions sit on the spine as their own node type, between what
+     the student says and what they do. Keeping them here is what will eventually
+     let the same question be asked three ways: what students say, what they
+     hypothetically choose, and what they actually did. */
+  scenarioResponses.forEach(r => {
+    const id = graph.node(`scenario:${r.id}`, 'scenario_decision', r.scenario_key || 'Decision scenario', { record: r });
+    graph.link(userId, id, 'decided_hypothetically');
+    if (r.experiment_id && graph.get(`experiment:${r.experiment_id}`)) graph.link(`experiment:${r.experiment_id}`, id, 'answered_during');
+  });
 
   paths.forEach(p => {
     const careerId = graph.node(`career:${p.id}`, 'career_hypothesis', p.path_name, { record: p });

@@ -1,10 +1,17 @@
 import { X, FlaskConical, MessageSquare, User } from 'lucide-react';
 import { EVIDENCE_LEVEL_LABELS } from '@/lib/career-dimensions';
+import DimensionSources from '@/components/matrix/DimensionSources';
+import { dimensionSources, scenarioProvenance } from '@/lib/scenarios/dimension-sources';
+import { ONBOARDING_SCENARIOS, ROLE_SCENARIOS, PERFORMANCE_QUESTIONS } from '@/lib/scenarios/scenario-library';
+
+const LIBRARY = [...ONBOARDING_SCENARIOS, ...ROLE_SCENARIOS, ...PERFORMANCE_QUESTIONS];
 
 /** Which experiences produced a conclusion, so nothing has to be taken on trust. */
-export default function DimensionInspector({ dimension, onClose }) {
+export default function DimensionInspector({ dimension, onClose, responses = [], performance = null, humanReviews = 0 }) {
   if (!dimension) return null;
   const d = dimension;
+  const breakdown = dimensionSources({ dimension: d, responses, performance, humanReviews });
+  const provenance = scenarioProvenance({ dimension: d.dimension, responses, scenarios: LIBRARY });
 
   return (
     <div className="fixed inset-0 z-[80] flex items-end justify-center bg-black/40 p-0 anim-overlay sm:items-center sm:p-6" onClick={onClose}>
@@ -23,6 +30,9 @@ export default function DimensionInspector({ dimension, onClose }) {
         </div>
 
         <p className="tp-body" style={{ color: 'var(--ink-700)' }}>{d.statement}</p>
+
+        {/* The five evidence sources, kept separate, plus the provenance drill-down. */}
+        <DimensionSources breakdown={breakdown} provenance={provenance} />
 
         {d.self_reported_preference && (
           <div className="mt-5">

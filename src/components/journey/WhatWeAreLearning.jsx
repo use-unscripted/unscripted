@@ -13,6 +13,8 @@ import { loadMeasurements } from '@/lib/experiment-measurement';
 import { dimensionsFromActivity, learningStatements, EVIDENCE_LEVEL_LABELS } from '@/lib/career-dimensions';
 import { syncDimensionEvidence } from '@/lib/career-dimensions-store';
 import DimensionInspector from '@/components/journey/DimensionInspector';
+import { loadEvidenceConfig } from '@/lib/evidence-weights';
+import { taskPerformance } from '@/lib/scenarios/scenario-performance';
 import { Reveal } from '@/components/motion';
 
 function Row({ icon, tone, dimension, onInspect }) {
@@ -39,15 +41,20 @@ function Row({ icon, tone, dimension, onInspect }) {
 export default function WhatWeAreLearning() {
   const [state, setState] = useState(null);
   const [inspecting, setInspecting] = useState(null);
+  const [scenarioResponses, setScenarioResponses] = useState([]);
+  const [performance, setPerformance] = useState(null);
 
   useEffect(() => {
     let alive = true;
     (async () => {
-      const [exps, refs, profs] = await Promise.all([
+      const [exps, refs, profs, responses] = await Promise.all([
         base44.entities.Experiments.list('-created_date', 100).catch(() => []),
         base44.entities.WeeklyReflections.list('-created_date', 50).catch(() => []),
         base44.entities.StudentProfile.list('-created_date', 1).catch(() => []),
+        base44.entities.ScenarioResponse.list('-completed_at', 200).catch(() => []),
       ]);
+      // Any admin-tuned weights and thresholds, before anything is interpreted.
+      await loadEvidenceConfig().catch(() => null);
       const measurements = await loadMeasurements().catch(() => ({}));
       const dimensions = dimensionsFromActivity({
         experiments: Array.isArray(exps) ? exps : [],
@@ -56,6 +63,9 @@ export default function WhatWeAreLearning() {
         profile: (Array.isArray(profs) ? profs[0] : null) || {},
       });
       if (!alive) return;
+      const rows = Array.isArray(responses) ? responses : [];
+      setScenarioResponses(rows);
+      setPerformance(taskPerformance(rows));
       setState(learningStatements(dimensions));
       // Keep the stored picture current so other screens read one shared answer.
       syncDimensionEvidence(dimensions).catch(() => null);
@@ -86,7 +96,14 @@ export default function WhatWeAreLearning() {
         </div>
       </section>
 
-      {inspecting && <DimensionInspector dimension={inspecting} onClose={() => setInspecting(null)} />}
+      {inspecting && (
+        <DimensionInspector
+          dimension={inspecting}
+          responses={scenarioResponses}
+          performance={performance}
+          onClose={() => setInspecting(null)}
+        />
+      )}
     </Reveal>
   );
 }

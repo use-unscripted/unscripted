@@ -76,13 +76,15 @@ describe('one answer is only an Initial Signal', () => {
   });
 
   it('raises to some, then stronger, as the pattern repeats', () => {
-    expect(scenarioLevelFor([sig('teamwork', 'draws_toward', 'moderate', 's1'), sig('teamwork', 'draws_toward', 'weak', 's2')])).toBe('some');
+    // Thresholds are configuration (see PATTERN_THRESHOLDS): two answers is still
+    // only an initial signal, three consistent ones read as some evidence.
+    expect(scenarioLevelFor([sig('teamwork', 'draws_toward', 'moderate', 's1'), sig('teamwork', 'draws_toward', 'weak', 's2')])).toBe('initial_signal');
     expect(scenarioLevelFor([
       sig('teamwork', 'draws_toward', 'moderate', 's1'),
       sig('teamwork', 'draws_toward', 'moderate', 's2'),
       sig('teamwork', 'draws_toward', 'weak', 's3'),
     ])).toBe('stronger');
-    expect(scenarioLevelFor(['s1', 's2', 's3', 's4'].map(id => sig('teamwork', 'draws_toward', 'weak', id)))).toBe('stronger');
+    expect(scenarioLevelFor(['s1', 's2', 's3', 's4'].map(id => sig('teamwork', 'draws_toward', 'weak', id)))).toBe('some');
   });
 
   it('never averages contradictory answers', () => {

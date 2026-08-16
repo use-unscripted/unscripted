@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import SidePanel from '@/components/matrix/SidePanel';
 import ProvenanceSources from '@/components/matrix/ProvenanceSources';
 import { workstyleProvenance } from '@/lib/matrix-provenance';
+import ScenarioSourceBlock from '@/components/matrix/ScenarioSourceBlock';
 
 /**
  * One work characteristic, with the experiences behind it, where they came from,
@@ -16,7 +17,7 @@ const Block = ({ title, children }) => (
   </section>
 );
 
-export default function WorkstyleDetail({ row, onClose }) {
+export default function WorkstyleDetail({ row, onClose, scenarioResponses = [] }) {
   if (!row) return null;
   const p = workstyleProvenance(row);
 
@@ -70,6 +71,10 @@ export default function WorkstyleDetail({ row, onClose }) {
           )}
         </>
       )}
+
+      {/* Hypothetical answers, kept in their own block so they can never read as
+          part of the behavioural evidence above. */}
+      <ScenarioSourceBlock dimension={row.dimension} responses={scenarioResponses} />
 
       {['unknown', 'mixed'].includes(row.levelKey) && (
         <Link to="/test" className="app-cta tp-control mt-7 inline-flex">Test this further</Link>

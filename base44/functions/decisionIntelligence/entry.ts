@@ -1,5 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
 import { decisionIntelligence, experimentEffectiveness } from '../../shared/decision-intelligence.js';
+import { scenarioAnalytics } from '../../shared/scenario-analytics.js';
 
 /**
  * Aggregate product learning, for the team only.
@@ -38,6 +39,10 @@ export default async function (req: Request): Promise<Response> {
       svc.ExperimentFeedback.list('-submitted_at', CAP).catch(() => []),
     ]);
 
+    // Scenario answers, reduced to counts here for the same reason as everything
+    // else on this dashboard: no per-student row ever leaves the server.
+    const scenarioResponses = await svc.ScenarioResponse.list('-completed_at', CAP).catch(() => []);
+
     const data = {
       experiments: Array.isArray(experiments) ? experiments : [],
       measurements: Array.isArray(measurements) ? measurements : [],
@@ -70,7 +75,12 @@ export default async function (req: Request): Promise<Response> {
       }
     }
 
-    return Response.json({ ...payload, stored_rows: rows.length });
+    const scenarios = scenarioAnalytics({
+      responses: Array.isArray(scenarioResponses) ? scenarioResponses : [],
+      dimensionEvidence: data.dimensionEvidence,
+    });
+
+    return Response.json({ ...payload, scenarios, stored_rows: rows.length });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }
