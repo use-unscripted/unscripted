@@ -223,11 +223,10 @@ export default function ExperimentReflection() {
               <p className="tp-prose mt-2" style={{ color: 'var(--text-secondary)' }}>{ELIMINATION_NOTE}</p>
             </section>
           )}
-          <HypothesisTimeline pathId={ctx.path?.id} pathName={ctx.path?.path_name} refreshKey={decision} />
-          {/* Straight after the hypothesis update, so the next test is the first
-              thing to act on rather than the last thing on the page. Pinned to
-              the hypothesis this experiment tested. */}
+          {/* First thing to act on after the decision, ahead of the history.
+              Pinned to the hypothesis this experiment tested. */}
           <NextBestExperimentPanel pathId={ctx.path?.id} />
+          <HypothesisTimeline pathId={ctx.path?.id} pathName={ctx.path?.path_name} refreshKey={decision} />
           {/* The path as it now stands, across every test run on it, so a student
               finishing their second or third test can see it accumulating. */}
           <PathHistoryPanel pathId={ctx.path?.id} />
