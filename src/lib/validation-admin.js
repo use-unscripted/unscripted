@@ -67,8 +67,18 @@ export async function loadValidationAdmin() {
   return { rows, blueprints: list(blueprints) };
 }
 
-/** Save a field change and refresh the stored score snapshot alongside it. */
+/**
+ * Save a field change and refresh the stored score snapshot alongside it.
+ *
+ * One refusal lives here: Field Calibrated cannot be set while the aggregate
+ * gate says the sample or the validation behind it is not there yet. The gate is
+ * computed server-side (see fieldCalibrationCheck) and passed in on the row;
+ * removing a calibration is always allowed.
+ */
 export async function updateValidation(row, patch) {
+  if (patch.field_calibrated === true && row.field_calibration && !row.field_calibration.eligible) {
+    throw new Error(`Not eligible for field calibration yet. ${row.field_calibration.missing.join(' ')}`);
+  }
   const next = { ...row.validation, ...patch };
   const strength = experimentStrength({ validation: next, sources: row.sources, reviews: row.reviews });
   return base44.entities.ExperimentValidation.update(row.validation.id, {

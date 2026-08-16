@@ -39,6 +39,10 @@ export default async function (req: Request): Promise<Response> {
       svc.ExperimentFeedback.list('-submitted_at', CAP).catch(() => []),
     ]);
 
+    // Validation levels, read only so the field-calibration gate can require
+    // human validation alongside a real sample.
+    const validations = await svc.ExperimentValidation.list('-created_date', CAP).catch(() => []);
+
     // Scenario answers, reduced to counts here for the same reason as everything
     // else on this dashboard: no per-student row ever leaves the server.
     const scenarioResponses = await svc.ScenarioResponse.list('-completed_at', CAP).catch(() => []);
@@ -53,6 +57,7 @@ export default async function (req: Request): Promise<Response> {
       overrides: Array.isArray(overrides) ? overrides : [],
       profiles: Array.isArray(profiles) ? profiles : [],
       feedback: Array.isArray(feedback) ? feedback : [],
+      validations: Array.isArray(validations) ? validations : [],
     };
 
     const payload = decisionIntelligence(data);
@@ -67,7 +72,8 @@ export default async function (req: Request): Promise<Response> {
       const existing = await base44.asServiceRole.entities.ExperimentEffectiveness.list('-computed_at', 500).catch(() => []);
       const byKey = new Map((Array.isArray(existing) ? existing : []).map((r) => [r.blueprint_key, r]));
       for (const row of rows) {
-        const { suppressed, students, reason, survey_suppressed, ...rest } = row;
+        // field_calibration is a live gate for the console, not a stored metric.
+        const { suppressed, students, reason, survey_suppressed, field_calibration, survey_realism_no_basis, ...rest } = row;
         const clean = { ...rest, suppressed: Boolean(suppressed) };
         const prior = byKey.get(row.blueprint_key);
         if (prior) await base44.asServiceRole.entities.ExperimentEffectiveness.update(prior.id, clean).catch(() => null);

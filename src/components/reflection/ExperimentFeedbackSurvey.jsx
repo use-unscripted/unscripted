@@ -10,18 +10,19 @@ import { Check, Loader2 } from 'lucide-react';
 import { RATING_QUESTIONS, ALIGNMENT_OPTIONS, saveFeedback } from '@/lib/experiment-feedback';
 
 const EMPTY = {
-  realism_rating: null, career_understanding_rating: null, self_learning_rating: null,
+  realism_rating: null, realism_not_enough_information: false,
+  career_understanding_rating: null, self_learning_rating: null,
   time_value_rating: null, realism_notes: '', missing_elements_notes: '',
   professional_alignment_rating: '',
 };
 
-function Scale({ q, value, onChange }) {
+function Scale({ q, value, noBasis, onChange, onNoBasis }) {
   return (
     <div>
       <p className="tp-body font-semibold" style={{ color: 'var(--text-primary)' }}>{q.label}</p>
       <div className="mt-2 flex gap-2">
         {[1, 2, 3, 4, 5].map(n => {
-          const on = value === n;
+          const on = !noBasis && value === n;
           return (
             <button key={n} type="button" onClick={() => onChange(q.key, n)}
               className="ui-press tp-body flex-1 rounded-[var(--r-control)] font-bold"
@@ -40,24 +41,50 @@ function Scale({ q, value, onChange }) {
         <span className="tp-meta" style={{ color: 'var(--text-muted)' }}>{q.low}</span>
         <span className="tp-meta" style={{ color: 'var(--text-muted)' }}>{q.high}</span>
       </div>
+      {/* An honest "I can't tell" is a real answer here, and a better one than a
+          guessed 3. It is recorded, and it is not scored. */}
+      {q.allowNoBasis && (
+        <button type="button" onClick={onNoBasis}
+          className="ui-press tp-meta mt-2 rounded-[var(--r-control)] px-3 font-semibold"
+          style={{
+            minHeight: '44px',
+            background: noBasis ? 'var(--background-tertiary)' : 'transparent',
+            color: noBasis ? 'var(--text-primary)' : 'var(--brand-navy-700)',
+            border: `1px solid ${noBasis ? 'var(--brand-navy-700)' : 'var(--border-light)'}`,
+          }}>
+          Not enough information to judge
+        </button>
+      )}
     </div>
   );
 }
 
-export default function ExperimentFeedbackSurvey({ experiment, validation, existing, onSaved }) {
+export default function ExperimentFeedbackSurvey({ experiment, validation, existing, context = {}, humanReality = false, onSaved }) {
   const [answers, setAnswers] = useState({ ...EMPTY, ...(existing || {}) });
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(Boolean(existing?.submitted_at));
   const [error, setError] = useState('');
 
-  const set = (key, value) => { setAnswers(a => ({ ...a, [key]: value })); setSaved(false); };
-  const answeredAny = RATING_QUESTIONS.some(q => answers[q.key]);
+  const set = (key, value) => {
+    setAnswers(a => ({
+      ...a,
+      [key]: value,
+      // Picking a realism score withdraws "not enough information", and vice versa.
+      ...(key === 'realism_rating' ? { realism_not_enough_information: false } : {}),
+    }));
+    setSaved(false);
+  };
+  const noBasis = () => {
+    setAnswers(a => ({ ...a, realism_not_enough_information: !a.realism_not_enough_information, realism_rating: null }));
+    setSaved(false);
+  };
+  const answeredAny = RATING_QUESTIONS.some(q => answers[q.key]) || answers.realism_not_enough_information;
 
   const submit = async () => {
     setSaving(true);
     setError('');
     try {
-      const row = await saveFeedback({ experiment, validation, answers, existing });
+      const row = await saveFeedback({ experiment, validation, answers, existing, context });
       setSaved(true);
       onSaved?.(row);
     } catch (err) {
@@ -70,12 +97,13 @@ export default function ExperimentFeedbackSurvey({ experiment, validation, exist
   return (
     <div className="space-y-5">
       <p className="tp-prose" style={{ color: 'var(--text-secondary)' }}>
-        This rates the experiment, not you. It changes nothing about your hypothesis: it tells us which
-        experiments are worth a student's time and which need rewriting. Optional, and about a minute.
+        It tells us which experiences are worth a student's time and which need rewriting. Optional, and about a minute.
       </p>
 
       {RATING_QUESTIONS.map(q => (
-        <Scale key={q.key} q={q} value={answers[q.key]} onChange={set} />
+        <Scale key={q.key} q={q} value={answers[q.key]}
+          noBasis={q.allowNoBasis && answers.realism_not_enough_information}
+          onChange={set} onNoBasis={noBasis} />
       ))}
 
       <div>
@@ -90,7 +118,7 @@ export default function ExperimentFeedbackSurvey({ experiment, validation, exist
 
       <div>
         <label className="tp-body font-semibold" style={{ color: 'var(--text-primary)' }}>
-          What important part of the career do you think this experiment missed? <span style={{ color: 'var(--text-muted)' }}>Optional</span>
+          What important aspect of the career was missing? <span style={{ color: 'var(--text-muted)' }}>Optional</span>
         </label>
         <textarea rows={3} value={answers.missing_elements_notes} onChange={e => set('missing_elements_notes', e.target.value)}
           className="tp-body mt-2 w-full rounded-[var(--r-control)] p-3"
@@ -98,10 +126,13 @@ export default function ExperimentFeedbackSurvey({ experiment, validation, exist
           placeholder="Something real about the work that never came up." />
       </div>
 
+      {/* Only when Human Reality was actually completed. Asking a student who
+          never spoke to anyone produces an opinion about a conversation that did
+          not happen. */}
+      {humanReality && (
       <div>
         <p className="tp-body font-semibold" style={{ color: 'var(--text-primary)' }}>
-          If you spoke with a professional during or after this experiment, did their description of the real work
-          support or contradict it?
+          How closely did the professional's description align with this experiment?
         </p>
         <div className="mt-2 flex flex-col gap-2">
           {ALIGNMENT_OPTIONS.map(o => {
@@ -121,6 +152,7 @@ export default function ExperimentFeedbackSurvey({ experiment, validation, exist
           })}
         </div>
       </div>
+      )}
 
       {error && <p className="tp-meta" style={{ color: 'var(--danger-700)' }}>{error}</p>}
 

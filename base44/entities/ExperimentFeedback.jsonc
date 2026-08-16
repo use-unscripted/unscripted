@@ -20,8 +20,33 @@
     "role_blueprint_version": {
       "type": "number"
     },
+    "path_id": {
+      "type": "string"
+    },
+    "path_name": {
+      "type": "string"
+    },
+    "cycle_id": {
+      "type": "string"
+    },
+    "unknown_id": {
+      "type": "string"
+    },
+    "unknown_label": {
+      "type": "string"
+    },
+    "validation_level_at_completion": {
+      "type": "number"
+    },
+    "validation_status_at_completion": {
+      "type": "string"
+    },
     "realism_rating": {
       "type": "number"
+    },
+    "realism_not_enough_information": {
+      "type": "boolean",
+      "default": false
     },
     "career_understanding_rating": {
       "type": "number"
@@ -38,6 +63,10 @@
     "missing_elements_notes": {
       "type": "string"
     },
+    "human_reality_completed": {
+      "type": "boolean",
+      "default": false
+    },
     "professional_alignment_rating": {
       "type": "string",
       "enum": [
@@ -45,6 +74,7 @@
         "mostly_supported",
         "mixed",
         "mostly_contradicted",
+        "strongly_contradicted",
         "not_enough_information"
       ]
     },

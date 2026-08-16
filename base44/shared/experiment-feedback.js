@@ -26,6 +26,22 @@ export const FLAG_THRESHOLDS = {
   repeated_missing_theme: 3,   // the same missing component named this many times
 };
 
+/**
+ * What must be true before an experiment may be called Field Calibrated.
+ * Calibration is a claim that the experience has been checked against how the
+ * work actually behaves in the field, so it needs a real sample AND human
+ * validation — never a handful of survey responses.
+ */
+export const FIELD_CALIBRATION = {
+  min_students: MIN_FEEDBACK_STUDENTS,   // enough distinct students to average
+  min_realism_ratings: 5,                // "not enough information" answers do not count
+  min_realism_average: 3.5,
+  min_validation_level: 2,               // professionally reviewed, not merely drafted
+};
+
+/** Answers that MISALIGN with the professional's account, at either strength. */
+const MISALIGNED = new Set(['mostly_contradicted', 'strongly_contradicted']);
+
 const num = (v) => (typeof v === 'number' && Number.isFinite(v) ? v : null);
 const avg = (xs) => {
   const vals = xs.map(num).filter((v) => v !== null);
@@ -79,6 +95,10 @@ export function feedbackSummary(rows = [], thresholds = FLAG_THRESHOLDS) {
     students,
     survey_responses: responses,
     survey_realism_rating: avg(rows.map((r) => r.realism_rating)),
+    /* Counted, never averaged in: students who said they could not judge
+       realism are visible as their own number so a thin realism average reads
+       as thin. */
+    survey_realism_no_basis: rows.filter((r) => r.realism_not_enough_information).length,
     survey_career_understanding_rating: avg(rows.map((r) => r.career_understanding_rating)),
     survey_self_learning_rating: avg(rows.map((r) => r.self_learning_rating)),
     survey_time_value_rating: avg(rows.map((r) => r.time_value_rating)),
@@ -113,9 +133,9 @@ export function reviewFlags(rows = [], thresholds = FLAG_THRESHOLDS) {
   }
 
   const alignment = rows.map((r) => r.professional_alignment_rating).filter((a) => a && a !== 'not_enough_information');
-  const contradicted = alignment.filter((a) => a === 'mostly_contradicted').length;
+  const contradicted = alignment.filter((a) => MISALIGNED.has(a)).length;
   if (alignment.length >= 3 && share(contradicted, alignment.length) >= thresholds.contradiction_share) {
-    flags.push({ code: 'professional_contradiction', detail: `${contradicted} of ${alignment.length} students heard a professional description that mostly contradicted this experiment.` });
+    flags.push({ code: 'professional_contradiction', detail: `${contradicted} of ${alignment.length} students heard a professional description that misaligned with this experiment.` });
   }
 
   missingThemes(rows)
@@ -124,6 +144,35 @@ export function reviewFlags(rows = [], thresholds = FLAG_THRESHOLDS) {
     .forEach((t) => flags.push({ code: 'repeated_missing_component', detail: `"${t.theme}" named as missing by ${t.mentions} students.` }));
 
   return flags;
+}
+
+/**
+ * May this experiment be marked Field Calibrated?
+ *
+ * Answered as reasons, not a bare boolean, so the console can say exactly what
+ * is missing. Deliberately strict in one direction only: this gate can block a
+ * calibration claim, and it never removes one already made, downgrades a
+ * validation level, or reacts to a single student's response.
+ */
+export function fieldCalibrationCheck({ survey = {}, validation_level = null, rules = FIELD_CALIBRATION } = {}) {
+  const missing = [];
+  const students = survey.students ?? 0;
+  const realismRatings = (survey.survey_responses ?? 0) - (survey.survey_realism_no_basis ?? 0);
+  const realism = num(survey.survey_realism_rating);
+
+  if (students < rules.min_students) {
+    missing.push(`Needs ${rules.min_students} students who rated it; has ${students}.`);
+  }
+  if (realismRatings < rules.min_realism_ratings) {
+    missing.push(`Needs ${rules.min_realism_ratings} realism ratings; has ${Math.max(realismRatings, 0)}. Responses of "not enough information to judge" do not count.`);
+  }
+  if (realism === null || realism < rules.min_realism_average) {
+    missing.push(`Needs an average realism of ${rules.min_realism_average}; ${realism === null ? 'none recorded' : `currently ${realism}`}.`);
+  }
+  if (num(validation_level) === null || validation_level < rules.min_validation_level) {
+    missing.push(`Needs validation level ${rules.min_validation_level} or above; currently ${validation_level ?? 'unscored'}.`);
+  }
+  return { eligible: missing.length === 0, missing };
 }
 
 /** Survey rows grouped by experience, keyed the same way effectiveness is. */

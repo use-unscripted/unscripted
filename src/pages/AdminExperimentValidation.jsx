@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Loader2, RefreshCw, Inbox } from 'lucide-react';
 import PageHeader from '@/components/PageHeader';
 import { SkCards } from '@/components/PageSkeleton';
+import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/lib/AuthContext';
 import ValidationAdminRow from '@/components/admin/ValidationAdminRow';
 import { loadValidationAdmin, updateValidation, markRewritten, assignReviewer, submitRereview } from '@/lib/validation-admin';
@@ -21,10 +22,27 @@ export default function AdminExperimentValidation() {
   const [tab, setTab] = useState('all');
   const [busy, setBusy] = useState(false);
 
+  const [error, setError] = useState('');
+
   const load = useCallback(async () => {
     setBusy(true);
-    const next = await loadValidationAdmin().catch(() => ({ rows: [] }));
-    setState(next);
+    /* The field-calibration gate is computed across students, so it comes from
+       the aggregate function rather than this page: the browser never sees the
+       responses behind it. If it cannot be loaded, nothing is blocked. */
+    const [next, di] = await Promise.all([
+      loadValidationAdmin().catch(() => ({ rows: [] })),
+      base44.functions.invoke('decisionIntelligence', {}).then(r => r?.data).catch(() => null),
+    ]);
+    const gates = new Map((di?.experiments || [])
+      .filter(r => r.blueprint_key && r.field_calibration)
+      .map(r => [r.blueprint_key, r.field_calibration]));
+    setState({
+      ...next,
+      rows: (next.rows || []).map(row => ({
+        ...row,
+        field_calibration: gates.get(row.validation.blueprint_key) || null,
+      })),
+    });
     setBusy(false);
   }, []);
 
@@ -45,7 +63,16 @@ export default function AdminExperimentValidation() {
     );
   }
 
-  const change = async (row, patch) => { await updateValidation(row, patch); await load(); };
+  const change = async (row, patch) => {
+    setError('');
+    try {
+      await updateValidation(row, patch);
+    } catch (err) {
+      setError(err?.message || 'That change was refused.');
+      return;
+    }
+    await load();
+  };
   const rewritten = async (row) => { await markRewritten(row); await load(); };
   const assign = async (row, reviewer) => { await assignReviewer(row, reviewer); await load(); };
   const review = async (row, form) => { await submitRereview(row, form); await load(); };
@@ -62,6 +89,13 @@ export default function AdminExperimentValidation() {
           </button>
         }
       />
+
+      {error && (
+        <div className="mb-4 rounded-[var(--r-control)] px-4 py-3 text-sm"
+          style={{ background: 'var(--warning-50)', border: '1px solid var(--warning-700)', color: 'var(--warning-700)' }}>
+          {error}
+        </div>
+      )}
 
       <div className="mb-4 flex flex-wrap gap-1">
         {TABS.map(t => {

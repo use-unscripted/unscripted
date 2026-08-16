@@ -269,8 +269,8 @@ export default function ExperimentReflection() {
 
           {/* Alongside the hypothesis update, never in front of it: this rates
               the experiment, and skipping it must not strand the cycle. */}
-          <ReflectionStep index={3} total={TOTAL_STEPS} title="Rate this experiment" delay={40}
-            purpose="How realistic and how useful it was. This improves the experiment for other students and changes nothing about your hypothesis.">
+          <ReflectionStep index={3} total={TOTAL_STEPS} title="Rate the quality of this experience" delay={40}
+            purpose="How realistic and how useful the experience itself was. Separate from the fit you experienced, how you performed and your confidence in this Path, and it changes none of them.">
             <FeedbackSurveyPanel experiment={ctx.experiment} />
           </ReflectionStep>
 

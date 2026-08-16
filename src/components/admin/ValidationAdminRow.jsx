@@ -22,11 +22,15 @@ export default function ValidationAdminRow({ row, onChange, onRewritten, onAssig
     try { await fn(); } finally { setBusy(''); }
   };
 
-  const Btn = ({ id, label, onClick }) => (
+  /* The field-calibration gate, computed across students on the server. Absent
+     until the aggregate has been loaded, in which case nothing is blocked. */
+  const gate = row.field_calibration || null;
+
+  const Btn = ({ id, label, onClick, disabled }) => (
     <button
       type="button"
       onClick={() => run(id, onClick)}
-      disabled={Boolean(busy)}
+      disabled={Boolean(busy) || Boolean(disabled)}
       className="flex items-center gap-1.5 rounded-lg border border-[color:var(--ink-200)] px-3 py-1.5 text-xs font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)] disabled:opacity-60"
     >
       {busy === id && <Loader2 size={11} className="animate-spin" />} {label}
@@ -58,6 +62,7 @@ export default function ValidationAdminRow({ row, onChange, onRewritten, onAssig
         <Btn id="map" label={v.mapping_reviewed ? 'Unmark mapping reviewed' : 'Mark mapping reviewed'}
           onClick={() => onChange(row, { mapping_reviewed: !v.mapping_reviewed })} />
         <Btn id="field" label={v.field_calibrated ? 'Remove field calibration' : 'Mark field calibrated'}
+          disabled={!v.field_calibrated && gate && !gate.eligible}
           onClick={() => onChange(row, { field_calibrated: !v.field_calibrated })} />
         {v.validation_status !== 'published' && (
           <Btn id="pub" label="Publish" onClick={() => onChange(row, { validation_status: 'published' })} />
@@ -71,6 +76,16 @@ export default function ValidationAdminRow({ row, onChange, onRewritten, onAssig
           {open ? 'Hide re-review' : 'Re-review'}
         </button>
       </div>
+
+      {/* Why calibration is unavailable, in the reviewer's own terms. No number
+          here comes from one student. */}
+      {gate && !gate.eligible && !v.field_calibrated && (
+        <ul className="mt-2 space-y-0.5">
+          {gate.missing.map((m, i) => (
+            <li key={i} className="text-[11px] text-[color:var(--ink-500)]">Field calibration blocked: {m}</li>
+          ))}
+        </ul>
+      )}
 
       {open && <RereviewPanel row={row} onAssign={onAssign} onSubmitReview={onSubmitReview} />}
     </div>

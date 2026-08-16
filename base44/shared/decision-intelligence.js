@@ -14,7 +14,7 @@
  */
 
 import {
-  feedbackSummary, groupFeedback, flaggedExperiments, MIN_FEEDBACK_STUDENTS,
+  feedbackSummary, groupFeedback, flaggedExperiments, MIN_FEEDBACK_STUDENTS, fieldCalibrationCheck,
 } from './experiment-feedback.js';
 
 /** Below this many distinct students, a cell reports nothing but its own absence. */
@@ -56,8 +56,9 @@ export function blueprintKey(experiment) {
  * suppression flag, because a rare experiment must not become identifiable just
  * because the aggregate around it is large.
  */
-export function experimentEffectiveness({ experiments = [], measurements = [], reflections = [], proof = [], updates = [], feedback = [] }) {
+export function experimentEffectiveness({ experiments = [], measurements = [], reflections = [], proof = [], updates = [], feedback = [], validations = [] }) {
   const feedbackByKey = groupFeedback(feedback, (r) => r.blueprint_key);
+  const levelByKey = new Map(validations.filter((v) => v.blueprint_key).map((v) => [v.blueprint_key, num(v.validation_level)]));
   const measurementByExp = new Map(measurements.map((m) => [m.experiment_id, m]));
   const reflectionByExp = new Map(reflections.filter(isLive).map((r) => [r.experiment_id, r]));
   const proofByExp = new Map();
@@ -123,6 +124,15 @@ export function experimentEffectiveness({ experiments = [], measurements = [], r
       ? { survey_responses: survey.survey_responses, survey_suppressed: true }
       : surveyNumbers;
     const flagFields = { flagged_for_review: flags.length > 0, review_flags: flags };
+    /* Whether this experience may be called Field Calibrated. Reported as a
+       gate with reasons, and only ever a gate: it blocks a claim, it never
+       downgrades an experiment on its own. */
+    const calibration = {
+      field_calibration: fieldCalibrationCheck({
+        survey: { ...survey, students: survey.students },
+        validation_level: levelByKey.get(g.key) ?? null,
+      }),
+    };
 
     // A suppressed row keeps its identity and nothing else. Emitting the
     // dimensions and the number of hypotheses it appeared in would still be a
@@ -134,11 +144,12 @@ export function experimentEffectiveness({ experiments = [], measurements = [], r
         blueprint_title: base.blueprint_title,
         ...computed,
         ...flagFields,
+        ...calibration,
         sample_size: size,
         computed_at: new Date().toISOString(),
       };
     }
-    return { ...base, ...computed, ...surveyCell, ...flagFields, sample_size: size, computed_at: new Date().toISOString() };
+    return { ...base, ...computed, ...surveyCell, ...flagFields, ...calibration, sample_size: size, computed_at: new Date().toISOString() };
   }).sort((a, b) => (b.sample_size || 0) - (a.sample_size || 0));
 }
 
