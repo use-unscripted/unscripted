@@ -4,7 +4,8 @@
  * routes between them, so no feature is duplicated.
  */
 import { useSearchParams } from 'react-router-dom';
-import { FileText, RotateCcw, Library, UserCheck, Compass } from 'lucide-react';
+import { FileText, RotateCcw, Library, UserCheck, Compass, Users } from 'lucide-react';
+import HumanEvidencePanel from '@/components/evidence/HumanEvidencePanel';
 import ScenarioEvidenceSection from '@/components/scenarios/ScenarioEvidenceSection';
 import CareerEvidenceProfile from '@/pages/CareerEvidenceProfile';
 import EvidenceLibrary from '@/pages/EvidenceLibrary';
@@ -16,6 +17,9 @@ const TABS = [
   ['proof',    'Proof',       FileText],
   ['reflect',  'Reflections', RotateCcw],
   ['career-profile', 'Career Profile', UserCheck],
+  // Professional, alumni, mentor and advisor interactions. One evidence
+  // architecture, one more source type — never a separate contacts database.
+  ['human', 'Human', Users],
   // Scenario evidence lives inside Evidence, never as its own nav item.
   ['signals', 'Signals', Compass],
 ];
@@ -63,6 +67,7 @@ export default function Evidence() {
       {active === 'proof' && <ProofOfWorkPage />}
       {active === 'reflect' && <WeeklyReflectionPage />}
       {active === 'career-profile' && <CareerEvidenceProfile />}
+      {active === 'human' && <HumanEvidencePanel />}
       {active === 'signals' && (
         <main className="app-page">
           <ScenarioEvidenceSection />

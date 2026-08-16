@@ -27,6 +27,14 @@ export const PILOT_EVENTS = [
   'next_experiment_recommended', 'repeat_path_test_started',
   'all_paths_viewed', 'path_selected', 'experiment_started', 'mission_guide_opened',
   'mission_completed', 'outreach_attempted', 'professional_conversation_completed',
+  // Human Reality and outreach. Emitters live in
+  // src/lib/analytics/human-reality-events.js. Same privacy rule as everything
+  // else here: ids, counts and fixed-choice values, never a contact's name or
+  // address and never a word the student typed.
+  'human_reality_recommended', 'outreach_started', 'outreach_drafted', 'contact_logged',
+  'professional_contacted', 'response_received', 'conversation_scheduled',
+  'human_evidence_started', 'human_evidence_submitted', 'human_evidence_reflected',
+  'human_evidence_matrix_updated',
   'proof_submitted', 'reflection_started', 'reflection_completed',
   'final_decision_submitted', 'cycle_completed', 'second_cycle_attempted',
   'continuation_interest_recorded', 'seven_day_return', 'thirty_day_return',

@@ -1,12 +1,23 @@
+import { useEffect } from 'react';
+import { humanEvidenceMatrixUpdated } from '@/lib/analytics/human-reality-events';
+
 /**
  * What people who do this work have said about this dimension.
  *
- * Its own block, its own wording. A conversation describes the field; only the
- * student's own work describes the student, so nothing here is folded into the
- * behavioural evidence above it.
+ * Its own block, its own wording, and always paired with what the student's own
+ * work has shown about the same dimension. That pairing is the point: a
+ * conversation can explain what the work involves, and only firsthand evidence
+ * says how this student responds to it. Collapsing the two is exactly the
+ * mistake this block exists to prevent.
  */
-export default function HumanSourceBlock({ human }) {
+export default function HumanSourceBlock({ human, behavioural }) {
+  useEffect(() => {
+    if (human?.count) humanEvidenceMatrixUpdated({ stage: 'workstyle' });
+  }, [human?.count]);
+
   if (!human?.count) return null;
+
+  const tested = Boolean(behavioural?.tested);
 
   return (
     <section className="mt-6">
@@ -22,8 +33,18 @@ export default function HumanSourceBlock({ human }) {
           </li>
         ))}
       </ul>
-      <p className="tp-meta mt-3" style={{ color: 'var(--text-muted)' }}>
-        This is context about the career. It does not change what your own experiments have shown.
+
+      <h3 className="tp-eyebrow mt-5" style={{ color: 'var(--brand-navy-700)' }}>From your own work</h3>
+      <p className="tp-body mt-2" style={{ color: 'var(--text-secondary)' }}>
+        {tested
+          ? behavioural.summary
+          : 'No experiment has put you in this situation yet, so we have nothing about how you respond to it.'}
+      </p>
+
+      <p className="tp-body mt-4 rounded-[var(--r-control)] px-3 py-2.5" style={{ background: 'var(--ink-50)', color: 'var(--ink-700)' }}>
+        {tested
+          ? 'Human perspective has clarified what the work involves, and your own work shows how you responded to it.'
+          : 'Human perspective has clarified what the work involves, but we still need firsthand evidence about how you respond to it.'}
       </p>
     </section>
   );

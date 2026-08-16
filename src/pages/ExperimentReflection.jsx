@@ -21,6 +21,7 @@ import {
 } from '@/lib/experiment-conclusion';
 import { clearConclusionDraft } from '@/lib/student-drafts';
 import ReflectionContextCard from '@/components/reflection/ReflectionContextCard';
+import HumanEvidenceContext from '@/components/reflection/HumanEvidenceContext';
 import ConclusionGate from '@/components/reflection/ConclusionGate';
 import ReflectionForm from '@/components/reflection/ReflectionForm';
 import EvidenceUpdatePanel from '@/components/reflection/EvidenceUpdatePanel';
@@ -210,6 +211,9 @@ export default function ExperimentReflection() {
     <Shell>
       <PageHeader showBack backLabel="Go back" title="Update your hypothesis" />
       <ReflectionContextCard ctx={ctx} measurement={measurement} />
+      {/* Anything a person actually doing this work told the student, carried in
+          so the reflection is against everything they know, not half of it. */}
+      <HumanEvidenceContext pathId={ctx.path?.id} cycleId={ctx.experiment?.cycle_id} />
 
       {decision ? (
         <>

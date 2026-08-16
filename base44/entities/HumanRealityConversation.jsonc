@@ -5,6 +5,9 @@
     "user_id": {
       "type": "string"
     },
+    "contact_id": {
+      "type": "string"
+    },
     "path_id": {
       "type": "string"
     },
@@ -15,6 +18,9 @@
       "type": "string"
     },
     "career_cycle_id": {
+      "type": "string"
+    },
+    "experiment_id": {
       "type": "string"
     },
     "uncertainty_id": {
@@ -38,6 +44,21 @@
         "type": "string"
       }
     },
+    "weakened_dimension_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "exposure_level": {
+      "type": "string",
+      "enum": [
+        "verified_perspective",
+        "human_exposure",
+        "direct_conversation"
+      ],
+      "default": "direct_conversation"
+    },
     "source_type": {
       "type": "string",
       "enum": [
@@ -49,6 +70,21 @@
         "other"
       ],
       "default": "own_connection"
+    },
+    "interaction_type": {
+      "type": "string",
+      "enum": [
+        "direct_conversation",
+        "informational_interview",
+        "alumni_meeting",
+        "advisor_conversation",
+        "mentor_conversation",
+        "professional_event",
+        "panel_or_presentation",
+        "verified_perspective",
+        "other"
+      ],
+      "default": "direct_conversation"
     },
     "professional_role": {
       "type": "string"
@@ -74,6 +110,12 @@
       ],
       "default": "call"
     },
+    "questions_planned": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
     "questions_asked": {
       "type": "array",
       "items": {
@@ -85,6 +127,21 @@
     },
     "key_learning": {
       "type": "string"
+    },
+    "surprised_by": {
+      "type": "string"
+    },
+    "remaining_unknown": {
+      "type": "string"
+    },
+    "representativeness": {
+      "type": "string",
+      "enum": [
+        "one_persons_perspective",
+        "likely_relevant",
+        "strongly_relevant",
+        "not_sure"
+      ]
     },
     "changed_expectation": {
       "type": "string",
@@ -107,6 +164,10 @@
         "abandoned"
       ],
       "default": "planned"
+    },
+    "reflected_at": {
+      "type": "string",
+      "format": "date-time"
     },
     "recorded_at": {
       "type": "string",

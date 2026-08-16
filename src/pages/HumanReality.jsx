@@ -1,14 +1,19 @@
 /**
  * Human Reality, end to end:
  *
- *   Path → remaining unknown → a human perspective is needed → who could answer
- *   it → the questions worth asking → what the student learned → human evidence
- *   → what it changed on the Path and in the Matrix.
+ *   Path → remaining unknown → a human perspective is needed → outreach → the
+ *   conversation → human evidence → what it changed on the Path and in the
+ *   Matrix → the next unknown.
  *
  * It is an experiment type, so it lives on the same rails as the others: it is
  * pinned to a Path, aimed at one uncertainty, and it ends in a record. What it
  * never does is touch a fit or confidence score, because a conversation is
  * evidence about the field rather than a reading of the student.
+ *
+ * The contact and the conversation are deliberately separate records. The
+ * contact is the source; the evidence is what the student learned. Keeping them
+ * apart is what lets the same professional answer a different question later
+ * without duplicating anybody.
  */
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
@@ -20,7 +25,15 @@ import HumanRealityQuestions from '@/components/human-reality/HumanRealityQuesti
 import HumanRealitySources from '@/components/human-reality/HumanRealitySources';
 import HumanRealityLog from '@/components/human-reality/HumanRealityLog';
 import HumanRealityLearned from '@/components/human-reality/HumanRealityLearned';
+import HumanPerspectiveActions from '@/components/outreach/HumanPerspectiveActions';
+import ContactForm from '@/components/outreach/ContactForm';
+import ContactPicker from '@/components/outreach/ContactPicker';
+import OutreachDraft from '@/components/outreach/OutreachDraft';
+import OutreachStatus from '@/components/outreach/OutreachStatus';
+import TurnIntoEvidence from '@/components/outreach/TurnIntoEvidence';
 import { HUMAN_REALITY_TOPICS, TOPICS_BY_ID, topicForVariable } from '@/lib/human-reality';
+import { loadContacts } from '@/lib/outreach';
+import { outreachStarted } from '@/lib/analytics/human-reality-events';
 import { WORK_VARIABLES } from '@/lib/uncertainty-model';
 
 function Shell({ children }) {
@@ -32,30 +45,51 @@ export default function HumanReality() {
   const params = new URLSearchParams(search);
   const recId = params.get('recId') || '';
   const variable = params.get('variable') || '';
+  const contactIdParam = params.get('contactId') || '';
 
   const [path, setPath] = useState(null);
+  const [me, setMe] = useState(null);
+  const [contacts, setContacts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [topicId, setTopicId] = useState(topicForVariable(variable)?.id || HUMAN_REALITY_TOPICS[0].id);
   const [selected, setSelected] = useState([]);
   const [saved, setSaved] = useState(null);
+  // 'choose' → 'contact' → 'outreach' → 'evidence'
+  const [step, setStep] = useState('choose');
+  const [contact, setContact] = useState(null);
 
   useEffect(() => {
     let alive = true;
     (async () => {
-      let p = null;
-      if (recId) p = await base44.entities.PathRecommendations.get(recId).catch(() => null);
-      if (!p) {
-        const rows = await base44.entities.PathRecommendations.filter({ is_primary_focus: true }, '-updated_date', 1).catch(() => []);
-        p = (Array.isArray(rows) && rows[0]) || null;
+      const [p, user, list] = await Promise.all([
+        recId ? base44.entities.PathRecommendations.get(recId).catch(() => null) : Promise.resolve(null),
+        base44.auth.me().catch(() => null),
+        loadContacts(),
+      ]);
+      let chosen = p;
+      if (!chosen) {
+        const focus = await base44.entities.PathRecommendations.filter({ is_primary_focus: true }, '-updated_date', 1).catch(() => []);
+        chosen = (Array.isArray(focus) && focus[0]) || null;
       }
-      if (!p) {
-        const rows = await base44.entities.PathRecommendations.list('-updated_date', 1).catch(() => []);
-        p = (Array.isArray(rows) && rows[0]) || null;
+      if (!chosen) {
+        const any = await base44.entities.PathRecommendations.list('-updated_date', 1).catch(() => []);
+        chosen = (Array.isArray(any) && any[0]) || null;
       }
-      if (alive) { setPath(p); setLoading(false); }
+      if (!alive) return;
+      setPath(chosen);
+      setMe(user);
+      setContacts(list);
+      // Arriving from Evidence on an existing contact resumes that outreach.
+      const existing = contactIdParam ? list.find(c => c.id === contactIdParam) : null;
+      if (existing) {
+        setContact(existing);
+        if (existing.topic_id) setTopicId(existing.topic_id);
+        setStep(existing.outreach_status === 'conversation_completed' ? 'evidence' : 'outreach');
+      }
+      setLoading(false);
     })();
     return () => { alive = false; };
-  }, [recId]);
+  }, [recId, contactIdParam]);
 
   const topic = TOPICS_BY_ID.get(topicId) || HUMAN_REALITY_TOPICS[0];
   const uncertainty = useMemo(() => {
@@ -102,39 +136,93 @@ export default function HumanReality() {
     );
   }
 
-  return (
-    <Shell>
+  const choose = (action) => {
+    outreachStarted({ pathId: path.id, cycleId: path.cycle_id, stage: topic.id });
+    setStep(action === 'log' ? 'evidence' : 'contact');
+  };
+
+  const header = (
+    <>
       <PageHeader
         showBack
-        title="Human Reality"
+        title="Get a Human Perspective"
         description="Some questions cannot be answered by simulated work. This is the experiment type for those."
       />
-
       <HumanRealityBrief brief={brief} pathName={path.path_name} />
+    </>
+  );
 
-      {/* The unknown is normally carried in from the recommendation. When a
-          student arrives here directly, they say which one they are chasing. */}
-      <section className="app-card p-6 sm:p-8">
-        <label htmlFor="hr-topic" className="tp-label" style={{ color: 'var(--ink-500)' }}>
-          What can&apos;t you learn from doing the work yourself?
-        </label>
-        <select id="hr-topic" value={topicId} onChange={e => setTopicId(e.target.value)}
-          className="tp-body mt-2 w-full rounded-[var(--r-control)] px-3 py-3"
-          style={{ border: '1px solid var(--border-light)', color: 'var(--ink-900)' }}>
-          {HUMAN_REALITY_TOPICS.map(t => <option key={t.id} value={t.id}>{t.label}</option>)}
-        </select>
-      </section>
+  return (
+    <Shell>
+      {header}
 
-      <HumanRealityQuestions questions={topic.questions} selected={selected} onChange={setSelected} />
-      <HumanRealitySources />
-      <HumanRealityLog
-        brief={brief}
-        path={path}
-        cycleId={path.cycle_id || ''}
-        uncertainty={uncertainty}
-        questions={selected}
-        onSaved={setSaved}
-      />
+      {step === 'choose' && (
+        <>
+          {/* The unknown is normally carried in from the recommendation. When a
+              student arrives here directly, they say which one they are chasing. */}
+          <section className="app-card p-6 sm:p-8">
+            <label htmlFor="hr-topic" className="tp-label" style={{ color: 'var(--ink-500)' }}>
+              What can&apos;t you learn from doing the work yourself?
+            </label>
+            <select id="hr-topic" value={topicId} onChange={e => setTopicId(e.target.value)}
+              className="tp-body mt-2 w-full rounded-[var(--r-control)] px-3 py-3"
+              style={{ border: '1px solid var(--border-light)', color: 'var(--ink-900)' }}>
+              {HUMAN_REALITY_TOPICS.map(t => <option key={t.id} value={t.id}>{t.label}</option>)}
+            </select>
+          </section>
+
+          <HumanRealityQuestions questions={topic.questions} selected={selected} onChange={setSelected} />
+          <HumanPerspectiveActions onChoose={choose} />
+          <ContactPicker contacts={contacts} onPick={(c) => { setContact(c); setStep('outreach'); }} />
+          <HumanRealitySources />
+        </>
+      )}
+
+      {step === 'contact' && (
+        <>
+          <HumanRealityQuestions questions={topic.questions} selected={selected} onChange={setSelected} />
+          <ContactForm
+            brief={brief}
+            path={path}
+            uncertainty={uncertainty}
+            questions={selected}
+            existing={contact}
+            onSaved={(c) => { setContact(c); setStep('outreach'); }}
+          />
+        </>
+      )}
+
+      {step === 'outreach' && contact && (
+        <>
+          <OutreachDraft
+            contact={contact}
+            path={path}
+            brief={brief}
+            studentName={me?.full_name || ''}
+            university={me?.university || ''}
+            onDrafted={(c) => c && setContact(c)}
+          />
+          <HumanRealityQuestions questions={contact.questions_to_ask?.length ? contact.questions_to_ask : topic.questions}
+            selected={selected} onChange={setSelected} />
+          <OutreachStatus contact={contact} onChange={setContact} />
+          {contact.outreach_status === 'conversation_completed' && (
+            <TurnIntoEvidence contact={contact} brief={brief} path={path} onContinue={() => setStep('evidence')} />
+          )}
+        </>
+      )}
+
+      {step === 'evidence' && (
+        <HumanRealityLog
+          brief={brief}
+          path={path}
+          cycleId={path.cycle_id || ''}
+          uncertainty={uncertainty}
+          questions={selected}
+          contact={contact}
+          experimentId={params.get('experimentId') || ''}
+          onSaved={setSaved}
+        />
+      )}
     </Shell>
   );
 }

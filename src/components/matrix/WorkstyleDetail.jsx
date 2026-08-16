@@ -78,7 +78,13 @@ export default function WorkstyleDetail({ row, onClose, scenarioResponses = [] }
       <ScenarioSourceBlock dimension={row.dimension} responses={scenarioResponses} />
 
       {/* And what people who do this work said, kept equally separate. */}
-      <HumanSourceBlock human={row.human} />
+      <HumanSourceBlock
+        human={row.human}
+        behavioural={{
+          tested: p.sufficient && row.levelKey !== 'unknown',
+          summary: row.interpretation || `${row.levelLabel} from the work you have done so far.`,
+        }}
+      />
 
       {['unknown', 'mixed'].includes(row.levelKey) && (
         <Link to="/test" className="app-cta tp-control mt-7 inline-flex">Test this further</Link>

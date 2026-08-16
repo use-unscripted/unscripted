@@ -37,6 +37,7 @@ export const HUMAN_REALITY_TOPICS = [
       'How often do deadlines significantly change your schedule?',
       'What does a genuinely difficult week look like?',
       'Which part of the workload is hardest to understand before entering the field?',
+      'What kind of person tends to tolerate this environment well?',
     ],
   },
   {
@@ -115,6 +116,19 @@ export const HUMAN_REALITY_SOURCES = [
 
 export const SOURCE_LABELS = new Map(HUMAN_REALITY_SOURCES.map(s => [s.id, s.label]));
 
+/**
+ * How far one person's account can be taken. Asked of the student rather than
+ * assumed, because one professional is never the whole career.
+ */
+export const REPRESENTATIVENESS_OPTIONS = [
+  { id: 'one_persons_perspective', label: "One person's perspective" },
+  { id: 'likely_relevant', label: 'Likely relevant' },
+  { id: 'strongly_relevant', label: 'Strongly relevant to this specific question' },
+  { id: 'not_sure', label: 'Not sure' },
+];
+
+export const REPRESENTATIVENESS_LABELS = new Map(REPRESENTATIVENESS_OPTIONS.map(o => [o.id, o.label]));
+
 export const CHANGED_EXPECTATION_OPTIONS = [
   { id: 'confirmed_what_i_expected', label: 'It confirmed what I expected' },
   { id: 'changed_what_i_expected', label: 'It changed what I expected' },
@@ -169,6 +183,10 @@ export function humanExposure(conversations = []) {
     topics: topics.size,
     changed_expectations: changed.length,
     level: done.length === 0 ? 'none' : done.length === 1 ? 'initial' : done.length < 4 ? 'some' : 'broad',
+    /* Named the way the matrix says it out loud. Deliberately a description of
+       exposure, never of fit: four conversations and no completed work is broad
+       exposure and no behavioural evidence at all. */
+    band: done.length === 0 ? 'None yet' : done.length === 1 ? 'Developing' : done.length < 4 ? 'Developing' : 'Established',
     label: done.length === 0 ? 'No human perspective yet'
       : done.length === 1 ? 'One conversation'
       : `${done.length} conversations`,
@@ -214,12 +232,26 @@ export function humanEvidenceByDimension(conversations = []) {
  * behavioural reading: a conversation changes what the student EXPECTS, and
  * only their own work changes what we have observed.
  */
-export async function saveConversation(payload, { path } = {}) {
+export async function saveConversation(payload, { path, contact } = {}) {
   const record = await base44.entities.HumanRealityConversation.create({
     ...payload,
     evidence_status: 'human_evidence_recorded',
     recorded_at: new Date().toISOString(),
   });
+
+  /* The contact is the source, not the evidence. It only records that this
+     conversation happened, so the same person can be asked something else
+     later without a second contact record being created. */
+  if (contact?.id) {
+    await base44.entities.OutreachContacts.update(contact.id, {
+      outreach_status: 'conversation_completed',
+      response_status: 'completed',
+    }).catch(() => {});
+  }
+
+  import('@/lib/analytics/human-reality-events')
+    .then(m => m.humanEvidenceSubmitted?.({ pathId: payload.path_id, cycleId: payload.cycle_id, stage: payload.topic_id }))
+    .catch(() => {});
 
   if (path?.id && payload.key_learning) {
     const insights = [...(path.human_reality_insights || []), {

@@ -1,6 +1,8 @@
+import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Users } from 'lucide-react';
 import OverrideActions from '@/components/next-test/OverrideActions';
+import { humanRealityRecommended } from '@/lib/analytics/human-reality-events';
 
 /**
  * The recommended next test, when that test is a conversation.
@@ -9,7 +11,15 @@ import OverrideActions from '@/components/next-test/OverrideActions';
  * open question cannot honestly be simulated, not as a softer alternative.
  */
 export default function HumanRealityNextTest({ recommendation, onAccept, onOverride, busy, exhausted }) {
-  const { human_reality: hr, path_name, why, start_to } = recommendation;
+  const { human_reality: hr, path_name, why, start_to, candidate } = recommendation;
+
+  /* Recorded where it is actually rendered: a recommendation nobody saw is not
+     a funnel stage, and this is the one that says a conversation was put
+     forward rather than a task. */
+  useEffect(() => {
+    humanRealityRecommended({ pathId: candidate?.path_id, stage: hr?.topic_id });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hr?.topic_id]);
 
   return (
     <section className="app-card p-6 sm:p-8" aria-labelledby="human-next-title">

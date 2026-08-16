@@ -21,6 +21,27 @@
     "path_id": {
       "type": "string"
     },
+    "path_name": {
+      "type": "string"
+    },
+    "uncertainty_id": {
+      "type": "string"
+    },
+    "uncertainty_label": {
+      "type": "string"
+    },
+    "topic_id": {
+      "type": "string"
+    },
+    "topic_label": {
+      "type": "string"
+    },
+    "decision_dimension_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
     "dedupe_key": {
       "type": "string"
     },
@@ -31,6 +52,9 @@
       "type": "string"
     },
     "role": {
+      "type": "string"
+    },
+    "industry": {
       "type": "string"
     },
     "archetype": {
@@ -49,11 +73,25 @@
       "type": "boolean",
       "default": false
     },
+    "other_contact_method": {
+      "type": "string"
+    },
     "search_url": {
       "type": "string"
     },
     "suggested_message": {
       "type": "string"
+    },
+    "outreach_format": {
+      "type": "string",
+      "enum": [
+        "linkedin",
+        "email",
+        "alumni_network",
+        "in_person",
+        "other"
+      ],
+      "default": "linkedin"
     },
     "questions_to_ask": {
       "type": "array",
@@ -63,6 +101,20 @@
     },
     "website_url": {
       "type": "string"
+    },
+    "how_known": {
+      "type": "string",
+      "enum": [
+        "own_connection",
+        "alumni",
+        "mentor",
+        "professor",
+        "university_professional",
+        "unscripted_professional",
+        "event_or_panel",
+        "cold_outreach",
+        "other"
+      ]
     },
     "contact_type": {
       "type": "string",
@@ -80,6 +132,20 @@
         "other"
       ],
       "default": "networking"
+    },
+    "outreach_status": {
+      "type": "string",
+      "enum": [
+        "identified",
+        "outreach_drafted",
+        "contacted",
+        "responded",
+        "conversation_scheduled",
+        "conversation_completed",
+        "no_response",
+        "archived"
+      ],
+      "default": "identified"
     },
     "reason_for_contact": {
       "type": "string"
@@ -154,9 +220,7 @@
       "format": "date-time"
     }
   },
-  "required": [
-    "name"
-  ],
+  "required": [],
   "rls": {
     "create": {
       "created_by_id": "{{user.id}}"
