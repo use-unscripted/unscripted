@@ -16,7 +16,7 @@ import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/lib/AuthContext';
 import PageHeader from '@/components/PageHeader';
 import PageSkeleton, { Sk } from '@/components/PageSkeleton';
-import DiSection from '@/components/admin/DiSection';
+import AdminSection from '@/components/admin/AdminSection';
 import FunnelStageTable from '@/components/admin/FunnelStageTable';
 import RepeatCyclePanel from '@/components/admin/RepeatCyclePanel';
 import UserClassPanel from '@/components/admin/UserClassPanel';
@@ -90,33 +90,33 @@ export default function AdminFunnel() {
           </p>
         </section>
 
-        <DiSection title="Real students, event by event" note="Each stage requires an event the product actually emitted. A stage with zero students means no student has been recorded reaching it, which is not the same as students abandoning it.">
+        <AdminSection title="Real students, event by event" note="Each stage requires an event the product actually emitted. A stage with zero students means no student has been recorded reaching it, which is not the same as students abandoning it.">
           <FunnelStageTable stages={data?.event_funnel?.stages || []} eventBacked />
-        </DiSection>
+        </AdminSection>
 
-        <DiSection title="Repeat cycles" note="A completed cycle needs all eight steps: selected, pre-expectations, experiment, evidence, post-experience, reflection, path update, decision. Creating an experiment record does not count.">
+        <AdminSection title="Repeat cycles" note="A completed cycle needs all seven recorded steps: selected, pre-expectations, experiment finished, evidence, post-experience, reflection, decision. Creating an experiment record does not count.">
           <RepeatCyclePanel cycles={data?.cycles} />
-        </DiSection>
+        </AdminSection>
 
-        <DiSection title="Internal and test activity" note="Kept visible so it is obvious how much of the raw record count came from us rather than from students.">
+        <AdminSection title="Internal and test activity" note="Kept visible so it is obvious how much of the raw record count came from us rather than from students.">
           <FunnelStageTable
             stages={(data?.internal_activity?.stages || []).map(s => ({ ...s, label: s.key.replace(/_/g, ' ') }))}
             eventBacked
           />
-        </DiSection>
+        </AdminSection>
 
-        <DiSection title="History, inferred from records" note="All of history, but every row here is an inference from stored rows. Do not read drop-off from this table.">
+        <AdminSection title="History, inferred from records" note="All of history, but every row here is an inference from stored rows. Do not read drop-off from this table.">
           <FunnelStageTable stages={data?.record_funnel?.stages || []} eventBacked={false} />
           <p className="tp-meta mt-3" style={{ color: 'var(--text-muted)' }}>{data?.record_funnel?.caveat}</p>
-        </DiSection>
+        </AdminSection>
 
-        <DiSection title="What can and cannot be reconstructed">
+        <AdminSection title="What can and cannot be reconstructed">
           <ReconstructionPanel reconstruction={data?.reconstruction} />
-        </DiSection>
+        </AdminSection>
 
-        <DiSection title="Account classification" note="Nothing is assigned automatically. An unclassified account stays out of the real-student numbers rather than being guessed at.">
+        <AdminSection title="Account classification" note="Nothing is assigned automatically. An unclassified account stays out of the real-student numbers rather than being guessed at.">
           <UserClassPanel accounts={data?.accounts || []} counts={counts} onChanged={load} />
-        </DiSection>
+        </AdminSection>
       </div>
     </main>
   );

@@ -161,7 +161,9 @@ export function eventFunnel({ events = [], users = [], include = REAL_CLASSES } 
       event: stage.event,
       students,
       records: bucket.records,
-      conversion_from_previous: previous ? pct(students, previous.students) : 100,
+      // The entry stage has nothing to convert from, and with nobody there it
+      // must not read as 100%.
+      conversion_from_previous: previous ? pct(students, previous.students) : (students > 0 ? 100 : null),
       conversion_from_entry: pct(students, entry),
       dropped_from_previous: previous ? Math.max(0, previous.students - students) : 0,
       median_hours_from_previous: medianHours,
