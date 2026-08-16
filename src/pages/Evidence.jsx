@@ -16,12 +16,14 @@ const TABS = [
   ['library',  'Library',     Library],
   ['proof',    'Proof',       FileText],
   ['reflect',  'Reflections', RotateCcw],
-  ['career-profile', 'Career Profile', UserCheck],
   // Professional, alumni, mentor and advisor interactions. One evidence
   // architecture, one more source type — never a separate contacts database.
   ['human', 'Human', Users],
   // Scenario evidence lives inside Evidence, never as its own nav item.
   ['signals', 'Signals', Compass],
+  /* Last, and set apart at the right-hand end of the rail: it is the standing
+     summary of everything the other tabs collect, not another collection. */
+  ['career-profile', 'Career Profile', UserCheck],
 ];
 
 export default function Evidence() {
@@ -49,7 +51,7 @@ export default function Evidence() {
                 type="button"
                 onClick={() => select(key)}
                 aria-current={isActive ? 'page' : undefined}
-                className="ui-press tp-body flex flex-1 items-center justify-center gap-1.5 rounded-[var(--r-control)] px-3.5 font-bold sm:flex-none sm:px-5"
+                className={`ui-press tp-body flex flex-1 items-center justify-center gap-1.5 rounded-[var(--r-control)] px-3.5 font-bold sm:flex-none sm:px-5${key === 'career-profile' ? ' sm:ml-auto' : ''}`}
                 style={
                   isActive
                     ? { background: 'var(--brand-navy-900)', color: '#fff', minHeight: '44px' }
