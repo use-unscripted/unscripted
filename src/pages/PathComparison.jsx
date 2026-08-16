@@ -29,6 +29,7 @@ import { characteristicSignals } from '@/lib/evidence-patterns';
 import { supportFor } from '@/lib/path-support';
 import { useSupportIndex } from '@/hooks/usePathSupport';
 import PathSupportBadge from '@/components/paths/PathSupportBadge';
+import { pathInvestigated } from '@/lib/analytics/decision-funnel-events';
 
 const STATUS_CFG = {
   active:        { label: 'Active',         bg: 'var(--success-50)', text: 'var(--success-700)' },
@@ -676,6 +677,14 @@ export default function PathComparison() {
 
   const cardProps = { experiments, missions, proof, reflections, profile, measurements, signals, supportIndex, onAction: handleAction };
 
+  /* Opening a path is the moment it was actually read, which is what
+     "investigated" means in the funnel. Deduped per path by the emitter, so
+     reopening the same one does not re-count it. */
+  const openPath = useCallback((p) => {
+    setExpandedId(p.id);
+    pathInvestigated({ pathId: p.id });
+  }, []);
+
   return (
     <main className="app-page">
       {showCreate && (
@@ -816,7 +825,7 @@ export default function PathComparison() {
                   path={p}
                   {...cardProps}
                   expanded={false}
-                  onToggle={() => setExpandedId(p.id)}
+                  onToggle={() => openPath(p)}
                   onAutoAssess={() => handleAutoAssess(p)}
                   assessing={assessingIds.has(p.id)}
                 />
