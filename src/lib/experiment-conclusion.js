@@ -44,10 +44,12 @@ export async function loadConclusionContext(experimentIdParam) {
      shared reading the Test screen uses, so the two screens agree. Only if
      nothing is owed does this fall back to the cycle and to open work. */
   if (!experiment) {
-    const { awaitingReflection } = await loadExperimentProgress().catch(() => ({ awaitingReflection: [] }));
-    const owed = awaitingReflection.find(r => !cycle?.selected_path_name || r.pathName === cycle.selected_path_name)
-      || awaitingReflection[0]
-      || null;
+    /* Same reading, same scope as the Test screen: the test the student is on if
+       its work is finished, otherwise the oldest one on this path that still
+       owes a reflection. */
+    const { current, awaitingReflection } = await loadExperimentProgress({ pathName: cycle?.selected_path_name || undefined })
+      .catch(() => ({ current: null, awaitingReflection: [] }));
+    const owed = (current?.awaitingReflection ? current : null) || awaitingReflection[0] || null;
     experiment = owed?.experiment || null;
   }
   if (!experiment && cycle?.experiment_id) experiment = own.find(e => e.id === cycle.experiment_id) || null;

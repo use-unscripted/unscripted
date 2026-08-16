@@ -7,7 +7,7 @@
 import { Link } from 'react-router-dom';
 import { CheckCircle2, PlayCircle, Clock } from 'lucide-react';
 
-function Row({ row }) {
+function Row({ row, isCurrent }) {
   const awaiting = row.awaitingReflection;
   const to = awaiting ? `/reflect?experimentId=${row.id}` : `/experiment?experimentId=${row.id}`;
   const Icon = awaiting ? CheckCircle2 : row.status === 'in_progress' ? PlayCircle : Clock;
@@ -20,6 +20,9 @@ function Row({ row }) {
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
+          {isCurrent && (
+            <p className="tp-eyebrow mb-1" style={{ color: 'var(--brand-gold-700)' }}>The test you are on</p>
+          )}
           <p className="tp-body font-bold truncate" style={{ color: 'var(--text-primary)' }}>{row.title}</p>
           {row.pathName && (
             <p className="tp-meta mt-0.5 truncate" style={{ color: 'var(--text-muted)' }}>{row.pathName}</p>
@@ -50,7 +53,7 @@ function Row({ row }) {
 
 const SHOWN = 6;
 
-export default function ActiveExperimentsPanel({ rows = [] }) {
+export default function ActiveExperimentsPanel({ rows = [], currentId = null }) {
   if (!rows.length) return null;
   const shown = rows.slice(0, SHOWN);
   const hidden = rows.length - shown.length;
@@ -64,7 +67,7 @@ export default function ActiveExperimentsPanel({ rows = [] }) {
         Where each one stands. Finishing the steps of one opens its reflection.
       </p>
       <div className="mt-4 space-y-3">
-        {shown.map(row => <Row key={row.id} row={row} />)}
+        {shown.map(row => <Row key={row.id} row={row} isCurrent={row.id === currentId} />)}
       </div>
       {hidden > 0 && (
         <p className="tp-meta mt-3" style={{ color: 'var(--text-muted)' }}>

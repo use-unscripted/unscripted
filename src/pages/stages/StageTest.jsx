@@ -19,16 +19,20 @@ import { Sk } from '@/components/PageSkeleton';
 export default function StageTest() {
   const { journey, focus } = useJourneyFocus();
   const { support, index, loading: supportLoading } = usePathSupport(journey?.currentPath?.path_name);
-  /* One shared reading of where every experiment stands, so this screen and the
-     reflection screen can never disagree about which one is finished. */
+  /* One shared reading of where every experiment stands, scoped to the path the
+     cycle says is being tested — the same scope My Journey uses, so the headline
+     test here is the one My Journey names rather than a test on another path. */
+  const pathName = journey?.currentPath?.path_name;
   const [progress, setProgress] = useState(null);
   useEffect(() => {
+    if (!pathName) return;
     let live = true;
-    loadExperimentProgress()
+    setProgress(null);
+    loadExperimentProgress({ pathName })
       .then(p => { if (live) setProgress(p); })
       .catch(() => { if (live) setProgress(null); });
     return () => { live = false; };
-  }, []);
+  }, [pathName]);
 
   if (!journey) return <StageShell stage="test"><Sk h={280} r={16} /></StageShell>;
   if (!journey.currentPath) {
@@ -101,8 +105,8 @@ export default function StageTest() {
         experiment={exp}
         action={action}
       />
-      {/* Every experiment still open, across every path, with its progress. */}
-      <ActiveExperimentsPanel rows={progress?.active || []} />
+      {/* The rest of the open work on this path, with the current test marked. */}
+      <ActiveExperimentsPanel rows={progress?.active || []} currentId={currentRow?.id} />
       <UnknownsChecklist progress={focus?.progress} pathId={journey.currentPath.id} />
       {/* No test set up yet: the validated library is the first place to look,
           and it says plainly when this career is not covered. */}

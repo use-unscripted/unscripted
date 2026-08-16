@@ -76,10 +76,23 @@ export async function loadExperimentProgress({ pathName } = {}) {
 
   /* Anything the student is still carrying: work in progress, or work finished
      that has not been concluded. Completed and reflected experiments are done. */
-  const active = rows.filter(r => r.open || r.awaitingReflection);
   const started = rows.find(r => r.open) || null;
-  const testing = rows.find(r => r.open) || rows.find(r => r.planned) || null;
+  const planned = rows.find(r => r.planned) || null;
+  const testing = started || planned;
   const awaitingReflection = rows.filter(r => r.awaitingReflection);
+
+  /* The test the student is on. Deliberately the same rule My Journey has always
+     used — the experiment whose status is in_progress, then work set up and
+     waiting — so the headline test is identical wherever it is shown. A student
+     can carry several open experiments, but only one is "the test you are on".
+     Only when nothing is under way does a reflection that is owed take over. */
+  const current = rows.find(r => r.status === 'in_progress') || planned || awaitingReflection[0] || null;
+
+  /* Anything the student is still carrying, with the current test always in it
+     even if its own steps are already finished. */
+  const active = rows
+    .filter(r => r.open || r.awaitingReflection || r.id === current?.id)
+    .sort((a, b) => (a.id === current?.id ? -1 : b.id === current?.id ? 1 : 0));
 
   return {
     rows,
@@ -87,8 +100,6 @@ export async function loadExperimentProgress({ pathName } = {}) {
     active,
     testing,
     awaitingReflection,
-    /* The one experiment to act on: work already under way, then a reflection
-       that is owed, then work set up but not started. Both screens use this. */
-    current: started || awaitingReflection[0] || testing || null,
+    current,
   };
 }
