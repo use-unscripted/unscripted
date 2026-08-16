@@ -18,6 +18,7 @@ import JourneyHistory from '@/components/matrix/JourneyHistory';
 import NextBestExperimentPanel from '@/components/next-test/NextBestExperimentPanel';
 import ScenarioEvidenceInMatrix from '@/components/matrix/ScenarioEvidenceInMatrix';
 import { loadEvidenceConfig } from '@/lib/evidence-weights';
+import { withScenarioSignals } from '@/lib/matrix-workstyle-scenarios';
 import { Reveal } from '@/components/motion';
 
 const track = (eventName, properties) => base44.analytics.track({ eventName, properties });
@@ -129,7 +130,7 @@ export default function CareerDecisionMatrix() {
           </Reveal>
 
           <Reveal y={16}>
-            <WorkstyleMatrix rows={data.workstyle} onOpen={openDimension} />
+            <WorkstyleMatrix rows={withScenarioSignals(data.workstyle, scenarioResponses)} onOpen={openDimension} />
           </Reveal>
 
           <div>

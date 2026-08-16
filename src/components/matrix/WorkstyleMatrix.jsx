@@ -13,11 +13,11 @@ const STYLE = {
 };
 
 export default function WorkstyleMatrix({ rows, onOpen }) {
-  const shown = rows.filter(r => r.evidenceCount > 0 || r.selfReported).slice(0, 12);
+  const shown = rows.filter(r => r.evidenceCount > 0 || r.selfReported || r.scenarioLabel).slice(0, 12);
 
   return (
     <section className="app-card p-6">
-      <h2 className="tp-section" style={{ color: 'var(--text-primary)' }}>What we&apos;re learning about you</h2>
+      <h2 className="tp-section" style={{ color: 'var(--text-primary)' }}>What we&apos;re learning about how you work</h2>
       <p className="tp-body mt-2" style={{ color: 'var(--text-secondary)' }}>
         Read across every direction you have tested. These describe the evidence so far, not who you are.
       </p>
@@ -39,6 +39,14 @@ export default function WorkstyleMatrix({ rows, onOpen }) {
                     style={{ color: s.color, background: s.bg }}>
                     <span aria-hidden="true" className="mr-1.5 font-mono">{s.mark}</span>{r.levelLabel}
                   </span>
+                  {/* Scenario answers, in their own badge and their own words, so
+                      a hypothetical signal is never read as tested evidence. */}
+                  {r.scenarioLabel && (
+                    <span className="tp-meta hidden shrink-0 rounded-full px-2.5 py-1 font-semibold sm:inline"
+                      style={{ color: 'var(--brand-navy-700)', background: 'var(--info-50)' }}>
+                      {r.scenarioLabel}
+                    </span>
+                  )}
                   <span className="hidden w-[120px] shrink-0 items-center gap-2 sm:flex">
                     <span className="h-2 flex-1 overflow-hidden rounded-full" style={{ background: 'var(--ink-100)' }}>
                       <span className="progress-fill block h-full rounded-full" style={{ width: `${r.confidence}%`, background: s.color }} />
