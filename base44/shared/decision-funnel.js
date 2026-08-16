@@ -99,11 +99,26 @@ export function eventFunnel({ events = [], users = [], include = REAL_CLASSES } 
   const { byId, counts, total } = classifyUsers(users);
   const allowed = new Set(include);
 
-  // A row's own analytics_class is what it was when it happened; the account's
-  // current class is the fallback. Neither is ever guessed.
+  /**
+   * The ACCOUNT's current classification decides, not the class stamped on the
+   * row when it was written.
+   *
+   * This ordering is the whole point of the exercise: most of the existing
+   * activity was recorded before anyone was classified, and the fix for
+   * founder and QA runs polluting the numbers is to classify the account and
+   * have its whole history follow. If the stamp won, an account marked
+   * internal_test today would keep counting as a real student for everything it
+   * did yesterday, which is the bug this endpoint exists to remove.
+   *
+   * The stamp is the fallback, for a row whose account no longer exists or was
+   * not in the page of accounts read. Neither path guesses: an account nobody
+   * classified is unclassified, and unclassified is not counted as real.
+   */
   const classOf = (row) => {
+    const current = byId.get(row?.created_by_id) || byId.get(row?.user_id) || null;
+    if (current && current !== 'unclassified') return current;
     const stamped = ANALYTICS_CLASSES.includes(row?.analytics_class) ? row.analytics_class : null;
-    return stamped || byId.get(row?.created_by_id) || byId.get(row?.user_id) || 'unclassified';
+    return current || stamped || 'unclassified';
   };
 
   const rows = (events || []).filter(e => allowed.has(classOf(e)));
@@ -178,8 +193,12 @@ export function eventFunnel({ events = [], users = [], include = REAL_CLASSES } 
 export function cycleMetrics({ events = [], users = [], include = REAL_CLASSES } = {}) {
   const { byId } = classifyUsers(users);
   const allowed = new Set(include);
-  const classOf = (row) => (ANALYTICS_CLASSES.includes(row?.analytics_class) ? row.analytics_class : null)
-    || byId.get(row?.created_by_id) || byId.get(row?.user_id) || 'unclassified';
+  // Same precedence as eventFunnel: the account's current class decides.
+  const classOf = (row) => {
+    const current = byId.get(row?.created_by_id) || byId.get(row?.user_id) || null;
+    if (current && current !== 'unclassified') return current;
+    return current || (ANALYTICS_CLASSES.includes(row?.analytics_class) ? row.analytics_class : null) || 'unclassified';
+  };
 
   // experimentKey → { user, path, events: Map<name, ms> }
   const work = new Map();
