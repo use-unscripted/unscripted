@@ -60,12 +60,6 @@
     "best_for": {
       "type": "string"
     },
-    "estimated_minutes_low": {
-      "type": "number"
-    },
-    "estimated_minutes_high": {
-      "type": "number"
-    },
     "mapping_reviewed": {
       "type": "boolean",
       "default": false
@@ -75,6 +69,13 @@
       "default": false
     },
     "field_calibration_note": {
+      "type": "string"
+    },
+    "strategic_priority": {
+      "type": "boolean",
+      "default": false
+    },
+    "priority_note": {
       "type": "string"
     },
     "validation_status": {

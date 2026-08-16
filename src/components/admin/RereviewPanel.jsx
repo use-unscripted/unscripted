@@ -18,20 +18,50 @@ export default function RereviewPanel({ row, onAssign, onSubmitReview }) {
   const history = reviews.filter(r => Number(r.experiment_version) !== version);
 
   const [reviewer, setReviewer] = useState({ reviewer_id: '', reviewer_display: v.pending_reviewer_display || '' });
+  /* The reviewer rubric, in full. Every rating is out of 5 and every list is one
+     item per line, so a review says what was realistic, what matters, whether
+     the task genuinely exposes the dimensions it claims, and what the experiment
+     cannot show. "Cannot be simulated" is recorded against the experiment as
+     well as the review, because it is what students are shown. */
+  const RATINGS = [
+    ['realism_rating', 'Career realism 1-5'],
+    ['entry_level_realism_rating', 'Entry-level realism 1-5'],
+    ['importance_rating', 'Importance of task 1-5'],
+    ['difficulty_rating', 'Appropriate simplification 1-5'],
+    ['terminology_rating', 'Terminology 1-5'],
+    ['workstyle_validity_rating', 'Genuinely exposes its dimensions 1-5'],
+  ];
+  const LISTS = [
+    ['missing_elements', 'Missing elements (one per line)'],
+    ['misleading_elements', 'Misleading elements (one per line)'],
+    ['cannot_simulate', 'What this cannot simulate (one per line)'],
+  ];
+
   const [form, setForm] = useState({
     reviewer_display: v.pending_reviewer_display || '',
     reviewer_role: '',
+    relevant_experience: '',
     realism_rating: '',
+    entry_level_realism_rating: '',
+    importance_rating: '',
+    difficulty_rating: '',
+    terminology_rating: '',
     workstyle_validity_rating: '',
+    missing_elements: '',
+    misleading_elements: '',
+    cannot_simulate: '',
     recommendations: '',
   });
   const [busy, setBusy] = useState('');
 
+  const num = (x) => (x === '' || x === null ? null : Number(x));
+  const lines = (x) => String(x || '').split('\n').map(s => s.trim()).filter(Boolean);
+
   const run = async (key, fn) => { setBusy(key); try { await fn(); } finally { setBusy(''); } };
   const decide = (approval_status) => run(approval_status, () => onSubmitReview(row, {
     ...form,
-    realism_rating: form.realism_rating === '' ? null : Number(form.realism_rating),
-    workstyle_validity_rating: form.workstyle_validity_rating === '' ? null : Number(form.workstyle_validity_rating),
+    ...Object.fromEntries(RATINGS.map(([key]) => [key, num(form[key])])),
+    ...Object.fromEntries(LISTS.map(([key]) => [key, lines(form[key])])),
     approval_status,
   }));
 
@@ -112,12 +142,18 @@ export default function RereviewPanel({ row, onAssign, onSubmitReview }) {
             onChange={e => setForm(s => ({ ...s, reviewer_display: e.target.value }))} />
           <input className={box} placeholder="Reviewer role" value={form.reviewer_role}
             onChange={e => setForm(s => ({ ...s, reviewer_role: e.target.value }))} />
-          <input className={box} type="number" min="1" max="5" placeholder="Realism 1-5" value={form.realism_rating}
-            onChange={e => setForm(s => ({ ...s, realism_rating: e.target.value }))} />
-          <input className={box} type="number" min="1" max="5" placeholder="Workstyle validity 1-5"
-            value={form.workstyle_validity_rating}
-            onChange={e => setForm(s => ({ ...s, workstyle_validity_rating: e.target.value }))} />
+          <input className={`${box} sm:col-span-2`} placeholder="Relevant recent experience"
+            value={form.relevant_experience}
+            onChange={e => setForm(s => ({ ...s, relevant_experience: e.target.value }))} />
+          {RATINGS.map(([key, label]) => (
+            <input key={key} className={box} type="number" min="1" max="5" placeholder={label} value={form[key]}
+              onChange={e => setForm(s => ({ ...s, [key]: e.target.value }))} />
+          ))}
         </div>
+        {LISTS.map(([key, label]) => (
+          <textarea key={key} className={`${box} mt-2`} rows={2} placeholder={label} value={form[key]}
+            onChange={e => setForm(s => ({ ...s, [key]: e.target.value }))} />
+        ))}
         <textarea className={`${box} mt-2`} rows={2} placeholder="Comments" value={form.recommendations}
           onChange={e => setForm(s => ({ ...s, recommendations: e.target.value }))} />
         <div className="mt-2 flex flex-wrap gap-1.5">

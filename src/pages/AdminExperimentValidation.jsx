@@ -5,9 +5,17 @@ import { SkCards } from '@/components/PageSkeleton';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/lib/AuthContext';
 import ValidationAdminRow from '@/components/admin/ValidationAdminRow';
+import ValidationPriorityQueue from '@/components/admin/ValidationPriorityQueue';
+import PathCoveragePanel from '@/components/admin/PathCoveragePanel';
 import { loadValidationAdmin, updateValidation, markRewritten, assignReviewer, submitRereview } from '@/lib/validation-admin';
+import { loadValidationPriority, setStrategicPriority } from '@/lib/validation-priority';
 
+/* The first two tabs answer "where should the next professional hour go?", which
+   is a different question from "what is on file", so they are views rather than
+   filters of the record list. */
 const TABS = [
+  { id: 'priority', label: 'Validate next' },
+  { id: 'coverage', label: 'Path coverage' },
   { id: 'needs_rereview', label: 'Needs re-review' },
   { id: 'draft', label: 'Draft' },
   { id: 'published', label: 'Published' },
@@ -19,7 +27,8 @@ export default function AdminExperimentValidation() {
   const { user } = useAuth();
   const admin = user?.role === 'admin';
   const [state, setState] = useState(null);
-  const [tab, setTab] = useState('all');
+  const [priority, setPriority] = useState(null);
+  const [tab, setTab] = useState('priority');
   const [busy, setBusy] = useState(false);
 
   const [error, setError] = useState('');
@@ -29,10 +38,14 @@ export default function AdminExperimentValidation() {
     /* The field-calibration gate is computed across students, so it comes from
        the aggregate function rather than this page: the browser never sees the
        responses behind it. If it cannot be loaded, nothing is blocked. */
-    const [next, di] = await Promise.all([
+    const [next, di, ranked] = await Promise.all([
       loadValidationAdmin().catch(() => ({ rows: [] })),
       base44.functions.invoke('decisionIntelligence', {}).then(r => r?.data).catch(() => null),
+      /* Ranking and coverage read across every student, so they come from the
+         server too: this browser can only see its own experiments and paths. */
+      loadValidationPriority().catch(() => null),
     ]);
+    setPriority(ranked);
     const gates = new Map((di?.experiments || [])
       .filter(r => r.blueprint_key && r.field_calibration)
       .map(r => [r.blueprint_key, r.field_calibration]));
@@ -50,7 +63,8 @@ export default function AdminExperimentValidation() {
 
   const rows = useMemo(() => {
     const all = state?.rows || [];
-    return tab === 'all' ? all : all.filter(r => (r.validation.validation_status || 'draft') === tab);
+    if (tab === 'all' || tab === 'priority' || tab === 'coverage') return all;
+    return all.filter(r => (r.validation.validation_status || 'draft') === tab);
   }, [state, tab]);
 
   if (!admin) {
@@ -76,6 +90,13 @@ export default function AdminExperimentValidation() {
   const rewritten = async (row) => { await markRewritten(row); await load(); };
   const assign = async (row, reviewer) => { await assignReviewer(row, reviewer); await load(); };
   const review = async (row, form) => { await submitRereview(row, form); await load(); };
+  /* The staff lever behind the strategic-importance factor. Five points of the
+     score, on purpose: it must be able to break a tie, never to outrank what
+     real students actually did. */
+  const strategic = async (row, value) => {
+    await setStrategicPriority(row.validation_id, { strategic_priority: value });
+    await load();
+  };
 
   return (
     <main className="mx-auto max-w-5xl px-5 py-10 sm:px-8">
@@ -99,9 +120,13 @@ export default function AdminExperimentValidation() {
 
       <div className="mb-4 flex flex-wrap gap-1">
         {TABS.map(t => {
-          const count = t.id === 'all'
-            ? (state?.rows || []).length
-            : (state?.rows || []).filter(r => (r.validation.validation_status || 'draft') === t.id).length;
+          const count = t.id === 'priority'
+            ? (priority?.shortlist || []).length
+            : t.id === 'coverage'
+              ? (priority?.path_coverage || []).length
+              : t.id === 'all'
+                ? (state?.rows || []).length
+                : (state?.rows || []).filter(r => (r.validation.validation_status || 'draft') === t.id).length;
           return (
             <button key={t.id} onClick={() => setTab(t.id)}
               className="flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold"
@@ -118,7 +143,13 @@ export default function AdminExperimentValidation() {
         })}
       </div>
 
-      {!state ? <SkCards /> : rows.length === 0 ? (
+      {tab === 'priority' || tab === 'coverage' ? (
+        !priority ? <SkCards /> : tab === 'priority' ? (
+          <ValidationPriorityQueue data={priority} onStrategic={strategic} />
+        ) : (
+          <PathCoveragePanel paths={priority.path_coverage} />
+        )
+      ) : !state ? <SkCards /> : rows.length === 0 ? (
         <div className="rounded-[var(--r-surface)] border border-dashed border-[color:var(--ink-200)] p-10 text-center">
           <Inbox size={22} className="mx-auto mb-2 text-[color:var(--ink-400)]" />
           <p className="text-sm font-semibold text-[color:var(--surface-dark-900)]">No validation records in this view.</p>

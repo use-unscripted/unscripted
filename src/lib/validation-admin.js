@@ -231,10 +231,23 @@ export async function submitRereview(row, review) {
     share_identity: Boolean(review.share_identity),
     realism_rating: review.realism_rating ?? null,
     entry_level_realism_rating: review.entry_level_realism_rating ?? null,
+    importance_rating: review.importance_rating ?? null,
+    difficulty_rating: review.difficulty_rating ?? null,
     workstyle_validity_rating: review.workstyle_validity_rating ?? null,
     terminology_rating: review.terminology_rating ?? null,
+    missing_elements: review.missing_elements || [],
+    misleading_elements: review.misleading_elements || [],
     recommendations: review.recommendations || null,
   });
+
+  /* What a professional says the experiment cannot show is recorded on the
+     experiment as well as on the review, because that list is what students are
+     shown. Merged, never replaced: an earlier reviewer's limitation does not
+     stop being true because a later reviewer did not repeat it. */
+  const cannotSimulate = Array.isArray(review.cannot_simulate) ? review.cannot_simulate.filter(Boolean) : [];
+  const notRepresented = cannotSimulate.length
+    ? [...new Set([...(v.career_characteristics_not_represented || []), ...cannotSimulate])]
+    : null;
 
   const current = row.versions?.find(x => x.is_current);
   if (current) {
@@ -250,11 +263,16 @@ export async function submitRereview(row, review) {
   const reviews = [...row.reviews, created];
   const approvedHere = reviews.some(r =>
     r.approval_status === 'approved' && Number(r.experiment_version) === Number(v.experiment_version || 1));
-  const nextValidation = { ...v, validation_status: approvedHere ? 'published' : 'needs_rereview' };
+  const nextValidation = {
+    ...v,
+    validation_status: approvedHere ? 'published' : 'needs_rereview',
+    ...(notRepresented ? { career_characteristics_not_represented: notRepresented } : {}),
+  };
   const strength = experimentStrength({ validation: nextValidation, sources: row.sources, reviews });
 
   await base44.entities.ExperimentValidation.update(v.id, {
     validation_status: nextValidation.validation_status,
+    ...(notRepresented ? { career_characteristics_not_represented: notRepresented } : {}),
     ...(approvedHere ? { rereview_reason: null, rereview_change_labels: [] } : {}),
     ...strengthSnapshot(strength, nextValidation),
     last_validated_at: now(),
