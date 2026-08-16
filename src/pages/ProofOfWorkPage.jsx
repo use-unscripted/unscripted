@@ -122,18 +122,17 @@ function ProofCard({ entry, missionsMap, experimentsMap, onDelete, onNavigateToP
 
   const mission = safeEntry.mission_id ? (missionsMap[safeEntry.mission_id] || null) : null;
   const experiment = safeEntry.experiment_id ? (experimentsMap[safeEntry.experiment_id] || null) : null;
-  const [showPreview, setShowPreview] = useState(false);
+  // Which attachment the preview is showing, or null.
+  const [preview, setPreview] = useState(null);
   const [menuOpen, setMenuOpen] = useState(false);
 
   if (!entry || !entry.id) return null;
-
-  const vid = isVideoFile(safeEntry.file_name, safeEntry.mime_type);
 
   // min-w-0: grid items default to min-width:auto, so a long filename or URL
   // stretches the card past its track and scrolls the whole page sideways.
   return (
     <div className="tp-card-body min-w-0 rounded-[var(--r-surface)] border border-[color:var(--ink-200)] bg-white">
-      {showPreview && <FilePreviewModal entry={safeEntry} onClose={() => setShowPreview(false)} />}
+      {preview && <FilePreviewModal entry={preview} onClose={() => setPreview(null)} />}
 
       {/* Header */}
       <div className="flex items-start justify-between gap-3 mb-3">
@@ -168,21 +167,28 @@ function ProofCard({ entry, missionsMap, experimentsMap, onDelete, onNavigateToP
         </div>
       </div>
 
-      {/* File preview row */}
-      {safeEntry.file_url && (
-        <div className="mb-3 flex items-center gap-3 rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] px-3 py-2.5">
-          <div className="shrink-0 w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'var(--ink-100)' }}>
-            <FileIcon name={safeEntry.file_name} mime={safeEntry.mime_type} size={16} />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="tp-meta font-semibold text-[color:var(--ink-700)] truncate">{safeEntry.file_name || 'Attached file'}</p>
-            {safeEntry.file_size && <p className="tp-meta text-[color:var(--ink-400)]">{fmtSize(safeEntry.file_size)}</p>}
-          </div>
-          <button onClick={() => setShowPreview(true)}
-            className="tp-meta shrink-0 flex items-center gap-1.5 rounded-lg px-3.5 py-2 font-semibold text-white"
-            style={{ background: 'var(--brand-navy-900)' }}>
-            {vid ? <><Play size={13} />Play</> : <><ExternalLink size={13} />Open</>}
-          </button>
+      {/* Attachments. One row each, all of them openable. */}
+      {safeEntry.files.length > 0 && (
+        <div className="mb-3 space-y-2">
+          {safeEntry.files.length > 1 && (
+            <p className="tp-meta text-[color:var(--ink-400)]">{safeEntry.files.length} files attached</p>
+          )}
+          {safeEntry.files.map((f, i) => (
+            <div key={f.file_url + i} className="flex items-center gap-3 rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] px-3 py-2.5">
+              <div className="shrink-0 w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'var(--ink-100)' }}>
+                <FileIcon name={f.file_name} mime={f.mime_type} size={16} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="tp-meta font-semibold text-[color:var(--ink-700)] truncate">{f.file_name || 'Attached file'}</p>
+                {f.file_size ? <p className="tp-meta text-[color:var(--ink-400)]">{fmtSize(f.file_size)}</p> : null}
+              </div>
+              <button onClick={() => setPreview(f)}
+                className="tp-meta shrink-0 flex items-center gap-1.5 rounded-lg px-3.5 py-2 font-semibold text-white"
+                style={{ background: 'var(--brand-navy-900)' }}>
+                {isVideoFile(f.file_name, f.mime_type) ? <><Play size={13} />Play</> : <><ExternalLink size={13} />Open</>}
+              </button>
+            </div>
+          ))}
         </div>
       )}
 
