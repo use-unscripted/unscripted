@@ -7,12 +7,15 @@ import SimEntryCard from '@/components/worksim/SimEntryCard';
 import LibraryTestPicker from '@/components/library/LibraryTestPicker';
 import ExperimentScenarios from '@/components/scenarios/ExperimentScenarios';
 import JourneyEmptyState from '@/components/journey/JourneyEmptyState';
+import UnsupportedPathNotice from '@/components/paths/UnsupportedPathNotice';
+import usePathSupport from '@/hooks/usePathSupport';
 import useJourneyFocus from '@/hooks/useJourneyFocus';
 import { Sk } from '@/components/PageSkeleton';
 
 /** Test: the one test running against the path you chose, and what to test next. */
 export default function StageTest() {
   const { journey, focus } = useJourneyFocus();
+  const { support, index, loading: supportLoading } = usePathSupport(journey?.currentPath?.path_name);
 
   if (!journey) return <StageShell stage="test"><Sk h={280} r={16} /></StageShell>;
   if (!journey.currentPath) {
@@ -23,10 +26,40 @@ export default function StageTest() {
     );
   }
 
+  const exp = journey.nextExperiment;
+  /* The Supported Path Gate. A direction the library cannot carry a cycle on does
+     not enter the normal Test flow: no new test is offered, no strength or
+     learning value is shown, and work already in progress on it is untouched. */
+  const gated = Boolean(support && !support.testable);
+
+  if (supportLoading) {
+    return <StageShell stage="test"><Sk h={280} r={16} /></StageShell>;
+  }
+
+  if (gated) {
+    return (
+      <StageShell stage="test">
+        <UnsupportedPathNotice path={journey.currentPath} support={support} index={index} />
+        {/* Work already started on this direction stays available and finishable. */}
+        {exp && (
+          <HypothesisFocus
+            focus={focus || { name: journey.currentPath.path_name }}
+            experiment={exp}
+            action={{
+              label: exp.status === 'in_progress' ? 'Continue Test' : 'Open Test',
+              to: `/experiment?experimentId=${exp.id}`,
+              sub: exp.title,
+            }}
+          />
+        )}
+        <UnknownsChecklist progress={focus?.progress} pathId={journey.currentPath.id} />
+      </StageShell>
+    );
+  }
+
   /* The button says where the test itself stands, not where the cycle stands:
      started work continues, planned work starts, and with nothing set up yet it
      sets one up. */
-  const exp = journey.nextExperiment;
   const action = exp
     ? {
         label: exp.status === 'in_progress' ? 'Continue Test' : 'Start Test',

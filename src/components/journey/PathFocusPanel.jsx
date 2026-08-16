@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import { ChevronLeft, ChevronRight, ArrowLeft, ArrowRight, Loader2, AlertCircle, Check } from 'lucide-react';
 import { COMPARISON_FIELDS, RISK_LABEL } from '@/components/journey/pathComparisonFields';
+import { useSupportIndex } from '@/hooks/usePathSupport';
+import { supportFor, UNSUPPORTED_HEADLINE } from '@/lib/path-support';
+import PathSupportBadge from '@/components/paths/PathSupportBadge';
 
 /**
  * One path at a time, one part of its description at a time.
@@ -23,6 +26,10 @@ export default function PathFocusPanel({
 }) {
   const [openId, setOpenId] = useState(null);
   const [fieldIndex, setFieldIndex] = useState(0);
+  // Whether each direction can carry a full cycle. Derived from stored library
+  // records, so a direction becomes testable as soon as those records exist.
+  const { data: supportIndex } = useSupportIndex();
+  const supportOf = (p) => (supportIndex && p ? supportFor(p.path_name, supportIndex) : null);
 
   if (!paths.length) return null;
 
@@ -63,6 +70,11 @@ export default function PathFocusPanel({
                   {(p.path_category || p.risk_level) && (
                     <span className="tp-meta block" style={{ color: 'var(--ink-400)' }}>
                       {[p.path_category, RISK_LABEL[p.risk_level]].filter(Boolean).join(' · ')}
+                    </span>
+                  )}
+                  {supportOf(p) && (
+                    <span className="mt-1.5 block">
+                      <PathSupportBadge support={supportOf(p)} showDetail={false} />
                     </span>
                   )}
                 </span>
@@ -136,7 +148,19 @@ export default function PathFocusPanel({
         </p>
       )}
 
-      {onSelect && path.id !== currentPathId && (
+      {/* A direction the library cannot carry a cycle on is never offered as a
+          test. It stays saved and readable; the student is not pushed elsewhere. */}
+      {onSelect && path.id !== currentPathId && supportOf(path) && !supportOf(path).testable && (
+        <div className="mt-5 rounded-[var(--r-control)] p-4" style={{ background: 'var(--warning-50)' }}>
+          <p className="tp-body font-semibold" style={{ color: 'var(--warning-700)' }}>{UNSUPPORTED_HEADLINE}</p>
+          <p className="tp-body mt-1.5" style={{ color: 'var(--ink-700)' }}>
+            You can keep it saved and come back to it. We are not going to start a test on it
+            with experiments we have not validated yet.
+          </p>
+        </div>
+      )}
+
+      {onSelect && path.id !== currentPathId && (!supportOf(path) || supportOf(path).testable) && (
         <>
           {error === path.id && (
             <p className="tp-meta mt-4 flex items-start gap-1.5 font-semibold text-red-600" role="alert">

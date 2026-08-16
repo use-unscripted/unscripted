@@ -33,6 +33,7 @@ import { base44 } from '@/api/base44Client';
 import { scenarioEvidence } from '@/lib/scenarios/scenario-signals';
 import { CAREER_DIMENSIONS } from '@/lib/career-dimensions';
 import { humanRealityFor } from '@/lib/human-reality';
+import { loadSupportIndex, supportFor } from '@/lib/path-support';
 
 /** Every knob in one place, so the engine's judgement can be tuned. */
 export const LEARNING_VALUE_WEIGHTS = {
@@ -131,9 +132,14 @@ function recentlyTested(ctx) {
  * Every unresolved question across every live career hypothesis, collapsed so
  * that one characteristic appears once with all of the careers it affects.
  */
-export function deriveOpenQuestions(ctx, { suppressed = new Map(), skip = [], pathId = null } = {}) {
+export function deriveOpenQuestions(ctx, { suppressed = new Map(), skip = [], pathId = null, supportedPathIds = null } = {}) {
   const skipSet = new Set(skip);
-  const paths = (ctx.paths || []).filter(p => p.status !== 'archived' && p.hypothesis_status !== 'archived');
+  const paths = (ctx.paths || [])
+    .filter(p => p.status !== 'archived' && p.hypothesis_status !== 'archived')
+    /* The Supported Path Gate. A direction whose library cannot carry a cycle
+       never enters the recommendation pool: recommending a test we cannot
+       actually provide is worse than saying so. */
+    .filter(p => !supportedPathIds || supportedPathIds.has(p.id));
   if (!paths.length) return { candidates: [], hypotheses: [], leading: [] };
 
   const hypotheses = paths.map(path => ({ path, h: deriveHypothesis(path, ctx) }))
@@ -479,17 +485,36 @@ function whyThisMatters(candidate, { knows, hypotheses, mode }) {
  * have already recorded.
  */
 export async function loadNextBestExperiment({ skip = [], pathId = null } = {}) {
-  const [baseCtx, overrides, scenarioResponses] = await Promise.all([
+  const [baseCtx, overrides, scenarioResponses, index] = await Promise.all([
     loadNextBestContext(),
     loadOverrides().catch(() => []),
     base44.entities.ScenarioResponse.list('-completed_at', 200).catch(() => []),
+    loadSupportIndex().catch(() => null),
   ]);
   const ctx = { ...baseCtx, scenarioResponses: Array.isArray(scenarioResponses) ? scenarioResponses : [] };
   const suppressed = suppressionFrom(overrides);
+
+  // Which of this student's directions the library can actually carry a cycle on.
+  const supportedPathIds = index
+    ? new Set((ctx.paths || []).filter(p => supportFor(p.path_name, index).testable).map(p => p.id))
+    : null;
+
+  // Pinned to a direction we cannot test: say so, and recommend nothing.
+  if (pathId && supportedPathIds && !supportedPathIds.has(pathId)) {
+    const path = (ctx.paths || []).find(p => p.id === pathId) || null;
+    return {
+      ctx,
+      recommendation: null,
+      overrides,
+      unsupportedPath: true,
+      support: path ? supportFor(path.path_name, index) : null,
+    };
+  }
+
   // Pinned first. If that career has no open question left, fall back to the
   // cross-path recommendation rather than showing nothing.
-  const rec = (pathId && nextBestExperiment(ctx, { suppressed, skip, pathId }))
-    || nextBestExperiment(ctx, { suppressed, skip });
+  const rec = (pathId && nextBestExperiment(ctx, { suppressed, skip, pathId, supportedPathIds }))
+    || nextBestExperiment(ctx, { suppressed, skip, supportedPathIds });
   return { ctx, recommendation: rec, overrides };
 }
 

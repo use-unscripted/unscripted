@@ -7,6 +7,8 @@ import {
   READINESS_MIN, READINESS_MAX,
 } from '@/lib/path-validation';
 import { logAiFailure } from '@/lib/ai-failures';
+import { loadSupportIndex, supportFor } from '@/lib/path-support';
+import { CAREERS } from '@/lib/career-library/careers';
 
 /**
  * The stage a generation reached before it failed.
@@ -160,6 +162,27 @@ Stated preferences (self-report, weak evidence, never treat as proven):
 
 Where an activity is marked "never experienced", that is an UNKNOWN, not a dislike.`;
 
+  /* The Supported Path Gate, at generation time. Directions the library can
+     actually carry a cycle on are PREFERRED, never forced: a genuinely poor-fit
+     supported career is a worse recommendation than a well-fitting one whose
+     experiment library is still developing, and the screens disclose the
+     difference either way. Derived from stored records only. */
+  let supportedTitles = [];
+  try {
+    const index = await loadSupportIndex();
+    supportedTitles = CAREERS.filter(c => supportFor(c.title, index).testable).map(c => c.title);
+  } catch { supportedTitles = []; }
+
+  const supportedSection = supportedTitles.length ? `
+Unscripted can currently run a full, validated test cycle on these directions:
+${supportedTitles.map(t => `- ${t}`).join('\n')}
+
+Prefer these where one genuinely fits what this student told us, because the
+student can start testing immediately. Do NOT force a poor fit from that list:
+if the strongest direction for this student is not on it, recommend the strong
+direction anyway. The product tells the student plainly when the experiment
+library for a direction is still developing.` : '';
+
   const stageGuidance = `This student is an undergraduate (typically first-year or sophomore). Experiments may assume campus resources, alumni networks, coursework, clubs, and internship-adjacent access.`;
 
   const buildPrompt = (correction = '') => `You are Unscripted, a path-experimentation platform for undergraduate students. Your only job is to help this student test whether their chosen paths actually fit them.
@@ -181,7 +204,7 @@ Student profile:
 - Available hours/week: ${availableHours}
 - Priority scores: autonomy=${profile.priority_autonomy || 3}, stability=${profile.priority_stability || 3}, impact=${profile.priority_impact || 3}, creativity=${profile.priority_creativity || 3}, ownership=${profile.priority_ownership || 3}
 - Willing to take financial risk: ${profile.willing_financial_risk ? 'yes' : 'no'}
-- Willing to work long hours early: ${profile.willing_long_hours ? 'yes' : 'no'}${uncertaintySection}${personalNotesSection}
+- Willing to work long hours early: ${profile.willing_long_hours ? 'yes' : 'no'}${uncertaintySection}${personalNotesSection}${supportedSection}
 
 TASK: Generate exactly 3 CAREER HYPOTHESES. A career hypothesis is a direction
 worth testing, never a prediction of what this student should become.

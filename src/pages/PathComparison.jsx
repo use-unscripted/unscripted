@@ -26,6 +26,9 @@ import { deriveHypothesis, backfillHypotheses, syncFitDimensions, HYPOTHESIS_STA
 import { dimensionProgress, nextTestForPath } from '@/lib/dimension-progress';
 import { loadMeasurements } from '@/lib/experiment-measurement';
 import { characteristicSignals } from '@/lib/evidence-patterns';
+import { supportFor } from '@/lib/path-support';
+import { useSupportIndex } from '@/hooks/usePathSupport';
+import PathSupportBadge from '@/components/paths/PathSupportBadge';
 
 const STATUS_CFG = {
   active:        { label: 'Active',         bg: 'var(--success-50)', text: 'var(--success-700)' },
@@ -105,9 +108,13 @@ function PausedPathPanel({ path, experiments, missions, proof, reflections, onRe
 }
 
 // ── Path card ─────────────────────────────────────────────────────────────────
-function PathCard({ path, experiments, missions, proof, reflections, profile, measurements, signals = [], onAction, expanded, onToggle, onAutoAssess, assessing }) {
+function PathCard({ path, experiments, missions, proof, reflections, profile, measurements, signals = [], supportIndex = null, onAction, expanded, onToggle, onAutoAssess, assessing }) {
   const cfg = statusCfg(path.status);
   const d = path.generated_detail || {};
+  // Whether the library can carry a full cycle on this direction. Derived from
+  // stored records, never from anything on the path row itself.
+  const support = supportIndex ? supportFor(path.path_name, supportIndex) : null;
+  const testable = !support || support.testable;
 
   const pathExps = experiments.filter(e => e.path_name === path.path_name);
   const completedExps = pathExps.filter(e => e.status === 'completed');
@@ -140,6 +147,7 @@ function PathCard({ path, experiments, missions, proof, reflections, profile, me
               )}
               {path.risk_level ? <RiskBadge riskLevel={path.risk_level} /> : <RiskNotAssessed onAutoAssess={onAutoAssess} onAssess={() => onAction('edit', path)} assessing={assessing} />}
               {path.confidence_level && <ConfidenceBadge confidenceLevel={path.confidence_level} />}
+              {support && <PathSupportBadge support={support} showDetail={expanded} />}
             </div>
             <h2 className="tp-section text-[color:var(--surface-dark-900)]">{path.path_name}</h2>
             {path.path_category && <p className="tp-meta text-[color:var(--ink-400)] mt-1">{path.path_category}</p>}
@@ -183,12 +191,19 @@ function PathCard({ path, experiments, missions, proof, reflections, profile, me
 
         <div className="mt-4 flex flex-wrap gap-2">
           {/* The one primary action. Choosing a career is not what happens here;
-              testing one is. */}
-          <Link to={`/experiments/new?pathId=${encodeURIComponent(path.id)}&pathName=${encodeURIComponent(path.path_name)}`}
-            className="tp-meta touch-target flex items-center gap-1.5 rounded-[var(--r-control)] px-4 py-2 font-semibold text-white"
-            style={{ background: 'var(--brand-navy-900)', boxShadow: '0 6px 18px rgba(31,58,95,0.22)' }}>
-            <FlaskConical size={12} /> Test This Hypothesis
-          </Link>
+              testing one is. Withheld where the library cannot carry a cycle. */}
+          {testable ? (
+            <Link to={`/experiments/new?pathId=${encodeURIComponent(path.id)}&pathName=${encodeURIComponent(path.path_name)}`}
+              className="tp-meta touch-target flex items-center gap-1.5 rounded-[var(--r-control)] px-4 py-2 font-semibold text-white"
+              style={{ background: 'var(--brand-navy-900)', boxShadow: '0 6px 18px rgba(31,58,95,0.22)' }}>
+              <FlaskConical size={12} /> Test This Hypothesis
+            </Link>
+          ) : (
+            <span className="tp-meta rounded-[var(--r-control)] px-4 py-2 font-semibold"
+              style={{ background: 'var(--warning-50)', color: 'var(--warning-700)' }}>
+              Not testable yet
+            </span>
+          )}
           <button onClick={() => onAction('edit', path)}
             className="tp-meta touch-target flex items-center gap-1.5 rounded-lg border border-[color:var(--ink-200)] px-3 py-1.5 font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)]">
             <Pencil size={12} /> Edit
@@ -351,11 +366,18 @@ function PathCard({ path, experiments, missions, proof, reflections, profile, me
             </div>
           </div>
 
-          <Link to={`/experiments/new?pathId=${encodeURIComponent(path.id)}&pathName=${encodeURIComponent(path.path_name)}`}
-            className="inline-flex items-center gap-2 text-sm font-semibold transition hover:opacity-80"
-            style={{ color: 'var(--brand-navy-900)' }}>
-            Test This Hypothesis <ArrowRight size={15} />
-          </Link>
+          {testable ? (
+            <Link to={`/experiments/new?pathId=${encodeURIComponent(path.id)}&pathName=${encodeURIComponent(path.path_name)}`}
+              className="inline-flex items-center gap-2 text-sm font-semibold transition hover:opacity-80"
+              style={{ color: 'var(--brand-navy-900)' }}>
+              Test This Hypothesis <ArrowRight size={15} />
+            </Link>
+          ) : (
+            <p className="tp-body" style={{ color: 'var(--text-secondary)' }}>
+              Our experiment library for this direction is still developing, so there is no test
+              to start on it yet. Everything recorded here stays as it is.
+            </p>
+          )}
         </div>
       )}
     </div>
@@ -505,6 +527,7 @@ export default function PathComparison() {
   const [editTarget, setEditTarget] = useState(null);
   const [resumeTarget, setResumeTarget] = useState(null);
 
+  const { data: supportIndex } = useSupportIndex();
   const [assessingIds, setAssessingIds] = useState(new Set());
   const [assessError, setAssessError] = useState('');
   const [sortBy, setSortByState] = useState(initSort);
@@ -651,7 +674,7 @@ export default function PathComparison() {
     }
   };
 
-  const cardProps = { experiments, missions, proof, reflections, profile, measurements, signals, onAction: handleAction };
+  const cardProps = { experiments, missions, proof, reflections, profile, measurements, signals, supportIndex, onAction: handleAction };
 
   return (
     <main className="app-page">

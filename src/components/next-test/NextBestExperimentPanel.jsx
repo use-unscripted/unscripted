@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { loadNextBestExperiment } from '@/lib/next-best-experiment';
 import { recordOverride, recordAcceptance } from '@/lib/recommendation-overrides';
 import RecommendedNextTest from '@/components/next-test/RecommendedNextTest';
@@ -16,21 +16,23 @@ import { Reveal } from '@/components/motion';
  * recorded as product-learning data.
  */
 export default function NextBestExperimentPanel({ pathId = null }) {
-  const [state, setState] = useState({ loading: true, recommendation: null });
+  const [state, setState] = useState({ loading: true, recommendation: null, unsupported: false });
   const [skip, setSkip] = useState([]);
   const [busy, setBusy] = useState(false);
   const [exhausted, setExhausted] = useState(false);
+  const unsupportedRef = useRef(false);
 
   const load = useCallback(async (skipList) => {
-    const { recommendation } = await loadNextBestExperiment({ skip: skipList, pathId }).catch(() => ({ recommendation: null }));
-    return recommendation;
+    const res = await loadNextBestExperiment({ skip: skipList, pathId }).catch(() => ({ recommendation: null }));
+    unsupportedRef.current = Boolean(res.unsupportedPath);
+    return res.recommendation;
   }, [pathId]);
 
   useEffect(() => {
     let alive = true;
     load([]).then(r => {
       if (!alive) return;
-      setState({ loading: false, recommendation: r });
+      setState({ loading: false, recommendation: r, unsupported: unsupportedRef.current });
       /* A recommendation that reached the screen. Recorded here rather than
          where it is computed, because a recommendation nobody saw is not a
          funnel stage. Repeat: after a finished cycle this same panel is the
@@ -72,6 +74,19 @@ export default function NextBestExperimentPanel({ pathId = null }) {
   };
 
   if (state.loading) return <Sk h={268} r={16} />;
+  /* A direction the library cannot carry a cycle on gets an honest sentence, not
+     a recommendation and not silence. */
+  if (state.unsupported) {
+    return (
+      <section className="app-card p-5 sm:p-6">
+        <h2 className="tp-section" style={{ color: 'var(--text-primary)' }}>No test to recommend here yet</h2>
+        <p className="tp-body mt-2" style={{ color: 'var(--text-secondary)' }}>
+          We do not have a validated experiment for this direction, so there is nothing we can
+          honestly recommend as your next test on it. Nothing you have recorded is affected.
+        </p>
+      </section>
+    );
+  }
   if (!state.recommendation) return null;
   /* The reveal lives here rather than around this component on the page: it
      renders nothing at all for a student with no open questions left, and a
