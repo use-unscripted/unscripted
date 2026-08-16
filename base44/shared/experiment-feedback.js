@@ -37,6 +37,9 @@ export const FIELD_CALIBRATION = {
   min_realism_ratings: 5,                // "not enough information" answers do not count
   min_realism_average: 3.5,
   min_validation_level: 2,               // professionally reviewed, not merely drafted
+  // Calibration is a claim about how the experience behaved in the field, so it
+  // needs students who actually finished it, not only students who rated it.
+  min_students_completed: 5,
 };
 
 /** Answers that MISALIGN with the professional's account, at either strength. */
@@ -154,9 +157,14 @@ export function reviewFlags(rows = [], thresholds = FLAG_THRESHOLDS) {
  * calibration claim, and it never removes one already made, downgrades a
  * validation level, or reacts to a single student's response.
  */
-export function fieldCalibrationCheck({ survey = {}, validation_level = null, rules = FIELD_CALIBRATION } = {}) {
+export function fieldCalibrationCheck({ survey = {}, validation_level = null, students_completed = 0, rules = FIELD_CALIBRATION } = {}) {
   const missing = [];
   const students = survey.students ?? 0;
+  const completed = Number.isFinite(students_completed) ? students_completed : 0;
+
+  if (completed < rules.min_students_completed) {
+    missing.push(`Needs ${rules.min_students_completed} students who completed it; has ${completed}.`);
+  }
   const realismRatings = (survey.survey_responses ?? 0) - (survey.survey_realism_no_basis ?? 0);
   const realism = num(survey.survey_realism_rating);
 

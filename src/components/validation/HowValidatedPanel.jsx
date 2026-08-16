@@ -1,5 +1,5 @@
 import { X, Check, Circle, ExternalLink } from 'lucide-react';
-import { MIN_FIELD_SAMPLE } from '@/lib/experiment-strength';
+import { effectivenessGate, NOT_ENOUGH_DATA } from '@/lib/effectiveness-thresholds';
 import { safeExternalUrl } from '@/lib/safe-url';
 import ComponentDots from '@/components/validation/ComponentDots';
 
@@ -23,8 +23,14 @@ export default function HowValidatedPanel({ reading, onClose }) {
   const { strength, sources = [], reviews = [], blueprint, effectiveness } = reading;
   const publicSources = sources.filter(s => s.source_verified_at && s.publicly_viewable && s.active_status !== 'retired');
   const approved = reviews.filter(r => r.approval_status === 'approved');
-  const sample = Number(effectiveness?.students_started) || 0;
-  const showField = sample >= MIN_FIELD_SAMPLE;
+  /* Gated on students who COMPLETED it, not students who started: a completion
+     rate computed from zero completions is an absence of data, not a result. */
+  const fieldGate = effectivenessGate({
+    students_completed: Number(effectiveness?.students_completed) || 0,
+    survey_responses: Number(effectiveness?.survey_responses) || 0,
+    audience: 'student_facing',
+  });
+  const showField = !fieldGate.suppressed;
 
   return (
     <div className="anim-overlay fixed inset-0 z-50 flex items-end justify-center sm:items-center"
@@ -123,8 +129,8 @@ export default function HowValidatedPanel({ reading, onClose }) {
             </ul>
           ) : (
             <p className="tp-body mt-2" style={{ color: 'var(--text-muted)' }}>
-              Not enough students have completed this experiment for us to report results yet. We do not
-              show statistics below {MIN_FIELD_SAMPLE} completions.
+              {NOT_ENOUGH_DATA} We do not show results until {fieldGate.required.min_students_completed} students
+              have completed this experiment.
             </p>
           )}
         </section>

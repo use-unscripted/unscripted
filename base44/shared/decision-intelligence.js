@@ -16,6 +16,7 @@
 import {
   feedbackSummary, groupFeedback, flaggedExperiments, MIN_FEEDBACK_STUDENTS, fieldCalibrationCheck,
 } from './experiment-feedback.js';
+import { EFFECTIVENESS_THRESHOLDS, effectivenessGate, safeRate } from './effectiveness-thresholds.js';
 
 /** Below this many distinct students, a cell reports nothing but its own absence. */
 export const MIN_STUDENTS = 5;
@@ -44,6 +45,19 @@ function cell(rows, compute) {
   if (n < MIN_STUDENTS) return { suppressed: true, sample_size: n < MIN_STUDENTS ? n : n, students: n, reason: `Fewer than ${MIN_STUDENTS} students.` };
   return { suppressed: false, students: n, ...compute() };
 }
+
+/**
+ * Fields that are a conclusion about how well an experience works, as opposed to
+ * a raw count of what exists. These are the ones withheld below the sample
+ * threshold; students_started, students_completed and survey_responses stay.
+ */
+const CONCLUSION_FIELDS = [
+  'completion_rate', 'evidence_submission_rate', 'reflection_completion_rate',
+  'pct_changed_understanding', 'average_uncertainties_resolved', 'expectation_reality_delta',
+  'information_value_score', 'student_reported_usefulness', 'average_hours_to_completion',
+  'dropoff_stage', 'survey_realism_rating', 'survey_career_understanding_rating',
+  'survey_self_learning_rating', 'survey_time_value_rating', 'survey_professional_support_rate',
+];
 
 /** A stable grouping key for "the same experience", independent of one student's wording. */
 export function blueprintKey(experiment) {
@@ -82,8 +96,9 @@ export function experimentEffectiveness({ experiments = [], measurements = [], r
       dimensions_tested: [...new Set(rows.flatMap((e) => e.work_characteristic_ids || e.work_characteristics_tested || []))].slice(0, 8),
       hypotheses_where_used: [...new Set(rows.map((e) => e.career_name || e.path_name).filter(Boolean))].length,
     };
+    const completedRows = rows.filter((e) => e.status === 'completed');
     const computed = cell(rows, () => {
-      const completed = rows.filter((e) => e.status === 'completed');
+      const completed = completedRows;
       const measured = completed.map((e) => measurementByExp.get(e.id)).filter(Boolean);
       const withPost = measured.filter((m) => m.post_completed_at);
       const upd = rows.map((e) => updatesByExp.get(e.id)).filter(Boolean);
@@ -96,16 +111,19 @@ export function experimentEffectiveness({ experiments = [], measurements = [], r
         students_completed: students(completed),
         completion_rate: pct(completed.length, rows.length),
         average_hours_to_completion: avg(completed.map((e) => e.estimated_hours)),
-        evidence_submission_rate: pct(completed.filter((e) => proofByExp.has(e.id)).length, completed.length || 1),
-        reflection_completion_rate: pct(completed.filter((e) => reflectionByExp.has(e.id)).length, completed.length || 1),
+        /* safeRate, not `completed.length || 1`: a faked denominator turned
+           "nobody finished" into "0% submitted evidence", which is a claim
+           about the experiment rather than an absence of data. */
+        evidence_submission_rate: safeRate(completed.filter((e) => proofByExp.has(e.id)).length, completed.length),
+        reflection_completion_rate: safeRate(completed.filter((e) => reflectionByExp.has(e.id)).length, completed.length),
         // "Changed understanding" is read from students saying so in their own
         // reflection, never inferred from a score moving.
-        pct_changed_understanding: pct(
+        pct_changed_understanding: safeRate(
           completed.filter((e) => {
             const r = reflectionByExp.get(e.id);
             return Boolean(r && (r.misconception_changed || r.assumptions_changed));
           }).length,
-          completed.length || 1,
+          completed.length,
         ),
         average_uncertainties_resolved: avg(upd.map((u) => (u.unknowns_resolved || []).length)),
         expectation_reality_delta: avg(gaps),
@@ -124,6 +142,23 @@ export function experimentEffectiveness({ experiments = [], measurements = [], r
       ? { survey_responses: survey.survey_responses, survey_suppressed: true }
       : surveyNumbers;
     const flagFields = { flagged_for_review: flags.length > 0, review_flags: flags };
+    /* The sample gate, measured on the denominators the numbers actually use:
+       students who COMPLETED, and survey responses. The privacy cell above
+       counts students who started, which is why rows with zero completions used
+       to publish completion-derived rates. */
+    const completedStudents = students(completedRows);
+    const gate = {
+      admin: effectivenessGate({
+        students_completed: completedStudents,
+        survey_responses: survey.survey_responses,
+        audience: 'admin',
+      }),
+      student_facing: effectivenessGate({
+        students_completed: completedStudents,
+        survey_responses: survey.survey_responses,
+        audience: 'student_facing',
+      }),
+    };
     /* Whether this experience may be called Field Calibrated. Reported as a
        gate with reasons, and only ever a gate: it blocks a claim, it never
        downgrades an experiment on its own. */
@@ -131,6 +166,8 @@ export function experimentEffectiveness({ experiments = [], measurements = [], r
       field_calibration: fieldCalibrationCheck({
         survey: { ...survey, students: survey.students },
         validation_level: levelByKey.get(g.key) ?? null,
+        // Calibration needs a real field sample as well as human validation.
+        students_completed: completedStudents,
       }),
     };
 
@@ -149,7 +186,25 @@ export function experimentEffectiveness({ experiments = [], measurements = [], r
         computed_at: new Date().toISOString(),
       };
     }
-    return { ...base, ...computed, ...surveyCell, ...flagFields, ...calibration, sample_size: size, computed_at: new Date().toISOString() };
+    const row = {
+      ...base, ...computed, ...surveyCell, ...flagFields, ...calibration,
+      students_completed: completedStudents,
+      survey_responses: survey.survey_responses,
+      sample_size: size,
+      sample_gate: gate,
+      effectiveness_suppressed: gate.admin.suppressed,
+      insufficient_sample: gate.admin.insufficient_sample,
+      suppression_reasons: gate.admin.reasons,
+      student_facing_suppressed: gate.student_facing.suppressed,
+      computed_at: new Date().toISOString(),
+    };
+    /* Under the admin threshold the raw counts stay — the team is allowed to see
+       them — and every derived conclusion is dropped rather than shown as a
+       small number that reads like a result. */
+    if (gate.admin.suppressed) {
+      CONCLUSION_FIELDS.forEach((f) => { delete row[f]; });
+    }
+    return row;
   }).sort((a, b) => (b.sample_size || 0) - (a.sample_size || 0));
 }
 
@@ -325,6 +380,7 @@ export function decisionIntelligence(data) {
   return {
     min_students: MIN_STUDENTS,
     min_survey_students: MIN_FEEDBACK_STUDENTS,
+    effectiveness_thresholds: EFFECTIVENESS_THRESHOLDS,
     flagged_experiments: flaggedExperiments(groups, titles),
     computed_at: new Date().toISOString(),
     uncertainty: uncertaintyPicture(data),

@@ -79,7 +79,7 @@ export default function AdminDecisionIntelligence() {
 
           <DiSection title="Uncertainty" cell={data.uncertainty} />
           <DiFlaggedExperiments rows={data.flagged_experiments || []} />
-          <DiExperimentTable rows={data.experiments} minStudents={data.min_students} />
+          <DiExperimentTable rows={data.experiments} minStudents={data.min_students} thresholds={data.effectiveness_thresholds} />
           {/* Decision scenarios: completion, self-consistency, and how often a
               scenario reading was later confirmed or contradicted by real work.
               Descriptive only — no predictive claim at this sample size. */}

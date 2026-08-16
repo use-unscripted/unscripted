@@ -47,7 +47,11 @@ export const VALIDATION_LEVELS = [
 
 export const validationLevelMeta = (n) => VALIDATION_LEVELS[Math.max(0, Math.min(4, Number(n) || 0))];
 
-/** Below this, aggregate student statistics are not shown at all. */
+/**
+ * Below this many COMPLETIONS, aggregate student statistics are not shown at all
+ * and an experiment may not be called Field Calibrated. Mirrors
+ * student_facing.min_students_completed in @/lib/effectiveness-thresholds.
+ */
 export const MIN_FIELD_SAMPLE = 25;
 
 const SOURCE_RECENCY_MONTHS = 30;
@@ -70,12 +74,15 @@ export function countingReviews(reviews = [], experimentVersion = null) {
 }
 
 /** Which of the five levels the stored records support. Never speculative. */
-export function validationLevelFrom({ validation, sources = [], reviews = [] }) {
+export function validationLevelFrom({ validation, sources = [], reviews = [], effectiveness = null }) {
   const verified = sources.filter(s => s.active_status !== 'retired' && s.source_verified_at);
   const grounded = Boolean(validation?.role_blueprint_id) && verified.length >= 1;
   const approved = countingReviews(reviews, validation?.experiment_version);
+  /* Field Calibrated needs both halves: enough students who finished it, and
+     professional validation behind it. The admin toggle alone is not enough. */
+  const fieldSample = (num(effectiveness?.students_completed) || 0) >= MIN_FIELD_SAMPLE;
   if (!grounded) return 0;
-  if (validation?.field_calibrated && approved.length >= 2) return 4;
+  if (validation?.field_calibrated && approved.length >= 2 && fieldSample) return 4;
   if (approved.length >= 2) return 3;
   if (approved.length >= 1) return 2;
   return 1;
@@ -137,9 +144,11 @@ export function experimentStrength({ validation, sources = [], reviews = [], eff
     + 0.2 * (validation?.mapping_reviewed ? 1 : 0)
     + 0.1 * (avg(approved.map(r => num(r.workstyle_validity_rating)).filter(v => v !== null)) ? clamp01((avg(approved.map(r => num(r.workstyle_validity_rating)).filter(v => v !== null)) - 1) / 4) : 0));
 
-  // 5. Field calibration — an admin decision, backed by a real sample.
-  const started = num(effectiveness?.students_started) || 0;
-  const sample = started >= MIN_FIELD_SAMPLE;
+  // 5. Field calibration — an admin decision, backed by a real sample AND by
+  //    human validation. Measured on students who COMPLETED it: usage alone was
+  //    letting an experiment nobody finished count as calibrated.
+  const completedStudents = num(effectiveness?.students_completed) || 0;
+  const sample = completedStudents >= MIN_FIELD_SAMPLE && approved.length >= 2;
   const field_calibration = validation?.field_calibrated && sample
     ? W.field_calibration * clamp01(
         0.5
@@ -156,7 +165,7 @@ export function experimentStrength({ validation, sources = [], reviews = [], eff
   };
   const score = Object.values(component_scores).reduce((a, b) => a + b, 0);
   const level = [...STRENGTH_LEVELS].reverse().find(l => score >= l.min) || STRENGTH_LEVELS[0];
-  const validation_level = validationLevelFrom({ validation, sources, reviews });
+  const validation_level = validationLevelFrom({ validation, sources, reviews, effectiveness });
 
   // Enough on file to show a number at all: a blueprint mapping plus either a
   // verified source or an approved review.
