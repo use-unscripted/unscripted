@@ -5,10 +5,11 @@
  * one record instead of creating two.
  */
 import { useEffect, useRef, useState } from 'react';
-import { CheckCircle2, FileText, Loader2, Upload } from 'lucide-react';
+import { CheckCircle2, FileText, Loader2, Upload, Trash2 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { EVIDENCE_TYPES } from '@/lib/mission-completion';
 import { saveStepEvidence } from '@/lib/guide-progress';
+import { MAX_FILES, fmtSize, getExt } from '@/components/experiments/ProofFiles';
 
 const field = {
   borderColor: 'var(--border-light)',
@@ -20,7 +21,7 @@ export default function StepEvidencePanel({ guide, stepNumber, step, experiment,
   const [title, setTitle] = useState(step?.title || '');
   const [description, setDescription] = useState('');
   const [url, setUrl] = useState('');
-  const [file, setFile] = useState(null);
+  const [files, setFiles] = useState([]);
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -37,13 +38,17 @@ export default function StepEvidencePanel({ guide, stepNumber, step, experiment,
   }, [experiment?.id, stepNumber, Boolean(existing)]);
 
   const pickFile = async (e) => {
-    const chosen = e.target.files?.[0];
-    if (!chosen) return;
+    const chosen = Array.from(e.target.files || []).slice(0, MAX_FILES - files.length);
+    e.target.value = '';
+    if (!chosen.length) return;
     setError('');
     setUploading(true);
     try {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file: chosen });
-      setFile({ file_url, file_name: chosen.name, file_size: chosen.size, mime_type: chosen.type });
+      const uploaded = await Promise.all(chosen.map(async (f) => {
+        const { file_url } = await base44.integrations.Core.UploadFile({ file: f });
+        return { file_url, file_name: f.name, file_size: f.size, mime_type: f.type };
+      }));
+      setFiles(prev => [...prev, ...uploaded].slice(0, MAX_FILES));
     } catch {
       setError('That file did not upload. Try again, or describe it instead.');
     } finally {
@@ -58,7 +63,7 @@ export default function StepEvidencePanel({ guide, stepNumber, step, experiment,
     try {
       const proof = await saveStepEvidence({
         guide, stepNumber, step, experiment, mission, path, keySuffix,
-        evidence: { type: type || 'other', title, description, external_url: url, file },
+        evidence: { type: type || 'other', title, description, external_url: url, files },
       });
       onSaved(proof);
     } catch {
@@ -81,7 +86,7 @@ export default function StepEvidencePanel({ guide, stepNumber, step, experiment,
     );
   }
 
-  const nothingYet = !file && !url.trim() && !description.trim();
+  const nothingYet = files.length === 0 && !url.trim() && !description.trim();
 
   return (
     <div className="mt-4 rounded-[var(--r-control)] p-4" style={{ background: 'var(--background-secondary)', border: '1px solid var(--border-light)' }}>
@@ -120,15 +125,41 @@ export default function StepEvidencePanel({ guide, stepNumber, step, experiment,
             className="mt-1 w-full rounded-[var(--r-control)] border px-3 py-2.5 text-base outline-none md:text-sm" style={field} />
         </label>
         <div>
-          <span className="tp-eyebrow" style={{ color: 'var(--text-muted)' }}>File (optional)</span>
-          <input ref={inputRef} type="file" onChange={pickFile} className="hidden" />
-          <button type="button" onClick={() => inputRef.current?.click()} disabled={uploading}
-            className="tp-body mt-1 flex w-full items-center justify-center gap-2 rounded-[var(--r-control)] border border-dashed px-3 font-semibold"
-            style={{ borderColor: 'var(--border-light)', color: 'var(--text-secondary)', minHeight: '48px' }}>
-            {uploading ? <><Loader2 size={14} className="animate-spin" /> Uploading…</>
-              : file ? <>Attached: {file.file_name}</>
-              : <><Upload size={14} /> Choose a file</>}
-          </button>
+          <div className="flex flex-wrap items-center justify-between gap-x-3">
+            <span className="tp-eyebrow" style={{ color: 'var(--text-muted)' }}>Files (optional)</span>
+            <span className="tp-meta" style={{ color: 'var(--text-muted)' }}>
+              {files.length} of {MAX_FILES} attached
+            </span>
+          </div>
+          {files.map((f, i) => (
+            <div key={f.file_url + i}
+              className="mt-1.5 flex items-center gap-2 rounded-[var(--r-control)] border px-3 py-2"
+              style={{ borderColor: 'var(--border-light)', background: '#fff' }}>
+              <FileText size={14} style={{ color: 'var(--brand-navy-700)' }} className="shrink-0" />
+              <span className="tp-meta min-w-0 flex-1 truncate font-semibold" style={{ color: 'var(--text-primary)' }}>{f.file_name}</span>
+              <span className="tp-meta shrink-0" style={{ color: 'var(--text-muted)' }}>
+                {fmtSize(f.file_size || 0)} · {getExt(f.file_name).toUpperCase()}
+              </span>
+              <button type="button" aria-label={`Remove ${f.file_name}`}
+                onClick={() => setFiles(prev => prev.filter((_, n) => n !== i))}
+                className="shrink-0 text-[color:var(--ink-400)] hover:text-red-500">
+                <Trash2 size={14} />
+              </button>
+            </div>
+          ))}
+          <input ref={inputRef} type="file" multiple onChange={pickFile} className="hidden" />
+          {files.length < MAX_FILES ? (
+            <button type="button" onClick={() => inputRef.current?.click()} disabled={uploading}
+              className="tp-body mt-1.5 flex w-full items-center justify-center gap-2 rounded-[var(--r-control)] border border-dashed px-3 font-semibold"
+              style={{ borderColor: 'var(--border-light)', color: 'var(--text-secondary)', minHeight: '48px' }}>
+              {uploading ? <><Loader2 size={14} className="animate-spin" /> Uploading…</>
+                : <><Upload size={14} /> {files.length ? 'Add another file' : 'Choose files — you can pick several at once'}</>}
+            </button>
+          ) : (
+            <p className="tp-meta mt-1.5" style={{ color: 'var(--text-muted)' }}>
+              That is the maximum of {MAX_FILES} files. Remove one to attach something else.
+            </p>
+          )}
         </div>
         <label className="block">
           <span className="tp-eyebrow" style={{ color: 'var(--text-muted)' }}>Or describe what you completed</span>

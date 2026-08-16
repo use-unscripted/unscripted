@@ -140,10 +140,13 @@ export function saveStepEvidence({ guide, stepNumber, step, experiment, mission,
       description: evidence.description || undefined,
       completion_note: evidence.description || undefined,
       external_url: evidence.external_url || undefined,
-      file_url: evidence.file?.file_url,
-      file_name: evidence.file?.file_name,
-      file_size: evidence.file?.file_size,
-      mime_type: evidence.file?.mime_type,
+      // Every attachment, plus the first one in the original single-file fields
+      // so anything reading those keeps working.
+      files: Array.isArray(evidence.files) ? evidence.files : undefined,
+      file_url: evidence.files?.[0]?.file_url,
+      file_name: evidence.files?.[0]?.file_name,
+      file_size: evidence.files?.[0]?.file_size,
+      mime_type: evidence.files?.[0]?.mime_type,
       completed_at: new Date().toISOString().split('T')[0],
     };
     import('@/lib/analytics/decision-funnel-events')
