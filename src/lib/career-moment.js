@@ -211,6 +211,39 @@ export async function nextQuickTest({ excludeVariable, pathId } = {}) {
 }
 
 /**
+ * The key dimensions on this path that still have no settled evidence, so a
+ * student running a second Quick Test picks a gap rather than being handed one
+ * question at a time. Least evidence first, and the dimension just tested is
+ * left out. Nothing here changes what a Moment measures: these are the same
+ * open questions from the same uncertainty map.
+ */
+export async function openQuickTestDimensions({ pathId, excludeVariable, limit = 5 } = {}) {
+  const ctx = await loadRecalculationContext();
+  const live = ctx.paths.filter(p => p.status !== 'archived' && p.hypothesis_status !== 'archived');
+  const path = live.find(p => p.id === pathId) || null;
+  if (!path) return { path: null, options: [] };
+
+  const byId = new Map((ctx.signals || []).map(s => [s.id, s]));
+  const options = (deriveHypothesis(path, ctx).uncertainty?.variables || [])
+    .filter(v => v.relevance !== 'low' && v.variable !== excludeVariable)
+    .map(v => ({ v, state: evidenceState(byId.get(v.variable)) }))
+    .filter(x => !x.state.settled || x.state.contradicted)
+    .sort((a, b) => a.state.rated - b.state.rated)
+    .slice(0, limit)
+    .map(({ v, state }, i) => ({
+      variable: v.variable,
+      label: v.label,
+      question: v.question,
+      untested: state.rated === 0,
+      contradicted: state.contradicted,
+      recommended: i === 0,
+      to: `/moment?recId=${path.id}&variable=${encodeURIComponent(v.variable)}`,
+    }));
+
+  return { path, options };
+}
+
+/**
  * Which one or two questions this Moment should ask, based on what past Moments
  * already answered. Rotates, and closes gaps before repeating a field.
  */

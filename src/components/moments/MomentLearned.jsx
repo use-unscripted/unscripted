@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { CheckCircle2 } from 'lucide-react';
 import { outcomeFraming } from '@/lib/dimension-progress';
+import MomentNextChoices from '@/components/moments/MomentNextChoices';
 
 /**
  * The end of a Quick Test: what we learned, then an open invitation.
@@ -9,7 +10,7 @@ import { outcomeFraming } from '@/lib/dimension-progress';
  * test is offered rather than required — returning to the dashboard sits beside
  * it as an equal choice.
  */
-export default function MomentLearned({ moment, changes = [], onAnother }) {
+export default function MomentLearned({ moment, changes = [], onAnother, nextOptions = [], onPickNext }) {
   const primary = changes[0];
   const delta = primary && typeof primary.deltaFit === 'number'
     ? primary.deltaFit
@@ -43,14 +44,19 @@ export default function MomentLearned({ moment, changes = [], onAnother }) {
       <div className="rounded-[var(--r-surface)] border p-4" style={{ borderColor: 'var(--border-light)' }}>
         <p className="tp-body font-semibold" style={{ color: 'var(--surface-dark-900)' }}>Want to test one more thing?</p>
         <p className="tp-meta mt-1" style={{ color: 'var(--ink-500)' }}>
-          Only if you have the time. Nothing is lost by stopping here.
+          {nextOptions.length
+            ? `Pick what ${moment?.career_name || 'this path'} still needs evidence on. Only if you have the time.`
+            : 'Only if you have the time. Nothing is lost by stopping here.'}
         </p>
+        {nextOptions.length > 0 && <MomentNextChoices options={nextOptions} onPick={onPickNext} />}
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
-          <button onClick={onAnother}
-            className="tp-body ui-press rounded-[var(--r-control)] py-3 font-semibold text-white"
-            style={{ background: 'var(--brand-navy-900)' }}>
-            Recommended next test
-          </button>
+          {!nextOptions.length && (
+            <button onClick={onAnother}
+              className="tp-body ui-press rounded-[var(--r-control)] py-3 font-semibold text-white"
+              style={{ background: 'var(--brand-navy-900)' }}>
+              Recommended next test
+            </button>
+          )}
           <Link to="/journey"
             className="tp-body rounded-[var(--r-control)] border py-3 text-center font-semibold"
             style={{ borderColor: 'var(--ink-200)', color: 'var(--ink-700)' }}>

@@ -17,7 +17,7 @@ import MomentReaction from '@/components/moments/MomentReaction';
 import MomentLearned from '@/components/moments/MomentLearned';
 import {
   loadMomentTarget, generateCareerMoment, saveCareerMoment, feedbackFor, completeCareerMoment,
-  loadMeasurementPlan, nextQuickTest,
+  loadMeasurementPlan, nextQuickTest, openQuickTestDimensions,
 } from '@/lib/career-moment';
 import { createTracker, recordMomentSignals } from '@/lib/behavioral-signals';
 
@@ -44,6 +44,8 @@ export default function CareerMomentPage() {
   const [answers, setAnswers] = useState({});
   const [saving, setSaving] = useState(false);
   const [changes, setChanges] = useState([]);
+  // The gaps left on this path, offered as the next Quick Test.
+  const [nextOptions, setNextOptions] = useState([]);
   // Passive signals only: stage timings, whether the answer changed, how much
   // was written. Held in a ref so recording never re-renders the Moment.
   const tracker = useRef(createTracker());
@@ -55,6 +57,7 @@ export default function CareerMomentPage() {
     // before the next one is built.
     setRow(null); setStage('hook'); setSelected(''); setRationale('');
     setPreAnswers({}); setAnswers({}); setChanges([]); setError(null); setSeenTask(false);
+    setNextOptions([]);
     finishedRef.current = false;
     (async () => {
       const { path, focus } = await loadMomentTarget({ recId, variable }).catch(() => ({ path: null }));
@@ -101,6 +104,13 @@ export default function CareerMomentPage() {
     if (!result) { setError('Your answers could not be saved. Nothing was lost, so try Save again.'); return; }
     setChanges(result.changes || []);
     setStage('done');
+    // What this path still needs evidence on, read after the recalculation so
+    // the dimension just tested drops out of the list on its own.
+    const { options } = await openQuickTestDimensions({
+      pathId: row?.path_id,
+      excludeVariable: row?.unresolved_question_id,
+    }).catch(() => ({ options: [] }));
+    setNextOptions(options);
   };
 
   // The next test, chosen by the recommendation engine from the evidence that
@@ -209,7 +219,13 @@ export default function CareerMomentPage() {
             />
           )}
           {stage === 'done' && (
-            <MomentLearned moment={row} changes={changes} onAnother={goAnother} />
+            <MomentLearned
+              moment={row}
+              changes={changes}
+              onAnother={goAnother}
+              nextOptions={nextOptions}
+              onPickNext={(o) => navigate(o.to, { replace: true })}
+            />
           )}
         </div>
       </div>
