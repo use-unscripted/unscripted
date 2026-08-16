@@ -77,6 +77,19 @@ export default function ProofFiles({ files, states = {}, onAdd, onRemove }) {
 
   return (
     <div className="space-y-2">
+      {/* How many are attached, and how many more are allowed. Without this the
+          step reads as a single-file upload. */}
+      <div className="flex items-center justify-between gap-3">
+        <p className="tp-meta font-semibold text-[color:var(--ink-700)]">
+          {files.length === 0
+            ? `Attach up to ${MAX_FILES} files`
+            : `${files.length} of ${MAX_FILES} files attached`}
+        </p>
+        {!full && files.length > 0 && (
+          <p className="tp-meta text-[color:var(--ink-400)]">{MAX_FILES - files.length} more allowed</p>
+        )}
+      </div>
+
       {files.map((f, i) => (
         <FileRow key={`${f.name}-${f.size}-${i}`} file={f} state={states[i]} onRemove={() => onRemove(i)} />
       ))}
@@ -103,7 +116,7 @@ export default function ProofFiles({ files, states = {}, onAdd, onRemove }) {
           />
           <Upload size={22} className="mx-auto mb-2 text-[color:var(--ink-400)]" />
           <p className="tp-body font-semibold text-[color:var(--ink-700)]">
-            {files.length ? 'Add another file' : 'Click or drag files here'}
+            {files.length ? 'Add another file' : 'Click or drag files here — you can pick several at once'}
           </p>
           <p className="tp-meta mt-1 text-[color:var(--ink-400)]">
             Up to {MAX_FILES} files · videos up to 100 MB · all other files up to 50 MB
