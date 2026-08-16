@@ -93,7 +93,8 @@ export default async function (req: Request): Promise<Response> {
         access_source: u.access_source || null,
         role: u.role || null,
         created_date: u.created_date || null,
-        events: eventRows.filter(e => (e.created_by_id || e.user_id) === u.id).length,
+        events: eventRows.filter(e => (e.user_id || e.created_by_id) === u.id).length,
+        backfilled_events: eventRows.filter(e => (e.user_id || e.created_by_id) === u.id && e.analytics_backfill).length,
       })),
       note: 'Event-derived numbers begin when the instrumentation shipped and describe only what students demonstrably did. Record-derived numbers cover all history but cannot prove a student saw, opened or progressed through anything. The two are never merged.',
     });

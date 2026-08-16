@@ -35,8 +35,13 @@ export const PILOT_EVENTS = [
   'professional_contacted', 'response_received', 'conversation_scheduled',
   'human_evidence_started', 'human_evidence_submitted', 'human_evidence_reflected',
   'human_evidence_matrix_updated',
+  // Scenarios and the experiment quality survey. A scenario that was rendered
+  // and a scenario that was answered are different facts, and only the second
+  // one was ever stored on a record.
+  'scenario_shown', 'scenario_answered', 'experiment_feedback_submitted',
   'proof_submitted', 'reflection_started', 'reflection_completed',
-  'final_decision_submitted', 'cycle_completed', 'second_cycle_attempted',
+  'final_decision_submitted', 'cycle_completed', 'repeat_cycle_completed',
+  'second_cycle_attempted',
   'continuation_interest_recorded', 'seven_day_return', 'thirty_day_return',
   // Work simulations. These four are the completion count, and they are read
   // off PilotEvent rather than off WorkSimulationRun because that entity is
@@ -91,11 +96,15 @@ async function writeEvent(name, props) {
 
     const { dedupe_key, ...rest } = props;
     if (dedupe_key) {
-      const key = `${name}:${dedupe_key}`;
+      const key = `${ctx.user_id}:${name}:${dedupe_key}`;
       if (writtenThisSession.has(key)) return null;
       writtenThisSession.add(key);
+      /* Scoped to this account, not just to the key. Several keys are per-path
+         or literally 'account', and an admin reads every student's rows, so an
+         unscoped check let one student's event block another's — which is the
+         reason internal test accounts recorded almost nothing. */
       const existing = await base44.entities.PilotEvent
-        .filter({ event_name: name, dedupe_key }, '-created_date', 1)
+        .filter({ event_name: name, dedupe_key, user_id: ctx.user_id }, '-created_date', 1)
         .catch(() => []);
       if (Array.isArray(existing) && existing.length) return null;
     }

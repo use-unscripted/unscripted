@@ -24,6 +24,19 @@ export default function CompareExperiments() {
     return () => { live = false; };
   }, []);
 
+  /* Each experiment card that reached the comparison screen, once per experiment. */
+  useEffect(() => {
+    const rows = state?.rows || [];
+    if (!rows.length) return;
+    import('@/lib/analytics/decision-funnel-events')
+      .then(m => rows.forEach(row => m.cardViewed({
+        experimentId: row.experiment?.id,
+        pathId: row.experiment?.path_id,
+        stage: 'compare',
+      })))
+      .catch(() => {});
+  }, [state]);
+
   if (!state) {
     return (
       <main className="app-page">

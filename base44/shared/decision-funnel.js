@@ -44,7 +44,21 @@ export const FUNNEL_STAGES = [
   { key: 'decision_completed', label: 'Decision made', event: 'decision_completed', viaRecord: 'decision' },
   { key: 'next_experiment_recommended', label: 'Next test recommended', event: 'next_experiment_recommended', viaRecord: null },
   { key: 'repeat_path_test_started', label: 'Next test started', event: 'repeat_path_test_started', viaRecord: null },
-  { key: 'cycle_completed', label: 'Repeat cycle completed', event: 'cycle_completed', viaRecord: 'second_conclusion' },
+  { key: 'cycle_completed', label: 'Cycle completed', event: 'cycle_completed', viaRecord: 'cycle' },
+  { key: 'repeat_cycle_completed', label: 'Repeat cycle completed', event: 'repeat_cycle_completed', viaRecord: 'second_conclusion' },
+];
+
+/**
+ * Stages that sit beside the cycle rather than inside it: optional or
+ * supplementary steps whose absence is not drop-off.
+ */
+export const SIDE_STAGES = [
+  { key: 'scenario_shown', label: 'Scenario shown', event: 'scenario_shown' },
+  { key: 'scenario_answered', label: 'Scenario answered', event: 'scenario_answered' },
+  { key: 'experiment_feedback_submitted', label: 'Experiment feedback sent', event: 'experiment_feedback_submitted' },
+  { key: 'human_reality_recommended', label: 'Conversation recommended', event: 'human_reality_recommended' },
+  { key: 'professional_conversation_completed', label: 'Conversation completed', event: 'professional_conversation_completed' },
+  { key: 'human_evidence_submitted', label: 'Human evidence submitted', event: 'human_evidence_submitted' },
 ];
 
 /**
@@ -114,8 +128,12 @@ export function eventFunnel({ events = [], users = [], include = REAL_CLASSES } 
    * not in the page of accounts read. Neither path guesses: an account nobody
    * classified is unclassified, and unclassified is not counted as real.
    */
+  /* user_id first, created_by_id second. A backfilled row is created by the
+     service role on the student's behalf, so created_by_id is not the student —
+     reading it first would attribute their whole history to the admin who ran
+     the backfill. Live events carry the same value in both. */
   const classOf = (row) => {
-    const current = byId.get(row?.created_by_id) || byId.get(row?.user_id) || null;
+    const current = byId.get(row?.user_id) || byId.get(row?.created_by_id) || null;
     if (current && current !== 'unclassified') return current;
     const stamped = ANALYTICS_CLASSES.includes(row?.analytics_class) ? row.analytics_class : null;
     return current || stamped || 'unclassified';
@@ -126,11 +144,12 @@ export function eventFunnel({ events = [], users = [], include = REAL_CLASSES } 
   const firstAt = new Map(); // `${userId}:${stage}` → earliest ms
 
   rows.forEach(e => {
-    const userId = e.created_by_id || e.user_id || 'unknown';
+    const userId = e.user_id || e.created_by_id || 'unknown';
     const at = time(e.occurred_at || e.created_date);
-    if (!byStage.has(e.event_name)) byStage.set(e.event_name, { records: 0, students: new Set() });
+    if (!byStage.has(e.event_name)) byStage.set(e.event_name, { records: 0, students: new Set(), backfilled: 0 });
     const bucket = byStage.get(e.event_name);
     bucket.records += 1;
+    if (e.analytics_backfill) bucket.backfilled += 1;
     bucket.students.add(userId);
     const key = `${userId}:${e.event_name}`;
     if (at !== null && (!firstAt.has(key) || at < firstAt.get(key))) firstAt.set(key, at);
@@ -140,7 +159,7 @@ export function eventFunnel({ events = [], users = [], include = REAL_CLASSES } 
   let previous = null;
 
   const stages = FUNNEL_STAGES.map(stage => {
-    const bucket = byStage.get(stage.event) || { records: 0, students: new Set() };
+    const bucket = byStage.get(stage.event) || { records: 0, students: new Set(), backfilled: 0 };
     const students = bucket.students.size;
 
     // Median hours from the previous stage, per student who reached both.
@@ -161,6 +180,10 @@ export function eventFunnel({ events = [], users = [], include = REAL_CLASSES } 
       event: stage.event,
       students,
       records: bucket.records,
+      // How much of this stage came from the records backfill rather than from
+      // observed behaviour. Kept visible: a stage that is entirely backfilled
+      // says a milestone happened, never that a student was seen doing it.
+      backfilled_records: bucket.backfilled || 0,
       // The entry stage has nothing to convert from, and with nobody there it
       // must not read as 100%.
       conversion_from_previous: previous ? pct(students, previous.students) : (students > 0 ? 100 : null),
@@ -173,8 +196,21 @@ export function eventFunnel({ events = [], users = [], include = REAL_CLASSES } 
     return row;
   });
 
+  // The optional steps beside the cycle. Reported separately so a low count
+  // never reads as drop-off in the cycle itself.
+  const side = SIDE_STAGES.map(s => {
+    const bucket = byStage.get(s.event) || { records: 0, students: new Set(), backfilled: 0 };
+    return {
+      key: s.key, label: s.label, event: s.event,
+      students: bucket.students.size, records: bucket.records,
+      backfilled_records: bucket.backfilled || 0,
+      event_backed: true,
+    };
+  });
+
   return {
     stages,
+    side_stages: side,
     entry_students: entry,
     included_classes: include,
     class_counts: counts,
@@ -197,7 +233,7 @@ export function cycleMetrics({ events = [], users = [], include = REAL_CLASSES }
   const allowed = new Set(include);
   // Same precedence as eventFunnel: the account's current class decides.
   const classOf = (row) => {
-    const current = byId.get(row?.created_by_id) || byId.get(row?.user_id) || null;
+    const current = byId.get(row?.user_id) || byId.get(row?.created_by_id) || null;
     if (current && current !== 'unclassified') return current;
     return current || (ANALYTICS_CLASSES.includes(row?.analytics_class) ? row.analytics_class : null) || 'unclassified';
   };
@@ -207,7 +243,7 @@ export function cycleMetrics({ events = [], users = [], include = REAL_CLASSES }
   (events || []).forEach(e => {
     if (!allowed.has(classOf(e))) return;
     if (!e.experiment_id) return;
-    const user = e.created_by_id || e.user_id || 'unknown';
+    const user = e.user_id || e.created_by_id || 'unknown';
     const key = `${user}:${e.experiment_id}`;
     if (!work.has(key)) work.set(key, { user, path_id: e.path_id || null, experiment_id: e.experiment_id, at: new Map() });
     const row = work.get(key);

@@ -44,6 +44,24 @@ export default function ScenarioRunner({
   }, [controlled]);
 
   const scenario = scenarios[index];
+  const shownKey = scenario?.scenario_key;
+
+  /* The scenario reached the screen. Its own fact: a stored answer only ever
+     proved the ones students went on to answer, so a scenario people skipped
+     was invisible. Deduped per scenario, so paging back does not re-count. */
+  useEffect(() => {
+    if (!shownKey || controlled) return;
+    import('@/lib/analytics/decision-funnel-events')
+      .then(m => m.scenarioShown({
+        scenarioKey: shownKey,
+        pathId: context.path_id,
+        experimentId: context.experiment_id,
+        stage: context.response_context,
+      }))
+      .catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shownKey, controlled]);
+
   if (!scenario) return null;
 
   const key = scenario.scenario_key;
@@ -68,6 +86,16 @@ export default function ScenarioRunner({
         scenario, option, context, numericAnswer: numbers[key], existing: existing[key],
       }).catch(() => null);
       if (row) setExisting(p => ({ ...p, [key]: row }));
+      if (row) {
+        import('@/lib/analytics/decision-funnel-events')
+          .then(m => m.scenarioAnswered({
+            scenarioKey: key,
+            pathId: context.path_id,
+            experimentId: context.experiment_id,
+            stage: context.response_context,
+          }))
+          .catch(() => {});
+      }
       setSaving(false);
     }
     if (index + 1 < scenarios.length) { setIndex(i => i + 1); return; }

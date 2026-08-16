@@ -145,8 +145,8 @@ export const experimentCompleted = ({ experimentId, pathId, cycleId, stage } = {
 
 /* ── Evidence ─────────────────────────────────────────────────────────────── */
 
-export const evidenceStarted = ({ experimentId, pathId } = {}) =>
-  once('evidence_started', { experimentId, pathId });
+export const evidenceStarted = ({ experimentId, pathId, step } = {}) =>
+  once('evidence_started', { experimentId, pathId, step }, typeof step === 'number' ? `step-${step}` : '');
 
 export const evidenceCompleted = ({ experimentId, pathId, step } = {}) =>
   once('evidence_completed', { experimentId, pathId, step }, typeof step === 'number' ? `step-${step}` : '');
@@ -184,3 +184,30 @@ export const professionalConversationCompleted = ({ pathId, cycleId, stage } = {
 /** A path was opened and read, which is what "investigated" means here. */
 export const pathInvestigated = ({ pathId, stage } = {}) =>
   once('path_investigated', { pathId, stage });
+
+/* ── Scenarios and the experiment quality survey ───────────────────────────── */
+
+/**
+ * A scenario was rendered, and then answered. Two separate facts: the stored
+ * ScenarioResponse only ever proved the second, so a scenario nobody answered
+ * was previously invisible.
+ *
+ * Keyed per scenario per student, so revisiting a run does not re-count it.
+ */
+export const scenarioShown = ({ scenarioKey, pathId, experimentId, stage } = {}) =>
+  once('scenario_shown', { pathId, experimentId, stage }, `scenario:${scenarioKey || 'unknown'}`);
+
+export const scenarioAnswered = ({ scenarioKey, pathId, experimentId, stage } = {}) =>
+  once('scenario_answered', { pathId, experimentId, stage }, `scenario:${scenarioKey || 'unknown'}`);
+
+/** The post-experiment quality survey was sent. Optional step, so it is its own stage. */
+export const feedbackSubmitted = ({ experimentId, pathId, cycleId } = {}) =>
+  once('experiment_feedback_submitted', { experimentId, pathId, cycleId });
+
+/**
+ * A cycle closed, and separately: it was the second or later completed cycle on
+ * that same path, which is the number the pilot actually cares about. Deduped on
+ * the closing cycle's own id, so a retry cannot double count it.
+ */
+export const repeatCycleCompleted = ({ pathId, cycleId, count } = {}) =>
+  once('repeat_cycle_completed', { pathId, cycleId, value: count }, `repeat:${cycleId || 'cycle'}`);

@@ -21,26 +21,40 @@ import FunnelStageTable from '@/components/admin/FunnelStageTable';
 import RepeatCyclePanel from '@/components/admin/RepeatCyclePanel';
 import UserClassPanel from '@/components/admin/UserClassPanel';
 import ReconstructionPanel from '@/components/admin/ReconstructionPanel';
+import BackfillPanel from '@/components/admin/BackfillPanel';
+
+/**
+ * Which accounts the numbers count. Real beta users are the default reading of
+ * the product; All activity is available beside it, never merged into it.
+ */
+const VIEWS = [
+  { id: 'real', label: 'Real beta users', include: ['real_beta_user'] },
+  { id: 'all', label: 'All activity', include: ['real_beta_user', 'founder', 'admin', 'internal_test', 'automated_test_agent', 'unclassified'] },
+  { id: 'internal', label: 'Internal only', include: ['founder', 'admin', 'internal_test', 'automated_test_agent'] },
+];
 
 export default function AdminFunnel() {
   const { user } = useAuth();
   const [data, setData] = useState(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
+  const [view, setView] = useState('real');
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (viewId = view) => {
     setLoading(true);
     setError('');
     try {
-      const res = await base44.functions.invoke('decisionFunnel', {});
+      const include = (VIEWS.find(v => v.id === viewId) || VIEWS[0]).include;
+      const res = await base44.functions.invoke('decisionFunnel', { include });
       setData(res?.data || null);
     } catch (err) {
       setError(err?.message || 'That did not load.');
     }
     setLoading(false);
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [view]);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => { load(view); }, [view]);
 
   if (user && user.role !== 'admin') {
     return (
@@ -70,11 +84,25 @@ export default function AdminFunnel() {
         title="Decision cycle funnel"
         description="What students demonstrably did, with internal and unclassified accounts held out of the numbers."
         action={
-          <button type="button" onClick={load} className="ui-press app-cta-secondary tp-control">
+          <button type="button" onClick={() => load(view)} className="ui-press app-cta-secondary tp-control">
             <RotateCcw size={15} /> Refresh
           </button>
         }
       />
+
+      {/* The default reading is real beta users. The other two sit beside it and
+          are never added to it. */}
+      <div className="mb-5 flex flex-wrap gap-2">
+        {VIEWS.map(v => (
+          <button key={v.id} type="button" onClick={() => setView(v.id)}
+            className="tp-meta rounded-full px-3.5 py-2 font-semibold"
+            style={view === v.id
+              ? { background: 'var(--brand-navy-900)', color: '#fff' }
+              : { background: 'var(--ink-100)', color: 'var(--ink-700)' }}>
+            {v.label}
+          </button>
+        ))}
+      </div>
 
       {error && (
         <p className="tp-body mb-5" style={{ color: 'var(--danger-700)' }}>{error}</p>
@@ -92,6 +120,14 @@ export default function AdminFunnel() {
 
         <AdminSection title="Real students, event by event" note="Each stage requires an event the product actually emitted. A stage with zero students means no student has been recorded reaching it, which is not the same as students abandoning it.">
           <FunnelStageTable stages={data?.event_funnel?.stages || []} eventBacked />
+        </AdminSection>
+
+        <AdminSection title="Beside the cycle" note="Optional and supplementary steps: scenarios, the experiment quality survey and Human Reality. A low count here is not drop-off in the cycle.">
+          <FunnelStageTable stages={data?.event_funnel?.side_stages || []} eventBacked />
+        </AdminSection>
+
+        <AdminSection title="Backfill from records" note="Creates events only where a stored record proves the milestone happened. Every row is marked as a backfill and names its source; anything unprovable is left unknown.">
+          <BackfillPanel onWritten={() => load(view)} />
         </AdminSection>
 
         <AdminSection title="Repeat cycles" note="A completed cycle needs all seven recorded steps: selected, pre-expectations, experiment finished, evidence, post-experience, reflection, decision. Creating an experiment record does not count.">

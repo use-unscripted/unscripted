@@ -156,7 +156,19 @@ export async function saveFeedback({ experiment, validation, answers, existing, 
     professional_alignment_rating: answers.professional_alignment_rating || undefined,
     submitted_at: new Date().toISOString(),
   };
-  return existing?.id
-    ? base44.entities.ExperimentFeedback.update(existing.id, payload)
-    : base44.entities.ExperimentFeedback.create(payload);
+  const saved = existing?.id
+    ? await base44.entities.ExperimentFeedback.update(existing.id, payload)
+    : await base44.entities.ExperimentFeedback.create(payload);
+
+  /* An optional step, so it needs its own event: skipping it is not drop-off in
+     the cycle, and until now nothing recorded that anyone answered it. */
+  await import('@/lib/analytics/decision-funnel-events')
+    .then(m => m.feedbackSubmitted({
+      experimentId: experiment.id,
+      pathId: payload.path_id,
+      cycleId: payload.cycle_id,
+    }))
+    .catch(() => {});
+
+  return saved;
 }

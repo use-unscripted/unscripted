@@ -104,6 +104,17 @@ export function completeMissionWithProof({ mission, experiment, path, evidence }
       if (open.length === 0 && experiment.status !== 'completed') {
         await base44.entities.Experiments.update(experiment.id, { status: 'completed' });
         experimentCompleted = true;
+        /* The experiment finished here, not in the guide, so this is the only
+           place that can say so. Without it a mission-driven completion left no
+           experiment_completed event at all. */
+        await import('@/lib/analytics/decision-funnel-events')
+          .then(m => m.experimentCompleted({
+            experimentId: experiment.id,
+            pathId: links.path_id || path?.id,
+            cycleId: links.cycle_id,
+            stage: 'missions_complete',
+          }))
+          .catch(() => {});
       } else if (experiment.status === 'planned') {
         await base44.entities.Experiments.update(experiment.id, { status: 'in_progress' });
       }

@@ -46,6 +46,9 @@
         "human_evidence_submitted",
         "human_evidence_reflected",
         "human_evidence_matrix_updated",
+        "scenario_shown",
+        "scenario_answered",
+        "experiment_feedback_submitted",
         "proof_submitted",
         "reflection_started",
         "reflection_completed",
@@ -55,6 +58,7 @@
         "repeat_path_test_started",
         "final_decision_submitted",
         "cycle_completed",
+        "repeat_cycle_completed",
         "second_cycle_attempted",
         "continuation_interest_recorded",
         "seven_day_return",
@@ -83,6 +87,13 @@
         "internal_test",
         "automated_test_agent"
       ]
+    },
+    "analytics_backfill": {
+      "type": "boolean",
+      "default": false
+    },
+    "backfill_basis": {
+      "type": "string"
     },
     "institution_id": {
       "type": "string"

@@ -48,6 +48,15 @@ export default function MeasurementGate({ phase, exp, measurement, behavioral, o
     setOpen(true);
   }, [done, autoOpen, exp?.id, phase]);
 
+  /* The expectations form was opened. Paired with pre_expectation_completed,
+     this is what separates "never asked" from "asked and abandoned". */
+  useEffect(() => {
+    if (!open || phase !== 'pre' || !exp?.id) return;
+    import('@/lib/analytics/decision-funnel-events')
+      .then(m => m.preExpectationStarted({ experimentId: exp.id, pathId: exp.path_id }))
+      .catch(() => {});
+  }, [open, phase, exp?.id, exp?.path_id]);
+
   if (done) return null;
   // A Quick Test measures itself, with one or two rotating questions inside the
   // Moment. Asking a five-question expectation form about a three minute task is

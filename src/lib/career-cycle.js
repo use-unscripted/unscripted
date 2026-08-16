@@ -295,6 +295,23 @@ export async function completeCycle({ final_decision, post_cycle_clarity_score, 
       experiment_id: cycle.experiment_id,
       stage: final_decision,
     });
+    /* A repeat completion on the SAME path is its own event. Counted from the
+       cycles already closed on this path, so it can never fire on a first one. */
+    if (cycle.selected_path_id) {
+      const prior = await base44.entities.CareerCycle
+        .filter({ selected_path_id: cycle.selected_path_id, status: 'completed' }, '-completed_at', 20)
+        .catch(() => []);
+      const closedBefore = (Array.isArray(prior) ? prior : []).filter(c => c.id !== cycle.id).length;
+      if (closedBefore >= 1) {
+        await import('@/lib/analytics/decision-funnel-events')
+          .then(m => m.repeatCycleCompleted({
+            pathId: cycle.selected_path_id,
+            cycleId: cycle.id,
+            count: closedBefore + 1,
+          }))
+          .catch(() => {});
+      }
+    }
     await trackPilotEvent('cycle_completed', {
       cycle_id: cycle.id,
       path_id: cycle.selected_path_id,

@@ -30,6 +30,20 @@ export default function LibraryTestPicker({ path }) {
     return () => { live = false; };
   }, [path?.path_name]);
 
+  /* The cards actually reached the screen. Deduped per experiment, so the
+     conversion from "saw the options" to "chose one" is readable. */
+  useEffect(() => {
+    const rows = data?.rows || [];
+    if (!rows.length) return;
+    import('@/lib/analytics/decision-funnel-events')
+      .then(m => rows.forEach(row => m.cardViewed({
+        experimentId: row.template?.id || row.id,
+        pathId: path?.id,
+        stage: 'validated_library',
+      })))
+      .catch(() => {});
+  }, [data, path?.id]);
+
   const start = useCallback(async (row) => {
     setError(false);
     setBusyId(row.id);

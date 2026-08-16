@@ -268,6 +268,26 @@ export async function completeCareerMoment({ momentRow, selected, rationale, pre
     status: 'completed',
   });
 
+  /* A Moment is chosen, generated, run and finished in one sitting, so all three
+     stages are recorded here rather than inferred from the row it writes. */
+  await import('@/lib/analytics/decision-funnel-events')
+    .then(async (m) => {
+      await m.experimentGenerated({ experimentId: experiment.id, pathId: momentRow.path_id, stage: 'career_moment' });
+      await m.experimentSelected({
+        experimentId: experiment.id,
+        pathId: momentRow.path_id,
+        cycleId: links.cycle_id,
+        stage: 'career_moment',
+      });
+      await m.experimentCompleted({
+        experimentId: experiment.id,
+        pathId: momentRow.path_id,
+        cycleId: links.cycle_id,
+        stage: 'career_moment',
+      });
+    })
+    .catch(() => {});
+
   const score = STRENGTH_SCALE[option?.strength] ?? 6;
 
   // The expectation half, when this Moment asked for one. Written first so the

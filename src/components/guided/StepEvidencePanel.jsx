@@ -4,7 +4,7 @@
  * existing ProofOfWork chain with a per-step key, so pressing save twice updates
  * one record instead of creating two.
  */
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { CheckCircle2, FileText, Loader2, Upload } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { EVIDENCE_TYPES } from '@/lib/mission-completion';
@@ -25,6 +25,16 @@ export default function StepEvidencePanel({ guide, stepNumber, step, experiment,
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const inputRef = useRef(null);
+
+  /* The evidence form was reached. Its pair, evidence_completed, fires on save,
+     so the two together say whether students who got here finished. */
+  useEffect(() => {
+    if (existing || !experiment?.id) return;
+    import('@/lib/analytics/decision-funnel-events')
+      .then(m => m.evidenceStarted({ experimentId: experiment.id, pathId: experiment.path_id || path?.id, step: stepNumber }))
+      .catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [experiment?.id, stepNumber, Boolean(existing)]);
 
   const pickFile = async (e) => {
     const chosen = e.target.files?.[0];
