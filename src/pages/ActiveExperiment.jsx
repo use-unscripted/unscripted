@@ -20,7 +20,7 @@ import ReviewedWork from '@/components/measurement/ReviewedWork';
 import { loadMeasurements } from '@/lib/experiment-measurement';
 import { behavioralSnapshot } from '@/lib/expectation-reality';
 import { Sk } from '@/components/PageSkeleton';
-import ExperimentValidationCard from '@/components/validation/ExperimentValidationCard';
+import ValidationDisclosure from '@/components/validation/ValidationDisclosure';
 import useExperimentValidation from '@/hooks/useExperimentValidation';
 
 const OPEN = ['draft', 'planned', 'in_progress'];
@@ -148,8 +148,6 @@ export default function ActiveExperiment() {
       <div className="space-y-5">
         <ExperimentOverview experiment={experiment} path={path} />
 
-        <ExperimentValidationCard reading={validationReading} pathName={path?.path_name} />
-
         {/* Before the work: what the student expects. After every mission is
             done: what actually happened. Both are what the reflection, the
             evidence profile and the next recommendation read. */}
@@ -265,6 +263,9 @@ export default function ActiveExperiment() {
         <ExperimentNotesPanel experiment={experiment} />
 
         <ExperimentStatusPanel proofs={proofs} reflections={reflections} cycle={cycle} />
+
+        {/* Strength and review history: available, but never the first thing. */}
+        <ValidationDisclosure reading={validationReading} pathName={path?.path_name} />
 
         <p className="touch-reach-line tp-meta justify-center pt-1 text-center" style={{ color: 'var(--text-muted)' }}>
           <Link to="/journey" className="touch-reach font-semibold" style={{ color: 'var(--brand-navy-700)' }}>Back to My Journey</Link>
