@@ -224,6 +224,10 @@ export default function ExperimentReflection() {
             </section>
           )}
           <HypothesisTimeline pathId={ctx.path?.id} pathName={ctx.path?.path_name} refreshKey={decision} />
+          {/* Straight after the hypothesis update, so the next test is the first
+              thing to act on rather than the last thing on the page. Pinned to
+              the hypothesis this experiment tested. */}
+          <NextBestExperimentPanel pathId={ctx.path?.id} />
           {/* The path as it now stands, across every test run on it, so a student
               finishing their second or third test can see it accumulating. */}
           <PathHistoryPanel pathId={ctx.path?.id} />
@@ -233,9 +237,6 @@ export default function ExperimentReflection() {
             decision={decisionMeta(decision)?.cycle_decision}
             closedCycle={closedCycle}
           />
-          {/* Pinned to the hypothesis this experiment tested, so the next test
-              continues the same path rather than jumping to another one. */}
-          <NextBestExperimentPanel pathId={ctx.path?.id} />
         </>
       ) : !availability.ready ? (
         <ConclusionGate availability={availability} experiment={ctx.experiment} onEndEarly={handleEndEarly} />
