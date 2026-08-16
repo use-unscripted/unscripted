@@ -1,0 +1,133 @@
+{
+  "name": "HumanRealityConversation",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string"
+    },
+    "path_id": {
+      "type": "string"
+    },
+    "path_name": {
+      "type": "string"
+    },
+    "cycle_id": {
+      "type": "string"
+    },
+    "career_cycle_id": {
+      "type": "string"
+    },
+    "uncertainty_id": {
+      "type": "string"
+    },
+    "uncertainty_label": {
+      "type": "string"
+    },
+    "uncertainty_question": {
+      "type": "string"
+    },
+    "topic_id": {
+      "type": "string"
+    },
+    "topic_label": {
+      "type": "string"
+    },
+    "decision_dimension_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "source_type": {
+      "type": "string",
+      "enum": [
+        "own_connection",
+        "alumni",
+        "mentor",
+        "university_professional",
+        "unscripted_professional",
+        "other"
+      ],
+      "default": "own_connection"
+    },
+    "professional_role": {
+      "type": "string"
+    },
+    "professional_organisation": {
+      "type": "string"
+    },
+    "years_in_field": {
+      "type": "string"
+    },
+    "conversation_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "conversation_format": {
+      "type": "string",
+      "enum": [
+        "call",
+        "video",
+        "in_person",
+        "message",
+        "email"
+      ],
+      "default": "call"
+    },
+    "questions_asked": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "notes": {
+      "type": "string"
+    },
+    "key_learning": {
+      "type": "string"
+    },
+    "changed_expectation": {
+      "type": "string",
+      "enum": [
+        "confirmed_what_i_expected",
+        "changed_what_i_expected",
+        "raised_a_new_concern",
+        "not_enough_information"
+      ]
+    },
+    "changed_expectation_note": {
+      "type": "string"
+    },
+    "evidence_status": {
+      "type": "string",
+      "enum": [
+        "planned",
+        "conversation_held",
+        "human_evidence_recorded",
+        "abandoned"
+      ],
+      "default": "planned"
+    },
+    "recorded_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "path_id"
+  ],
+  "rls": {
+    "create": {
+      "created_by_id": "{{user.id}}"
+    },
+    "read": {
+      "created_by_id": "{{user.id}}"
+    },
+    "update": {
+      "created_by_id": "{{user.id}}"
+    },
+    "delete": {
+      "created_by_id": "{{user.id}}"
+    }
+  }
+}

@@ -3,6 +3,7 @@ import SidePanel from '@/components/matrix/SidePanel';
 import ProvenanceSources from '@/components/matrix/ProvenanceSources';
 import { workstyleProvenance } from '@/lib/matrix-provenance';
 import ScenarioSourceBlock from '@/components/matrix/ScenarioSourceBlock';
+import HumanSourceBlock from '@/components/matrix/HumanSourceBlock';
 
 /**
  * One work characteristic, with the experiences behind it, where they came from,
@@ -75,6 +76,9 @@ export default function WorkstyleDetail({ row, onClose, scenarioResponses = [] }
       {/* Hypothetical answers, kept in their own block so they can never read as
           part of the behavioural evidence above. */}
       <ScenarioSourceBlock dimension={row.dimension} responses={scenarioResponses} />
+
+      {/* And what people who do this work said, kept equally separate. */}
+      <HumanSourceBlock human={row.human} />
 
       {['unknown', 'mixed'].includes(row.levelKey) && (
         <Link to="/test" className="app-cta tp-control mt-7 inline-flex">Test this further</Link>

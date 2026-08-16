@@ -173,6 +173,14 @@ export const pathUpdated = ({ experimentId, pathId, sequence } = {}) =>
 export const decisionCompleted = ({ experimentId, pathId, cycleId, decision } = {}) =>
   once('decision_completed', { experimentId, pathId, cycleId, stage: decision });
 
+/**
+ * A Human Reality conversation was held and recorded. Its own stage: this is an
+ * experiment type that produces evidence without any simulated work, so it must
+ * not be counted as an experiment completion.
+ */
+export const professionalConversationCompleted = ({ pathId, cycleId, stage } = {}) =>
+  once('professional_conversation_completed', { pathId, cycleId, stage }, stage || 'conversation');
+
 /** A path was opened and read, which is what "investigated" means here. */
 export const pathInvestigated = ({ pathId, stage } = {}) =>
   once('path_investigated', { pathId, stage });

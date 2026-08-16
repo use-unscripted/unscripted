@@ -13,7 +13,7 @@ const STYLE = {
 };
 
 export default function WorkstyleMatrix({ rows, onOpen }) {
-  const shown = rows.filter(r => r.evidenceCount > 0 || r.selfReported || r.scenarioLabel).slice(0, 12);
+  const shown = rows.filter(r => r.evidenceCount > 0 || r.selfReported || r.scenarioLabel || r.humanLabel).slice(0, 12);
 
   return (
     <section className="app-card p-6">
@@ -45,6 +45,14 @@ export default function WorkstyleMatrix({ rows, onOpen }) {
                     <span className="tp-meta hidden shrink-0 rounded-full px-2.5 py-1 font-semibold sm:inline"
                       style={{ color: 'var(--brand-navy-700)', background: 'var(--info-50)' }}>
                       {r.scenarioLabel}
+                    </span>
+                  )}
+                  {/* Human Reality conversations, in their own words: context
+                      about the field, never a reading of the student. */}
+                  {r.humanLabel && (
+                    <span className="tp-meta hidden shrink-0 rounded-full px-2.5 py-1 font-semibold sm:inline"
+                      style={{ color: 'var(--brand-gold-700)', background: 'var(--warning-50)' }}>
+                      {r.humanLabel}
                     </span>
                   )}
                   <span className="hidden w-[120px] shrink-0 items-center gap-2 sm:flex">

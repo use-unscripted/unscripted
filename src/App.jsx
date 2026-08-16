@@ -57,6 +57,7 @@ const Evidence = lazy(() => import('@/pages/Evidence'));
 const CareerEvidenceProfile = lazy(() => import('@/pages/CareerEvidenceProfile'));
 const ExperimentSetup = lazy(() => import('@/pages/ExperimentSetup'));
 const CareerMomentPage = lazy(() => import('@/pages/CareerMomentPage'));
+const HumanReality = lazy(() => import('@/pages/HumanReality'));
 const WorkSimulationPage = lazy(() => import('@/pages/WorkSimulationPage'));
 const Roadmap = lazy(() => import('@/pages/Roadmap'));
 const SavedRoadmaps = lazy(() => import('@/pages/SavedRoadmaps'));
@@ -171,6 +172,9 @@ const AuthenticatedApp = () => {
           <Route path="/all-paths" element={<AllPaths />} />
           {/* The default, short Experiment: one Career Moment, 2–7 minutes. */}
           <Route path="/moment" element={<CareerMomentPage />} />
+          {/* Human Reality: the experiment type for unknowns simulated work
+              cannot honestly answer. */}
+          <Route path="/human-reality" element={<HumanReality />} />
           {/* The work simulation: 30 minutes of one job, signed in only. Inside
               ProtectedRoute on purpose. Every row it writes is owned by the
               student under row-level security, so there is no guest draft to

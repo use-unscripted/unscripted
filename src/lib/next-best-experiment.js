@@ -32,6 +32,7 @@ import { loadOverrides, suppressionFrom } from '@/lib/recommendation-overrides';
 import { base44 } from '@/api/base44Client';
 import { scenarioEvidence } from '@/lib/scenarios/scenario-signals';
 import { CAREER_DIMENSIONS } from '@/lib/career-dimensions';
+import { humanRealityFor } from '@/lib/human-reality';
 
 /** Every knob in one place, so the engine's judgement can be tuned. */
 export const LEARNING_VALUE_WEIGHTS = {
@@ -351,8 +352,17 @@ export function nextBestExperiment(ctx, opts = {}) {
 
   const rule_id = ruleFor(top, mode);
 
+  /* Some unknowns cannot be simulated at all: lifestyle, hours, hierarchy,
+     client dynamics, culture, progression, real stakes. Where the top-ranked
+     question is one of those, the recommended next test IS a conversation with
+     somebody who does the work, rather than a task pretending to stand in for
+     it. Same slot, same authority. */
+  const human = humanRealityFor(top);
+
   return {
     mode,
+    human_reality: human,
+    experiment_type: human ? 'human_reality' : 'work_sample',
     early: mode === 'early',
     candidate: top,
     // The rule behind this recommendation, kept interpretable and logged with
@@ -406,7 +416,9 @@ export function nextBestExperiment(ctx, opts = {}) {
       })),
     quick_to: `/moment?recId=${top.attached.path_id}&variable=${encodeURIComponent(top.variable)}`,
     deep_to: `/experiments/new?recId=${top.attached.path_id}&variable=${encodeURIComponent(top.variable)}`,
-    start_to: `/experiments/new?recId=${top.attached.path_id}&variable=${encodeURIComponent(top.variable)}`,
+    start_to: human
+      ? `/human-reality?recId=${top.attached.path_id}&variable=${encodeURIComponent(top.variable)}`
+      : `/experiments/new?recId=${top.attached.path_id}&variable=${encodeURIComponent(top.variable)}`,
     detail: whyThisMatters(top, { knows, hypotheses, mode }),
     alternatives: candidates.slice(1, 4).map(c => ({
       ...c,

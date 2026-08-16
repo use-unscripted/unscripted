@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { loadNextBestExperiment } from '@/lib/next-best-experiment';
 import { recordOverride, recordAcceptance } from '@/lib/recommendation-overrides';
 import RecommendedNextTest from '@/components/next-test/RecommendedNextTest';
+import HumanRealityNextTest from '@/components/next-test/HumanRealityNextTest';
 import { Sk } from '@/components/PageSkeleton';
 import { Reveal } from '@/components/motion';
 
@@ -75,6 +76,21 @@ export default function NextBestExperimentPanel({ pathId = null }) {
   /* The reveal lives here rather than around this component on the page: it
      renders nothing at all for a student with no open questions left, and a
      wrapper out there would space out an empty box. */
+  // A question no task can answer gets the conversation card in the same slot.
+  if (state.recommendation.human_reality) {
+    return (
+      <Reveal y={20}>
+        <HumanRealityNextTest
+          recommendation={state.recommendation}
+          onAccept={onAccept}
+          onOverride={onOverride}
+          busy={busy}
+          exhausted={exhausted}
+        />
+      </Reveal>
+    );
+  }
+
   return (
     <Reveal y={20}>
       <RecommendedNextTest

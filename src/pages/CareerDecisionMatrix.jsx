@@ -19,6 +19,9 @@ import NextBestExperimentPanel from '@/components/next-test/NextBestExperimentPa
 import ScenarioEvidenceInMatrix from '@/components/matrix/ScenarioEvidenceInMatrix';
 import { loadEvidenceConfig } from '@/lib/evidence-weights';
 import { withScenarioSignals } from '@/lib/matrix-workstyle-scenarios';
+import { withHumanReality } from '@/lib/matrix-human-reality';
+import HumanExposurePanel from '@/components/matrix/HumanExposurePanel';
+import { loadConversations } from '@/lib/human-reality';
 import { Reveal } from '@/components/motion';
 
 const track = (eventName, properties) => base44.analytics.track({ eventName, properties });
@@ -43,6 +46,7 @@ export default function CareerDecisionMatrix() {
   const [dimension, setDimension] = useState(null);
   const [view, setView] = useState('active');
   const [scenarioResponses, setScenarioResponses] = useState([]);
+  const [conversations, setConversations] = useState([]);
 
   useEffect(() => { track('career_matrix_viewed'); }, []);
 
@@ -54,6 +58,7 @@ export default function CareerDecisionMatrix() {
     base44.entities.ScenarioResponse.list('-completed_at', 200)
       .then(rows => { if (alive) setScenarioResponses(Array.isArray(rows) ? rows : []); })
       .catch(() => {});
+    loadConversations().then(rows => { if (alive) setConversations(rows); }).catch(() => {});
     return () => { alive = false; };
   }, []);
 
@@ -130,7 +135,17 @@ export default function CareerDecisionMatrix() {
           </Reveal>
 
           <Reveal y={16}>
-            <WorkstyleMatrix rows={withScenarioSignals(data.workstyle, scenarioResponses)} onOpen={openDimension} />
+            <WorkstyleMatrix
+              rows={withHumanReality(withScenarioSignals(data.workstyle, scenarioResponses), conversations)}
+              onOpen={openDimension}
+            />
+          </Reveal>
+
+          {/* Its own metric, deliberately outside the fit and confidence scores:
+              a conversation changes what the student expects, never what their
+              own work has shown. */}
+          <Reveal y={16}>
+            <HumanExposurePanel conversations={conversations} />
           </Reveal>
 
           <div>
