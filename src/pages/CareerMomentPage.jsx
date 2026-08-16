@@ -15,13 +15,17 @@ import MomentTask from '@/components/moments/MomentTask';
 import MomentFeedback from '@/components/moments/MomentFeedback';
 import MomentReaction from '@/components/moments/MomentReaction';
 import MomentLearned from '@/components/moments/MomentLearned';
+import MomentPartHeader from '@/components/moments/MomentPartHeader';
 import {
   loadMomentTarget, generateCareerMoment, saveCareerMoment, feedbackFor, completeCareerMoment,
   loadMeasurementPlan, nextQuickTest, openQuickTestDimensions,
 } from '@/lib/career-moment';
 import { createTracker, recordMomentSignals } from '@/lib/behavioral-signals';
 
-const STAGES = ['Situation', 'Your call', 'What it showed', 'Reaction'];
+/* Part one is the question itself, part two is the short reflection that turns
+   the answer into evidence. The two are separate steps of the cycle. */
+const STAGES = ['Situation', 'Your call', 'What it showed', 'Quick reflection'];
+const PART_OF = { hook: 'question', task: 'question', feedback: 'question', reaction: 'reflection', done: 'reflection' };
 
 export default function CareerMomentPage() {
   const [params] = useSearchParams();
@@ -159,6 +163,8 @@ export default function CareerMomentPage() {
         <Link to="/journey" className="tp-body mb-6 inline-flex items-center gap-1" style={{ color: 'var(--ink-500)' }}>
           <ArrowLeft size={15} /> My Journey
         </Link>
+
+        <MomentPartHeader part={PART_OF[stage]} />
 
         <div className="mb-6 flex items-center gap-2">
           {STAGES.map((label, i) => (
