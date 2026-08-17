@@ -59,6 +59,10 @@
  * Append this to any prompt whose output reaches a person. Skip it on prompts
  * that only return structured data with no sentences in it.
  */
+// The rule that bans the two dashes has to show the model both characters, so
+// this template is the one place they are allowed. It is also the whole of the
+// documented bundle count of 2: anything above that is text someone added.
+// eslint-disable-next-line no-restricted-syntax -- the rule has to name them
 export const PLAIN_PROSE_RULES = `
 
 ## How to write

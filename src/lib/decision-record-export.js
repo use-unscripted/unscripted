@@ -111,8 +111,9 @@ export function portfolioExport(record, { includeReflections = false } = {}) {
     heading(h.pathName),
     ...h.nodes.map(n => {
       if (n.kind === 'initial') {
-        return [`### Initial hypothesis${n.reconstructed ? ' (reconstructed from my hypothesis record)' : ''}, ${date(n.at)}`,
+        return [`### Initial hypothesis (${date(n.at)})`,
           bullet([
+            n.reconstructed && 'Read from my hypothesis record rather than recorded at the time.',
             n.statement && `Why it seemed worth testing: ${n.statement}`,
             n.confidence != null && `Initial confidence: ${n.confidence}%`,
             n.unknowns?.length && `Initial unknowns: ${n.unknowns.join('; ')}`,

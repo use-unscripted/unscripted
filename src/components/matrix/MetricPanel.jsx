@@ -34,7 +34,7 @@ export default function MetricPanel({ row, metric, onClose }) {
       <div className="flex flex-wrap items-end gap-6">
         <div>
           <p className="tp-meta" style={{ color: 'var(--text-muted)' }}>Current</p>
-          <p className="tp-page tabular-nums" style={{ color: 'var(--text-primary)' }}>{p.current || '-'}</p>
+          <p className="tp-page tabular-nums" style={{ color: 'var(--text-primary)' }}>{p.current || 'No score yet'}</p>
         </div>
         {p.previous && (
           <div>

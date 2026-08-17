@@ -9,12 +9,12 @@
 const Stat = ({ label, value, sub }) => (
   <div className="app-card-flat p-4">
     <p className="tp-eyebrow" style={{ color: 'var(--text-muted)' }}>{label}</p>
-    <p className="tp-hero mt-1" style={{ color: 'var(--text-primary)' }}>{value ?? '-'}</p>
+    <p className="tp-hero mt-1" style={{ color: 'var(--text-primary)' }}>{value ?? 'No data'}</p>
     {sub && <p className="tp-meta mt-1" style={{ color: 'var(--text-muted)' }}>{sub}</p>}
   </div>
 );
 
-const hours = (h) => (h === null || h === undefined ? '-' : h >= 48 ? `${Math.round(h / 24)} days` : `${h} h`);
+const hours = (h) => (h === null || h === undefined ? 'No data' : h >= 48 ? `${Math.round(h / 24)} days` : `${h} h`);
 
 export default function RepeatCyclePanel({ cycles }) {
   if (!cycles) return null;
@@ -26,7 +26,7 @@ export default function RepeatCyclePanel({ cycles }) {
         <Stat label="Cycle attempts" value={cycles.attempts_total} sub="An experiment a student selected" />
         <Stat label="Completed cycles" value={cycles.cycles_completed_total} sub="All eight steps recorded" />
         <Stat label="Students with 1+" value={cycles.students_with_a_completed_cycle} />
-        <Stat label="Repeat rate" value={cycles.repeat_cycle_rate === null ? '-' : `${cycles.repeat_cycle_rate}%`} sub="Of students with one cycle, how many ran a second on the same path" />
+        <Stat label="Repeat rate" value={cycles.repeat_cycle_rate === null ? 'No data' : `${cycles.repeat_cycle_rate}%`} sub="Of students with one cycle, how many ran a second on the same path" />
         <Stat label="2 cycles, same path" value={cycles.students_with_two_cycles_same_path} />
         <Stat label="3 cycles, same path" value={cycles.students_with_three_cycles_same_path} />
         <Stat label="Between cycles" value={hours(cycles.median_hours_between_cycles)} sub="Median" />
