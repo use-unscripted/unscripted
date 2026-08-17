@@ -83,6 +83,7 @@ describe('every converted call site awaits before unwrapping', async () => {
     'src/pages/BlueprintLibrary.jsx',
     'src/components/outreach/OutreachPlanModal.jsx',
     'src/lib/risk-assessor.js',
+    'src/lib/experiment-evaluation.js',
   ];
 
   it.each(files)('%s', (file) => {

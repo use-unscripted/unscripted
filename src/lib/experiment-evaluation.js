@@ -113,7 +113,13 @@ export async function evaluateExperimentWork(exp, measurementRow) {
 
   // Judges the student's work, reads whatever they attached, and writes the
   // summary printed back to them on the measurement card while they wait.
-  // Same job as the simulation review. Highest-quality tier; see src/lib/llm.js.
+  // Same job as the simulation review, so the same tier. Verified 2026-08-17
+  // against the live model: pinned gemini_3_1_pro does read attached files, so
+  // don't revert the pin out of caution about that.
+  // The trade is speed. Unpinned, this ran on the app default, a lightweight
+  // tier that is faster than gemini_3_flash, and the student is held on a
+  // blocking spinner the whole time. Taken anyway because a wrong score costs
+  // more here than a slow one. See src/lib/llm.js.
   const res = unwrapLLM(await base44.integrations.Core.InvokeLLM({
     prompt,
     model: 'gemini_3_1_pro',
