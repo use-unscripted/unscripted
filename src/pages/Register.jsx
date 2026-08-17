@@ -16,21 +16,28 @@ import { validatePassword, isPasswordValid } from "@/lib/password-validation";
 import { trackFunnel } from "@/lib/funnel";
 
 /* This screen is reached from more than one place, and it used to introduce
-   itself as a path test no matter which. Someone who clicked "See a full
-   mission guide" on the landing page got a password form headed "Save Your
+   itself as a path test no matter which. Someone who clicked the work
+   simulation button on the landing page got a password form headed "Save Your
    Path Test" for something they never started, with no way back. The heading
    has to name the thing that was clicked. */
+const WORK_SIMULATION = {
+  title: "Try a work simulation",
+  // A simulation writes rows the student owns, so it needs an account, and it
+  // sits beside a path in the testing stage of the journey. Promise the route
+  // to one, not that it is waiting on the next screen.
+  subtitle:
+    "Work simulations run inside your account, beside the path you decide to test. Create one, choose a path, and you can start a simulation from your journey.",
+  backTo: "/",
+  backLabel: "Back to Unscripted",
+};
+
 const INTENTS = {
-  "mission-guide": {
-    title: "See a full Mission Guide",
-    // Guides are per-experiment and generated on request. Only the setup flow
-    // generates one for you; an experiment created anywhere else starts with no
-    // guide at all. Promise the route to a guide, not its automatic arrival.
-    subtitle:
-      "Mission Guides are written for the experiment you choose, so they live inside your account. Create one, pick an experiment, and generate its guide.",
-    backTo: "/",
-    backLabel: "Back to Unscripted",
-  },
+  "work-simulation": WORK_SIMULATION,
+  /* Mission Guides were replaced by work simulations on 2026-08-14. Nothing
+     links here with the old intent any more, but anything saved or shared
+     before then still resolves to a heading that reads correctly rather than
+     falling back to a path test the visitor never took. */
+  "mission-guide": WORK_SIMULATION,
 };
 
 const DEFAULT_INTENT = {
