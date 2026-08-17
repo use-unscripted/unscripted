@@ -17,7 +17,7 @@ export default function HumanEvidenceCard({ conversation: c, changedLabel, sourc
   return (
     <article className="app-card p-5 sm:p-6">
       <h3 className="tp-control" style={{ color: 'var(--ink-900)' }}>
-        {c.professional_role || sourceLabel || 'A professional'}{c.professional_organisation ? ` \u2014 ${c.professional_organisation}` : ''}
+        {c.professional_role || sourceLabel || 'A professional'}{c.professional_organisation ? `, ${c.professional_organisation}` : ''}
       </h3>
       <p className="tp-meta mt-1" style={{ color: 'var(--text-muted)' }}>
         {interactionLabel || 'A conversation'}
@@ -28,7 +28,7 @@ export default function HumanEvidenceCard({ conversation: c, changedLabel, sourc
       <Row label="Question tested">{c.uncertainty_question || c.topic_label || 'Not recorded'}</Row>
       <Row label="What you learned">{c.key_learning}</Row>
       {c.surprised_by && <Row label="What surprised you">{c.surprised_by}</Row>}
-      {changedLabel && <Row label="Expectation">{changedLabel}{c.changed_expectation_note ? ` \u2014 ${c.changed_expectation_note}` : ''}</Row>}
+      {changedLabel && <Row label="Expectation">{changedLabel}{c.changed_expectation_note ? `: ${c.changed_expectation_note}` : ''}</Row>}
       {c.remaining_unknown && <Row label="Still unknown">{c.remaining_unknown}</Row>}
       <Row label="Path informed">{c.path_name || 'Not recorded'}</Row>
       {representativeness && (

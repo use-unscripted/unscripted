@@ -23,8 +23,8 @@ export default function RevisionDiff({ version }) {
               <span className="text-[10px] text-[color:var(--ink-400)]">{Math.round(c.similarity * 100)}% similar</span>
             )}
           </div>
-          <p className="mt-1.5 text-xs text-[color:var(--ink-500)]"><span className="font-semibold">Before:</span> {String(c.before ?? '\u2014').slice(0, 300)}</p>
-          <p className="mt-1 text-xs text-[color:var(--ink-700)]"><span className="font-semibold">After:</span> {String(c.after ?? '\u2014').slice(0, 300)}</p>
+          <p className="mt-1.5 text-xs text-[color:var(--ink-500)]"><span className="font-semibold">Before:</span> {String(c.before ?? '-').slice(0, 300)}</p>
+          <p className="mt-1 text-xs text-[color:var(--ink-700)]"><span className="font-semibold">After:</span> {String(c.after ?? '-').slice(0, 300)}</p>
         </li>
       ))}
     </ul>

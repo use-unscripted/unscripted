@@ -7,8 +7,8 @@ const STYLE = {
   strong_positive: { color: 'var(--success-700)', bg: 'var(--success-50)', mark: '++' },
   positive: { color: 'var(--success-700)', bg: 'var(--success-50)', mark: '+' },
   mixed: { color: 'var(--warning-700)', bg: 'var(--warning-50)', mark: '~' },
-  negative: { color: 'var(--brand-navy-700)', bg: 'var(--ink-100)', mark: '–' },
-  strong_negative: { color: 'var(--brand-navy-700)', bg: 'var(--ink-100)', mark: '––' },
+  negative: { color: 'var(--brand-navy-700)', bg: 'var(--ink-100)', mark: '-' },
+  strong_negative: { color: 'var(--brand-navy-700)', bg: 'var(--ink-100)', mark: '--' },
   unknown: { color: 'var(--ink-500)', bg: 'var(--ink-50)', mark: '?' },
 };
 

@@ -153,7 +153,7 @@ export default function StepEvidencePanel({ guide, stepNumber, step, experiment,
               className="tp-body mt-1.5 flex w-full items-center justify-center gap-2 rounded-[var(--r-control)] border border-dashed px-3 font-semibold"
               style={{ borderColor: 'var(--border-light)', color: 'var(--text-secondary)', minHeight: '48px' }}>
               {uploading ? <><Loader2 size={14} className="animate-spin" /> Uploading…</>
-                : <><Upload size={14} /> {files.length ? 'Add another file' : 'Choose files — you can pick several at once'}</>}
+                : <><Upload size={14} /> {files.length ? 'Add another file' : 'Choose files (you can pick several at once)'}</>}
             </button>
           ) : (
             <p className="tp-meta mt-1.5" style={{ color: 'var(--text-muted)' }}>

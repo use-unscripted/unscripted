@@ -6,7 +6,7 @@
  */
 const cell = { padding: '10px 12px', borderBottom: '1px solid var(--border-light)', textAlign: 'left' };
 
-const val = (v, suffix = '') => (v === null || v === undefined ? '—' : `${v}${suffix}`);
+const val = (v, suffix = '') => (v === null || v === undefined ? '-' : `${v}${suffix}`);
 
 export default function FunnelStageTable({ stages = [], eventBacked = true }) {
   if (!stages.length) {
@@ -35,11 +35,11 @@ export default function FunnelStageTable({ stages = [], eventBacked = true }) {
               <td className="tp-body" style={{ ...cell, color: 'var(--text-secondary)' }}>{val(s.records)}</td>
               <td className="tp-body" style={{ ...cell, color: 'var(--text-secondary)' }}>{val(s.conversion_from_previous, '%')}</td>
               <td className="tp-body" style={{ ...cell, color: 'var(--text-secondary)' }}>{val(s.conversion_from_entry, '%')}</td>
-              <td className="tp-body" style={{ ...cell, color: 'var(--text-secondary)' }}>{eventBacked ? val(s.dropped_from_previous) : '—'}</td>
+              <td className="tp-body" style={{ ...cell, color: 'var(--text-secondary)' }}>{eventBacked ? val(s.dropped_from_previous) : '-'}</td>
               <td className="tp-body" style={{ ...cell, color: 'var(--text-muted)' }}>
                 {eventBacked
                   ? val(s.median_hours_from_previous, ' h')
-                  : (s.basis || '—')}
+                  : (s.basis || '-')}
               </td>
             </tr>
           ))}

@@ -42,7 +42,7 @@ export function advisorBrief(record, { includeReflections = false } = {}) {
     ]) || '- Not recorded.',
     heading('What I have tested'),
     hypotheses.map(h => bullet([
-      `${h.pathName} — ${h.current.decisionLabel || h.status.replace(/_/g, ' ')}${h.current.confidence ? `, ${h.current.confidence} confidence` : ''}.`,
+      `${h.pathName}: ${h.current.decisionLabel || h.status.replace(/_/g, ' ')}${h.current.confidence ? `, ${h.current.confidence} confidence` : ''}.`,
       h.experimentCount && `${h.experimentCount} experiment${h.experimentCount === 1 ? '' : 's'} run.`,
       ...(includeReflections ? [] : []),
     ])).join('\n'),
@@ -72,7 +72,7 @@ export function evidenceSummary(record, { includeReflections = false } = {}) {
         `Position now: ${h.current.decisionLabel || h.status.replace(/_/g, ' ')}${h.current.confidence ? ` (${h.current.confidence})` : ''}`,
       ]),
       ...h.nodes.filter(n => n.kind === 'update').map(u => bullet([
-        `${date(u.at)} — ${u.direction}${u.experimentTitle ? ` after ${u.experimentTitle}` : ''}.`,
+        `${date(u.at)}: ${u.direction}${u.experimentTitle ? ` after ${u.experimentTitle}` : ''}.`,
         u.strengthened[0] && `Strengthened by: ${u.strengthened[0]}`,
         u.weakened[0] && `Weakened by: ${u.weakened[0]}`,
         u.resolved[0] && `Question answered: ${u.resolved[0]}`,
@@ -111,15 +111,16 @@ export function portfolioExport(record, { includeReflections = false } = {}) {
     heading(h.pathName),
     ...h.nodes.map(n => {
       if (n.kind === 'initial') {
-        return [`### Initial hypothesis${n.reconstructed ? ' (reconstructed from my hypothesis record)' : ''} — ${date(n.at)}`,
+        return [`### Initial hypothesis (${date(n.at)})`,
           bullet([
+            n.reconstructed && 'Read from my hypothesis record rather than recorded at the time.',
             n.statement && `Why it seemed worth testing: ${n.statement}`,
             n.confidence != null && `Initial confidence: ${n.confidence}%`,
             n.unknowns?.length && `Initial unknowns: ${n.unknowns.join('; ')}`,
           ])].join('\n');
       }
       if (n.kind === 'experiment') {
-        return [`### Experiment — ${n.title} (${date(n.at)})`,
+        return [`### Experiment: ${n.title} (${date(n.at)})`,
           bullet([
             n.tested && `Tested: ${n.tested}`,
             n.expectation[0] && `Expectation: ${n.expectation.join('; ')}`,
@@ -128,7 +129,7 @@ export function portfolioExport(record, { includeReflections = false } = {}) {
             n.reality[0] && `Reality: ${n.reality.join('; ')}`,
           ])].join('\n');
       }
-      return [`### Hypothesis update ${n.sequence || ''} — ${date(n.at)}`,
+      return [`### Hypothesis update ${n.sequence || ''} (${date(n.at)})`,
         bullet([
           `${n.direction}${n.confidenceBefore ? `: ${n.confidenceBefore} → ${n.confidenceAfter}` : ''}`,
           n.resolved[0] && `Unknown resolved: ${n.resolved.join('; ')}`,

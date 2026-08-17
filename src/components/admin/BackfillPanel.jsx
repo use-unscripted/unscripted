@@ -66,7 +66,7 @@ export default function BackfillPanel({ onWritten }) {
           <ul className="mt-1.5 space-y-1">
             {(result.left_unknown || []).map(u => (
               <li key={u.event} className="tp-meta" style={{ color: 'var(--text-muted)' }}>
-                {u.event.replace(/_/g, ' ')} — {u.why}
+                {u.event.replace(/_/g, ' ')}: {u.why}
               </li>
             ))}
           </ul>

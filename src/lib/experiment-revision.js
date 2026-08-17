@@ -201,7 +201,7 @@ export function revisionPlan({ validation, diff }) {
 }
 
 /** Student-facing wording. Honest about what the badge currently means. */
-export const REREVIEW_LABEL = 'Recently Updated \u2014 Professional Re-Review Pending';
+export const REREVIEW_LABEL = 'Recently Updated, Professional Re-Review Pending';
 export const REREVIEW_NOTE = 'This experiment was materially updated, so the professional reviews of the previous version no longer apply to it. A professional re-review is pending.';
 
 export default diffExperimentVersions;
