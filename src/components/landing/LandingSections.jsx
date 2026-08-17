@@ -102,7 +102,11 @@ const MATRIX_ROWS = [
   { path: 'Data analysis', tested: false },
 ];
 
-const HOLD = 0.75;   // seconds "Not tested" holds before the test lands
+/* Long enough that the word it started on registers, short enough that the
+   card is not still contradicting the paragraph under it while that paragraph
+   is being read. At 0.75 the row read "Not tested" for the first second while
+   the caption said the path reads "Early signal" now. */
+const HOLD = 0.3;    // seconds "Not tested" holds before the test lands
 const SWAP = 0.35;   // how long the word takes to change
 
 function ExampleChip({ onNavy = false }) {
@@ -110,9 +114,9 @@ function ExampleChip({ onNavy = false }) {
     <span
       className="shrink-0 rounded-full px-3 py-1 text-xs font-semibold"
       style={onNavy
-        /* Solid gold with navy on it, 5.97:1. The tinted fill this replaced
-           measured 4.06:1, and a disclaimer that fails AA is the one label on
-           the card that has to be readable. */
+        /* Solid gold with navy on it, 5.88:1 measured in the browser. The
+           tinted fill this replaced measured 4.06:1, and a disclaimer that
+           fails AA is the one label on the card that has to be readable. */
         ? { background: 'var(--brand-gold-500)', color: 'var(--brand-navy-900)' }
         : { background: 'var(--background-tertiary)', color: 'var(--brand-navy-700)' }}
     >
@@ -252,7 +256,7 @@ export default function LandingSections() {
               Do thirty minutes of the job before you commit to it.
             </h2>
             <p className="mt-5 leading-7" style={{ color: 'var(--text-secondary)' }}>
-              A work simulation puts you inside one morning of a real job at a company that does not exist. More work than the team can take on, a salesperson who has already told a customer it’s coming, and an estimate that turns out to be wrong after you’ve planned around it. You decide what gets built. Then you write the spec and answer the people you said no to.
+              A work simulation puts you inside one morning of a real job at a company that does not exist. There is more work than the team can take on, and a salesperson who has already told a customer it’s coming. You decide what gets built and write the spec for it. Then an estimate turns out to be wrong, and you make the call again. After that you answer the people you said no to.
             </p>
             <p className="mt-5 leading-7" style={{ color: 'var(--text-secondary)' }}>
               You say up front how much you expect to enjoy it and how well you expect to do. At the end you get a read-out: what you predicted, what happened instead, and what the checks found in the work you handed in. It won’t tell you whether you’d be good at the job, or whether you should do it. It tells you how you reacted to the work.
@@ -286,15 +290,24 @@ export default function LandingSections() {
               Northgate is not a real company. It sells scheduling software to plumbers and electricians, and you run the Jobs area. It’s Tuesday, 9:12 in the morning, and six things arrived overnight.
             </p>
 
-            <ol className="space-y-3.5">
+            {/* role="list" is not redundant. The list style is none here, and
+                WebKit drops list semantics from a styled-off list unless the
+                role is stated, which would take the ordinal away from a
+                screen reader on the one list whose order is the point. */}
+            <ol role="list" className="space-y-3.5">
               {SIM_STEPS.map(([title, detail], i) => (
                 <li key={title} className="flex items-start gap-3.5">
-                  {/* The <ol> already announces the ordinal, so the drawn
-                      number is decoration and saying it twice is noise. */}
+                  {/* The list announces the ordinal, so the drawn number is
+                      decoration and saying it twice is noise. Solid gold with
+                      navy on it, the pairing .journey-now-cta already uses,
+                      5.88:1 measured in the browser. The tinted fill this
+                      replaced put gold text on a gold wash over navy and
+                      measured 4.24:1, and at 11px bold nothing below 4.5
+                      counts as large text. */}
                   <span
                     aria-hidden="true"
                     className="mt-px grid h-6 w-6 shrink-0 place-items-center rounded-full text-[11px] font-bold"
-                    style={{ background: 'rgba(214,182,106,0.18)', color: 'var(--brand-gold-500)' }}
+                    style={{ background: 'var(--brand-gold-500)', color: 'var(--brand-navy-900)' }}
                   >
                     {i + 1}
                   </span>
@@ -369,7 +382,7 @@ export default function LandingSections() {
               form of it that survives the phone, where the two cards stack
               and cannot be seen together. */}
           <p className="mt-6 max-w-3xl leading-7" style={{ color: 'var(--text-secondary)' }}>
-            One finished simulation moves one row. That path reads “Early signal” now, which is what sits where a confidence score would once there’s enough behind it. The other two still say “Not tested”, and nothing here rules them out.
+            One finished simulation moves one row. That path reads “Early signal” now, on one piece of evidence. The other two still say “Not tested”, and nothing here rules them out.
           </p>
           <p className="mt-2 max-w-3xl text-xs leading-5" style={{ color: 'var(--text-muted)' }}>
             An example, not a real student. We made up the three career names. “Not tested”, “Early signal” and “Not enough history” are the screen’s own words.
