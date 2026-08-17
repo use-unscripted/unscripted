@@ -37,6 +37,8 @@ const NUMBER_GAP = 3;
 const MAX_DIRECTIONS = 3;
 /** Under three characters a fragment matches half of everything by accident. */
 const MIN_OVERLAP = 3;
+/** What is left after an ending comes off has to still be a word, not a stub. */
+const MIN_STEM = 4;
 
 const clean = (v) => String(v ?? '').replace(/\s+/g, ' ').trim();
 const norm = (v) => clean(v).toLowerCase().replace(/[.,;:!?]+$/, '');
@@ -46,39 +48,70 @@ const listOf = (v) => (Array.isArray(v) ? v.map(clean).filter(Boolean) : []);
 const words = (v) => norm(v).split(/[^a-z0-9]+/).filter(Boolean);
 
 /**
- * Do two words name the same thing?
+ * Endings that turn one career word into another name for the same career:
+ * nurse and nursing, teacher and teaching, accountant and accounting. Longest
+ * first, so "engineering" loses "ing" rather than "g".
  *
- * Whole-string comparison leaks in one direction and only one: "lawyer" is not
- * a word inside "law school", so a student who ruled out Lawyer was handed back
- * Law school. Comparing word against word is symmetric, so it cannot.
- *
- * An exact word counts however short it is, because "HR" is a career and not an
- * accident. A prefix has to reach MIN_OVERLAP first, or a two-letter fragment
- * matches half of everything.
+ * One ending comes off and no letter is ever rewritten, which is well short of
+ * a real stemmer and is meant to be. MIN_STEM is what keeps it off short words,
+ * so "acting" does not become "act" and take Accounting with it.
  */
-const sameWord = (a, b) => {
-  if (a === b) return true;
+const ENDINGS = ['ings', 'ing', 'ists', 'ist', 'ants', 'ant', 'ents', 'ent', 'ers', 'er', 'ors', 'or', 'es', 's', 'y', 'e'];
+
+const stem = (word) => {
+  for (const end of ENDINGS) {
+    if (word.endsWith(end) && word.length - end.length >= MIN_STEM) return word.slice(0, -end.length);
+  }
+  return word;
+};
+
+/** Is the shorter of these two the front of the longer one? */
+const prefixOf = (a, b) => {
   const [short, long] = a.length <= b.length ? [a, b] : [b, a];
   return short.length >= MIN_OVERLAP && long.startsWith(short);
 };
 
 /**
+ * Do two words name the same thing?
+ *
+ * An exact word counts however short it is, because "HR" is a career and not an
+ * accident. A prefix has to reach MIN_OVERLAP first, or a two-letter fragment
+ * matches half of everything. Off the front is not enough on its own though:
+ * "nursing" does not start with "nurse", so the endings come off both and the
+ * stumps get the same treatment.
+ */
+const sameWord = (a, b) => a === b || prefixOf(a, b) || prefixOf(stem(a), stem(b));
+
+/**
  * Has the student already ruled this out?
  *
- * Deliberately generous, because the two failures are not equal. Dropping a
- * direction we could have shown costs one line on one screen. Showing a
- * student the thing they just told us they do not want reads as not having
- * listened, on the screen whose whole job is proving we did. The question that
- * collects this says "we will not suggest it back to you" in writing.
+ * Generous in one direction on purpose, because the two failures are not equal.
+ * Dropping a direction we could have shown costs one line on one screen.
+ * Showing a student the thing they just told us they do not want reads as not
+ * having listened, on the screen whose whole job is proving we did. The
+ * question that collects this says "we will not suggest it back to you" in
+ * writing.
  *
- * The cost of that generosity, taken knowingly: one shared word is enough, so
- * ruling out Product design also drops Product management.
+ * The generosity is in how much of an answer has to match, not how little.
+ * Every word of the shorter answer has to land somewhere in the longer one, so
+ * "HR" takes HR generalist with it and "Nursing" takes Nursing school, while
+ * Law school and Business school are two different answers that happen to share
+ * a word. Any-one-word matching is what made a student who ruled out Law school
+ * lose Business school, Med school and Grad school as well, and two answers
+ * ending up as no directions at all is not a rough edge on this screen. It is
+ * the screen with nothing on it.
  */
 export function isRuledOut(name, ruledOut) {
   const mine = words(name);
   if (!mine.length) return false;
-  return listOf(ruledOut).some((entry) =>
-    words(entry).some((theirs) => mine.some((word) => sameWord(word, theirs))));
+  return listOf(ruledOut).some((entry) => {
+    const theirs = words(entry);
+    // An entry with no words in it, "???" or ".*", would otherwise match
+    // everything, since every word of nothing lands anywhere.
+    if (!theirs.length) return false;
+    const [fewer, more] = mine.length <= theirs.length ? [mine, theirs] : [theirs, mine];
+    return fewer.every((word) => more.some((other) => sameWord(word, other)));
+  });
 }
 
 const SOURCE_LABELS = {
@@ -247,8 +280,16 @@ export function earlyRead(data = {}) {
  * wording, not which question they arrived through.
  */
 function emptyNote({ considered, curious, ruledOut, pressured }) {
-  if (considered.length || curious) {
-    return 'Everything you named is also on your ruled-out list, so there is nothing left to show you.';
+  const named = [curious, ...considered].filter(Boolean);
+  if (named.length) {
+    // A sentence about what the student did needs the student's own words for
+    // it: the same career typed into both questions. isRuledOut is loose by
+    // design, so letting it decide this line is how the screen ends up telling
+    // someone a career is on a list they never put it on.
+    const theirOwnWords = named.every((name) => ruledOut.some((entry) => norm(entry) === norm(name)));
+    return theirOwnWords
+      ? 'Everything you named is also on your ruled-out list, so there is nothing left to show you.'
+      : 'We took everything you named as already ruled out, so there is nothing left to show you.';
   }
   if (ruledOut.length && pressured) {
     return 'The only careers you have named are the ones you ruled out and the one being pushed at you, so there is nothing left to put here.';

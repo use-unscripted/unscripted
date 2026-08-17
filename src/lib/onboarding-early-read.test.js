@@ -139,6 +139,69 @@ describe('isRuledOut', () => {
     expect(isRuledOut('Marketing', ['ma'])).toBe(false);
   });
 
+  // The single most likely pair of answers here is a student who rules out one
+  // school and is considering another, since the question's own placeholder
+  // reads "e.g. Law school". Dropping the second one is not a rough edge: it
+  // empties the screen and then explains the empty screen with a sentence
+  // about the student that is not true.
+  it('leaves an unrelated career that happens to share a word', () => {
+    const pairs = [
+      ['Law school', 'Business school'],
+      ['Law school', 'Nursing school'],
+      ['Computer science', 'Political science'],
+      ['Software engineering', 'Civil engineering'],
+      ['Product design', 'Graphic design'],
+      ['Product management', 'Sports management'],
+      ['Data analyst', 'Financial analyst'],
+      ['Investment banking', 'Investment management'],
+      ['Public relations', 'Public health'],
+      ['Sports medicine', 'Sports management'],
+      ['Marketing manager', 'Project manager'],
+      ['Physical therapy', 'Occupational therapy'],
+    ];
+    for (const [out, considering] of pairs) {
+      expect(isRuledOut(considering, [out]), `${out} killed ${considering}`).toBe(false);
+      expect(isRuledOut(out, [considering]), `${considering} killed ${out}`).toBe(false);
+    }
+  });
+
+  it('does not match two answers on a word like "of"', () => {
+    expect(isRuledOut('Head of design', ['Director of nursing'])).toBe(false);
+    expect(isRuledOut('Master of fine arts', ['Doctor of medicine'])).toBe(false);
+  });
+
+  it('drops the same career written with a different ending', () => {
+    // Nurse and Nursing is at least as likely as Lawyer and Law school, and
+    // "Already off the table: Nurse" directly above "Worth testing: Nursing" is
+    // the screen failing at the one thing it is here to do.
+    const pairs = [
+      ['Nurse', 'Nursing'],
+      ['Teacher', 'Teaching'],
+      ['Accountant', 'Accounting'],
+      ['Therapist', 'Therapy'],
+      ['Engineer', 'Engineering'],
+      ['Consultant', 'Consulting'],
+    ];
+    for (const [out, considering] of pairs) {
+      expect(isRuledOut(considering, [out]), `${out} let ${considering} through`).toBe(true);
+      expect(isRuledOut(out, [considering]), `${considering} let ${out} through`).toBe(true);
+    }
+  });
+
+  it('reads a shorter answer as the whole of a longer one, not a word inside it', () => {
+    // Ruling out Nursing has to take Nursing school with it, while ruling out
+    // Nursing school leaves Business school alone.
+    expect(isRuledOut('Nursing school', ['Nursing'])).toBe(true);
+    expect(isRuledOut('Business school', ['Nursing school'])).toBe(false);
+    expect(isRuledOut('Medicine', ['Med school'])).toBe(true);
+    expect(isRuledOut('Law school', ['Med school'])).toBe(false);
+  });
+
+  it('drops nothing for a ruled-out entry with no words in it', () => {
+    expect(isRuledOut('Nursing', ['.*'])).toBe(false);
+    expect(isRuledOut('Law school', ['!!!'])).toBe(false);
+  });
+
   it('is false when nothing was ruled out', () => {
     expect(isRuledOut('Law', [])).toBe(false);
     expect(isRuledOut('Law', undefined)).toBe(false);
@@ -283,6 +346,44 @@ describe('earlyRead, the empty middle', () => {
   it('leaves the note empty when there are directions to show', () => {
     const read = earlyRead({ ...CLARITY_ONLY, current_careers_considered: ['Banking'] });
     expect(read.directionsNote).toBe('');
+  });
+
+  // A student naming one school and ruling out another is an ordinary pair of
+  // answers, and it used to empty the screen and then tell them their own
+  // career was on their ruled-out list.
+  it('does not empty the screen over a word two unrelated careers share', () => {
+    const read = earlyRead({
+      ...CLARITY_ONLY,
+      current_careers_considered: ['Business school'],
+      careers_ruled_out: ['Law school'],
+    });
+    expect(read.directions.map(d => d.name)).toEqual(['Business school']);
+    expect(read.directionsNote).toBe('');
+  });
+
+  // The matcher is deliberately loose, so it must never be what decides to
+  // print a sentence about what the student did. Only the same career typed
+  // into both questions can do that.
+  it('only says a career is on the ruled-out list when the student put it there', () => {
+    const read = earlyRead({
+      ...CLARITY_ONLY,
+      current_careers_considered: ['Nursing school'],
+      careers_ruled_out: ['Nursing'],
+    });
+    expect(read.directions).toEqual([]);
+    expect(read.directionsNote).not.toContain('also on your ruled-out list');
+    expect(read.directionsNote).toContain('took everything you named as already ruled out');
+  });
+
+  it('still says it plainly when they did type the same career into both', () => {
+    const read = earlyRead({
+      ...CLARITY_ONLY,
+      curious_path: 'Law',
+      current_careers_considered: ['Medicine'],
+      careers_ruled_out: ['medicine.', 'Law'],
+    });
+    expect(read.directions).toEqual([]);
+    expect(read.directionsNote).toContain('also on your ruled-out list');
   });
 
   // The screen prints the ruled-out list and the pressured path two lines above

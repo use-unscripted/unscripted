@@ -72,10 +72,14 @@ export default function OnboardingEarlyRead({ read, headingRef }) {
           <Block title="Worth testing" delay={110}>
             {/* A student can count. Naming five and seeing three, under a line
                 saying there is no order, makes the cut itself look like a
-                ranking, which is the one thing this screen must never do. */}
+                ranking, which is the one thing this screen must never do.
+                The number is what is left after the ruled-out ones come off,
+                so it is not what they named: five on the list line and four
+                here is the same student counting twice and getting two
+                answers. "Off the table" is the line that took them off. */}
             <p className="tp-meta mt-1.5" style={{ color: 'var(--text-secondary)' }}>
               {read.directionsTotal > read.directions.length
-                ? `We are showing ${read.directions.length} of the ${read.directionsTotal} careers you named. The ones left off are not worse, because nothing on this screen is scored.`
+                ? `We are showing ${read.directions.length} of the ${read.directionsTotal} careers still on the table. The ones left off are not worse, because nothing on this screen is scored.`
                 : 'These came off your own answers. There is no order to them and no score behind them.'}
             </p>
             <ul className="mt-3 space-y-2">

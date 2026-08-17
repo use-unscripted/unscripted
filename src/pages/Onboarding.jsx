@@ -102,13 +102,17 @@ export default function Onboarding() {
       setResumed(Object.values(fields).some(v => (Array.isArray(v) ? v.length : String(v ?? '').trim())));
       if (intake_version === INTAKE_VERSION && current_step != null) {
         setIndex(Math.min(current_step, REVIEW));
-        // How far the student actually got is in the draft and nowhere else. A
-        // fresh mount at ?step=0, which is exactly what the account wall's edit
-        // link does, would otherwise show "from your first five answers" to
-        // someone who answered all sixteen and has paths behind them. Reading
-        // it here covers the reload-and-step-back route at the same time.
-        if (current_step > EARLY_READ_AFTER) earlyReadShownRef.current = true;
       }
+      // How far the student actually got is in the draft and nowhere else. A
+      // fresh mount at ?step=0, which is exactly what the account wall's edit
+      // link does, would otherwise show "from your first five answers" to
+      // someone who answered all sixteen and has paths behind them. Reading it
+      // here covers the reload-and-step-back route at the same time.
+      //
+      // Outside the version check, because the answers above are restored
+      // whatever version wrote them. A finished student on last month's
+      // questions still finished.
+      if (current_step > EARLY_READ_AFTER) earlyReadShownRef.current = true;
     }
     const raw = params.get('step');
     if (raw !== null) {

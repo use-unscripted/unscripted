@@ -163,6 +163,31 @@ describe('the early read, in the flow', () => {
     expect(counter()).toBe(`6 OF ${STEPS.length}`);
   });
 
+  // The answers come back out of the draft whatever version it was written
+  // under, so how far the student got has to be read the same way. Otherwise a
+  // finished student on an older draft walks to question 5 and is shown a read
+  // "on partial answers" with all sixteen of them restored behind it.
+  it('stays away from a finished student whose draft was written under an older intake', () => {
+    seedDraft({
+      current_careers_considered: ['Investment banking'],
+      name: 'Sam',
+      current_step: STEPS.length,
+      intake_version: 3,
+    });
+    render(
+      <MemoryRouter initialEntries={['/onboarding?step=0']}>
+        <Onboarding />
+      </MemoryRouter>
+    );
+    expect(counter()).toBe(`1 OF ${STEPS.length}`);
+
+    for (let i = 0; i < 5; i += 1) advance();
+
+    expect(screen.queryByText('Here is what we can see so far.')).toBeNull();
+    expect(screen.queryByText('There is not much here yet.')).toBeNull();
+    expect(counter()).toBe(`6 OF ${STEPS.length}`);
+  });
+
   it('does not come back after a reload past it followed by Back and Continue', () => {
     seedDraft({ current_careers_considered: ['Investment banking'], current_step: 5 });
     render(
@@ -199,8 +224,40 @@ describe('the early read, in the flow', () => {
     openAtLastQuestionOfSectionOne();
     advance();
 
-    expect(screen.getByText(/showing 3 of the 5 careers you named/i)).toBeTruthy();
+    expect(screen.getByText(/showing 3 of the 5 careers still on the table/i)).toBeTruthy();
     expect(screen.queryByText(/There is no order to them/)).toBeNull();
+  });
+
+  // The count is taken after the ruled-out ones come off, so calling it the
+  // careers they named put two different numbers for the same thing on one
+  // screen: five on the list line, four two lines under it.
+  it('counts what is left rather than what they named once one is ruled out', () => {
+    seedDraft({
+      current_careers_considered: ['Investment banking', 'Consulting', 'Product design', 'Teaching', 'Nursing'],
+      careers_ruled_out: ['Nursing'],
+    });
+    openAtLastQuestionOfSectionOne();
+    advance();
+
+    expect(screen.getByText(/5 careers on your list/)).toBeTruthy();
+    expect(screen.getByText(/showing 3 of the 4 careers still on the table/i)).toBeTruthy();
+    expect(screen.queryByText(/careers you named/i)).toBeNull();
+  });
+
+  // The rendered form of the worst case: a student names one school, rules out
+  // a different one, and the screen empties itself and then explains the empty
+  // screen with a sentence about their answers that is not true.
+  it('does not empty the screen over a word two unrelated careers share', () => {
+    seedDraft({
+      current_careers_considered: ['Business school'],
+      careers_ruled_out: ['Law school'],
+    });
+    openAtLastQuestionOfSectionOne();
+    advance();
+
+    expect(screen.getByText('Business school')).toBeTruthy();
+    expect(screen.queryByText('Nothing to point at yet')).toBeNull();
+    expect(screen.queryByText(/also on your ruled-out list/)).toBeNull();
   });
 
   it('leaves the guest draft round-tripping and adds nothing to it', () => {
