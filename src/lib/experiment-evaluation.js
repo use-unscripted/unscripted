@@ -16,6 +16,7 @@
  *    fit is calculated elsewhere from all the evidence together.
  */
 import { base44 } from '@/api/base44Client';
+import { unwrapLLM, PLAIN_PROSE_RULES } from '@/lib/llm';
 
 const RUBRIC_SCHEMA = {
   type: 'object',
@@ -107,13 +108,18 @@ export async function evaluateExperimentWork(exp, measurementRow) {
     'Where the submission is only described rather than attached, judge the described work and say in the summary that you were working from a description.',
     'summary: two sentences, plain, addressed to the student, about the work only.',
     'demonstrated_strengths and improvement_areas: up to three short specific phrases each, about skills shown in this work.',
+    PLAIN_PROSE_RULES,
   ].filter(Boolean).join('\n');
 
-  const res = await base44.integrations.Core.InvokeLLM({
+  // Judges the student's work, reads whatever they attached, and writes the
+  // summary printed back to them on the measurement card while they wait.
+  // Same job as the simulation review. Highest-quality tier; see src/lib/llm.js.
+  const res = unwrapLLM(await base44.integrations.Core.InvokeLLM({
     prompt,
+    model: 'gemini_3_1_pro',
     response_json_schema: RUBRIC_SCHEMA,
     ...(fileUrls.length ? { file_urls: fileUrls } : {}),
-  });
+  }));
 
   const overall = clamp10(res?.overall_score);
   const reasoning = clamp10(res?.reasoning_quality);
