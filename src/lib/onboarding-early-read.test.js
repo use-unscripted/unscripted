@@ -79,6 +79,17 @@ describe('directionsFrom', () => {
     expect(read.map(d => d.name)).toEqual(['Flawless execution roles']);
   });
 
+  it('never shows back a ruled-out career written in a non-latin script', () => {
+    // Rendered, not theorised: "Already off the table: 医学" sat two lines above
+    // "Worth testing: 医学" on the same screen.
+    const read = directionsFrom({
+      curious_path: '医学',
+      current_careers_considered: ['Кино', 'Product management'],
+      careers_ruled_out: ['医学', 'кино'],
+    });
+    expect(read.map(d => d.name)).toEqual(['Product management']);
+  });
+
   it('shows at most three', () => {
     const read = directionsFrom({
       curious_path: 'Writing',
@@ -200,6 +211,85 @@ describe('isRuledOut', () => {
   it('drops nothing for a ruled-out entry with no words in it', () => {
     expect(isRuledOut('Nursing', ['.*'])).toBe(false);
     expect(isRuledOut('Law school', ['!!!'])).toBe(false);
+  });
+
+  // A career with no latin letters or digits in it has no words to compare, so
+  // the word rule cannot see it at all, not even against a string identical to
+  // it. That put "Already off the table: 医学" and "Worth testing: 医学" on the
+  // same screen, which is the exact promise this function exists to keep.
+  it('matches a career written in a script the word rule cannot read', () => {
+    for (const name of ['医学', 'Кино', 'Ιατρική', '의학', '🎬', '???']) {
+      expect(isRuledOut(name, [name]), `${name} did not match itself`).toBe(true);
+    }
+  });
+
+  it('still leaves two different careers in the same script alone', () => {
+    expect(isRuledOut('医学', ['法律'])).toBe(false);
+    expect(isRuledOut('Кино', ['医学'])).toBe(false);
+    expect(isRuledOut('医学', ['Medicine'])).toBe(false);
+    expect(isRuledOut('Medicine', ['医学'])).toBe(false);
+  });
+
+  it('reads padding and capitals off a non-latin answer the same way', () => {
+    expect(isRuledOut('  医学  ', ['医学'])).toBe(true);
+    expect(isRuledOut('Кино', ['  кино '])).toBe(true);
+  });
+
+  // All four of these are two different careers that happen to share the front
+  // of a word once an ending comes off. Losing the second one empties the
+  // screen and then explains it with a sentence about the student that is not
+  // true. Physics and Physical therapy is an ordinary pair of answers from one
+  // pre-health student.
+  it('leaves a different career that only shares a stem with the ruled-out one', () => {
+    const pairs = [
+      ['Physics', 'Physical therapy'],
+      ['Physics', 'Physician'],
+      ['Police', 'Public policy'],
+      ['Police', 'Policy analyst'],
+    ];
+    for (const [out, considering] of pairs) {
+      expect(isRuledOut(considering, [out]), `${out} killed ${considering}`).toBe(false);
+      expect(isRuledOut(out, [considering]), `${considering} killed ${out}`).toBe(false);
+    }
+  });
+
+  it('still drops the same career when only the ending changed', () => {
+    // What the single-letter endings were doing is done here by the longer
+    // ending coming off the other side, so none of these move.
+    const pairs = [
+      ['Physics', 'Physicist'],
+      ['Journalism', 'Journalist'],
+      ['Economics', 'Economist'],
+      ['Psychology', 'Psychologist'],
+      ['Pharmacy', 'Pharmacist'],
+      ['Education', 'Educator'],
+      ['Animation', 'Animator'],
+    ];
+    for (const [out, considering] of pairs) {
+      expect(isRuledOut(considering, [out]), `${out} let ${considering} through`).toBe(true);
+      expect(isRuledOut(out, [considering]), `${considering} let ${out} through`).toBe(true);
+    }
+  });
+
+  // MIN_STEM is the only thing holding these apart, and its comment used to
+  // name the wrong pair, so it read as a constant that guards nothing. Lower
+  // the floor to 3 and every line here starts dropping a career the student is
+  // still considering.
+  it('does not take an unrelated career with a short ruled-out word', () => {
+    expect(isRuledOut('Actuary', ['Acting'])).toBe(false);
+    expect(isRuledOut('Artificial intelligence', ['Artist'])).toBe(false);
+    expect(isRuledOut('Pathology', ['Patent law'])).toBe(false);
+    expect(isRuledOut('Cardiology', ['Care'])).toBe(false);
+  });
+
+  // Known and measured, not an oversight. The floor above is what stops these
+  // two meeting, and the only way to close it also joins Acting to Actuary,
+  // Artist to Artificial intelligence and Patent law to Pathology. Two careers
+  // that are genuinely different get typed into these two questions far more
+  // often than one career gets typed into both, so the floor stays.
+  it('is documented as missing Acting against Actor', () => {
+    expect(isRuledOut('Actor', ['Acting'])).toBe(false);
+    expect(isRuledOut('Baker', ['Baking'])).toBe(false);
   });
 
   it('is false when nothing was ruled out', () => {
@@ -358,6 +448,19 @@ describe('earlyRead, the empty middle', () => {
       careers_ruled_out: ['Law school'],
     });
     expect(read.directions.map(d => d.name)).toEqual(['Business school']);
+    expect(read.directionsNote).toBe('');
+  });
+
+  // One ruled-out answer used to take the student's only other answer with it,
+  // leaving a heading promising directions over a sentence saying we treated
+  // everything they named as ruled out. They did not name it.
+  it('keeps a pre-health student their only career', () => {
+    const read = earlyRead({
+      ...CLARITY_ONLY,
+      current_careers_considered: ['Physical therapy'],
+      careers_ruled_out: ['Physics'],
+    });
+    expect(read.directions.map(d => d.name)).toEqual(['Physical therapy']);
     expect(read.directionsNote).toBe('');
   });
 

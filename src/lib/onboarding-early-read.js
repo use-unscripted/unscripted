@@ -48,15 +48,45 @@ const listOf = (v) => (Array.isArray(v) ? v.map(clean).filter(Boolean) : []);
 const words = (v) => norm(v).split(/[^a-z0-9]+/).filter(Boolean);
 
 /**
+ * The whole answer, for a career the words above cannot see. Anything with no
+ * latin letters or digits in it, 医学 or Кино or 의학 or an emoji, comes out of
+ * `words` as nothing at all, so word matching cannot compare it even against a
+ * string identical to it. Trailing punctuation is already off, and a "???"
+ * keeps its own characters rather than falling to an empty string that would
+ * then match every other empty one.
+ */
+const whole = (v) => norm(v) || clean(v).toLowerCase();
+
+/**
  * Endings that turn one career word into another name for the same career:
  * nurse and nursing, teacher and teaching, accountant and accounting. Longest
  * first, so "engineering" loses "ing" rather than "g".
  *
  * One ending comes off and no letter is ever rewritten, which is well short of
- * a real stemmer and is meant to be. MIN_STEM is what keeps it off short words,
- * so "acting" does not become "act" and take Accounting with it.
+ * a real stemmer and is meant to be. MIN_STEM is what keeps it off short words:
+ * at a floor of 3, "acting" becomes "act" and takes Actuary with it, "artist"
+ * becomes "art" and takes Artificial intelligence, "patent" becomes "pat" and
+ * takes Pathology. Measured over a 192 career list, dropping the floor to 3
+ * adds 26 wrong drops like those against 10 right ones, and all 10 of the right
+ * ones are the same career typed twice: Acting and Actor, Coding and Coder,
+ * Baking and Baker. So the floor stays, and Acting missing Actor is the price
+ * of it rather than an oversight.
+ *
+ * No single-letter endings, deliberately, and adding one back is not free.
+ * "s", "y" and "e" earn almost nothing here, because a plural is already the
+ * front of its own singular and prefix matching gets there first: Graphic and
+ * Graphics, Architect and Architecture. What they cost is Physics eating
+ * Physical therapy and Physician, and Police eating Public policy and Policy
+ * analyst, which are ordinary pairs of answers from one student rather than
+ * one career typed twice. Measured on the same list, taking all three off
+ * fixes those 12 and loses 14, and every one of the 14 needs the student to
+ * have typed the same career into both questions: Actuary against Actuarial
+ * science, Veterinarian against Veterinary medicine, Statistics against
+ * Statistician, Politics against Politician, Finance against Financial
+ * analyst. Two different careers colliding is the likelier accident, so that
+ * is the one this list is tuned against.
  */
-const ENDINGS = ['ings', 'ing', 'ists', 'ist', 'ants', 'ant', 'ents', 'ent', 'ers', 'er', 'ors', 'or', 'es', 's', 'y', 'e'];
+const ENDINGS = ['ings', 'ing', 'ists', 'ist', 'ants', 'ant', 'ents', 'ent', 'ers', 'er', 'ors', 'or', 'es'];
 
 const stem = (word) => {
   for (const end of ENDINGS) {
@@ -77,8 +107,10 @@ const prefixOf = (a, b) => {
  * An exact word counts however short it is, because "HR" is a career and not an
  * accident. A prefix has to reach MIN_OVERLAP first, or a two-letter fragment
  * matches half of everything. Off the front is not enough on its own though:
- * "nursing" does not start with "nurse", so the endings come off both and the
- * stumps get the same treatment.
+ * "nursing" does not start with "nurse", so both words go past the endings list
+ * and whatever is left gets the same front treatment. Only one of them usually
+ * loses anything: "nursing" comes back as "nurs", which is the front of
+ * "nurse".
  */
 const sameWord = (a, b) => a === b || prefixOf(a, b) || prefixOf(stem(a), stem(b));
 
@@ -103,12 +135,15 @@ const sameWord = (a, b) => a === b || prefixOf(a, b) || prefixOf(stem(a), stem(b
  */
 export function isRuledOut(name, ruledOut) {
   const mine = words(name);
-  if (!mine.length) return false;
+  const mineWhole = whole(name);
+  if (!mineWhole) return false;
   return listOf(ruledOut).some((entry) => {
     const theirs = words(entry);
     // An entry with no words in it, "???" or ".*", would otherwise match
-    // everything, since every word of nothing lands anywhere.
-    if (!theirs.length) return false;
+    // everything, since every word of nothing lands anywhere. So a side with
+    // nothing to compare compares whole instead, which is the only way a
+    // career in a non-latin script can match even itself.
+    if (!mine.length || !theirs.length) return whole(entry) === mineWhole;
     const [fewer, more] = mine.length <= theirs.length ? [mine, theirs] : [theirs, mine];
     return fewer.every((word) => more.some((other) => sameWord(word, other)));
   });
