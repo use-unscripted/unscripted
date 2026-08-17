@@ -25,7 +25,7 @@
  * in src/components/onboarding/OnboardingFields.jsx, so this file only decides
  * what comes next.
  */
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, Pencil } from 'lucide-react';
 import { LogoWordmark } from '@/components/UnscriptedLogo';
@@ -42,10 +42,24 @@ import {
   Chip, Scale, Tags, ChipsMulti, Matrix, ValuesGrid, Experiences,
 } from '@/components/onboarding/OnboardingFields';
 import OnboardingScenarioStep from '@/components/onboarding/OnboardingScenarioStep';
+import OnboardingEarlyRead from '@/components/onboarding/OnboardingEarlyRead';
+import { earlyRead, earlyReadEventProps } from '@/lib/onboarding-early-read';
 
 /** Bumped with the question set. An older draft's step number points at a
  *  question that no longer exists, so only a matching version restores it. */
 const INTAKE_VERSION = 4;
+
+/**
+ * The early read sits between this question and the next one, which is the end
+ * of the first section. Found by key rather than written as a number so that
+ * reordering the questions moves it instead of stranding it, and so that
+ * removing that question turns it off rather than breaking the flow.
+ *
+ * It is an interstitial, not a question: `index` does not move while it is up,
+ * so STEPS.length is still the total the student was promised and the counter
+ * does not jump. The one thing it must never become is STEPS[n].
+ */
+const EARLY_READ_AFTER = STEPS.findIndex(s => s.key === 'current_decision_pressure');
 
 const TOGGLES = [
   { name: 'willing_financial_risk', label: 'I will take financial risk for better upside' },
@@ -67,6 +81,10 @@ export default function Onboarding() {
   const [data, setData] = useState({ available_hours_per_week: 8 });
   const [error, setError] = useState('');
   const [resumed, setResumed] = useState(false);
+  // The early read is a screen, not a step. Once per visit: a student who goes
+  // back to change an answer and comes forward again is not shown it twice.
+  const [onEarlyRead, setOnEarlyRead] = useState(false);
+  const earlyReadShownRef = useRef(false);
   const advanceRef = useRef(null);
   const clearedRef = useRef(null);
   const topRef = useRef(null);
@@ -82,7 +100,19 @@ export default function Onboarding() {
       const { draft_version, guest_session_id, started_at, updated_at, completed, current_step, intake_version, ...fields } = draft;
       setData({ available_hours_per_week: 8, ...fields });
       setResumed(Object.values(fields).some(v => (Array.isArray(v) ? v.length : String(v ?? '').trim())));
-      if (intake_version === INTAKE_VERSION && current_step != null) setIndex(Math.min(current_step, REVIEW));
+      if (intake_version === INTAKE_VERSION && current_step != null) {
+        setIndex(Math.min(current_step, REVIEW));
+      }
+      // How far the student actually got is in the draft and nowhere else. A
+      // fresh mount at ?step=0, which is exactly what the account wall's edit
+      // link does, would otherwise show "from your first five answers" to
+      // someone who answered all sixteen and has paths behind them. Reading it
+      // here covers the reload-and-step-back route at the same time.
+      //
+      // Outside the version check, because the answers above are restored
+      // whatever version wrote them. A finished student on last month's
+      // questions still finished.
+      if (current_step > EARLY_READ_AFTER) earlyReadShownRef.current = true;
     }
     const raw = params.get('step');
     if (raw !== null) {
@@ -103,14 +133,26 @@ export default function Onboarding() {
     setData({ available_hours_per_week: 8 });
     setResumed(false);
     setError('');
+    setOnEarlyRead(false);
+    earlyReadShownRef.current = false;
     setIndex(0);
     setDir('back');
   };
 
-  // Every question starts at the top of the page and takes focus.
+  // Every question starts at the top of the page and takes focus. The early
+  // read is in here too: it swaps the whole card without moving `index`, so
+  // leaving it out would change the screen under a student and leave their
+  // focus and scroll position on the last one.
   useEffect(() => {
     topRef.current?.scrollIntoView({ block: 'start', behavior: 'smooth' });
     headingRef.current?.focus({ preventScroll: true });
+  }, [index, onEarlyRead]);
+
+  // A student who has seen the review screen has answered everything, so a
+  // screen headed "from your first five answers" is behind them. Editing an
+  // early answer from the review must not surface it.
+  useEffect(() => {
+    if (index === REVIEW) earlyReadShownRef.current = true;
   }, [index]);
 
   const persist = (nextData, nextStep) =>
@@ -138,13 +180,35 @@ export default function Onboarding() {
     trackFunnel('intake_step_completed', { step_index: i + 1, step_label: STEPS[i].key });
   };
 
+  /** Is the early read due after the question at `i`, and still unseen? */
+  const earlyReadDue = (i) => i === EARLY_READ_AFTER && !earlyReadShownRef.current;
+
+  /** Put it up. The draft parks on the question behind it, so a reload from
+   *  here lands on an answered question rather than skipping a screen the
+   *  student had not finished reading. */
+  const openEarlyRead = (nextData) => {
+    earlyReadShownRef.current = true;
+    persist(nextData, EARLY_READ_AFTER);
+    setDir('fwd');
+    setOnEarlyRead(true);
+  };
+
   // Tapping the one answer a question wants should move you on by itself.
   const chooseOne = (key, value) => {
     set(key, value);
     clearTimeout(advanceRef.current);
     advanceRef.current = setTimeout(() => {
+      const nextData = { ...data, [key]: value };
       reportStepCleared(index);
-      persist({ ...data, [key]: value }, index + 1);
+      // Not reachable while the question before the early read is a `chips`
+      // one, since this path only runs for `choice`. It is here so that turning
+      // that question into a `choice` moves the screen rather than silently
+      // deleting it: this timer does not go through next().
+      if (earlyReadDue(index)) {
+        openEarlyRead(nextData);
+        return;
+      }
+      persist(nextData, index + 1);
       setDir('fwd');
       setIndex(i => Math.min(i + 1, REVIEW));
     }, 230);
@@ -168,7 +232,6 @@ export default function Onboarding() {
       return;
     }
     setError('');
-    persist(data, index + 1);
     reportStepCleared(index);
     // Kept under the name the existing dashboards read. A student who named no
     // career reports as undecided rather than dropping out of the funnel.
@@ -179,6 +242,12 @@ export default function Onboarding() {
         has_comparison: considered.length > 1,
       });
     }
+    // The end of the first section, once.
+    if (earlyReadDue(index)) {
+      openEarlyRead(data);
+      return;
+    }
+    persist(data, index + 1);
     go(Math.min(index + 1, REVIEW), 'fwd');
   };
 
@@ -186,6 +255,14 @@ export default function Onboarding() {
     if (index === 0) { nav('/'); return; }
     persist(data, index - 1);
     go(index - 1, 'back');
+  };
+
+  const leaveEarlyRead = (direction) => {
+    setOnEarlyRead(false);
+    setDir(direction);
+    if (direction === 'back') return;
+    persist(data, EARLY_READ_AFTER + 1);
+    go(Math.min(EARLY_READ_AFTER + 1, REVIEW), 'fwd');
   };
 
   const finish = () => {
@@ -201,6 +278,15 @@ export default function Onboarding() {
       const typing = ['INPUT', 'TEXTAREA'].includes(tag);
       const ownsEnter = ['BUTTON', 'A', 'SELECT'].includes(tag) || e.target?.getAttribute?.('role') === 'button';
       if (e.key === 'Enter' && !e.shiftKey) {
+        // Enter continues everywhere else in the intake, so it continues here
+        // too. Without this branch it would fall through to next() and advance
+        // the question underneath the early read.
+        if (onEarlyRead) {
+          if (ownsEnter) return;
+          e.preventDefault();
+          leaveEarlyRead('fwd');
+          return;
+        }
         if (typing && tag === 'TEXTAREA') return;
         // The tag list on a question that adds items on Enter belongs to that
         // control, not to the footer.
@@ -211,7 +297,7 @@ export default function Onboarding() {
         next();
         return;
       }
-      if (typing || reviewing || step?.kind !== 'choice') return;
+      if (typing || reviewing || onEarlyRead || step?.kind !== 'choice') return;
       const n = Number(e.key);
       if (!Number.isInteger(n) || n < 1 || n > step.options.length) return;
       chooseOne(step.key, step.options[n - 1].value);
@@ -219,6 +305,16 @@ export default function Onboarding() {
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   });
+
+  // Derived from the answers already in hand. No model call, no network, no
+  // wait: that is the whole point of showing it here rather than at the end.
+  const read = useMemo(() => (onEarlyRead ? earlyRead(data) : null), [onEarlyRead, data]);
+
+  useEffect(() => {
+    if (!read) return;
+    // Counts and booleans only, the same rule as every other funnel event.
+    trackFunnelOnce('intake_early_read_shown', 'intake_early_read_shown', earlyReadEventProps(read));
+  }, [onEarlyRead]);
 
   const emptyNow = step && !reviewing && !summarise(step, data);
   const ctaLabel = !step?.required && emptyNow ? 'Skip' : 'Continue';
@@ -231,7 +327,7 @@ export default function Onboarding() {
           <LogoWordmark />
           <div className="flex items-center gap-4">
             <span className="tp-eyebrow text-[color:var(--text-secondary)]">
-              {reviewing ? 'REVIEW' : `${index + 1} OF ${STEPS.length}`}
+              {reviewing ? 'REVIEW' : onEarlyRead ? 'EARLY READ' : `${index + 1} OF ${STEPS.length}`}
             </span>
             <Link to="/login" className="tp-meta font-semibold text-[color:var(--text-secondary)] hover:text-[color:var(--text-primary)] transition">
               Log in
@@ -239,6 +335,8 @@ export default function Onboarding() {
           </div>
         </div>
 
+        {/* Driven by `index` alone, which the early read deliberately does not
+            move. The bar sits exactly where the last question left it. */}
         <div className="mb-8">
           <ProgressBar value={(index + 1) / (REVIEW + 1)} />
         </div>
@@ -275,6 +373,28 @@ export default function Onboarding() {
       </div>
     </main>
   );
+
+  if (onEarlyRead && read) {
+    return shell(
+      <div key="early-read" className={dir === 'fwd' ? 'step-pane-fwd' : 'step-pane-back'}>
+        <OnboardingEarlyRead read={read} headingRef={headingRef} />
+      </div>,
+      <div className={footerCls}>
+        <div className="flex items-center gap-3">
+          <button onClick={() => leaveEarlyRead('back')}
+            className="ui-press flex items-center gap-1 rounded-[var(--r-control)] border px-4 text-sm font-bold"
+            style={{ borderColor: 'var(--border-light)', color: 'var(--text-primary)', minHeight: '48px' }}>
+            <ChevronLeft size={15} /> Back
+          </button>
+          <button onClick={() => leaveEarlyRead('fwd')}
+            className="ui-press flex flex-1 items-center justify-center gap-2 rounded-[var(--r-control)] text-sm font-bold text-white"
+            style={{ background: 'var(--brand-navy-900)', minHeight: '48px', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}>
+            Keep going <ChevronRight size={15} />
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (reviewing) {
     return shell(

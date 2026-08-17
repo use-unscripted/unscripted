@@ -22,6 +22,12 @@
  *   intake_started            opened the intake (resumed: true if a draft existed)
  *   intake_step_completed     cleared a step (step_index, step_label)
  *   intake_step_blocked       hit validation and could not continue
+ *   intake_early_read_shown   saw the early read between questions 5 and 6.
+ *                             Carries sparse (nothing but the required clarity
+ *                             answer, so the screen said so), directions_count
+ *                             and reflection_count. Counts of lines on a
+ *                             screen, never the lines: everything on that
+ *                             screen is text the student typed.
  *   paths_intake_reached      answered every question and reached the review
  *                             screen. Named for the old intake, where path
  *                             selection was the final step; it is the first
