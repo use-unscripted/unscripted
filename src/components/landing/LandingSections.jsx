@@ -1,11 +1,10 @@
 /* ──────────────────────────────────────────────────────────────────────────
    Landing sections.
 
-   The three "after" readings in the work simulation section are the only
-   animation in this file, and that is deliberate. They arrive one at a time
-   beside a "before" column that is already sitting there, so the movement is
-   the argument: the same three paths, and testing is what pulls them apart.
-   The animation is arguing the product's case.
+   One animation in this file, and it is one word wide. In the before-and-after
+   pair, the tested path's evidence stage reads "Not tested", holds, and is
+   replaced by "Early signal". That is what one finished simulation does to
+   that row, so the movement is the argument rather than decoration around it.
 
    What it replaced was a nine-step Mission Guide checklist that drew itself
    down a gold spine, arguing the case for guides. Guides were replaced by
@@ -14,7 +13,7 @@
 
    Everything else here is just present. Every heading, paragraph, card and
    panel below used to carry its own scroll-triggered fade-up on a staggered
-   delay — ten of them in this file alone. "Every section fades in when it
+   delay, ten of them in this file alone. "Every section fades in when it
    enters the viewport" is a named generated-page tell, and it cost more than
    taste: with everything moving, the two moments that mean something (this
    before-and-after, and the process rail in Hero) had nothing to stand out
@@ -22,7 +21,7 @@
    is there when you arrive at it. Don't re-add fades here.
    ────────────────────────────────────────────────────────────────────────── */
 import { Link } from 'react-router-dom';
-import { ArrowRight, ArrowUpRight, ArrowDownRight, Minus } from 'lucide-react';
+import { ArrowRight, Minus } from 'lucide-react';
 import { motion, useReducedMotion } from 'framer-motion';
 import PathExplorer from '@/components/landing/PathExplorer';
 import { EASE } from '@/components/motion';
@@ -42,56 +41,79 @@ const SIM_STEPS = [
 ];
 
 /* ── The example matrix ──────────────────────────────────────────────────
-   Every label here is a string the Career Decision Matrix itself shows: the
-   evidence stage where a percentage would otherwise sit ("Not tested",
-   "Early signal") and the trend word beside it ("Strengthening", "Stable or
-   mixed", "Weakening", "Not enough history yet"). See decision-matrix.js.
+   Two cards, the same three paths, one word different between them. That word
+   is the whole claim of this block, so here is the chain it rests on. It was
+   traced through the source on 2026-08-17; re-trace it before changing any
+   string below.
 
-   No numbers, on purpose. A percentage on a landing page is a percentage
-   somebody will read as a real student's, and we sell to career services.
-   The paths and the sentences are invented and the block says so twice.
+   Finishing the work simulation writes one completed Experiments row, one
+   ExperimentMeasurement carrying a post_completed_at, and one ProofOfWork row
+   for the spec (work-sim.js, completeRun). For that path the matrix then
+   counts one measured experiment and one evidence item. One item is under
+   THRESHOLDS.developing_evidence_items, so maturityFor lands on early_signal
+   and the row reads "Early signal". The other two paths have no records at
+   all, so they stay "Not tested". See MATURITY in decision-matrix.js.
+
+   Nothing in that flow writes a HypothesisUpdate row. Only the reflection
+   decision screen does, via recordHypothesisUpdate. So the trend has fewer
+   than two points and every row here reads "Not enough history", which is why
+   no row carries a direction word.
+
+   That absence is load bearing. "Early signal" beside "Strengthening" is a
+   screen the product cannot draw: a direction word needs a reflection, and
+   the same reflection saves a WeeklyReflections row against the experiment,
+   which is the second evidence item, which moves the path to "Developing
+   evidence" in the same action. An earlier version of this block pictured
+   that pairing on all three rows, and a buyer could have falsified it.
+
+   One string does not come from decision-matrix.js: trendFrom returns the
+   label "Not enough history yet", and TrendBadge.jsx never reads it, printing
+   "Not enough history" instead. What a student sees is the badge, so the
+   badge is what is copied here. Don't "fix" it to match the library.
+
+   What is drawn here is the row header and the trend, which is the part of
+   that screen with no numbers in it. The real table also carries five metric
+   columns, and after one measured experiment some of those do print a figure
+   (Experienced Fit, for one). They are left off rather than invented: a
+   percentage on a landing page is a percentage somebody will read as a real
+   student's, and we sell to career services. Showing a subset is fine.
+   Showing a made-up number is not.
+
+   The stage word appears twice on the real screen, under the path name and
+   again in the confidence cell whenever there is no percentage to put there
+   (MetricValue). Both say the same string, so drawing it once is not a
+   misrepresentation of either.
+
+   The three career names are invented and the block says so.
    ──────────────────────────────────────────────────────────────────────── */
+
+/* Exported so LandingSections.test.jsx can pin them to the strings they claim
+   to copy. Rename a maturity label or the badge's wording and that test fails
+   here rather than the page lying quietly. */
+export const STAGE_UNTESTED = 'Not tested';
+export const STAGE_TESTED = 'Early signal';
+export const TREND_NONE = 'Not enough history';
+
+/* `tested` is the path the simulation ran against. Exactly one, because
+   exactly one simulation exists. */
 const MATRIX_ROWS = [
-  {
-    path: 'Product management',
-    stage: 'Early signal',
-    dir: 'up',
-    trend: 'Strengthening',
-    line: 'You expected the admin part to bore you. It did, and you still wanted another one.',
-  },
-  {
-    path: 'UX research',
-    stage: 'Early signal',
-    dir: 'flat',
-    trend: 'Stable or mixed',
-    line: 'You enjoyed the work and finished it flat. Two readings pointing opposite ways.',
-  },
-  {
-    path: 'Data analysis',
-    stage: 'Early signal',
-    dir: 'down',
-    trend: 'Weakening',
-    line: 'You expected to like this one most of the three. You liked it least.',
-  },
+  { path: 'Product management', tested: true },
+  { path: 'UX research', tested: false },
+  { path: 'Data analysis', tested: false },
 ];
 
-/* Arrow, word and fill, matching the matrix's own TrendBadge so the two
-   screens read the same. Colour is never the only signal. */
-const TREND_STYLE = {
-  up: { Icon: ArrowUpRight, color: 'var(--success-700)', bg: 'var(--success-50)' },
-  flat: { Icon: ArrowRight, color: 'var(--ink-600)', bg: 'var(--ink-100)' },
-  down: { Icon: ArrowDownRight, color: 'var(--warning-700)', bg: 'var(--warning-50)' },
-};
-
-const STEP_GAP = 0.14;   // seconds between consecutive rows
-const LEAD_IN = 0.15;    // delay before the first row arrives
+const HOLD = 0.75;   // seconds "Not tested" holds before the test lands
+const SWAP = 0.35;   // how long the word takes to change
 
 function ExampleChip({ onNavy = false }) {
   return (
     <span
       className="shrink-0 rounded-full px-3 py-1 text-xs font-semibold"
       style={onNavy
-        ? { background: 'rgba(214,182,106,0.20)', color: 'var(--brand-gold-500)' }
+        /* Solid gold with navy on it, 5.97:1. The tinted fill this replaced
+           measured 4.06:1, and a disclaimer that fails AA is the one label on
+           the card that has to be readable. */
+        ? { background: 'var(--brand-gold-500)', color: 'var(--brand-navy-900)' }
         : { background: 'var(--background-tertiary)', color: 'var(--brand-navy-700)' }}
     >
       Example
@@ -99,57 +121,58 @@ function ExampleChip({ onNavy = false }) {
   );
 }
 
-function TrendChip({ dir, label }) {
-  const { Icon, color, bg } = TREND_STYLE[dir];
+/* The one animation. The word the tested path started on leaves, and the word
+   one simulation earns it takes its place. Reduced motion gets the end state
+   with no interval, and the leaving word is hidden from assistive tech so the
+   row only ever announces where it ended up. */
+function MovedStage() {
+  const reduce = useReducedMotion();
+  if (reduce) return STAGE_TESTED;
+
   return (
-    <span
-      className="inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold"
-      style={{ color, background: bg }}
-    >
-      <Icon size={13} aria-hidden="true" />
-      {label}
+    <span className="relative inline-block whitespace-nowrap">
+      <motion.span
+        aria-hidden="true"
+        className="absolute inset-0"
+        initial={{ opacity: 1 }}
+        whileInView={{ opacity: 0 }}
+        viewport={{ once: true, amount: 0.6 }}
+        transition={{ delay: HOLD, duration: SWAP, ease: EASE }}
+      >
+        {STAGE_UNTESTED}
+      </motion.span>
+      <motion.span
+        className="inline-block"
+        initial={{ opacity: 0, y: 3 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.6 }}
+        transition={{ delay: HOLD + 0.12, duration: SWAP, ease: EASE }}
+      >
+        {STAGE_TESTED}
+      </motion.span>
     </span>
   );
 }
 
-/* Path name over its evidence stage, which is how the matrix draws a row when
-   it has no percentage to show. */
-function RowHead({ name, stage, children }) {
+/* One row as the matrix draws its header: the path name with the evidence
+   stage under it, and the trend on the right. With no direction the trend is
+   plain muted text and no pill, which is exactly what TrendBadge falls back
+   to. */
+function MatrixRow({ name, stage }) {
   return (
-    <div className="flex items-start justify-between gap-4">
+    <li className="flex items-start justify-between gap-4 py-4 first:pt-0 last:pb-0">
       <div className="min-w-0">
         <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{name}</p>
         <p className="mt-0.5 text-xs" style={{ color: 'var(--text-muted)' }}>{stage}</p>
       </div>
-      {children}
-    </div>
-  );
-}
-
-function AfterRow({ row, index }) {
-  const reduce = useReducedMotion();
-  const body = (
-    <>
-      <RowHead name={row.path} stage={row.stage}>
-        <TrendChip dir={row.dir} label={row.trend} />
-      </RowHead>
-      <p className="mt-2 text-sm leading-6" style={{ color: 'var(--text-secondary)' }}>{row.line}</p>
-    </>
-  );
-  const className = 'py-4 first:pt-0 last:pb-0';
-
-  if (reduce) return <div className={className}>{body}</div>;
-
-  return (
-    <motion.div
-      className={className}
-      initial={{ opacity: 0, x: -6 }}
-      whileInView={{ opacity: 1, x: 0 }}
-      viewport={{ once: true, amount: 0.5 }}
-      transition={{ delay: LEAD_IN + index * STEP_GAP, duration: 0.45, ease: EASE }}
-    >
-      {body}
-    </motion.div>
+      <span
+        className="inline-flex shrink-0 items-center gap-1.5 text-[11px]"
+        style={{ color: 'var(--text-muted)' }}
+      >
+        <Minus size={13} aria-hidden="true" />
+        {TREND_NONE}
+      </span>
+    </li>
   );
 }
 
@@ -229,13 +252,13 @@ export default function LandingSections() {
               Do thirty minutes of the job before you commit to it.
             </h2>
             <p className="mt-5 leading-7" style={{ color: 'var(--text-secondary)' }}>
-              A work simulation puts you inside one morning of a real job at a company that does not exist. More work than the team can take on, a salesperson who has already told a customer it’s coming, and an estimate that turns out to be wrong after you’ve planned around it. You decide what gets built, write the spec, and answer the people you said no to.
+              A work simulation puts you inside one morning of a real job at a company that does not exist. More work than the team can take on, a salesperson who has already told a customer it’s coming, and an estimate that turns out to be wrong after you’ve planned around it. You decide what gets built. Then you write the spec and answer the people you said no to.
             </p>
             <p className="mt-5 leading-7" style={{ color: 'var(--text-secondary)' }}>
               You say up front how much you expect to enjoy it and how well you expect to do. At the end you get a read-out: what you predicted, what happened instead, and what the checks found in the work you handed in. It won’t tell you whether you’d be good at the job, or whether you should do it. It tells you how you reacted to the work.
             </p>
             <Link
-              /* ?intent=work-simulation — the register screen headlines itself
+              /* ?intent=work-simulation. The register screen headlines itself
                  for whatever sent you there. Without it this CTA lands on
                  "Save Your Path Test", which is a path test the visitor never
                  took. The old ?intent=mission-guide still resolves, to the same
@@ -266,7 +289,10 @@ export default function LandingSections() {
             <ol className="space-y-3.5">
               {SIM_STEPS.map(([title, detail], i) => (
                 <li key={title} className="flex items-start gap-3.5">
+                  {/* The <ol> already announces the ordinal, so the drawn
+                      number is decoration and saying it twice is noise. */}
                   <span
+                    aria-hidden="true"
                     className="mt-px grid h-6 w-6 shrink-0 place-items-center rounded-full text-[11px] font-bold"
                     style={{ background: 'rgba(214,182,106,0.18)', color: 'var(--brand-gold-500)' }}
                   >
@@ -285,65 +311,68 @@ export default function LandingSections() {
           </div>
         </div>
 
-        {/* What testing moves. Same three paths, twice. */}
+        {/* What testing moves. Same three paths, twice, one word apart.
+            The "Example" chip sits in each card header rather than beside the
+            heading: on desktop the old one landed behind the sticky header at
+            the scroll position where the rows read, so the disclosure was
+            weakest exactly where the reader takes the rows in. */}
         <div className="mt-20">
-          <div className="flex flex-wrap items-start justify-between gap-4">
-            <div>
-              <h3 className="font-heading text-2xl font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>
-                Every test you finish lands on the same screen.
-              </h3>
-              <p className="mt-3 max-w-2xl leading-7" style={{ color: 'var(--text-secondary)' }}>
-                The paths you’re weighing, side by side, with what your own evidence says about each one so far. Testing rarely moves them all the same way.
-              </p>
-            </div>
-            <ExampleChip />
-          </div>
+          <h3 className="font-heading text-2xl font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>
+            Every test you finish lands on the same screen.
+          </h3>
+          <p className="mt-3 max-w-2xl leading-7" style={{ color: 'var(--text-secondary)' }}>
+            The paths you’re weighing, side by side, with what your own evidence says about each one so far.
+          </p>
 
           <div className="mt-8 grid gap-5 lg:grid-cols-2">
             <div
               className="rounded-[var(--r-surface)] p-6 sm:p-7"
               style={{ background: 'var(--background-secondary)', border: '1px solid var(--border-light)' }}
             >
-              <p className="font-heading text-sm font-bold" style={{ color: 'var(--brand-navy-700)' }}>
-                Before you test anything
-              </p>
-              <div className="mt-5 divide-y" style={{ borderColor: 'var(--border-light)' }}>
-                {MATRIX_ROWS.map(row => (
-                  <div key={row.path} className="py-4 first:pt-0 last:pb-0">
-                    <RowHead name={row.path} stage="Not tested">
-                      <span
-                        className="inline-flex shrink-0 items-center gap-1.5 text-[11px]"
-                        style={{ color: 'var(--text-muted)' }}
-                      >
-                        <Minus size={13} aria-hidden="true" />
-                        Not enough history yet
-                      </span>
-                    </RowHead>
-                  </div>
-                ))}
+              <div className="flex items-center justify-between gap-3">
+                <h4 className="font-heading text-sm font-bold" style={{ color: 'var(--brand-navy-700)' }}>
+                  Before you test anything
+                </h4>
+                <ExampleChip />
               </div>
+              <ul role="list" className="mt-5 divide-y" style={{ borderColor: 'var(--border-light)' }}>
+                {MATRIX_ROWS.map(row => (
+                  <MatrixRow key={row.path} name={row.path} stage={STAGE_UNTESTED} />
+                ))}
+              </ul>
             </div>
 
             <div
               className="rounded-[var(--r-surface)] bg-white p-6 sm:p-7"
               style={{ border: '1px solid var(--border-light)', boxShadow: '0 18px 44px rgba(16,24,40,0.07)' }}
             >
-              <p className="font-heading text-sm font-bold" style={{ color: 'var(--brand-navy-700)' }}>
-                After you test them
-              </p>
-              <div className="mt-5 divide-y" style={{ borderColor: 'var(--border-light)' }}>
-                {MATRIX_ROWS.map((row, i) => (
-                  <AfterRow key={row.path} row={row} index={i} />
-                ))}
+              <div className="flex items-center justify-between gap-3">
+                <h4 className="font-heading text-sm font-bold" style={{ color: 'var(--brand-navy-700)' }}>
+                  After one simulation
+                </h4>
+                <ExampleChip />
               </div>
+              <ul role="list" className="mt-5 divide-y" style={{ borderColor: 'var(--border-light)' }}>
+                {MATRIX_ROWS.map(row => (
+                  <MatrixRow
+                    key={row.path}
+                    name={row.path}
+                    stage={row.tested ? <MovedStage /> : STAGE_UNTESTED}
+                  />
+                ))}
+              </ul>
             </div>
           </div>
 
-          <p className="mt-5 max-w-3xl leading-7" style={{ color: 'var(--text-secondary)' }}>
-            Nothing here rules a path out. It’s what you know so far, and it changes as you test more.
+          {/* Below the cards, so it reads as the conclusion rather than a
+              caption. It also carries the point in words, which is the only
+              form of it that survives the phone, where the two cards stack
+              and cannot be seen together. */}
+          <p className="mt-6 max-w-3xl leading-7" style={{ color: 'var(--text-secondary)' }}>
+            One finished simulation moves one row. That path reads “Early signal” now, which is what sits where a confidence score would once there’s enough behind it. The other two still say “Not tested”, and nothing here rules them out.
           </p>
           <p className="mt-2 max-w-3xl text-xs leading-5" style={{ color: 'var(--text-muted)' }}>
-            An example, not a real student. The paths and the readings are made up. The wording beside them is what this screen uses.
+            An example, not a real student. We made up the three career names. “Not tested”, “Early signal” and “Not enough history” are the screen’s own words.
           </p>
         </div>
       </section>
