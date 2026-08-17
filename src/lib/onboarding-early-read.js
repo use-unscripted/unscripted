@@ -54,8 +54,13 @@ const words = (v) => norm(v).split(/[^a-z0-9]+/).filter(Boolean);
  * string identical to it. Trailing punctuation is already off, and a "???"
  * keeps its own characters rather than falling to an empty string that would
  * then match every other empty one.
+ *
+ * The trim is what the punctuation leaves behind. "医学 ?" loses the "?" and
+ * keeps the space in front of it, so it was a different key from "医学" and the
+ * screen put both up. The same typing in a latin script was never affected,
+ * because that side still has a word to compare and never gets here.
  */
-const whole = (v) => norm(v) || clean(v).toLowerCase();
+const whole = (v) => norm(v).trim() || clean(v).toLowerCase();
 
 /**
  * Endings that turn one career word into another name for the same career:
@@ -71,6 +76,12 @@ const whole = (v) => norm(v) || clean(v).toLowerCase();
  * ones are the same career typed twice: Acting and Actor, Coding and Coder,
  * Baking and Baker. So the floor stays, and Acting missing Actor is the price
  * of it rather than an oversight.
+ *
+ * That price is real but it is not the whole account, and this list is not the
+ * only lever. Neither of the two numbers here could close Professor against
+ * Professional athlete or Chemical engineering against Chemist, but the share
+ * floor on `stemPrefixOf` closes both without moving either of them, so those
+ * two were never the price of anything.
  *
  * No single-letter endings, deliberately, and adding one back is not free.
  * "s", "y" and "e" earn almost nothing here, because a plural is already the
@@ -102,6 +113,30 @@ const prefixOf = (a, b) => {
 };
 
 /**
+ * The same question for two words that have been through the endings list,
+ * with a floor under how much of the longer one the shared front has to cover.
+ *
+ * A stem is a guess at a word, so a short one sitting on the front of a much
+ * longer one is usually two different careers rather than one: "chem" is half
+ * of "chemical", so Chemical engineering was taking Chemist with it, and
+ * "profess" is under three fifths of "professional", so Professor was taking
+ * Professional athlete. Three fifths is the line, and every ending pair this
+ * file is here to catch clears it comfortably: "nurs" is four fifths of
+ * "nurse", "educat" two thirds of "education", "animat" two thirds of
+ * "animation", "journali" four fifths of "journalism".
+ *
+ * Written as a fraction rather than 0.6 so that a stem landing exactly on the
+ * line passes instead of losing to a rounding error.
+ */
+const STEM_SHARE_NUM = 3;
+const STEM_SHARE_DEN = 5;
+
+const stemPrefixOf = (a, b) => {
+  const [short, long] = a.length <= b.length ? [a, b] : [b, a];
+  return prefixOf(a, b) && short.length * STEM_SHARE_DEN >= long.length * STEM_SHARE_NUM;
+};
+
+/**
  * Do two words name the same thing?
  *
  * An exact word counts however short it is, because "HR" is a career and not an
@@ -110,9 +145,10 @@ const prefixOf = (a, b) => {
  * "nursing" does not start with "nurse", so both words go past the endings list
  * and whatever is left gets the same front treatment. Only one of them usually
  * loses anything: "nursing" comes back as "nurs", which is the front of
- * "nurse".
+ * "nurse". That last comparison carries the share floor, because a stem is a
+ * guess and a guess that only covers half of the other word is not a match.
  */
-const sameWord = (a, b) => a === b || prefixOf(a, b) || prefixOf(stem(a), stem(b));
+const sameWord = (a, b) => a === b || prefixOf(a, b) || stemPrefixOf(stem(a), stem(b));
 
 /**
  * Has the student already ruled this out?

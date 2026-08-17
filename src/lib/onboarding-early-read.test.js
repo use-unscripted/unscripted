@@ -235,6 +235,30 @@ describe('isRuledOut', () => {
     expect(isRuledOut('Кино', ['  кино '])).toBe(true);
   });
 
+  // The trailing "?" comes off the whole-string key but the space in front of
+  // it stays, so "医学 ?" and "医学" were two different keys and the screen put
+  // both of them up. The same typing in a latin script never showed it, because
+  // that side still has a word to compare and never reaches this key at all.
+  it('matches a non-latin answer typed with a space before its punctuation', () => {
+    expect(isRuledOut('医学', ['医学 ?'])).toBe(true);
+    expect(isRuledOut('医学 ?', ['医学'])).toBe(true);
+    expect(isRuledOut('Кино', ['Кино !'])).toBe(true);
+    expect(isRuledOut('의학 .', ['의학'])).toBe(true);
+    expect(isRuledOut('🎬', ['🎬 ?'])).toBe(true);
+  });
+
+  it('is the same answer the latin control already gave', () => {
+    expect(isRuledOut('Law', ['Law ?'])).toBe(true);
+    expect(isRuledOut('Law ?', ['Law'])).toBe(true);
+  });
+
+  it('still leaves two different non-latin careers alone with the space in', () => {
+    expect(isRuledOut('医学', ['法律 ?'])).toBe(false);
+    expect(isRuledOut('医学 ?', ['法律'])).toBe(false);
+    expect(isRuledOut('医学', ['???'])).toBe(false);
+    expect(isRuledOut('医学 ?', ['???'])).toBe(false);
+  });
+
   // All four of these are two different careers that happen to share the front
   // of a word once an ending comes off. Losing the second one empties the
   // screen and then explains it with a sentence about the student that is not
@@ -282,11 +306,48 @@ describe('isRuledOut', () => {
     expect(isRuledOut('Cardiology', ['Care'])).toBe(false);
   });
 
-  // Known and measured, not an oversight. The floor above is what stops these
-  // two meeting, and the only way to close it also joins Acting to Actuary,
-  // Artist to Artificial intelligence and Patent law to Pathology. Two careers
-  // that are genuinely different get typed into these two questions far more
-  // often than one career gets typed into both, so the floor stays.
+  // Two careers that share a long front once one of them loses an ending. The
+  // share floor is what holds them apart: "chem" is half of "chemical" and
+  // "profess" is under three fifths of "professional", while every pair in the
+  // test above sits at two thirds or more. Both of these used to be handed back
+  // under the line promising they would not be.
+  it('leaves a career that only shares a short part of a longer stem', () => {
+    const pairs = [
+      ['Professor', 'Professional athlete'],
+      ['Chemical engineering', 'Chemist'],
+    ];
+    for (const [out, considering] of pairs) {
+      expect(isRuledOut(considering, [out]), `${out} killed ${considering}`).toBe(false);
+      expect(isRuledOut(out, [considering]), `${considering} killed ${out}`).toBe(false);
+    }
+  });
+
+  // The pairs the share floor had to survive, sitting either side of the line
+  // it draws: "nurs" is four fifths of "nurse" and "educat" is two thirds of
+  // "education", so the floor never reaches them.
+  it('keeps dropping the ending pairs that sit above the share floor', () => {
+    const pairs = [
+      ['Nurse', 'Nursing'],
+      ['Journalism', 'Journalist'],
+      ['Education', 'Educator'],
+      ['Animation', 'Animator'],
+      ['Pharmacy', 'Pharmacist'],
+      ['Therapist', 'Therapy'],
+      ['Manager', 'Management'],
+      ['Developer', 'Development'],
+    ];
+    for (const [out, considering] of pairs) {
+      expect(isRuledOut(considering, [out]), `${out} let ${considering} through`).toBe(true);
+      expect(isRuledOut(out, [considering]), `${considering} let ${out} through`).toBe(true);
+    }
+  });
+
+  // Known and measured, not an oversight. MIN_STEM is what stops these two
+  // meeting, and lowering it also joins Acting to Actuary, Artist to Artificial
+  // intelligence and Patent law to Pathology. The share floor above is a
+  // different lever and does not reach this pair: neither word loses an ending
+  // in the first place, because there is not enough left of either once it
+  // comes off.
   it('is documented as missing Acting against Actor', () => {
     expect(isRuledOut('Actor', ['Acting'])).toBe(false);
     expect(isRuledOut('Baker', ['Baking'])).toBe(false);
