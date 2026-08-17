@@ -100,7 +100,15 @@ export default function Onboarding() {
       const { draft_version, guest_session_id, started_at, updated_at, completed, current_step, intake_version, ...fields } = draft;
       setData({ available_hours_per_week: 8, ...fields });
       setResumed(Object.values(fields).some(v => (Array.isArray(v) ? v.length : String(v ?? '').trim())));
-      if (intake_version === INTAKE_VERSION && current_step != null) setIndex(Math.min(current_step, REVIEW));
+      if (intake_version === INTAKE_VERSION && current_step != null) {
+        setIndex(Math.min(current_step, REVIEW));
+        // How far the student actually got is in the draft and nowhere else. A
+        // fresh mount at ?step=0, which is exactly what the account wall's edit
+        // link does, would otherwise show "from your first five answers" to
+        // someone who answered all sixteen and has paths behind them. Reading
+        // it here covers the reload-and-step-back route at the same time.
+        if (current_step > EARLY_READ_AFTER) earlyReadShownRef.current = true;
+      }
     }
     const raw = params.get('step');
     if (raw !== null) {
@@ -168,13 +176,35 @@ export default function Onboarding() {
     trackFunnel('intake_step_completed', { step_index: i + 1, step_label: STEPS[i].key });
   };
 
+  /** Is the early read due after the question at `i`, and still unseen? */
+  const earlyReadDue = (i) => i === EARLY_READ_AFTER && !earlyReadShownRef.current;
+
+  /** Put it up. The draft parks on the question behind it, so a reload from
+   *  here lands on an answered question rather than skipping a screen the
+   *  student had not finished reading. */
+  const openEarlyRead = (nextData) => {
+    earlyReadShownRef.current = true;
+    persist(nextData, EARLY_READ_AFTER);
+    setDir('fwd');
+    setOnEarlyRead(true);
+  };
+
   // Tapping the one answer a question wants should move you on by itself.
   const chooseOne = (key, value) => {
     set(key, value);
     clearTimeout(advanceRef.current);
     advanceRef.current = setTimeout(() => {
+      const nextData = { ...data, [key]: value };
       reportStepCleared(index);
-      persist({ ...data, [key]: value }, index + 1);
+      // Not reachable while the question before the early read is a `chips`
+      // one, since this path only runs for `choice`. It is here so that turning
+      // that question into a `choice` moves the screen rather than silently
+      // deleting it: this timer does not go through next().
+      if (earlyReadDue(index)) {
+        openEarlyRead(nextData);
+        return;
+      }
+      persist(nextData, index + 1);
       setDir('fwd');
       setIndex(i => Math.min(i + 1, REVIEW));
     }, 230);
@@ -208,14 +238,9 @@ export default function Onboarding() {
         has_comparison: considered.length > 1,
       });
     }
-    // The end of the first section, once. The draft still points at the
-    // question behind it, so a reload from here lands on an answered question
-    // rather than skipping a screen the student had not finished reading.
-    if (index === EARLY_READ_AFTER && !earlyReadShownRef.current) {
-      earlyReadShownRef.current = true;
-      persist(data, index);
-      setDir('fwd');
-      setOnEarlyRead(true);
+    // The end of the first section, once.
+    if (earlyReadDue(index)) {
+      openEarlyRead(data);
       return;
     }
     persist(data, index + 1);

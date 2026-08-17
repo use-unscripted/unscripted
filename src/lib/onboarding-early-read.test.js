@@ -121,6 +121,20 @@ describe('isRuledOut', () => {
     expect(isRuledOut('Law', ['law school'])).toBe(true);
   });
 
+  it('matches whichever way round the longer word sits', () => {
+    // The question that collected this promises "we will not suggest it back to
+    // you", so a student who ruled out Lawyer must not be handed Law school.
+    expect(isRuledOut('Law school', ['Lawyer'])).toBe(true);
+    expect(isRuledOut('Lawyer', ['Law school'])).toBe(true);
+    expect(directionsFrom({ curious_path: 'Law school', careers_ruled_out: ['Lawyer'] })).toEqual([]);
+  });
+
+  it('matches a short word the student typed exactly', () => {
+    expect(isRuledOut('HR generalist', ['HR'])).toBe(true);
+    expect(isRuledOut('HR', ['HR generalist'])).toBe(true);
+    expect(directionsFrom({ current_careers_considered: ['HR generalist'], careers_ruled_out: ['HR'] })).toEqual([]);
+  });
+
   it('does not match on one or two characters', () => {
     expect(isRuledOut('Marketing', ['ma'])).toBe(false);
   });
@@ -139,6 +153,13 @@ describe('reflectionFrom', () => {
     expect(reflectionFrom({ baseline_career_clarity: 9 })[0]).toContain('holds up');
   });
 
+  it('hands back the words the question used, not our word for it', () => {
+    // The student was asked how certain they are. They never saw "clarity",
+    // which is our name for the field, not theirs.
+    expect(reflectionFrom({ baseline_career_clarity: 3 })[0].toLowerCase()).not.toContain('clarity');
+    expect(reflectionFrom({ baseline_career_clarity: 3 })[0]).toContain('certain');
+  });
+
   it('notices a real gap between the two numbers and ignores a small one', () => {
     const wide = reflectionFrom({ baseline_career_clarity: 8, baseline_confidence: 3 });
     expect(wide.some(l => l.includes('clearer on the direction'))).toBe(true);
@@ -148,6 +169,12 @@ describe('reflectionFrom', () => {
 
     const close = reflectionFrom({ baseline_career_clarity: 5, baseline_confidence: 4 });
     expect(close).toHaveLength(1);
+  });
+
+  it('does not say they are sure of not knowing right after saying some is settled', () => {
+    const lines = reflectionFrom({ baseline_career_clarity: 4, baseline_confidence: 7 });
+    expect(lines[0]).toContain('some of this is settled');
+    expect(lines.some(l => l.includes('do not know yet'))).toBe(false);
   });
 
   it('counts the careers on the list', () => {
@@ -174,7 +201,25 @@ describe('reflectionFrom', () => {
       current_decision_pressure: ['Finding an internship'],
       current_decision_pressure_note: 'whether to transfer',
     });
-    expect(lines[0]).toBe('In front of you this term: Finding an internship, whether to transfer.');
+    expect(lines[0]).toBe('In front of you this term: Finding an internship.');
+    expect(lines[1]).toBe('Also on your mind: whether to transfer.');
+  });
+
+  it('keeps a note that opens with a conjunction off the end of the list', () => {
+    // Comma-joined it reads as a broken list item: "Summer internship, and a
+    // transfer". The note is the student's own sentence, so it gets its own line
+    // rather than being edited.
+    const lines = reflectionFrom({
+      current_decision_pressure: ['Summer internship'],
+      current_decision_pressure_note: 'and a transfer',
+    });
+    expect(lines[0]).toBe('In front of you this term: Summer internship.');
+    expect(lines[1]).toBe('Also on your mind: and a transfer.');
+  });
+
+  it('uses the one line when only the note was written', () => {
+    expect(reflectionFrom({ current_decision_pressure_note: 'whether to transfer' }))
+      .toEqual(['In front of you this term: whether to transfer.']);
   });
 
   it('says nothing about a question that was skipped', () => {
@@ -190,9 +235,26 @@ describe('the honest unknown', () => {
     expect(read.unknown).toContain('yours or someone else');
   });
 
+  it('does not re-open a pressured career the student already ruled out', () => {
+    const read = earlyRead({
+      ...CLARITY_ONLY,
+      careers_ruled_out: ['Medicine'],
+      pressured_path: 'Medicine',
+      current_careers_considered: ['Nursing'],
+    });
+    expect(read.unknown).not.toContain('Medicine');
+    expect(read.unknown).toContain('Nursing');
+  });
+
   it('asks which one they would like doing when there are several', () => {
     const read = earlyRead({ ...CLARITY_ONLY, current_careers_considered: ['Banking', 'Design'] });
     expect(read.unknown).toContain('Which of these');
+  });
+
+  it('claims nothing about how the careers compare to each other', () => {
+    const read = earlyRead({ ...CLARITY_ONLY, curious_path: 'Writing', current_careers_considered: ['Investment banking'] });
+    expect(read.unknown).toContain('Which of these');
+    expect(read.unknown).not.toContain('read about the same');
   });
 
   it('asks whether the single one holds up', () => {
@@ -221,6 +283,56 @@ describe('earlyRead, the empty middle', () => {
   it('leaves the note empty when there are directions to show', () => {
     const read = earlyRead({ ...CLARITY_ONLY, current_careers_considered: ['Banking'] });
     expect(read.directionsNote).toBe('');
+  });
+
+  // The screen prints the ruled-out list and the pressured path two lines above
+  // this note, so a note saying no career was named contradicts the screen it
+  // sits on. "I do not know what I want but I know it is not X" is a signature
+  // student here, not an edge case.
+  it('does not claim nothing was named when careers were ruled out', () => {
+    const read = earlyRead({ ...CLARITY_ONLY, careers_ruled_out: ['Law school', 'Medicine'] });
+    expect(read.directions).toEqual([]);
+    expect(read.directionsNote).not.toContain('not named a career yet');
+    expect(read.directionsNote).toContain('do not want');
+  });
+
+  it('does not claim nothing was named when a career is being pushed at them', () => {
+    const read = earlyRead({ ...CLARITY_ONLY, pressured_path: 'Medicine' });
+    expect(read.directionsNote).not.toContain('not named a career yet');
+    expect(read.directionsNote).toContain('pushed at you');
+  });
+
+  it('does not claim nothing was named when both were answered', () => {
+    const read = earlyRead({ ...CLARITY_ONLY, careers_ruled_out: ['Medicine'], pressured_path: 'Medicine' });
+    expect(read.directionsNote).not.toContain('not named a career yet');
+    expect(read.directionsNote).toContain('ruled out');
+    expect(read.directionsNote).toContain('pushed at you');
+  });
+});
+
+describe('how many directions there were before the cap', () => {
+  it('reports the full count so the screen can say what it left out', () => {
+    const read = earlyRead({
+      ...CLARITY_ONLY,
+      current_careers_considered: ['Investment banking', 'Consulting', 'Product design', 'Teaching', 'Nursing'],
+    });
+    expect(read.directions).toHaveLength(3);
+    expect(read.directionsTotal).toBe(5);
+  });
+
+  it('reports the same number when nothing was left out', () => {
+    const read = earlyRead({ ...CLARITY_ONLY, current_careers_considered: ['Banking', 'Design'] });
+    expect(read.directionsTotal).toBe(2);
+    expect(read.directions).toHaveLength(2);
+  });
+
+  it('does not count a career the student ruled out', () => {
+    const read = earlyRead({
+      ...CLARITY_ONLY,
+      current_careers_considered: ['Banking', 'Law school'],
+      careers_ruled_out: ['Law'],
+    });
+    expect(read.directionsTotal).toBe(1);
   });
 });
 

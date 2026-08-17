@@ -41,18 +41,26 @@ const MIN_OVERLAP = 3;
 const clean = (v) => String(v ?? '').replace(/\s+/g, ' ').trim();
 const norm = (v) => clean(v).toLowerCase().replace(/[.,;:!?]+$/, '');
 const listOf = (v) => (Array.isArray(v) ? v.map(clean).filter(Boolean) : []);
-const escapeRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+/** The words in what a student typed, punctuation and spacing thrown away. */
+const words = (v) => norm(v).split(/[^a-z0-9]+/).filter(Boolean);
 
 /**
- * Does the shorter string start a word inside the longer one?
+ * Do two words name the same thing?
  *
- * Plain substring matching is wrong in the direction that matters: "law" sits
- * inside "flawless", so a student who ruled out law school would have lost an
- * unrelated answer. Anchoring to a word boundary keeps "law" against "lawyer"
- * and "law school" while leaving "flawless" alone.
+ * Whole-string comparison leaks in one direction and only one: "lawyer" is not
+ * a word inside "law school", so a student who ruled out Lawyer was handed back
+ * Law school. Comparing word against word is symmetric, so it cannot.
+ *
+ * An exact word counts however short it is, because "HR" is a career and not an
+ * accident. A prefix has to reach MIN_OVERLAP first, or a two-letter fragment
+ * matches half of everything.
  */
-const startsAtWord = (haystack, needle) =>
-  new RegExp(`\\b${escapeRe(needle)}`).test(haystack);
+const sameWord = (a, b) => {
+  if (a === b) return true;
+  const [short, long] = a.length <= b.length ? [a, b] : [b, a];
+  return short.length >= MIN_OVERLAP && long.startsWith(short);
+};
 
 /**
  * Has the student already ruled this out?
@@ -60,18 +68,17 @@ const startsAtWord = (haystack, needle) =>
  * Deliberately generous, because the two failures are not equal. Dropping a
  * direction we could have shown costs one line on one screen. Showing a
  * student the thing they just told us they do not want reads as not having
- * listened, on the screen whose whole job is proving we did.
+ * listened, on the screen whose whole job is proving we did. The question that
+ * collects this says "we will not suggest it back to you" in writing.
+ *
+ * The cost of that generosity, taken knowingly: one shared word is enough, so
+ * ruling out Product design also drops Product management.
  */
 export function isRuledOut(name, ruledOut) {
-  const a = norm(name);
-  if (!a) return false;
-  return listOf(ruledOut).some((entry) => {
-    const b = norm(entry);
-    if (!b) return false;
-    if (a === b) return true;
-    const [short, long] = a.length <= b.length ? [a, b] : [b, a];
-    return short.length >= MIN_OVERLAP && startsAtWord(long, short);
-  });
+  const mine = words(name);
+  if (!mine.length) return false;
+  return listOf(ruledOut).some((entry) =>
+    words(entry).some((theirs) => mine.some((word) => sameWord(word, theirs))));
 }
 
 const SOURCE_LABELS = {
@@ -80,10 +87,11 @@ const SOURCE_LABELS = {
 };
 
 /**
- * The directions, in source order, capped. Curious first because it is the one
- * the student said they had not told anyone, not because it is better.
+ * Every direction the answers support, in source order. Curious first because
+ * it is the one the student said they had not told anyone, not because it is
+ * better. Nothing here is cut, so the screen can say how many it left out.
  */
-export function directionsFrom(data = {}) {
+function allDirections(data = {}) {
   const ruledOut = listOf(data.careers_ruled_out);
   const out = [];
   const seen = new Set();
@@ -100,7 +108,12 @@ export function directionsFrom(data = {}) {
   add(data.curious_path, 'curious');
   listOf(data.current_careers_considered).forEach((c) => add(c, 'considered'));
 
-  return out.slice(0, MAX_DIRECTIONS);
+  return out;
+}
+
+/** What the screen shows: source order, capped. */
+export function directionsFrom(data = {}) {
+  return allDirections(data).slice(0, MAX_DIRECTIONS);
 }
 
 function clarityLine(clarity, confidence) {
@@ -110,12 +123,18 @@ function clarityLine(clarity, confidence) {
       clarity < CLARITY_LOW ? 'so almost all of this is still open'
         : clarity >= CLARITY_SURE ? 'so the open question is whether that holds up, not what to pick'
           : 'so some of this is settled and a lot of it is not';
-    lines.push(`You put your clarity at ${clarity} out of 10, ${tail}.`);
+    // The question asked how certain they are. "Clarity" is the field name, and
+    // handing someone back a word they never saw reads as a form talking to
+    // itself.
+    lines.push(`You put ${clarity} out of 10 on how certain you are, ${tail}.`);
   }
   if (clarity && confidence) {
     if (clarity - confidence >= NUMBER_GAP) {
       lines.push('You are clearer on the direction than you are sure of it.');
-    } else if (confidence - clarity >= NUMBER_GAP) {
+    } else if (confidence - clarity >= NUMBER_GAP && clarity < CLARITY_LOW) {
+      // Only worth saying while the first number is genuinely low. At a 4 the
+      // line above already said some of it is settled, and "you are sure you do
+      // not know" one line later contradicts it.
       lines.push('You are confident that you do not know yet.');
     }
   }
@@ -129,8 +148,8 @@ export function reflectionFrom(data = {}) {
   const considered = listOf(data.current_careers_considered);
   const ruledOut = listOf(data.careers_ruled_out);
   const pressured = clean(data.pressured_path);
-  const deciding = [...listOf(data.current_decision_pressure), clean(data.current_decision_pressure_note)]
-    .filter(Boolean);
+  const deciding = listOf(data.current_decision_pressure);
+  const decidingNote = clean(data.current_decision_pressure_note);
 
   const lines = clarityLine(clarity, confidence);
 
@@ -145,8 +164,15 @@ export function reflectionFrom(data = {}) {
   if (pressured) {
     lines.push(`Something is being pushed at you: ${pressured}.`);
   }
+  // The note is a sentence the student wrote, not another item. Comma-joined
+  // onto the fixed choices, one that opens with a conjunction reads as a broken
+  // list: "Summer internship, and a transfer". Their words are not edited, so
+  // the note gets its own line instead.
   if (deciding.length) {
     lines.push(`In front of you this term: ${deciding.join(', ')}.`);
+    if (decidingNote) lines.push(`Also on your mind: ${decidingNote}.`);
+  } else if (decidingNote) {
+    lines.push(`In front of you this term: ${decidingNote}.`);
   }
   return lines;
 }
@@ -158,11 +184,18 @@ export function reflectionFrom(data = {}) {
  */
 function unknownFrom(data, directions) {
   const pressured = clean(data.pressured_path);
-  if (pressured) {
+  // A pressured path the student has also ruled out is settled, by them, one
+  // screen ago. Asking whose it is re-opens the thing the last screen promised
+  // to leave shut, so it falls through to the next honest unknown.
+  if (pressured && !isRuledOut(pressured, listOf(data.careers_ruled_out))) {
     return `Whether ${pressured} is yours or someone else's. Nothing you have typed can settle that, and neither can we.`;
   }
   if (directions.length > 1) {
-    return 'Which of these you would actually like doing on a Tuesday. From the outside they read about the same.';
+    // One sentence, because the second one used to claim the careers read about
+    // the same from the outside, which is the only thing this screen ever said
+    // about the careers rather than about the student. For Writing and
+    // Investment banking it was simply untrue.
+    return 'Which of these you would actually like doing on a Tuesday.';
   }
   if (directions.length === 1) {
     return `Whether ${directions[0].name} holds up from the inside. Reading about a job and doing a piece of one are different things.`;
@@ -189,35 +222,59 @@ export function earlyRead(data = {}) {
   const reflection = reflectionFrom(data);
 
   if (!answeredAnything) {
-    return { sparse: true, reflection, directions: [], directionsNote: '', unknown: '' };
+    return { sparse: true, reflection, directions: [], directionsTotal: 0, directionsNote: '', unknown: '' };
   }
 
-  const directions = directionsFrom(data);
-  let directionsNote = '';
-  if (!directions.length) {
-    directionsNote = considered.length || curious
-      ? 'Everything you named is also on your ruled-out list, so there is nothing left to show you.'
-      : 'You have not named a career yet, so there is nothing to show you here.';
-  }
+  const all = allDirections(data);
+  const directions = all.slice(0, MAX_DIRECTIONS);
 
   return {
     sparse: false,
     reflection,
     directions,
-    directionsNote,
+    directionsTotal: all.length,
+    directionsNote: directions.length ? '' : emptyNote({ considered, curious, ruledOut, pressured }),
     unknown: unknownFrom(data, directions),
   };
 }
 
 /**
+ * Why the list is empty, said truthfully.
+ *
+ * The screen prints the ruled-out list and the pressured path two lines above
+ * this note, so it cannot answer "you have not named a career yet" for a
+ * student who named two. Which careers are on the screen is what decides the
+ * wording, not which question they arrived through.
+ */
+function emptyNote({ considered, curious, ruledOut, pressured }) {
+  if (considered.length || curious) {
+    return 'Everything you named is also on your ruled-out list, so there is nothing left to show you.';
+  }
+  if (ruledOut.length && pressured) {
+    return 'The only careers you have named are the ones you ruled out and the one being pushed at you, so there is nothing left to put here.';
+  }
+  if (ruledOut.length) {
+    return 'So far you have named what you do not want rather than what you are considering, so there is nothing here to show you.';
+  }
+  if (pressured) {
+    return 'The only career here is the one being pushed at you, and that is not the same as one you want.';
+  }
+  return 'You have not named a career yet, so there is nothing to show you here.';
+}
+
+/**
  * What the funnel is allowed to know about this screen: counts and booleans.
- * No career, no note, no clarity number, nothing a student typed. Same rule as
- * every other event in src/lib/funnel.js.
+ * No career, no note, no certainty number, nothing a student typed. Same rule
+ * as every other event in src/lib/funnel.js.
+ *
+ * Read defensively on purpose. This is built as an argument to the tracking
+ * call, which means it sits outside that call's try/catch, so "measurement
+ * never breaks the student's path" only holds if this cannot throw.
  */
 export function earlyReadEventProps(read) {
   return {
-    sparse: !!read.sparse,
-    directions_count: read.directions.length,
-    reflection_count: read.reflection.length,
+    sparse: !!read?.sparse,
+    directions_count: read?.directions?.length ?? 0,
+    reflection_count: read?.reflection?.length ?? 0,
   };
 }

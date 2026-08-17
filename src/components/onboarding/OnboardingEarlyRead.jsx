@@ -45,10 +45,12 @@ export default function OnboardingEarlyRead({ read, headingRef }) {
       <h1 ref={headingRef} tabIndex={-1} className="tp-page mt-2.5 outline-none" style={{ color: 'var(--text-primary)' }}>
         {read.sparse ? 'There is not much here yet.' : 'Here is what we can see so far.'}
       </h1>
+      {/* One disclaimer. The line used to carry three, and a screen that hedges
+          three times in two sentences undercuts the job it is here to do. */}
       <p className="tp-lead mt-3" style={{ color: 'var(--text-secondary)' }}>
         {read.sparse
           ? 'You skipped most of the first five, which is allowed. We are not going to invent a read out of one number, so here is the little we have.'
-          : 'You are five questions in, so this is a read on partial answers, not a result. Nothing here is a recommendation and nothing is decided.'}
+          : 'You are five questions in, so this is a read on partial answers, not a result.'}
       </p>
 
       <div className="mt-6 space-y-3">
@@ -68,8 +70,13 @@ export default function OnboardingEarlyRead({ read, headingRef }) {
 
         {read.directions.length > 0 && (
           <Block title="Worth testing" delay={110}>
+            {/* A student can count. Naming five and seeing three, under a line
+                saying there is no order, makes the cut itself look like a
+                ranking, which is the one thing this screen must never do. */}
             <p className="tp-meta mt-1.5" style={{ color: 'var(--text-secondary)' }}>
-              These came off your own answers. There is no order to them and no score behind them.
+              {read.directionsTotal > read.directions.length
+                ? `We are showing ${read.directions.length} of the ${read.directionsTotal} careers you named. The ones left off are not worse, because nothing on this screen is scored.`
+                : 'These came off your own answers. There is no order to them and no score behind them.'}
             </p>
             <ul className="mt-3 space-y-2">
               {read.directions.map(d => (

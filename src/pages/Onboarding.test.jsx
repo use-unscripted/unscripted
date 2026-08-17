@@ -144,6 +144,65 @@ describe('the early read, in the flow', () => {
     expect(counter()).toBe(`6 OF ${STEPS.length}`);
   });
 
+  // The account wall's "Edit my path selection" sends a finished student to
+  // /onboarding?step=0. That is a fresh mount, so nothing in the running page
+  // knows they are finished: only the draft does.
+  it('stays away from a student who finished the intake and came back through the edit link', () => {
+    seedDraft({ current_careers_considered: ['Investment banking'], name: 'Sam', current_step: STEPS.length });
+    render(
+      <MemoryRouter initialEntries={['/onboarding?step=0']}>
+        <Onboarding />
+      </MemoryRouter>
+    );
+    expect(counter()).toBe(`1 OF ${STEPS.length}`);
+
+    for (let i = 0; i < 5; i += 1) advance();
+
+    expect(screen.queryByText('Here is what we can see so far.')).toBeNull();
+    expect(screen.queryByText('There is not much here yet.')).toBeNull();
+    expect(counter()).toBe(`6 OF ${STEPS.length}`);
+  });
+
+  it('does not come back after a reload past it followed by Back and Continue', () => {
+    seedDraft({ current_careers_considered: ['Investment banking'], current_step: 5 });
+    render(
+      <MemoryRouter initialEntries={['/onboarding']}>
+        <Onboarding />
+      </MemoryRouter>
+    );
+    expect(counter()).toBe(`6 OF ${STEPS.length}`);
+
+    clickText('Back');
+    expect(counter()).toBe(`5 OF ${STEPS.length}`);
+    advance();
+
+    expect(screen.queryByText('Here is what we can see so far.')).toBeNull();
+    expect(counter()).toBe(`6 OF ${STEPS.length}`);
+  });
+
+  it('still shows for a draft parked on the question it follows', () => {
+    seedDraft({ current_careers_considered: ['Investment banking'], current_step: 4 });
+    render(
+      <MemoryRouter initialEntries={['/onboarding']}>
+        <Onboarding />
+      </MemoryRouter>
+    );
+    expect(counter()).toBe(`5 OF ${STEPS.length}`);
+    advance();
+    expect(screen.getByText('Here is what we can see so far.')).toBeTruthy();
+  });
+
+  it('says how many careers it is showing when it cannot show them all', () => {
+    seedDraft({
+      current_careers_considered: ['Investment banking', 'Consulting', 'Product design', 'Teaching', 'Nursing'],
+    });
+    openAtLastQuestionOfSectionOne();
+    advance();
+
+    expect(screen.getByText(/showing 3 of the 5 careers you named/i)).toBeTruthy();
+    expect(screen.queryByText(/There is no order to them/)).toBeNull();
+  });
+
   it('leaves the guest draft round-tripping and adds nothing to it', () => {
     seedDraft({ current_careers_considered: ['Investment banking'] });
     const before = Object.keys(draft()).sort();
