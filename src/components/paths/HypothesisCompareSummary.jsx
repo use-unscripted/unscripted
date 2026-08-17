@@ -68,7 +68,7 @@ export default function HypothesisCompareSummary({ hypothesis, path, nextTest })
 
       <Block label="Confidence">
         <p className="tp-body text-[color:var(--ink-700)]">
-          {confidenceWord} — {h.fit_confidence_score}% of the evidence this hypothesis needs.
+          {confidenceWord}: {h.fit_confidence_score}% of the evidence this hypothesis needs.
         </p>
         <p className="tp-meta mt-1 text-[color:var(--ink-400)]">
           {path.confidence_explanation

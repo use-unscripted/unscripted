@@ -11,7 +11,7 @@ export default function ReconstructionPanel({ reconstruction }) {
         <ul className="mt-2 space-y-1.5">
           {(reconstruction.reconstructable || []).map(r => (
             <li key={r.stage} className="tp-body" style={{ color: 'var(--text-secondary)' }}>
-              <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>{r.stage}</span> — {r.from}
+              <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>{r.stage}</span>: {r.from}
             </li>
           ))}
         </ul>
@@ -21,7 +21,7 @@ export default function ReconstructionPanel({ reconstruction }) {
         <ul className="mt-2 space-y-1.5">
           {(reconstruction.not_reconstructable || []).map(r => (
             <li key={r.stage} className="tp-body" style={{ color: 'var(--text-secondary)' }}>
-              <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>{r.stage}</span> — {r.why}
+              <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>{r.stage}</span>: {r.why}
             </li>
           ))}
         </ul>

@@ -85,7 +85,7 @@ export default function StageTest() {
       ? {
           label: 'Reflect On This Test',
           to: `/reflect?experimentId=${exp.id}`,
-          sub: `${exp.title} — the work is done, the reflection is still open.`,
+          sub: `${exp.title}. The work is done, the reflection is still open.`,
         }
       : {
           label: exp.status === 'in_progress' ? 'Continue Test' : 'Start Test',

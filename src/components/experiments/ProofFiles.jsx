@@ -116,7 +116,7 @@ export default function ProofFiles({ files, states = {}, onAdd, onRemove }) {
           />
           <Upload size={22} className="mx-auto mb-2 text-[color:var(--ink-400)]" />
           <p className="tp-body font-semibold text-[color:var(--ink-700)]">
-            {files.length ? 'Add another file' : 'Click or drag files here — you can pick several at once'}
+            {files.length ? 'Add another file' : 'Click or drag files here (you can pick several at once)'}
           </p>
           <p className="tp-meta mt-1 text-[color:var(--ink-400)]">
             Up to {MAX_FILES} files · videos up to 100 MB · all other files up to 50 MB

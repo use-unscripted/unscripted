@@ -28,7 +28,7 @@ export default function HumanRealityLearned({ record, brief }) {
         <div>
           <dt className="tp-label" style={{ color: 'var(--ink-500)' }}>What changed</dt>
           <dd className="tp-body mt-1" style={{ color: 'var(--ink-700)' }}>
-            {changed}{record.changed_expectation_note ? ` \u2014 ${record.changed_expectation_note}` : ''}
+            {changed}{record.changed_expectation_note ? `: ${record.changed_expectation_note}` : ''}
           </dd>
         </div>
         <div>

@@ -69,7 +69,7 @@ export default function UserClassPanel({ accounts = [], counts = {}, onChanged }
             {rows.slice(0, 200).map(a => (
               <tr key={a.id}>
                 <td className="tp-meta" style={{ padding: '8px 10px', color: 'var(--text-muted)' }}>…{String(a.id).slice(-8)}</td>
-                <td className="tp-meta" style={{ padding: '8px 10px', color: 'var(--text-muted)' }}>{(a.created_date || '').slice(0, 10) || '—'}</td>
+                <td className="tp-meta" style={{ padding: '8px 10px', color: 'var(--text-muted)' }}>{(a.created_date || '').slice(0, 10) || '-'}</td>
                 <td className="tp-body" style={{ padding: '8px 10px', color: 'var(--text-primary)' }}>{a.events}</td>
                 <td className="tp-meta" style={{ padding: '8px 10px', color: 'var(--text-muted)' }}>{a.role || 'user'}</td>
                 <td style={{ padding: '8px 10px' }}>

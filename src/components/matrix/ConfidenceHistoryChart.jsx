@@ -40,7 +40,7 @@ function Explain({ point }) {
       {point.weakened?.length > 0 && (
         <ul className="mt-1 space-y-1">
           {point.weakened.slice(0, 3).map((s, i) => (
-            <li key={i} className="tp-body" style={{ color: 'var(--text-secondary)' }}>– {s.text || s}</li>
+            <li key={i} className="tp-body" style={{ color: 'var(--text-secondary)' }}>- {s.text || s}</li>
           ))}
         </ul>
       )}

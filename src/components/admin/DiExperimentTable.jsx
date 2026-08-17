@@ -20,14 +20,14 @@ function Cell({ children }) {
 /** A rate, or an explicit nothing. Never a 0% built on a zero denominator. */
 function Rate({ value, thin }) {
   if (thin || value === null || value === undefined) {
-    return <Cell><span style={{ color: 'var(--ink-400)' }}>—</span></Cell>;
+    return <Cell><span style={{ color: 'var(--ink-400)' }}>-</span></Cell>;
   }
   return <Cell>{value}%</Cell>;
 }
 
 function Num({ value, thin }) {
   if (thin || value === null || value === undefined) {
-    return <Cell><span style={{ color: 'var(--ink-400)' }}>—</span></Cell>;
+    return <Cell><span style={{ color: 'var(--ink-400)' }}>-</span></Cell>;
   }
   return <Cell>{value}</Cell>;
 }

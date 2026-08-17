@@ -14,7 +14,7 @@ const Fact = ({ label, children }) => (
 
 export default function LibraryExperimentCard({ row, bestNext, bestValidated, onStart, busy }) {
   const { template, strength, value, minutes, minutesLow, coverage, coveredCount, importantCount, notRepresented, reviewerCount } = row;
-  const time = minutesLow && minutes ? `${minutesLow}\u2013${minutes} min` : minutes ? `about ${minutes} min` : template.effort;
+  const time = minutesLow && minutes ? `${minutesLow}-${minutes} min` : minutes ? `about ${minutes} min` : template.effort;
 
   return (
     <article className="app-card-flat p-5">
