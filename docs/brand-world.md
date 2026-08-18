@@ -5,10 +5,16 @@ error message, or an AI prompt. It holds the product's argument, the beliefs it 
 the vocabulary that carries them, the words that undo them, what a student should feel, and
 what movement on the screen is allowed to mean.
 
-Visual tokens (navy, gold, the two typefaces, the A/B bench) are in
-[`design.md`](design.md). The prose rules every AI prompt inherits are
-`PLAIN_PROSE_RULES` in `src/lib/llm.js`. This file is the layer above both: the point of
-view they exist to carry.
+This file is the layer above the mechanics. Three things it deliberately does not repeat:
+
+- **The punctuation and copy rules** (no em dashes, no en dashes, curly quotes stay, run the
+  `humanizer` skill over anything a student reads) are in `AGENTS.md` at the root of this
+  repo. Read that too.
+- **The prose rules every AI prompt inherits** are `PLAIN_PROSE_RULES` in `src/lib/llm.js`.
+- **Visual tokens** (navy, gold, the two typefaces, the A/B bench) are in `docs/design.md`
+  **in Drew's local project folder, which is not part of this repo.** If you are working in
+  the Base44 sandbox you cannot open it, so match the tokens already in `src/index.css` and
+  the surrounding components rather than inventing values.
 
 Read the last two sections before writing anything a buyer sees. They hold the parts that
 are currently out of date on the live site.
@@ -226,7 +232,7 @@ is decoration. The page has to read without it.
 ## What the pivot costs, and what you can claim today
 
 Simulations replace Mission Guides. That call was made on 2026-08-14 and the reasoning is in
-[`simulation-direction.md`](simulation-direction.md). It costs us one specific sentence, and
+`docs/simulation-direction.md` in Drew's local project folder, outside this repo. It costs us one specific sentence, and
 anyone writing buyer copy needs to know which side of it we are on.
 
 A real-world mission produced an artifact a student could hand to an employer. A simulation
@@ -293,5 +299,5 @@ marked so.
 - **Not a word, but it is on the page this section governs.** The hero carries 1.75 seconds of
   unlicensed Good Will Hunting footage, merged to the preview on 2026-08-14. It is the one
   item sitting there that a university's counsel could object to during diligence. The risk
-  position is written out in [`in-flight.md`](in-flight.md); read it before you write anything
+  position is written out in `docs/in-flight.md` in Drew's local project folder, outside this repo; read it before you write anything
   that ships that page.
