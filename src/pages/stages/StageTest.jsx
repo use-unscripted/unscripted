@@ -105,6 +105,9 @@ export default function StageTest() {
         experiment={exp}
         action={action}
       />
+      {/* Second from the top, directly under the path being tested: what to test
+          next is the decision this screen exists to support. */}
+      <NextBestExperimentPanel pathId={journey.currentPath.id} />
       {/* The rest of the open work on this path, with the current test marked. */}
       <ActiveExperimentsPanel rows={progress?.active || []} currentId={currentRow?.id} />
       <UnknownsChecklist progress={focus?.progress} pathId={journey.currentPath.id} />

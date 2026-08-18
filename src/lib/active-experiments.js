@@ -27,7 +27,9 @@ function shape(experiment, guides, reflections) {
   const stepsDone = Math.min(progress.completed?.length || 0, stepsTotal || Infinity) || 0;
   const stepsComplete = stepsTotal > 0 && stepsDone >= stepsTotal;
   const hasReflection = reflections.some(r => r.experiment_id === experiment.id && r.is_experiment_conclusion);
-  const workDone = experiment.status === 'completed' || experiment.status === 'skipped' || stepsComplete;
+  /* A written conclusion counts as the work being done. A student who has already
+     reflected on a test must never be told that test is still unfinished. */
+  const workDone = experiment.status === 'completed' || experiment.status === 'skipped' || stepsComplete || hasReflection;
 
   return {
     experiment,

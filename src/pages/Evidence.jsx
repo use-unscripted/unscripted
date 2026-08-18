@@ -21,8 +21,9 @@ const TABS = [
   ['human', 'Human', Users],
   // Scenario evidence lives inside Evidence, never as its own nav item.
   ['signals', 'Signals', Compass],
-  /* Last, and set apart at the right-hand end of the rail: it is the standing
-     summary of everything the other tabs collect, not another collection. */
+  /* Sits directly beside Signals rather than pushed to the far right: it is the
+     standing summary of what the other tabs collect, and it reads as part of the
+     same rail. */
   ['career-profile', 'Career Profile', UserCheck],
 ];
 
@@ -51,7 +52,7 @@ export default function Evidence() {
                 type="button"
                 onClick={() => select(key)}
                 aria-current={isActive ? 'page' : undefined}
-                className={`ui-press tp-body flex flex-1 items-center justify-center gap-1.5 rounded-[var(--r-control)] px-3.5 font-bold sm:flex-none sm:px-5${key === 'career-profile' ? ' sm:ml-auto' : ''}`}
+                className={`ui-press tp-body flex flex-1 items-center justify-center gap-1.5 rounded-[var(--r-control)] px-3.5 font-bold sm:flex-none sm:px-5`}
                 style={
                   isActive
                     ? { background: 'var(--brand-navy-900)', color: '#fff', minHeight: '44px' }

@@ -44,13 +44,15 @@ export async function loadConclusionContext(experimentIdParam) {
      shared reading the Test screen uses, so the two screens agree. Only if
      nothing is owed does this fall back to the cycle and to open work. */
   if (!experiment) {
-    /* Same reading, same scope as the Test screen: the test the student is on if
-       its work is finished, otherwise the oldest one on this path that still
-       owes a reflection. */
+    /* The test the student is on, full stop — the same one the Test screen names
+       as the headline test. Reflect used to jump to whichever experiment happened
+       to owe a reflection, which is how a student mid-way through one test was
+       asked to reflect on a different one they had never opened. If the current
+       test is not finished yet, this page says so about THAT test; only when
+       there is no current test at all does an owed reflection stand in. */
     const { current, awaitingReflection } = await loadExperimentProgress({ pathName: cycle?.selected_path_name || undefined })
       .catch(() => ({ current: null, awaitingReflection: [] }));
-    const owed = (current?.awaitingReflection ? current : null) || awaitingReflection[0] || null;
-    experiment = owed?.experiment || null;
+    experiment = (current || awaitingReflection[0])?.experiment || null;
   }
   if (!experiment && cycle?.experiment_id) experiment = own.find(e => e.id === cycle.experiment_id) || null;
   if (!experiment && cycle?.selected_path_name) {
@@ -120,6 +122,11 @@ export async function loadConclusionContext(experimentIdParam) {
  */
 export function conclusionAvailability(ctx) {
   if (!ctx?.experiment) return { ready: false, reason: 'no_experiment' };
+  /* A reflection that has already been written settles the question. Without this
+     an experiment whose steps were later edited, or whose status never moved to
+     completed, told the student their test was unfinished on the very page that
+     already holds their submitted reflection. */
+  if (ctx.existing) return { ready: true, reason: 'already_concluded' };
   if (ctx.endedEarly) return { ready: true, reason: 'ended_early' };
   if (ctx.experiment.status === 'completed') return { ready: true, reason: 'experiment_complete' };
   if (ctx.stepsTotal > 0 && ctx.stepsDone >= ctx.stepsTotal) return { ready: true, reason: 'steps_complete' };
