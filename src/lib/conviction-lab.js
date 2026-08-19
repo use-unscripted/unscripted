@@ -23,6 +23,7 @@ import { buildExpectationEvidence } from '@/lib/conviction-expectations';
 import { buildTensions } from '@/lib/tension-signals';
 import { buildTradeoffs } from '@/lib/tradeoffs';
 import { buildDifferentiator } from '@/lib/path-differentiator';
+import { decisionReadinessState } from '@/lib/decision-readiness-state';
 import { base44 } from '@/api/base44Client';
 
 export async function loadConvictionLab(pathId) {
@@ -103,6 +104,9 @@ export async function loadConvictionLab(pathId) {
        stands on each. Grounded only in the blueprint or the path's own record. */
     tradeoffs,
     comparison,
+    /* Where this path stands on Decision Readiness: a state read off the
+       diversity of the evidence above, never one percentage threshold. */
+    decisionReadiness: decisionReadinessState({ record, progress, tensions, tradeoffs }),
     gap: pickConvictionGap({ record, progress, nextTest, tensions, tradeoffs }),
     message: readinessMessage(readiness),
     confidenceBand: confidenceBand(hypothesis.fit_confidence_score),

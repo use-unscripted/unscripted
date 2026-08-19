@@ -13,6 +13,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import PageHeader from '@/components/PageHeader';
 import ConvictionSummary from '@/components/conviction/ConvictionSummary';
 import ConvictionRecord from '@/components/conviction/ConvictionRecord';
+import DecisionReadinessCard from '@/components/conviction/DecisionReadinessCard';
 import ConvictionGap from '@/components/conviction/ConvictionGap';
 import WorthTesting from '@/components/conviction/WorthTesting';
 import TradeoffsSection from '@/components/conviction/TradeoffsSection';
@@ -86,6 +87,8 @@ export default function ConvictionLab() {
         ) : (
           <>
             <ConvictionSummary lab={lab} />
+            {/* Where this path stands, in states rather than a percentage. */}
+            <DecisionReadinessCard readiness={lab.decisionReadiness} />
             {/* The one thing this path most needs next, and the recommendation
                 below is pointed at it. */}
             <ConvictionGap gap={lab.gap} />
