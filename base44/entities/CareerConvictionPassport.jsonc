@@ -1,0 +1,79 @@
+{
+  "name": "CareerConvictionPassport",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string"
+    },
+    "path_id": {
+      "type": "string"
+    },
+    "path_name": {
+      "type": "string"
+    },
+    "readiness_state": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "approved",
+        "discarded"
+      ],
+      "default": "draft"
+    },
+    "how_you_decided": {
+      "type": "string"
+    },
+    "what_you_know": {
+      "type": "string"
+    },
+    "what_remains_uncertain": {
+      "type": "string"
+    },
+    "strongest_support": {
+      "type": "string"
+    },
+    "strongest_contradiction": {
+      "type": "string"
+    },
+    "biggest_change": {
+      "type": "string"
+    },
+    "tradeoffs_accepted": {
+      "type": "string"
+    },
+    "what_could_change_your_mind": {
+      "type": "string"
+    },
+    "evidence_basis": {
+      "type": "object"
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "approved_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "path_id"
+  ],
+  "rls": {
+    "create": {
+      "created_by_id": "{{user.id}}"
+    },
+    "read": {
+      "created_by_id": "{{user.id}}"
+    },
+    "update": {
+      "created_by_id": "{{user.id}}"
+    },
+    "delete": {
+      "created_by_id": "{{user.id}}"
+    }
+  }
+}

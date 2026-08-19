@@ -62,9 +62,9 @@ export const READINESS_STATES = {
  * @param {object|null} args.record   buildConvictionRecord() result
  * @param {object|null} args.progress dimensionProgress() result
  * @param {Array}  args.tensions      buildTensions() result
- * @param {Array}  args.tradeoffs     buildTradeoffs() result
+ * @param {object} args.tradeoffs     buildTradeoffs() result
  */
-export function decisionReadinessState({ record, progress, tensions = [], tradeoffs = [] }) {
+export function decisionReadinessState({ record, progress, tensions = [], tradeoffs = null }) {
   const areas = record?.areas || [];
   if (!areas.length) return { ...READINESS_STATES.exploring, gaps: [], reasons: [] };
 
@@ -77,9 +77,7 @@ export function decisionReadinessState({ record, progress, tensions = [], tradeo
   const supportingMissing = SUPPORTING.filter(id => at(id) === 0);
   const untestedDimensions = (progress?.untested || []).length;
   const openTensions = (tensions || []).length;
-  const unresolvedTradeoffs = (tradeoffs || []).filter(
-    t => t.importance === 'high' && (t.status === 'unknown' || t.status === 'untested'),
-  ).length;
+  const unresolvedTradeoffs = (tradeoffs?.unresolvedImportant || []).length;
 
   const gaps = [
     ...missing.map(id => ({ id, label: labelOf(id), why: 'Nothing recorded here yet.' })),

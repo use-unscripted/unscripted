@@ -14,6 +14,8 @@ import PageHeader from '@/components/PageHeader';
 import ConvictionSummary from '@/components/conviction/ConvictionSummary';
 import ConvictionRecord from '@/components/conviction/ConvictionRecord';
 import DecisionReadinessCard from '@/components/conviction/DecisionReadinessCard';
+import ConvictionReview from '@/components/conviction/ConvictionReview';
+import ConvictionPassport from '@/components/conviction/ConvictionPassport';
 import ConvictionGap from '@/components/conviction/ConvictionGap';
 import WorthTesting from '@/components/conviction/WorthTesting';
 import TradeoffsSection from '@/components/conviction/TradeoffsSection';
@@ -89,6 +91,14 @@ export default function ConvictionLab() {
             <ConvictionSummary lab={lab} />
             {/* Where this path stands, in states rather than a percentage. */}
             <DecisionReadinessCard readiness={lab.decisionReadiness} />
+            {/* One concise read of this path, from the student's own records. */}
+            <ConvictionReview review={lab.review} />
+            {/* Offered at Decision Ready. A draft until the student approves it. */}
+            <ConvictionPassport
+              path={lab.path}
+              review={lab.review}
+              ready={lab.decisionReadiness?.key === 'ready'}
+            />
             {/* The one thing this path most needs next, and the recommendation
                 below is pointed at it. */}
             <ConvictionGap gap={lab.gap} />

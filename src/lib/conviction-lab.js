@@ -24,6 +24,7 @@ import { buildTensions } from '@/lib/tension-signals';
 import { buildTradeoffs } from '@/lib/tradeoffs';
 import { buildDifferentiator } from '@/lib/path-differentiator';
 import { decisionReadinessState } from '@/lib/decision-readiness-state';
+import { buildConvictionReview } from '@/lib/conviction-review';
 import { base44 } from '@/api/base44Client';
 
 export async function loadConvictionLab(pathId) {
@@ -89,11 +90,18 @@ export async function loadConvictionLab(pathId) {
     stances: Array.isArray(stances) ? stances : [],
   });
 
+  const decisionReadiness = decisionReadinessState({ record, progress, tensions, tradeoffs });
+
   return {
     path,
     hypothesis,
     progress,
     readiness,
+    /* One concise read of this path, assembled from the blocks above. */
+    review: buildConvictionReview({
+      path, hypothesis, progress, tradeoffs, tensions, nextTest,
+      readiness: decisionReadiness, context,
+    }),
     record,
     /* What this path's tests said they would feel like, against what they did. */
     expectations: buildExpectationEvidence({ pathName: path.path_name, context }),
@@ -106,7 +114,7 @@ export async function loadConvictionLab(pathId) {
     comparison,
     /* Where this path stands on Decision Readiness: a state read off the
        diversity of the evidence above, never one percentage threshold. */
-    decisionReadiness: decisionReadinessState({ record, progress, tensions, tradeoffs }),
+    decisionReadiness,
     gap: pickConvictionGap({ record, progress, nextTest, tensions, tradeoffs }),
     message: readinessMessage(readiness),
     confidenceBand: confidenceBand(hypothesis.fit_confidence_score),
