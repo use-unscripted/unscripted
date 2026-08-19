@@ -15,7 +15,7 @@ import { Reveal } from '@/components/motion';
  * uncertainty itself is never deleted: it is only held back, and the choice is
  * recorded as product-learning data.
  */
-export default function NextBestExperimentPanel({ pathId = null, preferVariable = null, gapId = null }) {
+export default function NextBestExperimentPanel({ pathId = null, preferVariable = null, gap = null, gapId = gap?.id || null }) {
   const [state, setState] = useState({ loading: true, recommendation: null, unsupported: false });
   const [skip, setSkip] = useState([]);
   const [busy, setBusy] = useState(false);
@@ -70,7 +70,15 @@ export default function NextBestExperimentPanel({ pathId = null, preferVariable 
      look bad. Fire-and-forget: the student navigates immediately either way. */
   const onAccept = () => {
     const current = state.recommendation;
-    if (current) recordAcceptance({ candidate: current.candidate, recommendation: current });
+    if (!current) return;
+    recordAcceptance({ candidate: current.candidate, recommendation: current });
+    /* A test started from a Conviction Gap opens the chain that later answers
+       which tests actually resolve which gaps. Fire-and-forget. */
+    if (gap?.id) {
+      import('@/lib/gap-outcomes')
+        .then(m => m.targetGap({ gap, recommendation: current }))
+        .catch(() => {});
+    }
   };
 
   if (state.loading) return <Sk h={268} r={16} />;

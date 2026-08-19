@@ -8,6 +8,7 @@ import DiSection from '@/components/admin/DiSection';
 import DiExperimentTable from '@/components/admin/DiExperimentTable';
 import DiFlaggedExperiments from '@/components/admin/DiFlaggedExperiments';
 import EvidenceWeightsPanel from '@/components/admin/EvidenceWeightsPanel';
+import GapEffectivenessPanel from '@/components/admin/GapEffectivenessPanel';
 
 /**
  * Decision Intelligence: what the product is learning about which experiences
@@ -78,6 +79,9 @@ export default function AdminDecisionIntelligence() {
           </p>
 
           <DiSection title="Uncertainty" cell={data.uncertainty} />
+          {/* Gap → test → expectation vs reality → evidence → conviction →
+              decision. No rate until a version has a real sample behind it. */}
+          <GapEffectivenessPanel data={data.gap_effectiveness} />
           <DiFlaggedExperiments rows={data.flagged_experiments || []} />
           <DiExperimentTable rows={data.experiments} minStudents={data.min_students} thresholds={data.effectiveness_thresholds} />
           {/* Decision scenarios: completion, self-consistency, and how often a

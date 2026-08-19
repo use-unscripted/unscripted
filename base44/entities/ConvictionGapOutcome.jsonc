@@ -1,0 +1,121 @@
+{
+  "name": "ConvictionGapOutcome",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string"
+    },
+    "gap_id": {
+      "type": "string"
+    },
+    "gap_area": {
+      "type": "string"
+    },
+    "gap_label": {
+      "type": "string"
+    },
+    "gap_dimension": {
+      "type": "string"
+    },
+    "path_id": {
+      "type": "string"
+    },
+    "path_name": {
+      "type": "string"
+    },
+    "cycle_id": {
+      "type": "string"
+    },
+    "rule_id": {
+      "type": "string"
+    },
+    "rule_version": {
+      "type": "string"
+    },
+    "test_type": {
+      "type": "string"
+    },
+    "experiment_id": {
+      "type": "string"
+    },
+    "experiment_title": {
+      "type": "string"
+    },
+    "blueprint_key": {
+      "type": "string"
+    },
+    "experiment_version": {
+      "type": "number"
+    },
+    "role_blueprint_version": {
+      "type": "number"
+    },
+    "validation_level": {
+      "type": "number"
+    },
+    "chain_stage": {
+      "type": "string",
+      "enum": [
+        "gap_targeted",
+        "test_completed",
+        "abandoned"
+      ],
+      "default": "gap_targeted"
+    },
+    "conviction_before": {
+      "type": "number"
+    },
+    "career_interest_delta": {
+      "type": "number"
+    },
+    "career_confidence_delta": {
+      "type": "number"
+    },
+    "enjoyment_expectation_delta": {
+      "type": "number"
+    },
+    "expectation_recorded": {
+      "type": "boolean",
+      "default": false
+    },
+    "evidence_created": {
+      "type": "number"
+    },
+    "targeted_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "test_completed_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "gap_id"
+  ],
+  "rls": {
+    "create": {
+      "created_by_id": "{{user.id}}"
+    },
+    "read": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "created_by_id": "{{user.id}}"
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

@@ -123,7 +123,7 @@ export default function ConvictionLab() {
             <NextBestExperimentPanel
               pathId={lab.path.id}
               preferVariable={lab.gap?.variable || null}
-              gapId={lab.gap?.id || null}
+              gap={lab.gap || null}
             />
             <PathHistoryPanel pathId={lab.path.id} />
             <p className="tp-meta text-center" style={{ color: 'var(--text-muted)' }}>

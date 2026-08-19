@@ -1,6 +1,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
 import { decisionIntelligence, experimentEffectiveness } from '../../shared/decision-intelligence.js';
 import { scenarioAnalytics } from '../../shared/scenario-analytics.js';
+import { gapEffectiveness } from '../../shared/gap-effectiveness.js';
 
 /**
  * Aggregate product learning, for the team only.
@@ -81,12 +82,24 @@ export default async function (req: Request): Promise<Response> {
       }
     }
 
+    /* The Conviction Gap chain: which tests resolve which gaps, grouped by the
+       exact experiment version. Read with the service role and reduced to
+       counts and rates here; suppressed groups carry no rate at all. */
+    const [gapOutcomes, cycles] = await Promise.all([
+      svc.ConvictionGapOutcome.list('-targeted_at', CAP).catch(() => []),
+      svc.CareerCycle.list('-created_date', CAP).catch(() => []),
+    ]);
+    const gaps = gapEffectiveness({
+      outcomes: Array.isArray(gapOutcomes) ? gapOutcomes : [],
+      cycles: Array.isArray(cycles) ? cycles : [],
+    });
+
     const scenarios = scenarioAnalytics({
       responses: Array.isArray(scenarioResponses) ? scenarioResponses : [],
       dimensionEvidence: data.dimensionEvidence,
     });
 
-    return Response.json({ ...payload, scenarios, stored_rows: rows.length });
+    return Response.json({ ...payload, scenarios, gap_effectiveness: gaps, stored_rows: rows.length });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }

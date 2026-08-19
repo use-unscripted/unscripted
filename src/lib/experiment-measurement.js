@@ -222,9 +222,15 @@ export async function savePostMeasurement(exp, existingRow, values) {
     .filter({ experiment_id: exp.id }, '-created_date', 5).catch(() => []);
   const row = existingRow || (Array.isArray(rows) ? rows : [])[0];
   await funnel('postExperimentCompleted', { experimentId: exp.id, pathId: exp.path_id, cycleId: exp.cycle_id });
-  if (row) {
-    await base44.entities.ExperimentMeasurement.update(row.id, payload);
-    return { ...row, ...payload };
-  }
-  return base44.entities.ExperimentMeasurement.create(payload);
+  const saved = row
+    ? (await base44.entities.ExperimentMeasurement.update(row.id, payload), { ...row, ...payload })
+    : await base44.entities.ExperimentMeasurement.create(payload);
+  /* If this test was started from a Conviction Gap, close that link with the
+     expectation-against-reality readings and the exact experiment version. Never
+     allowed to affect the save: analytics only, guarded inside. */
+  try {
+    const mod = await import('@/lib/gap-outcomes');
+    await mod.completeGapOutcome({ experiment: exp, measurement: saved });
+  } catch { /* the student's measurement is already stored */ }
+  return saved;
 }
