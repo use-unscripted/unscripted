@@ -1,0 +1,72 @@
+{
+  "name": "TradeoffStance",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string"
+    },
+    "path_id": {
+      "type": "string"
+    },
+    "path_name": {
+      "type": "string"
+    },
+    "tradeoff_id": {
+      "type": "string"
+    },
+    "tradeoff_label": {
+      "type": "string"
+    },
+    "source": {
+      "type": "string"
+    },
+    "dimension_id": {
+      "type": "string"
+    },
+    "importance": {
+      "type": "string",
+      "enum": [
+        "high",
+        "medium",
+        "low"
+      ]
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "unknown",
+        "untested",
+        "acceptable",
+        "concern",
+        "dealbreaker",
+        "context_dependent"
+      ],
+      "default": "unknown"
+    },
+    "note": {
+      "type": "string"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "path_id",
+    "tradeoff_id"
+  ],
+  "rls": {
+    "create": {
+      "created_by_id": "{{user.id}}"
+    },
+    "read": {
+      "created_by_id": "{{user.id}}"
+    },
+    "update": {
+      "created_by_id": "{{user.id}}"
+    },
+    "delete": {
+      "created_by_id": "{{user.id}}"
+    }
+  }
+}

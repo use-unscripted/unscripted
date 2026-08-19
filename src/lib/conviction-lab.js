@@ -21,6 +21,7 @@ import { buildConvictionRecord } from '@/lib/conviction-record';
 import { pickConvictionGap } from '@/lib/conviction-gap';
 import { buildExpectationEvidence } from '@/lib/conviction-expectations';
 import { buildTensions } from '@/lib/tension-signals';
+import { buildTradeoffs } from '@/lib/tradeoffs';
 import { base44 } from '@/api/base44Client';
 
 export async function loadConvictionLab(pathId) {
@@ -51,15 +52,27 @@ export async function loadConvictionLab(pathId) {
   /* Where this student's own evidence disagrees with itself. Read-only, and it
      never feeds Path Confidence — that stays with evidence-contradictions.js,
      which caps how far conflicting readings can move it. */
-  const [scenarioResponses, dimensions] = await Promise.all([
+  const [scenarioResponses, dimensions, blueprints, stances] = await Promise.all([
     base44.entities.ScenarioResponse.list('-created_date', 200).catch(() => []),
     base44.entities.CareerDimensionEvidence.list('-created_date', 200).catch(() => []),
+    base44.entities.RoleBlueprint.list('-created_date', 200).catch(() => []),
+    base44.entities.TradeoffStance.filter({ path_id: pathId }, '-updated_at', 100).catch(() => []),
   ]);
   const tensions = buildTensions({
     path,
     context,
     scenarioResponses: Array.isArray(scenarioResponses) ? scenarioResponses : [],
     dimensions: Array.isArray(dimensions) ? dimensions : [],
+  });
+
+  const norm = (s) => String(s || '').toLowerCase().trim();
+  const blueprint = (Array.isArray(blueprints) ? blueprints : []).find(
+    b => b.path_id === pathId || norm(b.career_title) === norm(path.path_name),
+  ) || null;
+  const tradeoffs = buildTradeoffs({
+    path,
+    blueprint,
+    stances: Array.isArray(stances) ? stances : [],
   });
 
   return {
@@ -73,7 +86,10 @@ export async function loadConvictionLab(pathId) {
     /* The one thing this path most needs next, read off the record above. Its
        dimension is handed to the Next Best Test engine so both agree. */
     tensions,
-    gap: pickConvictionGap({ record, progress, nextTest, tensions }),
+    /* The costs and conditions recorded for this work, and where the student
+       stands on each. Grounded only in the blueprint or the path's own record. */
+    tradeoffs,
+    gap: pickConvictionGap({ record, progress, nextTest, tensions, tradeoffs }),
     message: readinessMessage(readiness),
     confidenceBand: confidenceBand(hypothesis.fit_confidence_score),
     confidence: hypothesis.fit_confidence_score ?? null,

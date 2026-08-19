@@ -11,6 +11,8 @@
  * step, and the whole point of this is to hand the student one.
  */
 
+import { tradeoffTest } from '@/lib/tradeoffs';
+
 /* Importance order, not ease order. Doing the work comes before comparing it,
    and comparing it comes before declaring yourself ready. */
 const PRIORITY = [
@@ -79,7 +81,7 @@ const RANK = { none: 0, early: 1, some: 2, strong: 3 };
  *        existing evidence, eligible to become the gap (see below)
  * @returns {object|null} the gap, or null when every area has real evidence
  */
-export function pickConvictionGap({ record, progress, nextTest, tensions = [] }) {
+export function pickConvictionGap({ record, progress, nextTest, tensions = [], tradeoffs = null }) {
   if (!record) return null;
   const byId = new Map(record.areas.map(a => [a.id, a]));
   const ordered = PRIORITY.map(id => byId.get(id)).filter(Boolean);
@@ -108,6 +110,28 @@ export function pickConvictionGap({ record, progress, nextTest, tensions = [] })
       test: 'One more reading on the same thing, in a different realistic context, so this stops resting on a single observation.',
       to: (tension.variable && nextTest?.to) || null,
       from_tension: true,
+    };
+  }
+
+  /* An important tradeoff the student has not settled is eligible on the same
+     terms: it loses to an area with no reading at all, and to a contradiction,
+     but it beats every partially covered area. Their own stance decides whether
+     it counts as settled — acceptable and dealbreaker are positions, the other
+     four are open questions. */
+  const tradeoff = (tradeoffs?.unresolvedImportant || [])[0];
+  if (tradeoff && (!gapArea || gapArea.state !== 'none')) {
+    return {
+      id: `tradeoff:${tradeoff.id}`,
+      area: 'Tradeoffs',
+      unknown: `Where you actually stand on this: ${tradeoff.label}`,
+      dimension: null,
+      variable: tradeoff.dimension || null,
+      matters: 'A tradeoff you have not met is the most common reason a path that looked right stops being right. Marked as ' + tradeoff.statusLabel.toLowerCase() + ', this one is still an open question rather than a position.',
+      evidence: `${tradeoff.source}: ${tradeoff.detail}`,
+      basis: record.basis,
+      test: tradeoffTest(tradeoff),
+      to: tradeoff.simulatable === false ? '/human-reality' : ((tradeoff.dimension && nextTest?.to) || null),
+      from_tradeoff: true,
     };
   }
 

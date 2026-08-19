@@ -9,12 +9,13 @@
  * test the same path again as often as they like without touching onboarding.
  */
 import { useSearchParams, Link } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import PageHeader from '@/components/PageHeader';
 import ConvictionSummary from '@/components/conviction/ConvictionSummary';
 import ConvictionRecord from '@/components/conviction/ConvictionRecord';
 import ConvictionGap from '@/components/conviction/ConvictionGap';
 import WorthTesting from '@/components/conviction/WorthTesting';
+import TradeoffsSection from '@/components/conviction/TradeoffsSection';
 import ExpectationEvidence from '@/components/conviction/ExpectationEvidence';
 import UnknownsChecklist from '@/components/stages/UnknownsChecklist';
 import NextBestExperimentPanel from '@/components/next-test/NextBestExperimentPanel';
@@ -28,6 +29,7 @@ import { Sk } from '@/components/PageSkeleton';
 
 export default function ConvictionLab() {
   const [params] = useSearchParams();
+  const queryClient = useQueryClient();
   const requestedId = params.get('pathId') || '';
 
   /* The Lab is a destination in the nav now, so it can be opened without a path
@@ -93,6 +95,12 @@ export default function ConvictionLab() {
             <ConvictionRecord record={lab.record} />
             {/* What each test on this path was expected to feel like, against
                 what it actually felt like. */}
+            {/* The recorded costs of this work, and where the student stands. */}
+            <TradeoffsSection
+              tradeoffs={lab.tradeoffs}
+              path={lab.path}
+              onChanged={() => queryClient.invalidateQueries({ queryKey: ['conviction-lab', pathId] })}
+            />
             <ExpectationEvidence evidence={lab.expectations} pathId={lab.path.id} />
             <UnknownsChecklist progress={lab.progress} pathId={lab.path.id} />
             <NextBestExperimentPanel
