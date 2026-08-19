@@ -13,6 +13,7 @@ import { useQuery } from '@tanstack/react-query';
 import PageHeader from '@/components/PageHeader';
 import ConvictionSummary from '@/components/conviction/ConvictionSummary';
 import ConvictionRecord from '@/components/conviction/ConvictionRecord';
+import ConvictionGap from '@/components/conviction/ConvictionGap';
 import UnknownsChecklist from '@/components/stages/UnknownsChecklist';
 import NextBestExperimentPanel from '@/components/next-test/NextBestExperimentPanel';
 import PathHistoryPanel from '@/components/paths/PathHistoryPanel';
@@ -57,10 +58,13 @@ export default function ConvictionLab() {
         ) : (
           <>
             <ConvictionSummary lab={lab} />
+            {/* The one thing this path most needs next, and the recommendation
+                below is pointed at it. */}
+            <ConvictionGap gap={lab.gap} />
             {/* How much real evidence stands behind this path, in eight areas. */}
             <ConvictionRecord record={lab.record} />
             <UnknownsChecklist progress={lab.progress} pathId={lab.path.id} />
-            <NextBestExperimentPanel pathId={lab.path.id} />
+            <NextBestExperimentPanel pathId={lab.path.id} preferVariable={lab.gap?.variable || null} />
             <PathHistoryPanel pathId={lab.path.id} />
             <p className="tp-meta text-center" style={{ color: 'var(--text-muted)' }}>
               <Link to="/test" className="font-semibold" style={{ color: 'var(--brand-navy-700)' }}>The test you are on</Link>

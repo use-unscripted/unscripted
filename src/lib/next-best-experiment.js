@@ -318,8 +318,17 @@ function modeOf(candidate, leading, ctx) {
  * Returns null only when there is no live career hypothesis to test.
  */
 export function nextBestExperiment(ctx, opts = {}) {
-  const { candidates, hypotheses, leading } = deriveOpenQuestions(ctx, opts);
-  if (!candidates.length) return null;
+  const { candidates: pool, hypotheses, leading } = deriveOpenQuestions(ctx, opts);
+  if (!pool.length) return null;
+
+  /* `preferVariable` is how the Conviction Lab hands its biggest gap to this
+     engine. It only reorders: the question still has to be a live candidate, so
+     a gap that is already settled cannot be forced back onto the student. */
+  let candidates = pool;
+  if (opts.preferVariable) {
+    const i = pool.findIndex(c => c.variable === opts.preferVariable);
+    if (i > 0) candidates = [pool[i], ...pool.slice(0, i), ...pool.slice(i + 1)];
+  }
 
   const top = candidates[0];
   const blueprint = blueprintFor(top);
@@ -484,7 +493,7 @@ function whyThisMatters(candidate, { knows, hypotheses, mode }) {
  * for something else is honoured within a session, on top of the overrides they
  * have already recorded.
  */
-export async function loadNextBestExperiment({ skip = [], pathId = null, context = null } = {}) {
+export async function loadNextBestExperiment({ skip = [], pathId = null, context = null, preferVariable = null } = {}) {
   /* `context` is the shared student context a screen has already loaded. When it
      is supplied nothing here re-reads the student's records, which is what used
      to make this panel a third full copy of the same six lists, fired only after
@@ -519,8 +528,8 @@ export async function loadNextBestExperiment({ skip = [], pathId = null, context
 
   // Pinned first. If that career has no open question left, fall back to the
   // cross-path recommendation rather than showing nothing.
-  const rec = (pathId && nextBestExperiment(ctx, { suppressed, skip, pathId, supportedPathIds }))
-    || nextBestExperiment(ctx, { suppressed, skip, supportedPathIds });
+  const rec = (pathId && nextBestExperiment(ctx, { suppressed, skip, pathId, supportedPathIds, preferVariable }))
+    || nextBestExperiment(ctx, { suppressed, skip, supportedPathIds, preferVariable });
   return { ctx, recommendation: rec, overrides };
 }
 

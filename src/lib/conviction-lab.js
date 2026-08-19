@@ -18,6 +18,7 @@ import { dimensionProgress, nextTestForPath } from '@/lib/dimension-progress';
 import { decideReadiness, readinessMessage } from '@/lib/decide-readiness';
 import { confidenceBand } from '@/lib/journey-focus';
 import { buildConvictionRecord } from '@/lib/conviction-record';
+import { pickConvictionGap } from '@/lib/conviction-gap';
 
 export async function loadConvictionLab(pathId) {
   /* One read wave, shared: the profile is built from the same context the
@@ -41,15 +42,21 @@ export async function loadConvictionLab(pathId) {
       testedCount: dimensionProgress({ hypothesis: h.hypothesis, signals })?.testedCount || 0,
     }));
 
+  const record = buildConvictionRecord({ path, hypothesis, progress, readiness, context, alternatives });
+  const nextTest = progress ? nextTestForPath({ path, hypothesis, progress }) : null;
+
   return {
     path,
     hypothesis,
     progress,
     readiness,
-    record: buildConvictionRecord({ path, hypothesis, progress, readiness, context, alternatives }),
+    record,
+    /* The one thing this path most needs next, read off the record above. Its
+       dimension is handed to the Next Best Test engine so both agree. */
+    gap: pickConvictionGap({ record, progress, nextTest }),
     message: readinessMessage(readiness),
     confidenceBand: confidenceBand(hypothesis.fit_confidence_score),
     confidence: hypothesis.fit_confidence_score ?? null,
-    nextTest: progress ? nextTestForPath({ path, hypothesis, progress }) : null,
+    nextTest,
   };
 }
