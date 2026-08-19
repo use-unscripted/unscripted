@@ -66,6 +66,7 @@ const UncertaintyUpdate = lazy(() => import('@/pages/UncertaintyUpdate'));
 const BlueprintLibrary = lazy(() => import('@/pages/BlueprintLibrary'));
 const PathComparison = lazy(() => import('@/pages/PathComparison'));
 const AllPaths = lazy(() => import('@/pages/AllPaths'));
+const ConvictionLab = lazy(() => import('@/pages/ConvictionLab'));
 const ExperimentsPage = lazy(() => import('@/pages/ExperimentsPage'));
 const CompareExperiments = lazy(() => import('@/pages/CompareExperiments'));
 const ActiveExperiment = lazy(() => import('@/pages/ActiveExperiment'));
@@ -170,6 +171,9 @@ const AuthenticatedApp = () => {
           <Route path="/paths" element={<PathComparison />} />
           {/* Every path this student owns, plus the look-alike merge tool. */}
           <Route path="/all-paths" element={<AllPaths />} />
+          {/* One path's Conviction Lab: what it still needs evidence on. Keyed
+              on ?pathId, so the same path can be tested again and again. */}
+          <Route path="/conviction-lab" element={<ConvictionLab />} />
           {/* The default, short Experiment: one Career Moment, 2–7 minutes. */}
           <Route path="/moment" element={<CareerMomentPage />} />
           {/* Human Reality: the experiment type for unknowns simulated work

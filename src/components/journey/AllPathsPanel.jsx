@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { ChevronDown, ChevronUp, Check, Loader2 } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { ChevronDown, ChevronUp, Check, Loader2, FlaskConical } from 'lucide-react';
 import OtherPathsBrowser from '@/components/journey/OtherPathsBrowser';
 
 /**
@@ -61,6 +62,15 @@ export default function AllPathsPanel({ paths = [], currentPathId, onChoose, bus
                     {path.fit_reason || path.why_it_fits}
                   </p>
                 )}
+                {/* Every path gets its Lab, whether or not it is the one being
+                    tested right now. */}
+                <Link
+                  to={`/conviction-lab?pathId=${path.id}`}
+                  className="touch-reach tp-meta mt-2 inline-flex items-center gap-1 font-bold"
+                  style={{ color: 'var(--brand-navy-700)', minHeight: '44px' }}
+                >
+                  <FlaskConical size={12} /> Conviction Lab
+                </Link>
                 {!isCurrent && (
                   <button
                     type="button"
