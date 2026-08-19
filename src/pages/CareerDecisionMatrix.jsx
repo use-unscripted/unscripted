@@ -9,6 +9,9 @@ import StrongestHypothesis from '@/components/matrix/StrongestHypothesis';
 import MatrixTable from '@/components/matrix/MatrixTable';
 import MatrixCards from '@/components/matrix/MatrixCards';
 import ConvictionInMatrix from '@/components/matrix/ConvictionInMatrix';
+import QuadrantChart from '@/components/matrix/QuadrantChart';
+import PathConvictionCard from '@/components/matrix/PathConvictionCard';
+import { plotPaths } from '@/lib/matrix-quadrant';
 import MetricPanel from '@/components/matrix/MetricPanel';
 import ConfidenceHistoryChart from '@/components/matrix/ConfidenceHistoryChart';
 import WorkstyleMatrix from '@/components/matrix/WorkstyleMatrix';
@@ -46,6 +49,8 @@ export default function CareerDecisionMatrix() {
   const [scored, setScored] = useState(null);
   const [dimension, setDimension] = useState(null);
   const [view, setView] = useState('active');
+  // Which path's marker was tapped on the quadrant chart.
+  const [plotted, setPlotted] = useState(null);
   const [scenarioResponses, setScenarioResponses] = useState([]);
   const [conversations, setConversations] = useState([]);
 
@@ -128,6 +133,37 @@ export default function CareerDecisionMatrix() {
           <Reveal y={16}>
             <StrongestHypothesis strongest={data.strongest} />
           </Reveal>
+
+          {/* The whole matrix in one glance: path confidence against evidence
+              coverage, using the readings the table below already shows. Tapping
+              a marker reveals that path's existing conviction card. */}
+          {(() => {
+            const { points, unplaced } = plotPaths({ rows: data.active || [], conviction: data.conviction });
+            if (!points.length && !unplaced.length) return null;
+            const selected = points.find(p => p.pathId === plotted) || null;
+            return (
+              <Reveal y={16}>
+                <QuadrantChart
+                  points={points}
+                  unplaced={unplaced}
+                  selectedId={plotted}
+                  onSelect={(p) => {
+                    setPlotted(prev => (prev === p.pathId ? null : p.pathId));
+                    track('matrix_quadrant_path_opened', { hypothesis: p.name, quadrant: p.quadrant.key });
+                  }}
+                />
+                {selected && (
+                  <div className="mt-4">
+                    <PathConvictionCard
+                      row={selected.row}
+                      conviction={data.conviction?.[selected.pathId]}
+                      onOpen={openScore}
+                    />
+                  </div>
+                )}
+              </Reveal>
+            );
+          })()}
 
           {/* The story first: how the thinking has moved, and what the work has
               shown about this student. The per-path table follows it. */}
