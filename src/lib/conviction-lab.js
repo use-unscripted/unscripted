@@ -22,6 +22,7 @@ import { pickConvictionGap } from '@/lib/conviction-gap';
 import { buildExpectationEvidence } from '@/lib/conviction-expectations';
 import { buildTensions } from '@/lib/tension-signals';
 import { buildTradeoffs } from '@/lib/tradeoffs';
+import { buildDifferentiator } from '@/lib/path-differentiator';
 import { base44 } from '@/api/base44Client';
 
 export async function loadConvictionLab(pathId) {
@@ -39,12 +40,24 @@ export async function loadConvictionLab(pathId) {
 
   /* The student's other paths, so "compared against your alternatives" reads the
      existing hypotheses rather than a second set of scores. */
-  const alternatives = (profile.hypotheses || [])
+  const others = (profile.hypotheses || [])
     .filter(h => h.path?.id !== pathId)
     .map(h => ({
-      name: h.path.path_name,
-      testedCount: dimensionProgress({ hypothesis: h.hypothesis, signals })?.testedCount || 0,
+      path: h.path,
+      hypothesis: h.hypothesis,
+      progress: dimensionProgress({ hypothesis: h.hypothesis, signals }),
     }));
+  const alternatives = others.map(o => ({
+    name: o.path.path_name,
+    testedCount: o.progress?.testedCount || 0,
+  }));
+
+  /* With a second credible path on file, the most useful difference to test
+     between them, read off both paths' existing dimension readings. */
+  const comparison = buildDifferentiator({
+    primary: { path, hypothesis, progress },
+    others,
+  });
 
   const record = buildConvictionRecord({ path, hypothesis, progress, readiness, context, alternatives });
   const nextTest = progress ? nextTestForPath({ path, hypothesis, progress }) : null;
@@ -89,6 +102,7 @@ export async function loadConvictionLab(pathId) {
     /* The costs and conditions recorded for this work, and where the student
        stands on each. Grounded only in the blueprint or the path's own record. */
     tradeoffs,
+    comparison,
     gap: pickConvictionGap({ record, progress, nextTest, tensions, tradeoffs }),
     message: readinessMessage(readiness),
     confidenceBand: confidenceBand(hypothesis.fit_confidence_score),

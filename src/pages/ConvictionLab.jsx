@@ -16,6 +16,7 @@ import ConvictionRecord from '@/components/conviction/ConvictionRecord';
 import ConvictionGap from '@/components/conviction/ConvictionGap';
 import WorthTesting from '@/components/conviction/WorthTesting';
 import TradeoffsSection from '@/components/conviction/TradeoffsSection';
+import ComparativeTest from '@/components/conviction/ComparativeTest';
 import ExpectationEvidence from '@/components/conviction/ExpectationEvidence';
 import UnknownsChecklist from '@/components/stages/UnknownsChecklist';
 import NextBestExperimentPanel from '@/components/next-test/NextBestExperimentPanel';
@@ -95,6 +96,9 @@ export default function ConvictionLab() {
             <ConvictionRecord record={lab.record} />
             {/* What each test on this path was expected to feel like, against
                 what it actually felt like. */}
+            {/* With a second credible path, the difference worth testing between
+                them. Never a preference question. */}
+            <ComparativeTest comparison={lab.comparison} />
             {/* The recorded costs of this work, and where the student stands. */}
             <TradeoffsSection
               tradeoffs={lab.tradeoffs}
