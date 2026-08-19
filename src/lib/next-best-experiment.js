@@ -35,6 +35,7 @@ import { CAREER_DIMENSIONS } from '@/lib/career-dimensions';
 import { humanRealityFor } from '@/lib/human-reality';
 import { loadSupportIndex, supportFor } from '@/lib/path-support';
 import { convictionSignals } from '@/lib/conviction-impact';
+import { pickTestType } from '@/lib/test-types';
 
 /** Every knob in one place, so the engine's judgement can be tuned. */
 export const LEARNING_VALUE_WEIGHTS = {
@@ -401,10 +402,19 @@ export function nextBestExperiment(ctx, opts = {}) {
      it. Same slot, same authority. */
   const human = humanRealityFor(top);
 
+  /* Which TYPE of test this is. Only a framing and an aim: it runs on the same
+     experiment, evidence, blueprint, validation and reflection path as every
+     other test, and is chosen from the Conviction Gap it came from. */
+  const testType = pickTestType({ candidate: top, human, gapId: opts.gapId || null, depth: depth.depth });
+
   return {
     mode,
     human_reality: human,
     experiment_type: human ? 'human_reality' : 'work_sample',
+    test_type: testType.id,
+    test_type_label: testType.label,
+    test_type_purpose: testType.purpose,
+    test_type_produces: testType.produces,
     early: mode === 'early',
     candidate: top,
     // The rule behind this recommendation, kept interpretable and logged with
@@ -520,7 +530,7 @@ function whyThisMatters(candidate, { knows, hypotheses, mode }) {
  * for something else is honoured within a session, on top of the overrides they
  * have already recorded.
  */
-export async function loadNextBestExperiment({ skip = [], pathId = null, context = null, preferVariable = null } = {}) {
+export async function loadNextBestExperiment({ skip = [], pathId = null, context = null, preferVariable = null, gapId = null } = {}) {
   /* `context` is the shared student context a screen has already loaded. When it
      is supplied nothing here re-reads the student's records, which is what used
      to make this panel a third full copy of the same six lists, fired only after
@@ -555,8 +565,8 @@ export async function loadNextBestExperiment({ skip = [], pathId = null, context
 
   // Pinned first. If that career has no open question left, fall back to the
   // cross-path recommendation rather than showing nothing.
-  const rec = (pathId && nextBestExperiment(ctx, { suppressed, skip, pathId, supportedPathIds, preferVariable }))
-    || nextBestExperiment(ctx, { suppressed, skip, supportedPathIds, preferVariable });
+  const rec = (pathId && nextBestExperiment(ctx, { suppressed, skip, pathId, supportedPathIds, preferVariable, gapId }))
+    || nextBestExperiment(ctx, { suppressed, skip, supportedPathIds, preferVariable, gapId });
   return { ctx, recommendation: rec, overrides };
 }
 

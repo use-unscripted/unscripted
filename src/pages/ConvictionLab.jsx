@@ -64,7 +64,11 @@ export default function ConvictionLab() {
             {/* How much real evidence stands behind this path, in eight areas. */}
             <ConvictionRecord record={lab.record} />
             <UnknownsChecklist progress={lab.progress} pathId={lab.path.id} />
-            <NextBestExperimentPanel pathId={lab.path.id} preferVariable={lab.gap?.variable || null} />
+            <NextBestExperimentPanel
+              pathId={lab.path.id}
+              preferVariable={lab.gap?.variable || null}
+              gapId={lab.gap?.id || null}
+            />
             <PathHistoryPanel pathId={lab.path.id} />
             <p className="tp-meta text-center" style={{ color: 'var(--text-muted)' }}>
               <Link to="/test" className="font-semibold" style={{ color: 'var(--brand-navy-700)' }}>The test you are on</Link>

@@ -7,6 +7,7 @@ import WhyThisMatters from '@/components/next-test/WhyThisMatters';
 import AlternativeTests from '@/components/next-test/AlternativeTests';
 import OverrideActions from '@/components/next-test/OverrideActions';
 import DimensionPicker from '@/components/next-test/DimensionPicker';
+import TestTypeBadge from '@/components/next-test/TestTypeBadge';
 
 /**
  * Recommended next test.
@@ -26,6 +27,7 @@ export default function RecommendedNextTest({ recommendation, onOverride, onAcce
     depth = 'quick_test', depth_reason, depth_meta, alternative_depth_meta,
     quick_to, deep_to, start_to, unlock, cross_career_note, smallest_useful,
     dimension_options = [], candidate,
+    test_type_label, test_type_purpose, test_type_produces,
   } = recommendation;
 
   // The dropdown only ever changes WHICH open question this test answers. The
@@ -60,6 +62,8 @@ export default function RecommendedNextTest({ recommendation, onOverride, onAcce
 
       <h2 id="next-test-title" className="tp-section mt-3" style={{ color: 'var(--ink-900)' }}>{title}</h2>
       <p className="tp-meta mt-1" style={{ color: 'var(--ink-400)' }}>For {path_name}</p>
+
+      <TestTypeBadge label={test_type_label} purpose={test_type_purpose} produces={test_type_produces} />
 
       {early && (
         <p className="tp-meta mt-3 inline-block rounded-full px-2.5 py-1 font-semibold" style={{ background: 'var(--warning-50)', color: 'var(--warning-700)' }}>
