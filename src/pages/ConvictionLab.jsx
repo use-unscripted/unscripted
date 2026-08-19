@@ -20,20 +20,43 @@ import NextBestExperimentPanel from '@/components/next-test/NextBestExperimentPa
 import PathHistoryPanel from '@/components/paths/PathHistoryPanel';
 import JourneyEmptyState from '@/components/journey/JourneyEmptyState';
 import { loadConvictionLab } from '@/lib/conviction-lab';
+import { loadOwnedPaths } from '@/lib/path-set';
+import { getActiveCycle } from '@/lib/career-cycle';
+import { resolveCurrentPath } from '@/lib/current-path';
 import { Sk } from '@/components/PageSkeleton';
 
 export default function ConvictionLab() {
   const [params] = useSearchParams();
-  const pathId = params.get('pathId') || '';
+  const requestedId = params.get('pathId') || '';
 
-  const { data: lab, isLoading } = useQuery({
+  /* The Lab is a destination in the nav now, so it can be opened without a path
+     in the URL. In that case it opens on the path the student is actually
+     testing, which is the cycle's own answer to that question. */
+  const { data: fallbackId, isLoading: resolving } = useQuery({
+    queryKey: ['conviction-lab-current-path'],
+    enabled: !requestedId,
+    staleTime: 30_000,
+    queryFn: async () => {
+      const [cycle, owned] = await Promise.all([
+        getActiveCycle().catch(() => null),
+        loadOwnedPaths().catch(() => ({ paths: [] })),
+      ]);
+      return resolveCurrentPath(cycle, owned?.paths || [])?.id || '';
+    },
+  });
+
+  const pathId = requestedId || fallbackId || '';
+
+  const { data: lab, isLoading: loadingLab } = useQuery({
     queryKey: ['conviction-lab', pathId || 'none'],
     enabled: Boolean(pathId),
     staleTime: 30_000,
     queryFn: () => loadConvictionLab(pathId),
   });
 
-  if (!pathId || (!isLoading && !lab)) {
+  const isLoading = resolving || loadingLab;
+
+  if (!isLoading && (!pathId || !lab)) {
     return (
       <main className="app-page">
         <PageHeader showBack backLabel="Go back" title="Conviction Lab" />
@@ -76,6 +99,8 @@ export default function ConvictionLab() {
             <PathHistoryPanel pathId={lab.path.id} />
             <p className="tp-meta text-center" style={{ color: 'var(--text-muted)' }}>
               <Link to="/test" className="font-semibold" style={{ color: 'var(--brand-navy-700)' }}>The test you are on</Link>
+              {' · '}
+              <Link to="/all-paths" className="font-semibold" style={{ color: 'var(--brand-navy-700)' }}>Test a different path</Link>
               {' · '}
               <Link to="/matrix" className="font-semibold" style={{ color: 'var(--brand-navy-700)' }}>Career Decision Matrix</Link>
             </p>
