@@ -20,6 +20,8 @@ import { confidenceBand } from '@/lib/journey-focus';
 import { buildConvictionRecord } from '@/lib/conviction-record';
 import { pickConvictionGap } from '@/lib/conviction-gap';
 import { buildExpectationEvidence } from '@/lib/conviction-expectations';
+import { buildTensions } from '@/lib/tension-signals';
+import { base44 } from '@/api/base44Client';
 
 export async function loadConvictionLab(pathId) {
   /* One read wave, shared: the profile is built from the same context the
@@ -46,6 +48,20 @@ export async function loadConvictionLab(pathId) {
   const record = buildConvictionRecord({ path, hypothesis, progress, readiness, context, alternatives });
   const nextTest = progress ? nextTestForPath({ path, hypothesis, progress }) : null;
 
+  /* Where this student's own evidence disagrees with itself. Read-only, and it
+     never feeds Path Confidence — that stays with evidence-contradictions.js,
+     which caps how far conflicting readings can move it. */
+  const [scenarioResponses, dimensions] = await Promise.all([
+    base44.entities.ScenarioResponse.list('-created_date', 200).catch(() => []),
+    base44.entities.CareerDimensionEvidence.list('-created_date', 200).catch(() => []),
+  ]);
+  const tensions = buildTensions({
+    path,
+    context,
+    scenarioResponses: Array.isArray(scenarioResponses) ? scenarioResponses : [],
+    dimensions: Array.isArray(dimensions) ? dimensions : [],
+  });
+
   return {
     path,
     hypothesis,
@@ -56,7 +72,8 @@ export async function loadConvictionLab(pathId) {
     expectations: buildExpectationEvidence({ pathName: path.path_name, context }),
     /* The one thing this path most needs next, read off the record above. Its
        dimension is handed to the Next Best Test engine so both agree. */
-    gap: pickConvictionGap({ record, progress, nextTest }),
+    tensions,
+    gap: pickConvictionGap({ record, progress, nextTest, tensions }),
     message: readinessMessage(readiness),
     confidenceBand: confidenceBand(hypothesis.fit_confidence_score),
     confidence: hypothesis.fit_confidence_score ?? null,

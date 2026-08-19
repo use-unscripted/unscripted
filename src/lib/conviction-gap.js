@@ -75,9 +75,11 @@ const RANK = { none: 0, early: 1, some: 2, strong: 3 };
  * @param {object} args.record   buildConvictionRecord() result
  * @param {object|null} args.progress dimensionProgress() result
  * @param {object|null} args.nextTest nextTestForPath() result, for the link
+ * @param {Array} args.tensions buildTensions() result — contradictions across
+ *        existing evidence, eligible to become the gap (see below)
  * @returns {object|null} the gap, or null when every area has real evidence
  */
-export function pickConvictionGap({ record, progress, nextTest }) {
+export function pickConvictionGap({ record, progress, nextTest, tensions = [] }) {
   if (!record) return null;
   const byId = new Map(record.areas.map(a => [a.id, a]));
   const ordered = PRIORITY.map(id => byId.get(id)).filter(Boolean);
@@ -87,6 +89,28 @@ export function pickConvictionGap({ record, progress, nextTest }) {
   const gapArea = ordered
     .filter(a => a.state !== 'strong')
     .sort((a, b) => RANK[a.state] - RANK[b.state])[0];
+
+  /* A contradiction across existing evidence is eligible to be the gap, and
+     outranks everything except an area with no reading at all: resolving a
+     disagreement is worth less than a first look at work never attempted. It is
+     never treated as proof — it becomes a question to test, nothing more. */
+  const tension = (tensions || [])[0];
+  if (tension && (!gapArea || gapArea.state !== 'none')) {
+    return {
+      id: `tension:${tension.id}`,
+      area: 'Something worth testing',
+      unknown: tension.title,
+      dimension: null,
+      variable: tension.variable || null,
+      matters: tension.open_question,
+      evidence: `${tension.source}: ${tension.detail}`,
+      basis: record.basis,
+      test: 'One more reading on the same thing, in a different realistic context, so this stops resting on a single observation.',
+      to: (tension.variable && nextTest?.to) || null,
+      from_tension: true,
+    };
+  }
+
   if (!gapArea) return null;
 
   const guide = GUIDE[gapArea.id] || {};

@@ -14,6 +14,7 @@ import PageHeader from '@/components/PageHeader';
 import ConvictionSummary from '@/components/conviction/ConvictionSummary';
 import ConvictionRecord from '@/components/conviction/ConvictionRecord';
 import ConvictionGap from '@/components/conviction/ConvictionGap';
+import WorthTesting from '@/components/conviction/WorthTesting';
 import ExpectationEvidence from '@/components/conviction/ExpectationEvidence';
 import UnknownsChecklist from '@/components/stages/UnknownsChecklist';
 import NextBestExperimentPanel from '@/components/next-test/NextBestExperimentPanel';
@@ -85,6 +86,9 @@ export default function ConvictionLab() {
             {/* The one thing this path most needs next, and the recommendation
                 below is pointed at it. */}
             <ConvictionGap gap={lab.gap} />
+            {/* Where two pieces of existing evidence disagree. Shown as an open
+                question, never as a finding. */}
+            <WorthTesting tensions={lab.tensions} />
             {/* How much real evidence stands behind this path, in eight areas. */}
             <ConvictionRecord record={lab.record} />
             {/* What each test on this path was expected to feel like, against
