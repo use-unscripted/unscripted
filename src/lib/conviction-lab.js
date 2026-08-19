@@ -25,6 +25,7 @@ import { buildTradeoffs } from '@/lib/tradeoffs';
 import { buildDifferentiator } from '@/lib/path-differentiator';
 import { decisionReadinessState } from '@/lib/decision-readiness-state';
 import { buildConvictionReview } from '@/lib/conviction-review';
+import { buildChangeOfMind } from '@/lib/change-your-mind';
 import { base44 } from '@/api/base44Client';
 
 export async function loadConvictionLab(pathId) {
@@ -116,6 +117,9 @@ export async function loadConvictionLab(pathId) {
        diversity of the evidence above, never one percentage threshold. */
     decisionReadiness,
     gap: pickConvictionGap({ record, progress, nextTest, tensions, tradeoffs }),
+    /* The assumption most likely to weaken this path if tested, pointed at the
+       same next test. Challenges the leading path rather than confirming it. */
+    changeOfMind: buildChangeOfMind({ progress, tensions, tradeoffs, nextTest }),
     message: readinessMessage(readiness),
     confidenceBand: confidenceBand(hypothesis.fit_confidence_score),
     confidence: hypothesis.fit_confidence_score ?? null,

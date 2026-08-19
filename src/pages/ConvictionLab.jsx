@@ -17,6 +17,7 @@ import DecisionReadinessCard from '@/components/conviction/DecisionReadinessCard
 import ConvictionReview from '@/components/conviction/ConvictionReview';
 import ConvictionPassport from '@/components/conviction/ConvictionPassport';
 import ConvictionGap from '@/components/conviction/ConvictionGap';
+import ChangeYourMind from '@/components/conviction/ChangeYourMind';
 import WorthTesting from '@/components/conviction/WorthTesting';
 import TradeoffsSection from '@/components/conviction/TradeoffsSection';
 import ComparativeTest from '@/components/conviction/ComparativeTest';
@@ -102,6 +103,8 @@ export default function ConvictionLab() {
             {/* The one thing this path most needs next, and the recommendation
                 below is pointed at it. */}
             <ConvictionGap gap={lab.gap} />
+            {/* The assumption worth attacking, linked to the same next test. */}
+            <ChangeYourMind change={lab.changeOfMind} />
             {/* Where two pieces of existing evidence disagree. Shown as an open
                 question, never as a finding. */}
             <WorthTesting tensions={lab.tensions} />
