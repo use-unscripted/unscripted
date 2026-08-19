@@ -19,6 +19,7 @@
 import { base44 } from '@/api/base44Client';
 import { CAREERS } from '@/lib/career-library/careers';
 import { TEMPLATES } from '@/lib/career-library/templates';
+import { purposeOf, convictionCoverage } from '../../../base44/shared/career-library/conviction-purposes.js';
 
 export const LIBRARY_VERSION = 1;
 
@@ -128,6 +129,10 @@ export async function seedLibrary({ dryRun = false } = {}) {
       blueprint_status: 'source_grounded',
       sources: sourceCount,
       professional_reviews: 0,
+      /* Which conviction purposes this career's tests cover, and which are
+         still open. An open purpose is reported rather than filled: a generic
+         test would raise the count and teach nothing. */
+      conviction_coverage: convictionCoverage(mine),
       experiments: [],
     };
 
@@ -142,6 +147,8 @@ export async function seedLibrary({ dryRun = false } = {}) {
         match_terms: career.match_terms,
         role_blueprint_id: blueprintId,
         title: t.title,
+        // Which part of conviction this test can move. Never inferred.
+        conviction_purpose: purposeOf(t) || undefined,
         test_question: t.test_question,
         why_it_matters: t.why_it_matters,
         what_it_tests: t.what_it_tests,
@@ -200,6 +207,7 @@ export async function seedLibrary({ dryRun = false } = {}) {
       careerReport.experiments.push({
         blueprint_key: t.key,
         title: t.title,
+        conviction_purpose: purposeOf(t),
         dimensions_tested: t.dims,
         estimated_minutes: t.minutes,
         validation_level: 1,
@@ -224,6 +232,8 @@ export async function seedLibrary({ dryRun = false } = {}) {
     experiments: report.careers.reduce((n, c) => n + c.experiments.length, 0),
     sources: report.careers.reduce((n, c) => n + c.sources, 0),
     professional_reviews_created: 0,
+    balanced_careers: report.careers.filter(c => c.conviction_coverage.balanced).length,
+    careers_with_open_purposes: report.careers.filter(c => !c.conviction_coverage.balanced).length,
   };
   return report;
 }

@@ -27,6 +27,17 @@
     "title": {
       "type": "string"
     },
+    "conviction_purpose": {
+      "type": "string",
+      "enum": [
+        "core_work",
+        "difficult_reality",
+        "work_environment",
+        "tradeoff",
+        "contradiction",
+        "comparison"
+      ]
+    },
     "test_question": {
       "type": "string"
     },

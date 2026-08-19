@@ -4,6 +4,7 @@
  * them, how long it takes, and what it cannot tell them.
  */
 import { Clock, ShieldCheck, Target, AlertTriangle, Users, CheckCircle2 } from 'lucide-react';
+import { PURPOSE_BY_ID } from '../../../base44/shared/career-library/conviction-purposes.js';
 
 const Fact = ({ label, children }) => (
   <div>
@@ -15,6 +16,8 @@ const Fact = ({ label, children }) => (
 export default function LibraryExperimentCard({ row, bestNext, bestValidated, onStart, busy }) {
   const { template, strength, value, minutes, minutesLow, coverage, coveredCount, importantCount, notRepresented, reviewerCount } = row;
   const time = minutesLow && minutes ? `${minutesLow}-${minutes} min` : minutes ? `about ${minutes} min` : template.effort;
+  // What part of conviction this test can move, when the library has assigned one.
+  const purpose = PURPOSE_BY_ID.get(template.conviction_purpose) || null;
 
   return (
     <article className="app-card-flat p-5">
@@ -33,9 +36,17 @@ export default function LibraryExperimentCard({ row, bestNext, bestValidated, on
         </div>
       )}
 
+      {purpose && (
+        <p className="tp-meta mb-1.5 font-semibold uppercase" style={{ color: 'var(--ink-400)', letterSpacing: '0.06em' }}>
+          {purpose.label}
+        </p>
+      )}
       <h3 className="tp-section" style={{ color: 'var(--text-primary)' }}>{template.title}</h3>
       <p className="tp-body mt-2" style={{ color: 'var(--text-secondary)' }}>{template.test_question}</p>
       <p className="tp-body mt-2" style={{ color: 'var(--text-secondary)' }}>{template.why_it_matters}</p>
+      {purpose && (
+        <p className="tp-meta mt-2" style={{ color: 'var(--text-muted)' }}>What this can settle: {purpose.establishes}</p>
+      )}
 
       <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3">
         <Fact label="Experiment strength">
