@@ -34,6 +34,7 @@ import { scenarioEvidence } from '@/lib/scenarios/scenario-signals';
 import { CAREER_DIMENSIONS } from '@/lib/career-dimensions';
 import { humanRealityFor } from '@/lib/human-reality';
 import { loadSupportIndex, supportFor } from '@/lib/path-support';
+import { convictionSignals } from '@/lib/conviction-impact';
 
 /** Every knob in one place, so the engine's judgement can be tuned. */
 export const LEARNING_VALUE_WEIGHTS = {
@@ -46,8 +47,12 @@ export const LEARNING_VALUE_WEIGHTS = {
   contradiction: 18,            // conflicting readings that need a decider
   exploration_bonus: 8,         // a credible career with very little evidence
   scenario_disagreement: 12,    // hypothetical answers disagree with each other or with what we were told
+  path_tradeoff: 16,            // decides between two paths the student is weighing closely
+  contested_choice: 8,          // bears on a close choice, without settling it alone
   recent_repeat_penalty: 22,    // tested in the last few experiments
   saturated_penalty: 30,        // already answered consistently
+  redundant_penalty: 14,        // consistent readings already exist, so another mostly repeats them
+  confirms_settled_penalty: 12, // and the path it sits on is already well settled
   deferred_penalty: 16,         // the student asked to come back to it later
 };
 
@@ -59,10 +64,11 @@ export const LEARNING_VALUE_WEIGHTS = {
  * from" can be answered later from records rather than guessed. Deliberately a
  * short list of stated rules: no opaque model, and every id is readable.
  */
-export const RULE_VERSION = '2026-08-r1';
+export const RULE_VERSION = '2026-08-r2';
 
 export const RECOMMENDATION_RULES = {
   resolve_contradiction: 'Evidence on this dimension points both ways, so settling it is worth more than anything new.',
+  resolve_path_tradeoff: 'Two directions you are weighing are close, and this is the question that separates them.',
   differentiate_leading_paths: 'This answer separates the leading directions rather than confirming all of them.',
   cross_career_unknown: 'One unknown that several live directions turn on.',
   explore_low_confidence_path: 'A credible direction we know very little about yet.',
@@ -73,6 +79,7 @@ export const RECOMMENDATION_RULES = {
 function ruleFor(candidate, mode) {
   if (candidate.contradicted) return 'resolve_contradiction';
   if (mode === 'early') return 'first_behavioural_evidence';
+  if (candidate.path_tradeoff) return 'resolve_path_tradeoff';
   if (candidate.differentiates) return 'differentiate_leading_paths';
   if (candidate.cross_career) return 'cross_career_unknown';
   if (mode === 'exploration') return 'explore_low_confidence_path';
@@ -269,6 +276,22 @@ function score(candidate, { signalsById, recent, leading, suppressed = new Map()
   const attached = (pathId && careers.find(c => c.path_id === pathId))
     || [...careers].sort((a, b) => opportunity(b) - opportunity(a))[0];
   if (norm(attached.confidence, 0.5) < 0.45) { total += W.exploration_bonus; factors.push('a path we still know little about'); }
+
+  /* How much this could actually move the student's conviction, as opposed to
+     how little we know about it. A close race between two directions is where a
+     single answer changes a real decision; a consistent reading on a settled
+     direction is where it changes nothing. */
+  const conviction = convictionSignals({ evidence, careers, leading, attached });
+  if (conviction.path_tradeoff) {
+    total += W.path_tradeoff;
+    factors.push('decides between two directions you are weighing closely');
+  } else if (conviction.contested) {
+    total += W.contested_choice;
+    factors.push('bears on a close choice between your leading directions');
+  }
+  if (conviction.redundant && !contradicted) total -= W.redundant_penalty;
+  if (conviction.confirms_settled && !contradicted) total -= W.confirms_settled_penalty;
+
   if (isRecent) total -= W.recent_repeat_penalty;
   if (evidence.settled) total -= W.saturated_penalty;
   const deferred = suppressed.get(candidate.variable);
@@ -286,6 +309,10 @@ function score(candidate, { signalsById, recent, leading, suppressed = new Map()
     cross_career: careers.length >= 2,
     cross_career_count: careers.length,
     differentiates,
+    path_tradeoff: conviction.path_tradeoff,
+    contested_choice: conviction.contested,
+    redundant: conviction.redundant,
+    fit_gap: conviction.fit_gap,
     deferred: deferred?.action || null,
     learning_value_score: clamp(total),
   };
