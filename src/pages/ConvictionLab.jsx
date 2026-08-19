@@ -12,6 +12,7 @@ import { useSearchParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import PageHeader from '@/components/PageHeader';
 import ConvictionSummary from '@/components/conviction/ConvictionSummary';
+import ConvictionRecord from '@/components/conviction/ConvictionRecord';
 import UnknownsChecklist from '@/components/stages/UnknownsChecklist';
 import NextBestExperimentPanel from '@/components/next-test/NextBestExperimentPanel';
 import PathHistoryPanel from '@/components/paths/PathHistoryPanel';
@@ -56,6 +57,8 @@ export default function ConvictionLab() {
         ) : (
           <>
             <ConvictionSummary lab={lab} />
+            {/* How much real evidence stands behind this path, in eight areas. */}
+            <ConvictionRecord record={lab.record} />
             <UnknownsChecklist progress={lab.progress} pathId={lab.path.id} />
             <NextBestExperimentPanel pathId={lab.path.id} />
             <PathHistoryPanel pathId={lab.path.id} />
