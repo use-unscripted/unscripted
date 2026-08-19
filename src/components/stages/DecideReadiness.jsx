@@ -3,11 +3,14 @@
  * this path has at least one reading. Until then this says which are missing and
  * links each one straight to a short test.
  */
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Circle, Lock, CheckCircle2 } from 'lucide-react';
 import { decideReadiness, readinessMessage } from '@/lib/decide-readiness';
+import ConcludeChoice from '@/components/stages/ConcludeChoice';
 
-export default function DecideReadiness({ progress, pathId }) {
+export default function DecideReadiness({ progress, pathId, pathName }) {
+  const [choosing, setChoosing] = useState(false);
   const readiness = decideReadiness(progress);
   const message = readinessMessage(readiness);
 
@@ -18,13 +21,17 @@ export default function DecideReadiness({ progress, pathId }) {
           <CheckCircle2 size={17} style={{ color: 'var(--success-700)' }} /> This decision is ready to record
         </h2>
         <p className="tp-prose mt-1.5" style={{ color: 'var(--text-secondary)' }}>{message}</p>
-        <Link
-          to="/reflect"
-          className="app-cta tp-body mt-4 font-bold"
+        <button
+          type="button"
+          onClick={() => setChoosing(true)}
+          className="app-cta ui-press tp-body mt-4 font-bold"
           style={{ minHeight: '48px' }}
         >
           Conclude this test
-        </Link>
+        </button>
+        {choosing && (
+          <ConcludeChoice pathId={pathId} pathName={pathName} onClose={() => setChoosing(false)} />
+        )}
       </section>
     );
   }

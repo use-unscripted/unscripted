@@ -17,7 +17,11 @@ export default function StageDecide() {
   return (
     <StageShell stage="decide">
       {/* The decision opens once every key dimension has at least one reading. */}
-      <DecideReadiness progress={focus?.progress} pathId={journey?.currentPath?.id} />
+      <DecideReadiness
+        progress={focus?.progress}
+        pathId={journey?.currentPath?.id}
+        pathName={journey?.currentPath?.path_name}
+      />
       <KnownAndUnknown focus={focus} />
       {/* The same path, test by test. This is what makes a second and third test
           on one path feel like progress rather than repetition. */}
