@@ -19,6 +19,7 @@ import { decideReadiness, readinessMessage } from '@/lib/decide-readiness';
 import { confidenceBand } from '@/lib/journey-focus';
 import { buildConvictionRecord } from '@/lib/conviction-record';
 import { pickConvictionGap } from '@/lib/conviction-gap';
+import { buildExpectationEvidence } from '@/lib/conviction-expectations';
 
 export async function loadConvictionLab(pathId) {
   /* One read wave, shared: the profile is built from the same context the
@@ -51,6 +52,8 @@ export async function loadConvictionLab(pathId) {
     progress,
     readiness,
     record,
+    /* What this path's tests said they would feel like, against what they did. */
+    expectations: buildExpectationEvidence({ pathName: path.path_name, context }),
     /* The one thing this path most needs next, read off the record above. Its
        dimension is handed to the Next Best Test engine so both agree. */
     gap: pickConvictionGap({ record, progress, nextTest }),

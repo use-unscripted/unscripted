@@ -14,6 +14,7 @@ import PageHeader from '@/components/PageHeader';
 import ConvictionSummary from '@/components/conviction/ConvictionSummary';
 import ConvictionRecord from '@/components/conviction/ConvictionRecord';
 import ConvictionGap from '@/components/conviction/ConvictionGap';
+import ExpectationEvidence from '@/components/conviction/ExpectationEvidence';
 import UnknownsChecklist from '@/components/stages/UnknownsChecklist';
 import NextBestExperimentPanel from '@/components/next-test/NextBestExperimentPanel';
 import PathHistoryPanel from '@/components/paths/PathHistoryPanel';
@@ -63,6 +64,9 @@ export default function ConvictionLab() {
             <ConvictionGap gap={lab.gap} />
             {/* How much real evidence stands behind this path, in eight areas. */}
             <ConvictionRecord record={lab.record} />
+            {/* What each test on this path was expected to feel like, against
+                what it actually felt like. */}
+            <ExpectationEvidence evidence={lab.expectations} pathId={lab.path.id} />
             <UnknownsChecklist progress={lab.progress} pathId={lab.path.id} />
             <NextBestExperimentPanel
               pathId={lab.path.id}

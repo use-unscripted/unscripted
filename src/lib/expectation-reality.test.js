@@ -30,7 +30,9 @@ const FULL = {
   expected_energy: 6, actual_energy: 4,
   pre_career_interest: 8, post_career_interest: 6,
   pre_career_fit_confidence: 7, post_career_fit_confidence: 5,
-  frustration_level: 6, desire_to_repeat: 3, self_rated_performance: 7,
+  expected_frustration: 4, frustration_level: 6,
+  expected_repeat: 7, desire_to_repeat: 3,
+  self_rated_performance: 7,
   pre_completed_at: '2026-08-01T00:00:00.000Z',
   post_completed_at: '2026-08-02T00:00:00.000Z',
 };
@@ -60,6 +62,8 @@ describe('comparison', () => {
       ['enjoyment', 8, 5, -3],
       ['difficulty', 7, 6, -1],
       ['energy', 6, 4, -2],
+      ['frustration', 4, 6, 2],
+      ['repeat', 7, 3, -4],
       ['interest', 8, 6, -2],
       ['confidence', 7, 5, -2],
     ]);
@@ -96,7 +100,7 @@ describe('comparison', () => {
   });
 
   it('separates the outcome-only ratings from the compared ones', () => {
-    expect(comparison(FULL).outcomes.map(r => r.key)).toEqual(['frustration', 'repeat', 'performance']);
+    expect(comparison(FULL).outcomes.map(r => r.key)).toEqual(['performance']);
   });
 });
 

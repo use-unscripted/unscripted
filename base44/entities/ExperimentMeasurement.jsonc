@@ -38,6 +38,12 @@
     "expected_energy": {
       "type": "number"
     },
+    "expected_frustration": {
+      "type": "number"
+    },
+    "expected_repeat": {
+      "type": "number"
+    },
     "expected_performance": {
       "type": "number"
     },
@@ -152,6 +158,12 @@
       "type": "number"
     },
     "energy_expectation_delta": {
+      "type": "number"
+    },
+    "frustration_expectation_delta": {
+      "type": "number"
+    },
+    "repeat_expectation_delta": {
       "type": "number"
     },
     "career_interest_delta": {

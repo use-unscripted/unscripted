@@ -1,6 +1,6 @@
 /**
- * "Before You Start" — five taps and three optional lines, recorded before the
- * work begins.
+ * "Before You Start" — the expectation ratings and three optional lines,
+ * recorded before the work begins.
  *
  * Not skippable on the scales: without the expectation there is nothing to
  * compare the outcome against, which is the whole point of the measurement. The
@@ -82,7 +82,7 @@ export default function PreExperimentCheckIn({ exp, onClose, onSaved }) {
           {saving ? 'Saving…' : 'Start the experiment'}
         </button>
         {!complete && (
-          <p className="tp-meta mt-2 text-center" style={{ color: 'var(--text-muted)' }}>Answer the five ratings to begin. The written questions are optional.</p>
+          <p className="tp-meta mt-2 text-center" style={{ color: 'var(--text-muted)' }}>Answer every rating to begin. The written questions are optional.</p>
         )}
       </div>
     </div>

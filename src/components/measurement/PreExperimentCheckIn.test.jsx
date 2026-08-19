@@ -3,17 +3,16 @@
  * A guard on the length of the Career Experiment pre check-in.
  *
  * This component renders every PRE_FIELDS entry and requires every one of them
- * before its button unlocks, and the hint under the button counts them out loud:
- * "Answer all five to begin." That makes PRE_FIELDS a shared list with a cost
- * attached. A field appended to it for some other flow turns into a sixth
- * mandatory question here, the hint starts contradicting the form, and nothing
- * fails. That is exactly what happened when the work simulation needed two
- * predictions of its own and put them in PRE_FIELDS.
+ * before its button unlocks. That makes PRE_FIELDS a shared list with a cost
+ * attached: a field appended to it for some other flow turns into another
+ * mandatory question here, and nothing fails. That is exactly what happened when
+ * the work simulation needed two predictions of its own and put them in
+ * PRE_FIELDS.
  *
- * So the assertions below are deliberately about the count a student faces, read
- * off the rendered DOM rather than off the constant, and about the hint agreeing
- * with that count. Adding a field to PRE_FIELDS fails these. Adding one to
- * SIM_PRE_FIELDS, which is what a new prediction should do, does not.
+ * The seven below are the deliberate set: every expectation that has a matching
+ * answer after the work, so the Conviction Lab can compare them. Adding an
+ * eighth fails these. Adding one to SIM_PRE_FIELDS, which is what a new
+ * simulation-only prediction should do, does not.
  */
 
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -34,17 +33,17 @@ vi.mock('@/api/base44Client', () => ({
   },
 }));
 
-// The five this flow has always asked, written out rather than imported, so the
-// test still fails if someone edits the constant and the expectation together.
-const ORIGINAL_QUESTIONS = [
+// Written out rather than imported, so the test still fails if someone edits the
+// constant and the expectation together.
+const EXPECTED_QUESTIONS = [
   'Expected enjoyment',
   'Expected difficulty',
   'Current interest in this career',
   'How strongly do you think this career fits you?',
   'Expected energy / excitement',
+  'How frustrating do you expect this to be?',
+  'Do you expect to want to do work like this again?',
 ];
-
-const NUMBER_WORDS = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'];
 
 const exp = { id: 'e1', title: 'Shadow a product manager' };
 
@@ -64,16 +63,16 @@ const renderedQuestions = () =>
 afterEach(cleanup);
 
 describe('the Career Experiment pre check-in', () => {
-  it('asks exactly its original five questions and nothing else', () => {
+  it('asks exactly its seven expectation questions and nothing else', () => {
     renderCheckIn();
-    expect(renderedQuestions()).toEqual(ORIGINAL_QUESTIONS);
+    expect(renderedQuestions()).toEqual(EXPECTED_QUESTIONS);
   });
 
   it('does not grow when a measurement field is added for another flow', () => {
     renderCheckIn();
     const asked = renderedQuestions();
 
-    expect(asked).toHaveLength(5);
+    expect(asked).toHaveLength(7);
 
     // The work simulation's own predictions exist and are stored on the same
     // entity, but a student in this flow is never shown them.
@@ -90,14 +89,7 @@ describe('the Career Experiment pre check-in', () => {
     expect(asked.join('|')).not.toMatch(/want to do another one/);
   });
 
-  it('counts the questions correctly in its own instructions', () => {
-    renderCheckIn();
-    const count = renderedQuestions().length;
-    const hint = screen.getByText(/Answer all .* to begin\./);
-    expect(hint.textContent).toBe(`Answer all ${NUMBER_WORDS[count]} to begin.`);
-  });
-
-  it('unlocks the button on the fifth answer, not a later one', () => {
+  it('unlocks the button on the last answer, not a later one', () => {
     renderCheckIn();
     const start = screen.getByRole('button', { name: 'Start the experiment' });
     expect(start.disabled).toBe(true);
@@ -109,10 +101,8 @@ describe('the Career Experiment pre check-in', () => {
       expect(start.disabled).toBe(i < questions.length - 1);
     });
 
-    expect(questions).toHaveLength(5);
     expect(start.disabled).toBe(false);
-    // The hint retires once the form is answerable, so it cannot be left
-    // claiming a number while the button is live.
-    expect(screen.queryByText(/Answer all .* to begin\./)).toBeNull();
+    // The hint retires once the form is answerable.
+    expect(screen.queryByText(/Answer every rating to begin/)).toBeNull();
   });
 });

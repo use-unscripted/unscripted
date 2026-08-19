@@ -19,14 +19,14 @@ export const COMPARISON_ROWS = [
   { key: 'enjoyment', label: 'Enjoyment', pre: 'expected_enjoyment', post: 'actual_enjoyment', preLabel: 'Expected', postLabel: 'Actual' },
   { key: 'difficulty', label: 'Difficulty', pre: 'expected_difficulty', post: 'actual_difficulty', preLabel: 'Expected', postLabel: 'Actual' },
   { key: 'energy', label: 'Energy', pre: 'expected_energy', post: 'actual_energy', preLabel: 'Expected', postLabel: 'Actual' },
+  { key: 'frustration', label: 'Frustration', pre: 'expected_frustration', post: 'frustration_level', preLabel: 'Expected', postLabel: 'Actual' },
+  { key: 'repeat', label: 'Desire to do similar work again', pre: 'expected_repeat', post: 'desire_to_repeat', preLabel: 'Expected', postLabel: 'Actual' },
   { key: 'interest', label: 'Interest in path', pre: 'pre_career_interest', post: 'post_career_interest', preLabel: 'Before', postLabel: 'After' },
   { key: 'confidence', label: 'Confidence this fits you', pre: 'pre_career_fit_confidence', post: 'post_career_fit_confidence', preLabel: 'Before', postLabel: 'After' },
 ];
 
-/** Post-only answers: no expectation was ever collected for these. */
+/** Post-only answers: no expectation is collected for these. */
 export const OUTCOME_ONLY_ROWS = [
-  { key: 'frustration', label: 'Frustration', post: 'frustration_level' },
-  { key: 'repeat', label: 'Desire to do similar work again', post: 'desire_to_repeat' },
   { key: 'performance', label: 'How well you think you did', post: 'self_rated_performance' },
 ];
 
@@ -106,6 +106,21 @@ export function whatChanged(m) {
     lines.push(energy.delta < 0
       ? `You felt less energised afterwards than you expected to.`
       : `You felt more energised afterwards than you expected to.`);
+  }
+
+  const frustration = by('frustration');
+  const repeat = by('repeat');
+
+  if (frustration && frustration.delta !== 0) {
+    lines.push(frustration.delta > 0
+      ? `It frustrated you more than you expected it to (${frustration.expected} expected, ${frustration.actual} actual).`
+      : `It frustrated you less than you expected it to (${frustration.expected} expected, ${frustration.actual} actual).`);
+  }
+
+  if (repeat && repeat.delta !== 0) {
+    lines.push(repeat.delta < 0
+      ? `You want to do work like this again less than you expected to beforehand.`
+      : `You want to do work like this again more than you expected to beforehand.`);
   }
 
   if (confidence && confidence.delta !== 0) {

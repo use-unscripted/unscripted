@@ -15,11 +15,14 @@
 import { base44 } from '@/api/base44Client';
 
 /**
- * The five the Career Experiment pre check-in asks.
+ * The seven the Career Experiment pre check-in asks. Every one of them has a
+ * matching post field, because an expectation with nothing to compare it to is
+ * only a mood: enjoyment, difficulty, energy, frustration, desire to repeat,
+ * interest, and confidence that the career fits.
  *
- * That component renders every entry and requires every entry, and its own copy
- * reads "Answer all five to begin", so a field added to this list silently
- * becomes another mandatory question in a flow that never asked for one. Every
+ * That component renders every entry and requires every entry, so a field added
+ * to this list silently becomes another mandatory question in a flow that never
+ * asked for one. Every
  * extra required question costs completions, which is the number this area of
  * the product exists to move. A prediction that only one flow needs goes in a
  * list of its own, the way SIM_PRE_FIELDS below does. Add here only when you
@@ -31,6 +34,8 @@ export const PRE_FIELDS = [
   { key: 'pre_career_interest', label: 'Current interest in this career', low: 'Low', high: 'High' },
   { key: 'pre_career_fit_confidence', label: 'How strongly do you think this career fits you?', low: 'Not sure', high: 'Very sure' },
   { key: 'expected_energy', label: 'Expected energy / excitement', low: 'Flat', high: 'Energised' },
+  { key: 'expected_frustration', label: 'How frustrating do you expect this to be?', low: 'Not at all', high: 'A lot' },
+  { key: 'expected_repeat', label: 'Do you expect to want to do work like this again?', low: 'No', high: 'Yes' },
 ];
 
 /**
@@ -192,6 +197,8 @@ export function computeDeltas(pre, post) {
     enjoyment_expectation_delta: d(post.actual_enjoyment, pre?.expected_enjoyment),
     difficulty_expectation_delta: d(post.actual_difficulty, pre?.expected_difficulty),
     energy_expectation_delta: d(post.actual_energy, pre?.expected_energy),
+    frustration_expectation_delta: d(post.frustration_level, pre?.expected_frustration),
+    repeat_expectation_delta: d(post.desire_to_repeat, pre?.expected_repeat),
     career_interest_delta: d(post.post_career_interest, pre?.pre_career_interest),
     career_confidence_delta: d(post.post_career_fit_confidence, pre?.pre_career_fit_confidence),
   };
