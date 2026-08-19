@@ -22,6 +22,7 @@ import { loadConversations } from '@/lib/human-reality';
 import { loadDimensionEvidence } from '@/lib/career-dimensions-store';
 import { loadEvidenceConfig } from '@/lib/evidence-weights';
 import { scoreHypothesis, workstyleRows, changedMind, claritySummary, strongestOf } from '@/lib/decision-matrix';
+import { buildMatrixConviction } from '@/lib/matrix-conviction';
 
 const ELIMINATED = ['eliminated', 'archived', 'modified'];
 
@@ -64,6 +65,8 @@ export async function loadDecisionMatrix() {
     rows,
     active,
     history,
+    /* The conviction read per path, from the records already loaded above. */
+    conviction: buildMatrixConviction({ hypotheses, signals, context }),
     workstyle: workstyleRows(dimensions),
     changed: changedMind({ measurements, experiments }),
     clarity: claritySummary({ profile, reflections, rows, dimensions }),

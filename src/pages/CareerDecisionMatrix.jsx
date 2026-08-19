@@ -8,6 +8,7 @@ import HowThisWorks from '@/components/matrix/HowThisWorks';
 import StrongestHypothesis from '@/components/matrix/StrongestHypothesis';
 import MatrixTable from '@/components/matrix/MatrixTable';
 import MatrixCards from '@/components/matrix/MatrixCards';
+import ConvictionInMatrix from '@/components/matrix/ConvictionInMatrix';
 import MetricPanel from '@/components/matrix/MetricPanel';
 import ConfidenceHistoryChart from '@/components/matrix/ConfidenceHistoryChart';
 import WorkstyleMatrix from '@/components/matrix/WorkstyleMatrix';
@@ -168,6 +169,13 @@ export default function CareerDecisionMatrix() {
               <>
                 <MatrixTable rows={rows} onOpen={openScore} />
                 <MatrixCards rows={rows} onOpen={openScore} />
+                {/* Conviction per path, in the matrix rather than on its own
+                    dashboard: status, action readiness, the biggest remaining
+                    gap and the next best test, each next to the scores it was
+                    read from. */}
+                <div className="mt-8">
+                  <ConvictionInMatrix rows={rows} conviction={data.conviction} onOpen={openScore} />
+                </div>
               </>
             ) : (
               <EmptyState
