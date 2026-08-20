@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { loadOwnedPaths, authoritativeSet } from '@/lib/path-set';
 import { getActiveCycle } from '@/lib/career-cycle';
 import PathFocusPanel from '@/components/journey/PathFocusPanel';
@@ -20,6 +21,7 @@ import { Sk } from '@/components/PageSkeleton';
  */
 export default function ChoosePath() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [paths, setPaths] = useState(null);
   const [busyId, setBusyId] = useState(null);
   const [error, setError] = useState(null);
@@ -52,6 +54,14 @@ export default function ChoosePath() {
     try {
       const result = await selectPathAndBeginExperiment(path, paths?.all || []);
       setConfirmed({ pathName: path.path_name, experiment: result.experiment });
+      /* The cycle reading is cached for a minute and it is what every later
+         stage means by "the path being tested". Without dropping it here, Test,
+         Prove and Decide all carried on naming the previous path until the
+         cache aged out, which read as the choice never having been made. */
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['cycle-rail'] }),
+        queryClient.invalidateQueries({ queryKey: ['journey-focus'] }),
+      ]);
       await load();
       // Straight to the Test stage, which shows the path now being tested and
       // the unknowns still open on it.
@@ -64,7 +74,7 @@ export default function ChoosePath() {
     } finally {
       setBusyId(null);
     }
-  }, [paths, load, navigate]);
+  }, [paths, load, navigate, queryClient]);
 
   if (!paths) return <Sk h={320} r={16} />;
 
