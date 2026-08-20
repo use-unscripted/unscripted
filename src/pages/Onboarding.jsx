@@ -367,7 +367,7 @@ export default function Onboarding() {
         </section>
 
         <p className="tp-meta mt-6 text-center" style={{ color: 'var(--text-muted)' }}>
-          No account yet. You do not need to know what career you want.{' '}
+          No account needed yet.{' '}
           <Link to="/login" className="underline hover:text-[color:var(--text-primary)]">Already have an account?</Link>
         </p>
       </div>
@@ -406,7 +406,7 @@ export default function Onboarding() {
           That is everything.
         </h1>
         <p className="tp-lead mt-3" style={{ color: 'var(--text-secondary)' }}>
-          Tap any answer to change it. None of this is treated as settled, and your experiments are what test it.
+          Tap any answer to change it. Nothing here is settled.
         </p>
         <div className="mt-5 space-y-1.5">
           {STEPS.map((s, i) => {
@@ -459,7 +459,7 @@ export default function Onboarding() {
           />
           <Scale
             label="And how confident are you in that answer?"
-            description="Optional. Someone can be fairly sure of a direction and not at all confident in it."
+            description="Optional."
             value={data.baseline_confidence || null}
             onChange={v => set('baseline_confidence', v)}
             lowLabel="Not confident"

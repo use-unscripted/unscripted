@@ -96,19 +96,15 @@ export default function CareerDecisionMatrix() {
     <main className="app-page">
       <PageHeader
         title="Career Decision Matrix"
-        description="See how real experiences are shaping your paths over time."
+        description="How your evidence so far is shaping each path. Not a prediction of success."
       />
-      <p className="tp-body -mt-6" style={{ color: 'var(--text-muted)', maxWidth: '60ch' }}>
-        These scores reflect the evidence you have collected so far. They are not predictions of career success or
-        guarantees of fit.
-      </p>
       <HowThisWorks onOpen={() => track('score_explanation_opened', { source: 'how_this_works' })} />
 
       {!data || !data.hasHypotheses ? (
         <div className="mt-8">
           <EmptyState
-            title="Complete onboarding to begin building your Career Decision Matrix"
-            body="Once you have paths to test, this page shows how real experiences change them."
+            title="Finish onboarding to build your matrix"
+            body="Once you have paths to test, they show up here."
             ctaLabel="Start onboarding"
             ctaTo="/onboarding"
           />
@@ -118,7 +114,7 @@ export default function CareerDecisionMatrix() {
           {data.measuredExperiments === 0 && (
             <EmptyState
               title="Your paths are based mostly on what you've told us so far"
-              body="Test one of them to begin collecting real evidence. Confidence stays as an early signal until then."
+              body="Test one to start collecting real evidence."
               ctaLabel="Choose something to test"
               ctaTo="/choose"
             />
@@ -126,7 +122,7 @@ export default function CareerDecisionMatrix() {
 
           {data.measuredExperiments === 1 && (
             <p className="app-card tp-body p-5" style={{ color: 'var(--text-secondary)' }}>
-              Your first real evidence is in. Keep testing before drawing strong conclusions.
+              Your first real evidence is in. Keep testing.
             </p>
           )}
 
@@ -239,8 +235,7 @@ export default function CareerDecisionMatrix() {
           <ClaritySummary clarity={data.clarity} />
 
           <p className="tp-meta" style={{ color: 'var(--text-muted)' }}>
-            This page is private to you. Nobody else sees your confidence scores, evidence, reflections or conversation notes
-            unless you share them.
+            Private to you unless you share it.
           </p>
         </div>
       )}

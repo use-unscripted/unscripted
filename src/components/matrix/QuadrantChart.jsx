@@ -27,7 +27,7 @@ export default function QuadrantChart({ points = [], unplaced = [], selectedId, 
     <section className="app-card p-5 sm:p-6">
       <h2 className="tp-section" style={{ color: 'var(--text-primary)' }}>Where your paths stand</h2>
       <p className="tp-body mt-2" style={{ color: 'var(--text-secondary)', maxWidth: '58ch' }}>
-        A summary of your evidence so far, not a decision. Tap a path to see the evidence behind its position.
+        Tap a path to see the evidence behind its position.
       </p>
 
       <div className="mt-6 flex gap-2 sm:gap-3">

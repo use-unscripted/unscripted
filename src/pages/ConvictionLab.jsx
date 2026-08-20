@@ -79,7 +79,7 @@ export default function ConvictionLab() {
         showBack
         backLabel="Go back"
         title="Conviction Lab"
-        description="What this path still needs evidence on before a decision about it would rest on more than a guess."
+        description="What this path still needs evidence on."
       />
       <div className="app-stack">
         {isLoading || !lab ? (
