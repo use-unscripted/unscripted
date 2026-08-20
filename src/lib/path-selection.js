@@ -17,8 +17,7 @@
  * experiment before creating one.
  */
 import { base44 } from '@/api/base44Client';
-import { onceInFlight, selectPathForCycle, attachExperimentToCycle, getActiveCycle } from '@/lib/career-cycle';
-import { assertCanStartCycle } from '@/lib/pilot-access';
+import { onceInFlight, selectPathForCycle, attachExperimentToCycle } from '@/lib/career-cycle';
 import { trackPilotEvent } from '@/lib/pilot-metrics';
 
 const OPEN_STATUSES = ['draft', 'planned', 'in_progress'];
@@ -67,13 +66,16 @@ export function selectPathAndBeginExperiment(path, allPaths = []) {
   }
 
   return onceInFlight(`select-path:${path.id}`, async () => {
-    // Access first, but only when this would actually START a cycle. A student
-    // who already has an active cycle is picking the path INSIDE it, and the
-    // one-cycle limit was being applied to that too: the button threw, the
-    // caller swallowed the throw, and nothing happened at all.
-    const existingCycle = await getActiveCycle().catch(() => null);
-    if (!existingCycle) await assertCanStartCycle();
+    /* No access gate here. Choosing which path you test is navigation, not a new
+       purchase: a student whose first cycle had been closed hit the one-cycle
+       limit the moment they picked a different path, so the button wrote nothing
+       at all, bounced them to My Journey, and every screen carried on naming the
+       path they were trying to leave — permanently, since the count of closed
+       cycles never goes back down.
 
+       The limit still holds where it means something: completeCycle refuses to
+       open the next cycle once it is reached, and My Journey shows the
+       continuation step there. */
     const user_id = await currentUserId();
 
     // 1 — cycle records the choice first, so every later write can reference it.

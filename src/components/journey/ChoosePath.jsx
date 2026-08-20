@@ -7,7 +7,6 @@ import PathFocusPanel from '@/components/journey/PathFocusPanel';
 import CurrentPathCard from '@/components/journey/CurrentPathCard';
 import { selectPathAndBeginExperiment } from '@/lib/path-selection';
 import { resetCacheForPathSwitch } from '@/lib/path-switch';
-import { CycleLimitError } from '@/lib/pilot-access';
 import PathSelectedConfirm from '@/components/journey/PathSelectedConfirm';
 import { Sk } from '@/components/PageSkeleton';
 
@@ -62,11 +61,10 @@ export default function ChoosePath() {
       // Straight to the Test stage, which shows the path now being tested and
       // the unknowns still open on it.
       navigate('/test');
-    } catch (err) {
-      // A limit used to fail silently, so the button looked broken. It now sends
-      // the student to My Journey, where the continuation step explains it.
-      if (err instanceof CycleLimitError) navigate('/journey');
-      else setError(path.id);
+    } catch {
+      // Stay on the choice and offer retry. Redirecting away from here is what
+      // made a failed selection look like the old path had been re-chosen.
+      setError(path.id);
     } finally {
       setBusyId(null);
     }
