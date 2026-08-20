@@ -73,7 +73,12 @@ export function rememberPath(fullPath, pathname) {
 
 /** Where this tab was last left, or its root the first time it is opened. */
 export function lastLocation(tabRoot) {
-  return readAll()[tabRoot]?.path || tabRoot;
+  const saved = readAll()[tabRoot]?.path;
+  // A route can move between tabs between releases, and a stale session entry
+  // would then send a tab to a screen that now belongs somewhere else — which
+  // is how the Matrix tab started opening the Conviction Lab.
+  if (!saved || tabOf(saved.split('?')[0]) !== tabRoot) return tabRoot;
+  return saved;
 }
 
 /** The scroll offset saved for a route, or 0. */
