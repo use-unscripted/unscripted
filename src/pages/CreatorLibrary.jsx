@@ -133,7 +133,7 @@ export default function CreatorLibrary() {
           distinguishable; without it they were the same page twice. */}
       <PageHeader
         title="People who took the path first."
-        description="Curated profiles of founders, creators, and professionals, with honest stories rather than highlight reels. All profiles use public information and are reviewed for accuracy."
+        description="Honest stories from founders, creators and professionals."
       />
 
       <div className="mb-8 flex flex-wrap gap-2">
@@ -178,7 +178,7 @@ export default function CreatorLibrary() {
 
       <div className="mt-10 rounded-[var(--r-surface)] p-5" style={{ background: 'var(--ink-100)' }}>
         <p className="tp-eyebrow text-[color:var(--ink-500)] mb-2">About these profiles</p>
-        <p className="tp-prose text-[color:var(--ink-700)]">All profiles use publicly available information. Unscripted does not scrape protected social-media content, fabricate histories, or claim private information. Profiles are reviewed periodically for accuracy. Dates shown indicate last review.</p>
+        <p className="tp-prose text-[color:var(--ink-700)]">All profiles use public information and are reviewed periodically.</p>
       </div>
     </main>
   );

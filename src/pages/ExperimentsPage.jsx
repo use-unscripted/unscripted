@@ -790,7 +790,7 @@ export default function ExperimentsPage() {
       )}
       <PageHeader
         title="Test paths. Learn from results."
-        description="Every experiment is a controlled test. You are not committing to a path. You are gathering evidence."
+        description="Every experiment is a test, not a commitment."
         action={
           <button onClick={() => setShowNew(true)}
             className="tp-body flex items-center gap-2 rounded-[var(--r-control)] px-6 py-3.5 font-semibold text-white transition hover:-translate-y-px"

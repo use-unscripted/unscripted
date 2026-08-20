@@ -119,7 +119,7 @@ export default function HumanReality() {
         <section className="app-card p-6">
           <p className="tp-body font-bold" style={{ color: 'var(--text-primary)' }}>Choose a path to test first</p>
           <p className="tp-prose mt-2" style={{ color: 'var(--text-secondary)' }}>
-            A conversation is aimed at one open question on one path, so there has to be a path behind it.
+A conversation is aimed at one open question on one path.
           </p>
           <Link to="/choose" className="app-cta tp-control mt-4 inline-flex">Choose something to test</Link>
         </section>
@@ -146,7 +146,7 @@ export default function HumanReality() {
       <PageHeader
         showBack
         title="Get a Human Perspective"
-        description="Some questions cannot be answered by simulated work. This is the experiment type for those."
+        description="For questions simulated work cannot answer."
       />
       <HumanRealityBrief brief={brief} pathName={path.path_name} />
     </>

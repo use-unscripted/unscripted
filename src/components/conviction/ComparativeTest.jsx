@@ -61,8 +61,7 @@ export default function ComparativeTest({ comparison }) {
       </div>
 
       <p className="tp-meta mt-3" style={{ color: 'var(--ink-400)' }}>
-        Run it on either path, or on both. Each run is recorded against the path you ran it on, and only
-        updates that path's evidence.
+Run it on either path, or both. Each run only counts for the path you ran it on.
       </p>
     </section>
   );

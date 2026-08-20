@@ -485,7 +485,7 @@ export default function ProofOfWorkPage() {
           </h3>
           <p className="tp-body mx-auto mt-2.5 max-w-[52ch] text-[color:var(--ink-500)]">
             {entries.length === 0
-              ? 'Add work from your experiments and missions to build a record of what you have learned and completed.'
+              ? 'Add work from your experiments and missions to build your record.'
               : 'Try adjusting your search or filters.'}
           </p>
           {entries.length === 0 && (

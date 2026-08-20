@@ -75,7 +75,7 @@ export default function ConvictionReview({ review }) {
               {against.text}
               {against.source && <span className="tp-meta" style={{ color: 'var(--ink-400)' }}> · {against.source}</span>}
             </>
-          ) : <Empty>Nothing recorded against this path yet, which usually means the costs have not been tested.</Empty>}
+          ) : <Empty>Nothing recorded against this path yet.</Empty>}
         </Block>
 
         <Block label="The biggest assumption that changed">

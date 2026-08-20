@@ -44,9 +44,6 @@ export default function ConvictionGap({ gap }) {
           <ArrowRight size={16} />
         </Link>
       )}
-      <p className="tp-meta mt-3" style={{ color: 'var(--text-muted)' }}>
-        The recommended next test below is aimed at this gap.
-      </p>
     </section>
   );
 }

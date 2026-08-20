@@ -38,8 +38,7 @@ export default function ConvictionPassport({ path, review, ready }) {
         <BadgeCheck size={17} style={{ color: 'var(--brand-navy-700)' }} /> Career Conviction Passport
       </h2>
       <p className="tp-prose mt-1.5" style={{ color: 'var(--text-secondary)' }}>
-        A written record of how you reached your decision about {path.path_name}, drawn from your own evidence.
-        It never claims this career is the right one.
+A written record of how you reached your decision about {path.path_name}, from your own evidence.
       </p>
 
       {isLoading ? (

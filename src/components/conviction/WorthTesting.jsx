@@ -14,9 +14,7 @@ export default function WorthTesting({ tensions = [] }) {
         <HelpCircle size={17} style={{ color: 'var(--brand-navy-700)' }} /> Something worth testing
       </h2>
       <p className="tp-prose mt-1.5" style={{ color: 'var(--text-secondary)' }}>
-        Two things you have recorded point in different directions. Neither one is wrong, and neither
-        settles anything on its own. They are just the parts of your picture that would change most
-        with one more reading.
+Two things you recorded point in different directions. Neither is wrong.
       </p>
 
       <ul className="mt-4 space-y-3">

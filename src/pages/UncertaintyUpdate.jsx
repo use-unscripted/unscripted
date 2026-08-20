@@ -106,14 +106,14 @@ export default function UncertaintyUpdate() {
       <PageHeader
         showBack
         title="What are you still figuring out?"
-        description="Your original answers and your paths stay exactly as they are. These few questions are what your next experiments are chosen from."
+        description="A few questions your next experiments are chosen from. Nothing existing changes."
       />
 
       <div className="app-stack">
         <div className="app-card p-6 sm:p-8">
           <Scale
             label="How certain are you about what you want to do?"
-            description="A low number is not a problem. This is the number we measure your progress against."
+            description="A low number is fine. We measure progress against it."
             value={form.baseline_career_clarity}
             onChange={v => set('baseline_career_clarity', v)}
             lowLabel="No idea at all"
@@ -134,7 +134,7 @@ export default function UncertaintyUpdate() {
         <div className="app-card p-6 sm:p-8">
           <p className="tp-card mb-1" style={{ color: 'var(--text-primary)' }}>Careers you are considering</p>
           <p className="tp-meta mb-4" style={{ color: 'var(--text-secondary)' }}>
-            Optional. Edit or remove anything here, and leave it empty if nothing fits.
+Optional. Leave it empty if nothing fits.
           </p>
           <Tags
             value={form.current_careers_considered}

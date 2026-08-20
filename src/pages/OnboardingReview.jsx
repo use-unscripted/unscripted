@@ -126,7 +126,7 @@ export default function OnboardingReview() {
             You do not need to know what you want yet
           </h1>
           <p className="tp-lead mt-3 text-[color:var(--ink-500)]">
-            Create a free account and we will turn these answers into three careers worth testing, plus the first experiment that tells you something real about the ones you are unsure of.
+Create a free account and we will turn these answers into three careers worth testing, plus your first experiment.
           </p>
         </div>
 
@@ -213,8 +213,7 @@ export default function OnboardingReview() {
               <div className="min-w-0 flex-1">
                 <p className="tp-card text-[color:var(--surface-dark-900)]">Want to add personal context?</p>
                 <p className="tp-prose mt-2 text-[color:var(--ink-500)]">
-                  Responsibilities, things you want to rule out, what your recommendations should weigh
-                  heavily. Entirely optional. You can add it now or any time from your settings.
+Responsibilities, things to rule out, what should weigh heavily. Optional.
                 </p>
                 <button onClick={() => setEditingNotes(true)}
                   className="tp-meta mt-3 rounded-[var(--r-control)] border border-[color:var(--ink-200)] px-4 py-2 font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)]">
@@ -313,7 +312,7 @@ export default function OnboardingReview() {
         {/* CTA */}
         <div className="rounded-[var(--r-surface)] border border-[color:var(--ink-200)] bg-white p-7 shadow-sm text-center">
           <p className="tp-body mx-auto text-[color:var(--ink-500)] mb-6">
-            Create a free account to generate your three tailored paths, save your Mission Guides, and track what you learn.
+Create a free account to generate your three paths and save your work.
           </p>
           <button onClick={handleCreateAccount}
             className="w-full flex items-center justify-center gap-2 rounded-[var(--r-control)] py-3.5 text-sm font-semibold text-white transition hover:-translate-y-px"

@@ -85,7 +85,7 @@ export default function StageTest() {
       ? {
           label: 'Reflect On This Test',
           to: `/reflect?experimentId=${exp.id}`,
-          sub: `${exp.title}. The work is done, the reflection is still open.`,
+          sub: `${exp.title}. The reflection is still open.`,
         }
       : {
           label: exp.status === 'in_progress' ? 'Continue Test' : 'Start Test',
@@ -95,7 +95,7 @@ export default function StageTest() {
     : {
         label: 'Set Up My Test',
         to: `/experiments/new?pathName=${encodeURIComponent(journey.currentPath.path_name)}`,
-        sub: 'A 30-day test that shows you what this path actually feels like.',
+        sub: 'A 30-day test of what this path feels like.',
       };
 
   return (

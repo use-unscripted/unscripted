@@ -179,7 +179,7 @@ export default function MyJourney() {
   // 1 — onboarding not completed
   if (!data.profile && data.paths.length === 0) {
     trackPilotEvent('onboarding_started', { dedupe_key: data.access?.user?.id || 'anon' });
-    return shell(<JourneyEmptyState variant="onboarding" />, 'Four steps: answer a few questions, compare three paths, choose one, run one experiment.');
+    return shell(<JourneyEmptyState variant="onboarding" />, 'Answer a few questions, compare three paths, choose one, test it.');
   }
   trackPilotEvent('onboarding_completed', { dedupe_key: data.access?.user?.id || 'anon' });
 
@@ -196,7 +196,7 @@ export default function MyJourney() {
         <ContinuationGate />
         <JourneyStages stage={stage} detail={stageDetail} />
       </>,
-      'Your first cycle is complete. Everything you produced stays in your Evidence Library.'
+      'Your first cycle is complete. Everything you produced is saved.'
     );
   }
 
@@ -218,7 +218,7 @@ export default function MyJourney() {
         />
         <JourneyStages stage={stage} detail={stageDetail} />
       </>,
-      'Compare your three paths below, then choose the one you will test first.'
+      'Compare your paths, then choose the one you test first.'
     );
   }
 
@@ -265,7 +265,7 @@ export default function MyJourney() {
       </Reveal>
 
       <p className="tp-meta pt-2 text-center" style={{ color: 'var(--text-muted)' }}>
-        Working on something else? Use the cycle in the sidebar to jump to any step.
+Use the cycle in the sidebar to jump to any step.
       </p>
     </>,
     // The hypothesis is named in the panel directly below, so the standfirst
@@ -273,6 +273,6 @@ export default function MyJourney() {
     // title and the thing it describes.
     currentPath
       ? 'Nothing here is settled until the evidence says so.'
-      : 'One direction at a time. This page tells you what comes next.'
+      : 'One direction at a time. Here is what comes next.'
   );
 }

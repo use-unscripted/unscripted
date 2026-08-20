@@ -175,7 +175,7 @@ export default function ExperimentReflection() {
       <Shell>
         <Notice
           title="That experiment isn't yours"
-          body="We only load experiments on your own account. Open the one you're testing from My Journey."
+          body="Open the one you're testing from My Journey."
           to="/journey"
           cta="Back to My Journey"
         />
@@ -241,7 +241,7 @@ export default function ExperimentReflection() {
         <ConclusionGate availability={availability} experiment={ctx.experiment} onEndEarly={handleEndEarly} />
       ) : !measurement?.post_completed_at ? (
         <ReflectionStep index={1} total={TOTAL_STEPS} title="How it actually went"
-          purpose="A short check-in against what you predicted before you started. It takes a minute.">
+          purpose="A short check-in against what you predicted.">
           <MeasurementGate phase="post" exp={ctx.experiment} measurement={measurement} autoOpen onSaved={setMeasurement} />
         </ReflectionStep>
       ) : reflection ? (
@@ -249,7 +249,7 @@ export default function ExperimentReflection() {
           {/* The recalculation runs once per saved reflection and hands its
               before/after to the synthesis below. */}
           <ReflectionStep index={3} total={TOTAL_STEPS} title="What the evidence changed"
-            purpose="Read against your hypothesis: what got stronger, what got weaker, and what is still unsettled."
+            purpose="What got stronger, what got weaker, what is still unsettled."
             done={!!approved}>
             <div className="space-y-5">
               <EvidenceUpdatePanel reflection={reflection} experiment={ctx.experiment} onResults={setChanges} />
@@ -274,13 +274,13 @@ export default function ExperimentReflection() {
           {/* Alongside the hypothesis update, never in front of it: this rates
               the experiment, and skipping it must not strand the cycle. */}
           <ReflectionStep index={3} total={TOTAL_STEPS} title="Rate the quality of this experience" delay={40}
-            purpose="How realistic and how useful the experience itself was. Separate from the fit you experienced, how you performed and your confidence in this Path, and it changes none of them.">
+            purpose="How realistic and useful the experience was. This changes none of your scores.">
             <FeedbackSurveyPanel experiment={ctx.experiment} />
           </ReflectionStep>
 
           {(approved || (changes && !synthesis)) && (
             <ReflectionStep index={4} total={TOTAL_STEPS} title="Decide what comes next" delay={80}
-              purpose="Keep testing this direction, change what you are claiming, or record it as tested and set aside.">
+              purpose="Keep testing, change what you are claiming, or set it aside.">
               <HypothesisDecision
                 ctx={ctx}
                 reflection={reflection}
@@ -300,7 +300,7 @@ export default function ExperimentReflection() {
         </>
       ) : (
         <ReflectionStep index={2} total={TOTAL_STEPS} title="What you learned"
-          purpose="Your own words about the work: what you did, what surprised you, what you would avoid next time.">
+          purpose="In your own words: what you did, what surprised you.">
           <ReflectionForm
             ctx={ctx}
             measurement={measurement}

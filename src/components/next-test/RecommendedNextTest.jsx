@@ -156,7 +156,7 @@ export default function RecommendedNextTest({ recommendation, onOverride, onAcce
       {onOverride && <OverrideActions onOverride={onOverride} busy={busy} />}
       {exhausted && (
         <p className="tp-meta mt-3" style={{ color: 'var(--ink-400)' }}>
-          That was the last open question we could put forward right now, so this one is still showing. Nothing you set aside has been lost.
+That was the last open question we could put forward. Nothing you set aside is lost.
         </p>
       )}
     </section>

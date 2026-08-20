@@ -126,7 +126,7 @@ ${PLAIN_PROSE_RULES}${correction}`,
     <main className="app-page">
       <PageHeader
         title="Study the path. Build your own."
-        description="Real strategies extracted from high-agency students, creators, and founders. Pick a path, understand the playbook, and take the first step."
+        description="Playbooks from students, creators and founders who did it."
       />
       <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {BLUEPRINTS.map(bp => (

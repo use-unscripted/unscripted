@@ -55,7 +55,7 @@ export default function HumanRealityNextTest({ recommendation, onAccept, onOverr
       </div>
 
       <p className="tp-meta mt-4" style={{ color: 'var(--ink-400)' }}>
-        One conversation is enough. Your own contact, an alumnus, a mentor or your careers service all count the same.
+One conversation is enough. Any contact, alumnus or mentor counts.
       </p>
 
       <div className="mt-6">
@@ -67,7 +67,7 @@ export default function HumanRealityNextTest({ recommendation, onAccept, onOverr
       {onOverride && <OverrideActions onOverride={onOverride} busy={busy} />}
       {exhausted && (
         <p className="tp-meta mt-3" style={{ color: 'var(--ink-400)' }}>
-          That was the last open question we could put forward right now, so this one is still showing.
+That was the last open question we could put forward.
         </p>
       )}
     </section>

@@ -40,7 +40,7 @@ export default function GoalsPage() {
     <main className="app-page">
       <PageHeader
         title="What you're building toward."
-        description="Annual, monthly, and weekly goals, with honest feasibility assessments so your plan stays realistic."
+        description="Annual, monthly and weekly goals, with feasibility checks."
       />
 
       {/* Feasibility summary */}
@@ -48,7 +48,7 @@ export default function GoalsPage() {
         <div className="mb-6 rounded-[var(--r-surface)] p-5" style={{ background: 'var(--danger-50)', border: '1px solid rgba(185,28,28,0.2)' }}>
           <p className="tp-eyebrow text-[color:var(--danger-700)] mb-2">Feasibility issue detected</p>
           <p className="tp-prose text-[color:var(--ink-700)]">
-            {goals.filter(g => g.feasibility_status === 'unrealistic').length} goal{goals.filter(g => g.feasibility_status === 'unrealistic').length > 1 ? 's were' : ' was'} flagged as unrealistic based on your available time. Consider deferring or reducing scope.
+            {goals.filter(g => g.feasibility_status === 'unrealistic').length} goal{goals.filter(g => g.feasibility_status === 'unrealistic').length > 1 ? 's were' : ' was'} flagged as unrealistic for your available time.
           </p>
         </div>
       )}

@@ -78,7 +78,7 @@ export default function EvidenceLibrary() {
 
           {view !== 'record' && (
             <p className="tp-meta mb-5 flex items-center gap-2 rounded-[var(--r-control)] px-4 py-3 text-[color:var(--ink-700)]" style={{ background: 'var(--background-tertiary)' }}>
-              <Lock size={13} className="shrink-0" /> Everything here is yours alone. Private evidence is never shown to other students.
+              <Lock size={13} className="shrink-0" /> Everything here is private to you.
             </p>
           )}
 
@@ -94,7 +94,7 @@ export default function EvidenceLibrary() {
                 <div className="rounded-[var(--r-surface)] border border-dashed border-[color:var(--ink-200)] py-16 text-center">
                   <FileText size={30} className="mx-auto mb-3 text-[color:var(--ink-200)]" />
                   <p className="tp-section text-[color:var(--surface-dark-900)]">No evidence yet.</p>
-                  <p className="tp-body mx-auto mt-2 max-w-[46ch] text-[color:var(--ink-500)]">Complete a mission inside your experiment and submit proof. It lands here.</p>
+                  <p className="tp-body mx-auto mt-2 max-w-[46ch] text-[color:var(--ink-500)]">Submit proof from an experiment and it lands here.</p>
                 </div>
               ) : shown.length === 0 ? (
                 <div className="rounded-[var(--r-surface)] border border-dashed border-[color:var(--ink-200)] py-16 text-center">

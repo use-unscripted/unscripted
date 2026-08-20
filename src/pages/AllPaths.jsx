@@ -60,7 +60,7 @@ export default function AllPaths() {
         showBack
         backLabel="Back to My Journey"
         title="All paths available to me"
-        description="Every path of your own, the ones that look like the same career, and the rest of the library you could explore."
+        description="Your own paths, plus the rest of the library."
       />
       <div className="app-stack">
         {/* Silent when there is nothing that looks duplicated. */}

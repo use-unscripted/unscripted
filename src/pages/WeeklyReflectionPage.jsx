@@ -733,7 +733,7 @@ function ReflectionFlow({ experiments, missions, proofs, initialData, draft, use
 
   if (stepKey === 'experiment') {
     question = 'Which experiment is this about?';
-    hint = 'Reflections attach to one, so the roadmap knows what to adjust.';
+    hint = 'Reflections attach to one experiment.';
     body = (
       <div className="space-y-2">
         {experiments.map((exp, i) => (
@@ -1190,7 +1190,7 @@ export default function WeeklyReflectionPage() {
 
       <PageHeader
         title="Learn from what you actually did."
-        description="A few taps at the end of the week. It adjusts your roadmap from real experience, not guesswork."
+        description="A few taps at the end of the week."
         action={
           <div className="flex gap-2">
             <button onClick={startReflection}
@@ -1246,7 +1246,7 @@ export default function WeeklyReflectionPage() {
                 disappeared once it became accurate. */}
             {currentWeekRow && editingReflection?.id === currentWeekRow.id && (
               <p className="tp-body mb-4 text-[color:var(--ink-500)]">
-                Picking up this week&apos;s reflection. Saving updates it rather than adding a second.
+Picking up this week&apos;s reflection. Saving updates it.
               </p>
             )}
 

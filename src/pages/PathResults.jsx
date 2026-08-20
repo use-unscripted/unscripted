@@ -244,7 +244,7 @@ export default function PathResults() {
         <div className="mb-3">
           <h1 className="tp-page mt-2 text-[color:var(--surface-dark-900)]">Three career hypotheses.</h1>
           <p className="tp-lead mt-3 text-[color:var(--ink-500)]">
-            A career hypothesis is a direction worth testing, not a prediction of what you should become. Each one below says why it may fit, why it may not, and what only real experience can tell you.
+Directions worth testing. Each says why it may fit, and why it may not.
           </p>
         </div>
 
@@ -275,7 +275,7 @@ export default function PathResults() {
               dark panel, which carries the same kind of label. */}
           <p className="tp-eyebrow mb-2.5" style={{ color: 'var(--brand-gold-500)' }}>Your 30-day experiment plan is ready</p>
           <p className="tp-prose text-[color:var(--ink-300)] mb-5">
-            Pick a path above to start its 30-day test. You can compare all three from your dashboard first.
+Pick a path above to start its 30-day test.
           </p>
           <Link to="/journey"
             className="touch-reach inline-flex items-center gap-1.5 text-sm font-semibold text-[color:var(--ink-300)] transition hover:text-white">
@@ -284,7 +284,7 @@ export default function PathResults() {
         </div>
 
         <p className="tp-meta mt-6 text-center text-[color:var(--ink-400)]">
-          These recommendations will update each week based on your reflections and completed experiments.
+These update each week as you test and reflect.
         </p>
       </div>
     </main>

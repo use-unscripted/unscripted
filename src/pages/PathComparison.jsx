@@ -375,8 +375,7 @@ function PathCard({ path, experiments, missions, proof, reflections, profile, me
             </Link>
           ) : (
             <p className="tp-body" style={{ color: 'var(--text-secondary)' }}>
-              Our experiment library for this direction is still developing, so there is no test
-              to start on it yet. Everything recorded here stays as it is.
+No validated test exists for this direction yet.
             </p>
           )}
         </div>
@@ -730,7 +729,7 @@ export default function PathComparison() {
 
       <PageHeader
         title="Your career hypotheses."
-        description="A career hypothesis is a direction worth testing, not a prediction of what you should become. Compare them on what is known, what is still unknown, and how much evidence sits behind each one."
+        description="Directions worth testing, compared on the evidence behind each."
         action={
           <button onClick={() => setShowCreate(true)}
             className="touch-target flex items-center gap-2 rounded-[var(--r-control)] px-5 py-2.5 text-sm font-semibold text-white shrink-0"
@@ -835,7 +834,7 @@ export default function PathComparison() {
 
           <div className="tp-body mt-8 rounded-[var(--r-surface)] p-5 text-center text-[color:var(--ink-500)]"
             style={{ background: 'var(--background-tertiary)', border: '1px solid var(--border-light)' }}>
-            These are hypotheses to test, not commitments to make. A hypothesis you rule out is as useful as one you strengthen.
+Ruling one out is as useful as strengthening one.
           </div>
         </>
       )}

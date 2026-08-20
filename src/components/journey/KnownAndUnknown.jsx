@@ -32,7 +32,7 @@ export default function KnownAndUnknown({ focus }) {
             </ul>
           ) : (
             <p className="tp-body mt-4" style={{ color: 'var(--ink-400)' }}>
-              Nothing here yet. This fills in from what you actually do, not from what you told us.
+Nothing yet. This fills in from what you do, not what you told us.
             </p>
           )}
         </section>

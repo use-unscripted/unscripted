@@ -44,7 +44,7 @@ export default function ResourceHub() {
     <main className="app-page">
       <PageHeader
         title="The right tool for each path."
-        description="Unscripted points you at specialized resources rather than replacing them, so you can pick the right one at the right time."
+        description="Specialized resources, so you can pick the right one at the right time."
       />
 
       {/* The category list is derived from the resources, so during the fetch
@@ -113,7 +113,7 @@ export default function ResourceHub() {
 
       <div className="mt-10 rounded-[var(--r-surface)] p-5" style={{ background: 'var(--ink-100)', border: '1px solid var(--ink-200)' }}>
         <p className="tp-eyebrow text-[color:var(--ink-500)] mb-2">Coming later</p>
-        <p className="tp-prose text-[color:var(--ink-700)]">Live labor-market data, Apollo and Hunter integrations, campus-specific resource directories, and an affiliate marketplace are planned for future releases.</p>
+        <p className="tp-prose text-[color:var(--ink-700)]">Labor-market data and campus resource directories are planned.</p>
       </div>
     </main>
   );

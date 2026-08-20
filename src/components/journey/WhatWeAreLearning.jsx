@@ -82,7 +82,7 @@ export default function WhatWeAreLearning() {
       <section className="app-card p-6">
         <h2 className="tp-section" style={{ color: 'var(--surface-dark-900)' }}>What we&rsquo;re learning about you</h2>
         <p className="tp-meta mt-1.5" style={{ color: 'var(--ink-400)' }}>
-          Built from what you have actually done, not from a questionnaire. Tap any line to see the experiences behind it.
+Built from what you have done. Tap a line to see the evidence.
         </p>
 
         <div className="mt-4 space-y-0.5">

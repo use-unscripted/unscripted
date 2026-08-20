@@ -55,7 +55,7 @@ export default function CareerEvidenceProfile() {
     <main className="app-page">
       <PageHeader
         title="Career Evidence Profile."
-        description="What Unscripted has learned about you so far, and how sure it is. Every conclusion here is built from your own experiments, ratings, reflections and proof, and it gets sharper as you do more."
+        description="What we have learned about you so far, built from your own evidence."
       />
 
       <div className="tp-meta mb-8 flex flex-wrap items-center gap-x-4 gap-y-2 rounded-[var(--r-surface)] border p-4"
@@ -71,7 +71,7 @@ export default function CareerEvidenceProfile() {
       </div>
 
       <ProfileSection index={1} title="Career hypotheses" count={hypotheses.length}
-        description="Where each career you are testing currently stands. Fit and confidence are separate numbers and are never combined.">
+        description="Where each career you are testing stands. Fit and confidence stay separate.">
         {hypotheses.length === 0 ? (
           <StillLearning>You are not testing any career hypotheses yet, so there is nothing to score.</StillLearning>
         ) : (
@@ -85,9 +85,9 @@ export default function CareerEvidenceProfile() {
       </ProfileSection>
 
       <ProfileSection index={2} title="What you're showing strength in" count={abilities.length}
-        description="Demonstrated ability only. This section says nothing about whether you enjoy the work, which is measured separately below.">
+        description="Demonstrated ability only, not enjoyment.">
         {abilities.length === 0 ? (
-          <StillLearning>Nothing has been demonstrated yet. Completing an experiment or adding proof of work is what puts an ability here.</StillLearning>
+          <StillLearning>Nothing demonstrated yet. Complete an experiment or add proof of work.</StillLearning>
         ) : (
           <div className="grid gap-4 sm:grid-cols-2">
             {abilities.map(a => <AbilityCard key={a.id} ability={a} flagged={flagged.has(`ability:${a.id}`)} />)}
@@ -96,7 +96,7 @@ export default function CareerEvidenceProfile() {
       </ProfileSection>
 
       <ProfileSection index={3} title="Work preferences" count={settledPrefs.length}
-        description="How you appear to prefer working, based on what you rated after doing the work.">
+        description="From what you rated after doing the work.">
         {settledPrefs.length === 0 ? (
           <StillLearning>We have not measured enough work yet to say how you prefer to work.</StillLearning>
         ) : (
@@ -121,9 +121,9 @@ export default function CareerEvidenceProfile() {
       </ProfileSection>
 
       <ProfileSection index={4} title="What gives you energy" count={energisers.length}
-        description="Enjoyment and motivation only. Strength in something does not put it here, and energy here does not imply strong ability yet.">
+        description="Enjoyment and motivation only, not ability.">
         {energisers.length === 0 ? (
-          <StillLearning>No pattern yet. These appear once your post-experiment ratings start repeating themselves.</StillLearning>
+          <StillLearning>No pattern yet. These appear as your ratings repeat.</StillLearning>
         ) : (
           <div className="grid gap-4 sm:grid-cols-2">
             {energisers.map(p => <PatternCard key={p.id} pattern={p} flagged={flagged.has(`energiser:${p.id}`)} />)}
@@ -132,9 +132,9 @@ export default function CareerEvidenceProfile() {
       </ProfileSection>
 
       <ProfileSection index={5} title="What drains you" count={drains.length}
-        description="Kinds of work that rated lower on energy or higher on frustration. This is evidence about work fit, not about you.">
+        description="Work that rated low on energy or high on frustration.">
         {drains.length === 0 ? (
-          <StillLearning>Nothing here yet. This section fills in from your own ratings, not from assumptions.</StillLearning>
+          <StillLearning>Nothing here yet. This fills in from your own ratings.</StillLearning>
         ) : (
           <div className="grid gap-4 sm:grid-cols-2">
             {drains.map(p => <PatternCard key={p.id} pattern={p} flagged={flagged.has(`drain:${p.id}`)} />)}
@@ -173,7 +173,7 @@ export default function CareerEvidenceProfile() {
       </ProfileSection>
 
       <ProfileSection index={8} title="What we are still learning" count={openQuestions.length}
-        description="The questions your evidence cannot answer yet. These stay open until something you do answers them.">
+        description="Questions your evidence cannot answer yet.">
         {openQuestions.length === 0 ? (
           <StillLearning>No open questions right now.</StillLearning>
         ) : (
@@ -183,7 +183,7 @@ export default function CareerEvidenceProfile() {
 
       <p className="tp-meta rounded-[var(--r-surface)] p-5 text-center"
         style={{ background: 'var(--background-tertiary)', border: '1px solid var(--border-light)', color: 'var(--ink-500)' }}>
-        Nothing here is a verdict. Confidence never reaches certainty, and anything you flag as inaccurate stays on file next to the evidence so a future experiment can settle it.
+Nothing here is a verdict. Anything you flag as inaccurate stays on file next to the evidence.
       </p>
     </main>
   );

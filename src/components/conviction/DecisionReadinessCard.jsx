@@ -73,8 +73,7 @@ export default function DecisionReadinessCard({ readiness }) {
       )}
 
       <p className="tp-meta mt-3" style={{ color: 'var(--ink-400)' }}>
-        Decision Ready means you have enough evidence to decide for yourself. It is never a claim that this
-        career is the right one.
+Decision Ready means enough evidence to decide for yourself, not that this career is right.
       </p>
     </section>
   );

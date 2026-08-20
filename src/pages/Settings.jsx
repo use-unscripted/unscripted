@@ -172,7 +172,7 @@ export default function Settings() {
     <main className="app-page">
       <PageHeader
         title="Keep your context current."
-        description="Your direction can change. Update the facts that shape future roadmaps."
+        description="Update the facts that shape future recommendations."
       />
       <section className="mb-8 grid gap-5 rounded-[var(--r-surface)] border border-[color:var(--ink-200)] bg-white p-7 shadow-sm sm:grid-cols-2">
         <Field label="Full name" value={user.full_name} name="full_name" onChange={change} />
@@ -201,7 +201,7 @@ export default function Settings() {
 
       <div className="mb-3 mt-10">
         <h2 className="tp-section text-[color:var(--surface-dark-900)] mb-1.5">Personal context</h2>
-        <p className="tp-prose text-[color:var(--ink-700)] mb-5">Add context, ambitions, constraints, or priorities that personalize your path recommendations. Changes influence future recommendations but do not rewrite past ones.</p>
+        <p className="tp-prose text-[color:var(--ink-700)] mb-5">Context that personalizes future recommendations. Past ones are not rewritten.</p>
       </div>
       <section className="mb-10 rounded-[var(--r-surface)] border border-[color:var(--ink-200)] bg-white p-7 shadow-sm space-y-5">
         {NOTES_FIELDS.map(f => (
@@ -216,7 +216,7 @@ export default function Settings() {
           </label>
         ))}
         <p className="tp-meta rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-[color:var(--ink-50)] px-4 py-3.5 text-[color:var(--ink-500)]">
-          Your notes are private to your account and are used only to personalize your Unscripted experience.
+Your notes are private to your account.
         </p>
         <button onClick={saveNotes} disabled={!profile}
           className="w-full rounded-[var(--r-control)] px-5 py-3 font-semibold text-white transition hover:-translate-y-px disabled:opacity-60"
@@ -227,7 +227,7 @@ export default function Settings() {
         {showRegenPrompt && !regenDone && (
           <div className="rounded-[var(--r-surface)] border border-[color:var(--brand-navy-700)] bg-[color:var(--ink-100)] p-5">
             <p className="tp-card text-[color:var(--brand-navy-900)] mb-1.5">Want to refresh your recommended paths?</p>
-            <p className="tp-prose text-[color:var(--ink-700)] mb-5">Your personal context has been updated. Unscripted can generate new path recommendations tailored to your updated preferences. For example, if you now want to focus only on law-related roles.</p>
+            <p className="tp-prose text-[color:var(--ink-700)] mb-5">We can generate new paths from your updated context.</p>
             <div className="flex flex-wrap gap-2">
               <button onClick={handleRegenerate} disabled={regenerating}
                 className="tp-body flex items-center gap-2 rounded-[var(--r-control)] px-5 py-3 font-semibold text-white disabled:opacity-60 transition"
@@ -249,7 +249,7 @@ export default function Settings() {
             <CheckCircle size={18} className="text-green-600 shrink-0 mt-0.5" />
             <div>
               <p className="tp-card text-green-800">New paths generated!</p>
-              <p className="tp-prose text-green-700 mt-1.5">Your updated preferences have been applied and new recommendations have been added to your paths.</p>
+              <p className="tp-prose text-green-700 mt-1.5">New recommendations have been added to your paths.</p>
               {/* Newest first, so the set that was just generated is at the top
                   of the page rather than below the older recommendations. */}
               <Link to="/paths?sort=newest" className="tp-meta mt-3 inline-flex items-center gap-1 font-semibold text-green-800 underline">
@@ -262,13 +262,13 @@ export default function Settings() {
 
       <div className="mt-10 mb-3">
         <h2 className="tp-section text-[color:var(--surface-dark-900)] mb-1.5">My Career Vocabulary</h2>
-        <p className="tp-prose text-[color:var(--ink-700)]">Terms you saved while running experiments. Language level itself is set per path, inside the path and the experiment.</p>
+        <p className="tp-prose text-[color:var(--ink-700)]">Terms you saved while running experiments.</p>
       </div>
       <MyCareerVocabulary />
 
       <div className="mt-10 mb-3">
         <h2 className="tp-section text-[color:var(--surface-dark-900)] mb-1.5">Emails from us</h2>
-        <p className="tp-prose text-[color:var(--ink-700)]">At most one email a week, with one thing to do or one question to answer. Turning them off does not change anything else on your account.</p>
+        <p className="tp-prose text-[color:var(--ink-700)]">At most one email a week, with one thing to do.</p>
       </div>
       <section className="rounded-[var(--r-surface)] border border-[color:var(--ink-200)] bg-white p-7 shadow-sm">
         {emailsOff ? (
@@ -291,7 +291,7 @@ export default function Settings() {
 
       <div className="mt-10 mb-3">
         <h2 className="tp-section text-[color:var(--surface-dark-900)] mb-1.5">Delete account</h2>
-        <p className="tp-prose text-[color:var(--ink-700)]">Permanently delete your account and everything in it: paths, experiments, missions, proof of work, contacts, reflections and resumes. This cannot be undone.</p>
+        <p className="tp-prose text-[color:var(--ink-700)]">Permanently delete your account and everything in it. This cannot be undone.</p>
       </div>
       <section className="rounded-[var(--r-surface)] border border-[color:var(--ink-200)] bg-white p-7 shadow-sm">
         <button onClick={() => setShowDelete(true)}
@@ -303,7 +303,7 @@ export default function Settings() {
 
       <div className="mt-10">
         <h2 className="tp-section text-[color:var(--surface-dark-900)] mb-1.5">Recently deleted</h2>
-        <p className="tp-prose text-[color:var(--ink-700)] mb-4">Mission Guides, contacts, reflections, and proof of work you've deleted are kept for 30 days before permanent removal.</p>
+        <p className="tp-prose text-[color:var(--ink-700)] mb-4">Deleted items are kept for 30 days.</p>
         <Link to="/recently-deleted"
           className="tp-body inline-flex items-center gap-2 rounded-[var(--r-control)] border border-[color:var(--ink-200)] px-5 py-3 font-semibold text-[color:var(--ink-700)] hover:bg-[color:var(--ink-50)] transition">
           <Trash2 size={16} /> View Recently Deleted

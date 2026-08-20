@@ -48,7 +48,7 @@ export default function TradeoffsSection({ tradeoffs, path, onChanged }) {
         <Scale size={17} style={{ color: 'var(--brand-navy-700)' }} /> Tradeoffs
       </h2>
       <p className="tp-prose mt-1.5" style={{ color: 'var(--text-secondary)' }}>
-        The costs and conditions recorded for this kind of work. Say where you stand on each one.
+The recorded costs of this work. Say where you stand.
         {open > 0 && ` ${open} of ${items.length} are still open.`}
       </p>
 

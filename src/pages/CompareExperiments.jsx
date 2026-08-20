@@ -62,7 +62,7 @@ export default function CompareExperiments() {
     <main className="app-page">
       <PageHeader
         title="Compare experiments"
-        description="How well validated each experiment is, and how much it would teach you given what your evidence already says."
+        description="How well validated each one is, and how much it would teach you."
       />
 
       {best && (

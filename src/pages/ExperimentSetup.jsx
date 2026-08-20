@@ -209,14 +209,14 @@ function StepPick({ rec, options, selected, onSelect, onCustom, onNext, designin
         <p className="tp-eyebrow" style={{ color: 'var(--brand-gold-700)' }}>Recommended · about 4 minutes</p>
         <p className="tp-card mt-2 text-[color:var(--surface-dark-900)]">Try 4 minutes of {rec.path_name}</p>
         <p className="tp-body mt-1 text-[color:var(--ink-500)]">
-          One realistic decision, instant feedback, two quick questions. It updates your evidence the same way a long experiment does.
+One realistic decision, instant feedback, two quick questions.
         </p>
       </Link>
 
       {/* Experiment options */}
       <div>
         <p className="tp-body font-bold text-[color:var(--surface-dark-900)] mb-1">Or go deeper:</p>
-        <p className="tp-meta text-[color:var(--ink-500)] mb-3">Deep Dives are full work simulations that take a few hours, built to answer the question you chose.</p>
+        <p className="tp-meta text-[color:var(--ink-500)] mb-3">Deep Dives are full work simulations, a few hours each.</p>
         {designing && (
           <div className="mb-3 space-y-3">
             <div className="flex items-center gap-2 tp-body text-[color:var(--ink-500)]">

@@ -187,8 +187,7 @@ export default function ActiveExperiment() {
               <Wand2 size={22} style={{ color: 'var(--brand-navy-700)' }} /> Build out your experiment
             </h2>
             <p className="tp-lead mt-2" style={{ color: 'var(--text-secondary)' }}>
-              Right now this experiment is a title and a goal. Building it out turns it into the actual
-              moves: what to do first, how to do it, and what to keep as proof you did it.
+Turn the goal into actual steps: what to do first, and what to keep as proof.
             </p>
             <button
               onClick={() => setShowGuideGen(true)}
@@ -198,7 +197,7 @@ export default function ActiveExperiment() {
               <Wand2 size={16} /> Build my experiment
             </button>
             <p className="tp-meta mt-2" style={{ color: 'var(--text-muted)' }}>
-              Takes about forty seconds. If the first one isn't right, generate another.
+Takes about forty seconds.
             </p>
           </section>
         ) : (
