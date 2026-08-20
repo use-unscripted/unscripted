@@ -17,7 +17,7 @@ export default function PathSelectedConfirm({ pathName, experiment, onDismiss })
         <CheckCircle2 size={20} className="mt-0.5 shrink-0" style={{ color: 'var(--success-700)' }} />
         <div className="min-w-0">
           <h2 className="tp-section" style={{ color: '#14532D' }}>
-            You are now testing {pathName}. Your first experiment is ready.
+You are testing {pathName}. Your first experiment is ready.
           </h2>
           {experiment?.title && (
             <p className="tp-body mt-1.5" style={{ color: '#166534' }}>{experiment.title}</p>

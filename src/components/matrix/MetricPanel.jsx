@@ -52,7 +52,7 @@ export default function MetricPanel({ row, metric, onClose }) {
       ) : (
         <>
           {p.signals?.length > 0 && (
-            <Block title="Signals used, and how much each counted">
+            <Block title="Signals used">
               <ul className="space-y-2">
                 {p.signals.map(s => (
                   <li key={s.key} className="app-inset p-3" style={{ background: 'var(--ink-50)' }}>
@@ -70,7 +70,7 @@ export default function MetricPanel({ row, metric, onClose }) {
           )}
 
           {p.lines?.length > 0 && (
-            <Block title="What you reported after the work">
+            <Block title="What you reported">
               <ul className="space-y-1.5">
                 {p.lines.map((l, i) => (
                   <li key={i} className="tp-body" style={{ color: 'var(--text-secondary)' }}>

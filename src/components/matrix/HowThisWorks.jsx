@@ -3,12 +3,10 @@ import { ChevronDown } from 'lucide-react';
 
 /** What the numbers on this page mean, in the student's own terms. */
 const POINTS = [
-  'Scores change as you complete experiments and reflect on them.',
-  'Onboarding gives an initial signal only. It never counts as evidence.',
-  'Real experiences provide the strongest evidence.',
-  'Conflicting experiences lower confidence rather than being averaged away.',
-  'Missing evidence shows up as uncertainty, not as a low score.',
-  'You control your career decisions. Nothing here is a prediction.',
+  'Scores move as you test and reflect.',
+  'Onboarding is an initial signal, never evidence.',
+  'Conflicting experiences lower confidence.',
+  'Missing evidence shows as uncertainty, not a low score.',
 ];
 
 export default function HowThisWorks({ onOpen }) {

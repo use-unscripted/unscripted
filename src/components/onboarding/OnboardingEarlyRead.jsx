@@ -49,8 +49,8 @@ export default function OnboardingEarlyRead({ read, headingRef }) {
           three times in two sentences undercuts the job it is here to do. */}
       <p className="tp-lead mt-3" style={{ color: 'var(--text-secondary)' }}>
         {read.sparse
-          ? 'You skipped most of the first five, which is allowed. We are not going to invent a read out of one number, so here is the little we have.'
-          : 'You are five questions in, so this is a read on partial answers, not a result.'}
+          ? 'You skipped most of the first five, so there is not much to work with yet.'
+          : 'A read on partial answers, not a result.'}
       </p>
 
       <div className="mt-6 space-y-3">
@@ -79,8 +79,8 @@ export default function OnboardingEarlyRead({ read, headingRef }) {
                 answers. "Off the table" is the line that took them off. */}
             <p className="tp-meta mt-1.5" style={{ color: 'var(--text-secondary)' }}>
               {read.directionsTotal > read.directions.length
-                ? `We are showing ${read.directions.length} of the ${read.directionsTotal} careers still on the table. The ones left off are not worse, because nothing on this screen is scored.`
-                : 'These came off your own answers. There is no order to them and no score behind them.'}
+                ? `${read.directions.length} of the ${read.directionsTotal} still on the table. Nothing here is scored or ranked.`
+                : 'From your own answers. No order, no score.'}
             </p>
             <ul className="mt-3 space-y-2">
               {read.directions.map(d => (
