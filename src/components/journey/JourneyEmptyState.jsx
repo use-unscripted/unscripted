@@ -9,13 +9,13 @@ const STATES = {
   onboarding: {
     Icon: Compass,
     title: 'Start with your onboarding',
-    body: 'Answer a short set of questions about your interests, goals and time. Your paths are built from those answers.',
+    body: 'A short set of questions. Your paths are built from your answers.',
     cta: { label: 'Begin onboarding', to: '/onboarding' },
   },
   paths: {
     Icon: Sparkles,
     title: 'Your paths haven’t been generated yet',
-    body: 'Your onboarding answers are saved. Generate your three paths to start comparing them.',
+    body: 'Your answers are saved. Generate your three paths to compare them.',
     // Straight to generation. Their answers are already saved, so sending them
     // through the signed-out intake ended at the account wall, which bounces a
     // student who already has an account back here with nothing generated.
@@ -24,25 +24,25 @@ const STATES = {
   path: {
     Icon: ListChecks,
     title: 'No path selected yet',
-    body: 'Compare your three paths and pick the one you want to test first. You can change direction later.',
+    body: 'Pick the one you want to test first. You can change later.',
     cta: { label: 'Compare my paths', to: '/paths' },
   },
   experiment: {
     Icon: FlaskConical,
     title: 'No experiment yet',
-    body: 'A path only teaches you something once you test it. Set up one experiment for this path.',
+    body: 'Set up one experiment for this path.',
     cta: { label: 'Begin my experiment', to: '/experiments/new' },
   },
   experiment_done: {
     Icon: CheckCircle2,
     title: 'Your experiment is finished',
-    body: 'Turn what you did into evidence, then reflect on it. That’s what makes the decision at the end honest.',
+    body: 'Turn what you did into evidence, then reflect on it.',
     cta: { label: 'Add evidence', to: '/evidence?tab=proof' },
   },
   legacy: {
     Icon: FileWarning,
     title: 'Some older records need a home',
-    body: 'A few things you created before we introduced cycles couldn’t be matched to one automatically. Nothing was deleted. Open Evidence to see them.',
+    body: 'A few older records couldn’t be matched to a cycle. Nothing was deleted.',
     cta: { label: 'Review my records', to: '/evidence' },
   },
 };

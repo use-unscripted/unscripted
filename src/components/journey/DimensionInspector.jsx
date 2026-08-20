@@ -71,12 +71,12 @@ export default function DimensionInspector({ dimension, onClose, responses = [],
 
         {d.careers_observed_in?.length > 0 && (
           <p className="tp-meta mt-5 text-[color:var(--ink-400)]">
-            Observed while testing {d.careers_observed_in.join(', ')}. A preference can read differently in another setting.
+Observed while testing {d.careers_observed_in.join(', ')}.
           </p>
         )}
 
         {d.current_evidence_level === 'unknown' && (
-          <p className="tp-meta mt-5 text-[color:var(--ink-400)]">Nothing you have done yet speaks to this, so we are not guessing.</p>
+          <p className="tp-meta mt-5 text-[color:var(--ink-400)]">Nothing you have done yet speaks to this.</p>
         )}
       </div>
     </div>

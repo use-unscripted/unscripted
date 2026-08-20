@@ -21,7 +21,7 @@ export default function HumanExposurePanel({ conversations = [] }) {
       </div>
       <p className="tp-body mt-2" style={{ color: 'var(--text-secondary)' }}>
         {exposure.conversations === 0
-          ? 'Nobody who does this work has described it to you yet. Some questions, like hours, hierarchy and real stakes, can only be answered this way.'
+          ? 'Nobody who does this work has described it to you yet. Hours, hierarchy and real stakes can only be answered this way.'
           : `${exposure.label} across ${exposure.paths} ${exposure.paths === 1 ? 'path' : 'paths'}, covering ${exposure.topics} ${exposure.topics === 1 ? 'question' : 'questions'} no experiment could answer.`}
       </p>
 
