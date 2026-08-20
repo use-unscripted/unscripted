@@ -6,6 +6,7 @@ import { getActiveCycle } from '@/lib/career-cycle';
 import PathFocusPanel from '@/components/journey/PathFocusPanel';
 import CurrentPathCard from '@/components/journey/CurrentPathCard';
 import { selectPathAndBeginExperiment } from '@/lib/path-selection';
+import { resetCacheForPathSwitch } from '@/lib/path-switch';
 import { CycleLimitError } from '@/lib/pilot-access';
 import PathSelectedConfirm from '@/components/journey/PathSelectedConfirm';
 import { Sk } from '@/components/PageSkeleton';
@@ -54,14 +55,9 @@ export default function ChoosePath() {
     try {
       const result = await selectPathAndBeginExperiment(path, paths?.all || []);
       setConfirmed({ pathName: path.path_name, experiment: result.experiment });
-      /* The cycle reading is cached for a minute and it is what every later
-         stage means by "the path being tested". Without dropping it here, Test,
-         Prove and Decide all carried on naming the previous path until the
-         cache aged out, which read as the choice never having been made. */
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ['cycle-rail'] }),
-        queryClient.invalidateQueries({ queryKey: ['journey-focus'] }),
-      ]);
+      /* Every screen's cached reading of "the path being tested" is now wrong,
+         including the ones keyed on the previous path's name. */
+      await resetCacheForPathSwitch(queryClient);
       await load();
       // Straight to the Test stage, which shows the path now being tested and
       // the unknowns still open on it.
