@@ -15,8 +15,9 @@ const KEY = 'unscripted:tab-stacks';
 // so they belong to that tab's stack rather than to a tab of their own.
 export const TAB_ROUTES = {
   '/journey': ['/journey', '/moment', '/experiment', '/experiments', '/paths', '/reflect', '/guide', '/roadmap', '/explore', '/choose', '/test', '/prove', '/decide', '/saved', '/goals-tracker'],
-  // The Conviction Lab is now a deep screen inside the matrix rather than a tab.
-  '/matrix': ['/matrix', '/conviction-lab', '/all-paths'],
+  '/matrix': ['/matrix', '/all-paths'],
+  // The Conviction Lab is its own destination, between the matrix and evidence.
+  '/conviction-lab': ['/conviction-lab'],
   '/evidence': ['/evidence', '/career-profile', '/recently-deleted'],
   '/settings': ['/settings', '/blueprints', '/resources', '/creators'],
 };
