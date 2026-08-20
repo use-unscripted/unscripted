@@ -6,7 +6,7 @@ import { DEPTHS } from '@/lib/experiment-depth';
 import WhyThisMatters from '@/components/next-test/WhyThisMatters';
 import AlternativeTests from '@/components/next-test/AlternativeTests';
 import OverrideActions from '@/components/next-test/OverrideActions';
-import DimensionPicker from '@/components/next-test/DimensionPicker';
+import TestDimensions from '@/components/conviction/TestDimensions';
 import TestTypeBadge from '@/components/next-test/TestTypeBadge';
 
 /**
@@ -19,7 +19,6 @@ import TestTypeBadge from '@/components/next-test/TestTypeBadge';
 export default function RecommendedNextTest({ recommendation, onOverride, onAccept, busy, exhausted }) {
   const [showWhy, setShowWhy] = useState(false);
   const [showOthers, setShowOthers] = useState(false);
-  const [chosen, setChosen] = useState(recommendation?.candidate?.variable || '');
   if (!recommendation) return null;
 
   const {
@@ -30,17 +29,12 @@ export default function RecommendedNextTest({ recommendation, onOverride, onAcce
     test_type_label, test_type_purpose, test_type_produces,
   } = recommendation;
 
-  // The dropdown only ever changes WHICH open question this test answers. The
-  // career it is designed against is the one named above, either way.
-  const selected = dimension_options.find(o => o.variable === chosen) || dimension_options[0] || null;
-  const switched = selected && candidate && selected.variable !== candidate.variable;
-  const linkTo = (base) => (switched && path_id
-    ? `${base}?recId=${path_id}&variable=${encodeURIComponent(selected.variable)}`
-    : null);
-
+  /* Dimensions are no longer something the student picks. The Conviction Lab
+     decides which one is still uncertain; this component only names them as
+     supporting context further down. */
   const quickFirst = depth !== 'deep_dive';
-  const quickLink = linkTo('/moment') || quick_to || start_to;
-  const deepLink = linkTo('/experiments/new') || deep_to || start_to;
+  const quickLink = quick_to || start_to;
+  const deepLink = deep_to || start_to;
   const primary = {
     to: quickFirst ? quickLink : deepLink,
     meta: depth_meta || DEPTHS[depth],
@@ -113,14 +107,8 @@ export default function RecommendedNextTest({ recommendation, onOverride, onAcce
         </div>
       )}
 
-      {/* Chosen before the test starts, so the student decides what they are
-          trying to learn rather than discovering it inside the task. */}
-      <DimensionPicker
-        options={dimension_options}
-        value={selected?.variable || ''}
-        onChange={setChosen}
-        question={selected?.question}
-      />
+      {/* Supporting context only: what this test measures underneath. */}
+      <TestDimensions dimensions={[candidate, ...dimension_options].filter(Boolean)} />
 
       <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
         {/* Quick Test is the default level. Deep Dive stays one tap away and is

@@ -87,7 +87,6 @@ export default function HypothesisFocus({ focus, experiment, action, effort, onA
                 {[
                   effort,
                   progress && `Evidence ${progress.evidenceStatus.label}`,
-                  progress && `${progress.testedCount} of ${progress.total} dimensions tested`,
                 ].filter(Boolean).join(' · ')}
               </p>
             )}

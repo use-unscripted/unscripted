@@ -31,8 +31,8 @@ export default function CurrentPathCard({ path, switching, onToggleSwitch }) {
       )}
 
       <div className="mt-5 flex flex-wrap items-center gap-3">
-        <Link to="/test" className="app-cta tp-control">
-          Go to my test <ArrowRight size={16} />
+        <Link to={`/conviction-lab?pathId=${path.id}`} className="app-cta tp-control">
+          What to figure out next <ArrowRight size={16} />
         </Link>
         <button
           type="button"

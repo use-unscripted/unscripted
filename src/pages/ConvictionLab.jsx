@@ -22,7 +22,6 @@ import WorthTesting from '@/components/conviction/WorthTesting';
 import TradeoffsSection from '@/components/conviction/TradeoffsSection';
 import ComparativeTest from '@/components/conviction/ComparativeTest';
 import ExpectationEvidence from '@/components/conviction/ExpectationEvidence';
-import UnknownsChecklist from '@/components/stages/UnknownsChecklist';
 import NextBestExperimentPanel from '@/components/next-test/NextBestExperimentPanel';
 import PathHistoryPanel from '@/components/paths/PathHistoryPanel';
 import JourneyEmptyState from '@/components/journey/JourneyEmptyState';
@@ -122,7 +121,6 @@ export default function ConvictionLab() {
               onChanged={() => queryClient.invalidateQueries({ queryKey: ['conviction-lab', pathId] })}
             />
             <ExpectationEvidence evidence={lab.expectations} pathId={lab.path.id} />
-            <UnknownsChecklist progress={lab.progress} pathId={lab.path.id} />
             <NextBestExperimentPanel
               pathId={lab.path.id}
               preferVariable={lab.gap?.variable || null}

@@ -49,7 +49,7 @@ export default function HypothesisDimensions({ hypothesis, careerName, signals =
       </ul>
       {view.unknown.length > 0 && (
         <p className="tp-meta mt-3 text-[color:var(--ink-500)]">
-          Still unknown here: {view.unknown.slice(0, 3).map(r => r.dimension_label.toLowerCase()).join(', ')}. Your next experiment should test one of these.
+          Still unknown here: {view.unknown.slice(0, 3).map(r => r.dimension_label.toLowerCase()).join(', ')}.
         </p>
       )}
     </div>

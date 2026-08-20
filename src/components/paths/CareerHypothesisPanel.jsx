@@ -1,11 +1,9 @@
-import { FlaskConical, HelpCircle } from 'lucide-react';
+import { FlaskConical, HelpCircle, ArrowRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { HYPOTHESIS_STATUS_LABELS, HYPOTHESIS_STATUS_MEANING, NOT_YET_ASSESSED } from '@/lib/career-hypothesis';
 import CareerUncertaintyMap from '@/components/paths/CareerUncertaintyMap';
 import HypothesisDimensions from '@/components/paths/HypothesisDimensions';
 import FitBreakdown from '@/components/paths/FitBreakdown';
-import DimensionProgress from '@/components/paths/DimensionProgress';
-import NextTestCard from '@/components/paths/NextTestCard';
-import { dimensionProgress, nextTestForPath } from '@/lib/dimension-progress';
 import LanguageLevelControl from '@/components/language/LanguageLevelControl';
 import useLanguageLevel from '@/hooks/useLanguageLevel';
 
@@ -47,13 +45,9 @@ function Bullets({ title, items, render }) {
  */
 export default function CareerHypothesisPanel({ pathName, hypothesis, path, signals = [], profile = {} }) {
   const h = hypothesis;
-  // Which dimensions of this career already have evidence, and which one is
-  // worth testing next. Both read the uncertainty map that already exists.
   // Language level for this path specifically, so a student can be fluent in one
   // field and new to another.
   const language = useLanguageLevel({ path });
-  const progress = dimensionProgress({ hypothesis: h, signals });
-  const nextTest = progress ? nextTestForPath({ path, hypothesis: h, progress }) : null;
   return (
     <section className="rounded-[var(--r-surface)] p-5" style={{ background: 'var(--background-tertiary)', border: '1px solid var(--border-light)' }}>
       <div className="flex flex-wrap items-center gap-2">
@@ -95,11 +89,15 @@ export default function CareerHypothesisPanel({ pathName, hypothesis, path, sign
       {/* Ability and enjoyment, kept separate from the overall number above. */}
       <FitBreakdown fit={h.fit} overall={h.career_fit_score} evidenceShare={h.fit_evidence_share} />
 
-      {progress && (
-        <div className="mt-4 space-y-4">
-          <DimensionProgress progress={progress} />
-          <NextTestCard next={nextTest} careerName={pathName} />
-        </div>
+      {/* What to figure out next lives in one place now: this path's Conviction
+          Lab. No parallel dimension checklist to work through here. */}
+      {path?.id && (
+        <Link
+          to={`/conviction-lab?pathId=${path.id}`}
+          className="app-cta tp-control mt-4 inline-flex"
+        >
+          What do I need to figure out next? <ArrowRight size={16} />
+        </Link>
       )}
 
       <div className="mt-5 space-y-4">

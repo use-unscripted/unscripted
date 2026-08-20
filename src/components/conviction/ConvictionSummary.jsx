@@ -2,9 +2,9 @@ import { Link } from 'react-router-dom';
 import { FlaskConical, ArrowRight } from 'lucide-react';
 
 /**
- * Where this path stands, in the terms the Lab cares about: how many of its key
- * dimensions have a reading behind them, and whether that is enough to decide on
- * yet. Reported, never scored — a path is never "complete".
+ * Where this path stands: how many of its open questions have real evidence
+ * behind them, and whether that is enough to decide on yet. The dimensions
+ * underneath decide this; the student is never asked to manage them.
  */
 export default function ConvictionSummary({ lab }) {
   const { path, readiness, message, confidenceBand, nextTest } = lab;
@@ -20,7 +20,7 @@ export default function ConvictionSummary({ lab }) {
       <div className="mt-4 flex flex-wrap gap-2">
         <span className="tp-meta rounded-full px-3 py-1 font-bold"
           style={{ background: 'var(--background-tertiary)', color: 'var(--text-secondary)' }}>
-          {readiness.seen} of {readiness.total} dimensions have a reading
+          {readiness.seen} of {readiness.total} questions answered
         </span>
         <span className="tp-meta rounded-full px-3 py-1 font-bold"
           style={{ background: 'var(--background-tertiary)', color: 'var(--text-secondary)' }}>
@@ -36,7 +36,7 @@ export default function ConvictionSummary({ lab }) {
         </Link>
       ) : nextTest ? (
         <Link to={nextTest.to} className="app-cta tp-body mt-5 font-bold">
-          Test {nextTest.dimension} <ArrowRight size={15} />
+          Run My Next Conviction Test <ArrowRight size={15} />
         </Link>
       ) : null}
     </section>

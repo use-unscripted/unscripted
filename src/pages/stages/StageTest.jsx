@@ -5,7 +5,6 @@ import { loadExperimentProgress } from '@/lib/active-experiments';
 import StageShell from '@/components/stages/StageShell';
 import HypothesisFocus from '@/components/journey/HypothesisFocus';
 import NextBestExperimentPanel from '@/components/next-test/NextBestExperimentPanel';
-import UnknownsChecklist from '@/components/stages/UnknownsChecklist';
 import SimEntryCard from '@/components/worksim/SimEntryCard';
 import LibraryTestPicker from '@/components/library/LibraryTestPicker';
 import ExperimentScenarios from '@/components/scenarios/ExperimentScenarios';
@@ -72,7 +71,6 @@ export default function StageTest() {
             }}
           />
         )}
-        <UnknownsChecklist progress={focus?.progress} pathId={journey.currentPath.id} />
       </StageShell>
     );
   }
@@ -110,7 +108,6 @@ export default function StageTest() {
       <NextBestExperimentPanel pathId={journey.currentPath.id} />
       {/* The rest of the open work on this path, with the current test marked. */}
       <ActiveExperimentsPanel rows={progress?.active || []} currentId={currentRow?.id} />
-      <UnknownsChecklist progress={focus?.progress} pathId={journey.currentPath.id} />
       {/* No test set up yet: the validated library is the first place to look,
           and it says plainly when this career is not covered. */}
       {!exp && <LibraryTestPicker path={journey.currentPath} />}
@@ -120,7 +117,6 @@ export default function StageTest() {
         careerName={journey.currentPath.path_name}
         pathId={journey.currentPath.id}
       />
-      <NextBestExperimentPanel pathId={journey.currentPath.id} />
       <SimEntryCard />
       <p className="tp-meta text-center" style={{ color: 'var(--text-muted)' }}>
         <Link to={`/conviction-lab?pathId=${journey.currentPath.id}`} className="font-semibold" style={{ color: 'var(--brand-navy-700)' }}>Conviction Lab</Link>
