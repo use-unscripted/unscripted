@@ -12,6 +12,7 @@ import { useSearchParams, Link } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import PageHeader from '@/components/PageHeader';
 import ConvictionSummary from '@/components/conviction/ConvictionSummary';
+import LabDeck from '@/components/conviction/LabDeck';
 import ConvictionRecord from '@/components/conviction/ConvictionRecord';
 import DecisionReadinessCard from '@/components/conviction/DecisionReadinessCard';
 import ConvictionReview from '@/components/conviction/ConvictionReview';
@@ -88,45 +89,73 @@ export default function ConvictionLab() {
           </>
         ) : (
           <>
+            {/* Always on screen: where the path stands, and the one thing to
+                do next. Everything else is one click away in the deck below. */}
             <ConvictionSummary lab={lab} />
-            {/* Where this path stands, in states rather than a percentage. */}
             <DecisionReadinessCard readiness={lab.decisionReadiness} />
-            {/* One concise read of this path, from the student's own records. */}
-            <ConvictionReview review={lab.review} />
-            {/* Offered at Decision Ready. A draft until the student approves it. */}
-            <ConvictionPassport
-              path={lab.path}
-              review={lab.review}
-              ready={lab.decisionReadiness?.key === 'ready'}
-            />
-            {/* The one thing this path most needs next, and the recommendation
-                below is pointed at it. */}
-            <ConvictionGap gap={lab.gap} />
-            {/* The assumption worth attacking, linked to the same next test. */}
-            <ChangeYourMind change={lab.changeOfMind} />
-            {/* Where two pieces of existing evidence disagree. Shown as an open
-                question, never as a finding. */}
-            <WorthTesting tensions={lab.tensions} />
-            {/* How much real evidence stands behind this path, in eight areas. */}
-            <ConvictionRecord record={lab.record} />
-            {/* What each test on this path was expected to feel like, against
-                what it actually felt like. */}
-            {/* With a second credible path, the difference worth testing between
-                them. Never a preference question. */}
-            <ComparativeTest comparison={lab.comparison} />
-            {/* The recorded costs of this work, and where the student stands. */}
-            <TradeoffsSection
-              tradeoffs={lab.tradeoffs}
-              path={lab.path}
-              onChanged={() => queryClient.invalidateQueries({ queryKey: ['conviction-lab', pathId] })}
-            />
-            <ExpectationEvidence evidence={lab.expectations} pathId={lab.path.id} />
             <NextBestExperimentPanel
               pathId={lab.path.id}
               preferVariable={lab.gap?.variable || null}
               gap={lab.gap || null}
             />
-            <PathHistoryPanel pathId={lab.path.id} />
+            {/* The same panels as before, one at a time. Empty ones are left out
+                rather than shown as a blank step. */}
+            <LabDeck
+              items={[
+                lab.gap && {
+                  key: 'gap', label: 'Biggest gap',
+                  node: <ConvictionGap gap={lab.gap} />,
+                },
+                lab.changeOfMind && {
+                  key: 'change', label: 'Change your mind',
+                  node: <ChangeYourMind change={lab.changeOfMind} />,
+                },
+                lab.tensions?.length && {
+                  key: 'tensions', label: 'Worth testing',
+                  node: <WorthTesting tensions={lab.tensions} />,
+                },
+                lab.tradeoffs?.length && {
+                  key: 'tradeoffs', label: 'Tradeoffs',
+                  node: (
+                    <TradeoffsSection
+                      tradeoffs={lab.tradeoffs}
+                      path={lab.path}
+                      onChanged={() => queryClient.invalidateQueries({ queryKey: ['conviction-lab', pathId] })}
+                    />
+                  ),
+                },
+                lab.comparison && {
+                  key: 'comparison', label: 'This path vs another',
+                  node: <ComparativeTest comparison={lab.comparison} />,
+                },
+                lab.record && {
+                  key: 'record', label: 'Evidence so far',
+                  node: <ConvictionRecord record={lab.record} />,
+                },
+                lab.expectations && {
+                  key: 'expectations', label: 'Expected vs actual',
+                  node: <ExpectationEvidence evidence={lab.expectations} pathId={lab.path.id} />,
+                },
+                lab.review && {
+                  key: 'review', label: 'Full read',
+                  node: <ConvictionReview review={lab.review} />,
+                },
+                {
+                  key: 'history', label: 'History',
+                  node: <PathHistoryPanel pathId={lab.path.id} />,
+                },
+                {
+                  key: 'passport', label: 'Passport',
+                  node: (
+                    <ConvictionPassport
+                      path={lab.path}
+                      review={lab.review}
+                      ready={lab.decisionReadiness?.key === 'ready'}
+                    />
+                  ),
+                },
+              ].filter(Boolean)}
+            />
             <p className="tp-meta text-center" style={{ color: 'var(--text-muted)' }}>
               <Link to="/test" className="font-semibold" style={{ color: 'var(--brand-navy-700)' }}>The test you are on</Link>
               {' · '}
