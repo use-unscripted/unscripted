@@ -121,7 +121,8 @@ export default function ActiveExperiment() {
   // The one to open. A guide saved as a draft is still the only guide a student
   // has, so falling back to the newest keeps the card from disappearing.
   const openGuide = guides.find(g => g.is_active) || guides[0];
-  const firstStepTitle = openGuide?.steps?.find(s => s?.title)?.title || '';
+  const steps = Array.isArray(openGuide?.steps) ? openGuide.steps : [];
+  const firstStepTitle = steps.find(s => s?.title)?.title || '';
   // Counts of what actually happened, recorded beside the ratings and never
   // merged into them.
   const behavioral = behavioralSnapshot({
@@ -225,7 +226,7 @@ Takes about forty seconds.
               <div className="rounded-[var(--r-control)] p-4" style={{ background: 'var(--background-tertiary)', border: '1px solid var(--border-light)' }}>
                 <p className="tp-card" style={{ color: 'var(--text-primary)' }}>{openGuide.guide_title}</p>
                 <p className="tp-meta mt-0.5" style={{ color: 'var(--text-muted)' }}>
-                  {openGuide.steps?.length || 0} steps{openGuide.estimated_time ? ` · ${openGuide.estimated_time}` : ''}
+                  {steps.length} steps{openGuide.estimated_time ? ` · ${openGuide.estimated_time}` : ''}
                 </p>
                 {firstStepTitle && (
                   <p className="tp-body mt-2" style={{ color: 'var(--text-secondary)' }}>
