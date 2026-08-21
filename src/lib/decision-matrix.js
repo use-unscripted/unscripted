@@ -208,6 +208,10 @@ function trendFrom(updates) {
     .map(u => ({
       id: u.id,
       label: u.stage === 'initial' ? 'Onboarding' : (u.experiment_title || u.test_question || `Update ${u.sequence}`),
+      // The experiment behind this point, and the gap it was testing. Kept apart
+      // from `label` so the graph can name both without inventing either.
+      experiment: u.stage === 'initial' ? '' : (u.experiment_title || ''),
+      tested: u.test_question || '',
       value: num(u.confidence_after),
       at: u.recorded_at || u.created_date,
       strengthened: u.strengthened_by || [],

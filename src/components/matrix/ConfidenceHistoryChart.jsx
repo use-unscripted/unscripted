@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { humanDate } from '@/lib/matrix-provenance';
+import PointReadout from '@/components/matrix/PointReadout';
 
 /**
  * How the student's thinking has changed, read from stored hypothesis versions
@@ -55,6 +56,7 @@ function Explain({ point }) {
 
 export default function ConfidenceHistoryChart({ rows }) {
   const [selected, setSelected] = useState(null);
+  const [hover, setHover] = useState(null);
   const series = rows.filter(r => r.trend.points.length >= 2).slice(0, 3);
 
   if (!series.length) {
@@ -72,11 +74,12 @@ export default function ConfidenceHistoryChart({ rows }) {
      handful of straight lines on a fixed 0–100 scale, and the library was a
      large extra dependency for it. viewBox scaling keeps it responsive. */
   const length = Math.max(...series.map(s => s.trend.points.length));
-  const W = 720, H = 280, L = 38, R = 12, T = 12, B = 30;
+  /* No labels along the bottom. Every point is an experiment title, and a dozen
+     of those on one axis collided into unreadable stacks of "Recovering Me…".
+     The names live on the point itself now: hover or tap it. */
+  const W = 720, H = 260, L = 38, R = 12, T = 12, B = 10;
   const x = (i) => L + (length > 1 ? (i * (W - L - R)) / (length - 1) : (W - L - R) / 2);
   const y = (v) => T + ((100 - v) * (H - T - B)) / 100;
-  const labels = Array.from({ length }, (_, i) =>
-    series.find(s => s.trend.points[i])?.trend.points[i]?.label || `Step ${i + 1}`);
 
   const onPoint = (careerName, index) => {
     const s = series.find(x => x.name === careerName);
@@ -91,7 +94,7 @@ export default function ConfidenceHistoryChart({ rows }) {
     <section className="app-card p-6">
       <h2 className="tp-section" style={{ color: 'var(--text-primary)' }}>How your career thinking has changed</h2>
       <p className="tp-body mt-2" style={{ color: 'var(--text-secondary)' }}>
-        Each point is a path update you recorded. Tap a point to see what moved it.
+        Each point is a path update you recorded. Hover a point for the experiment behind it, or tap it to see what moved it.
       </p>
 
       <div className="mt-5 flex flex-wrap gap-4">
@@ -114,11 +117,6 @@ export default function ConfidenceHistoryChart({ rows }) {
               <text x={L - 8} y={y(v) + 4} textAnchor="end" fontSize="11" fill="var(--text-muted)">{v}</text>
             </g>
           ))}
-          {labels.map((label, i) => (
-            <text key={i} x={x(i)} y={H - 8} textAnchor="middle" fontSize="11" fill="var(--text-muted)">
-              {label.length > 14 ? `${label.slice(0, 13)}…` : label}
-            </text>
-          ))}
           {series.map((s, si) => {
             const pts = s.trend.points
               .map((p, i) => (typeof p.value === 'number' ? { i, value: p.value } : null))
@@ -131,13 +129,25 @@ export default function ConfidenceHistoryChart({ rows }) {
                   strokeDasharray={STROKES[si].dash} strokeLinecap="round"
                 />
                 {pts.map(p => (
-                  <circle key={p.i} cx={x(p.i)} cy={y(p.value)} r="5"
-                    fill="var(--background-primary)" stroke={STROKES[si].color} strokeWidth="2.5"
-                    style={{ cursor: 'pointer' }}
-                    onClick={() => onPoint(s.name, p.i)}
-                  >
-                    <title>{`${s.name}: ${p.value}%`}</title>
-                  </circle>
+                  /* A bigger invisible disc carries the pointer, so a 5px dot is
+                     still findable with a finger or a mouse. */
+                  <g key={p.i}>
+                    <circle cx={x(p.i)} cy={y(p.value)} r="16" fill="transparent"
+                      style={{ cursor: 'pointer' }}
+                      onMouseEnter={() => setHover({ series: s, index: p.i, stroke: STROKES[si] })}
+                      onMouseLeave={() => setHover(h => (h?.series?.pathId === s.pathId && h?.index === p.i ? null : h))}
+                      onFocus={() => setHover({ series: s, index: p.i, stroke: STROKES[si] })}
+                      onClick={() => onPoint(s.name, p.i)}
+                      tabIndex={0}
+                    >
+                      <title>{`${s.name}: ${p.value}%`}</title>
+                    </circle>
+                    <circle cx={x(p.i)} cy={y(p.value)}
+                      r={hover?.series?.pathId === s.pathId && hover?.index === p.i ? 7 : 5}
+                      fill="var(--background-primary)" stroke={STROKES[si].color} strokeWidth="2.5"
+                      pointerEvents="none"
+                    />
+                  </g>
                 ))}
               </g>
             );
@@ -145,6 +155,7 @@ export default function ConfidenceHistoryChart({ rows }) {
         </svg>
       </div>
 
+      <PointReadout hover={hover} />
       <Explain point={selected} />
     </section>
   );
