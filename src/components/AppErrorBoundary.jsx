@@ -22,6 +22,22 @@ export default class AppErrorBoundary extends Component {
   }
 
   componentDidCatch(error) {
+    /* A page whose code chunk could not be fetched is not a broken page: it is a
+       browser holding a page reference from an older build, which is what happens
+       when a student is mid-session while a new version ships. It throws here and
+       reads as "this page crashed" even though one reload fixes it, so we do that
+       reload ourselves — once per session, so a genuinely missing chunk still
+       lands on the message below instead of looping. */
+    const msg = String(error?.message || '');
+    if (/dynamically imported module|Importing a module script failed|Loading chunk/i.test(msg)) {
+      try {
+        if (!sessionStorage.getItem('unscripted_chunk_reload')) {
+          sessionStorage.setItem('unscripted_chunk_reload', '1');
+          window.location.reload();
+          return;
+        }
+      } catch { /* private mode: fall through to the message */ }
+    }
     // Shape only. A render error message can quote the value that broke it, and
     // that value is often the student's own text.
     console.error(`[app] render error (${error?.name || 'Error'})`);
