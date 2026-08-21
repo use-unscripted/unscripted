@@ -44,7 +44,15 @@ export default function ActiveExperiment() {
     const experiments = alive(await base44.entities.Experiments.list('-created_date', 100).catch(() => []));
 
     let experiment = null;
-    if (paramId) experiment = experiments.find(e => e.id === paramId) || null;
+    /* An id in the URL is an instruction, not a hint. The list above is the most
+       recent hundred, so an older experiment was not in it and the page silently
+       opened a different one instead — which is how "continue this test" landed a
+       student on a test for the path they had just left. Fetch it directly. */
+    if (paramId) {
+      experiment = experiments.find(e => e.id === paramId)
+        || await base44.entities.Experiments.get(paramId).catch(() => null);
+      if (experiment?.deletion_status === 'deleted') experiment = null;
+    }
     if (!experiment && cycle?.experiment_id) experiment = experiments.find(e => e.id === cycle.experiment_id) || null;
     if (!experiment && cycle?.selected_path_name) {
       experiment = experiments.find(e => e.path_name === cycle.selected_path_name && OPEN.includes(e.status)) || null;
