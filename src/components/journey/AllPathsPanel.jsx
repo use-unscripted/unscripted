@@ -64,25 +64,30 @@ export default function AllPathsPanel({ paths = [], currentPathId, onChoose, bus
                 )}
                 {/* Every path gets its Lab, whether or not it is the one being
                     tested right now. */}
-                <Link
-                  to={`/conviction-lab?pathId=${path.id}`}
-                  className="touch-reach tp-meta mt-2 inline-flex items-center gap-1 font-bold"
-                  style={{ color: 'var(--brand-navy-700)', minHeight: '44px' }}
-                >
-                  <FlaskConical size={12} /> Conviction Lab
-                </Link>
-                {!isCurrent && (
-                  <button
-                    type="button"
-                    onClick={() => onChoose(path)}
-                    disabled={Boolean(busyId)}
-                    className="ui-press tp-body mt-3 inline-flex items-center justify-center gap-2 rounded-[var(--r-control)] px-5 font-bold text-white disabled:opacity-60"
-                    style={{ background: 'var(--brand-navy-900)', minHeight: '44px' }}
+                {/* One row, so the quiet link and the primary button sit beside
+                    each other with real space between them instead of two
+                    inline-level boxes landing on the same text line. */}
+                <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2">
+                  <Link
+                    to={`/conviction-lab?pathId=${path.id}`}
+                    className="tp-meta inline-flex items-center gap-1 font-bold"
+                    style={{ color: 'var(--brand-navy-700)', minHeight: '44px' }}
                   >
-                    {busyId === path.id && <Loader2 size={14} className="animate-spin" />}
-                    Choose this path and test it
-                  </button>
-                )}
+                    <FlaskConical size={12} /> Conviction Lab
+                  </Link>
+                  {!isCurrent && (
+                    <button
+                      type="button"
+                      onClick={() => onChoose(path)}
+                      disabled={Boolean(busyId)}
+                      className="ui-press tp-body inline-flex items-center justify-center gap-2 rounded-[var(--r-control)] px-5 font-bold text-white disabled:opacity-60"
+                      style={{ background: 'var(--brand-navy-900)', minHeight: '44px' }}
+                    >
+                      {busyId === path.id && <Loader2 size={14} className="animate-spin" />}
+                      Choose this path and test it
+                    </button>
+                  )}
+                </div>
                 {error === path.id && (
                   <p className="tp-meta mt-2" style={{ color: 'var(--danger-700)' }}>
                     That did not go through. Try again.
