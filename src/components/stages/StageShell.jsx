@@ -1,6 +1,7 @@
 import { STAGE_INDEX, STAGES } from '@/lib/journey';
 import { stageMeta } from '@/lib/cycle-stages';
 import StageStepper from '@/components/stages/StageStepper';
+import StageOrientation from '@/components/stages/StageOrientation';
 
 /**
  * One stage, one screen. The shell says which step of the cycle you are on and
@@ -21,6 +22,7 @@ export default function StageShell({ stage, children }) {
         <p className="tp-lead mt-3" style={{ color: 'var(--text-secondary)', maxWidth: '48ch' }}>
           {meta?.question}
         </p>
+        <StageOrientation label={meta?.label} instruction={meta?.instruction} />
       </header>
 
       <div className="app-stack">{children}</div>

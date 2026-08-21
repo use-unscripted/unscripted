@@ -11,11 +11,14 @@ import { resolveCurrentPath } from '@/lib/current-path';
 export const STAGES = [
   /* Explore and Choose used to be two screens showing the same three paths with
      the same button, so they are one stage: read them, pick one. */
-  { key: 'choose',  label: 'Choose',  question: 'Which path am I testing first?' },
-  { key: 'test',    label: 'Test',    question: 'What am I actually doing this week?' },
-  { key: 'prove',   label: 'Prove',   question: 'What evidence did I create?' },
-  { key: 'reflect', label: 'Reflect', question: 'What did I learn about the fit?' },
-  { key: 'decide',  label: 'Decide',  question: 'Do I continue, or test something else?' },
+  /* `instruction` is the one thing to do on this screen, in plain words. It sits
+     at the top of the stage as the "you are here, do this next" line, so a
+     student never has to work out which of the panels below is the real task. */
+  { key: 'choose',  label: 'Choose',  question: 'Which path am I testing first?',            instruction: 'Pick the one path you want to test first.' },
+  { key: 'test',    label: 'Test',    question: 'What am I actually doing this week?',        instruction: 'Do the work in your experiment.' },
+  { key: 'prove',   label: 'Prove',   question: 'What evidence did I create?',                instruction: 'Record what you produced.' },
+  { key: 'reflect', label: 'Reflect', question: 'What did I learn about the fit?',            instruction: 'Say what you learned about the fit.' },
+  { key: 'decide',  label: 'Decide',  question: 'Do I continue, or test something else?',     instruction: 'Decide whether to continue on this path.' },
 ];
 
 export const STAGE_INDEX = STAGES.reduce((a, s, i) => ({ ...a, [s.key]: i }), {});
