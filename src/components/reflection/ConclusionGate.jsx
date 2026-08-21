@@ -4,7 +4,7 @@
  */
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { AlertCircle, FlaskConical } from 'lucide-react';
+import { AlertCircle, FlaskConical, FolderOpen } from 'lucide-react';
 
 export default function ConclusionGate({ availability, experiment, onEndEarly }) {
   const [open, setOpen] = useState(false);
@@ -24,25 +24,41 @@ export default function ConclusionGate({ availability, experiment, onEndEarly })
     }
   };
 
+  // Two different blocks, one gate. Either the work is unfinished, or it is
+  // finished and nothing was recorded.
+  const needsEvidence = availability.reason === 'evidence_required';
+
   return (
     <section className="rounded-[var(--r-surface)] bg-white p-5 sm:p-6" style={{ border: '1px solid var(--border-light)' }}>
       <h2 className="tp-section" style={{ color: 'var(--text-primary)' }}>
-        Reflection opens once the work is done
+        {needsEvidence ? 'Record your evidence first' : 'Reflection opens once the work is done'}
       </h2>
       <p className="tp-lead mt-2.5" style={{ color: 'var(--text-secondary)' }}>
-        {availability.stepsTotal > 0
-          ? `${availability.stepsDone} of ${availability.stepsTotal} steps done on ${experiment.title}. Finish the experiment, or end it early and tell us why.`
-          : `${experiment.title} is not finished yet. Work through it, or end it early and tell us why.`}
+        {needsEvidence
+          ? `You finished ${experiment.title} but nothing has been recorded yet. Add what you actually produced, a screenshot, a written summary, a file or a link, or log a conversation you held. A decision without evidence is a guess.`
+          : availability.stepsTotal > 0
+            ? `${availability.stepsDone} of ${availability.stepsTotal} steps done on ${experiment.title}. Finish the experiment, or end it early and tell us why.`
+            : `${experiment.title} is not finished yet. Work through it, or end it early and tell us why.`}
       </p>
 
       <div className="mt-4 flex flex-wrap gap-3">
-        <Link
-          to={`/experiment?experimentId=${experiment.id}`}
-          className="ui-press inline-flex items-center gap-2 rounded-[var(--r-control)] px-5 text-sm font-bold text-white"
-          style={{ background: 'var(--brand-navy-900)', minHeight: '48px', paddingTop: 12, paddingBottom: 12 }}
-        >
-          <FlaskConical size={15} /> Back to my experiment
-        </Link>
+        {needsEvidence ? (
+          <Link
+            to="/evidence?tab=proof"
+            className="ui-press inline-flex items-center gap-2 rounded-[var(--r-control)] px-5 text-sm font-bold text-white"
+            style={{ background: 'var(--brand-navy-900)', minHeight: '48px', paddingTop: 12, paddingBottom: 12 }}
+          >
+            <FolderOpen size={15} /> Add my evidence
+          </Link>
+        ) : (
+          <Link
+            to={`/experiment?experimentId=${experiment.id}`}
+            className="ui-press inline-flex items-center gap-2 rounded-[var(--r-control)] px-5 text-sm font-bold text-white"
+            style={{ background: 'var(--brand-navy-900)', minHeight: '48px', paddingTop: 12, paddingBottom: 12 }}
+          >
+            <FlaskConical size={15} /> Back to my experiment
+          </Link>
+        )}
         {!open && (
           <button
             type="button"

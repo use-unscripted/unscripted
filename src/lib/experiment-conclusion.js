@@ -117,8 +117,21 @@ export async function loadConclusionContext(experimentIdParam) {
 }
 
 /**
- * Is the reflection open yet? Three doors: the experiment is marked complete,
- * every step of it is done, or the student ended it early with a reason.
+ * Did the work leave a trace? A recorded piece of proof (a screenshot, a written
+ * summary, a file, a link) or a conversation actually held with someone in the
+ * field. A contact merely identified is not evidence.
+ */
+const HELD = ['responded', 'conversation_scheduled', 'conversation_completed'];
+
+export function hasEvidence(ctx) {
+  const proof = (ctx?.proof || []).filter(p => p.file_url || p.external_url || p.files?.length || String(p.description || '').trim() || String(p.completion_note || '').trim());
+  if (proof.length > 0) return true;
+  return (ctx?.outreach || []).some(o => HELD.includes(o.outreach_status));
+}
+
+/**
+ * Is the reflection open yet? The experiment is finished AND it left evidence
+ * behind, or the student ended it early with a reason.
  */
 export function conclusionAvailability(ctx) {
   if (!ctx?.experiment) return { ready: false, reason: 'no_experiment' };
@@ -127,9 +140,31 @@ export function conclusionAvailability(ctx) {
      completed, told the student their test was unfinished on the very page that
      already holds their submitted reflection. */
   if (ctx.existing) return { ready: true, reason: 'already_concluded' };
+  /* Ending early stays open without evidence on purpose. That is the honest
+     exit for a student who tried the work and found it is not for them, and
+     it is recorded as such. */
   if (ctx.endedEarly) return { ready: true, reason: 'ended_early' };
-  if (ctx.experiment.status === 'completed') return { ready: true, reason: 'experiment_complete' };
-  if (ctx.stepsTotal > 0 && ctx.stepsDone >= ctx.stepsTotal) return { ready: true, reason: 'steps_complete' };
+
+  const worked = ctx.experiment.status === 'completed'
+    || (ctx.stepsTotal > 0 && ctx.stepsDone >= ctx.stepsTotal);
+
+  /* The work has to have left a trace before the decision opens. Without this a
+     student could walk the whole cycle, skip recording anything they actually
+     did, and still arrive at a conclusion about a career on the strength of
+     having clicked through. Either a piece of proof, or a real conversation
+     held with someone in the field, counts. */
+  if (worked && !hasEvidence(ctx)) {
+    return {
+      ready: false,
+      reason: 'evidence_required',
+      stepsDone: ctx.stepsDone || 0,
+      stepsTotal: ctx.stepsTotal || 0,
+    };
+  }
+
+  if (worked) {
+    return { ready: true, reason: ctx.experiment.status === 'completed' ? 'experiment_complete' : 'steps_complete' };
+  }
   return {
     ready: false,
     reason: 'experiment_open',

@@ -9,6 +9,7 @@ import { clearStudentDrafts } from '@/lib/student-drafts';
 import PilotTracker from '@/components/PilotTracker';
 import { CycleRailStrip } from '@/components/nav/CycleRailShell';
 import CycleRail from '@/components/nav/CycleRail';
+import AssistantLauncher from '@/components/assistant/AssistantLauncher';
 
 function CompassSVG() {
   return (
@@ -140,6 +141,9 @@ export default function AppShell() {
           );
         })}
       </nav>
+
+      {/* The guide, in the corner, on every signed-in screen. */}
+      <AssistantLauncher />
     </div>
     </MotionConfig>
   );
