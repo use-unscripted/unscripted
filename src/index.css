@@ -211,6 +211,49 @@
     --sidebar-accent-foreground: 240 4.8% 95.9%;
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* ── The neutral ramp, inverted ───────────────────────────────────────
+       Same rungs, same names, same jobs: ink-900 is still the strongest text
+       and ink-200 is still the hairline. Only the direction flips, so every
+       screen that already reads from the ramp comes over without a change.
+       Still navy-tinted, so the dark app is the same product as the light one
+       rather than neutral grey.
+
+       The role aliases below the ramp in :root point at these tokens rather
+       than at hexes, so --text-primary, --text-secondary, --text-muted,
+       --background-secondary, --background-tertiary and --border-light all
+       follow automatically. --background-primary and --page-surface were
+       literal whites, so they are restated here. */
+    --ink-900: #F2F5F9;   /* headings, primary text */
+    --ink-800: #E3E8EF;
+    --ink-700: #D5DCE5;   /* body text */
+    --ink-600: #B9C3D0;
+    --ink-500: #A2AEBD;   /* secondary text */
+    --ink-400: #8F9CAC;   /* muted text */
+    --ink-300: #5C6979;   /* disabled, dividers */
+    --ink-200: #2B3543;   /* borders, hairlines */
+    --ink-100: #1B2431;   /* panel and card fills */
+    --ink-50:  #151D28;   /* section surfaces */
+
+    /* The card a panel sits on, and the paper behind it. A card must be
+       lighter than the page in dark mode, the reverse of the light theme,
+       or the elevation shadows read as holes. */
+    --background-primary: #111926;
+    --page-surface: #0C121B;
+
+    /* Semantic pairs. The light-theme 50s are near-white washes that would
+       glare, and the 700s are too dark to read on them, so each pair swaps
+       roles: a deep tinted fill with a light tinted ink on top. */
+    --success-700: #6EE7A0;
+    --success-50:  #0F2A1C;
+    --warning-700: #FBC97A;
+    --warning-50:  #2E2110;
+    --danger-700:  #FCA5A5;
+    --danger-50:   #2E1516;
+    --info-700:    #A5C4FF;
+    --info-600:    #7FA8FF;
+    --info-50:     #12203A;
+    --info-600-a10: rgb(127 168 255 / 0.14);
   }
 }
 
@@ -648,7 +691,9 @@
   100% { background-position:  400px 0; }
 }
 .skeleton {
-  background: linear-gradient(90deg, #EEF2F6 25%, #DCE3EA 50%, #EEF2F6 75%);
+  /* Token-driven so the loading state follows the theme. Hard-coded light greys
+     here left every skeleton glowing white on the dark page. */
+  background: linear-gradient(90deg, var(--ink-100) 25%, var(--ink-200) 50%, var(--ink-100) 75%);
   background-size: 800px 100%;
   animation: shimmer 1.4s ease-in-out infinite;
   border-radius: 8px;

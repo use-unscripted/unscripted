@@ -26,19 +26,34 @@ export default function TradeoffsSection({ tradeoffs, path, onChanged }) {
       status: statusId,
       updated_at: new Date().toISOString(),
     };
-    const saved = tradeoff.stanceId
-      ? await base44.entities.TradeoffStance.update(tradeoff.stanceId, payload)
-      : await base44.entities.TradeoffStance.create(payload);
-
-    setItems(prev => prev.map(t => (t.id === tradeoff.id
+    // The row moves on the tap, not when the write comes back. On a phone the
+    // round trip is long enough that a student taps twice, so the state goes
+    // first and the save follows; if the save fails the row goes back to the
+    // stance it had, which is the truth on the server.
+    const before = items;
+    const apply = (extra = {}) => setItems(prev => prev.map(t => (t.id === tradeoff.id
       ? {
           ...t,
-          stanceId: saved?.id || t.stanceId,
           status: statusId,
           statusLabel: LABELS[statusId],
           resolved: statusId === 'acceptable' || statusId === 'dealbreaker',
+          ...extra,
         }
       : t)));
+
+    apply();
+
+    let saved;
+    try {
+      saved = tradeoff.stanceId
+        ? await base44.entities.TradeoffStance.update(tradeoff.stanceId, payload)
+        : await base44.entities.TradeoffStance.create(payload);
+    } catch (err) {
+      setItems(before);
+      throw err;
+    }
+
+    if (saved?.id) apply({ stanceId: saved.id });
     onChanged?.();
   };
 

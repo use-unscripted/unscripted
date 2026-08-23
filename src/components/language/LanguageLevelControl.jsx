@@ -7,6 +7,7 @@
  */
 import { Languages } from 'lucide-react';
 import { LEVELS, LEVEL_HINTS, LEVEL_LABELS } from '@/lib/language-level';
+import FieldSelect from '@/components/ui/FieldSelect';
 
 export default function LanguageLevelControl({ level, onChange, hint = true, className = '' }) {
   return (
@@ -15,20 +16,13 @@ export default function LanguageLevelControl({ level, onChange, hint = true, cla
         <span className="tp-eyebrow inline-flex items-center gap-1.5" style={{ color: 'var(--text-muted)' }}>
           <Languages size={12} /> Language level
         </span>
-        <div className="relative">
-          <select
-            value={level}
-            onChange={e => onChange(e.target.value)}
-            aria-label="Language level"
-            className="field-select tp-meta appearance-none rounded-[var(--r-control)] border bg-white py-1.5 pl-2.5 pr-7 font-bold"
-            style={{ borderColor: 'var(--border-light)', color: 'var(--brand-navy-700)' }}
-          >
-            {LEVELS.map(l => (
-              <option key={l} value={l}>{LEVEL_LABELS[l]}</option>
-            ))}
-          </select>
-          <span className="field-select-chevron pointer-events-none absolute right-2 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-muted)' }}>▾</span>
-        </div>
+        <FieldSelect
+          value={level}
+          onChange={onChange}
+          ariaLabel="Language level"
+          options={LEVELS.map(l => ({ value: l, label: LEVEL_LABELS[l] }))}
+          className="w-auto font-bold"
+        />
       </div>
       {hint && (
         <p className="tp-meta mt-1.5" style={{ color: 'var(--text-muted)' }}>

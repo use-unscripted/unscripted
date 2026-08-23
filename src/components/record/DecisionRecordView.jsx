@@ -17,6 +17,7 @@ import CrossHypothesisEvidence from '@/components/record/CrossHypothesisEvidence
 import DecisionRecordExports from '@/components/record/DecisionRecordExports';
 import RecordOrigin from '@/components/record/RecordOrigin';
 import { Sk } from '@/components/PageSkeleton';
+import FieldSelect from '@/components/ui/FieldSelect';
 
 export default function DecisionRecordView({ raw }) {
   const [extra, setExtra] = useState(null);
@@ -95,22 +96,21 @@ export default function DecisionRecordView({ raw }) {
           every one of them buries the current position. */}
       {listed.length > 1 && (
         <div>
-          <label className="tp-eyebrow" htmlFor="record-hypothesis" style={{ color: 'var(--brand-navy-700)' }}>
+          {/* The listbox is not a native <select>, so this is a caption rather
+              than a <label> — the control carries its own accessible name. */}
+          <p className="tp-eyebrow" style={{ color: 'var(--brand-navy-700)' }}>
             Whose history are you reading?
-          </label>
-          <select
-            id="record-hypothesis"
+          </p>
+          <FieldSelect
             value={open.pathId}
-            onChange={e => setOpenPathId(e.target.value)}
-            className="field-select tp-body mt-2 w-full rounded-[var(--r-control)] bg-white px-3 py-2.5"
-            style={{ border: '1px solid var(--border-light)', color: 'var(--text-primary)' }}
-          >
-            {listed.map(h => (
-              <option key={h.pathId} value={h.pathId}>
-                {h.pathName}{h.experimentCount ? ` · ${h.experimentCount} experiment${h.experimentCount === 1 ? '' : 's'}` : ''}
-              </option>
-            ))}
-          </select>
+            onChange={setOpenPathId}
+            ariaLabel="Whose history are you reading?"
+            className="mt-2 w-full"
+            options={listed.map(h => ({
+              value: h.pathId,
+              label: `${h.pathName}${h.experimentCount ? ` · ${h.experimentCount} experiment${h.experimentCount === 1 ? '' : 's'}` : ''}`,
+            }))}
+          />
           {tested.length > 0 && record.hypotheses.length > tested.length && (
             <button onClick={() => setShowAll(s => !s)} className="touch-reach tp-meta mt-2 font-semibold" style={{ color: 'var(--brand-navy-700)' }}>
               {showAll
