@@ -354,6 +354,11 @@ export default function AddProofFlow({ onClose, onSaved, preselectedMission, pre
         .then(m => m.evidenceCompleted({ experimentId: selectedExpId, pathId: exp.path_id }))
         .catch(() => {});
 
+      // The cycle rail derives its stage from these records and caches it, so
+      // without this the student lands on the reflection with Prove still
+      // unmarked and Reflect unlit — as if the evidence had not registered.
+      await import('@/hooks/useCycleStage').then(m => m.refreshCycleStage()).catch(() => {});
+
       const chosenMission = selectedMissionId
         ? (preselectedMission?.id === selectedMissionId ? preselectedMission : missions.find(m => m.id === selectedMissionId))
         : null;

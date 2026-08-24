@@ -42,6 +42,7 @@ import { loadNextBestExperiment } from '@/lib/next-best-experiment';
 import { Sk } from '@/components/PageSkeleton';
 import ReflectionStep from '@/components/reflection/ReflectionStep';
 import FeedbackSurveyPanel from '@/components/reflection/FeedbackSurveyPanel';
+import ReflectionSavedFocus from '@/components/reflection/ReflectionSavedFocus';
 
 /* The flow, named. Four steps from "the experiment is finished" to "the cycle is
    closed", so the student can see how much is left at every point. */
@@ -81,6 +82,9 @@ export default function ExperimentReflection() {
   const [changes, setChanges] = useState(null);
   const [nextBest, setNextBest] = useState(null);
   const [approved, setApproved] = useState(null);
+  // Shown once, the moment a reflection is saved on this screen. Not shown for a
+  // reflection that was already saved before the page loaded.
+  const [savedFocus, setSavedFocus] = useState(false);
 
   const load = useCallback(async () => {
     setLoadError('');
@@ -198,6 +202,10 @@ export default function ExperimentReflection() {
     setReflection(saved);
     clearConclusionDraft(ctx.user?.id, ctx.experiment.id);
     setCtx(c => ({ ...c, existing: saved }));
+    setSavedFocus(true);
+    // Same reason as evidence: the rail's stage is derived from the reflection
+    // that was just written.
+    import('@/hooks/useCycleStage').then(m => m.refreshCycleStage()).catch(() => {});
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -209,6 +217,7 @@ export default function ExperimentReflection() {
 
   return (
     <Shell>
+      {savedFocus && <ReflectionSavedFocus onClose={() => setSavedFocus(false)} />}
       <PageHeader showBack backLabel="Go back" title="Update your hypothesis" />
       <ReflectionContextCard ctx={ctx} measurement={measurement} />
       {/* Anything a person actually doing this work told the student, carried in

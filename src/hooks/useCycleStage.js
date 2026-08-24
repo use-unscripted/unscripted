@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { queryClientInstance } from '@/lib/query-client';
 import { base44 } from '@/api/base44Client';
 import { loadOwnedPaths } from '@/lib/path-set';
 import { resolveJourney } from '@/lib/journey';
@@ -17,9 +18,23 @@ import { syncPrimaryFocus } from '@/lib/current-path';
  * is brought back in line with it as a side effect, and only when a row
  * actually disagrees.
  */
+export const CYCLE_RAIL_KEY = ['cycle-rail'];
+
+/**
+ * Force the rail to re-derive the stage.
+ *
+ * Call this after writing a record the stage is derived FROM — a piece of
+ * evidence, a reflection. Without it the cached derivation stands for up to a
+ * minute, so a student who has just submitted evidence lands on the reflection
+ * with the rail still marking Test, which reads as "nothing was recorded".
+ */
+export function refreshCycleStage() {
+  return queryClientInstance.invalidateQueries({ queryKey: CYCLE_RAIL_KEY });
+}
+
 export default function useCycleStage() {
   const { data } = useQuery({
-    queryKey: ['cycle-rail'],
+    queryKey: CYCLE_RAIL_KEY,
     staleTime: 60_000,
     queryFn: async () => {
       const [owned, cycle, exps, proof, refs] = await Promise.all([
