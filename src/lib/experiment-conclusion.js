@@ -246,10 +246,32 @@ export async function saveConclusion(ctx, answers, dimensions = []) {
       { experiment_id: experiment.id, is_experiment_conclusion: true }, '-created_date', 10
     ).catch(() => []));
     const target = ctx.existing || rows[0];
-    if (target) {
-      await base44.entities.WeeklyReflections.update(target.id, payload);
-      return { ...target, ...payload, reused: true };
+    const saved = target
+      ? { ...target, ...payload, reused: true, _update: true }
+      : null;
+    const result = saved
+      ? (await base44.entities.WeeklyReflections.update(target.id, payload), saved)
+      : await base44.entities.WeeklyReflections.create(payload);
+
+    /* A reflected experiment is finished. Without this the row stayed
+       in_progress, so Test kept handing the student the same test back and they
+       could complete it again and again — which flattens the confidence graph
+       with repeats of one test. */
+    if (experiment.status !== 'completed' && experiment.status !== 'skipped') {
+      await base44.entities.Experiments.update(experiment.id, {
+        status: 'completed',
+        status_history: [
+          ...(experiment.status_history || []),
+          {
+            from_status: experiment.status,
+            to_status: 'completed',
+            changed_at: new Date().toISOString(),
+            reason: 'Reflection submitted',
+          },
+        ],
+      }).catch(() => {});
     }
-    return base44.entities.WeeklyReflections.create(payload);
+
+    return result;
   });
 }

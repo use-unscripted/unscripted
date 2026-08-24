@@ -88,7 +88,9 @@ export async function loadExperimentProgress({ pathName } = {}) {
      waiting — so the headline test is identical wherever it is shown. A student
      can carry several open experiments, but only one is "the test you are on".
      Only when nothing is under way does a reflection that is owed take over. */
-  const current = rows.find(r => r.status === 'in_progress') || planned || awaitingReflection[0] || null;
+  /* `workDone` is part of the test, not just the status: a test that has already
+     been reflected on must never come back as the test you are on. */
+  const current = rows.find(r => r.status === 'in_progress' && !r.workDone) || planned || awaitingReflection[0] || null;
 
   /* Anything the student is still carrying, with the current test always in it
      even if its own steps are already finished. */

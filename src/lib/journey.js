@@ -43,8 +43,14 @@ export function resolveJourney({ paths = [], experiments = [], proof = [], refle
     : experiments;
   const liveExps = scoped.filter(e => e.deletion_status !== 'deleted');
 
-  const inProgress = liveExps.filter(e => e.status === 'in_progress');
-  const planned    = liveExps.filter(e => e.status === 'planned');
+  /* An experiment with a written conclusion is finished, whatever its status
+     field says. Otherwise a reflected test is handed back as the next thing to
+     do, and the student repeats a test they have already recorded. */
+  const concluded = new Set(
+    reflections.filter(r => r.is_experiment_conclusion && r.experiment_id).map(r => r.experiment_id)
+  );
+  const inProgress = liveExps.filter(e => e.status === 'in_progress' && !concluded.has(e.id));
+  const planned    = liveExps.filter(e => e.status === 'planned' && !concluded.has(e.id));
   const doneExps   = liveExps.filter(e => e.status === 'completed');
   const nextExperiment = inProgress[0] || planned[0] || null;
 
