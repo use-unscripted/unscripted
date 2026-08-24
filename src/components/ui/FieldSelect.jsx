@@ -46,7 +46,8 @@ export default function FieldSelect({
           <SelectItem
             key={o.value === '' ? NONE : o.value}
             value={o.value === '' ? NONE : o.value}
-            className="min-h-[44px] text-base md:text-sm"
+            className={`min-h-[44px] text-base md:text-sm ${o.className || ''}`}
+            style={o.style}
           >
             {o.label}
           </SelectItem>

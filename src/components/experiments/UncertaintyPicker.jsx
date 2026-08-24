@@ -18,8 +18,17 @@ const STATE_LABEL = (v) =>
   : v.evidence_strength >= 25 ? 'Partly tested'
   : 'Untested';
 
+/* Untested and partly tested questions first: those are the ones that would move
+   this path's evidence. Anything already well tested drops to the bottom and is
+   drawn quieter, so it reads as available rather than recommended. */
+const wellTested = (v) => v.evidence_strength >= 60;
+
 export default function UncertaintyPicker({ pathName, variables, value, onChange, onNext }) {
   const chosen = variables.find(v => v.variable === value) || null;
+  const ranked = [
+    ...variables.filter(v => !wellTested(v)),
+    ...variables.filter(v => wellTested(v)),
+  ];
 
   return (
     <div className="space-y-6">
@@ -46,8 +55,17 @@ export default function UncertaintyPicker({ pathName, variables, value, onChange
           placeholder="Choose what to test…"
           ariaLabel="The question you want answered"
           className="w-full rounded-[var(--r-control)] border border-[color:var(--ink-200)] bg-[color:var(--page-surface)] px-4 py-3 text-[color:var(--ink-900)]"
-          options={variables.map(v => ({ value: v.variable, label: `${v.label} (${STATE_LABEL(v)})` }))}
+          options={ranked.map(v => ({
+            value: v.variable,
+            label: `${v.label} (${STATE_LABEL(v)})`,
+            style: wellTested(v)
+              ? { color: 'var(--ink-400)' }
+              : { color: 'var(--brand-navy-900)', fontWeight: 600 },
+          }))}
         />
+        <span className="tp-meta mt-1.5 block" style={{ color: 'var(--ink-400)' }}>
+          Untested and partly tested questions are listed first.
+        </span>
       </label>
 
       {chosen && (
