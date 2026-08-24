@@ -15,15 +15,19 @@
 import { CAREER_DIMENSIONS, DIMENSION_BY_ID } from '@/lib/career-dimensions';
 
 /** The eight kinds of test. `id` is what gets stored on the experiment. */
+/* The effort against each type is the SMALLEST useful version of that test, and
+   none of them is longer than one sitting. These used to read 2-3 hours,
+   several days and 1 week, which is what a student saw before deciding whether
+   to start — and the reason most of them did not. */
 export const EXPERIMENT_TYPES = [
-  { id: 'work_sample', label: 'Work sample', blurb: 'Complete a realistic piece of the actual work.', acts: ['doing', 'producing'], effort: '2-3 hours' },
-  { id: 'human_reality', label: 'Human reality', blurb: 'Speak with someone doing the work now.', acts: ['speaking'], effort: '1 hour' },
-  { id: 'environment_test', label: 'Environment test', blurb: 'Put yourself in a relevant environment and watch your own reaction.', acts: ['observing'], effort: 'several days' },
+  { id: 'work_sample', label: 'Work sample', blurb: 'Complete a realistic piece of the actual work.', acts: ['doing', 'producing'], effort: '30-45 minutes' },
+  { id: 'human_reality', label: 'Human reality', blurb: 'Speak with someone doing the work now.', acts: ['speaking'], effort: '30-45 minutes' },
+  { id: 'environment_test', label: 'Environment test', blurb: 'Put yourself in a relevant environment and watch your own reaction.', acts: ['observing'], effort: '30-45 minutes' },
   { id: 'decision_simulation', label: 'Decision simulation', blurb: 'Make the decisions the role actually requires.', acts: ['doing'], effort: '15-30 minutes' },
-  { id: 'workstyle_test', label: 'Skill and workstyle test', blurb: 'Test one underlying characteristic that carries across careers.', acts: ['doing'], effort: '1 hour' },
-  { id: 'research_test', label: 'Research test', blurb: 'Investigate an industry, problem or market.', acts: ['observing', 'producing'], effort: '2-3 hours' },
-  { id: 'creation_test', label: 'Creation test', blurb: 'Build or produce something of your own.', acts: ['producing'], effort: 'several days' },
-  { id: 'combined', label: 'Combined experiment', blurb: 'Several of the above, when one alone would not answer it.', acts: ['doing', 'speaking', 'producing'], effort: '1 week' },
+  { id: 'workstyle_test', label: 'Skill and workstyle test', blurb: 'Test one underlying characteristic that carries across careers.', acts: ['doing'], effort: '15-30 minutes' },
+  { id: 'research_test', label: 'Research test', blurb: 'Investigate an industry, problem or market.', acts: ['observing', 'producing'], effort: '30-45 minutes' },
+  { id: 'creation_test', label: 'Creation test', blurb: 'Build or produce something of your own.', acts: ['producing'], effort: '30-45 minutes' },
+  { id: 'combined', label: 'Combined experiment', blurb: 'Several of the above, when one alone would not answer it.', acts: ['doing', 'speaking', 'producing'], effort: '30-45 minutes' },
 ];
 
 export const TYPE_BY_ID = new Map(EXPERIMENT_TYPES.map(t => [t.id, t]));
@@ -35,11 +39,14 @@ export const TYPE_BY_ID = new Map(EXPERIMENT_TYPES.map(t => [t.id, t]));
  */
 export const EFFORT_SCALE = [
   { id: '15-30 minutes', label: '15 to 30 minutes', hours: 0.5, order: 1 },
-  { id: '1 hour', label: 'About an hour', hours: 1, order: 2 },
-  { id: '2-3 hours', label: '2 to 3 hours', hours: 3, order: 3 },
-  { id: 'several days', label: 'Several days', hours: 6, order: 4 },
-  { id: '1 week', label: 'About a week', hours: 10, order: 5 },
-  { id: 'multi-week', label: 'Multiple weeks', hours: 25, order: 6 },
+  /* The longest a test is designed to take. Everything above it is kept only so
+     that experiments recorded before this rule still read back. */
+  { id: '30-45 minutes', label: '30 to 45 minutes', hours: 0.75, order: 2 },
+  { id: '1 hour', label: 'About an hour', hours: 1, order: 3 },
+  { id: '2-3 hours', label: '2 to 3 hours', hours: 3, order: 4 },
+  { id: 'several days', label: 'Several days', hours: 6, order: 5 },
+  { id: '1 week', label: 'About a week', hours: 10, order: 6 },
+  { id: 'multi-week', label: 'Multiple weeks', hours: 25, order: 7 },
 ];
 
 export const EFFORT_BY_ID = new Map(EFFORT_SCALE.map(e => [e.id, e]));
@@ -49,7 +56,7 @@ export const effortLabel = (v) => EFFORT_BY_ID.get(v)?.label || null;
 export const effortHours = (v) => EFFORT_BY_ID.get(v)?.hours || null;
 
 /** The smallest useful test of a given kind. Used when a design omits effort. */
-export const smallestUsefulEffort = (typeId) => TYPE_BY_ID.get(typeId)?.effort || '1 hour';
+export const smallestUsefulEffort = (typeId) => TYPE_BY_ID.get(typeId)?.effort || '15-30 minutes';
 
 /** The four acts a set of missions should cover between them, where relevant. */
 export const MISSION_ACTS = ['doing', 'observing', 'speaking', 'producing'];

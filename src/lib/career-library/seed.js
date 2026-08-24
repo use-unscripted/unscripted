@@ -20,6 +20,7 @@ import { base44 } from '@/api/base44Client';
 import { CAREERS } from '@/lib/career-library/careers';
 import { TEMPLATES } from '@/lib/career-library/templates';
 import { purposeOf, convictionCoverage } from '../../../base44/shared/career-library/conviction-purposes.js';
+import { compressMinutes, effortForMinutes } from '@/lib/experiment-time';
 
 export const LIBRARY_VERSION = 1;
 
@@ -138,6 +139,11 @@ export async function seedLibrary({ dryRun = false } = {}) {
 
     for (const t of mine) {
       const { represented, notRepresented } = coverage(career, t);
+      /* The authored estimate is compressed to one sitting before it is ever
+         published. The content files keep their original numbers; this is the
+         only place that decides what a student is told. */
+      const [minLow, minHigh] = compressMinutes(t.minutes);
+      const effort = effortForMinutes(minHigh);
 
       const templatePayload = {
         blueprint_key: t.key,
@@ -155,9 +161,9 @@ export async function seedLibrary({ dryRun = false } = {}) {
         cannot_simulate: t.cannot_simulate,
         decision_dimension_ids: t.dims,
         work_characteristics_tested: t.dims,
-        estimated_minutes_low: t.minutes[0],
-        estimated_minutes_high: t.minutes[1],
-        effort: t.effort,
+        estimated_minutes_low: minLow,
+        estimated_minutes_high: minHigh,
+        effort,
         realistic_scenario: t.realistic_scenario,
         instructions: t.instructions,
         deliverable: t.deliverable,
@@ -183,8 +189,8 @@ export async function seedLibrary({ dryRun = false } = {}) {
         validation_scope: 'Mapped by the Unscripted team against a role blueprint grounded in published occupational sources. No professional reviewer has assessed this experiment yet.',
         what_it_does: t.what_it_tests,
         best_for: t.why_it_matters,
-        estimated_minutes_low: t.minutes[0],
-        estimated_minutes_high: t.minutes[1],
+        estimated_minutes_low: minLow,
+        estimated_minutes_high: minHigh,
         mapping_reviewed: true,
         field_calibrated: false,
         validation_status: 'published',
@@ -209,7 +215,7 @@ export async function seedLibrary({ dryRun = false } = {}) {
         title: t.title,
         conviction_purpose: purposeOf(t),
         dimensions_tested: t.dims,
-        estimated_minutes: t.minutes,
+        estimated_minutes: [minLow, minHigh],
         validation_level: 1,
         validation_label: 'Source Grounded',
         professional_reviews: 0,

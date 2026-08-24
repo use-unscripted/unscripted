@@ -89,6 +89,7 @@
       "type": "string",
       "enum": [
         "15-30 minutes",
+        "30-45 minutes",
         "1 hour",
         "2-3 hours",
         "several days",

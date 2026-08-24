@@ -14,7 +14,7 @@ import { unwrapLLM, PLAIN_PROSE_RULES } from '@/lib/llm';
 import { toText, toTextList } from '@/lib/ai-validation';
 import { generateValidated } from '@/lib/ai-generate';
 import {
-  EXPERIMENT_TYPES, TYPE_BY_ID, EFFORT_SCALE, normalizeEffort, effortHours,
+  EXPERIMENT_TYPES, TYPE_BY_ID, normalizeEffort, effortHours,
   smallestUsefulEffort, typeForUncertainty, dimensionsForUncertainty,
   evidenceRequirementFallback,
 } from '@/lib/experiment-types';
@@ -129,12 +129,12 @@ Rules:
 - The experiment exists to reduce ONE uncertainty, not to represent the career. State it in "test_question", and in "why_this_test_matters" say why that unknown decides whether this career is worth more of their life.
 - Choose "experiment_type" from this list, picking the kind of test that can actually answer the question (a lifestyle or income unknown is answered by speaking to someone, not by producing a work sample):
 ${EXPERIMENT_TYPES.map(t => `  ${t.id}: ${t.blurb}`).join('\n')}
-- Choose "effort" from this list, and choose the SMALLEST useful experiment capable of reducing this uncertainty. Most uncertainties do not need more than a few hours. Only use "1 week" or "multi-week" when nothing shorter could answer it: ${EFFORT_SCALE.map(e => e.id).join(', ')}.
+- Choose "effort" from exactly these two values: "15-30 minutes" or "30-45 minutes". Every experiment must be completable in ONE SITTING of no more than 45 minutes, and most in 15 to 25 minutes. Scope the scenario, the instructions and the deliverable to fit that. Never design multi-hour, multi-day or multi-week work.
 - "evidence_requirements" is 2 to 4 plain items answering: what evidence would help us update our view of this career?
 - Where the type is a work sample, decision simulation, research or creation test, the experiment is a miniature version of ACTUAL work in this career, with a concrete scenario containing real details, numbers, constraints and competing pressures the student must reason through. Consulting: diagnose why a business is losing profitability. Product management: prioritize a roadmap when engineering, sales and design each want something different. Venture capital: decide whether a startup earns further diligence. Marketing: position a new product. Investment banking: review a simplified acquisition case. UX research: interpret mock interview feedback.
 - NEVER a quiz, a personality test, or generic reading and reflection about the profession.
 - The scenario must be self-contained: invent the company, the numbers and the constraints so the student can start immediately.
-- Deliverable is something the student writes or builds in one sitting (a recommendation, a memo, a model, a plan).
+- Deliverable is something the student writes or builds inside that one short sitting (a recommendation, a memo, a simple model, a plan). Keep it small enough that 25 minutes is genuinely enough.
 - Evaluation criteria describe what a good response looks like, in plain language.
 - "evidence_expected" states what completing this will reveal about whether this work fits the student.
 - Do not use technical language about hypotheses, variables or uncertainty in any student-facing text.
