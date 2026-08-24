@@ -11,6 +11,7 @@ import { Sk, SkCards } from '@/components/PageSkeleton';
 import ExperimentDesignOption from '@/components/experiments/ExperimentDesignOption';
 import UncertaintyPicker from '@/components/experiments/UncertaintyPicker';
 import BiggestUnknownCard from '@/components/experiments/BiggestUnknownCard';
+import OtherTestOptions from '@/components/experiments/OtherTestOptions';
 import { testBrief, evidenceRequirementFallback } from '@/lib/experiment-types';
 import { designExperiments } from '@/lib/experiment-design';
 import { deriveHypothesis } from '@/lib/career-hypothesis';
@@ -153,6 +154,7 @@ const STEPS = ['What to Test', 'Select Experiment', 'Confirm Details', 'Build Ex
 
 // ─── Step 1: Path context + experiment picker ────────────────────────────────
 function StepPick({ rec, options, selected, onSelect, onCustom, onNext, designing, focus, onChangeFocus, brief, onTestRecommended }) {
+  const [showOptions, setShowOptions] = useState(false);
   return (
     <div className="space-y-6">
       {/* Path context card */}
@@ -213,10 +215,9 @@ One realistic decision, instant feedback, two quick questions.
         </p>
       </Link>
 
-      {/* Experiment options */}
-      <div>
-        <p className="tp-body font-bold text-[color:var(--surface-dark-900)] mb-1">Or go deeper:</p>
-        <p className="tp-meta text-[color:var(--ink-500)] mb-3">Deep Dives are full work simulations, a few hours each.</p>
+      {/* Experiment options, collapsed by default so the recommended test above
+          is the only thing competing for the decision. */}
+      <OtherTestOptions count={options.length} open={showOptions} onToggle={() => setShowOptions(o => !o)}>
         {designing && (
           <div className="mb-3 space-y-3">
             <div className="flex items-center gap-2 tp-body text-[color:var(--ink-500)]">
@@ -259,13 +260,15 @@ One realistic decision, instant feedback, two quick questions.
             + Create a custom experiment
           </button>
         </div>
-      </div>
+      </OtherTestOptions>
 
+      {selected !== null && (
       <button onClick={onNext} disabled={selected === null}
         className="tp-body w-full flex items-center justify-center gap-2 rounded-[var(--r-control)] py-3.5 font-semibold text-white transition hover:-translate-y-px disabled:opacity-40"
         style={{ background: 'var(--brand-navy-900)', boxShadow: '0 8px 24px rgba(31,58,95,0.25)' }}>
         Confirm & Build My Experiment <ArrowRight size={16} />
       </button>
+      )}
     </div>
   );
 }
