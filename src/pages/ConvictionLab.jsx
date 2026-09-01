@@ -8,6 +8,7 @@
  * is a normal Quick Test or experiment on that path, a student can come back and
  * test the same path again as often as they like without touching onboarding.
  */
+import { useState } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import PageHeader from '@/components/PageHeader';
@@ -18,6 +19,7 @@ import DecisionReadinessCard from '@/components/conviction/DecisionReadinessCard
 import ConvictionReview from '@/components/conviction/ConvictionReview';
 import ConvictionPassport from '@/components/conviction/ConvictionPassport';
 import ConvictionGap from '@/components/conviction/ConvictionGap';
+import ConvictionGapRoster from '@/components/conviction/ConvictionGapRoster';
 import ChangeYourMind from '@/components/conviction/ChangeYourMind';
 import WorthTesting from '@/components/conviction/WorthTesting';
 import TradeoffsSection from '@/components/conviction/TradeoffsSection';
@@ -36,6 +38,9 @@ export default function ConvictionLab() {
   const [params] = useSearchParams();
   const queryClient = useQueryClient();
   const requestedId = params.get('pathId') || '';
+  /* Which of the eight gaps the student chose to aim the next test at. Null
+     means the recommendation stands: the single biggest gap. */
+  const [chosenGap, setChosenGap] = useState(null);
 
   /* The Lab is a destination in the nav now, so it can be opened without a path
      in the URL. In that case it opens on the path the student is actually
@@ -92,11 +97,17 @@ export default function ConvictionLab() {
             {/* Always on screen: where the path stands, and the one thing to
                 do next. Everything else is one click away in the deck below. */}
             <ConvictionSummary lab={lab} />
+            <ConvictionGapRoster
+              roster={lab.gapRoster}
+              selectedId={chosenGap?.id || null}
+              onStartTest={setChosenGap}
+            />
             <DecisionReadinessCard readiness={lab.decisionReadiness} />
             <NextBestExperimentPanel
+              key={chosenGap?.id || 'recommended'}
               pathId={lab.path.id}
-              preferVariable={lab.gap?.variable || null}
-              gap={lab.gap || null}
+              preferVariable={(chosenGap || lab.gap)?.variable || null}
+              gap={chosenGap || lab.gap || null}
             />
             {/* The same panels as before, one at a time. Empty ones are left out
                 rather than shown as a blank step. */}

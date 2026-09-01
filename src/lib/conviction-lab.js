@@ -26,6 +26,7 @@ import { buildDifferentiator } from '@/lib/path-differentiator';
 import { decisionReadinessState } from '@/lib/decision-readiness-state';
 import { buildConvictionReview } from '@/lib/conviction-review';
 import { buildChangeOfMind } from '@/lib/change-your-mind';
+import { buildGapRoster } from '@/lib/conviction-gap-roster';
 import { base44 } from '@/api/base44Client';
 
 export async function loadConvictionLab(pathId) {
@@ -68,11 +69,12 @@ export async function loadConvictionLab(pathId) {
   /* Where this student's own evidence disagrees with itself. Read-only, and it
      never feeds Path Confidence — that stays with evidence-contradictions.js,
      which caps how far conflicting readings can move it. */
-  const [scenarioResponses, dimensions, blueprints, stances] = await Promise.all([
+  const [scenarioResponses, dimensions, blueprints, stances, gapOutcomes] = await Promise.all([
     base44.entities.ScenarioResponse.list('-created_date', 200).catch(() => []),
     base44.entities.CareerDimensionEvidence.list('-created_date', 200).catch(() => []),
     base44.entities.RoleBlueprint.list('-created_date', 200).catch(() => []),
     base44.entities.TradeoffStance.filter({ path_id: pathId }, '-updated_at', 100).catch(() => []),
+    base44.entities.ConvictionGapOutcome.filter({ path_id: pathId }, '-targeted_at', 200).catch(() => []),
   ]);
   const tensions = buildTensions({
     path,
@@ -117,6 +119,12 @@ export async function loadConvictionLab(pathId) {
        diversity of the evidence above, never one percentage threshold. */
     decisionReadiness,
     gap: pickConvictionGap({ record, progress, nextTest, tensions, tradeoffs }),
+    /* All eight student-facing gaps with a derived state each. Nothing stored. */
+    gapRoster: buildGapRoster({
+      progress,
+      record,
+      outcomes: Array.isArray(gapOutcomes) ? gapOutcomes : [],
+    }),
     /* The assumption most likely to weaken this path if tested, pointed at the
        same next test. Challenges the leading path rather than confirming it. */
     changeOfMind: buildChangeOfMind({ progress, tensions, tradeoffs, nextTest }),
