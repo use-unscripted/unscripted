@@ -7,6 +7,7 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight, Target } from 'lucide-react';
 import MetricValue from '@/components/matrix/MetricValue';
+import PathStrengthGauge from '@/components/conviction/PathStrengthGauge';
 
 const TONE = {
   muted: { bg: 'var(--ink-100)', fg: 'var(--text-secondary)' },
@@ -17,7 +18,7 @@ const TONE = {
 
 export default function PathConvictionCard({ row, conviction, onOpen }) {
   if (!conviction) return null;
-  const { record, decisionReadiness: readiness, actionReadiness, gap, nextTest, performance } = conviction;
+  const { record, decisionReadiness: readiness, decisionStrength, actionReadiness, gap, nextTest, performance } = conviction;
   const tone = TONE[readiness?.tone] || TONE.muted;
 
   const metrics = [
@@ -66,6 +67,23 @@ export default function PathConvictionCard({ row, conviction, onOpen }) {
           )}
         </div>
       </div>
+
+      {decisionStrength && (
+        <div className="app-inset mt-4 flex flex-wrap items-center gap-4 p-4" style={{ background: 'var(--ink-50)' }}>
+          <PathStrengthGauge strength={decisionStrength} height={96} />
+          <div className="min-w-[200px] flex-1">
+            <p className="tp-meta font-semibold uppercase" style={{ color: 'var(--ink-400)', letterSpacing: '0.06em' }}>
+              Path Decision Strength
+            </p>
+            <p className="tp-body mt-1" style={{ color: 'var(--text-secondary)' }}>{decisionStrength.meaning}</p>
+            {decisionStrength.heldDownByContradiction && (
+              <p className="tp-meta mt-1 font-semibold" style={{ color: 'var(--warning-700)' }}>
+                Held down by an unresolved contradiction.
+              </p>
+            )}
+          </div>
+        </div>
+      )}
 
       {actionReadiness && (
         <p className="tp-body mt-4" style={{ color: 'var(--text-secondary)' }}>

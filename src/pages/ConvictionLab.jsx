@@ -16,6 +16,7 @@ import ConvictionSummary from '@/components/conviction/ConvictionSummary';
 import LabDeck from '@/components/conviction/LabDeck';
 import ConvictionRecord from '@/components/conviction/ConvictionRecord';
 import DecisionReadinessCard from '@/components/conviction/DecisionReadinessCard';
+import PathDecisionStrengthCard from '@/components/conviction/PathDecisionStrengthCard';
 import ConvictionReview from '@/components/conviction/ConvictionReview';
 import ConvictionPassport from '@/components/conviction/ConvictionPassport';
 import ConvictionGap from '@/components/conviction/ConvictionGap';
@@ -102,7 +103,12 @@ export default function ConvictionLab() {
               selectedId={chosenGap?.id || null}
               onStartTest={setChosenGap}
             />
-            <DecisionReadinessCard readiness={lab.decisionReadiness} />
+            {/* Two readings, side by side: is there enough to decide, and how
+                much weight the evidence actually carries. */}
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+              <DecisionReadinessCard readiness={lab.decisionReadiness} />
+              <PathDecisionStrengthCard strength={lab.decisionStrength} />
+            </div>
             <NextBestExperimentPanel
               key={chosenGap?.id || 'recommended'}
               pathId={lab.path.id}

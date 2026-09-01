@@ -16,6 +16,9 @@ import { decideReadiness } from '@/lib/decide-readiness';
 import { buildConvictionRecord } from '@/lib/conviction-record';
 import { pickConvictionGap } from '@/lib/conviction-gap';
 import { decisionReadinessState } from '@/lib/decision-readiness-state';
+import { buildGapRoster } from '@/lib/conviction-gap-roster';
+import { pathDecisionStrength } from '@/lib/path-decision-strength';
+import { detectContradictions } from '@/lib/evidence-contradictions';
 
 const num = (v) => (typeof v === 'number' && Number.isFinite(v) ? v : null);
 const mean = (arr) => (arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : null);
@@ -44,7 +47,8 @@ function taskPerformance({ pathName, context }) {
  * @param {object} args.context    loadStudentContext() result
  * @returns {object} keyed by path id
  */
-export function buildMatrixConviction({ hypotheses = [], signals = [], context }) {
+export function buildMatrixConviction({ hypotheses = [], signals = [], context, gapOutcomes = [] }) {
+  const contradictions = detectContradictions(signals);
   const progressById = new Map();
   hypotheses.forEach(({ path, hypothesis }) => {
     progressById.set(path.id, dimensionProgress({ hypothesis, signals }));
@@ -64,10 +68,16 @@ export function buildMatrixConviction({ hypotheses = [], signals = [], context }
     const record = buildConvictionRecord({ path, hypothesis, progress, readiness, context, alternatives });
     const nextTest = progress ? nextTestForPath({ path, hypothesis, progress }) : null;
 
+    const outcomes = (Array.isArray(gapOutcomes) ? gapOutcomes : []).filter(o => o.path_id === path.id);
+    const roster = buildGapRoster({ progress, record, outcomes });
+
     out[path.id] = {
       record,
       progress,
       nextTest,
+      /* "How much would you bet on it?" — separate from Decision Readiness
+         below, and it feeds neither the fit score nor the confidence score. */
+      decisionStrength: pathDecisionStrength({ roster, outcomes, contradictions }),
       /* Where this path stands, in states rather than a percentage. */
       decisionReadiness: decisionReadinessState({ record, progress }),
       /* "Is there enough here for a decision to rest on evidence?" */

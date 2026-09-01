@@ -27,6 +27,8 @@ import { decisionReadinessState } from '@/lib/decision-readiness-state';
 import { buildConvictionReview } from '@/lib/conviction-review';
 import { buildChangeOfMind } from '@/lib/change-your-mind';
 import { buildGapRoster } from '@/lib/conviction-gap-roster';
+import { pathDecisionStrength } from '@/lib/path-decision-strength';
+import { detectContradictions } from '@/lib/evidence-contradictions';
 import { base44 } from '@/api/base44Client';
 
 export async function loadConvictionLab(pathId) {
@@ -95,6 +97,19 @@ export async function loadConvictionLab(pathId) {
 
   const decisionReadiness = decisionReadinessState({ record, progress, tensions, tradeoffs });
 
+  const roster = buildGapRoster({
+    progress,
+    record,
+    outcomes: Array.isArray(gapOutcomes) ? gapOutcomes : [],
+  });
+  /* How much weight the evidence behind this path carries. A separate reading
+     from Decision Readiness, and it feeds neither fit nor confidence. */
+  const strength = pathDecisionStrength({
+    roster,
+    outcomes: Array.isArray(gapOutcomes) ? gapOutcomes : [],
+    contradictions: detectContradictions(signals),
+  });
+
   return {
     path,
     hypothesis,
@@ -123,11 +138,8 @@ export async function loadConvictionLab(pathId) {
     decisionReadiness,
     gap: pickConvictionGap({ record, progress, nextTest, tensions, tradeoffs }),
     /* All eight student-facing gaps with a derived state each. Nothing stored. */
-    gapRoster: buildGapRoster({
-      progress,
-      record,
-      outcomes: Array.isArray(gapOutcomes) ? gapOutcomes : [],
-    }),
+    gapRoster: roster,
+    decisionStrength: strength,
     /* The assumption most likely to weaken this path if tested, pointed at the
        same next test. Challenges the leading path rather than confirming it. */
     changeOfMind: buildChangeOfMind({ progress, tensions, tradeoffs, nextTest }),
