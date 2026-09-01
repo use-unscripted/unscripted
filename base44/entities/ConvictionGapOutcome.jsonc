@@ -35,6 +35,17 @@
     "test_type": {
       "type": "string"
     },
+    "evidence_method": {
+      "type": "string",
+      "enum": [
+        "stated",
+        "exposure",
+        "simulated",
+        "human",
+        "applied",
+        "lived"
+      ]
+    },
     "experiment_id": {
       "type": "string"
     },

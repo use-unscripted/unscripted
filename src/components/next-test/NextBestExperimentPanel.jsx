@@ -5,6 +5,7 @@ import RecommendedNextTest from '@/components/next-test/RecommendedNextTest';
 import HumanRealityNextTest from '@/components/next-test/HumanRealityNextTest';
 import { Sk } from '@/components/PageSkeleton';
 import { Reveal } from '@/components/motion';
+import EvidenceMethodLadder from '@/components/next-test/EvidenceMethodLadder';
 
 /**
  * Loads the recommendation and renders it. Stays silent when there is nothing
@@ -20,13 +21,17 @@ export default function NextBestExperimentPanel({ pathId = null, preferVariable 
   const [skip, setSkip] = useState([]);
   const [busy, setBusy] = useState(false);
   const [exhausted, setExhausted] = useState(false);
+  /* Which method on the evidence ladder the student wants. Null means the
+     engine's own recommendation stands. */
+  const [method, setMethod] = useState(null);
   const unsupportedRef = useRef(false);
 
-  const load = useCallback(async (skipList) => {
-    const res = await loadNextBestExperiment({ skip: skipList, pathId, preferVariable, gapId }).catch(() => ({ recommendation: null }));
+  const load = useCallback(async (skipList, methodId = method) => {
+    const res = await loadNextBestExperiment({ skip: skipList, pathId, preferVariable, gapId, method: methodId })
+      .catch(() => ({ recommendation: null }));
     unsupportedRef.current = Boolean(res.unsupportedPath);
     return res.recommendation;
-  }, [pathId, preferVariable, gapId]);
+  }, [pathId, preferVariable, gapId, method]);
 
   useEffect(() => {
     let alive = true;
@@ -49,6 +54,16 @@ export default function NextBestExperimentPanel({ pathId = null, preferVariable 
     });
     return () => { alive = false; };
   }, [load, pathId]);
+
+  /* A different method regenerates the same recommendation at that method. */
+  const onSelectMethod = async (methodId) => {
+    if (busy || methodId === (state.recommendation?.method || null)) return;
+    setBusy(true);
+    setMethod(methodId);
+    const next = await load(skip, methodId);
+    setState(s => ({ ...s, loading: false, recommendation: next || s.recommendation }));
+    setBusy(false);
+  };
 
   const onOverride = async (action, note) => {
     const current = state.recommendation;
@@ -100,9 +115,19 @@ export default function NextBestExperimentPanel({ pathId = null, preferVariable 
      renders nothing at all for a student with no open questions left, and a
      wrapper out there would space out an empty box. */
   // A question no task can answer gets the conversation card in the same slot.
+  const ladder = (
+    <EvidenceMethodLadder
+      selected={state.recommendation.method}
+      onSelect={onSelectMethod}
+      recommendation={state.recommendation}
+      disabled={busy}
+    />
+  );
+
   if (state.recommendation.human_reality) {
     return (
       <Reveal y={20}>
+        {ladder}
         <HumanRealityNextTest
           recommendation={state.recommendation}
           onAccept={onAccept}
@@ -116,6 +141,7 @@ export default function NextBestExperimentPanel({ pathId = null, preferVariable 
 
   return (
     <Reveal y={20}>
+      {ladder}
       <RecommendedNextTest
         recommendation={state.recommendation}
         onAccept={onAccept}

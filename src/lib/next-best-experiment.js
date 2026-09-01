@@ -36,6 +36,7 @@ import { humanRealityFor } from '@/lib/human-reality';
 import { loadSupportIndex, supportFor } from '@/lib/path-support';
 import { convictionSignals } from '@/lib/conviction-impact';
 import { pickTestType } from '@/lib/test-types';
+import { methodForRecommendation, methodStartUrl, typesForMethod } from '@/lib/evidence-methods';
 
 /** Every knob in one place, so the engine's judgement can be tuned. */
 export const LEARNING_VALUE_WEIGHTS = {
@@ -407,13 +408,27 @@ export function nextBestExperiment(ctx, opts = {}) {
      other test, and is chosen from the Conviction Gap it came from. */
   const testType = pickTestType({ candidate: top, human, gapId: opts.gapId || null, depth: depth.depth });
 
+  /* Which method on the evidence ladder this test runs at. The engine's own
+     answer unless the student picked one, in which case the same recommendation
+     is offered at their method instead. */
+  const recommendedMethod = methodForRecommendation({ human_reality: human, depth: depth.depth });
+  const method = opts.method || recommendedMethod;
+  const methodTo = methodStartUrl(method, { pathId: top.attached.path_id, variable: top.variable });
+  /* The kind of test the chosen method actually runs, so picking a method
+     changes the test on offer rather than only its link. */
+  const methodType = typesForMethod(method)[0] || null;
+
   return {
+    method,
+    recommended_method: recommendedMethod,
+    method_type_label: methodType?.label || null,
+    method_type_blurb: methodType?.blurb || null,
     mode,
     human_reality: human,
-    experiment_type: human ? 'human_reality' : 'work_sample',
+    experiment_type: methodType?.id || (human ? 'human_reality' : 'work_sample'),
     test_type: testType.id,
-    test_type_label: testType.label,
-    test_type_purpose: testType.purpose,
+    test_type_label: methodType?.label || testType.label,
+    test_type_purpose: methodType?.blurb || testType.purpose,
     test_type_produces: testType.produces,
     early: mode === 'early',
     candidate: top,
@@ -466,11 +481,12 @@ export function nextBestExperiment(ctx, opts = {}) {
         question: c.question,
         recommended: c.variable === top.variable,
       })),
-    quick_to: `/moment?recId=${top.attached.path_id}&variable=${encodeURIComponent(top.variable)}`,
-    deep_to: `/experiments/new?recId=${top.attached.path_id}&variable=${encodeURIComponent(top.variable)}`,
-    start_to: human
-      ? `/human-reality?recId=${top.attached.path_id}&variable=${encodeURIComponent(top.variable)}`
-      : `/experiments/new?recId=${top.attached.path_id}&variable=${encodeURIComponent(top.variable)}`,
+    quick_to: methodTo || `/moment?recId=${top.attached.path_id}&variable=${encodeURIComponent(top.variable)}`,
+    deep_to: methodTo || `/experiments/new?recId=${top.attached.path_id}&variable=${encodeURIComponent(top.variable)}`,
+    start_to: methodTo
+      || (human
+        ? `/human-reality?recId=${top.attached.path_id}&variable=${encodeURIComponent(top.variable)}`
+        : `/experiments/new?recId=${top.attached.path_id}&variable=${encodeURIComponent(top.variable)}`),
     detail: whyThisMatters(top, { knows, hypotheses, mode }),
     alternatives: candidates.slice(1, 4).map(c => ({
       ...c,
@@ -530,7 +546,7 @@ function whyThisMatters(candidate, { knows, hypotheses, mode }) {
  * for something else is honoured within a session, on top of the overrides they
  * have already recorded.
  */
-export async function loadNextBestExperiment({ skip = [], pathId = null, context = null, preferVariable = null, gapId = null } = {}) {
+export async function loadNextBestExperiment({ skip = [], pathId = null, context = null, preferVariable = null, gapId = null, method = null } = {}) {
   /* `context` is the shared student context a screen has already loaded. When it
      is supplied nothing here re-reads the student's records, which is what used
      to make this panel a third full copy of the same six lists, fired only after
@@ -565,8 +581,8 @@ export async function loadNextBestExperiment({ skip = [], pathId = null, context
 
   // Pinned first. If that career has no open question left, fall back to the
   // cross-path recommendation rather than showing nothing.
-  const rec = (pathId && nextBestExperiment(ctx, { suppressed, skip, pathId, supportedPathIds, preferVariable, gapId }))
-    || nextBestExperiment(ctx, { suppressed, skip, supportedPathIds, preferVariable, gapId });
+  const rec = (pathId && nextBestExperiment(ctx, { suppressed, skip, pathId, supportedPathIds, preferVariable, gapId, method }))
+    || nextBestExperiment(ctx, { suppressed, skip, supportedPathIds, preferVariable, gapId, method });
   return { ctx, recommendation: rec, overrides };
 }
 

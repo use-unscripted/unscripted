@@ -45,6 +45,8 @@ export async function targetGap({ gap, recommendation }) {
       rule_id: recommendation?.rule_id || undefined,
       rule_version: recommendation?.rule_version || undefined,
       test_type: recommendation?.test_type || undefined,
+      /* Where on the evidence ladder this test was chosen to sit. */
+      evidence_method: recommendation?.method || undefined,
       conviction_before: num(recommendation?.candidate?.attached?.confidence),
       chain_stage: 'gap_targeted',
       targeted_at: new Date().toISOString(),
