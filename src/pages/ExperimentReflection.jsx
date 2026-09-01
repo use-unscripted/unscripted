@@ -34,6 +34,7 @@ import PageHeader from '@/components/PageHeader';
 import NextBestExperimentPanel from '@/components/next-test/NextBestExperimentPanel';
 import PathHistoryPanel from '@/components/paths/PathHistoryPanel';
 import MeasurementGate from '@/components/measurement/MeasurementGate';
+import EvidenceImpactPanel from '@/components/measurement/EvidenceImpactPanel';
 import { loadMeasurements } from '@/lib/experiment-measurement';
 import { dimensionsFromActivity, dimensionsForExperiment } from '@/lib/career-dimensions';
 import { buildSynthesis } from '@/lib/hypothesis-synthesis';
@@ -223,6 +224,11 @@ export default function ExperimentReflection() {
       {/* Anything a person actually doing this work told the student, carried in
           so the reflection is against everything they know, not half of it. */}
       <HumanEvidenceContext pathId={ctx.path?.id} cycleId={ctx.experiment?.cycle_id} />
+      {/* What the evidence just submitted actually did. Reporting only, and only
+          once the outcome is recorded — before that there is nothing to say. */}
+      {measurement?.post_completed_at && !decision && (
+        <EvidenceImpactPanel exp={ctx.experiment} measurement={measurement} pathId={ctx.path?.id} />
+      )}
 
       {decision ? (
         <>

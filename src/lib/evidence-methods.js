@@ -24,6 +24,9 @@ export const EVIDENCE_METHODS = [
     tiers: ['self_report'],
     experimentTypes: [],
     route: null,
+    /* Reporting copy only: how heavily this evidence counts, in words. No weight
+       or threshold anywhere in the product reads this. */
+    weightNote: 'This is the lightest kind of evidence, because nothing was tested.',
   },
   {
     id: 'exposure',
@@ -32,6 +35,7 @@ export const EVIDENCE_METHODS = [
     tiers: ['single_scenario'],
     experimentTypes: ['environment_test', 'research_test'],
     route: 'moment',
+    weightNote: 'It counts for more than what you already believed, and for less than doing the work or speaking to somebody in it.',
   },
   {
     id: 'simulated',
@@ -40,6 +44,7 @@ export const EVIDENCE_METHODS = [
     tiers: ['scenario_pattern'],
     experimentTypes: ['decision_simulation', 'workstyle_test'],
     route: 'moment',
+    weightNote: 'It counts for more than reading about the work, and for less than doing a real piece of it or speaking to somebody in it.',
   },
   {
     id: 'human',
@@ -48,6 +53,7 @@ export const EVIDENCE_METHODS = [
     tiers: ['experiment'],
     experimentTypes: ['human_reality'],
     route: 'human',
+    weightNote: 'It counts heavily, because it came from somebody living this work rather than from a simulation.',
   },
   {
     id: 'applied',
@@ -56,6 +62,7 @@ export const EVIDENCE_METHODS = [
     tiers: ['experiment', 'reviewed'],
     experimentTypes: ['work_sample', 'creation_test'],
     route: 'experiment',
+    weightNote: 'It counts heavily, because you did a real piece of the work and produced something.',
   },
   {
     id: 'lived',
@@ -64,6 +71,7 @@ export const EVIDENCE_METHODS = [
     tiers: ['repeated_behaviour', 'reviewed'],
     experimentTypes: ['combined'],
     route: 'experiment',
+    weightNote: 'This is the heaviest kind of evidence, because it came from sustained real exposure.',
   },
 ];
 

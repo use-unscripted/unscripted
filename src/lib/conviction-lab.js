@@ -100,6 +100,9 @@ export async function loadConvictionLab(pathId) {
     hypothesis,
     progress,
     readiness,
+    /* The raw per-characteristic readings, so a consumer can ask the existing
+       contradiction check about them rather than re-deriving anything. */
+    signals,
     /* One concise read of this path, assembled from the blocks above. */
     review: buildConvictionReview({
       path, hypothesis, progress, tradeoffs, tensions, nextTest,
