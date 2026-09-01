@@ -6,6 +6,7 @@ import HumanRealityNextTest from '@/components/next-test/HumanRealityNextTest';
 import { Sk } from '@/components/PageSkeleton';
 import { Reveal } from '@/components/motion';
 import EvidenceMethodLadder from '@/components/next-test/EvidenceMethodLadder';
+import TestContainerPicker from '@/components/next-test/TestContainerPicker';
 
 /**
  * Loads the recommendation and renders it. Stays silent when there is nothing
@@ -116,12 +117,20 @@ export default function NextBestExperimentPanel({ pathId = null, preferVariable 
      wrapper out there would space out an empty box. */
   // A question no task can answer gets the conversation card in the same slot.
   const ladder = (
-    <EvidenceMethodLadder
-      selected={state.recommendation.method}
-      onSelect={onSelectMethod}
-      recommendation={state.recommendation}
-      disabled={busy}
-    />
+    <>
+      <EvidenceMethodLadder
+        selected={state.recommendation.method}
+        onSelect={onSelectMethod}
+        recommendation={state.recommendation}
+        disabled={busy}
+      />
+      <TestContainerPicker
+        selectedMethod={state.recommendation.method}
+        onSelect={onSelectMethod}
+        recommendation={state.recommendation}
+        disabled={busy}
+      />
+    </>
   );
 
   if (state.recommendation.human_reality) {

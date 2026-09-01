@@ -28,7 +28,10 @@ const AREA_WEIGHT = { none: 0, early: 1, some: 1, strong: 2 };
 export function buildGapRoster({ progress = null, record = null, outcomes = [] } = {}) {
   const rows = new Map((progress?.rows || []).map(r => [r.id, r]));
   const areas = new Map((record?.areas || []).map(a => [a.id, a]));
-  const done = (Array.isArray(outcomes) ? outcomes : []).filter(o => o.chain_stage === 'test_completed');
+  /* A test with no evidence submitted did not test its gap, however far the
+     student got through it. Evidence is the requirement, not completion. */
+  const done = (Array.isArray(outcomes) ? outcomes : [])
+    .filter(o => o.chain_stage === 'test_completed' && (o.evidence_created || 0) > 0);
 
   const gaps = CONVICTION_GAPS.map(gap => {
     const matched = gap.characteristics.map(id => rows.get(id)).filter(Boolean);

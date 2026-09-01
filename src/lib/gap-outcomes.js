@@ -82,11 +82,18 @@ export async function completeGapOutcome({ experiment, measurement }) {
       || r.path_name === experiment.path_name));
     if (!row) return null;
 
-    const [validations, proof] = await Promise.all([
+    const [validations, proof, conversations] = await Promise.all([
       base44.entities.ExperimentValidation.filter({ experiment_id: experiment.id }, '-created_date', 1).catch(() => []),
       base44.entities.ProofOfWork.filter({ experiment_id: experiment.id }, '-created_date', 20).catch(() => []),
+      /* A conversation submits its evidence through the human reality flow
+         rather than the proof of work flow, so both count. */
+      base44.entities.HumanRealityConversation
+        .filter({ experiment_id: experiment.id }, '-created_date', 20).catch(() => []),
     ]);
     const v = (Array.isArray(validations) ? validations : [])[0] || {};
+    const evidence = (Array.isArray(proof) ? proof : []).length
+      + (Array.isArray(conversations) ? conversations : [])
+        .filter(c => c.evidence_status === 'human_evidence_recorded').length;
 
     return base44.entities.ConvictionGapOutcome.update(row.id, {
       experiment_id: experiment.id,
@@ -101,9 +108,11 @@ export async function completeGapOutcome({ experiment, measurement }) {
       career_confidence_delta: num(measurement?.career_confidence_delta),
       enjoyment_expectation_delta: num(measurement?.enjoyment_expectation_delta),
       expectation_recorded: Boolean(measurement?.pre_completed_at),
-      evidence_created: (Array.isArray(proof) ? proof : []).length,
-      chain_stage: 'test_completed',
-      test_completed_at: new Date().toISOString(),
+      evidence_created: evidence,
+      /* Without submitted evidence the gap stays open: the row keeps its
+         readings, but it is not a test of the gap yet. */
+      chain_stage: evidence > 0 ? 'test_completed' : 'gap_targeted',
+      test_completed_at: evidence > 0 ? new Date().toISOString() : undefined,
     });
   } catch {
     return null;

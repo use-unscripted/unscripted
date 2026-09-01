@@ -63,6 +63,14 @@ export const ALL_PRE_FIELDS = [
   ...SIM_PRE_FIELDS.filter(s => !PRE_FIELDS.some(p => p.key === s.key)),
 ];
 
+/**
+ * The four answers the comparison afterwards is actually built on: the three
+ * scales that have a matching post reading the student will see side by side,
+ * and the written prediction. The check-in shows these first and prominently;
+ * everything else on the list still gets asked, below them.
+ */
+export const PRE_KEY_KEYS = ['expected_enjoyment', 'expected_energy', 'expected_difficulty', 'expectation_prediction'];
+
 export const POST_FIELDS = [
   { key: 'actual_enjoyment', label: 'Actual enjoyment', low: 'Not at all', high: 'A lot' },
   { key: 'actual_difficulty', label: 'Actual difficulty', low: 'Easy', high: 'Very hard' },

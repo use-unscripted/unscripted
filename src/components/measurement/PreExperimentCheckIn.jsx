@@ -12,10 +12,13 @@ import { useEffect, useState } from 'react';
 import { Loader2, X } from 'lucide-react';
 import ScaleInput from '@/components/measurement/ScaleInput';
 import TextAnswer from '@/components/measurement/TextAnswer';
+import CheckInGapHeader from '@/components/measurement/CheckInGapHeader';
 import {
-  PRE_FIELDS, PRE_TEXT_FIELDS, savePreMeasurement,
+  PRE_FIELDS, PRE_TEXT_FIELDS, PRE_KEY_KEYS, savePreMeasurement,
   loadDraft, saveDraft, clearDraft,
 } from '@/lib/experiment-measurement';
+
+const isKey = (f) => PRE_KEY_KEYS.includes(f.key);
 
 export default function PreExperimentCheckIn({ exp, onClose, onSaved }) {
   const [values, setValues] = useState(() => loadDraft('pre', exp?.id));
@@ -52,12 +55,32 @@ export default function PreExperimentCheckIn({ exp, onClose, onSaved }) {
         <p className="tp-lead mb-5" style={{ color: 'var(--text-secondary)' }}>
           Take a few seconds to tell us what you are expecting from {exp.title}. We will compare it to what actually happens.
         </p>
+        <CheckInGapHeader exp={exp} />
         {resumed && (
           <p className="tp-meta mb-4" style={{ color: 'var(--text-muted)' }}>Your earlier answers were kept.</p>
         )}
 
+        {/* The four that carry the comparison afterwards, first and on their own
+            surface. The rest are still asked, below. */}
+        <div className="app-card-flat space-y-5 p-4 sm:p-5">
+          {PRE_FIELDS.filter(isKey).map(f => (
+            <ScaleInput
+              key={f.key}
+              label={f.label}
+              low={f.low}
+              high={f.high}
+              value={values[f.key]}
+              onChange={(n) => set(f.key, n)}
+            />
+          ))}
+          {PRE_TEXT_FIELDS.filter(isKey).map(f => (
+            <TextAnswer key={f.key} label={f.label} value={values[f.key]} onChange={(t) => set(f.key, t)} />
+          ))}
+        </div>
+
+        <p className="tp-meta mb-3 mt-6" style={{ color: 'var(--text-muted)' }}>A few more, to fill out the picture.</p>
         <div className="space-y-5">
-          {PRE_FIELDS.map(f => (
+          {PRE_FIELDS.filter(f => !isKey(f)).map(f => (
             <ScaleInput
               key={f.key}
               label={f.label}
@@ -68,7 +91,7 @@ export default function PreExperimentCheckIn({ exp, onClose, onSaved }) {
             />
           ))}
 
-          {PRE_TEXT_FIELDS.map(f => (
+          {PRE_TEXT_FIELDS.filter(f => !isKey(f)).map(f => (
             <TextAnswer key={f.key} label={f.label} value={values[f.key]} onChange={(t) => set(f.key, t)} />
           ))}
         </div>
