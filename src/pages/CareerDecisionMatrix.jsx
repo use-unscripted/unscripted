@@ -11,6 +11,7 @@ import MatrixCards from '@/components/matrix/MatrixCards';
 import ConvictionInMatrix from '@/components/matrix/ConvictionInMatrix';
 import QuadrantChart from '@/components/matrix/QuadrantChart';
 import PathConvictionCard from '@/components/matrix/PathConvictionCard';
+import PathTriangulationSummary from '@/components/matrix/PathTriangulationSummary';
 import { plotPaths } from '@/lib/matrix-quadrant';
 import MetricPanel from '@/components/matrix/MetricPanel';
 import ConfidenceHistoryChart from '@/components/matrix/ConfidenceHistoryChart';
@@ -208,6 +209,15 @@ export default function CareerDecisionMatrix() {
                 <div className="mt-8">
                   <ConvictionInMatrix rows={rows} conviction={data.conviction} onOpen={openScore} />
                 </div>
+                {/* Why a completed path stands where the matrix says it does.
+                    Absent for any path that is not Path Complete. */}
+                {rows
+                  .filter(r => data.conviction?.[r.pathId]?.triangulation)
+                  .map(r => (
+                    <div key={r.pathId} className="mt-8">
+                      <PathTriangulationSummary row={r} triangulation={data.conviction[r.pathId].triangulation} />
+                    </div>
+                  ))}
               </>
             ) : (
               <EmptyState

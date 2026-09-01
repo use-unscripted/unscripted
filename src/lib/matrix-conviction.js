@@ -19,6 +19,9 @@ import { decisionReadinessState } from '@/lib/decision-readiness-state';
 import { buildGapRoster } from '@/lib/conviction-gap-roster';
 import { pathDecisionStrength } from '@/lib/path-decision-strength';
 import { detectContradictions } from '@/lib/evidence-contradictions';
+import { pathCompletion } from '@/lib/path-completion';
+import { buildTriangulation } from '@/lib/path-triangulation';
+import { buildTensions } from '@/lib/tension-signals';
 
 const num = (v) => (typeof v === 'number' && Number.isFinite(v) ? v : null);
 const mean = (arr) => (arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : null);
@@ -47,7 +50,7 @@ function taskPerformance({ pathName, context }) {
  * @param {object} args.context    loadStudentContext() result
  * @returns {object} keyed by path id
  */
-export function buildMatrixConviction({ hypotheses = [], signals = [], context, gapOutcomes = [] }) {
+export function buildMatrixConviction({ hypotheses = [], signals = [], context, gapOutcomes = [], passports = [], scenarioResponses = [], dimensions = [] }) {
   const contradictions = detectContradictions(signals);
   const progressById = new Map();
   hypotheses.forEach(({ path, hypothesis }) => {
@@ -71,7 +74,23 @@ export function buildMatrixConviction({ hypotheses = [], signals = [], context, 
     const outcomes = (Array.isArray(gapOutcomes) ? gapOutcomes : []).filter(o => o.path_id === path.id);
     const roster = buildGapRoster({ progress, record, outcomes });
 
+    /* Path Complete: five checks, derived and deliberately independent of
+       Decision Readiness. */
+    const passport = (Array.isArray(passports) ? passports : []).find(p => p.path_id === path.id) || null;
+    const completion = pathCompletion({ roster, outcomes, context, pathName: path.path_name, passport });
+
     out[path.id] = {
+      completion,
+      /* Why the path stands where it does. Only assembled once it is complete,
+         because that is the only place it is shown. */
+      triangulation: completion.complete
+        ? buildTriangulation({
+          roster,
+          outcomes,
+          contradictions,
+          tensions: buildTensions({ path, context, scenarioResponses, dimensions }),
+        })
+        : null,
       record,
       progress,
       nextTest,

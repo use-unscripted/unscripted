@@ -27,7 +27,7 @@ import { buildMatrixConviction } from '@/lib/matrix-conviction';
 const ELIMINATED = ['eliminated', 'archived', 'modified'];
 
 export async function loadDecisionMatrix() {
-  const [context, updates, scenarioResponses, conversations, dimensionMap, , gapOutcomes] = await Promise.all([
+  const [context, updates, scenarioResponses, conversations, dimensionMap, , gapOutcomes, passports] = await Promise.all([
     loadStudentContext(),
     base44.entities.HypothesisUpdate.list('-created_date', 300).catch(() => []),
     base44.entities.ScenarioResponse.list('-completed_at', 200).catch(() => []),
@@ -38,6 +38,8 @@ export async function loadDecisionMatrix() {
     loadEvidenceConfig().catch(() => null),
     // The method each completed test ran at, for Path Decision Strength.
     base44.entities.ConvictionGapOutcome.list('-targeted_at', 300).catch(() => []),
+    // The written conclusion per path, for the last Path Complete check.
+    base44.entities.CareerConvictionPassport.list('-created_date', 100).catch(() => []),
   ]);
 
   // No network: the context above is everything it reads.
@@ -68,7 +70,15 @@ export async function loadDecisionMatrix() {
     active,
     history,
     /* The conviction read per path, from the records already loaded above. */
-    conviction: buildMatrixConviction({ hypotheses, signals, context, gapOutcomes }),
+    conviction: buildMatrixConviction({
+      hypotheses,
+      signals,
+      context,
+      gapOutcomes,
+      passports: Array.isArray(passports) ? passports : [],
+      scenarioResponses: Array.isArray(scenarioResponses) ? scenarioResponses : [],
+      dimensions: Object.values(dimensionMap || {}),
+    }),
     workstyle: workstyleRows(dimensions),
     changed: changedMind({ measurements, experiments }),
     clarity: claritySummary({ profile, reflections, rows, dimensions }),
