@@ -16,7 +16,7 @@ export const QUADRANTS = {
   validate: {
     key: 'validate',
     title: 'Validate path',
-    message: 'Promising early evidence — keep testing.',
+    message: 'Early evidence looks promising, so keep testing.',
     meaning: 'Promising signals so far, but not enough evidence yet to justify stronger conviction.',
     corner: 'top-left',
     bg: 'var(--info-50)',
@@ -34,7 +34,7 @@ export const QUADRANTS = {
   exposure: {
     key: 'exposure',
     title: 'Seek exposure',
-    message: 'Not enough evidence yet — experience more of the path.',
+    message: 'Not enough evidence yet, so experience more of the path.',
     meaning: 'Too little evidence to make a meaningful judgment about this path yet.',
     corner: 'bottom-left',
     bg: 'var(--ink-100)',

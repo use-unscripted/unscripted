@@ -78,7 +78,7 @@ export default function PathConvictionCard({ row, conviction, onOpen }) {
             <p className="tp-body mt-1" style={{ color: 'var(--text-secondary)' }}>{decisionStrength.meaning}</p>
             {decisionStrength.heldDownByContradiction && (
               <p className="tp-meta mt-1 font-semibold" style={{ color: 'var(--warning-700)' }}>
-                Held down by an unresolved contradiction.
+                Held down by a disagreement that is still open.
               </p>
             )}
           </div>
@@ -110,7 +110,7 @@ export default function PathConvictionCard({ row, conviction, onOpen }) {
       {nextTest && (
         <div className="mt-4">
           <p className="tp-meta font-semibold uppercase" style={{ color: 'var(--ink-400)', letterSpacing: '0.06em' }}>
-            Next best test
+            Recommended next test
           </p>
           <p className="tp-body mt-1" style={{ color: 'var(--text-primary)' }}>
             <Target size={14} className="mr-1.5 inline" style={{ color: 'var(--brand-navy-700)' }} />

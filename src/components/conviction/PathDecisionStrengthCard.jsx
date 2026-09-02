@@ -36,10 +36,10 @@ export default function PathDecisionStrengthCard({ strength }) {
           style={{ background: 'var(--warning-50)', border: '1px solid var(--warning-700)' }}
         >
           <p className="tp-body font-semibold" style={{ color: 'var(--warning-700)' }}>
-            Held down by an unresolved contradiction
+            Held down by a disagreement that is still open
           </p>
           <p className="tp-prose mt-1" style={{ color: 'var(--text-secondary)' }}>
-            Both readings are kept. This cannot read higher than moderate until further testing settles it.
+            Both readings are kept. This cannot read above Moderate until another test settles which one holds.
           </p>
         </div>
       )}

@@ -23,7 +23,7 @@ export default function TriangulationGapCoverage({ coverage = [], testedOnce = 0
                 <p className="tp-meta mt-0.5" style={{ color: 'var(--text-muted)' }}>
                   {g.methods.length
                     ? `Tested at ${g.methods.join(', ')}`
-                    : 'No completed test has produced evidence on this gap.'}
+                    : 'Nothing has been tested here yet.'}
                 </p>
               </div>
               <span className="tp-meta rounded-full px-3 py-1 font-semibold" style={{ background: tone.bg, color: tone.fg }}>
@@ -35,7 +35,7 @@ export default function TriangulationGapCoverage({ coverage = [], testedOnce = 0
       </div>
       {testedOnce > 0 && (
         <p className="tp-meta mt-3" style={{ color: 'var(--text-muted)' }}>
-          {testedOnce} {testedOnce === 1 ? 'gap rests' : 'gaps rest'} on a single reading, so another test there would carry the most weight.
+          {testedOnce} {testedOnce === 1 ? 'gap rests' : 'gaps rest'} on a single reading, so a second test there would add the most.
         </p>
       )}
     </div>

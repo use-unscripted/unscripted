@@ -18,19 +18,19 @@ const MIN_WRITTEN = 40;
 
 /** The four states, in the order they are earned. */
 export const COMPLETION_STATES = [
-  { key: 'gaps_tested', label: 'Gaps Tested' },
-  { key: 'all_gaps_tested', label: 'All Gaps Tested' },
-  { key: 'all_gaps_complete', label: 'All Gaps Complete' },
-  { key: 'path_complete', label: 'Path Complete' },
+  { key: 'gaps_tested', label: 'Some gaps tested' },
+  { key: 'all_gaps_tested', label: 'Every gap tested once' },
+  { key: 'all_gaps_complete', label: 'Tested across the ladder' },
+  { key: 'path_complete', label: 'Tested and written up' },
 ];
 
-/** The one sentence Path Complete must always carry. */
+/** The one sentence the last state must always carry. */
 export const PATH_COMPLETE_CAVEAT =
-  'Path Complete means every gap has been tested and you can defend your conclusion, not that this career is decided, correct, or finished with.';
+  'Tested and written up means every gap has evidence behind it and the reasoning has been written down. It does not mean this career is decided, correct, or settled.';
 
-/** Testing a complete path is normal, not pointless. */
+/** Testing a path that reads this way is normal, not pointless. */
 export const KEEP_TESTING_NOTE =
-  'You can keep testing a complete path, and anything you add from here makes the conclusion sturdier.';
+  'Testing can carry on from here, and anything added gives the reasoning more to stand on.';
 
 const written = (s) => String(s || '').trim();
 
@@ -91,7 +91,7 @@ export function pathCompletion({ roster = null, outcomes = [], context = {}, pat
     },
     {
       id: 'reflected',
-      label: 'Before and after reflections finished on the tests you ran',
+      label: 'Before and after reflections recorded on the tests run so far',
       met: reflected,
       detail: measured.length
         ? `${bothEnds} of ${measured.length} ${measured.length === 1 ? 'test has' : 'tests have'} both check-ins recorded.`
@@ -107,11 +107,11 @@ export function pathCompletion({ roster = null, outcomes = [], context = {}, pat
     },
     {
       id: 'defended',
-      label: 'You have written why this path is or is not worth pursuing',
+      label: 'A written reason this path is or is not worth pursuing',
       met: defended,
       detail: defended
-        ? 'Your written answer is on file with this path.'
-        : 'Write your conclusion in the Decide stage to meet this.',
+        ? 'That written reasoning is on file with this path.'
+        : 'The Decide stage is where that reasoning gets written down.',
     },
   ];
 

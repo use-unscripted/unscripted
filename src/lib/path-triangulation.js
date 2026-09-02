@@ -52,9 +52,9 @@ export function buildTriangulation({ roster = null, outcomes = [], contradiction
     kinds: methods.length,
     diverges: towardMethods.length > 0 && awayMethods.length > 0,
     summary: methods.length < 2
-      ? 'Only one kind of evidence has been produced here, so there is nothing yet to cross-check it against.'
+      ? 'Only one kind of evidence exists here, so there is nothing yet to check it against.'
       : !pointed.length
-        ? `${methods.length} kinds of evidence exist here, and none of them moved your interest in a clear direction.`
+        ? `${methods.length} kinds of evidence exist here, and none of them moved interest in this path either way.`
         : towardMethods.length && awayMethods.length
           ? `${towardMethods.length} ${towardMethods.length === 1 ? 'kind of evidence points' : 'kinds of evidence point'} toward this path and ${awayMethods.length} ${awayMethods.length === 1 ? 'points' : 'point'} away from it.`
           : `${pointed.length} independent ${pointed.length === 1 ? 'kind' : 'kinds'} of evidence point ${DIRECTION_LABEL[pointed[0].direction]}.`,
@@ -78,10 +78,10 @@ export function buildTriangulation({ roster = null, outcomes = [], contradiction
     highestLabel: highest ? METHOD_BY_ID.get(highest)?.label || highest : null,
     rows: EVIDENCE_METHODS.map(m => ({ id: m.id, label: m.label, tests: done.filter(o => o.evidence_method === m.id).length })),
     summary: upper === 0
-      ? 'This rests entirely on Stated, Exposure and Simulated evidence, which is a weaker conclusion than the same result reached from work you did.'
+      ? 'Nothing here came from doing a real piece of the work, so this reasoning rests on lighter evidence than the same result reached by doing it.'
       : upper > lower
-        ? `Most of this rests on work you actually did: ${upper} of ${done.length} pieces sit at Applied or Lived, against ${lower} at Stated or Exposure.`
-        : `${upper} of ${done.length} ${upper === 1 ? 'piece sits' : 'pieces sit'} at Applied or Lived and ${lower} at Stated or Exposure, so the conclusion leans on lighter evidence more than on work you did.`,
+        ? `Most of this rests on real work: ${upper} of ${done.length} pieces sit at Applied or Lived, against ${lower} at Stated or Exposure.`
+        : `${upper} of ${done.length} ${upper === 1 ? 'piece sits' : 'pieces sit'} at Applied or Lived and ${lower} at Stated or Exposure, so the reasoning leans on the lighter evidence more than on real work.`,
   };
 
   /* 3. Contradictions. Kept open, never settled here. */
@@ -90,8 +90,8 @@ export function buildTriangulation({ roster = null, outcomes = [], contradiction
       id: `signal:${c.id}`,
       title: `${c.label} reads both ways`,
       detail: c.note,
-      open_question: 'Both readings are kept until further testing settles which holds.',
-      source: 'Your own ratings of the same characteristic',
+      open_question: 'Both readings are kept until another test settles which one holds.',
+      source: 'Two of your own readings on the same characteristic',
     })),
     ...(Array.isArray(tensions) ? tensions : []).map(t => ({
       id: `tension:${t.id}`,

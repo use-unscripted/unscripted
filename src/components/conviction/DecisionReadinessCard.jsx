@@ -65,7 +65,7 @@ export default function DecisionReadinessCard({ readiness }) {
           <ul className="mt-2 space-y-1.5">
             {readiness.gaps.map(g => (
               <li key={g.id} className="tp-meta" style={{ color: 'var(--text-secondary)' }}>
-                <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>{g.label}</span> — {g.why}
+                <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>{g.label}.</span> {g.why}
               </li>
             ))}
           </ul>

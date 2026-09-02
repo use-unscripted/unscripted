@@ -29,7 +29,7 @@ const PRIORITY = [
 /** Why each area matters, and the kind of test that actually closes it. */
 const GUIDE = {
   core_work: {
-    matters: 'Everything else you conclude about this path rests on having done the work it is actually made of. Until then you are judging a description of the job, not the job.',
+    matters: 'Everything else concluded about this path rests on having done the work it is actually made of. Until then the reading comes from a description of the job rather than the job.',
     test: 'A short test where you do one real task from this kind of role, start to finish.',
     dimension_led: true,
   },

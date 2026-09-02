@@ -13,10 +13,10 @@ export default function TriangulationContradictions({ conflicts = [] }) {
       <div className="app-inset p-4" style={{ background: 'var(--success-50)' }}>
         <p className="tp-body font-semibold" style={{ color: 'var(--success-700)' }}>
           <CheckCircle2 size={15} className="mr-1.5 inline" />
-          No evidence on this path currently disagrees with itself.
+          Nothing recorded on this path disagrees with itself so far.
         </p>
         <p className="tp-meta mt-1" style={{ color: 'var(--text-secondary)' }}>
-          That can change with the next test, which is normal rather than a setback.
+          The next test can change that, which is normal rather than a setback.
         </p>
       </div>
     );
@@ -26,7 +26,7 @@ export default function TriangulationContradictions({ conflicts = [] }) {
     <div className="space-y-3">
       <p className="tp-body font-semibold" style={{ color: 'var(--warning-700)' }}>
         <AlertTriangle size={15} className="mr-1.5 inline" />
-        {conflicts.length} open {conflicts.length === 1 ? 'contradiction sits' : 'contradictions sit'} behind this conclusion.
+        {conflicts.length} {conflicts.length === 1 ? 'disagreement is' : 'disagreements are'} still open behind this reasoning.
       </p>
       {conflicts.map(c => (
         <article key={c.id} className="app-inset p-4" style={{ background: 'var(--warning-50)' }}>
@@ -43,7 +43,7 @@ export default function TriangulationContradictions({ conflicts = [] }) {
         </article>
       ))}
       <p className="tp-meta" style={{ color: 'var(--text-muted)' }}>
-        Both sides of each disagreement are kept, and neither is averaged into the other.
+        Both sides of each disagreement are kept, and neither one is averaged into the other.
       </p>
     </div>
   );

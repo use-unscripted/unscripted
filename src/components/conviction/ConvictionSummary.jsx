@@ -32,11 +32,11 @@ export default function ConvictionSummary({ lab }) {
           dimension has been looked at. Both are existing flows. */}
       {readiness.ready ? (
         <Link to="/decide" className="app-cta tp-body mt-5 font-bold">
-          Take This To A Decision <ArrowRight size={15} />
+          Take this to a decision <ArrowRight size={15} />
         </Link>
       ) : nextTest ? (
         <Link to={nextTest.to} className="app-cta tp-body mt-5 font-bold">
-          Run My Next Conviction Test <ArrowRight size={15} />
+          Run the next test <ArrowRight size={15} />
         </Link>
       ) : null}
     </section>

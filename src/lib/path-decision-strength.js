@@ -46,16 +46,16 @@ export const STRENGTH_WEIGHTS = {
 
 /** Low to High. Named bands, never a number or a percentage on screen. */
 export const STRENGTH_BANDS = [
-  { key: 'thin', label: 'Thin', tone: 'muted', meaning: 'Almost nothing behind this path yet carries real weight.' },
-  { key: 'light', label: 'Light', tone: 'muted', meaning: 'What you have is mostly reading and reacting rather than doing.' },
-  { key: 'moderate', label: 'Moderate', tone: 'info', meaning: 'Real evidence exists, and little of it comes from doing the work or from people in it.' },
-  { key: 'substantial', label: 'Substantial', tone: 'info', meaning: 'A good part of this rests on work you actually did or people who do it.' },
-  { key: 'strong', label: 'Strong', tone: 'success', meaning: 'The evidence here is high on the ladder and has held up more than once.' },
+  { key: 'thin', label: 'Thin', tone: 'muted', meaning: 'Almost nothing recorded here carries real weight yet.' },
+  { key: 'light', label: 'Light', tone: 'muted', meaning: 'The evidence so far is mostly reading and reacting rather than doing.' },
+  { key: 'moderate', label: 'Moderate', tone: 'info', meaning: 'Real evidence exists, and little of it came from doing the work or from people in it.' },
+  { key: 'substantial', label: 'Substantial', tone: 'info', meaning: 'A good part of this rests on real work, or on people who do it now.' },
+  { key: 'strong', label: 'Strong', tone: 'success', meaning: 'The evidence so far sits high on the ladder and has held up more than once.' },
 ];
 
 /** The one sentence that says how this differs from Decision Readiness. */
 export const STRENGTH_VS_READINESS =
-  'Decision Readiness asks whether there is enough here to decide. Path Decision Strength asks how much you would bet on it.';
+  'Decision Readiness asks whether there is enough here to decide. This asks how much weight the evidence behind the path carries.';
 
 const THRESHOLDS = [15, 32, 52, 74];
 
@@ -102,13 +102,13 @@ export function pathDecisionStrength({ roster = null, outcomes = [], contradicti
 
   const reasons = [];
   if (!done.length) {
-    reasons.push('No completed test has produced evidence on this path yet.');
+    reasons.push('No finished test has produced evidence on this path yet.');
   } else {
-    reasons.push(`${done.length} ${done.length === 1 ? 'test has' : 'tests have'} produced evidence, the highest of them ${String(highest || 'exposure')} evidence.`);
+    reasons.push(`${done.length} ${done.length === 1 ? 'test has' : 'tests have'} produced evidence, the heaviest of them ${String(highest || 'exposure')} evidence.`);
   }
   if (total) reasons.push(`${withEvidence} of ${total} gaps have something behind them, and ${repeated} ${repeated === 1 ? 'has' : 'have'} held up more than once.`);
   if (conflicts.length) {
-    reasons.push(`${conflicts.length} ${conflicts.length === 1 ? 'reading disagrees' : 'readings disagree'} with itself, which holds this down until further testing settles it.`);
+    reasons.push(`${conflicts.length} ${conflicts.length === 1 ? 'reading disagrees' : 'readings disagree'} with itself, which holds this down until another test settles it.`);
   }
 
   return {
